@@ -1,12 +1,11 @@
 import { ART } from '../art-manifest';
-import type { AbductResult, Audio, UpgradeId } from '../contracts';
-import { clamp, Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid } from './ragdoll';
-import type { Area, Room } from './rooms/layout';
+import { VIEW_W, type AbductResult, type Audio, type UpgradeId } from '../contracts';
+import { clamp, Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
+import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
 
-export const SAUCER_X = 270;
-export const BEAM_ORIGIN_Y = 127;
-export const FLOOR = 846;
+export const BEAM_BOUNDS = { left: 47, top: 146, right: 491, bottom: 800 };
+const FAN_BLADE_RADIUS = 14;
 const SLURP_SECONDS = 0.56;
 const GRIP_STRAIN = 132;
 const HANDS = [Joint.NearHand, Joint.FarHand] as const;
@@ -59,7 +58,10 @@ export class AbductSimulation {
   readonly wake: WakeMeter;
   readonly item: LooseItem;
   readonly fanBlades: readonly Blade[];
-  readonly sign: Blade | undefined;
+  readonly sign: SwingingRect | undefined;
+  readonly emitterX: number;
+  readonly exitX: number;
+  readonly exitY: number;
   readonly cart: Rect | undefined;
   readonly solids: readonly Solid[];
   elapsed = 0;
@@ -90,7 +92,8 @@ export class AbductSimulation {
   private readonly grabSurfaces: Rect[] = [];
   private readonly contact = new Contact();
   private readonly itemRadius: number;
-  private readonly itemFloorOffset: number;
+  private beamMoved = false;
+  private lift = 0;
 
   constructor(
     readonly room: Room,
@@ -98,19 +101,21 @@ export class AbductSimulation {
     private readonly audio: Audio,
     private readonly random: () => number = Math.random,
   ) {
+    this.exitX = room.exitZone.x + room.exitZone.w / 2;
+    this.exitY = room.exitMouthY ?? room.exitZone.y + room.exitZone.h / 2;
+    this.emitterX = room.roofExit ? room.exit.x + room.exit.w / 2 : VIEW_W / 2;
     const solids: Solid[] = [
-      rectangle({ x: -120, y: 106, w: 139, h: 860 }),
-      rectangle({ x: 521, y: 106, w: 139, h: 860 }),
-      rectangle({ x: 0, y: 3, w: 540, h: 117 }),
-      rectangle({ x: 0, y: FLOOR, w: 540, h: 180 }),
+      rectangle({ x: LEFT_WALL - 140, y: CEILING, w: 140, h: FLOOR - CEILING }),
+      rectangle({ x: RIGHT_WALL, y: CEILING, w: 140, h: FLOOR - CEILING }),
+      rectangle({ x: 0, y: 3, w: VIEW_W, h: CEILING - 3 }),
+      rectangle({ x: 0, y: FLOOR, w: VIEW_W, h: 180 }),
     ];
 
     for (const masonry of room.masonry ?? []) solids.push(rectangle(masonry));
-    for (const { sprite, solid, grabbable } of room.furniture) {
-      if (!solid) continue;
-      const shape = rectangle(sprite, 5);
-      solids.push(shape);
-      if (grabbable) this.grabSurfaces.push(shape);
+    for (const { sprite, colliders, grabbable } of room.furniture) {
+      const shapes = colliders ? colliders.map(area => rectangle(area)) : [rectangle(sprite, 5)];
+      solids.push(...shapes);
+      if (grabbable) this.grabSurfaces.push(...shapes);
     }
 
     if (room.cat) {
@@ -119,12 +124,13 @@ export class AbductSimulation {
       solids.push(this.cat);
     }
 
-    this.fanBlades = room.fan ? [
-      { kind: 'blade', ...room.fan, from: 19, to: 207, r: 11, omega: room.fan.speed },
-      { kind: 'blade', ...room.fan, angle: room.fan.angle + Math.PI, from: 19, to: 207, r: 11, omega: room.fan.speed },
-    ] : [];
-    if (room.fan) {
-      const hub: Circle = { kind: 'circle', x: room.fan.x, y: room.fan.y, r: 22, vx: 0, vy: 0 };
+    const { fan } = room;
+    this.fanBlades = fan ? [fan.angle, fan.angle + Math.PI].map(angle => ({
+      kind: 'blade', x: fan.x, y: fan.y, angle,
+      from: 19, to: fan.bladeLength - FAN_BLADE_RADIUS, r: FAN_BLADE_RADIUS, omega: fan.speed,
+    })) : [];
+    if (fan) {
+      const hub: Circle = { kind: 'circle', x: fan.x, y: fan.y, r: 24, vx: 0, vy: 0 };
       solids.push(hub, ...this.fanBlades);
     }
 
@@ -135,9 +141,9 @@ export class AbductSimulation {
     }
     if (room.sign) {
       this.sign = {
-        kind: 'blade',
-        x: room.sign.x, y: room.sign.y + room.sign.h / 2, angle: 0,
-        from: 29, to: room.sign.w - 29, r: 29, omega: 0,
+        kind: 'swingingRect',
+        x: room.sign.x + room.sign.w / 2, y: room.sign.y,
+        w: room.sign.w, h: room.sign.h, angle: 0, omega: 0,
       };
       this.signIndex = solids.length;
       solids.push(this.sign);
@@ -147,8 +153,7 @@ export class AbductSimulation {
     this.wake = new WakeMeter(upgrades.has('hush_drive'));
     const item = room.item.sprite;
     this.item = { x: item.x + item.w * 0.5, y: item.y + item.h * 0.5, vx: 0, vy: 0, captured: false, side: 1, stolen: false };
-    this.itemRadius = item.h * 0.5 - 3;
-    this.itemFloorOffset = item.h * 0.5;
+    this.itemRadius = item.h * 0.5;
     this.strainX = this.body.beamX;
     this.strainY = this.body.beamY;
   }
@@ -156,8 +161,11 @@ export class AbductSimulation {
   get complete(): boolean { return this.delivered && this.slurp >= 1; }
 
   moveBeam(x: number, y: number): void {
-    this.body.beamX = clamp(x, 47, 491);
-    this.body.beamY = clamp(y, 146, 800);
+    const beamX = clamp(x, BEAM_BOUNDS.left, BEAM_BOUNDS.right);
+    const beamY = clamp(y, BEAM_BOUNDS.top, BEAM_BOUNDS.bottom);
+    if (beamX !== this.body.beamX || beamY !== this.body.beamY) this.beamMoved = true;
+    this.body.beamX = beamX;
+    this.body.beamY = beamY;
   }
 
   update(dt: number): void {
@@ -195,7 +203,8 @@ export class AbductSimulation {
     this.shake = Math.max(0, this.shake - STEP * 6);
     this.moveHazards();
     this.updateGrip();
-    this.body.step();
+    if (this.beamMoved) this.lift = Math.min(1, this.lift + STEP * 2);
+    this.body.step(this.lift);
 
     if (this.sign && this.body.impacts[this.signIndex]! > 55) {
       this.sign.omega = clamp(this.sign.omega + this.body.impacts[this.signIndex]! * 0.004, -1.5, 1.5);
@@ -333,9 +342,9 @@ export class AbductSimulation {
     const item = this.item;
     const body = this.body;
     const dy = item.y - body.chestY;
-    const t = clamp((item.y - BEAM_ORIGIN_Y) / Math.max(30, body.chestY - BEAM_ORIGIN_Y), 0, 1);
-    const columnX = SAUCER_X + (body.chestX - SAUCER_X) * t;
-    if (!item.captured && dy > -115 && dy < 60 && Math.abs(item.x - columnX) < 57) {
+    const t = clamp((item.y - CEILING) / Math.max(30, body.chestY - CEILING), 0, 1);
+    const columnX = this.emitterX + (body.chestX - this.emitterX) * t;
+    if (this.beamMoved && !item.captured && dy > -115 && dy < 78 && Math.abs(item.x - columnX) < 57) {
       item.captured = true;
       item.side = item.x < body.chestX ? -1 : 1;
     }
@@ -359,6 +368,6 @@ export class AbductSimulation {
       item.vx = (item.vx - inward * 1.2 * c.nx) * 0.85;
       item.vy = (item.vy - inward * 1.2 * c.ny) * 0.85;
     }
-    item.y = Math.min(item.y, FLOOR - this.itemFloorOffset);
+    item.y = Math.min(item.y, FLOOR - this.itemRadius);
   }
 }

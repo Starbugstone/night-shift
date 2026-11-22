@@ -1,6 +1,11 @@
 import { ART } from '../../art-manifest';
 import type { Pose } from '../ragdoll';
 
+export const CEILING = 133;
+export const FLOOR = 846;
+export const LEFT_WALL = 20;
+export const RIGHT_WALL = 520;
+
 export type Human = 'doyle' | 'larry';
 
 export interface Sprite {
@@ -13,7 +18,7 @@ export interface Sprite {
 
 export interface Furniture {
   sprite: Sprite;
-  solid: boolean;
+  colliders?: readonly Area[];
   grabbable: boolean;
 }
 
@@ -36,11 +41,14 @@ export interface Room {
   pose: Pose;
   furniture: readonly Furniture[];
   masonry?: readonly Area[];
+  flue?: Area;
   exit: Sprite;
   exitZone: Area;
+  roofExit?: boolean;
+  exitMouthY?: number;
   item: { sprite: Sprite; name: string };
   cat?: Sprite;
-  fan?: { x: number; y: number; angle: number; speed: number };
+  fan?: { x: number; y: number; angle: number; speed: number; bladeLength: number };
   cart?: { sprite: Sprite; travel: number; speed: number };
   sign?: Sprite;
   par: number;
@@ -52,24 +60,44 @@ export function sprite(key: string, x: number, y: number): Sprite {
   return { key, x, y, w, h };
 }
 
-export function prop(key: string, x: number, y: number, solid = true): Furniture {
-  return { sprite: sprite(key, x, y), solid, grabbable: solid };
+export function prop(sprite: Sprite, colliders?: readonly Area[]): Furniture {
+  return { sprite, colliders, grabbable: true };
+}
+
+export function bed(x: number): Furniture {
+  const y = FLOOR - 140;
+  return prop(sprite('room/bed', x, y), [
+    { x: x + 17, y: y + 60, w: 269, h: 53 },
+    { x: x + 10, y: y + 20, w: 8, h: 40 },
+    { x: x + 27, y: y + 51, w: 49, h: 9 },
+  ]);
+}
+
+export function chair(x: number): Furniture {
+  const y = FLOOR - 150;
+  return prop(sprite('room/office_chair', x, y), [
+    { x: x + 8, y: y + 75, w: 95, h: 23 },
+    { x: x + 46, y: y + 98, w: 14, h: 32 },
+    { x: x + 14, y: y + 130, w: 84, h: 16 },
+    { x: x + 8, y: y + 10, w: 29, h: 65 },
+  ]);
 }
 
 export const BED_POSE: Pose = {
-  neckX: 126, neckY: 660,
-  torso: 0.13, head: 3.34,
-  nearArm: 1.08, nearForearm: 0.60,
-  farArm: 1.10, farForearm: 0.08,
-  nearThigh: 0.02, nearShin: 0.2,
-  farThigh: 0.42, farShin: 0.27,
+  neckX: 112, neckY: 736,
+  torso: 0.025, head: 3.25,
+  nearArm: -0.10, nearForearm: 0.48,
+  farArm: -0.23, farForearm: 0.32,
+  nearThigh: -0.64, nearShin: 0.95,
+  farThigh: -0.76, farShin: 0.93,
 };
 
 export const CHAIR_POSE: Pose = {
-  neckX: 112, neckY: 585,
-  torso: 1.38, head: -1.23,
-  nearArm: 1.82, nearForearm: 0.04,
-  farArm: 1.72, farForearm: 0.43,
-  nearThigh: 0.09, nearShin: 1.31,
-  farThigh: 0.27, farShin: 1.44,
+  neckX: 94, neckY: 650,
+  pelvisRadius: 16,
+  torso: 1.30, head: -1.03,
+  nearArm: 1.54, nearForearm: 0.54,
+  farArm: 1.75, farForearm: 0.61,
+  nearThigh: 0.22, nearShin: 1.53,
+  farThigh: 0.24, farShin: 1.59,
 };

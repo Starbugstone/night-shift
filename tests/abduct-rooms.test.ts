@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { GameContext, RoomId, SfxName } from '../src/contracts';
 import { createAbductScene } from '../src/abduct';
 import { ROOMS } from '../src/abduct/rooms';
-import type { Waypoint } from '../src/abduct/rooms/layout';
+import { Joint, type Rect } from '../src/abduct/ragdoll';
+import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Waypoint } from '../src/abduct/rooms/layout';
 import { AbductSimulation } from '../src/abduct/simulation';
 import { AWAKE_SECONDS, BONK_SPEED, WakeMeter } from '../src/abduct/wake';
 
@@ -54,25 +55,132 @@ function steer(sim: AbductSimulation, route: readonly Waypoint[]): void {
   }
 }
 
-function runRoute(id: RoomId): AbductSimulation {
+function runRoute(id: RoomId, settleSeconds = 0): AbductSimulation {
   const room = ROOMS[id];
-  const sim = new AbductSimulation(room, new Set(), { sfx() {} }, () => 0.5);
+  const sim = makeSimulation(id);
+  for (let frame = 0; frame < settleSeconds * 60; frame++) sim.update(1 / 60);
   steer(sim, room.route);
   for (let frame = 0; frame < 90 && !sim.complete; frame++) sim.update(1 / 60);
   return sim;
 }
 
+function makeSimulation(id: RoomId): AbductSimulation {
+  return new AbductSimulation(ROOMS[id], new Set(), { sfx() {} }, () => 0.5);
+}
+
+function rects(sim: AbductSimulation): Rect[] {
+  return sim.solids.filter(solid => solid.kind === 'rect');
+}
+
+function overlap(a: Area, b: Area): boolean {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+describe('abduction geometry', () => {
+  it.each(ROOM_IDS)('%s settles against its mattress or seat without bonks or item capture', (id) => {
+    const sim = makeSimulation(id);
+    const { room, body, item } = sim;
+    const isBed = room.human === 'doyle';
+    const furniture = room.furniture.find(({ sprite }) => sprite.key === (isBed ? 'room/bed' : 'room/office_chair'))!;
+    const [support] = furniture.colliders!;
+    const { x, y, w } = support!;
+    expect(rects(sim)).toContainEqual(expect.objectContaining(support!));
+
+    for (let frame = 0; frame < 120; frame++) sim.update(1 / 60);
+    expect(body.x[Joint.Pelvis]!).toBeGreaterThan(x);
+    expect(body.x[Joint.Pelvis]!).toBeLessThan(x + w);
+    expect(Math.abs(body.y[Joint.Pelvis]! + (isBed ? 31 : 16) - y)).toBeLessThan(3);
+    if (isBed) {
+      const pillow = furniture.colliders![2]!;
+      expect(Math.abs(body.y[Joint.Head]! + 32 - pillow.y)).toBeLessThan(3);
+      expect(Math.abs(body.chestY + 34 - y)).toBeLessThan(3);
+    }
+    for (const foot of [Joint.NearFoot, Joint.FarFoot]) {
+      expect(Math.abs(body.y[foot]! + 14 - (isBed ? y : FLOOR))).toBeLessThan(3);
+    }
+    expect(sim.wake.bonks).toBe(0);
+    expect(item.captured).toBe(false);
+    const itemBottom = item.y + room.item.sprite.h / 2;
+    expect(rects(sim).some(r => item.x > r.x && item.x < r.x + r.w && Math.abs(itemBottom - r.y) < 1)).toBe(true);
+  });
+
+  it.each(ROOM_IDS)('%s has no intersecting rectangular solids', (id) => {
+    const sim = makeSimulation(id);
+    const solids = rects(sim);
+    if (sim.sign) {
+      const { x, y, w, h } = sim.sign;
+      const sweep = Math.hypot(w / 2, h);
+      solids.push({ kind: 'rect', x: x - sweep, y: y - sweep, w: sweep * 2, h: sweep * 2, vx: 0, vy: 0 });
+    }
+    for (const [index, a] of solids.entries()) {
+      for (const b of solids.slice(index + 1)) {
+        expect(overlap(a, b), JSON.stringify({ a, b })).toBe(false);
+      }
+    }
+  });
+
+  it('keeps the entire cart patrol clear of the fixtures, walls and usable loading door', () => {
+    const sim = makeSimulation('laundry_loading');
+    const { sprite, travel } = sim.room.cart!;
+    const swept = { ...sprite, x: sprite.x - travel, w: sprite.w + travel * 2 };
+    expect(swept.x).toBeGreaterThan(LEFT_WALL);
+    expect(swept.x + swept.w).toBeLessThan(RIGHT_WALL);
+    expect(swept.x + swept.w).toBeLessThan(sim.room.exitZone.x);
+    for (const { sprite: furniture } of sim.room.furniture) expect(overlap(swept, furniture)).toBe(false);
+    for (const solid of rects(sim)) {
+      if (solid !== sim.cart) expect(overlap(swept, solid)).toBe(false);
+    }
+    expect(sim.room.exit.y + sim.room.exit.h).toBe(FLOOR);
+  });
+
+  it('keeps the fan below the skylight through a full turn and leaves room for the ragdoll', () => {
+    const sim = makeSimulation('laundry_skylight');
+    const { fan, exit } = sim.room;
+    for (const blade of sim.fanBlades) {
+      const tip = blade.to + blade.r;
+      expect(tip).toBe(fan!.bladeLength);
+      expect(blade.y - tip).toBeGreaterThanOrEqual(Math.max(CEILING, exit.y + exit.h));
+      expect(blade.x - tip - LEFT_WALL).toBeGreaterThan(68);
+      expect(RIGHT_WALL - blade.x - tip).toBeGreaterThan(68);
+    }
+    expect(sim.fanBlades).toHaveLength(2);
+  });
+
+  it.each(ROOM_IDS)('%s has a reachable exit zone and a slurp target inside the exit', (id) => {
+    const sim = makeSimulation(id);
+    const { exit, exitZone: zone, roofExit } = sim.room;
+    const right = zone.x + zone.w;
+    const bottom = zone.y + zone.h;
+    for (const [x, y] of [[zone.x, zone.y], [right, bottom]] as const) {
+      sim.moveBeam(x, y);
+      expect(sim.body.beamX).toBe(x);
+      expect(sim.body.beamY).toBe(y);
+    }
+    expect(sim.exitX).toBeGreaterThan(exit.x);
+    expect(sim.exitX).toBeLessThan(exit.x + exit.w);
+    expect(sim.exitY).toBeGreaterThan(exit.y);
+    expect(sim.exitY).toBeLessThan(exit.y + exit.h);
+    if (roofExit) {
+      expect(exit.y).toBe(CEILING);
+      expect(sim.emitterX).toBe(exit.x + exit.w / 2);
+    }
+  });
+});
+
 describe('abduction rooms', () => {
   it.each(ROOM_IDS)('%s has a route through the scene within par', (id) => {
-    const sim = runRoute(id);
-    const result = sim.result();
-    expect(result, `chest ended at ${sim.body.chestX.toFixed()}, ${sim.body.chestY.toFixed()}`).toMatchObject({
-      delivered: true,
-      woke: false,
-    });
-    expect(result.timeSec).toBeLessThan(ROOMS[id].par);
-    expect(result.snores).toBeGreaterThan(1);
-    expect(sim.complete).toBe(true);
+    for (const settleSeconds of [0, 2]) {
+      const sim = runRoute(id, settleSeconds);
+      const result = sim.result();
+      expect(result, `chest ended at ${sim.body.chestX.toFixed()}, ${sim.body.chestY.toFixed()}`).toMatchObject({
+        delivered: true,
+        woke: false,
+      });
+      expect(result.timeSec).toBeLessThan(ROOMS[id].par);
+      expect(result.snores).toBeGreaterThan(1);
+      if (id === 'laundry_skylight') expect(result.bonks).toBeLessThanOrEqual(3);
+      expect(sim.complete).toBe(true);
+    }
   });
 
   it('can take a mug out of the loading door', () => {
@@ -96,7 +204,8 @@ describe('abduction rooms', () => {
     ]);
     expect(sounds).toContain('yowl');
     expect(sim.wake.value).toBeGreaterThan(25);
-    for (let i = 0; i < 240 && !sim.body.gripActive; i++) sim.update(1 / 60);
+    for (let i = 0; i < 360 && !sim.body.gripActive; i++) sim.update(1 / 60);
+    expect(sounds.filter(sound => sound === 'yowl')).toHaveLength(3);
     expect(sounds).toContain('wake');
     expect(sim.body.gripActive).toBe(true);
     const hand = sim.body.gripJoint;

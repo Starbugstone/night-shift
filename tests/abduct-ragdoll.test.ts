@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect } from '../src/abduct/ragdoll';
+import { Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect, type SwingingRect } from '../src/abduct/ragdoll';
 import { CHAIR_POSE } from '../src/abduct/rooms/layout';
 
 const floor: Rect = { kind: 'rect', x: -1000, y: 846, w: 2000, h: 150, vx: 0, vy: 0 };
@@ -45,10 +45,24 @@ describe('abduction ragdoll', () => {
     expect(c.depth).toBe(3);
     expect(c.vy).toBe(140);
 
-    const movingCart: Rect = { kind: 'rect', x: 91, y: 555, w: 90, h: 140, vx: 190, vy: 0 };
+    const movingCart: Rect = { kind: 'rect', x: 91, y: 592, w: 107, h: 140, vx: 190, vy: 0 };
     const body = new Ragdoll({ ...CHAIR_POSE, neckX: 205 }, [movingCart]);
     body.beamActive = false;
     body.step();
     expect(body.impacts[0]).toBeGreaterThan(170);
+  });
+
+  it('rotates a hanging sign about the top centre, including its contact velocity', () => {
+    const contact = new Contact();
+    const sign: SwingingRect = {
+      kind: 'swingingRect', x: 300, y: 200, w: 200, h: 70, angle: Math.PI / 2, omega: 2,
+    };
+    expect(contact.find(225, 245, 10, sign)).toBe(true);
+    expect(contact.nx).toBeCloseTo(-1);
+    expect(contact.ny).toBeCloseTo(0);
+    expect(contact.depth).toBeCloseTo(5);
+    expect(contact.vx).toBeCloseTo(-90);
+    expect(contact.vy).toBeCloseTo(-140);
+    expect(contact.find(375, 245, 10, sign)).toBe(false);
   });
 });

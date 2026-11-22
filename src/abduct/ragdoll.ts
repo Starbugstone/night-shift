@@ -44,7 +44,17 @@ export interface Blade {
   omega: number;
 }
 
-export type Solid = Rect | Circle | Blade;
+export interface SwingingRect {
+  kind: 'swingingRect';
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  angle: number;
+  omega: number;
+}
+
+export type Solid = Rect | Circle | Blade | SwingingRect;
 
 export interface Pose {
   neckX: number;
@@ -59,6 +69,7 @@ export interface Pose {
   nearShin: number;
   farThigh: number;
   farShin: number;
+  pelvisRadius?: number;
 }
 
 const LENGTHS = [40, 108, 55, 53, 55, 53, 63, 64, 63, 64] as const;
@@ -128,19 +139,42 @@ export class Contact {
       return true;
     }
 
+    if (solid.kind === 'swingingRect') {
+      const dx = px - solid.x;
+      const dy = py - solid.y;
+      const cos = Math.cos(solid.angle);
+      const sin = Math.sin(solid.angle);
+      const localX = dx * cos + dy * sin;
+      const localY = -dx * sin + dy * cos;
+      const halfWidth = solid.w / 2;
+      if (!this.box(localX, localY, radius, -halfWidth, 0, halfWidth, solid.h)) return false;
+
+      const toSurface = this.depth - radius;
+      const offsetX = clamp(localX + this.nx * toSurface, -halfWidth, halfWidth);
+      const offsetY = clamp(localY + this.ny * toSurface, 0, solid.h);
+      this.vx = -solid.omega * (offsetX * sin + offsetY * cos);
+      this.vy = solid.omega * (offsetX * cos - offsetY * sin);
+      const nx = this.nx;
+      this.nx = nx * cos - this.ny * sin;
+      this.ny = nx * sin + this.ny * cos;
+      return true;
+    }
+
     this.vx = solid.vx;
     this.vy = solid.vy;
     if (solid.kind === 'circle') return this.round(px, py, solid.x, solid.y, radius + solid.r);
 
-    const right = solid.x + solid.w;
-    const bottom = solid.y + solid.h;
-    if (px < solid.x || px > right || py < solid.y || py > bottom) {
-      return this.round(px, py, clamp(px, solid.x, right), clamp(py, solid.y, bottom), radius);
+    return this.box(px, py, radius, solid.x, solid.y, solid.x + solid.w, solid.y + solid.h);
+  }
+
+  private box(px: number, py: number, radius: number, left: number, top: number, right: number, bottom: number): boolean {
+    if (px < left || px > right || py < top || py > bottom) {
+      return this.round(px, py, clamp(px, left, right), clamp(py, top, bottom), radius);
     }
 
-    const leftDist = px - solid.x;
+    const leftDist = px - left;
     const rightDist = right - px;
-    const topDist = py - solid.y;
+    const topDist = py - top;
     const bottomDist = bottom - py;
     const nearest = Math.min(leftDist, rightDist, topDist, bottomDist);
     this.nx = nearest === leftDist ? -1 : nearest === rightDist ? 1 : 0;
@@ -162,6 +196,9 @@ export class Ragdoll {
   private readonly contactY = new Float64Array(RADII.length);
   private readonly surfaceVx = new Float64Array(RADII.length);
   private readonly surfaceVy = new Float64Array(RADII.length);
+  private readonly pelvisRadius: number;
+  private readonly restHeadX: number;
+  private readonly restHeadY: number;
   readonly impacts: Float64Array;
   readonly touched: Uint8Array;
   beamX: number;
@@ -173,6 +210,7 @@ export class Ragdoll {
   gripY = 0;
 
   constructor(pose: Pose, readonly solids: readonly Solid[], private readonly dampener = false) {
+    this.pelvisRadius = pose.pelvisRadius ?? RADII[Joint.Pelvis]!;
     this.impacts = new Float64Array(solids.length);
     this.touched = new Uint8Array(solids.length);
     this.x[Joint.Neck] = pose.neckX;
@@ -190,6 +228,8 @@ export class Ragdoll {
     this.oldY.set(this.y);
     this.beamX = this.chestX;
     this.beamY = this.chestY;
+    this.restHeadX = this.x[Joint.Head]! - this.beamX;
+    this.restHeadY = this.y[Joint.Head]! - this.beamY;
   }
 
   get chestX(): number { return this.x[Joint.Neck]! * 0.65 + this.x[Joint.Pelvis]! * 0.35; }
@@ -209,7 +249,7 @@ export class Ragdoll {
     return error;
   }
 
-  step(): void {
+  step(lift = 1): void {
     const x = this.x;
     const y = this.y;
     const chestVx = (this.chestX - this.oldX[Joint.Neck]! * 0.65 - this.oldX[Joint.Pelvis]! * 0.35) / STEP;
@@ -232,8 +272,10 @@ export class Ragdoll {
           ax = pullX;
           ay = pullY + (i === Joint.Neck ? -280 : 180);
         } else if (i === Joint.Head) {
-          ax = clamp((this.beamX - x[i]!) * 8 - vx * 1.9, -1550, 1550);
-          ay = clamp((this.beamY - 72 - y[i]!) * 8 - vy * 1.9, -1550, 1550);
+          const targetX = this.beamX + this.restHeadX * (1 - lift);
+          const targetY = this.beamY + this.restHeadY * (1 - lift) - 72 * lift;
+          ax = clamp((targetX - x[i]!) * 8 - vx * 1.9, -1550, 1550);
+          ay = clamp((targetY - y[i]!) * 8 - vy * 1.9, -1550, 1550);
         } else {
           ay *= 0.55;
         }
@@ -306,7 +348,9 @@ export class Ragdoll {
         const [a, b] = BONES[i]!;
         this.collide(a, b, MIDPOINT_RADII[i]!);
       }
-      for (let i = 0; i < RADII.length; i++) this.collide(i, i, RADII[i]!);
+      for (let i = 0; i < RADII.length; i++) {
+        this.collide(i, i, i === Joint.Pelvis ? this.pelvisRadius : RADII[i]!);
+      }
     }
 
     for (let i = 0; i < RADII.length; i++) this.resolveVelocity(i);
