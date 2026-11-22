@@ -159,7 +159,7 @@ describe('level layouts', () => {
       }
       const [a, b] = m.entries;
       expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan(150);
-      expect(m.start.y).toBeGreaterThan(m.h * 0.85);
+      expect(m.start.y).toBeGreaterThan(m.h * 0.75);
       expect(m.vehicles.length).toBeGreaterThan(0);
     }
     expect(LEVELS[0]!.map.entries.map((e) => e.roomId)).toEqual(['farm_window', 'farm_chimney']);

@@ -63,6 +63,43 @@ export function steerSaucer(s: Saucer, down: boolean, dx: number, dy: number, dt
   s.y += s.vy * dt;
 }
 
+/**
+ * Power lines collide as a capsule around the straight pole-to-pole segment. The two drawn
+ * wires sit `wireGap` either side of that segment with a gentle `sag`, so the drawing never
+ * strays more than `maxDrawOffset()` px from what you actually hit.
+ */
+export const POWER_LINE = {
+  /** Fraction of SAUCER.radius used for the hit capsule. */
+  hitFrac: 0.8,
+  /** Quadratic control-point drop at mid-span (the curve itself drops half this). */
+  sag: 4,
+  /** Each wire's offset from the collision segment. */
+  wireGap: 4,
+  /** Drawn pole radius. */
+  poleR: 11,
+};
+
+/** Largest distance between a drawn wire and its collision segment. */
+export function maxWireOffset(): number {
+  return POWER_LINE.wireGap + POWER_LINE.sag / 2;
+}
+
+/**
+ * Screen-space layout of flight HUD pieces that sit over the play field (logical px), so the
+ * spawn point can be checked against them.
+ */
+export const FLIGHT_HUD = {
+  /** Tutorial pill centre y and height. */
+  tutY: 770,
+  tutH: 60,
+  /** Zib's bubble never rises above this y (three wrapped lines). */
+  zibTop: 836,
+  /** Saucer sprite size. */
+  saucer: 120,
+  /** Camera keeps the saucer this far down the screen (fraction of VIEW_H). */
+  camFrac: 0.58,
+};
+
 export function saucerSpeed(s: Saucer): number {
   return Math.hypot(s.vx, s.vy);
 }
@@ -104,6 +141,9 @@ export class SuspicionMeter {
     this.cool = 0;
   }
 }
+
+/** Entry ring radius (drawn); lock-on needs the saucer centre within LOCK.insideFrac of it. */
+export const RING_R = 60;
 
 export const LOCK = {
   time: 1,

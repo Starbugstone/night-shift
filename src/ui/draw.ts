@@ -50,12 +50,15 @@ export function text(
   align: CanvasTextAlign = 'center',
   weight = 600,
   italic = false,
+  /** Squeeze to fit this width (only if it would overflow). */
+  maxW?: number,
 ): void {
   g.font = font(size, weight, italic);
   g.textAlign = align;
   g.textBaseline = 'middle';
   g.fillStyle = color;
-  g.fillText(s, x, y);
+  if (maxW !== undefined) g.fillText(s, x, y, maxW);
+  else g.fillText(s, x, y);
 }
 
 /** Text with a thick outline (titles, captions). */

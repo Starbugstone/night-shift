@@ -183,15 +183,16 @@ export function drawSkyline(g: CanvasRenderingContext2D, t: number, baseY = VIEW
     g.lineTo(x + w + 6, baseY - h);
     g.fill();
   }
-  // a few lit windows; one flickers off now and then
+  // A few lit windows; one flickers off now and then. Kept above the bottom-left footer text
+  // (y > baseY - 50) and out of the bottom-right mute button (x 448..516, y > baseY - 92).
   const wins = [
-    [30, 70],
+    [30, 104],
     [110, 120],
-    [180, 60],
+    [180, 96],
     [280, 150],
     [360, 90],
     [440, 130],
-    [510, 70],
+    [520, 118],
   ] as const;
   for (let i = 0; i < wins.length; i++) {
     const [x, h] = wins[i]!;

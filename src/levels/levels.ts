@@ -11,7 +11,7 @@ export const LEVELS: readonly LevelDef[] = [
     location: 'Doyle Farm · Route 9',
     blurb: 'Big man. Bigger snore. Light-sleeper dog.',
     human: 'Farmer Doyle',
-    parSec: 50,
+    parSec: 42,
     memo: {
       re: 'Work Order #0001 — Farmer Doyle',
       body:
@@ -23,10 +23,11 @@ export const LEVELS: readonly LevelDef[] = [
       theme: 'farm',
       w: 1080,
       h: 1920,
-      start: { x: 540, y: 1790 },
+      start: { x: 540, y: 1600 },
       roads: [
         { dir: 'h', at: 1240, from: 0, to: 1080 },
-        { dir: 'v', at: 620, from: 700, to: 1185 },
+        // farm driveway: T-junction into the county road (overlap is painted plain)
+        { dir: 'v', at: 620, from: 700, to: 1240 },
       ],
       groundProps: [
         { key: 'flight/field_rows', kind: 'field', x: 210, y: 1570 },
@@ -55,8 +56,10 @@ export const LEVELS: readonly LevelDef[] = [
       ],
       target: { key: 'flight/farmhouse_top', kind: 'farmhouse', x: 420, y: 560 },
       entries: [
-        { roomId: 'farm_window', route: 'Window', difficulty: 'easy', x: 292, y: 610, labelSide: 'below' },
-        { roomId: 'farm_chimney', route: 'Chimney', difficulty: 'fast & risky', x: 480, y: 495, labelSide: 'above' },
+        // west bedroom window: farmhouse_top.svg local (2, 140)
+        { roomId: 'farm_window', route: 'Window', difficulty: 'easy', x: 292, y: 590, labelSide: 'below' },
+        // chimney pot: farmhouse_top.svg local (202, 31)
+        { roomId: 'farm_chimney', route: 'Chimney', difficulty: 'fast & risky', x: 492, y: 481, labelSide: 'above' },
       ],
       vehicles: [
         {
@@ -75,10 +78,14 @@ export const LEVELS: readonly LevelDef[] = [
           sweepRate: 0.9,
         },
       ],
-      dogs: [{ x: 400, y: 740, rMin: 70, rMax: 165, period: 3.2 }],
+      dogs: [{ x: 410, y: 770, rMin: 70, rMax: 165, period: 3.2 }],
       neons: [],
       powerLines: [],
-      lamps: [{ x: 560, y: 700 }],
+      // light spilling from the two lit south windows
+      lamps: [
+        { x: 332, y: 664 },
+        { x: 506, y: 664 },
+      ],
     },
   },
   {
@@ -88,7 +95,7 @@ export const LEVELS: readonly LevelDef[] = [
     location: 'Spin City Laundromat · Main St',
     blurb: 'Asleep in a rolling chair. Holding coffee.',
     human: 'Larry',
-    parSec: 60,
+    parSec: 48,
     memo: {
       re: 'Work Order #0002 — Laundromat Larry',
       body:
@@ -100,7 +107,7 @@ export const LEVELS: readonly LevelDef[] = [
       theme: 'town',
       w: 1080,
       h: 1920,
-      start: { x: 540, y: 1790 },
+      start: { x: 540, y: 1600 },
       roads: [
         { dir: 'h', at: 860, from: 0, to: 1080 },
         { dir: 'h', at: 1460, from: 0, to: 1080 },
@@ -130,8 +137,10 @@ export const LEVELS: readonly LevelDef[] = [
       ],
       target: { key: 'flight/laundromat_top', kind: 'laundromat', x: 790, y: 560 },
       entries: [
-        { roomId: 'laundry_skylight', route: 'Skylight', difficulty: 'short & risky', x: 760, y: 570, labelSide: 'below' },
-        { roomId: 'laundry_loading', route: 'Loading door', difficulty: 'long & safe', x: 870, y: 420, labelSide: 'above' },
+        // skylight: laundromat_top.svg local (148, 128)
+        { roomId: 'laundry_skylight', route: 'Skylight', difficulty: 'short & risky', x: 788, y: 568, labelSide: 'below' },
+        // north loading dock: laundromat_top.svg local (225, -4)
+        { roomId: 'laundry_loading', route: 'Loading door', difficulty: 'long & safe', x: 865, y: 436, labelSide: 'above' },
       ],
       vehicles: [
         {
@@ -151,10 +160,13 @@ export const LEVELS: readonly LevelDef[] = [
       ],
       dogs: [],
       neons: [{ x: 445, y: 655, r: 160, text: 'EAT' }],
+      // Strung along the south kerb of Main St's first block, pole to streetlight.
+      // Gaps: Main St (455..625, the short way) and the east yard (860..1080, the long way round).
       powerLines: [
-        { ax: 0, ay: 1010, bx: 400, by: 995 },
-        { ax: 680, ay: 995, bx: 1080, by: 1010 },
-        { ax: 940, ay: 455, bx: 1070, by: 330 },
+        { ax: 16, ay: 950, bx: 90, by: 950 },
+        { ax: 90, ay: 950, bx: 455, by: 950 },
+        { ax: 625, ay: 950, bx: 860, by: 950 },
+        // service drop to the diner
         { ax: 160, ay: 475, bx: 30, by: 340 },
       ],
       lamps: [

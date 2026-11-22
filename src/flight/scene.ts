@@ -10,8 +10,11 @@ import { Button } from '../ui/widgets';
 import { circleSegment, pointInCircle, pointInCone, type SegHit } from './geometry';
 import { drawDog, drawProp, drawSaucerFallback, drawVehicle, propSize } from './props';
 import {
+  FLIGHT_HUD,
   LockOn,
+  POWER_LINE,
   PathFollower,
+  RING_R,
   SAUCER,
   SUSPICION,
   SuspicionMeter,
@@ -24,9 +27,11 @@ import {
   type Saucer,
 } from './sim';
 
-const RING_R = 60;
-const SAUCER_DRAW = 120;
+const SAUCER_DRAW = FLIGHT_HUD.saucer;
 const LOCK_ANIM = 0.9;
+const ROAD_W = 120;
+/** Plain road surface, used to paint clean junctions (matches road_v/road_h asphalt). */
+const ROAD_BASE = { farm: '#6e5841', town: '#343756' } as const;
 
 interface VehicleRT {
   def: VehicleDef;
@@ -61,6 +66,8 @@ export class FlightScene implements Scene {
   private readonly lineFlash: number[];
   private readonly quit = new Button(14, 14, 64, 64, '✕', 'ghost', 30);
   private readonly speckles: Float32Array;
+  /** Wooden poles to draw: unique power-line ends that are not already a streetlight. */
+  private readonly poles: [number, number][] = [];
 
   private camX = 0;
   private camY = 0;
@@ -98,6 +105,17 @@ export class FlightScene implements Scene {
     this.spotted = opts.spotted;
     this.ringPts = this.level.map.entries.map((e) => ({ x: e.x, y: e.y }));
     this.lineFlash = this.level.map.powerLines.map(() => 0);
+    for (const l of this.level.map.powerLines) {
+      for (const [px, py] of [
+        [l.ax, l.ay],
+        [l.bx, l.by],
+      ] as const) {
+        const near = (x: number, y: number): boolean => Math.hypot(px - x, py - y) < 8;
+        if (this.poles.some(([x, y]) => near(x, y))) continue;
+        if (this.level.map.props.some((p) => p.kind === 'streetlight' && near(p.x, p.y))) continue;
+        this.poles.push([px, py]);
+      }
+    }
     // ground speckles for the no-art fallback (generated once)
     const m = this.level.map;
     let seed = m.theme === 'farm' ? 7 : 11;
@@ -151,7 +169,7 @@ export class FlightScene implements Scene {
     const s = this.saucer;
     const m = this.level.map;
     this.camX = clamp(s.x - VIEW_W / 2, 0, m.w - VIEW_W);
-    this.camY = clamp(s.y - VIEW_H * 0.58, 0, m.h - VIEW_H);
+    this.camY = clamp(s.y - VIEW_H * FLIGHT_HUD.camFrac, 0, m.h - VIEW_H);
   }
 
   private say(evt: ZibEvent, force = false): void {
@@ -249,7 +267,7 @@ export class FlightScene implements Scene {
     this.bumpCd = Math.max(0, this.bumpCd - dt);
     for (let i = 0; i < m.powerLines.length; i++) {
       const l = m.powerLines[i]!;
-      if (circleSegment(s.x, s.y, R * 0.8, l.ax, l.ay, l.bx, l.by, this.hit)) {
+      if (circleSegment(s.x, s.y, R * POWER_LINE.hitFrac, l.ax, l.ay, l.bx, l.by, this.hit)) {
         const h = this.hit;
         s.x += h.nx * h.depth;
         s.y += h.ny * h.depth;
@@ -346,7 +364,7 @@ export class FlightScene implements Scene {
     const s = this.saucer;
     const m = this.level.map;
     const tx = clamp(s.x - VIEW_W / 2 + s.vx * 0.3, 0, m.w - VIEW_W);
-    const ty = clamp(s.y - VIEW_H * 0.58 + s.vy * 0.3, 0, m.h - VIEW_H);
+    const ty = clamp(s.y - VIEW_H * FLIGHT_HUD.camFrac + s.vy * 0.3, 0, m.h - VIEW_H);
     const k = 1 - Math.exp(-5 * dt);
     this.camX += (tx - this.camX) * k;
     this.camY += (ty - this.camY) * k;
@@ -382,6 +400,7 @@ export class FlightScene implements Scene {
 
     this.drawGround(g, cx, cy);
     for (const r of m.roads) this.drawRoad(g, r);
+    this.drawJunctions(g);
     for (const p of m.groundProps) if (this.visible(p.x, p.y, 220)) drawProp(g, assets, p);
 
     // target building with a soft pulse outline
@@ -483,31 +502,34 @@ export class FlightScene implements Scene {
     }
 
     // power lines (above everything on the ground)
+    // Wires sit ±wireGap around the collision segment (offset along its normal) with a small sag.
     for (let i = 0; i < m.powerLines.length; i++) {
       const l = m.powerLines[i]!;
+      const len = Math.hypot(l.bx - l.ax, l.by - l.ay) || 1;
+      const nx = -(l.by - l.ay) / len;
+      const ny = (l.bx - l.ax) / len;
       const midx = (l.ax + l.bx) / 2;
-      const midy = (l.ay + l.by) / 2 + 14;
+      const midy = (l.ay + l.by) / 2 + POWER_LINE.sag;
       const flash = this.lineFlash[i]!;
+      g.lineWidth = 3;
+      g.strokeStyle = flash > 0 ? `rgba(255,240,150,${(0.5 + flash * 0.5).toFixed(3)})` : '#0b0818';
       for (let k = -1; k <= 1; k += 2) {
+        const ox = nx * k * POWER_LINE.wireGap;
+        const oy = ny * k * POWER_LINE.wireGap;
         g.beginPath();
-        g.moveTo(l.ax, l.ay + k * 5);
-        g.quadraticCurveTo(midx, midy + k * 5, l.bx, l.by + k * 5);
-        g.lineWidth = 3;
-        g.strokeStyle = flash > 0 ? `rgba(255,240,150,${(0.5 + flash * 0.5).toFixed(3)})` : '#0b0818';
+        g.moveTo(l.ax + ox, l.ay + oy);
+        g.quadraticCurveTo(midx + ox, midy + oy, l.bx + ox, l.by + oy);
         g.stroke();
       }
-      for (const [px, py] of [
-        [l.ax, l.ay],
-        [l.bx, l.by],
-      ] as const) {
-        g.beginPath();
-        g.arc(px, py, 11, 0, Math.PI * 2);
-        g.fillStyle = '#6b4a2e';
-        g.fill();
-        g.lineWidth = 3;
-        g.strokeStyle = C.ink;
-        g.stroke();
-      }
+    }
+    for (const [px, py] of this.poles) {
+      g.beginPath();
+      g.arc(px, py, POWER_LINE.poleR, 0, Math.PI * 2);
+      g.fillStyle = '#6b4a2e';
+      g.fill();
+      g.lineWidth = 3;
+      g.strokeStyle = C.ink;
+      g.stroke();
     }
 
     // entry rings
@@ -550,15 +572,23 @@ export class FlightScene implements Scene {
     }
   }
 
+  private roadRect(r: RoadDef): { x: number; y: number; w: number; h: number } {
+    return r.dir === 'h'
+      ? { x: r.from, y: r.at - ROAD_W / 2, w: r.to - r.from, h: ROAD_W }
+      : { x: r.at - ROAD_W / 2, y: r.from, w: ROAD_W, h: r.to - r.from };
+  }
+
+  /**
+   * Farm roads are dirt: `flight/dirt_road_h` / `flight/dirt_road_v` if an art pass provides them,
+   * otherwise drawn here. Town roads use the asphalt sprites.
+   */
   private drawRoad(g: CanvasRenderingContext2D, r: RoadDef): void {
     const farm = this.level.map.theme === 'farm';
-    const W = 120;
-    const x = r.dir === 'h' ? r.from : r.at - W / 2;
-    const y = r.dir === 'h' ? r.at - W / 2 : r.from;
-    const w = r.dir === 'h' ? r.to - r.from : W;
-    const h = r.dir === 'h' ? W : r.to - r.from;
+    const W = ROAD_W;
+    const { x, y, w, h } = this.roadRect(r);
     if (x > this.camX + VIEW_W || x + w < this.camX || y > this.camY + VIEW_H || y + h < this.camY) return;
-    const img = this.ctx.assets.get(r.dir === 'h' ? 'flight/road_h' : 'flight/road_v');
+    const key = farm ? (r.dir === 'h' ? 'flight/dirt_road_h' : 'flight/dirt_road_v') : r.dir === 'h' ? 'flight/road_h' : 'flight/road_v';
+    const img = this.ctx.assets.get(key);
     g.save();
     g.beginPath();
     g.rect(x, y, w, h);
@@ -566,22 +596,35 @@ export class FlightScene implements Scene {
     if (img) {
       if (r.dir === 'h') for (let xx = x; xx < x + w; xx += 540) g.drawImage(img, xx, y, 540.5, W);
       else for (let yy = y; yy < y + h; yy += 540) g.drawImage(img, x, yy, W, 540.5);
+    } else if (farm) {
+      drawDirtRoad(g, r.dir, x, y, w, h);
     } else {
-      g.fillStyle = farm ? '#5e4b39' : '#30304a';
+      g.fillStyle = ROAD_BASE.town;
       g.fillRect(x, y, w, h);
-      g.fillStyle = farm ? '#4c3c2d' : '#e3c35a';
-      if (farm) {
-        if (r.dir === 'h') {
-          g.fillRect(x, y + 30, w, 10);
-          g.fillRect(x, y + 80, w, 10);
-        } else {
-          g.fillRect(x + 30, y, 10, h);
-          g.fillRect(x + 80, y, 10, h);
-        }
-      } else if (r.dir === 'h') for (let xx = x + 10; xx < x + w; xx += 70) g.fillRect(xx, y + W / 2 - 3, 36, 6);
+      g.fillStyle = '#e3c35a';
+      if (r.dir === 'h') for (let xx = x + 10; xx < x + w; xx += 70) g.fillRect(xx, y + W / 2 - 3, 36, 6);
       else for (let yy = y + 10; yy < y + h; yy += 70) g.fillRect(x + W / 2 - 3, yy, 6, 36);
     }
     g.restore();
+  }
+
+  /** Paint each road crossing / T-junction as plain surface so curbs and markings don't run through it. */
+  private drawJunctions(g: CanvasRenderingContext2D): void {
+    const m = this.level.map;
+    g.fillStyle = m.theme === 'farm' ? ROAD_BASE.farm : ROAD_BASE.town;
+    for (const a of m.roads) {
+      if (a.dir !== 'h') continue;
+      for (const b of m.roads) {
+        if (b.dir !== 'v') continue;
+        const ra = this.roadRect(a);
+        const rb = this.roadRect(b);
+        const x0 = Math.max(ra.x, rb.x);
+        const y0 = Math.max(ra.y, rb.y);
+        const x1 = Math.min(ra.x + ra.w, rb.x + rb.w);
+        const y1 = Math.min(ra.y + ra.h, rb.y + rb.h);
+        if (x1 > x0 && y1 > y0) g.fillRect(x0, y0, x1 - x0, y1 - y0);
+      }
+    }
   }
 
   private drawRing(g: CanvasRenderingContext2D, i: number, t: number): void {
@@ -758,8 +801,8 @@ export class FlightScene implements Scene {
       const msg = this.tutStep === 0 ? 'Drag anywhere to fly' : this.tutStep === 1 ? 'Let go to hover' : 'Hover in a ring for 1 s to lock on';
       g.font = font(24, 800);
       const w = g.measureText(msg).width + 80;
-      const y = 770;
-      panel(g, (VIEW_W - w) / 2, y - 30, w, 60, C.mint, 30, C.ink, 3, 4);
+      const y = FLIGHT_HUD.tutY;
+      panel(g, (VIEW_W - w) / 2, y - FLIGHT_HUD.tutH / 2, w, FLIGHT_HUD.tutH, C.mint, 30, C.ink, 3, 4);
       text(g, msg, VIEW_W / 2 + 18, y + 1, 24, C.ink, 'center', 800);
       // finger glyph
       const fx = (VIEW_W - w) / 2 + 30;
@@ -770,8 +813,8 @@ export class FlightScene implements Scene {
       g.fill();
     }
 
-    // Zib bubble
-    if (this.zibT > 0) {
+    // Zib bubble (hidden behind the SPOTTED! overlay — the witness has the floor)
+    if (this.zibT > 0 && this.state !== 'spotted') {
       const a = clamp(Math.min(this.zibT * 4, (2.8 - this.zibT) * 6), 0, 1);
       const slide = rm ? 0 : (1 - a) * 30;
       g.globalAlpha = a;
@@ -817,12 +860,47 @@ export class FlightScene implements Scene {
       paragraph(g, this.caption, 70, 302, VIEW_W - 140, 20, C.paperInk, 26, 'center', 700, true);
       text(g, `Times spotted tonight: ${this.spotted + 1}`, VIEW_W / 2, 410, 17, C.muted, 'center', 800);
     }
+    // Retry prompt: a pill at the bottom, drawn over the witness so the shout bubble can't hide it.
     if (st > 0.9) {
-      const a = rm ? 1 : 0.6 + 0.4 * Math.sin(t * 5);
+      const a = rm ? 1 : 0.75 + 0.25 * Math.sin(t * 5);
+      g.font = font(26, 900);
+      const w = g.measureText('Tap to try again').width + 64;
+      panel(g, (VIEW_W - w) / 2, SPOTTED_RETRY_Y - 32, w, 64, C.ink, 32, C.mint, 3, 4);
       g.globalAlpha = a;
-      text(g, 'Tap to try again', VIEW_W / 2, 460, 24, C.mint, 'center', 900);
+      text(g, 'Tap to try again', VIEW_W / 2, SPOTTED_RETRY_Y + 1, 26, C.mint, 'center', 900);
       g.globalAlpha = 1;
     }
+  }
+}
+
+/** Centre y of the SPOTTED! retry pill (below the witness's shout bubble at rest). */
+export const SPOTTED_RETRY_Y = 884;
+
+function drawDirtRoad(g: CanvasRenderingContext2D, dir: 'h' | 'v', x: number, y: number, w: number, h: number): void {
+  const along = dir === 'h' ? w : h;
+  // (u, v) → along / across the road
+  const rect = (u: number, v: number, du: number, dv: number): void => {
+    if (dir === 'h') g.fillRect(x + u, y + v, du, dv);
+    else g.fillRect(x + v, y + u, dv, du);
+  };
+  g.fillStyle = ROAD_BASE.farm;
+  rect(0, 0, along, ROAD_W);
+  // grassy verges
+  g.fillStyle = '#4f5a3a';
+  rect(0, 0, along, 7);
+  rect(0, ROAD_W - 7, along, 7);
+  // packed wheel ruts
+  g.fillStyle = '#5a4634';
+  rect(0, 24, along, 14);
+  rect(0, ROAD_W - 38, along, 14);
+  // grass strip down the middle, patchy
+  g.fillStyle = '#56663e';
+  for (let u = 6; u < along; u += 46) rect(u, ROAD_W / 2 - 4, 28, 8);
+  // pebbles
+  g.fillStyle = '#8a7356';
+  for (let u = 17; u < along; u += 61) {
+    rect(u, 46, 4, 4);
+    rect(u + 29, 78, 5, 4);
   }
 }
 

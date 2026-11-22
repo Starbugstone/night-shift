@@ -2,6 +2,9 @@ import type { Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { outlinedText, sprite, text } from './draw';
+
+/** Moon, top-left; the logo box spans y 130..330 and its built-in saucer sits top-right. */
+export const MOON = { x: 92, y: 84, r: 40 };
 import { C } from './theme';
 import { Button, drawNightSky, drawSkyline, drawSpeaker } from './widgets';
 
@@ -32,15 +35,15 @@ export class TitleScene implements Scene {
     const rm = ctx.reducedMotion;
     drawNightSky(g, this.t, rm);
 
-    // moon
+    // moon: top-left, clear of the logo's own saucer (top-right of the logo art)
     g.fillStyle = '#f6edc9';
     g.beginPath();
-    g.arc(430, 130, 46, 0, Math.PI * 2);
+    g.arc(MOON.x, MOON.y, MOON.r, 0, Math.PI * 2);
     g.fill();
     g.fillStyle = '#e4d9ae';
     g.beginPath();
-    g.arc(415, 120, 9, 0, Math.PI * 2);
-    g.arc(446, 146, 6, 0, Math.PI * 2);
+    g.arc(MOON.x - 13, MOON.y - 9, 8, 0, Math.PI * 2);
+    g.arc(MOON.x + 14, MOON.y + 13, 5, 0, Math.PI * 2);
     g.fill();
 
     drawSkyline(g, this.t, VIEW_H);
@@ -56,20 +59,8 @@ export class TitleScene implements Scene {
     g.lineTo(sx + 90, VIEW_H - 120);
     g.lineTo(sx - 90, VIEW_H - 120);
     g.fill();
-    if (!sprite(g, ctx.assets, 'flight/saucer_top', sx, sy, 130, 130)) {
-      g.fillStyle = '#9fb3d6';
-      g.beginPath();
-      g.ellipse(sx, sy, 84, 24, 0, 0, Math.PI * 2);
-      g.fill();
-      g.strokeStyle = C.ink;
-      g.lineWidth = 4;
-      g.stroke();
-      g.fillStyle = C.mint;
-      g.beginPath();
-      g.ellipse(sx, sy - 12, 38, 28, 0, Math.PI, 0);
-      g.fill();
-      g.stroke();
-    }
+    // side-view saucer to match the side-view skyline (the flight sprite is top-down)
+    drawSideSaucer(g, sx, sy, this.t, rm);
 
     // logo
     const ly = 230 + (rm ? 0 : Math.sin(this.t * 1.3) * 4);
@@ -84,5 +75,52 @@ export class TitleScene implements Scene {
     this.mute.render(g);
     drawSpeaker(g, this.mute.x + 30, this.mute.y + 34, this.shell.save.muted, C.text);
     text(g, 'v0.1 · night shift build', 24, VIEW_H - 30, 15, 'rgba(169,162,214,0.6)', 'left', 500);
+  }
+}
+
+/** Side-on flying saucer: hull, rim lights, glass dome with Zib inside. */
+function drawSideSaucer(g: CanvasRenderingContext2D, x: number, y: number, t: number, rm: boolean): void {
+  g.lineJoin = 'round';
+  // dome
+  g.fillStyle = 'rgba(124,255,203,0.55)';
+  g.beginPath();
+  g.ellipse(x, y - 14, 36, 34, 0, Math.PI, 0);
+  g.closePath();
+  g.fill();
+  // Zib peeking
+  g.fillStyle = '#7fd27a';
+  g.beginPath();
+  g.ellipse(x, y - 30, 14, 13, 0, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = C.ink;
+  g.beginPath();
+  g.ellipse(x - 5, y - 32, 3.5, 4.5, 0, 0, Math.PI * 2);
+  g.ellipse(x + 5, y - 32, 3.5, 4.5, 0, 0, Math.PI * 2);
+  g.fill();
+  g.strokeStyle = C.ink;
+  g.lineWidth = 4;
+  g.beginPath();
+  g.ellipse(x, y - 14, 36, 34, 0, Math.PI, 0);
+  g.stroke();
+  // hull
+  g.fillStyle = '#9fb3d6';
+  g.beginPath();
+  g.ellipse(x, y, 86, 24, 0, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = '#7b8db3';
+  g.beginPath();
+  g.ellipse(x, y + 8, 70, 13, 0, 0, Math.PI);
+  g.fill();
+  g.beginPath();
+  g.ellipse(x, y, 86, 24, 0, 0, Math.PI * 2);
+  g.stroke();
+  // rim lights chase round
+  for (let i = 0; i < 7; i++) {
+    const lx = x - 60 + i * 20;
+    const on = rm ? i % 2 === 0 : Math.floor(t * 6 + i) % 3 === 0;
+    g.fillStyle = on ? C.amberHi : '#4a4470';
+    g.beginPath();
+    g.arc(lx, y + 4 - Math.abs(i - 3) * 1.5, 5, 0, Math.PI * 2);
+    g.fill();
   }
 }

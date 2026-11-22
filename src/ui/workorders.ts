@@ -154,8 +154,13 @@ export class WorkOrdersScene implements Scene {
     drawGlorb(g, assets, 414, 138, 40);
     text(g, String(save.glorbs), 440, 139, 26, C.mint, 'left', 800);
     const nr = nextRank(stars);
-    text(g, `★ ${stars}/${MAX_STARS}`, 44, 206, 22, C.amberHi, 'left', 800);
-    text(g, nr ? `Next rank at ★${nr.minStars} · ${rank.flavour}` : rank.flavour, 44, 234, 15, C.muted, 'left', 600);
+    // Left column under the rank panel stops short of the Upgrades button.
+    const colW = this.upgrades.x - 44 - 12;
+    text(g, `★ ${stars}/${MAX_STARS}`, 44, 198, 22, C.amberHi, 'left', 800);
+    if (nr) {
+      text(g, `Next rank at ★${nr.minStars}`, 44, 224, 15, C.muted, 'left', 700);
+      text(g, rank.flavour, 44, 244, 14, 'rgba(169,162,214,0.8)', 'left', 600, true, colW);
+    } else text(g, rank.flavour, 44, 232, 15, C.muted, 'left', 600, true, colW);
     this.upgrades.render(g);
 
     if (this.toastT > 0) {
