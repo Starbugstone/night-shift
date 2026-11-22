@@ -5,6 +5,7 @@ import { SPOTTED_CAPTIONS, SPOTTED_SHOUTS, ZIB_LINES, pick, type ZibEvent } from
 import { meterMultiplier } from '../levels/progress';
 import type { LevelDef, RoadDef, VehicleDef } from '../levels/types';
 import { clamp, drawPortrait, easeOutBack, fmtTime, outlinedText, panel, paragraph, roundRectPath, text, wrap } from '../ui/draw';
+import { drawVignette } from '../core/fx';
 import { C, font } from '../ui/theme';
 import { Button } from '../ui/widgets';
 import { circleSegment, pointInCircle, pointInCone, type SegHit } from './geometry';
@@ -539,6 +540,7 @@ export class FlightScene implements Scene {
     this.drawSaucer(g, t);
 
     g.restore();
+    drawVignette(g, 0.9);
     this.drawHud(g, t);
     if (this.state === 'spotted') this.drawSpotted(g, t);
   }

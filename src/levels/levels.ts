@@ -81,8 +81,9 @@ export const LEVELS: readonly LevelDef[] = [
       dogs: [{ x: 410, y: 770, rMin: 70, rMax: 165, period: 3.2 }],
       neons: [],
       powerLines: [],
-      // light spilling from the two lit south windows
+      // light spilling from the lit west bedroom window and the two south windows
       lamps: [
+        { x: 286, y: 590 },
         { x: 332, y: 664 },
         { x: 506, y: 664 },
       ],

@@ -16,6 +16,8 @@ export const ART: Record<string, ArtSpec> = {
   'flight/ground_town': { w: 540, h: 540 }, // seamless tile
   'flight/road_v': { w: 120, h: 540 }, // tiles vertically
   'flight/road_h': { w: 540, h: 120 }, // tiles horizontally
+  'flight/dirt_road_v': { w: 120, h: 540 }, // farm track, tiles vertically (edges transparent)
+  'flight/dirt_road_h': { w: 540, h: 120 }, // farm track, tiles horizontally
   'flight/farmhouse_top': { w: 260, h: 220 },
   'flight/barn_top': { w: 240, h: 260 },
   'flight/field_rows': { w: 300, h: 300 },

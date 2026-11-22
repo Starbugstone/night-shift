@@ -1,5 +1,6 @@
 import { ART, type ArtSpec } from '../art-manifest';
 import { VIEW_H, VIEW_W, type GameContext } from '../contracts';
+import { drawVignette, makeGlow } from '../core/fx';
 import { clamp, Joint, type Ragdoll } from './ragdoll';
 import type { AbductSimulation } from './simulation';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Human, type Sprite } from './rooms/layout';
@@ -13,6 +14,15 @@ const DREAMS = ['ui/dream_sheep', 'ui/dream_sandwich', 'ui/dream_taxform'] as co
 const PARTICLE_COUNT = 32;
 const HUD_HEIGHT = 106;
 const MUMBLE_FONT = '600 16px system-ui';
+
+/** A light source in a room: warm (lamp, embers) or cool (moonlight through the exit). */
+interface Light {
+  x: number;
+  y: number;
+  r: number;
+  warm: boolean;
+  flicker: boolean;
+}
 
 interface Part extends ArtSpec {
   key: string;
@@ -293,9 +303,20 @@ export class AbductView {
   private clock = '0:00';
   private measuredMumble = '';
   private mumbleWidth = 0;
+  private readonly lights: Light[] = [];
+  private warmGlow: CanvasGradient | null = null;
+  private coolGlow: CanvasGradient | null = null;
+  private mintGlow: CanvasGradient | null = null;
+  private beamGrad: CanvasGradient | null = null;
 
   constructor(private readonly sim: AbductSimulation, private readonly ctx: GameContext) {
     this.human = new HumanArt(sim.room.human, ctx);
+    for (const { sprite } of sim.room.furniture) {
+      if (sprite.key === 'room/lamp') this.lights.push({ x: sprite.x + sprite.w / 2, y: sprite.y + 26, r: 190, warm: true, flicker: false });
+      if (sprite.key === 'room/fireplace') this.lights.push({ x: sprite.x + sprite.w / 2, y: sprite.y + sprite.h - 50, r: 170, warm: true, flicker: true });
+    }
+    const { exit } = sim.room;
+    this.lights.push({ x: exit.x + exit.w / 2, y: exit.y + exit.h / 2, r: 230, warm: false, flicker: false });
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       this.particles[i * 2] = (i * 0.61803398875) % 1;
       this.particles[i * 2 + 1] = (i * 0.38196601125 + i * i * 0.013) % 1 - 0.5;
@@ -320,7 +341,17 @@ export class AbductView {
     if (!ctx.reducedMotion && sim.shake > 0) {
       g.translate(Math.sin(sim.elapsed * 94) * sim.shake * 5, Math.cos(sim.elapsed * 116) * sim.shake * 3);
     }
+    if (!this.warmGlow) {
+      this.warmGlow = makeGlow(g, '255,189,104', 0.34);
+      this.coolGlow = makeGlow(g, '150,170,255', 0.2);
+      this.mintGlow = makeGlow(g, '124,255,203', 0.4);
+      this.beamGrad = g.createLinearGradient(0, CEILING, 0, FLOOR);
+      this.beamGrad.addColorStop(0, 'rgba(124,255,203,0.42)');
+      this.beamGrad.addColorStop(0.5, 'rgba(124,255,203,0.2)');
+      this.beamGrad.addColorStop(1, 'rgba(124,255,203,0.1)');
+    }
     this.structure(g);
+    if (!sim.delivered) this.floorShadow(g);
     if (room.flue) {
       const { x, y, w, h } = room.flue;
       g.fillStyle = '#211c32';
@@ -328,7 +359,6 @@ export class AbductView {
     }
     for (const box of room.masonry ?? []) this.masonry(g, box.x, box.y, box.w, box.h);
     this.drawSprite(g, room.exit);
-    if (room.exit.key === 'room/exit_window') this.windowOpening(g, room.exit);
     this.exitMarker(g);
     for (const { sprite } of room.furniture) {
       this.suspension(g, sprite);
@@ -341,7 +371,8 @@ export class AbductView {
       this.sprite(g, key, room.cat.x, room.cat.y + room.cat.h - h, w, h);
     }
     this.hazards(g);
-    this.beam(g);
+    this.lighting(g);
+    this.beam(g, dragging);
 
     const p = sim.slurp * sim.slurp;
     g.save();
@@ -367,6 +398,7 @@ export class AbductView {
       this.reticle(g, dragging);
     }
     g.restore();
+    drawVignette(g);
     this.hud(g, tutorial);
     g.restore();
   }
@@ -393,23 +425,32 @@ export class AbductView {
     g.fillRect(LEFT_WALL, CEILING - 3, RIGHT_WALL - LEFT_WALL, 3);
   }
 
-  private windowOpening(g: CanvasRenderingContext2D, { x, y }: Sprite): void {
-    g.save();
-    g.translate(x, y);
-    g.fillStyle = '#222440';
-    g.fillRect(17, 103, 126, 67);
+  /** Soft contact shadow on the floor under the specimen; fades as they rise. */
+  private floorShadow(g: CanvasRenderingContext2D): void {
+    const { chestX, chestY } = this.sim.body;
+    const height = clamp((FLOOR - chestY) / 560, 0, 1);
+    g.fillStyle = 'rgba(10,7,28,' + (0.34 * (1 - height * 0.75)).toFixed(3) + ')';
     g.beginPath();
-    g.moveTo(17, 147);
-    g.quadraticCurveTo(47, 138, 77, 151);
-    g.quadraticCurveTo(107, 159, 143, 141);
-    g.lineTo(143, 170);
-    g.lineTo(17, 170);
-    g.closePath();
-    g.fillStyle = '#28575c';
+    g.ellipse(chestX, FLOOR - 3, 74 - height * 34, 9 - height * 4, 0, 0, Math.PI * 2);
     g.fill();
-    g.fillStyle = '#e5cc9f';
-    g.fillRect(36, 121, 2, 2);
-    g.fillRect(113, 133, 2, 2);
+  }
+
+  /** Additive pools of lamp light, ember glow and moonlight from the exit. */
+  private lighting(g: CanvasRenderingContext2D): void {
+    const t = this.sim.elapsed;
+    g.save();
+    g.globalCompositeOperation = 'lighter';
+    for (const light of this.lights) {
+      const flicker = light.flicker && !this.ctx.reducedMotion ? 0.82 + 0.18 * Math.sin(t * 9) * Math.sin(t * 5.3) : 1;
+      const k = light.r / 100;
+      g.save();
+      g.translate(light.x, light.y);
+      g.scale(k, k);
+      g.globalAlpha = flicker;
+      g.fillStyle = light.warm ? this.warmGlow! : this.coolGlow!;
+      g.fillRect(-100, -100, 200, 200);
+      g.restore();
+    }
     g.restore();
   }
 
@@ -442,17 +483,24 @@ export class AbductView {
 
   private exitMarker(g: CanvasRenderingContext2D): void {
     const zone = this.sim.room.exitZone;
+    const pulse = this.ctx.reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(this.sim.elapsed * 3.2);
     g.save();
-    g.globalAlpha = 0.61;
+    g.globalAlpha = 0.1 + pulse * 0.1;
+    g.fillStyle = MINT;
+    g.beginPath();
+    g.roundRect(zone.x, zone.y, zone.w, zone.h, 12);
+    g.fill();
+    g.globalAlpha = 0.7 + pulse * 0.3;
     g.strokeStyle = MINT;
-    g.lineWidth = 2;
+    g.lineWidth = 2.5;
     g.setLineDash(EXIT_DASHES);
     g.beginPath();
     g.roundRect(zone.x, zone.y, zone.w, zone.h, 12);
     g.stroke();
     g.setLineDash(SOLID_LINE);
-    const { exitX: x, exitY: y } = this.sim;
-    g.lineWidth = 3;
+    const { exitX: x } = this.sim;
+    const y = this.sim.exitY - pulse * 5;
+    g.lineWidth = 3.5;
     g.lineCap = 'round';
     g.beginPath();
     g.moveTo(x - 10, y + 3);
@@ -499,51 +547,85 @@ export class AbductView {
     }
   }
 
-  private beam(g: CanvasRenderingContext2D): void {
+  private beam(g: CanvasRenderingContext2D, dragging: boolean): void {
     const { body, elapsed, slurp, emitterX, exitX, exitY } = this.sim;
     const p = slurp * slurp;
     const x = body.chestX + (exitX - body.chestX) * p;
     const y = body.chestY + (exitY - body.chestY) * p;
     const spread = 59 * (1 - p);
+    const power = (1 - p) * (dragging ? 1 : 0.72);
     g.save();
-    g.beginPath();
-    g.moveTo(emitterX - 23, CEILING);
-    g.lineTo(emitterX + 23, CEILING);
-    g.lineTo(x + spread, y + 28 * (1 - p));
-    g.quadraticCurveTo(x, y + 46 * (1 - p), x - spread, y + 28 * (1 - p));
-    g.closePath();
-    g.globalAlpha = 1 - p;
-    g.fillStyle = 'rgba(105,249,178,0.14)';
-    g.fill();
-    g.strokeStyle = 'rgba(133,255,199,0.21)';
-    g.lineWidth = 1.5;
-    g.stroke();
+    g.globalCompositeOperation = 'lighter';
+    // wide soft cone, then a brighter core
+    for (let pass = 0; pass < 2; pass++) {
+      const k = pass === 0 ? 1 : 0.42;
+      g.beginPath();
+      g.moveTo(emitterX - 23 * k, CEILING);
+      g.lineTo(emitterX + 23 * k, CEILING);
+      g.lineTo(x + spread * k, y + 28 * (1 - p));
+      g.quadraticCurveTo(x, y + 46 * (1 - p), x - spread * k, y + 28 * (1 - p));
+      g.closePath();
+      g.globalAlpha = power * (pass === 0 ? 1 : 0.55);
+      g.fillStyle = this.beamGrad!;
+      g.fill();
+    }
+    // glow where the beam lands and at the emitter
+    g.globalAlpha = power;
+    g.fillStyle = this.mintGlow!;
+    g.translate(x, y + 8);
+    g.scale(0.95, 0.62);
+    g.fillRect(-100, -100, 200, 200);
+    g.scale(1 / 0.95, 1 / 0.62);
+    g.translate(emitterX - x, CEILING - y - 8);
+    g.scale(0.6, 0.3);
+    g.fillRect(-100, -100, 200, 200);
+    g.scale(1 / 0.6, 1 / 0.3);
+    g.translate(-emitterX, -CEILING);
 
     const phase = this.ctx.reducedMotion ? 0 : elapsed;
     const count = this.ctx.reducedMotion ? 12 : PARTICLE_COUNT;
     for (let i = 0; i < count; i++) {
       const t = (this.particles[i * 2]! + phase * (0.22 + (i % 3) * 0.025)) % 1;
       const offset = this.particles[i * 2 + 1]! * (43 + (spread * 2 - 43) * t);
-      g.globalAlpha = (0.23 + (1 - t) * 0.35) * (1 - p);
+      g.globalAlpha = (0.3 + (1 - t) * 0.5) * (1 - p);
       const size = i % 4 === 0 ? 3 : 2;
       g.fillStyle = i % 4 === 0 ? '#edffe7' : MINT;
       g.fillRect(emitterX + (x - emitterX) * t + offset, CEILING + (y - CEILING) * t, size, size);
     }
     g.globalAlpha = 1;
-    ellipse(g, emitterX, CEILING - 12, 38, 10, '#596683', '#9ba0c1');
+    g.globalCompositeOperation = 'source-over';
+    g.lineWidth = 3;
+    ellipse(g, emitterX, CEILING - 12, 40, 11, '#647899', INK);
+    ellipse(g, emitterX, CEILING - 15, 30, 5, '#a7b7ce');
     ellipse(g, emitterX, CEILING - 5, 23, 5, MINT);
     g.restore();
   }
 
   private reticle(g: CanvasRenderingContext2D, dragging: boolean): void {
     const { beamX, beamY } = this.sim.body;
-    const radius = dragging ? 17 : 13;
-    g.lineWidth = 3.5;
-    ellipse(g, beamX, beamY, radius, radius, '#80ffbd24', INK);
-    g.lineWidth = 1.5;
-    ellipse(g, beamX, beamY, radius, radius, '#80ffbd18', MINT);
-    g.fillStyle = MINT;
-    g.fillRect(beamX - 2, beamY - 2, 4, 4);
+    const radius = dragging ? 24 : 19;
+    const spin = this.ctx.reducedMotion ? 0 : this.sim.elapsed * 1.4;
+    g.save();
+    g.translate(beamX, beamY);
+    g.lineCap = 'round';
+    for (let pass = 0; pass < 2; pass++) {
+      g.lineWidth = pass === 0 ? 6 : 2.6;
+      g.strokeStyle = pass === 0 ? INK : MINT;
+      g.beginPath();
+      g.arc(0, 0, radius, 0, Math.PI * 2);
+      for (let i = 0; i < 4; i++) {
+        const a = spin + i * Math.PI / 2;
+        g.moveTo(Math.cos(a) * (radius + 4), Math.sin(a) * (radius + 4));
+        g.lineTo(Math.cos(a) * (radius + 11), Math.sin(a) * (radius + 11));
+      }
+      g.stroke();
+    }
+    g.fillStyle = dragging ? '#8effce40' : '#8effce22';
+    g.beginPath();
+    g.arc(0, 0, radius, 0, Math.PI * 2);
+    g.fill();
+    ellipse(g, 0, 0, 3.5, 3.5, MINT);
+    g.restore();
   }
 
   private sleepEffects(g: CanvasRenderingContext2D): void {
