@@ -34,6 +34,8 @@ export type SceneName =
 export interface DebugHook {
   readonly scene: string;
   readonly save: SaveData;
+  /** The live scene object, for automated test scripts only. */
+  readonly active: unknown;
   goto(name: string, arg?: unknown): void;
 }
 
@@ -239,6 +241,9 @@ export class Game implements Shell {
       },
       get save() {
         return game._save;
+      },
+      get active() {
+        return game.scenes.active;
       },
       goto(name: string, arg?: unknown) {
         const n = typeof arg === 'number' ? arg : Number(arg);

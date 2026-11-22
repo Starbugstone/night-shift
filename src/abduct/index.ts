@@ -61,5 +61,7 @@ export const createAbductScene: CreateAbductScene = (ctx, start, onDone) => {
       view.render(g, tutorial && !simulation.delivered, dragging);
     },
     dispose: endDrag,
-  };
+    /** For automated test scripts (window.__nightShift.active.debug). */
+    debug: simulation,
+  } as ReturnType<CreateAbductScene> & { debug: AbductSimulation };
 };

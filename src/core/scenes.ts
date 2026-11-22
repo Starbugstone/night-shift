@@ -12,6 +12,10 @@ interface Pending {
 export class SceneManager {
   name = 'none';
   private current: Scene | null = null;
+  /** Live scene, for debug hooks. */
+  get active(): Scene | null {
+    return this.current;
+  }
   private pending: Pending | null = null;
   private phase: 'idle' | 'out' | 'in' = 'idle';
   private t = 0;
