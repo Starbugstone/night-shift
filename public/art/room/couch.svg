@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="120" viewBox="0 0 280 120" stroke-linejoin="round" stroke-linecap="round">
+<rect x="22" y="92" width="12" height="25" rx="3" fill="#594050" stroke="#1b1433" stroke-width="3"/><rect x="244" y="92" width="12" height="25" rx="3" fill="#594050" stroke="#1b1433" stroke-width="3"/>
+<path d="M15 67Q10 45 15 27Q19 12 43 12Q61 2 88 5Q116 3 139 13Q159 1 192 5Q223 3 243 13Q264 13 264 33L259 80Z" fill="#468c89" stroke="#1b1433" stroke-width="4"/>
+<path d="M28 53q0 -26 12 -32q47 -17 90 -1l4 39Z" fill="#64c5a1" stroke="#1b1433" stroke-width="2.6"/>
+<path d="M142 58l1 -35q37 -20 95 -3q10 4 12 34Z" fill="#64c5a1" stroke="#1b1433" stroke-width="2.6"/>
+<path d="M14 74q12 -15 32 -14h189q24 0 33 14l-6 29q-118 12 -245 0Z" fill="#28575c" stroke="#1b1433" stroke-width="3.5"/>
+<path d="M27 61q47 -12 108 -3q9 7 1 17q-50 7 -109 1Zm116 -2q58 -8 104 0q8 7 1 16q-50 8 -105 1Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M10 47Q25 42 34 52Q39 58 35 70l2 22q-3 14 -16 13q-14 1 -15 -15L3 61q-2 -10 7 -14ZM245 57q2 -12 15 -13q17 -1 17 15l-3 33q-3 14 -18 12q-13 -1 -13 -15Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 56q7 -7 15 -2m226 0q7 -6 15 -3" fill="none" stroke="#64c5a1" stroke-width="3"/>
+</svg>

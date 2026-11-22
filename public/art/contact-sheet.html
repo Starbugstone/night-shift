@@ -1,14 +1,676 @@
-<!doctype html><html lang="en" id="top"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Field art catalogue · Night Shift</title><style>
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#17192d;color:#ffedc9;font:16px/1.4 system-ui,sans-serif}
-.wrap{width:min(1160px,calc(100% - 64px));margin:auto}.mast{background:#222440;overflow:hidden;border-top:5px solid #7CFFCB}
-.topline,.headline,.topline span,.dept,nav .wrap,header,figcaption,footer{display:flex;align-items:center}.topline,header,footer{justify-content:space-between}
-.topline{height:53px;border-bottom:1px solid #495374;color:#a7b7ce;font:12px/1.2 ui-monospace,monospace}.dept{gap:12px;color:#d8ffdf}.dept i{width:13px;height:13px;border:3px double #7CFFCB;border-radius:50%;outline:1px solid #468c89;outline-offset:2px}
-.headline{justify-content:space-between;min-height:239px}.headline h1{color:#ffedc9;font:19px/1.15 Georgia,serif;margin:0 0 24px 18px}.logo{width:370px;max-width:100%;display:block}.cast{align-self:end;display:flex;align-items:end;gap:18px;padding-right:28px}.cast img:first-child{width:152px}.cast img:last-child{width:190px}
-nav{border-block:1px solid #495374;background:#222440}nav .wrap{gap:32px;overflow:auto;min-height:44px}a{color:#7CFFCB;text-decoration:none}a:hover{text-decoration:underline}nav a{color:#e5cc9f;font:13px ui-monospace,monospace;white-space:nowrap}
-section{margin-top:42px;scroll-margin-top:18px}header{margin-bottom:17px;border-bottom:1px solid #495374;padding-bottom:13px;gap:12px}h2{font:normal clamp(29px,3vw,38px)/1.1 Georgia,serif;letter-spacing:-.025em;margin:0}header span,figcaption span,footer{color:#a7b7ce;font:12px ui-monospace,monospace}figure{margin:0;min-width:0}figcaption{padding:12px 0 3px;gap:8px;justify-content:space-between}figcaption b{font-weight:550}.scenes,.tiles{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.stage{position:relative;overflow:hidden;aspect-ratio:540/800;container-type:inline-size;background:#222440;border-radius:8px}.world{position:absolute;left:0;top:50%;width:540px;height:960px;transform-origin:0 50%;transform:translateY(-50%) scale(calc(100cqw / 540px))}
-.world img,.rig img{position:absolute;display:block}.rig,.joint{width:0;height:0;position:absolute;transform-origin:0 0}.poses{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.pose{background:#343756;border-radius:6px;height:300px;overflow:hidden;position:relative;container-type:inline-size}.posedrawing{width:272px;height:300px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(min(1,calc(100cqw / 272px)))}.poses figcaption{align-items:start;flex-direction:column}.repeat{border-radius:6px;aspect-ratio:1;background-size:calc(100% / 3) calc(100% / 3);background-repeat:repeat}.gallery{display:flex;flex-wrap:wrap;align-items:end;gap:16px 14px}.spec{flex:1 1 var(--card);max-width:100%;min-width:min(var(--card),100%);overflow:auto}.art{display:grid;place-items:center;width:100%;min-width:max-content;min-height:93px;border-radius:4px;background-color:#40435a;background-image:conic-gradient(#393d52 25%,transparent 0 50%,#393d52 0 75%,transparent 0);background-size:18px 18px}.art img{display:block;max-width:none}.spec figcaption{display:block;padding:7px 1px 1px}.spec b{display:block;color:#ffedc9;font:12px/1.4 ui-monospace,monospace}.spec span{font-size:11px}.tiles figcaption{font-family:ui-monospace,monospace;font-size:13px}footer{border-top:1px solid #495374;margin:40px 0;padding:19px 0}
-@media(min-width:1180px){.gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:4px;grid-auto-flow:row dense;column-gap:14px;row-gap:0;align-items:start}.spec{grid-column:span var(--cols);grid-row:span var(--rows);min-width:0}}
-@media(max-width:720px){.wrap{width:calc(100% - 28px)}.headline{min-height:160px}.logo{width:255px}.cast{gap:0;padding:0}.cast img:first-child{width:70px}.cast img:last-child{width:85px}.headline h1{font-size:16px;margin-left:8px}.topline{font-size:10px}.scenes,.tiles{gap:10px}nav .wrap{gap:21px}.poses{grid-template-columns:1fr 1fr}figcaption{align-items:start;flex-direction:column}.pose{height:240px}.scenes figcaption b{font-size:14px}.gallery{gap:12px}.spec figcaption{display:block}}
-@media(max-width:440px){.cast img:first-child{display:none}.topline span:last-child{max-width:120px;text-align:right}.headline{min-height:135px}header span{max-width:125px;text-align:right}.pose{height:190px}.scenes .stage{aspect-ratio:540/900}.spec{flex-basis:min(var(--card),100%)}}
-</style></head><body><div class="mast"><div class="wrap topline"><span class="dept"><i></i> Galactic Census Bureau</span><span>Abductions Dept. &nbsp; / &nbsp; Art reference</span></div><div class="wrap headline"><div><img class="logo" src="ui/logo.svg" alt="Night Shift — Abductions Dept."><h1>Field art catalogue</h1></div><div class="cast"><img src="ui/zib_portrait.svg" alt="Zib"><img src="ui/vrell_portrait.svg" alt="Vrell"></div></div></div><nav><div class="wrap"><a href="#scenes">Scenes</a><a href="#poses">Poses</a><a href="#tiles">Tiles</a><a href="#flight">Flight</a><a href="#room">Rooms</a><a href="#human">Human parts</a><a href="#ui">Interface</a></div></nav><main class="wrap"><section id="scenes"><header><h2>Scene studies</h2><span>Farm work order</span></header><div class="scenes"><figure class="scene"><div class="stage"><div class="world"><div style="position:absolute;inset:0;background:url(flight/ground_farm.svg) repeat"></div><img aria-hidden="true" alt="" src="flight/field_rows.svg" style="left:-42px;top:92px;width:258px;height:255px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/field_rows.svg" style="left:-40px;top:377px;width:215px;height:220px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/road_v.svg" style="left:345px;top:0px;width:120px;height:540px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/road_v.svg" style="left:345px;top:540px;width:120px;height:540px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/barn_top.svg" style="left:145px;top:-24px;width:182px;height:192px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/tree_top.svg" style="left:468px;top:27px;width:103px;height:101px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/haybale_top.svg" style="left:277px;top:168px;width:42px;height:42px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/haybale_top.svg" style="left:245px;top:201px;width:39px;height:39px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/tractor_top.svg" style="left:121px;top:285px;width:58px;height:83.7778px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/pickup_top.svg" style="left:371px;top:274px;width:64px;height:120px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/streetlight_top.svg" style="left:431px;top:458px;width:30px;height:30px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/tree_top.svg" style="left:462px;top:464px;width:114px;height:114px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/farmhouse_top.svg" style="left:64px;top:542px;width:259px;height:219.154px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/entry_ring.svg" style="left:154px;top:577px;width:92px;height:92px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/dog_top.svg" style="left:244px;top:762px;width:50px;height:50px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/tree_top.svg" style="left:-43px;top:746px;width:142px;height:142px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/tree_top.svg" style="left:431px;top:808px;width:162px;height:162px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="flight/saucer_top.svg" style="left:190px;top:348px;width:135px;height:135px;transform:rotate(0deg)"></div></div><figcaption><b>Approach to Doyle Farm</b><span>Overhead flight</span></figcaption></figure><figure class="scene"><div class="stage"><div class="world"><img aria-hidden="true" alt="" src="room/bg_bedroom.svg" style="left:0px;top:0px;width:540px;height:960px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="room/exit_window.svg" style="left:311px;top:188px;width:160px;height:200px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="room/hanging_plant.svg" style="left:28px;top:9px;width:90px;height:157.5px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="room/portrait_cow.svg" style="left:87px;top:405px;width:123px;height:102px;transform:rotate(-4deg)"><img aria-hidden="true" alt="" src="room/shelf.svg" style="left:301px;top:520px;width:160px;height:24px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="room/cat_sleeping.svg" style="left:338px;top:472px;width:90px;height:50px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="room/nightstand.svg" style="left:335px;top:698px;width:90px;height:110px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="room/lamp.svg" style="left:351px;top:612px;width:60px;height:90px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="room/bed.svg" style="left:21px;top:675px;width:300px;height:140px;transform:rotate(0deg)"><div class="rig" style="left:111px;top:721px;transform:rotate(-86deg) scale(0.73)"><span class="joint" style="left:-25px;top:25px;transform:rotate(17deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(-46deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(21deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(-24deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-5deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(25deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><img aria-hidden="true" alt="" src="human/doyle_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/doyle_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:21px;top:24px;transform:rotate(-15deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(49deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span></div><img aria-hidden="true" alt="" src="room/slipper.svg" style="left:163px;top:815px;width:40px;height:20px;transform:rotate(-7deg)"><img aria-hidden="true" alt="" src="ui/zzz.svg" style="left:48px;top:653px;width:29px;height:29px;transform:rotate(0deg)"></div></div><figcaption><b>Doyle’s bedroom</b><span>Window entry</span></figcaption></figure></div></section><section id="poses"><header><h2>Articulation</h2><span>Top-centre limb pivots</span></header><div class="poses"><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:136px;top:78px;transform:rotate(0deg) scale(0.9)"><span class="joint" style="left:-25px;top:25px;transform:rotate(90deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(10deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-9deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><img aria-hidden="true" alt="" src="human/doyle_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/doyle_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:21px;top:24px;transform:rotate(-90deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span></div></div></div><figcaption><b>Farmer Doyle</b><span>T-pose</span></figcaption></figure><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:80px;top:100px;transform:rotate(-47deg) scale(0.9)"><span class="joint" style="left:-25px;top:25px;transform:rotate(53deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(-66deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(38deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(54deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-41deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(77deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><img aria-hidden="true" alt="" src="human/doyle_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/doyle_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:21px;top:24px;transform:rotate(-73deg)"><img aria-hidden="true" alt="" src="human/doyle_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(-61deg)"><img aria-hidden="true" alt="" src="human/doyle_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span></div></div></div><figcaption><b>Farmer Doyle</b><span>Flopped</span></figcaption></figure><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:136px;top:78px;transform:rotate(0deg) scale(0.9)"><span class="joint" style="left:-24px;top:25px;transform:rotate(90deg)"><img aria-hidden="true" alt="" src="human/larry_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/larry_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(10deg)"><img aria-hidden="true" alt="" src="human/larry_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/larry_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-9deg)"><img aria-hidden="true" alt="" src="human/larry_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/larry_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><img aria-hidden="true" alt="" src="human/larry_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/larry_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:20px;top:24px;transform:rotate(-90deg)"><img aria-hidden="true" alt="" src="human/larry_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/larry_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span></div></div></div><figcaption><b>Laundromat Larry</b><span>T-pose</span></figcaption></figure><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:80px;top:100px;transform:rotate(-47deg) scale(0.9)"><span class="joint" style="left:-24px;top:25px;transform:rotate(53deg)"><img aria-hidden="true" alt="" src="human/larry_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(-66deg)"><img aria-hidden="true" alt="" src="human/larry_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(38deg)"><img aria-hidden="true" alt="" src="human/larry_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(54deg)"><img aria-hidden="true" alt="" src="human/larry_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-41deg)"><img aria-hidden="true" alt="" src="human/larry_upper_leg.svg" style="left:-16.0px;top:-4px;width:32px;height:70px;transform:rotate(0deg)"><span class="joint" style="top:57px;transform:rotate(77deg)"><img aria-hidden="true" alt="" src="human/larry_lower_leg.svg" style="left:-15.0px;top:-4px;width:30px;height:72px;transform:rotate(0deg)"></span></span><img aria-hidden="true" alt="" src="human/larry_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img aria-hidden="true" alt="" src="human/larry_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:20px;top:24px;transform:rotate(-73deg)"><img aria-hidden="true" alt="" src="human/larry_upper_arm.svg" style="left:-13.0px;top:-4px;width:26px;height:60px;transform:rotate(0deg)"><span class="joint" style="top:49px;transform:rotate(-61deg)"><img aria-hidden="true" alt="" src="human/larry_lower_arm.svg" style="left:-12.0px;top:-4px;width:24px;height:60px;transform:rotate(0deg)"></span></span></div></div></div><figcaption><b>Laundromat Larry</b><span>Flopped</span></figcaption></figure></div></section><section id="tiles"><header><h2>Ground repeats</h2><span>3 × 3 tiles per sample</span></header><div class="tiles"><figure><div class="repeat" style="background-image:url(flight/ground_farm.svg)"></div><figcaption><b>ground_farm</b></figcaption></figure><figure><div class="repeat" style="background-image:url(flight/ground_town.svg)"></div><figcaption><b>ground_town</b></figcaption></figure></div></section><section id="flight"><header><h2>Flight</h2><span>19 sprites &nbsp; / &nbsp; Native size</span></header><div class="gallery"><figure class="spec" style="--card:165px;--cols:1;--rows:53"><div class="art"><img src="flight/saucer_top.svg" alt="flight/saucer_top" width="160" height="160"></div><figcaption><b>flight/saucer_top</b><span>160 × 160</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:43"><div class="art"><img src="flight/entry_ring.svg" alt="flight/entry_ring" width="120" height="120"></div><figcaption><b>flight/entry_ring</b><span>120 × 120</span></figcaption></figure><figure class="spec" style="--card:542px;--cols:2;--rows:148"><div class="art"><img src="flight/ground_farm.svg" alt="flight/ground_farm" width="540" height="540"></div><figcaption><b>flight/ground_farm</b><span>540 × 540</span></figcaption></figure><figure class="spec" style="--card:542px;--cols:2;--rows:148"><div class="art"><img src="flight/ground_town.svg" alt="flight/ground_town" width="540" height="540"></div><figcaption><b>flight/ground_town</b><span>540 × 540</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:148"><div class="art"><img src="flight/road_v.svg" alt="flight/road_v" width="120" height="540"></div><figcaption><b>flight/road_v</b><span>120 × 540</span></figcaption></figure><figure class="spec" style="--card:542px;--cols:2;--rows:43"><div class="art"><img src="flight/road_h.svg" alt="flight/road_h" width="540" height="120"></div><figcaption><b>flight/road_h</b><span>540 × 120</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:148"><div class="art"><img src="flight/dirt_road_v.svg" alt="flight/dirt_road_v" width="120" height="540"></div><figcaption><b>flight/dirt_road_v</b><span>120 × 540</span></figcaption></figure><figure class="spec" style="--card:542px;--cols:2;--rows:43"><div class="art"><img src="flight/dirt_road_h.svg" alt="flight/dirt_road_h" width="540" height="120"></div><figcaption><b>flight/dirt_road_h</b><span>540 × 120</span></figcaption></figure><figure class="spec" style="--card:262px;--cols:2;--rows:68"><div class="art"><img src="flight/farmhouse_top.svg" alt="flight/farmhouse_top" width="260" height="220"></div><figcaption><b>flight/farmhouse_top</b><span>260 × 220</span></figcaption></figure><figure class="spec" style="--card:242px;--cols:1;--rows:78"><div class="art"><img src="flight/barn_top.svg" alt="flight/barn_top" width="240" height="260"></div><figcaption><b>flight/barn_top</b><span>240 × 260</span></figcaption></figure><figure class="spec" style="--card:302px;--cols:2;--rows:88"><div class="art"><img src="flight/field_rows.svg" alt="flight/field_rows" width="300" height="300"></div><figcaption><b>flight/field_rows</b><span>300 × 300</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:46"><div class="art"><img src="flight/tractor_top.svg" alt="flight/tractor_top" width="90" height="130"></div><figcaption><b>flight/tractor_top</b><span>90 × 130</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:48"><div class="art"><img src="flight/tree_top.svg" alt="flight/tree_top" width="140" height="140"></div><figcaption><b>flight/tree_top</b><span>140 × 140</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="flight/haybale_top.svg" alt="flight/haybale_top" width="60" height="60"></div><figcaption><b>flight/haybale_top</b><span>60 × 60</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:51"><div class="art"><img src="flight/pickup_top.svg" alt="flight/pickup_top" width="80" height="150"></div><figcaption><b>flight/pickup_top</b><span>80 × 150</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="flight/dog_top.svg" alt="flight/dog_top" width="70" height="70"></div><figcaption><b>flight/dog_top</b><span>70 × 70</span></figcaption></figure><figure class="spec" style="--card:302px;--cols:2;--rows:73"><div class="art"><img src="flight/laundromat_top.svg" alt="flight/laundromat_top" width="300" height="240"></div><figcaption><b>flight/laundromat_top</b><span>300 × 240</span></figcaption></figure><figure class="spec" style="--card:262px;--cols:2;--rows:68"><div class="art"><img src="flight/diner_top.svg" alt="flight/diner_top" width="260" height="220"></div><figcaption><b>flight/diner_top</b><span>260 × 220</span></figcaption></figure><figure class="spec" style="--card:202px;--cols:1;--rows:58"><div class="art"><img src="flight/house_top.svg" alt="flight/house_top" width="200" height="180"></div><figcaption><b>flight/house_top</b><span>200 × 180</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:56"><div class="art"><img src="flight/van_top.svg" alt="flight/van_top" width="90" height="170"></div><figcaption><b>flight/van_top</b><span>90 × 170</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="flight/streetlight_top.svg" alt="flight/streetlight_top" width="40" height="40"></div><figcaption><b>flight/streetlight_top</b><span>40 × 40</span></figcaption></figure></div></section><section id="room"><header><h2>Rooms</h2><span>25 sprites &nbsp; / &nbsp; Native size</span></header><div class="gallery"><figure class="spec" style="--card:542px;--cols:2;--rows:253"><div class="art"><img src="room/bg_bedroom.svg" alt="room/bg_bedroom" width="540" height="960"></div><figcaption><b>room/bg_bedroom</b><span>540 × 960</span></figcaption></figure><figure class="spec" style="--card:542px;--cols:2;--rows:253"><div class="art"><img src="room/bg_chimney.svg" alt="room/bg_chimney" width="540" height="960"></div><figcaption><b>room/bg_chimney</b><span>540 × 960</span></figcaption></figure><figure class="spec" style="--card:542px;--cols:2;--rows:253"><div class="art"><img src="room/bg_laundry.svg" alt="room/bg_laundry" width="540" height="960"></div><figcaption><b>room/bg_laundry</b><span>540 × 960</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:63"><div class="art"><img src="room/exit_window.svg" alt="room/exit_window" width="160" height="200"></div><figcaption><b>room/exit_window</b><span>160 × 200</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:43"><div class="art"><img src="room/exit_chimney_top.svg" alt="room/exit_chimney_top" width="140" height="120"></div><figcaption><b>room/exit_chimney_top</b><span>140 × 120</span></figcaption></figure><figure class="spec" style="--card:202px;--cols:1;--rows:37"><div class="art"><img src="room/exit_skylight.svg" alt="room/exit_skylight" width="200" height="80"></div><figcaption><b>room/exit_skylight</b><span>200 × 80</span></figcaption></figure><figure class="spec" style="--card:182px;--cols:1;--rows:73"><div class="art"><img src="room/exit_loading_door.svg" alt="room/exit_loading_door" width="180" height="240"></div><figcaption><b>room/exit_loading_door</b><span>180 × 240</span></figcaption></figure><figure class="spec" style="--card:302px;--cols:2;--rows:48"><div class="art"><img src="room/bed.svg" alt="room/bed" width="300" height="140"></div><figcaption><b>room/bed</b><span>300 × 140</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:41"><div class="art"><img src="room/nightstand.svg" alt="room/nightstand" width="90" height="110"></div><figcaption><b>room/nightstand</b><span>90 × 110</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="room/lamp.svg" alt="room/lamp" width="60" height="90"></div><figcaption><b>room/lamp</b><span>60 × 90</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:48"><div class="art"><img src="room/hanging_plant.svg" alt="room/hanging_plant" width="80" height="140"></div><figcaption><b>room/hanging_plant</b><span>80 × 140</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:38"><div class="art"><img src="room/portrait_cow.svg" alt="room/portrait_cow" width="120" height="100"></div><figcaption><b>room/portrait_cow</b><span>120 × 100</span></figcaption></figure><figure class="spec" style="--card:262px;--cols:2;--rows:68"><div class="art"><img src="room/fireplace.svg" alt="room/fireplace" width="260" height="220"></div><figcaption><b>room/fireplace</b><span>260 × 220</span></figcaption></figure><figure class="spec" style="--card:222px;--cols:1;--rows:37"><div class="art"><img src="room/pot_rack.svg" alt="room/pot_rack" width="220" height="80"></div><figcaption><b>room/pot_rack</b><span>220 × 80</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="room/shelf.svg" alt="room/shelf" width="160" height="24"></div><figcaption><b>room/shelf</b><span>160 × 24</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="room/cat_sleeping.svg" alt="room/cat_sleeping" width="90" height="50"></div><figcaption><b>room/cat_sleeping</b><span>90 × 50</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="room/cat_awake.svg" alt="room/cat_awake" width="90" height="70"></div><figcaption><b>room/cat_awake</b><span>90 × 70</span></figcaption></figure><figure class="spec" style="--card:222px;--cols:1;--rows:37"><div class="art"><img src="room/fan_blade.svg" alt="room/fan_blade" width="220" height="28"></div><figcaption><b>room/fan_blade</b><span>220 × 28</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="room/fan_hub.svg" alt="room/fan_hub" width="50" height="50"></div><figcaption><b>room/fan_hub</b><span>50 × 50</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:46"><div class="art"><img src="room/washer.svg" alt="room/washer" width="120" height="130"></div><figcaption><b>room/washer</b><span>120 × 130</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:46"><div class="art"><img src="room/towel_cart.svg" alt="room/towel_cart" width="140" height="130"></div><figcaption><b>room/towel_cart</b><span>140 × 130</span></figcaption></figure><figure class="spec" style="--card:202px;--cols:1;--rows:37"><div class="art"><img src="room/sign_no_sleeping.svg" alt="room/sign_no_sleeping" width="200" height="70"></div><figcaption><b>room/sign_no_sleeping</b><span>200 × 70</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:51"><div class="art"><img src="room/office_chair.svg" alt="room/office_chair" width="110" height="150"></div><figcaption><b>room/office_chair</b><span>110 × 150</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="room/coffee_mug.svg" alt="room/coffee_mug" width="30" height="30"></div><figcaption><b>room/coffee_mug</b><span>30 × 30</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="room/slipper.svg" alt="room/slipper" width="40" height="20"></div><figcaption><b>room/slipper</b><span>40 × 20</span></figcaption></figure></div></section><section id="human"><header><h2>Human parts</h2><span>14 sprites &nbsp; / &nbsp; Native size</span></header><div class="gallery"><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/doyle_head.svg" alt="human/doyle_head" width="70" height="80"></div><figcaption><b>human/doyle_head</b><span>70 × 80</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/doyle_head_awake.svg" alt="human/doyle_head_awake" width="70" height="80"></div><figcaption><b>human/doyle_head_awake</b><span>70 × 80</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:43"><div class="art"><img src="human/doyle_torso.svg" alt="human/doyle_torso" width="80" height="120"></div><figcaption><b>human/doyle_torso</b><span>80 × 120</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/doyle_upper_arm.svg" alt="human/doyle_upper_arm" width="26" height="60"></div><figcaption><b>human/doyle_upper_arm</b><span>26 × 60</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/doyle_lower_arm.svg" alt="human/doyle_lower_arm" width="24" height="60"></div><figcaption><b>human/doyle_lower_arm</b><span>24 × 60</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/doyle_upper_leg.svg" alt="human/doyle_upper_leg" width="32" height="70"></div><figcaption><b>human/doyle_upper_leg</b><span>32 × 70</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/doyle_lower_leg.svg" alt="human/doyle_lower_leg" width="30" height="72"></div><figcaption><b>human/doyle_lower_leg</b><span>30 × 72</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/larry_head.svg" alt="human/larry_head" width="70" height="80"></div><figcaption><b>human/larry_head</b><span>70 × 80</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/larry_head_awake.svg" alt="human/larry_head_awake" width="70" height="80"></div><figcaption><b>human/larry_head_awake</b><span>70 × 80</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:43"><div class="art"><img src="human/larry_torso.svg" alt="human/larry_torso" width="80" height="120"></div><figcaption><b>human/larry_torso</b><span>80 × 120</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/larry_upper_arm.svg" alt="human/larry_upper_arm" width="26" height="60"></div><figcaption><b>human/larry_upper_arm</b><span>26 × 60</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/larry_lower_arm.svg" alt="human/larry_lower_arm" width="24" height="60"></div><figcaption><b>human/larry_lower_arm</b><span>24 × 60</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/larry_upper_leg.svg" alt="human/larry_upper_leg" width="32" height="70"></div><figcaption><b>human/larry_upper_leg</b><span>32 × 70</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="human/larry_lower_leg.svg" alt="human/larry_lower_leg" width="30" height="72"></div><figcaption><b>human/larry_lower_leg</b><span>30 × 72</span></figcaption></figure></div></section><section id="ui"><header><h2>Interface</h2><span>14 sprites &nbsp; / &nbsp; Native size</span></header><div class="gallery"><figure class="spec" style="--card:482px;--cols:2;--rows:63"><div class="art"><img src="ui/logo.svg" alt="ui/logo" width="480" height="200"></div><figcaption><b>ui/logo</b><span>480 × 200</span></figcaption></figure><figure class="spec" style="--card:202px;--cols:1;--rows:63"><div class="art"><img src="ui/vrell_portrait.svg" alt="ui/vrell_portrait" width="200" height="200"></div><figcaption><b>ui/vrell_portrait</b><span>200 × 200</span></figcaption></figure><figure class="spec" style="--card:202px;--cols:1;--rows:63"><div class="art"><img src="ui/zib_portrait.svg" alt="ui/zib_portrait" width="200" height="200"></div><figcaption><b>ui/zib_portrait</b><span>200 × 200</span></figcaption></figure><figure class="spec" style="--card:242px;--cols:1;--rows:43"><div class="art"><img src="ui/stamp_delivered.svg" alt="ui/stamp_delivered" width="240" height="120"></div><figcaption><b>ui/stamp_delivered</b><span>240 × 120</span></figcaption></figure><figure class="spec" style="--card:242px;--cols:1;--rows:43"><div class="art"><img src="ui/stamp_failed.svg" alt="ui/stamp_failed" width="240" height="120"></div><figcaption><b>ui/stamp_failed</b><span>240 × 120</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/star_full.svg" alt="ui/star_full" width="64" height="64"></div><figcaption><b>ui/star_full</b><span>64 × 64</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/star_empty.svg" alt="ui/star_empty" width="64" height="64"></div><figcaption><b>ui/star_empty</b><span>64 × 64</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/glorb.svg" alt="ui/glorb" width="48" height="48"></div><figcaption><b>ui/glorb</b><span>48 × 48</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/dream_sheep.svg" alt="ui/dream_sheep" width="60" height="50"></div><figcaption><b>ui/dream_sheep</b><span>60 × 50</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/dream_sandwich.svg" alt="ui/dream_sandwich" width="60" height="50"></div><figcaption><b>ui/dream_sandwich</b><span>60 × 50</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/dream_taxform.svg" alt="ui/dream_taxform" width="60" height="50"></div><figcaption><b>ui/dream_taxform</b><span>60 × 50</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/zzz.svg" alt="ui/zzz" width="40" height="40"></div><figcaption><b>ui/zzz</b><span>40 × 40</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/upgrade_dampener.svg" alt="ui/upgrade_dampener" width="96" height="96"></div><figcaption><b>ui/upgrade_dampener</b><span>96 × 96</span></figcaption></figure><figure class="spec" style="--card:165px;--cols:1;--rows:37"><div class="art"><img src="ui/upgrade_hush.svg" alt="ui/upgrade_hush" width="96" height="96"></div><figcaption><b>ui/upgrade_hush</b><span>96 × 96</span></figcaption></figure></div></section><footer><a href="PALETTE.md">Palette and assembly notes ↗</a><a href="#top">Back to top ↑</a></footer></main></body></html>
+<!doctype html>
+<html lang="en" id="top"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Field art catalogue · Night Shift</title><style>
+* { box-sizing:border-box }
+html { scroll-behavior:smooth }
+body { margin:0; background:#17192d; color:#ffedc9; font:16px/1.4 system-ui,sans-serif }
+.wrap { width:min(1160px,calc(100% - 64px)); margin:auto }
+.mast { background:#222440; overflow:hidden; border-top:5px solid #7CFFCB }
+.topline,.headline,.topline span,.dept,nav .wrap,header,figcaption,footer { display:flex; align-items:center }
+.topline,header,footer { justify-content:space-between }
+.topline { height:53px; border-bottom:1px solid #495374; color:#a7b7ce; font:12px/1.2 ui-monospace,monospace }
+.dept { gap:12px; color:#d8ffdf }
+.dept i { width:13px; height:13px; border:3px double #7CFFCB; border-radius:50%; outline:1px solid #468c89; outline-offset:2px }
+.headline { justify-content:space-between; min-height:239px }
+.headline h1 { color:#ffedc9; font:19px/1.15 Georgia,serif; margin:0 0 24px 18px }
+.logo { width:370px; max-width:100%; display:block }
+.cast { align-self:end; display:flex; align-items:end; gap:18px; padding-right:28px }
+.cast img:first-child { width:152px }
+.cast img:last-child { width:190px }
+nav { border-block:1px solid #495374; background:#222440 }
+nav .wrap { gap:32px; overflow:auto; min-height:44px }
+a { color:#7CFFCB; text-decoration:none }
+a:hover { text-decoration:underline }
+nav a { color:#e5cc9f; font:13px ui-monospace,monospace; white-space:nowrap }
+section { margin-top:42px; scroll-margin-top:18px }
+header { margin-bottom:17px; border-bottom:1px solid #495374; padding-bottom:13px; gap:12px }
+h2 { font:normal clamp(29px,3vw,38px)/1.1 Georgia,serif; letter-spacing:-.025em; margin:0 }
+header span,figcaption span,footer { color:#a7b7ce; font:12px ui-monospace,monospace }
+figure { margin:0; min-width:0 }
+figcaption { padding:12px 0 3px; gap:8px; justify-content:space-between }
+figcaption b { font-weight:550 }
+.scenes,.tiles { display:grid; grid-template-columns:1fr 1fr; gap:20px }
+.stage { position:relative; overflow:hidden; aspect-ratio:540/800; container-type:inline-size; background:#222440; border-radius:8px }
+.world { position:absolute; left:0; top:50%; width:540px; height:960px; transform-origin:0 50%; transform:translateY(-50%) scale(calc(100cqw / 540px)) }
+.world img,.rig img { position:absolute; display:block }
+.rig,.joint { width:0; height:0; position:absolute; transform-origin:0 0 }
+.poses { display:grid; grid-template-columns:repeat(4,1fr); gap:12px }
+.pose { background:#343756; border-radius:6px; height:300px; overflow:hidden; position:relative; container-type:inline-size }
+.posedrawing { width:272px; height:300px; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) scale(min(1,calc(100cqw / 272px))) }
+.poses figcaption { align-items:start; flex-direction:column }
+.repeat { border-radius:6px; aspect-ratio:1; background-size:calc(100% / 3) calc(100% / 3); background-repeat:repeat }
+.gallery { display:flex; flex-wrap:wrap; align-items:end; gap:16px 14px }
+.spec { flex:1 1 var(--card); max-width:100%; min-width:min(var(--card),100%); overflow:auto }
+.art { display:grid; place-items:center; width:100%; min-width:max-content; min-height:93px; border-radius:4px; background-color:#40435a; background-image:conic-gradient(#393d52 25%,transparent 0 50%,#393d52 0 75%,transparent 0); background-size:18px 18px }
+.art img { display:block; max-width:none }
+.spec figcaption { display:block; padding:7px 1px 1px }
+.spec b { display:block; color:#ffedc9; font:12px/1.4 ui-monospace,monospace }
+.spec span { font-size:11px }
+.tiles figcaption { font-family:ui-monospace,monospace; font-size:13px }
+footer { border-top:1px solid #495374; margin:40px 0; padding:19px 0 }
+@media(max-width:720px) {
+  .wrap { width:calc(100% - 28px) }
+  .headline { min-height:160px }
+  .logo { width:255px }
+  .cast { gap:0; padding:0 }
+  .cast img:first-child { width:70px }
+  .cast img:last-child { width:85px }
+  .headline h1 { font-size:16px; margin-left:8px }
+  .topline { font-size:10px }
+  .scenes,.tiles { gap:10px }
+  nav .wrap { gap:21px }
+  .poses { grid-template-columns:1fr 1fr }
+  figcaption { align-items:start; flex-direction:column }
+  .pose { height:240px }
+  .scenes figcaption b { font-size:14px }
+  .gallery { gap:12px }
+  .spec figcaption { display:block }
+}
+@media(max-width:440px) {
+  .cast img:first-child { display:none }
+  .topline span:last-child { max-width:120px; text-align:right }
+  .headline { min-height:135px }
+  header span { max-width:125px; text-align:right }
+  .pose { height:190px }
+  .scenes .stage { aspect-ratio:540/900 }
+  .spec { flex-basis:min(var(--card),100%) }
+}
+.missing {  color:#ffbd68;  font:600 14px system-ui,sans-serif;  padding:10px }
+.art {  width:max(100%,var(--image-width));  min-width:0; }
+.spec figcaption {  position:sticky;  left:0; }
+</style></head><body>
+<div class="mast"><div class="wrap topline"><span class="dept"><i></i> Galactic Census Bureau</span><span>Abductions Dept. &nbsp; / &nbsp; Art reference</span></div><div class="wrap headline"><div><img class="logo" src="ui/logo.svg" alt="Night Shift — Abductions Dept."><h1>Field art catalogue</h1></div><div class="cast"><img src="ui/zib_portrait.svg" alt="Zib"><img src="ui/vrell_portrait.svg" alt="Vrell"></div></div></div><nav><div class="wrap"><a href="#scenes">Scenes</a><a href="#poses">Poses</a><a href="#tiles">Tiles</a><a href="#flight">Flight</a><a href="#room">Rooms</a><a href="#human">Human parts</a><a href="#ui">Interface</a></div></nav>
+<main class="wrap"><section id="scenes"><header><h2>Scene studies</h2><span>Farm work order</span></header>
+    <div class="scenes"><figure class="scene"><div class="stage"><div class="world"><div style="position:absolute;inset:0;background:url(flight/ground_farm.svg) repeat"></div><img alt="" src="flight/field_rows.svg" style="left:-42px;top:92px;width:258px;height:255px;transform:rotate(0deg)"><img alt="" src="flight/field_rows.svg" style="left:-40px;top:377px;width:215px;height:220px;transform:rotate(0deg)"><img alt="" src="flight/road_v.svg" style="left:345px;top:0px;width:120px;height:540px;transform:rotate(0deg)"><img alt="" src="flight/road_v.svg" style="left:345px;top:540px;width:120px;height:540px;transform:rotate(0deg)"><img alt="" src="flight/barn_top.svg" style="left:145px;top:-24px;width:182px;height:192px;transform:rotate(0deg)"><img alt="" src="flight/tree_top.svg" style="left:468px;top:27px;width:103px;height:101px;transform:rotate(0deg)"><img alt="" src="flight/haybale_top.svg" style="left:277px;top:168px;width:42px;height:42px;transform:rotate(0deg)"><img alt="" src="flight/haybale_top.svg" style="left:245px;top:201px;width:39px;height:39px;transform:rotate(0deg)"><img alt="" src="flight/tractor_top.svg" style="left:121px;top:285px;width:58px;height:83.7778px;transform:rotate(0deg)"><img alt="" src="flight/pickup_top.svg" style="left:371px;top:274px;width:64px;height:120px;transform:rotate(0deg)"><img alt="" src="flight/streetlight_top.svg" style="left:431px;top:458px;width:30px;height:30px;transform:rotate(0deg)"><img alt="" src="flight/tree_top.svg" style="left:462px;top:464px;width:114px;height:114px;transform:rotate(0deg)"><img alt="" src="flight/farmhouse_top.svg" style="left:64px;top:542px;width:259px;height:219.154px;transform:rotate(0deg)"><img alt="" src="flight/entry_ring.svg" style="left:154px;top:577px;width:92px;height:92px;transform:rotate(0deg)"><img alt="" src="flight/dog_top.svg" style="left:244px;top:762px;width:50px;height:50px;transform:rotate(0deg)"><img alt="" src="flight/tree_top.svg" style="left:-43px;top:746px;width:142px;height:142px;transform:rotate(0deg)"><img alt="" src="flight/tree_top.svg" style="left:431px;top:808px;width:162px;height:162px;transform:rotate(0deg)"><img alt="" src="flight/saucer_top.svg" style="left:190px;top:348px;width:135px;height:135px;transform:rotate(0deg)"></div></div>
+    <figcaption><b>Approach to Doyle Farm</b><span>Overhead flight</span></figcaption></figure><figure class="scene"><div class="stage"><div class="world"><img alt="" src="room/bg_bedroom.svg" style="left:0px;top:0px;width:540px;height:960px;transform:rotate(0deg)"><img alt="" src="room/exit_window.svg" style="left:311px;top:188px;width:160px;height:200px;transform:rotate(0deg)"><img alt="" src="room/hanging_plant.svg" style="left:28px;top:9px;width:90px;height:157.5px;transform:rotate(0deg)"><img alt="" src="room/portrait_cow.svg" style="left:87px;top:405px;width:123px;height:102px;transform:rotate(-4deg)"><img alt="" src="room/shelf.svg" style="left:301px;top:520px;width:160px;height:24px;transform:rotate(0deg)"><img alt="" src="room/cat_sleeping.svg" style="left:338px;top:472px;width:90px;height:50px;transform:rotate(0deg)"><img alt="" src="room/nightstand.svg" style="left:335px;top:698px;width:90px;height:110px;transform:rotate(0deg)"><img alt="" src="room/lamp.svg" style="left:351px;top:612px;width:60px;height:90px;transform:rotate(0deg)"><img alt="" src="room/bed.svg" style="left:21px;top:675px;width:300px;height:140px;transform:rotate(0deg)"><div class="rig" style="left:111px;top:721px;transform:rotate(-86deg) scale(0.73)">
+    <span class="joint" style="left:-25px;top:25px;transform:rotate(17deg)">
+      <img alt="" src="human/doyle_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(-46deg)">
+        <img alt="" src="human/doyle_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(21deg)">
+      <img alt="" src="human/doyle_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(-24deg)">
+        <img alt="" src="human/doyle_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-5deg)">
+      <img alt="" src="human/doyle_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(25deg)">
+        <img alt="" src="human/doyle_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><img alt="" src="human/doyle_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img alt="" src="human/doyle_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:21px;top:24px;transform:rotate(-15deg)">
+      <img alt="" src="human/doyle_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(49deg)">
+        <img alt="" src="human/doyle_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span></div><img alt="" src="room/slipper.svg" style="left:163px;top:815px;width:40px;height:20px;transform:rotate(-7deg)"><img alt="" src="ui/zzz.svg" style="left:48px;top:653px;width:29px;height:29px;transform:rotate(0deg)"></div></div>
+    <figcaption><b>Doyle’s bedroom</b><span>Window entry</span></figcaption></figure></div></section><section id="poses"><header><h2>Articulation</h2><span>Top-centre limb pivots</span></header>
+    <div class="poses"><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:136px;top:78px;transform:rotate(0deg) scale(0.9)">
+    <span class="joint" style="left:-25px;top:25px;transform:rotate(90deg)">
+      <img alt="" src="human/doyle_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(0deg)">
+        <img alt="" src="human/doyle_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(10deg)">
+      <img alt="" src="human/doyle_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(0deg)">
+        <img alt="" src="human/doyle_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-9deg)">
+      <img alt="" src="human/doyle_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(0deg)">
+        <img alt="" src="human/doyle_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><img alt="" src="human/doyle_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img alt="" src="human/doyle_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:21px;top:24px;transform:rotate(-90deg)">
+      <img alt="" src="human/doyle_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(0deg)">
+        <img alt="" src="human/doyle_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span></div></div></div><figcaption><b>Farmer Doyle</b><span>T-pose</span></figcaption></figure><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:80px;top:100px;transform:rotate(-47deg) scale(0.9)">
+    <span class="joint" style="left:-25px;top:25px;transform:rotate(53deg)">
+      <img alt="" src="human/doyle_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(-66deg)">
+        <img alt="" src="human/doyle_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(38deg)">
+      <img alt="" src="human/doyle_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(54deg)">
+        <img alt="" src="human/doyle_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-41deg)">
+      <img alt="" src="human/doyle_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(77deg)">
+        <img alt="" src="human/doyle_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><img alt="" src="human/doyle_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img alt="" src="human/doyle_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:21px;top:24px;transform:rotate(-73deg)">
+      <img alt="" src="human/doyle_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(-61deg)">
+        <img alt="" src="human/doyle_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span></div></div></div><figcaption><b>Farmer Doyle</b><span>Flopped</span></figcaption></figure><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:136px;top:78px;transform:rotate(0deg) scale(0.9)">
+    <span class="joint" style="left:-24px;top:25px;transform:rotate(90deg)">
+      <img alt="" src="human/larry_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(0deg)">
+        <img alt="" src="human/larry_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(10deg)">
+      <img alt="" src="human/larry_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(0deg)">
+        <img alt="" src="human/larry_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-9deg)">
+      <img alt="" src="human/larry_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(0deg)">
+        <img alt="" src="human/larry_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><img alt="" src="human/larry_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img alt="" src="human/larry_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:20px;top:24px;transform:rotate(-90deg)">
+      <img alt="" src="human/larry_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(0deg)">
+        <img alt="" src="human/larry_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span></div></div></div><figcaption><b>Laundromat Larry</b><span>T-pose</span></figcaption></figure><figure><div class="pose"><div class="posedrawing"><div class="rig" style="left:80px;top:100px;transform:rotate(-47deg) scale(0.9)">
+    <span class="joint" style="left:-24px;top:25px;transform:rotate(53deg)">
+      <img alt="" src="human/larry_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(-66deg)">
+        <img alt="" src="human/larry_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:-12px;top:102px;transform:rotate(38deg)">
+      <img alt="" src="human/larry_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(54deg)">
+        <img alt="" src="human/larry_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><span class="joint" style="left:11px;top:103px;transform:rotate(-41deg)">
+      <img alt="" src="human/larry_upper_leg.svg" style="left:-16px;top:-4px;width:32px;height:70px;transform:rotate(0deg)">
+      <span class="joint" style="top:57px;transform:rotate(77deg)">
+        <img alt="" src="human/larry_lower_leg.svg" style="left:-15px;top:-4px;width:30px;height:72px;transform:rotate(0deg)">
+      </span></span><img alt="" src="human/larry_torso.svg" style="left:-40px;top:-5px;width:80px;height:120px;transform:rotate(0deg)"><img alt="" src="human/larry_head.svg" style="left:-35px;top:-74px;width:70px;height:80px;transform:rotate(0deg)"><span class="joint" style="left:20px;top:24px;transform:rotate(-73deg)">
+      <img alt="" src="human/larry_upper_arm.svg" style="left:-13px;top:-4px;width:26px;height:60px;transform:rotate(0deg)">
+      <span class="joint" style="top:49px;transform:rotate(-61deg)">
+        <img alt="" src="human/larry_lower_arm.svg" style="left:-12px;top:-4px;width:24px;height:60px;transform:rotate(0deg)">
+      </span></span></div></div></div><figcaption><b>Laundromat Larry</b><span>Flopped</span></figcaption></figure></div></section>
+<section id="tiles"><header><h2>Ground repeats</h2><span>3 × 3 tiles per sample</span></header>
+    <div class="tiles"><figure><div class="repeat" style="background-image:url(flight/ground_farm.svg)"></div><figcaption><b>ground_farm</b></figcaption></figure><figure><div class="repeat" style="background-image:url(flight/ground_town.svg)"></div><figcaption><b>ground_town</b></figcaption></figure><figure><div class="repeat" style="background-image:url(flight/ground_suburb.svg)"></div><figcaption><b>ground_suburb</b></figcaption></figure><figure><div class="repeat" style="background-image:url(flight/ground_city.svg)"></div><figcaption><b>ground_city</b></figcaption></figure></div></section>
+<section id="flight"><header><h2>Flight</h2><span>57 sprites · Native size</span></header>
+    <div class="gallery"><figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:160px"><img src="flight/saucer_top.svg" alt="flight/saucer_top" loading="lazy" width="160" height="160"></div><figcaption><b>flight/saucer_top</b><span>160 × 160</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:120px"><img src="flight/entry_ring.svg" alt="flight/entry_ring" loading="lazy" width="120" height="120"></div><figcaption><b>flight/entry_ring</b><span>120 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:540px"><img src="flight/ground_farm.svg" alt="flight/ground_farm" loading="lazy" width="540" height="540"></div><figcaption><b>flight/ground_farm</b><span>540 × 540</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:540px"><img src="flight/ground_town.svg" alt="flight/ground_town" loading="lazy" width="540" height="540"></div><figcaption><b>flight/ground_town</b><span>540 × 540</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:540px"><img src="flight/road_v.svg" alt="flight/road_v" loading="lazy" width="120" height="540"></div><figcaption><b>flight/road_v</b><span>120 × 540</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:120px"><img src="flight/road_h.svg" alt="flight/road_h" loading="lazy" width="540" height="120"></div><figcaption><b>flight/road_h</b><span>540 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:540px"><img src="flight/dirt_road_v.svg" alt="flight/dirt_road_v" loading="lazy" width="120" height="540"></div><figcaption><b>flight/dirt_road_v</b><span>120 × 540</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:120px"><img src="flight/dirt_road_h.svg" alt="flight/dirt_road_h" loading="lazy" width="540" height="120"></div><figcaption><b>flight/dirt_road_h</b><span>540 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:220px"><img src="flight/farmhouse_top.svg" alt="flight/farmhouse_top" loading="lazy" width="260" height="220"></div><figcaption><b>flight/farmhouse_top</b><span>260 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:260px"><img src="flight/barn_top.svg" alt="flight/barn_top" loading="lazy" width="240" height="260"></div><figcaption><b>flight/barn_top</b><span>240 × 260</span></figcaption></figure>
+<figure class="spec" style="--card:300px;--image-width:300px">
+    <div class="art" style="min-height:300px"><img src="flight/field_rows.svg" alt="flight/field_rows" loading="lazy" width="300" height="300"></div><figcaption><b>flight/field_rows</b><span>300 × 300</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:90px">
+    <div class="art" style="min-height:130px"><img src="flight/tractor_top.svg" alt="flight/tractor_top" loading="lazy" width="90" height="130"></div><figcaption><b>flight/tractor_top</b><span>90 × 130</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:140px"><img src="flight/tree_top.svg" alt="flight/tree_top" loading="lazy" width="140" height="140"></div><figcaption><b>flight/tree_top</b><span>140 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:93px"><img src="flight/haybale_top.svg" alt="flight/haybale_top" loading="lazy" width="60" height="60"></div><figcaption><b>flight/haybale_top</b><span>60 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:150px"><img src="flight/pickup_top.svg" alt="flight/pickup_top" loading="lazy" width="80" height="150"></div><figcaption><b>flight/pickup_top</b><span>80 × 150</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="flight/dog_top.svg" alt="flight/dog_top" loading="lazy" width="70" height="70"></div><figcaption><b>flight/dog_top</b><span>70 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:300px;--image-width:300px">
+    <div class="art" style="min-height:240px"><img src="flight/laundromat_top.svg" alt="flight/laundromat_top" loading="lazy" width="300" height="240"></div><figcaption><b>flight/laundromat_top</b><span>300 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:220px"><img src="flight/diner_top.svg" alt="flight/diner_top" loading="lazy" width="260" height="220"></div><figcaption><b>flight/diner_top</b><span>260 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:180px"><img src="flight/house_top.svg" alt="flight/house_top" loading="lazy" width="200" height="180"></div><figcaption><b>flight/house_top</b><span>200 × 180</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:90px">
+    <div class="art" style="min-height:170px"><img src="flight/van_top.svg" alt="flight/van_top" loading="lazy" width="90" height="170"></div><figcaption><b>flight/van_top</b><span>90 × 170</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="flight/streetlight_top.svg" alt="flight/streetlight_top" loading="lazy" width="40" height="40"></div><figcaption><b>flight/streetlight_top</b><span>40 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:540px"><img src="flight/ground_suburb.svg" alt="flight/ground_suburb" loading="lazy" width="540" height="540"></div><figcaption><b>flight/ground_suburb</b><span>540 × 540</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:540px"><img src="flight/ground_city.svg" alt="flight/ground_city" loading="lazy" width="540" height="540"></div><figcaption><b>flight/ground_city</b><span>540 × 540</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:540px"><img src="flight/sidewalk_v.svg" alt="flight/sidewalk_v" loading="lazy" width="40" height="540"></div><figcaption><b>flight/sidewalk_v</b><span>40 × 540</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:93px"><img src="flight/sidewalk_h.svg" alt="flight/sidewalk_h" loading="lazy" width="540" height="40"></div><figcaption><b>flight/sidewalk_h</b><span>540 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:180px"><img src="flight/house_suburb_a.svg" alt="flight/house_suburb_a" loading="lazy" width="200" height="180"></div><figcaption><b>flight/house_suburb_a</b><span>200 × 180</span></figcaption></figure>
+<figure class="spec" style="--card:220px;--image-width:220px">
+    <div class="art" style="min-height:170px"><img src="flight/house_suburb_b.svg" alt="flight/house_suburb_b" loading="lazy" width="220" height="170"></div><figcaption><b>flight/house_suburb_b</b><span>220 × 170</span></figcaption></figure>
+<figure class="spec" style="--card:180px;--image-width:180px">
+    <div class="art" style="min-height:200px"><img src="flight/house_suburb_c.svg" alt="flight/house_suburb_c" loading="lazy" width="180" height="200"></div><figcaption><b>flight/house_suburb_c</b><span>180 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:220px"><img src="flight/dave_house_top.svg" alt="flight/dave_house_top" loading="lazy" width="260" height="220"></div><figcaption><b>flight/dave_house_top</b><span>260 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:200px"><img src="flight/barb_house_top.svg" alt="flight/barb_house_top" loading="lazy" width="260" height="200"></div><figcaption><b>flight/barb_house_top</b><span>260 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:300px;--image-width:300px">
+    <div class="art" style="min-height:220px"><img src="flight/gary_house_top.svg" alt="flight/gary_house_top" loading="lazy" width="300" height="220"></div><figcaption><b>flight/gary_house_top</b><span>300 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:220px;--image-width:220px">
+    <div class="art" style="min-height:190px"><img src="flight/pruitt_house_top.svg" alt="flight/pruitt_house_top" loading="lazy" width="220" height="190"></div><figcaption><b>flight/pruitt_house_top</b><span>220 × 190</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:100px"><img src="flight/pool_top.svg" alt="flight/pool_top" loading="lazy" width="160" height="100"></div><figcaption><b>flight/pool_top</b><span>160 × 100</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:90px">
+    <div class="art" style="min-height:93px"><img src="flight/trampoline_top.svg" alt="flight/trampoline_top" loading="lazy" width="90" height="90"></div><figcaption><b>flight/trampoline_top</b><span>90 × 90</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="flight/sprinkler_top.svg" alt="flight/sprinkler_top" loading="lazy" width="40" height="40"></div><figcaption><b>flight/sprinkler_top</b><span>40 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="flight/porch_light_top.svg" alt="flight/porch_light_top" loading="lazy" width="30" height="30"></div><figcaption><b>flight/porch_light_top</b><span>30 × 30</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:93px"><img src="flight/hedge_h.svg" alt="flight/hedge_h" loading="lazy" width="200" height="40"></div><figcaption><b>flight/hedge_h</b><span>200 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:150px"><img src="flight/police_top.svg" alt="flight/police_top" loading="lazy" width="80" height="150"></div><figcaption><b>flight/police_top</b><span>80 × 150</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:150px"><img src="flight/sedan_top.svg" alt="flight/sedan_top" loading="lazy" width="80" height="150"></div><figcaption><b>flight/sedan_top</b><span>80 × 150</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:150px"><img src="flight/taxi_top.svg" alt="flight/taxi_top" loading="lazy" width="80" height="150"></div><figcaption><b>flight/taxi_top</b><span>80 × 150</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:200px"><img src="flight/helicopter_top.svg" alt="flight/helicopter_top" loading="lazy" width="200" height="200"></div><figcaption><b>flight/helicopter_top</b><span>200 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:220px;--image-width:220px">
+    <div class="art" style="min-height:220px"><img src="flight/helicopter_rotor.svg" alt="flight/helicopter_rotor" loading="lazy" width="220" height="220"></div><figcaption><b>flight/helicopter_rotor</b><span>220 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:360px;--image-width:360px">
+    <div class="art" style="min-height:280px"><img src="flight/museum_top.svg" alt="flight/museum_top" loading="lazy" width="360" height="280"></div><figcaption><b>flight/museum_top</b><span>360 × 280</span></figcaption></figure>
+<figure class="spec" style="--card:280px;--image-width:280px">
+    <div class="art" style="min-height:240px"><img src="flight/club_top.svg" alt="flight/club_top" loading="lazy" width="280" height="240"></div><figcaption><b>flight/club_top</b><span>280 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:340px;--image-width:340px">
+    <div class="art" style="min-height:300px"><img src="flight/cityhall_top.svg" alt="flight/cityhall_top" loading="lazy" width="340" height="300"></div><figcaption><b>flight/cityhall_top</b><span>340 × 300</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:240px"><img src="flight/highrise_a.svg" alt="flight/highrise_a" loading="lazy" width="240" height="240"></div><figcaption><b>flight/highrise_a</b><span>240 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:280px"><img src="flight/highrise_b.svg" alt="flight/highrise_b" loading="lazy" width="200" height="280"></div><figcaption><b>flight/highrise_b</b><span>200 × 280</span></figcaption></figure>
+<figure class="spec" style="--card:280px;--image-width:280px">
+    <div class="art" style="min-height:200px"><img src="flight/highrise_c.svg" alt="flight/highrise_c" loading="lazy" width="280" height="200"></div><figcaption><b>flight/highrise_c</b><span>280 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="flight/office_window_lit.svg" alt="flight/office_window_lit" loading="lazy" width="40" height="24"></div><figcaption><b>flight/office_window_lit</b><span>40 × 24</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:120px"><img src="flight/crane_base.svg" alt="flight/crane_base" loading="lazy" width="120" height="120"></div><figcaption><b>flight/crane_base</b><span>120 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:520px;--image-width:520px">
+    <div class="art" style="min-height:93px"><img src="flight/crane_boom.svg" alt="flight/crane_boom" loading="lazy" width="520" height="50"></div><figcaption><b>flight/crane_boom</b><span>520 × 50</span></figcaption></figure>
+<figure class="spec" style="--card:220px;--image-width:220px">
+    <div class="art" style="min-height:93px"><img src="flight/billboard_top.svg" alt="flight/billboard_top" loading="lazy" width="220" height="50"></div><figcaption><b>flight/billboard_top</b><span>220 × 50</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="flight/security_cam_top.svg" alt="flight/security_cam_top" loading="lazy" width="40" height="40"></div><figcaption><b>flight/security_cam_top</b><span>40 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:93px"><img src="flight/pigeon_flock.svg" alt="flight/pigeon_flock" loading="lazy" width="120" height="90"></div><figcaption><b>flight/pigeon_flock</b><span>120 × 90</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:93px"><img src="flight/bat_flock.svg" alt="flight/bat_flock" loading="lazy" width="120" height="90"></div><figcaption><b>flight/bat_flock</b><span>120 × 90</span></figcaption></figure>
+<figure class="spec" style="--card:400px;--image-width:400px">
+    <div class="art" style="min-height:300px"><img src="flight/park_top.svg" alt="flight/park_top" loading="lazy" width="400" height="300"></div><figcaption><b>flight/park_top</b><span>400 × 300</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:93px"><img src="flight/tram_wire_h.svg" alt="flight/tram_wire_h" loading="lazy" width="540" height="20"></div><figcaption><b>flight/tram_wire_h</b><span>540 × 20</span></figcaption></figure></div></section>
+<section id="room"><header><h2>Rooms</h2><span>110 sprites · Native size</span></header>
+    <div class="gallery"><figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:960px"><img src="room/bg_bedroom.svg" alt="room/bg_bedroom" loading="lazy" width="540" height="960"></div><figcaption><b>room/bg_bedroom</b><span>540 × 960</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:960px"><img src="room/bg_chimney.svg" alt="room/bg_chimney" loading="lazy" width="540" height="960"></div><figcaption><b>room/bg_chimney</b><span>540 × 960</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:960px"><img src="room/bg_laundry.svg" alt="room/bg_laundry" loading="lazy" width="540" height="960"></div><figcaption><b>room/bg_laundry</b><span>540 × 960</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:200px"><img src="room/exit_window.svg" alt="room/exit_window" loading="lazy" width="160" height="200"></div><figcaption><b>room/exit_window</b><span>160 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:120px"><img src="room/exit_chimney_top.svg" alt="room/exit_chimney_top" loading="lazy" width="140" height="120"></div><figcaption><b>room/exit_chimney_top</b><span>140 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:93px"><img src="room/exit_skylight.svg" alt="room/exit_skylight" loading="lazy" width="200" height="80"></div><figcaption><b>room/exit_skylight</b><span>200 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:180px;--image-width:180px">
+    <div class="art" style="min-height:240px"><img src="room/exit_loading_door.svg" alt="room/exit_loading_door" loading="lazy" width="180" height="240"></div><figcaption><b>room/exit_loading_door</b><span>180 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:300px;--image-width:300px">
+    <div class="art" style="min-height:140px"><img src="room/bed.svg" alt="room/bed" loading="lazy" width="300" height="140"></div><figcaption><b>room/bed</b><span>300 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:90px">
+    <div class="art" style="min-height:110px"><img src="room/nightstand.svg" alt="room/nightstand" loading="lazy" width="90" height="110"></div><figcaption><b>room/nightstand</b><span>90 × 110</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:93px"><img src="room/lamp.svg" alt="room/lamp" loading="lazy" width="60" height="90"></div><figcaption><b>room/lamp</b><span>60 × 90</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:140px"><img src="room/hanging_plant.svg" alt="room/hanging_plant" loading="lazy" width="80" height="140"></div><figcaption><b>room/hanging_plant</b><span>80 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:100px"><img src="room/portrait_cow.svg" alt="room/portrait_cow" loading="lazy" width="120" height="100"></div><figcaption><b>room/portrait_cow</b><span>120 × 100</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:220px"><img src="room/fireplace.svg" alt="room/fireplace" loading="lazy" width="260" height="220"></div><figcaption><b>room/fireplace</b><span>260 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:220px;--image-width:220px">
+    <div class="art" style="min-height:93px"><img src="room/pot_rack.svg" alt="room/pot_rack" loading="lazy" width="220" height="80"></div><figcaption><b>room/pot_rack</b><span>220 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:93px"><img src="room/shelf.svg" alt="room/shelf" loading="lazy" width="160" height="24"></div><figcaption><b>room/shelf</b><span>160 × 24</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:90px">
+    <div class="art" style="min-height:93px"><img src="room/cat_sleeping.svg" alt="room/cat_sleeping" loading="lazy" width="90" height="50"></div><figcaption><b>room/cat_sleeping</b><span>90 × 50</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:90px">
+    <div class="art" style="min-height:93px"><img src="room/cat_awake.svg" alt="room/cat_awake" loading="lazy" width="90" height="70"></div><figcaption><b>room/cat_awake</b><span>90 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:220px;--image-width:220px">
+    <div class="art" style="min-height:93px"><img src="room/fan_blade.svg" alt="room/fan_blade" loading="lazy" width="220" height="28"></div><figcaption><b>room/fan_blade</b><span>220 × 28</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:50px">
+    <div class="art" style="min-height:93px"><img src="room/fan_hub.svg" alt="room/fan_hub" loading="lazy" width="50" height="50"></div><figcaption><b>room/fan_hub</b><span>50 × 50</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:130px"><img src="room/washer.svg" alt="room/washer" loading="lazy" width="120" height="130"></div><figcaption><b>room/washer</b><span>120 × 130</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:130px"><img src="room/towel_cart.svg" alt="room/towel_cart" loading="lazy" width="140" height="130"></div><figcaption><b>room/towel_cart</b><span>140 × 130</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:93px"><img src="room/sign_no_sleeping.svg" alt="room/sign_no_sleeping" loading="lazy" width="200" height="70"></div><figcaption><b>room/sign_no_sleeping</b><span>200 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:110px">
+    <div class="art" style="min-height:150px"><img src="room/office_chair.svg" alt="room/office_chair" loading="lazy" width="110" height="150"></div><figcaption><b>room/office_chair</b><span>110 × 150</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="room/coffee_mug.svg" alt="room/coffee_mug" loading="lazy" width="30" height="30"></div><figcaption><b>room/coffee_mug</b><span>30 × 30</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="room/slipper.svg" alt="room/slipper" loading="lazy" width="40" height="20"></div><figcaption><b>room/slipper</b><span>40 × 20</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:93px"><img src="room/brenda_asleep.svg" alt="room/brenda_asleep" loading="lazy" width="140" height="70"></div><figcaption><b>room/brenda_asleep</b><span>140 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:93px"><img src="room/brenda_awake.svg" alt="room/brenda_awake" loading="lazy" width="140" height="90"></div><figcaption><b>room/brenda_awake</b><span>140 × 90</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:100px">
+    <div class="art" style="min-height:93px"><img src="room/biscuit_asleep.svg" alt="room/biscuit_asleep" loading="lazy" width="100" height="60"></div><figcaption><b>room/biscuit_asleep</b><span>100 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:100px">
+    <div class="art" style="min-height:93px"><img src="room/biscuit_awake.svg" alt="room/biscuit_awake" loading="lazy" width="100" height="80"></div><figcaption><b>room/biscuit_awake</b><span>100 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:190px"><img src="room/tiny_asleep.svg" alt="room/tiny_asleep" loading="lazy" width="120" height="190"></div><figcaption><b>room/tiny_asleep</b><span>120 × 190</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:200px"><img src="room/tiny_awake.svg" alt="room/tiny_awake" loading="lazy" width="120" height="200"></div><figcaption><b>room/tiny_awake</b><span>120 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_suburb_bedroom.svg" alt="room/bg_suburb_bedroom" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_suburb_bedroom</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_hallway.svg" alt="room/bg_hallway" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_hallway</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_stairwell.svg" alt="room/bg_stairwell" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_stairwell</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_attic.svg" alt="room/bg_attic" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_attic</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_living_room.svg" alt="room/bg_living_room" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_living_room</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_kitchen.svg" alt="room/bg_kitchen" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_kitchen</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_utility.svg" alt="room/bg_utility" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_utility</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_garage.svg" alt="room/bg_garage" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_garage</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_museum.svg" alt="room/bg_museum" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_museum</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_vault.svg" alt="room/bg_vault" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_vault</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_club.svg" alt="room/bg_club" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_club</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_duct.svg" alt="room/bg_duct" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_duct</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_office.svg" alt="room/bg_office" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_office</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_corridor.svg" alt="room/bg_corridor" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_corridor</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_clocktower.svg" alt="room/bg_clocktower" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_clocktower</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:540px;--image-width:540px">
+    <div class="art" style="min-height:720px"><img src="room/bg_shaft.svg" alt="room/bg_shaft" loading="lazy" width="540" height="720"></div><figcaption><b>room/bg_shaft</b><span>540 × 720</span></figcaption></figure>
+<figure class="spec" style="--card:320px;--image-width:320px">
+    <div class="art" style="min-height:140px"><img src="room/double_bed.svg" alt="room/double_bed" loading="lazy" width="320" height="140"></div><figcaption><b>room/double_bed</b><span>320 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:280px;--image-width:280px">
+    <div class="art" style="min-height:120px"><img src="room/couch.svg" alt="room/couch" loading="lazy" width="280" height="120"></div><figcaption><b>room/couch</b><span>280 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:100px"><img src="room/tv_static.svg" alt="room/tv_static" loading="lazy" width="120" height="100"></div><figcaption><b>room/tv_static</b><span>120 × 100</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:100px"><img src="room/fish_tank.svg" alt="room/fish_tank" loading="lazy" width="140" height="100"></div><figcaption><b>room/fish_tank</b><span>140 × 100</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="room/vase.svg" alt="room/vase" loading="lazy" width="40" height="70"></div><figcaption><b>room/vase</b><span>40 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="room/trophy.svg" alt="room/trophy" loading="lazy" width="40" height="60"></div><figcaption><b>room/trophy</b><span>40 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:93px"><img src="room/plate_stack.svg" alt="room/plate_stack" loading="lazy" width="60" height="60"></div><figcaption><b>room/plate_stack</b><span>60 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:36px">
+    <div class="art" style="min-height:93px"><img src="room/snow_globe.svg" alt="room/snow_globe" loading="lazy" width="36" height="40"></div><figcaption><b>room/snow_globe</b><span>36 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:100px">
+    <div class="art" style="min-height:120px"><img src="room/champagne_tower.svg" alt="room/champagne_tower" loading="lazy" width="100" height="120"></div><figcaption><b>room/champagne_tower</b><span>100 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:93px"><img src="room/shards.svg" alt="room/shards" loading="lazy" width="60" height="20"></div><figcaption><b>room/shards</b><span>60 × 20</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:90px">
+    <div class="art" style="min-height:260px"><img src="room/grandfather_clock.svg" alt="room/grandfather_clock" loading="lazy" width="90" height="260"></div><figcaption><b>room/grandfather_clock</b><span>90 × 260</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:140px"><img src="room/pendulum.svg" alt="room/pendulum" loading="lazy" width="40" height="140"></div><figcaption><b>room/pendulum</b><span>40 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:120px"><img src="room/hanging_bulb.svg" alt="room/hanging_bulb" loading="lazy" width="30" height="120"></div><figcaption><b>room/hanging_bulb</b><span>30 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:120px"><img src="room/chandelier.svg" alt="room/chandelier" loading="lazy" width="160" height="120"></div><figcaption><b>room/chandelier</b><span>160 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="room/robot_vacuum.svg" alt="room/robot_vacuum" loading="lazy" width="70" height="24"></div><figcaption><b>room/robot_vacuum</b><span>70 × 24</span></figcaption></figure>
+<figure class="spec" style="--card:300px;--image-width:300px">
+    <div class="art" style="min-height:300px"><img src="room/stairs.svg" alt="room/stairs" loading="lazy" width="300" height="300"></div><figcaption><b>room/stairs</b><span>300 × 300</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:240px"><img src="room/ladder.svg" alt="room/ladder" loading="lazy" width="60" height="240"></div><figcaption><b>room/ladder</b><span>60 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:220px"><img src="room/door_frame.svg" alt="room/door_frame" loading="lazy" width="120" height="220"></div><figcaption><b>room/door_frame</b><span>120 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:220px"><img src="room/bookcase.svg" alt="room/bookcase" loading="lazy" width="120" height="220"></div><figcaption><b>room/bookcase</b><span>120 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:240px"><img src="room/wardrobe.svg" alt="room/wardrobe" loading="lazy" width="140" height="240"></div><figcaption><b>room/wardrobe</b><span>140 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:110px"><img src="room/boxes.svg" alt="room/boxes" loading="lazy" width="140" height="110"></div><figcaption><b>room/boxes</b><span>140 × 110</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:100px">
+    <div class="art" style="min-height:200px"><img src="room/fridge.svg" alt="room/fridge" loading="lazy" width="100" height="200"></div><figcaption><b>room/fridge</b><span>100 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:110px"><img src="room/counter.svg" alt="room/counter" loading="lazy" width="260" height="110"></div><figcaption><b>room/counter</b><span>260 × 110</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:93px"><img src="room/hanging_pans.svg" alt="room/hanging_pans" loading="lazy" width="200" height="90"></div><figcaption><b>room/hanging_pans</b><span>200 × 90</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:130px"><img src="room/dryer.svg" alt="room/dryer" loading="lazy" width="120" height="130"></div><figcaption><b>room/dryer</b><span>120 × 130</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:93px"><img src="room/dryer_drum.svg" alt="room/dryer_drum" loading="lazy" width="80" height="80"></div><figcaption><b>room/dryer_drum</b><span>80 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:93px"><img src="room/dog_bed.svg" alt="room/dog_bed" loading="lazy" width="120" height="40"></div><figcaption><b>room/dog_bed</b><span>120 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="room/laser_emitter.svg" alt="room/laser_emitter" loading="lazy" width="24" height="36"></div><figcaption><b>room/laser_emitter</b><span>24 × 36</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="room/security_camera.svg" alt="room/security_camera" loading="lazy" width="70" height="40"></div><figcaption><b>room/security_camera</b><span>70 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:140px"><img src="room/monitor_bank.svg" alt="room/monitor_bank" loading="lazy" width="200" height="140"></div><figcaption><b>room/monitor_bank</b><span>200 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:130px"><img src="room/camping_chair.svg" alt="room/camping_chair" loading="lazy" width="120" height="130"></div><figcaption><b>room/camping_chair</b><span>120 × 130</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:110px"><img src="room/workbench.svg" alt="room/workbench" loading="lazy" width="260" height="110"></div><figcaption><b>room/workbench</b><span>260 × 110</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:93px"><img src="room/power_tools.svg" alt="room/power_tools" loading="lazy" width="200" height="80"></div><figcaption><b>room/power_tools</b><span>200 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:100px"><img src="room/work_lamp.svg" alt="room/work_lamp" loading="lazy" width="60" height="100"></div><figcaption><b>room/work_lamp</b><span>60 × 100</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:240px"><img src="room/garage_door.svg" alt="room/garage_door" loading="lazy" width="200" height="240"></div><figcaption><b>room/garage_door</b><span>200 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:200px"><img src="room/swing_door.svg" alt="room/swing_door" loading="lazy" width="30" height="200"></div><figcaption><b>room/swing_door</b><span>30 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:140px"><img src="room/dino_skull.svg" alt="room/dino_skull" loading="lazy" width="200" height="140"></div><figcaption><b>room/dino_skull</b><span>200 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:200px"><img src="room/dino_ribs.svg" alt="room/dino_ribs" loading="lazy" width="260" height="200"></div><figcaption><b>room/dino_ribs</b><span>260 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:260px"><img src="room/dino_legs.svg" alt="room/dino_legs" loading="lazy" width="160" height="260"></div><figcaption><b>room/dino_legs</b><span>160 × 260</span></figcaption></figure>
+<figure class="spec" style="--card:220px;--image-width:220px">
+    <div class="art" style="min-height:100px"><img src="room/pterodactyl.svg" alt="room/pterodactyl" loading="lazy" width="220" height="100"></div><figcaption><b>room/pterodactyl</b><span>220 × 100</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:160px"><img src="room/display_case.svg" alt="room/display_case" loading="lazy" width="140" height="160"></div><figcaption><b>room/display_case</b><span>140 × 160</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:180px"><img src="room/postcard_rack.svg" alt="room/postcard_rack" loading="lazy" width="70" height="180"></div><figcaption><b>room/postcard_rack</b><span>70 × 180</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:120px"><img src="room/security_desk.svg" alt="room/security_desk" loading="lazy" width="260" height="120"></div><figcaption><b>room/security_desk</b><span>260 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:240px"><img src="room/cargo_shutter.svg" alt="room/cargo_shutter" loading="lazy" width="200" height="240"></div><figcaption><b>room/cargo_shutter</b><span>200 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:93px"><img src="room/disco_ball.svg" alt="room/disco_ball" loading="lazy" width="80" height="80"></div><figcaption><b>room/disco_ball</b><span>80 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:110px">
+    <div class="art" style="min-height:220px"><img src="room/speaker_stack.svg" alt="room/speaker_stack" loading="lazy" width="110" height="220"></div><figcaption><b>room/speaker_stack</b><span>110 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:130px"><img src="room/dj_booth.svg" alt="room/dj_booth" loading="lazy" width="240" height="130"></div><figcaption><b>room/dj_booth</b><span>240 × 130</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:200px"><img src="room/coat_rack.svg" alt="room/coat_rack" loading="lazy" width="70" height="200"></div><figcaption><b>room/coat_rack</b><span>70 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:140px">
+    <div class="art" style="min-height:140px"><img src="room/duct_fan.svg" alt="room/duct_fan" loading="lazy" width="140" height="140"></div><figcaption><b>room/duct_fan</b><span>140 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:280px;--image-width:280px">
+    <div class="art" style="min-height:130px"><img src="room/mayor_desk.svg" alt="room/mayor_desk" loading="lazy" width="280" height="130"></div><figcaption><b>room/mayor_desk</b><span>280 × 130</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:220px"><img src="room/flag_stand.svg" alt="room/flag_stand" loading="lazy" width="60" height="220"></div><figcaption><b>room/flag_stand</b><span>60 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:150px"><img src="room/mayor_portrait.svg" alt="room/mayor_portrait" loading="lazy" width="120" height="150"></div><figcaption><b>room/mayor_portrait</b><span>120 × 150</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:150px"><img src="room/water_cooler.svg" alt="room/water_cooler" loading="lazy" width="60" height="150"></div><figcaption><b>room/water_cooler</b><span>60 × 150</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:240px"><img src="room/gear_big.svg" alt="room/gear_big" loading="lazy" width="240" height="240"></div><figcaption><b>room/gear_big</b><span>240 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:120px"><img src="room/gear_small.svg" alt="room/gear_small" loading="lazy" width="120" height="120"></div><figcaption><b>room/gear_small</b><span>120 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:260px;--image-width:260px">
+    <div class="art" style="min-height:260px"><img src="room/clock_face_back.svg" alt="room/clock_face_back" loading="lazy" width="260" height="260"></div><figcaption><b>room/clock_face_back</b><span>260 × 260</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:200px"><img src="room/elevator_car.svg" alt="room/elevator_car" loading="lazy" width="200" height="200"></div><figcaption><b>room/elevator_car</b><span>200 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:140px"><img src="room/counterweight.svg" alt="room/counterweight" loading="lazy" width="60" height="140"></div><figcaption><b>room/counterweight</b><span>60 × 140</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:93px"><img src="room/exit_roof_hatch.svg" alt="room/exit_roof_hatch" loading="lazy" width="160" height="70"></div><figcaption><b>room/exit_roof_hatch</b><span>160 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:240px"><img src="room/exit_patio_door.svg" alt="room/exit_patio_door" loading="lazy" width="160" height="240"></div><figcaption><b>room/exit_patio_door</b><span>160 × 240</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:220px"><img src="room/exit_back_door.svg" alt="room/exit_back_door" loading="lazy" width="120" height="220"></div><figcaption><b>room/exit_back_door</b><span>120 × 220</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:200px"><img src="room/exit_fire_escape.svg" alt="room/exit_fire_escape" loading="lazy" width="160" height="200"></div><figcaption><b>room/exit_fire_escape</b><span>160 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:160px">
+    <div class="art" style="min-height:93px"><img src="room/exit_vent.svg" alt="room/exit_vent" loading="lazy" width="160" height="80"></div><figcaption><b>room/exit_vent</b><span>160 × 80</span></figcaption></figure></div></section>
+<section id="human"><header><h2>Human parts</h2><span>56 sprites · Native size</span></header>
+    <div class="gallery"><figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/doyle_head.svg" alt="human/doyle_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/doyle_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/doyle_head_awake.svg" alt="human/doyle_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/doyle_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/doyle_torso.svg" alt="human/doyle_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/doyle_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/doyle_upper_arm.svg" alt="human/doyle_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/doyle_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/doyle_lower_arm.svg" alt="human/doyle_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/doyle_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/doyle_upper_leg.svg" alt="human/doyle_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/doyle_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/doyle_lower_leg.svg" alt="human/doyle_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/doyle_lower_leg</b><span>30 × 72</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/larry_head.svg" alt="human/larry_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/larry_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/larry_head_awake.svg" alt="human/larry_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/larry_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/larry_torso.svg" alt="human/larry_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/larry_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/larry_upper_arm.svg" alt="human/larry_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/larry_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/larry_lower_arm.svg" alt="human/larry_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/larry_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/larry_upper_leg.svg" alt="human/larry_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/larry_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/larry_lower_leg.svg" alt="human/larry_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/larry_lower_leg</b><span>30 × 72</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/dave_head.svg" alt="human/dave_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/dave_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/dave_head_awake.svg" alt="human/dave_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/dave_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/dave_torso.svg" alt="human/dave_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/dave_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/dave_upper_arm.svg" alt="human/dave_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/dave_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/dave_lower_arm.svg" alt="human/dave_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/dave_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/dave_upper_leg.svg" alt="human/dave_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/dave_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/dave_lower_leg.svg" alt="human/dave_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/dave_lower_leg</b><span>30 × 72</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/barb_head.svg" alt="human/barb_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/barb_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/barb_head_awake.svg" alt="human/barb_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/barb_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/barb_torso.svg" alt="human/barb_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/barb_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/barb_upper_arm.svg" alt="human/barb_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/barb_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/barb_lower_arm.svg" alt="human/barb_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/barb_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/barb_upper_leg.svg" alt="human/barb_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/barb_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/barb_lower_leg.svg" alt="human/barb_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/barb_lower_leg</b><span>30 × 72</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/gary_head.svg" alt="human/gary_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/gary_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/gary_head_awake.svg" alt="human/gary_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/gary_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/gary_torso.svg" alt="human/gary_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/gary_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/gary_upper_arm.svg" alt="human/gary_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/gary_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/gary_lower_arm.svg" alt="human/gary_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/gary_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/gary_upper_leg.svg" alt="human/gary_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/gary_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/gary_lower_leg.svg" alt="human/gary_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/gary_lower_leg</b><span>30 × 72</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/nigel_head.svg" alt="human/nigel_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/nigel_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/nigel_head_awake.svg" alt="human/nigel_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/nigel_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/nigel_torso.svg" alt="human/nigel_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/nigel_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/nigel_upper_arm.svg" alt="human/nigel_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/nigel_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/nigel_lower_arm.svg" alt="human/nigel_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/nigel_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/nigel_upper_leg.svg" alt="human/nigel_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/nigel_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/nigel_lower_leg.svg" alt="human/nigel_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/nigel_lower_leg</b><span>30 × 72</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/kev_head.svg" alt="human/kev_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/kev_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/kev_head_awake.svg" alt="human/kev_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/kev_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/kev_torso.svg" alt="human/kev_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/kev_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/kev_upper_arm.svg" alt="human/kev_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/kev_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/kev_lower_arm.svg" alt="human/kev_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/kev_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/kev_upper_leg.svg" alt="human/kev_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/kev_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/kev_lower_leg.svg" alt="human/kev_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/kev_lower_leg</b><span>30 × 72</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/mayor_head.svg" alt="human/mayor_head" loading="lazy" width="70" height="80"></div><figcaption><b>human/mayor_head</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:70px">
+    <div class="art" style="min-height:93px"><img src="human/mayor_head_awake.svg" alt="human/mayor_head_awake" loading="lazy" width="70" height="80"></div><figcaption><b>human/mayor_head_awake</b><span>70 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:120px"><img src="human/mayor_torso.svg" alt="human/mayor_torso" loading="lazy" width="80" height="120"></div><figcaption><b>human/mayor_torso</b><span>80 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:26px">
+    <div class="art" style="min-height:93px"><img src="human/mayor_upper_arm.svg" alt="human/mayor_upper_arm" loading="lazy" width="26" height="60"></div><figcaption><b>human/mayor_upper_arm</b><span>26 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:24px">
+    <div class="art" style="min-height:93px"><img src="human/mayor_lower_arm.svg" alt="human/mayor_lower_arm" loading="lazy" width="24" height="60"></div><figcaption><b>human/mayor_lower_arm</b><span>24 × 60</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:32px">
+    <div class="art" style="min-height:93px"><img src="human/mayor_upper_leg.svg" alt="human/mayor_upper_leg" loading="lazy" width="32" height="70"></div><figcaption><b>human/mayor_upper_leg</b><span>32 × 70</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:30px">
+    <div class="art" style="min-height:93px"><img src="human/mayor_lower_leg.svg" alt="human/mayor_lower_leg" loading="lazy" width="30" height="72"></div><figcaption><b>human/mayor_lower_leg</b><span>30 × 72</span></figcaption></figure></div></section>
+<section id="ui"><header><h2>Interface</h2><span>26 sprites · Native size</span></header>
+    <div class="gallery"><figure class="spec" style="--card:480px;--image-width:480px">
+    <div class="art" style="min-height:200px"><img src="ui/logo.svg" alt="ui/logo" loading="lazy" width="480" height="200"></div><figcaption><b>ui/logo</b><span>480 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:200px"><img src="ui/vrell_portrait.svg" alt="ui/vrell_portrait" loading="lazy" width="200" height="200"></div><figcaption><b>ui/vrell_portrait</b><span>200 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:200px"><img src="ui/zib_portrait.svg" alt="ui/zib_portrait" loading="lazy" width="200" height="200"></div><figcaption><b>ui/zib_portrait</b><span>200 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:120px"><img src="ui/stamp_delivered.svg" alt="ui/stamp_delivered" loading="lazy" width="240" height="120"></div><figcaption><b>ui/stamp_delivered</b><span>240 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:120px"><img src="ui/stamp_failed.svg" alt="ui/stamp_failed" loading="lazy" width="240" height="120"></div><figcaption><b>ui/stamp_failed</b><span>240 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:64px">
+    <div class="art" style="min-height:93px"><img src="ui/star_full.svg" alt="ui/star_full" loading="lazy" width="64" height="64"></div><figcaption><b>ui/star_full</b><span>64 × 64</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:64px">
+    <div class="art" style="min-height:93px"><img src="ui/star_empty.svg" alt="ui/star_empty" loading="lazy" width="64" height="64"></div><figcaption><b>ui/star_empty</b><span>64 × 64</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:48px">
+    <div class="art" style="min-height:93px"><img src="ui/glorb.svg" alt="ui/glorb" loading="lazy" width="48" height="48"></div><figcaption><b>ui/glorb</b><span>48 × 48</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:93px"><img src="ui/dream_sheep.svg" alt="ui/dream_sheep" loading="lazy" width="60" height="50"></div><figcaption><b>ui/dream_sheep</b><span>60 × 50</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:93px"><img src="ui/dream_sandwich.svg" alt="ui/dream_sandwich" loading="lazy" width="60" height="50"></div><figcaption><b>ui/dream_sandwich</b><span>60 × 50</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:60px">
+    <div class="art" style="min-height:93px"><img src="ui/dream_taxform.svg" alt="ui/dream_taxform" loading="lazy" width="60" height="50"></div><figcaption><b>ui/dream_taxform</b><span>60 × 50</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:40px">
+    <div class="art" style="min-height:93px"><img src="ui/zzz.svg" alt="ui/zzz" loading="lazy" width="40" height="40"></div><figcaption><b>ui/zzz</b><span>40 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:96px">
+    <div class="art" style="min-height:96px"><img src="ui/upgrade_dampener.svg" alt="ui/upgrade_dampener" loading="lazy" width="96" height="96"></div><figcaption><b>ui/upgrade_dampener</b><span>96 × 96</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:96px">
+    <div class="art" style="min-height:96px"><img src="ui/upgrade_hush.svg" alt="ui/upgrade_hush" loading="lazy" width="96" height="96"></div><figcaption><b>ui/upgrade_hush</b><span>96 × 96</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:120px">
+    <div class="art" style="min-height:120px"><img src="ui/sunrise_clock.svg" alt="ui/sunrise_clock" loading="lazy" width="120" height="120"></div><figcaption><b>ui/sunrise_clock</b><span>120 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:80px">
+    <div class="art" style="min-height:93px"><img src="ui/sun.svg" alt="ui/sun" loading="lazy" width="80" height="80"></div><figcaption><b>ui/sun</b><span>80 × 80</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:48px">
+    <div class="art" style="min-height:93px"><img src="ui/target_marker.svg" alt="ui/target_marker" loading="lazy" width="48" height="48"></div><figcaption><b>ui/target_marker</b><span>48 × 48</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:64px">
+    <div class="art" style="min-height:93px"><img src="ui/eye_closed.svg" alt="ui/eye_closed" loading="lazy" width="64" height="40"></div><figcaption><b>ui/eye_closed</b><span>64 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:64px">
+    <div class="art" style="min-height:93px"><img src="ui/eye_open.svg" alt="ui/eye_open" loading="lazy" width="64" height="40"></div><figcaption><b>ui/eye_open</b><span>64 × 40</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:96px">
+    <div class="art" style="min-height:96px"><img src="ui/upgrade_afterburner.svg" alt="ui/upgrade_afterburner" loading="lazy" width="96" height="96"></div><figcaption><b>ui/upgrade_afterburner</b><span>96 × 96</span></figcaption></figure>
+<figure class="spec" style="--card:165px;--image-width:96px">
+    <div class="art" style="min-height:96px"><img src="ui/upgrade_snooze.svg" alt="ui/upgrade_snooze" loading="lazy" width="96" height="96"></div><figcaption><b>ui/upgrade_snooze</b><span>96 × 96</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:200px"><img src="ui/vrell_furious.svg" alt="ui/vrell_furious" loading="lazy" width="200" height="200"></div><figcaption><b>ui/vrell_furious</b><span>200 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:200px"><img src="ui/vrell_pleased.svg" alt="ui/vrell_pleased" loading="lazy" width="200" height="200"></div><figcaption><b>ui/vrell_pleased</b><span>200 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:200px;--image-width:200px">
+    <div class="art" style="min-height:200px"><img src="ui/zib_panic.svg" alt="ui/zib_panic" loading="lazy" width="200" height="200"></div><figcaption><b>ui/zib_panic</b><span>200 × 200</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:120px"><img src="ui/stamp_sunrise.svg" alt="ui/stamp_sunrise" loading="lazy" width="240" height="120"></div><figcaption><b>ui/stamp_sunrise</b><span>240 × 120</span></figcaption></figure>
+<figure class="spec" style="--card:240px;--image-width:240px">
+    <div class="art" style="min-height:120px"><img src="ui/stamp_spotted.svg" alt="ui/stamp_spotted" loading="lazy" width="240" height="120"></div><figcaption><b>ui/stamp_spotted</b><span>240 × 120</span></figcaption></figure></div></section><footer><a href="PALETTE.md">Palette and assembly notes ↗</a><span>249 sprites · 0 missing</span><a href="#top">Back to top ↑</a></footer></main></body></html>
