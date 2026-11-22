@@ -1,5 +1,7 @@
 import { ART } from '../art-manifest';
-import { VIEW_W, type AbductResult, type Audio, type UpgradeId } from '../contracts';
+import { VIEW_H, VIEW_W, type AbductAutopilotIntent, type AbductResult, type AbductRules, type Audio, type UpgradeId } from '../contracts';
+import { AbductPilot } from './autopilot';
+import { InteriorSimulation, type InteriorFailure } from './interior';
 import { clamp, Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
@@ -7,6 +9,15 @@ import { AWAKE_SECONDS, WakeMeter } from './wake';
 export const BEAM_BOUNDS = { left: 47, top: 146, right: 491, bottom: 800 };
 const FAN_BLADE_RADIUS = 14;
 const SLURP_SECONDS = 0.56;
+const FAILURE_SECONDS = 0.85;
+const SNOOZE_AMOUNT = 40;
+const SNOOZE_SECONDS = 0.65;
+const QUIET_RULES: AbductRules = { hard: false, wakeFails: false };
+const HUMAN_NAMES = {
+  doyle: 'Farmer Doyle', larry: 'Larry', dave: 'Dentist Dave', barb: 'Coach Barb',
+  gary: 'Gary', nigel: 'Night Guard Nigel', kev: 'DJ Kev', mayor: 'Mayor Whitlock',
+} as const;
+const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
 const GRIP_STRAIN = 132;
 const HANDS = [Joint.NearHand, Joint.FarHand] as const;
 const FLAIL_JOINTS = [...HANDS, Joint.NearFoot, Joint.FarFoot] as const;
@@ -64,6 +75,18 @@ export class AbductSimulation {
   readonly exitY: number;
   readonly cart: Rect | undefined;
   readonly solids: readonly Solid[];
+  readonly interior: InteriorSimulation | undefined;
+  readonly subjectName: string;
+  readonly snoozeOwned: boolean;
+  readonly camera = { x: 0, y: 0 };
+  private readonly pilot: AbductPilot;
+  private readonly wallCount: number;
+  failure: InteriorFailure | undefined;
+  failureTime = 0;
+  snoozeUsed = false;
+  snoozePulse = 0;
+  snoozeX = 0;
+  snoozeY = 0;
   elapsed = 0;
   snores = 0;
   snoreFx = 0;
@@ -108,20 +131,22 @@ export class AbductSimulation {
     upgrades: ReadonlySet<UpgradeId>,
     private readonly audio: Audio,
     private readonly random: () => number = Math.random,
+    readonly rules: AbductRules = QUIET_RULES,
   ) {
     this.exitX = room.exitZone.x + room.exitZone.w / 2;
     this.exitY = room.exitMouthY ?? room.exitZone.y + room.exitZone.h / 2;
     this.emitterX = room.roofExit ? room.exit.x + room.exit.w / 2 : VIEW_W / 2;
-    const solids: Solid[] = [
+    const solids: Solid[] = room.interior ? room.interior.building.walls.map(wall => rectangle(wall)) : [
       rectangle({ x: LEFT_WALL - 140, y: CEILING, w: 140, h: FLOOR - CEILING }),
       rectangle({ x: RIGHT_WALL, y: CEILING, w: 140, h: FLOOR - CEILING }),
       rectangle({ x: 0, y: 3, w: VIEW_W, h: CEILING - 3 }),
       rectangle({ x: 0, y: FLOOR, w: VIEW_W, h: 180 }),
     ];
 
+    this.wallCount = solids.length;
     for (const masonry of room.masonry ?? []) solids.push(rectangle(masonry));
     for (const { sprite, colliders, grabbable } of room.furniture) {
-      const shapes = colliders ? colliders.map(area => rectangle(area)) : [rectangle(sprite, 5)];
+      const shapes = colliders ? colliders.map(area => rectangle(area)) : [rectangle(sprite, room.interior ? 0 : 5)];
       solids.push(...shapes);
       if (grabbable) this.grabSurfaces.push(...shapes);
     }
@@ -156,9 +181,20 @@ export class AbductSimulation {
       this.signIndex = solids.length;
       solids.push(this.sign);
     }
+    const hush = upgrades.has('hush_drive');
+    this.interior = room.interior
+      ? new InteriorSimulation(room.interior.building, solids, room.pose.neckX, room.pose.neckY, audio, hush)
+      : undefined;
     this.solids = solids;
     this.body = new Ragdoll(room.pose, solids, upgrades.has('beam_dampener'));
-    this.wake = new WakeMeter(upgrades.has('hush_drive'));
+    this.wake = new WakeMeter(hush, rules.hard);
+    this.subjectName = HUMAN_NAMES[room.human];
+    this.snoozeOwned = upgrades.has('snooze_ray');
+    this.pilot = new AbductPilot(room);
+    if (this.interior) {
+      this.camera.x = this.body.chestX - VIEW_W * 0.5;
+      this.camera.y = this.body.chestY - VIEW_H * 0.49;
+    }
     const item = room.item.sprite;
     this.item = { x: item.x + item.w * 0.5, y: item.y + item.h * 0.5, vx: 0, vy: 0, captured: false, side: 1, stolen: false };
     this.itemRadius = item.h * 0.5;
@@ -166,11 +202,28 @@ export class AbductSimulation {
     this.strainY = this.body.beamY;
   }
 
-  get complete(): boolean { return this.delivered && this.slurp >= 1; }
+  get complete(): boolean { return this.failure ? this.failureTime >= FAILURE_SECONDS : this.delivered && this.slurp >= 1; }
+
+  autopilot(): AbductAutopilotIntent {
+    return this.delivered || this.failure ? HOLD_INTENT : this.pilot.move(this.body, this.elapsed, this.interior);
+  }
+
+  snooze(): void {
+    if (!this.snoozeOwned || this.snoozeUsed || this.delivered || this.failure) return;
+    this.snoozeUsed = true;
+    this.wake.calm(SNOOZE_AMOUNT);
+    this.interior?.calm(SNOOZE_AMOUNT);
+    this.snoozeX = this.body.chestX;
+    this.snoozeY = this.body.chestY;
+    this.snoozePulse = 1;
+    this.audio.sfx('lullaby');
+  }
 
   moveBeam(x: number, y: number): void {
-    const beamX = clamp(x, BEAM_BOUNDS.left, BEAM_BOUNDS.right);
-    const beamY = clamp(y, BEAM_BOUNDS.top, BEAM_BOUNDS.bottom);
+    if (this.failure || this.delivered) return;
+    const a = this.interior?.building.bounds;
+    const beamX = a ? clamp(x, a.x + 21, a.x + a.w - 21) : clamp(x, BEAM_BOUNDS.left, BEAM_BOUNDS.right);
+    const beamY = a ? clamp(y, a.y + 21, a.y + a.h - 21) : clamp(y, BEAM_BOUNDS.top, BEAM_BOUNDS.bottom);
     if (beamX !== this.body.beamX || beamY !== this.body.beamY) this.beamMoved = true;
     this.body.beamX = beamX;
     this.body.beamY = beamY;
@@ -180,7 +233,9 @@ export class AbductSimulation {
     this.accumulator += clamp(dt, 0, 0.1);
     while (this.accumulator + 1e-9 >= STEP && !this.complete) {
       this.accumulator -= STEP;
-      if (this.delivered) {
+      if (this.failure) {
+        this.failureTime += STEP;
+      } else if (this.delivered) {
         this.slurp = Math.min(1, this.slurp + STEP / SLURP_SECONDS);
       } else {
         this.step();
@@ -198,11 +253,13 @@ export class AbductSimulation {
       snores: this.snores,
       itemsStolen: this.item.stolen && !aborted ? [this.room.item.name] : [],
       aborted,
+      ...(!aborted && this.failure ? { failReason: this.failure.reason, failBy: this.failure.by } : {}),
     };
   }
 
   private step(): void {
     this.elapsed += STEP;
+    this.snoozePulse = Math.max(0, this.snoozePulse - STEP / SNOOZE_SECONDS);
     this.wake.tick(STEP, this.body.gripActive);
     this.catCooldown = Math.max(0, this.catCooldown - STEP);
     this.catAwake = Math.max(0, this.catAwake - STEP);
@@ -212,7 +269,9 @@ export class AbductSimulation {
     this.moveHazards();
     this.updateGrip();
     if (this.beamMoved) this.lift = Math.min(1, this.lift + STEP * 2);
-    this.body.step(this.lift);
+    const interior = this.interior;
+    interior?.prepare(this.elapsed, this.body.chestX, this.body.chestY);
+    this.body.step(this.lift, interior?.draftX, interior?.draftY);
 
     if (this.sign && this.body.impacts[this.signIndex]! > 55) {
       this.sign.omega = clamp(this.sign.omega + this.body.impacts[this.signIndex]! * 0.004, -1.5, 1.5);
@@ -228,19 +287,36 @@ export class AbductSimulation {
 
     let speed = 0;
     let hardest = -1;
+    let wallContact = false;
     for (let i = 0; i < this.body.impacts.length; i++) {
+      if (i < this.wallCount && this.body.touched[i]) wallContact = true;
       if (i !== this.catIndex && this.body.impacts[i]! > speed) {
         speed = this.body.impacts[i]!;
         hardest = i;
       }
     }
+    if (interior) {
+      const wasAwake = this.wake.awake > 0;
+      this.wake.noise(interior.step(this.body, this.elapsed, wallContact));
+      this.onWake(wasAwake);
+      if (interior.failure) this.failure ??= interior.failure;
+      if (this.failure) return;
+      if (interior.strain > 0.55 && speed < 167) {
+        this.onBonk(167, false, this.body.chestX, this.body.chestY);
+      }
+      const smooth = 1 - Math.exp(-STEP * 5.4);
+      this.camera.x += (this.body.chestX - VIEW_W * 0.5 - this.camera.x) * smooth;
+      this.camera.y += (this.body.chestY - VIEW_H * 0.49 - this.camera.y) * smooth;
+    }
     if (hardest >= 0) this.onBonk(speed, false, this.body.impactX[hardest]!, this.body.impactY[hardest]!);
-    else this.onBonk(0, false, 0, 0);
+    if (interior?.failure) this.failure ??= interior.failure;
+    if (this.failure) return;
 
     if (this.wake.awake === 0 && this.elapsed >= this.nextSnore) {
       this.snores++;
       this.snoreFx = 1.1;
       this.nextSnore = this.elapsed + 1.85 + this.random() * 0.65;
+      if (interior && this.snores % 5 === 0 && this.mumbleFx === 0) this.sleepTalk();
       this.audio.sfx('snore', this.room.human === 'doyle' ? 0.75 : 0.53);
     }
 
@@ -263,20 +339,33 @@ export class AbductSimulation {
     this.audio.sfx('bonk', clamp(speed / 320, 0.3, 1));
     if (speed >= 195) this.shake = clamp(speed / 300, 0.6, 1.6);
 
-    if (this.wake.awake > 0 && !wasAwake) {
-      this.wakeSeq++;
-      this.audio.sfx('wake');
-      this.mumbleFx = 0;
-      this.snoreFx = 0;
-      this.nextSnore = this.elapsed + 3.5;
-      this.grabbed = false;
-      this.flailEnds = this.elapsed + AWAKE_SECONDS;
-      this.nextFlail = this.elapsed;
-    } else if (!wasAwake && !cat && speed >= 145) {
-      this.mumble = MUMBLES[Math.floor(this.random() * MUMBLES.length)]!;
-      this.mumbleFx = 1.6;
-      this.audio.sfx('mumble');
+    this.interior?.noise((cat ? 46 : clamp((speed - 40) * 0.29, 0, 70)), x, y);
+    this.onWake(wasAwake);
+    if (this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
+  }
+
+  private sleepTalk(): void {
+    const mumbles = this.room.interior?.mumbles ?? MUMBLES;
+    this.mumble = mumbles[Math.floor(this.random() * mumbles.length)]!;
+    this.mumbleFx = 1.6;
+    this.audio.sfx('mumble');
+  }
+
+  private onWake(wasAwake: boolean): void {
+    if (this.wake.awake === 0 || wasAwake) return;
+    this.wakeSeq++;
+    this.mumbleFx = 0;
+    this.snoreFx = 0;
+    if (this.rules.wakeFails) {
+      this.failure = { reason: 'woke', by: this.subjectName };
+      this.audio.sfx('scream');
+      return;
     }
+    this.audio.sfx('wake');
+    this.nextSnore = this.elapsed + 3.5;
+    this.grabbed = false;
+    this.flailEnds = this.elapsed + AWAKE_SECONDS;
+    this.nextFlail = this.elapsed;
   }
 
   private moveHazards(): void {
@@ -363,14 +452,14 @@ export class AbductSimulation {
     const body = this.body;
     const dy = item.y - body.chestY;
     const t = clamp((item.y - CEILING) / Math.max(30, body.chestY - CEILING), 0, 1);
-    const columnX = this.emitterX + (body.chestX - this.emitterX) * t;
+    const columnX = this.interior ? body.chestX : this.emitterX + (body.chestX - this.emitterX) * t;
     if (this.beamMoved && !item.captured && dy > -115 && dy < 78 && Math.abs(item.x - columnX) < 57) {
       item.captured = true;
       item.side = item.x < body.chestX ? -1 : 1;
     }
 
     if (item.captured) {
-      const targetX = clamp(body.chestX + item.side * 32, 38, 502);
+      const targetX = this.interior ? body.chestX + item.side * 32 : clamp(body.chestX + item.side * 32, 38, 502);
       item.vx += clamp((targetX - item.x) * 23 - item.vx * 6, -1600, 1600) * STEP;
       item.vy += clamp((body.chestY + 12 - item.y) * 24 - item.vy * 6, -1600, 1600) * STEP;
     } else {
@@ -388,6 +477,6 @@ export class AbductSimulation {
       item.vx = (item.vx - inward * 1.2 * c.nx) * 0.85;
       item.vy = (item.vy - inward * 1.2 * c.ny) * 0.85;
     }
-    item.y = Math.min(item.y, FLOOR - this.itemRadius);
+    if (!this.interior) item.y = Math.min(item.y, FLOOR - this.itemRadius);
   }
 }

@@ -1,12 +1,13 @@
 import { ART } from '../../art-manifest';
 import type { Pose } from '../ragdoll';
+import type { InteriorRoute } from './interior';
 
 export const CEILING = 133;
 export const FLOOR = 846;
 export const LEFT_WALL = 20;
 export const RIGHT_WALL = 520;
 
-export type Human = 'doyle' | 'larry';
+export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'kev' | 'mayor';
 
 export interface Sprite {
   key: string;
@@ -36,6 +37,7 @@ export interface Waypoint {
 }
 
 export interface Room {
+  interior?: InteriorRoute;
   backdrop: string;
   human: Human;
   pose: Pose;

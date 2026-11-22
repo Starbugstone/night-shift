@@ -238,7 +238,16 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
   g.restore();
 }
 
-class HumanArt {
+const SHIRTS: Record<Human, string> = {
+  doyle: '#ac5961', larry: '#6482a6', dave: '#a284be', barb: '#dd6269',
+  gary: '#e9b258', nigel: '#416790', kev: '#ae73bd', mayor: '#575783',
+};
+const PANTS: Record<Human, string> = {
+  doyle: '#904951', larry: '#b4977f', dave: '#76569c', barb: '#744451',
+  gary: '#926861', nigel: '#374e6c', kev: '#62496d', mayor: '#443d5c',
+};
+
+export class HumanArt {
   private readonly head: Part;
   private readonly awakeHead: Part;
   private readonly torso: Part;
@@ -250,8 +259,8 @@ class HumanArt {
 
   constructor(human: Human, private readonly ctx: GameContext) {
     const key = 'human/' + human;
-    const shirt = human === 'doyle' ? '#ac5961' : '#6482a6';
-    const pants = human === 'doyle' ? '#904951' : '#b4977f';
+    const shirt = SHIRTS[human];
+    const pants = PANTS[human];
     this.head = part(key + '_head', '#d5a182');
     this.awakeHead = part(key + '_head_awake', '#d5a182');
     this.torso = part(key + '_torso', shirt);

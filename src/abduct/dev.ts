@@ -1,6 +1,7 @@
 import { ART } from '../art-manifest';
 import { VIEW_H, VIEW_W, type GameContext, type RoomId } from '../contracts';
 import { createAbductScene } from './index';
+import { ROOMS } from './rooms';
 
 export function mountAbductDev(canvas: HTMLCanvasElement, roomId: RoomId): () => void {
   const g = canvas.getContext('2d');
@@ -23,7 +24,8 @@ export function mountAbductDev(canvas: HTMLCanvasElement, roomId: RoomId): () =>
     time: 0,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   };
-  const start = { levelId: 'dev', roomId };
+  const hard = ROOMS[roomId].interior !== undefined;
+  const start = { levelId: 'dev', roomId, rules: { hard, wakeFails: hard } };
   let scene = createAbductScene(ctx, start, reset);
   let pointerId: number | undefined;
   let frame = 0;

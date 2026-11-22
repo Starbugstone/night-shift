@@ -16,6 +16,7 @@ export enum Joint {
 
 export interface Rect {
   kind: 'rect';
+  active?: boolean;
   x: number;
   y: number;
   w: number;
@@ -29,6 +30,7 @@ export interface Circle {
   x: number;
   y: number;
   r: number;
+  omega?: number;
   vx: number;
   vy: number;
 }
@@ -162,7 +164,15 @@ export class Contact {
 
     this.vx = solid.vx;
     this.vy = solid.vy;
-    if (solid.kind === 'circle') return this.round(px, py, solid.x, solid.y, radius + solid.r);
+    if (solid.kind === 'circle') {
+      if (!this.round(px, py, solid.x, solid.y, radius + solid.r)) return false;
+      if (solid.omega) {
+        this.vx -= this.ny * solid.r * solid.omega;
+        this.vy += this.nx * solid.r * solid.omega;
+      }
+      return true;
+    }
+    if (solid.active === false) return false;
 
     return this.box(px, py, radius, solid.x, solid.y, solid.x + solid.w, solid.y + solid.h);
   }
@@ -196,6 +206,8 @@ export class Ragdoll {
   private readonly contactY = new Float64Array(RADII.length);
   private readonly surfaceVx = new Float64Array(RADII.length);
   private readonly surfaceVy = new Float64Array(RADII.length);
+  private readonly candidates: Int32Array;
+  private candidateCount = 0;
   private readonly pelvisRadius: number;
   private readonly restHeadX: number;
   private readonly restHeadY: number;
@@ -214,6 +226,7 @@ export class Ragdoll {
 
   constructor(pose: Pose, readonly solids: readonly Solid[], private readonly dampener = false) {
     this.pelvisRadius = pose.pelvisRadius ?? RADII[Joint.Pelvis]!;
+    this.candidates = new Int32Array(solids.length);
     this.impacts = new Float64Array(solids.length);
     this.touched = new Uint8Array(solids.length);
     this.impactX = new Float64Array(solids.length);
@@ -254,7 +267,45 @@ export class Ragdoll {
     return error;
   }
 
-  step(lift = 1): void {
+  overlaps(solid: Solid): boolean {
+    for (let i = 0; i < RADII.length; i++) {
+      if (this.contact.find(this.x[i]!, this.y[i]!, i === Joint.Pelvis ? this.pelvisRadius : RADII[i]!, solid)) return true;
+    }
+    for (let i = 0; i < BONES.length; i++) {
+      const [a, b] = BONES[i]!;
+      if (this.contact.find((this.x[a]! + this.x[b]!) * 0.5, (this.y[a]! + this.y[b]!) * 0.5, MIDPOINT_RADII[i]!, solid)) return true;
+    }
+    return false;
+  }
+
+  private collectCandidates(): void {
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+    for (let i = 0; i < RADII.length; i++) {
+      left = Math.min(left, this.x[i]!);
+      right = Math.max(right, this.x[i]!);
+      top = Math.min(top, this.y[i]!);
+      bottom = Math.max(bottom, this.y[i]!);
+    }
+    const margin = 94;
+    this.candidateCount = 0;
+    for (let i = 0; i < this.solids.length; i++) {
+      const solid = this.solids[i]!;
+      if (solid.kind === 'rect') {
+        if (solid.active === false || solid.x + solid.w < left - margin || solid.x > right + margin ||
+            solid.y + solid.h < top - margin || solid.y > bottom + margin) continue;
+      } else {
+        const r = solid.kind === 'circle' ? solid.r : solid.kind === 'blade' ? solid.to + solid.r : Math.hypot(solid.w * 0.5, solid.h);
+        if (solid.x + r < left - margin || solid.x - r > right + margin ||
+            solid.y + r < top - margin || solid.y - r > bottom + margin) continue;
+      }
+      this.candidates[this.candidateCount++] = i;
+    }
+  }
+
+  step(lift = 1, draftX = 0, draftY = 0): void {
     const x = this.x;
     const y = this.y;
     const chestVx = (this.chestX - this.oldX[Joint.Neck]! * 0.65 - this.oldX[Joint.Pelvis]! * 0.35) / STEP;
@@ -286,14 +337,15 @@ export class Ragdoll {
         }
       }
 
-      this.vx[i] = clamp(vx * damping + ax * STEP, -860, 860);
-      this.vy[i] = clamp(vy * damping + ay * STEP, -860, 860);
+      this.vx[i] = clamp(vx * damping + (ax + draftX) * STEP, -860, 860);
+      this.vy[i] = clamp(vy * damping + (ay + draftY) * STEP, -860, 860);
       this.oldX[i] = x[i]!;
       this.oldY[i] = y[i]!;
       x[i] = x[i]! + this.vx[i]! * STEP;
       y[i] = y[i]! + this.vy[i]! * STEP;
     }
 
+    this.collectCandidates();
     for (let iteration = 0; iteration < ITERATIONS; iteration++) {
       for (let i = 0; i < BONES.length; i++) {
         const [a, b] = BONES[i]!;
@@ -374,7 +426,8 @@ export class Ragdoll {
     const weight = wa + wb;
     if (weight === 0) return;
 
-    for (let i = 0; i < this.solids.length; i++) {
+    for (let index = 0; index < this.candidateCount; index++) {
+      const i = this.candidates[index]!;
       if (!c.find((x[a]! + x[b]!) * 0.5, (y[a]! + y[b]!) * 0.5, radius, this.solids[i]!)) continue;
 
       const vx = (this.vx[a]! + this.vx[b]!) * 0.5 - c.vx;
