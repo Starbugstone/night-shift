@@ -1,5 +1,5 @@
 import type { AbductResult, FlightResult, RoomId } from '../contracts';
-import { createAbductScene } from '../abduct';
+import { createAbductScene, emitterPoint } from '../abduct';
 import { SynthAudio } from '../audio/sfx';
 import { FlightScene } from '../flight/scene';
 import { LEVELS, isRoomId, levelIndexForRoom } from '../levels/levels';
@@ -16,7 +16,7 @@ import { AssetLoader } from './assets';
 import type { CanvasHost } from './canvas';
 import { PointerInput } from './input';
 import { startLoop } from './loop';
-import { SceneManager } from './scenes';
+import { SceneManager, type Transition } from './scenes';
 import type { MutableContext, Shell } from './shell';
 import { browserStorage, watchReducedMotion } from './storage';
 
@@ -74,7 +74,7 @@ export class Game implements Shell {
       time: 0,
       reducedMotion: watchReducedMotion((r) => (this.ctx.reducedMotion = r)),
     };
-    this.scenes = new SceneManager(this.input.state);
+    this.scenes = new SceneManager(this.input.state, () => this.ctx.reducedMotion);
     this.input.onAnyDown(() => this.audio.unlock());
   }
 
@@ -181,7 +181,10 @@ export class Game implements Shell {
         onLocked: (r) => {
           if (done) return;
           done = true;
-          this.toAbduct(i, r.roomId, r);
+          // dive in: the iris closes on the saucer and opens from the beam emitter in the room
+          const from = scene.screenFocus();
+          const to = emitterPoint(r.roomId);
+          this.toAbduct(i, r.roomId, r, { style: 'iris', x: from.x, y: from.y, toX: to.x, toY: to.y });
         },
         onQuit: () => {
           if (done) return;
@@ -194,27 +197,33 @@ export class Game implements Shell {
     });
   }
 
-  toAbduct(levelIndex: number, room: RoomId, flight: FlightResult): void {
+  toAbduct(levelIndex: number, room: RoomId, flight: FlightResult, transition?: Transition): void {
     const i = clampLevel(levelIndex);
     const level = LEVELS[i]!;
-    this.scenes.go('abduct', () => {
-      this.flight = null;
-      this.ctx.tutorial = i === 0 && !this._save.levels.level1.delivered;
-      let done = false;
-      return createAbductScene(this.ctx, { levelId: level.id, roomId: room }, (res) => {
-        if (done) return;
-        done = true;
-        if (res.aborted) this.toAbortChoice(i, room, flight);
-        else this.toReport(i, res, flight);
-      });
-    });
+    this.scenes.go(
+      'abduct',
+      () => {
+        this.flight = null;
+        this.ctx.tutorial = i === 0 && !this._save.levels.level1.delivered;
+        let done = false;
+        return createAbductScene(this.ctx, { levelId: level.id, roomId: room }, (res) => {
+          if (done) return;
+          done = true;
+          if (res.aborted) this.toAbortChoice(i, room, flight);
+          // the specimen leaves in a flash of beam light, which carries over into the report
+          else this.toReport(i, res, flight, true, res.delivered ? { style: 'flash' } : undefined);
+        });
+      },
+      false,
+      transition,
+    );
   }
 
-  toReport(levelIndex: number, abduct: AbductResult, flight: FlightResult, persist = true): void {
+  toReport(levelIndex: number, abduct: AbductResult, flight: FlightResult, persist = true, transition?: Transition): void {
     const i = clampLevel(levelIndex);
     const outcome = applyRun(this._save, LEVELS[i]!.id, abduct, flight);
     if (persist) this.setSave(outcome.save);
-    this.scenes.go('report', () => new ReportScene(this, i, abduct, flight, outcome));
+    this.scenes.go('report', () => new ReportScene(this, i, abduct, flight, outcome), false, transition);
   }
 
   toAbortChoice(levelIndex: number, room: RoomId, flight: FlightResult): void {

@@ -3,7 +3,7 @@ import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
 import { STAR_LABELS } from '../levels/progress';
-import { drawPortrait, drawStar, fmtTime, panel, text, wrap } from './draw';
+import { drawPortrait, drawStar, easeOutBack, fmtTime, panel, text, wrap } from './draw';
 import { C, font } from './theme';
 import { Button, drawNightSky } from './widgets';
 
@@ -51,10 +51,22 @@ export class MemoScene implements Scene {
     const lv = this.level;
     this.back.render(g);
     text(g, 'INCOMING MEMO', VIEW_W / 2 + 20, 48, 22, C.mint, 'center', 900);
+    // "new mail" dot
+    g.beginPath();
+    g.arc(VIEW_W / 2 - 108, 47, 5, 0, Math.PI * 2);
+    g.fillStyle = C.red;
+    g.globalAlpha = ctx.reducedMotion ? 1 : 0.55 + 0.45 * Math.sin(this.t * 5);
+    g.fill();
+    g.globalAlpha = 1;
 
-    // paper
+    // paper: slaps down onto the desk, a touch crooked, then straightens
     const py = 92;
     const ph = 736;
+    const land = ctx.reducedMotion ? 1 : easeOutBack(this.t / 0.42, 1.1);
+    g.save();
+    g.translate(VIEW_W / 2, py + ph / 2 + (1 - land) * 620);
+    g.rotate((1 - land) * 0.09);
+    g.translate(-VIEW_W / 2, -(py + ph / 2));
     panel(g, PX, py, PW, ph, C.paper, 20, C.ink, 4, 8);
     // clip at top
     panel(g, VIEW_W / 2 - 70, py - 14, 140, 30, '#b9a58a', 10, C.ink, 3, 0);
@@ -127,6 +139,7 @@ export class MemoScene implements Scene {
       text(g, goals[i]!, PX + 72, gy + 34 + i * 38, 17, C.paperInk, 'left', 700);
     }
     text(g, '— Vrell. Sent from my clipboard.', PX + PW - 24, py + ph - 22, 14, '#7a70a0', 'right', 600, true);
+    g.restore();
 
     this.start.render(g);
     if (typing) text(g, 'tap to skip', VIEW_W / 2, 838, 14, C.muted, 'center', 600);

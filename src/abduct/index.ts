@@ -1,7 +1,14 @@
-import type { CreateAbductScene } from '../contracts';
+import { VIEW_W, type CreateAbductScene, type RoomId, type Vec2 } from '../contracts';
 import { AbductView, RESTART } from './draw';
 import { ROOMS } from './rooms';
+import { CEILING } from './rooms/layout';
 import { AbductSimulation } from './simulation';
+
+/** Where the beam enters a room (the scene transition opens from here). Matches the simulation's emitter. */
+export function emitterPoint(roomId: RoomId): Vec2 {
+  const room = ROOMS[roomId];
+  return { x: room.roofExit ? room.exit.x + room.exit.w / 2 : VIEW_W / 2, y: CEILING };
+}
 
 export const createAbductScene: CreateAbductScene = (ctx, start, onDone) => {
   const simulation = new AbductSimulation(ROOMS[start.roomId], ctx.upgrades, ctx.audio);

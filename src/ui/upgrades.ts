@@ -2,7 +2,7 @@ import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { UPGRADES, buyUpgrade, canBuy } from '../levels/progress';
-import { drawGlorb, outlinedText, panel, paragraph, sprite, text } from './draw';
+import { drawGlorb, outlinedText, panel, panelHighlight, paragraph, sprite, text } from './draw';
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
 
@@ -65,6 +65,7 @@ export class UpgradesScene implements Scene {
       const owned = save.upgrades.includes(u.id);
       const pop = this.bought === i && this.boughtT > 0 && !ctx.reducedMotion ? Math.sin((1.2 - this.boughtT) * 12) * 4 * this.boughtT : 0;
       panel(g, 24 - pop, y - pop, VIEW_W - 48 + pop * 2, CARD_H + pop * 2, owned ? '#22404a' : C.panel, 22, owned ? C.mint : C.ink, 4, 6);
+      panelHighlight(g, 24 - pop, y - pop, VIEW_W - 48 + pop * 2, 22);
       // icon
       panel(g, 46, y + 24, 104, 104, C.night2, 20, C.ink, 3, 0);
       if (!sprite(g, assets, u.icon, 98, y + 76, 96, 96)) this.fallbackIcon(g, u.id, 98, y + 76);

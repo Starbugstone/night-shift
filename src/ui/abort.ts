@@ -1,7 +1,7 @@
 import type { FlightResult, RoomId, Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
-import { drawPortrait, outlinedText, panel, paragraph } from './draw';
+import { drawPortrait, outlinedText, panel, panelHighlight, paragraph } from './draw';
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
 
@@ -42,6 +42,7 @@ export class AbortScene implements Scene {
     drawNightSky(g, this.t, ctx.reducedMotion);
     outlinedText(g, 'SHIFT PAUSED', VIEW_W / 2, 150, 46, C.amberHi);
     panel(g, 40, 220, VIEW_W - 80, 250, C.panel, 22, C.ink, 4, 6);
+    panelHighlight(g, 40, 220, VIEW_W - 80, 22);
     drawPortrait(g, assets, 'vrell', 120, 310, 120, this.t);
     paragraph(g, this.line, 196, 252, VIEW_W - 260, 20, C.text, 27, 'left', 600, true);
     paragraph(g, 'Pick an option. Any option. Quickly.', 70, 410, VIEW_W - 140, 17, C.muted, 22, 'center', 600);

@@ -1,19 +1,31 @@
 import { ART, type ArtSpec } from '../art-manifest';
 import { VIEW_H, VIEW_W, type GameContext } from '../contracts';
-import { drawVignette, makeGlow } from '../core/fx';
+import {
+  CachedLayer, GLOW, P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles,
+  bump, clamp01, drawEdgeTint, drawGlow, drawVignette, easeOutBack, lightSprite,
+} from '../core/fx';
+import { HUD_ROW, hudButton, hudMeter, hudPrompt, hudTimer, type MeterState } from '../ui/hud';
 import { clamp, Joint, type Ragdoll } from './ragdoll';
 import type { AbductSimulation } from './simulation';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Human, type Sprite } from './rooms/layout';
 
-export const RESTART = { x: 422, y: 28, w: 94, h: 60 };
+/** Restart button (top-right of the shared HUD row). */
+export const RESTART = { x: 422, y: HUD_ROW.y, w: 104, h: HUD_ROW.h };
+const METER = { x: 14, y: HUD_ROW.y, w: 296, h: HUD_ROW.h };
+const TIMER = { x: 318, y: HUD_ROW.y, w: 96, h: HUD_ROW.h };
 const INK = '#1d1631';
-const MINT = '#8effce';
+const MINT = '#7CFFCB';
 const EXIT_DASHES = [2, 8];
 const SOLID_LINE: number[] = [];
 const DREAMS = ['ui/dream_sheep', 'ui/dream_sandwich', 'ui/dream_taxform'] as const;
 const PARTICLE_COUNT = 32;
-const HUD_HEIGHT = 106;
 const MUMBLE_FONT = '600 16px system-ui';
+const BUBBLE = '#e9ddd2';
+const BUBBLE_EDGE = '#6c5277';
+const MUMBLE_SECONDS = 1.6;
+/** Night sky seen over the roof, above the room's ceiling line. */
+const SKY_STARS = [22, 14, 71, 96, 118, 30, 163, 104, 214, 12, 262, 88, 301, 22, 352, 110, 398, 8, 431, 92, 476, 34, 520, 100, 96, 60, 338, 58] as const;
+const HULL_LIGHTS = 7;
 
 /** A light source in a room: warm (lamp, embers) or cool (moonlight through the exit). */
 interface Light {
@@ -234,6 +246,7 @@ class HumanArt {
   private readonly lowerArm: Part;
   private readonly upperLeg: Part;
   private readonly lowerLeg: Part;
+  private breath = 0;
 
   constructor(human: Human, private readonly ctx: GameContext) {
     const key = 'human/' + human;
@@ -248,7 +261,9 @@ class HumanArt {
     this.lowerLeg = part(key + '_lower_leg', pants);
   }
 
-  draw(g: CanvasRenderingContext2D, body: Ragdoll, awake: boolean): void {
+  /** `breath` (0..1) swells the chest; the torso sprite is scaled across its width. */
+  draw(g: CanvasRenderingContext2D, body: Ragdoll, awake: boolean, breath = 0): void {
+    this.breath = breath;
     g.save();
     g.globalAlpha *= 0.73;
     this.bone(g, body, this.upperArm, Joint.Neck, Joint.FarElbow);
@@ -278,6 +293,7 @@ class HumanArt {
     g.save();
     g.translate(x, y);
     g.rotate(Math.atan2(body.y[b]! - y, body.x[b]! - x) + (head ? Math.PI / 2 : -Math.PI / 2));
+    if (part === this.torso && this.breath !== 0) g.scale(1 + this.breath * 0.07, 1 - this.breath * 0.012);
     const image = this.ctx.assets.get(part.key);
     const left = -part.w * 0.5;
     const top = head ? -part.h : -5;
@@ -299,15 +315,44 @@ class HumanArt {
 export class AbductView {
   private readonly human: HumanArt;
   private readonly particles = new Float64Array(PARTICLE_COUNT * 2);
+  /** Bonk stars, wake sparks, delivery sparkles: one fixed pool for the whole room. */
+  private readonly fx = new Particles(96);
   private lastSecond = -1;
   private clock = '0:00';
   private measuredMumble = '';
   private mumbleWidth = 0;
   private readonly lights: Light[] = [];
-  private warmGlow: CanvasGradient | null = null;
-  private coolGlow: CanvasGradient | null = null;
-  private mintGlow: CanvasGradient | null = null;
+  private warmGlow: HTMLCanvasElement | null = null;
+  private coolGlow: HTMLCanvasElement | null = null;
+  private mintGlow: HTMLCanvasElement | null = null;
   private beamGrad: CanvasGradient | null = null;
+  private skyGrad: CanvasGradient | null = null;
+  /** Backdrop art + walls + sky band: static, so painted once and blitted. */
+  private readonly backdrop = new CachedLayer();
+  private readonly paintBackdrop = (g: CanvasRenderingContext2D): void => {
+    const image = this.ctx.assets.get(this.sim.room.backdrop);
+    if (image) g.drawImage(image, 0, 0, VIEW_W, VIEW_H);
+    this.structure(g);
+  };
+  private readonly meter: MeterState = {
+    label: 'WAKE', value: 0, warn: 0.45, danger: 0.73, icon: 'sleep', t: 0, reduced: false, flash: 0, alarm: false,
+  };
+
+  private lastTime = -1;
+  private seenBonk = 0;
+  private seenWake = 0;
+  private seenCat = 0;
+  private seenDelivered = false;
+  /** 0..1 after a bonk, decays fast: tiny squash on the specimen. */
+  private squash = 0;
+  private meterFlash = 0;
+  /** Seconds since the specimen woke (0 = asleep). */
+  private wakeAge = 0;
+  /** Eased 0..1 red alarm while awake. */
+  private alarm = 0;
+  private sweat = 0;
+  private lastDream = 0;
+  private dreamPop = 1;
 
   constructor(private readonly sim: AbductSimulation, private readonly ctx: GameContext) {
     this.human = new HumanArt(sim.room.human, ctx);
@@ -326,31 +371,39 @@ export class AbductView {
   render(g: CanvasRenderingContext2D, tutorial: boolean, dragging: boolean): void {
     const { sim, ctx } = this;
     const { room, body } = sim;
-    g.save();
-    const backdrop = ctx.assets.get(room.backdrop);
-    if (backdrop) {
-      g.drawImage(backdrop, 0, 0, VIEW_W, VIEW_H);
-    } else {
-      g.fillStyle = room.human === 'doyle' ? '#2c233f' : '#232c45';
-      g.fillRect(0, 0, VIEW_W, VIEW_H);
-      g.fillStyle = room.human === 'doyle' ? '#362943' : '#28344c';
-      for (let x = 25; x < VIEW_W; x += 44) g.fillRect(x, CEILING, 2, FLOOR - CEILING);
-    }
+    const dt = this.lastTime < 0 ? 0 : clamp(ctx.time - this.lastTime, 0, 0.05);
+    this.lastTime = ctx.time;
+    this.moments(dt);
 
     g.save();
-    if (!ctx.reducedMotion && sim.shake > 0) {
-      g.translate(Math.sin(sim.elapsed * 94) * sim.shake * 5, Math.cos(sim.elapsed * 116) * sim.shake * 3);
-    }
-    if (!this.warmGlow) {
-      this.warmGlow = makeGlow(g, '255,189,104', 0.34);
-      this.coolGlow = makeGlow(g, '150,170,255', 0.2);
-      this.mintGlow = makeGlow(g, '124,255,203', 0.4);
+    if (!this.beamGrad) {
+      this.warmGlow = lightSprite('255,189,104', 0.34);
+      this.coolGlow = lightSprite('150,170,255', 0.2);
+      this.mintGlow = lightSprite('124,255,203', 0.4);
       this.beamGrad = g.createLinearGradient(0, CEILING, 0, FLOOR);
       this.beamGrad.addColorStop(0, 'rgba(124,255,203,0.42)');
       this.beamGrad.addColorStop(0.5, 'rgba(124,255,203,0.2)');
       this.beamGrad.addColorStop(1, 'rgba(124,255,203,0.1)');
+      this.skyGrad = g.createLinearGradient(0, 0, 0, CEILING);
+      this.skyGrad.addColorStop(0, '#0b0820');
+      this.skyGrad.addColorStop(1, '#221a52');
     }
-    this.structure(g);
+    if (ctx.assets.get(room.backdrop)) {
+      this.backdrop.draw(g, this.paintBackdrop);
+    } else {
+      // art still loading (or missing): plain wallpaper, not cached
+      g.fillStyle = room.human === 'doyle' ? '#2c233f' : '#232c45';
+      g.fillRect(0, 0, VIEW_W, VIEW_H);
+      g.fillStyle = room.human === 'doyle' ? '#362943' : '#28344c';
+      for (let x = 25; x < VIEW_W; x += 44) g.fillRect(x, CEILING, 2, FLOOR - CEILING);
+      this.structure(g);
+    }
+
+    // everything loose in the room rattles with a hard bonk; the walls stay put
+    g.save();
+    if (!ctx.reducedMotion && sim.shake > 0) {
+      g.translate(Math.sin(sim.elapsed * 94) * sim.shake * 5, Math.cos(sim.elapsed * 116) * sim.shake * 3);
+    }
     if (!sim.delivered) this.floorShadow(g);
     if (room.flue) {
       const { x, y, w, h } = room.flue;
@@ -365,14 +418,11 @@ export class AbductView {
       this.drawSprite(g, sprite);
     }
     if (sim.cart && room.cart) this.drawSprite(g, room.cart.sprite, sim.cart.x - 5, room.cart.sprite.y);
-    if (room.cat) {
-      const key = sim.catAwake > 0 ? 'room/cat_awake' : room.cat.key;
-      const { w, h } = ART[key]!;
-      this.sprite(g, key, room.cat.x, room.cat.y + room.cat.h - h, w, h);
-    }
+    if (room.cat) this.cat(g, room.cat);
     this.hazards(g);
     this.lighting(g);
     this.beam(g, dragging);
+    this.saucer(g, dragging);
 
     const p = sim.slurp * sim.slurp;
     g.save();
@@ -386,21 +436,118 @@ export class AbductView {
       g.scale(1 - p * 0.83, 1 - p * 0.83);
       g.translate(-body.chestX, -body.chestY);
       g.globalAlpha = 1 - p;
+    } else if (this.squash > 0) {
+      const q = this.squash * 0.11;
+      g.translate(body.chestX, body.chestY);
+      g.scale(1 + q, 1 - q);
+      g.translate(-body.chestX, -body.chestY);
     }
     const item = room.item.sprite;
     if (!sim.delivered || sim.item.stolen) this.drawSprite(g, item, sim.item.x - item.w * 0.5, sim.item.y - item.h * 0.5);
-    this.human.draw(g, body, sim.wake.awake > 0);
+    this.human.draw(g, body, sim.wake.awake > 0, this.breath());
     g.restore();
 
     if (sim.delivered && !sim.item.stolen) this.drawSprite(g, item, sim.item.x - item.w * 0.5, sim.item.y - item.h * 0.5);
-    if (!sim.delivered) {
+    if (sim.delivered) {
+      // the exit swallows the specimen in a bloom of beam light
+      g.globalCompositeOperation = 'lighter';
+      drawGlow(g, GLOW.mint, sim.exitX, sim.exitY, 60 + 170 * p, 60 + 170 * p, 0.25 + 0.75 * bump(sim.slurp));
+      drawGlow(g, GLOW.white, sim.exitX, sim.exitY, 30 + 60 * p, 30 + 60 * p, bump(sim.slurp));
+      g.globalCompositeOperation = 'source-over';
+    } else {
       this.sleepEffects(g);
       this.reticle(g, dragging);
     }
+    this.fx.draw(g);
     g.restore();
     drawVignette(g);
+    drawEdgeTint(g, GLOW.red, this.alarm * (ctx.reducedMotion ? 0.5 : 0.5 + 0.25 * Math.sin(ctx.time * 9)));
+    if (sim.delivered) {
+      g.globalAlpha = p * p * (ctx.reducedMotion ? 0.25 : 0.6);
+      g.fillStyle = '#d9fff0';
+      g.fillRect(0, 0, VIEW_W, VIEW_H);
+      g.globalAlpha = 1;
+    }
     this.hud(g, tutorial);
     g.restore();
+  }
+
+  /** Turn simulation events into particles and short timers. */
+  private moments(dt: number): void {
+    const { sim, fx } = this;
+    const { body } = sim;
+    const rm = this.ctx.reducedMotion;
+    const awake = sim.wake.awake > 0 && !sim.delivered;
+    const headX = body.x[Joint.Head]!;
+    const headY = body.y[Joint.Head]!;
+    this.squash = Math.max(0, this.squash - dt * 5);
+    this.meterFlash = Math.max(0, this.meterFlash - dt * 3);
+    this.dreamPop = Math.min(1, this.dreamPop + dt * 4.5);
+    this.alarm += ((awake ? 1 : 0) - this.alarm) * Math.min(1, dt * 7);
+    this.wakeAge = awake ? this.wakeAge + dt : 0;
+
+    if (sim.bonkSeq !== this.seenBonk) {
+      this.seenBonk = sim.bonkSeq;
+      const { bonkX: x, bonkY: y, bonkPower: power } = sim;
+      this.meterFlash = Math.max(this.meterFlash, 0.35 + power * 0.4);
+      fx.burst(P_STAR, x, y, rm ? 2 : 2 + Math.round(power * 3), 110, 200 + power * 110, 0.62, 9 + power * 4, PC.amber, 300, 1.4, -Math.PI / 2, Math.PI * 1.3);
+      fx.spawn(P_RING, x, y, 0, 0, 0.3, 24 + power * 30, PC.white);
+      if (!rm) {
+        this.squash = power;
+        fx.burst(P_PUFF, x, y, 3, 20, 80, 0.42, 12 + power * 6, PC.dust, -30, 2);
+        fx.burst(P_SPARK, x, y, 4, 170, 320, 0.24, 3, PC.white, 0, 3);
+      }
+    }
+    if (sim.catSeq !== this.seenCat) {
+      this.seenCat = sim.catSeq;
+      const cat = sim.room.cat;
+      if (cat) {
+        const x = cat.x + cat.w / 2;
+        fx.burst(P_STAR, x, cat.y, rm ? 2 : 4, 140, 260, 0.6, 10, PC.red, 320, 1.4, -Math.PI / 2, Math.PI);
+        fx.spawn(P_RING, x, cat.y + 10, 0, 0, 0.36, 70, PC.red);
+      }
+    }
+    if (sim.wakeSeq !== this.seenWake) {
+      this.seenWake = sim.wakeSeq;
+      this.meterFlash = 1;
+      this.wakeAge = 0.0001;
+      fx.spawn(P_RING, headX, headY, 0, 0, 0.45, 100, PC.red);
+      if (!rm) fx.burst(P_SPARK, headX, headY, 10, 240, 400, 0.3, 4, PC.red, 0, 2.5);
+    }
+    if (awake && !rm) {
+      this.sweat -= dt;
+      if (this.sweat <= 0) {
+        this.sweat = 0.13;
+        const side = fx.rnd() < 0.5 ? -1 : 1;
+        fx.spawn(P_SPARK, headX + side * 24, headY - 16, side * (50 + fx.rnd() * 70), -130 - fx.rnd() * 60, 0.45, 3.4, PC.sweat, 640, 0.5);
+      }
+    }
+    if (sim.delivered && !this.seenDelivered) {
+      this.seenDelivered = true;
+      const { exitX, exitY } = sim;
+      fx.spawn(P_RING, exitX, exitY, 0, 0, 0.5, 130, PC.mint);
+      fx.spawn(P_RING, exitX, exitY, 0, 0, 0.34, 70, PC.white);
+      const count = rm ? 6 : 18;
+      for (let i = 0; i < count; i++) {
+        const a = fx.rnd() * Math.PI * 2;
+        const d = 34 + fx.rnd() * 80;
+        const index = fx.spawn(
+          P_TWINKLE, body.chestX + Math.cos(a) * d, body.chestY + Math.sin(a) * d,
+          Math.cos(a) * 150, Math.sin(a) * 150, 0.42 + fx.rnd() * 0.16, 7 + fx.rnd() * 7,
+          i % 3 === 0 ? PC.white : PC.mint, 0, 3.5,
+        );
+        fx.home(index, exitX, exitY, 55);
+      }
+    }
+    fx.update(dt);
+  }
+
+  /** Chest swell: a slow rise with every snore, quick panting once awake. */
+  private breath(): number {
+    const { sim } = this;
+    if (this.ctx.reducedMotion || sim.delivered) return 0;
+    if (sim.wake.awake > 0) return 0.5 + 0.5 * Math.sin(sim.elapsed * 15);
+    return sim.snoreFx > 0 ? Math.sin(Math.PI * clamp01((1.1 - sim.snoreFx) / 1.1)) : 0;
   }
 
   private sprite(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number): void {
@@ -414,9 +561,21 @@ export class AbductView {
   }
 
   private structure(g: CanvasRenderingContext2D): void {
+    // the night over the roof (the HUD floats on it) and the roof slab the beam comes through
+    g.fillStyle = this.skyGrad!;
+    g.fillRect(0, 0, VIEW_W, CEILING - 14);
+    g.fillStyle = '#ffffff';
+    g.globalAlpha = 0.6;
+    for (let i = 0; i < SKY_STARS.length; i += 2) g.fillRect(SKY_STARS[i]!, SKY_STARS[i + 1]!, 2, 2);
+    g.globalAlpha = 1;
+    g.fillStyle = '#2b2242';
+    g.fillRect(0, CEILING - 16, VIEW_W, 16);
+    g.fillStyle = '#4a3d68';
+    g.fillRect(0, CEILING - 16, VIEW_W, 3);
+
     g.fillStyle = 'rgba(17,15,34,0.48)';
-    g.fillRect(0, HUD_HEIGHT, LEFT_WALL, FLOOR - HUD_HEIGHT);
-    g.fillRect(RIGHT_WALL, HUD_HEIGHT, VIEW_W - RIGHT_WALL, FLOOR - HUD_HEIGHT);
+    g.fillRect(0, CEILING, LEFT_WALL, FLOOR - CEILING);
+    g.fillRect(RIGHT_WALL, CEILING, VIEW_W - RIGHT_WALL, FLOOR - CEILING);
     g.fillRect(0, FLOOR, VIEW_W, VIEW_H - FLOOR);
     g.fillStyle = '#514362';
     g.fillRect(LEFT_WALL - 4, CEILING, 4, FLOOR - CEILING);
@@ -429,10 +588,7 @@ export class AbductView {
   private floorShadow(g: CanvasRenderingContext2D): void {
     const { chestX, chestY } = this.sim.body;
     const height = clamp((FLOOR - chestY) / 560, 0, 1);
-    g.fillStyle = 'rgba(10,7,28,' + (0.34 * (1 - height * 0.75)).toFixed(3) + ')';
-    g.beginPath();
-    g.ellipse(chestX, FLOOR - 3, 74 - height * 34, 9 - height * 4, 0, 0, Math.PI * 2);
-    g.fill();
+    drawGlow(g, GLOW.dark, chestX, FLOOR - 3, 96 - height * 40, 13 - height * 5, 0.62 * (1 - height * 0.7));
   }
 
   /** Additive pools of lamp light, ember glow and moonlight from the exit. */
@@ -441,15 +597,10 @@ export class AbductView {
     g.save();
     g.globalCompositeOperation = 'lighter';
     for (const light of this.lights) {
-      const flicker = light.flicker && !this.ctx.reducedMotion ? 0.82 + 0.18 * Math.sin(t * 9) * Math.sin(t * 5.3) : 1;
-      const k = light.r / 100;
-      g.save();
-      g.translate(light.x, light.y);
-      g.scale(k, k);
-      g.globalAlpha = flicker;
-      g.fillStyle = light.warm ? this.warmGlow! : this.coolGlow!;
-      g.fillRect(-100, -100, 200, 200);
-      g.restore();
+      const pool = light.warm ? this.warmGlow : this.coolGlow;
+      if (!pool) continue;
+      g.globalAlpha = light.flicker && !this.ctx.reducedMotion ? 0.82 + 0.18 * Math.sin(t * 9) * Math.sin(t * 5.3) : 1;
+      g.drawImage(pool, light.x - light.r, light.y - light.r, light.r * 2, light.r * 2);
     }
     g.restore();
   }
@@ -476,36 +627,56 @@ export class AbductView {
   }
 
   private masonry(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+    g.lineWidth = 3;
     roundBox(g, x, y, w, h, 3, '#5b4357', '#372942');
     g.fillStyle = '#79596a';
     for (let dy = 15; dy < h - 3; dy += 23) g.fillRect(x + 2, y + dy, w - 4, 2);
   }
 
+  /** The cat breathes in its sleep (art only; its collider is unchanged). */
+  private cat(g: CanvasRenderingContext2D, cat: Sprite): void {
+    const awake = this.sim.catAwake > 0;
+    const key = awake ? 'room/cat_awake' : cat.key;
+    const { w, h } = ART[key]!;
+    const rise = awake || this.ctx.reducedMotion ? 0 : (0.5 + 0.5 * Math.sin(this.sim.elapsed * 1.9)) * 2.5;
+    this.sprite(g, key, cat.x, cat.y + cat.h - h - rise, w, h + rise);
+  }
+
   private exitMarker(g: CanvasRenderingContext2D): void {
-    const zone = this.sim.room.exitZone;
-    const pulse = this.ctx.reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(this.sim.elapsed * 3.2);
+    const { sim } = this;
+    const zone = sim.room.exitZone;
+    const pulse = this.ctx.reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(sim.elapsed * 3.2);
+    // the closer the specimen, the louder the exit
+    const near = 1 - clamp01((Math.hypot(sim.body.chestX - sim.exitX, sim.body.chestY - sim.exitY) - 60) / 300);
     g.save();
-    g.globalAlpha = 0.1 + pulse * 0.1;
+    g.globalCompositeOperation = 'lighter';
+    drawGlow(g, GLOW.mint, sim.exitX, sim.exitY, zone.w * 0.75, zone.h * 0.75, (0.1 + pulse * 0.08) * (1 + near * 2.2));
+    g.globalCompositeOperation = 'source-over';
+    g.globalAlpha = 0.1 + pulse * 0.1 + near * 0.1;
     g.fillStyle = MINT;
     g.beginPath();
     g.roundRect(zone.x, zone.y, zone.w, zone.h, 12);
     g.fill();
     g.globalAlpha = 0.7 + pulse * 0.3;
     g.strokeStyle = MINT;
-    g.lineWidth = 2.5;
+    g.lineWidth = 2.5 + near;
     g.setLineDash(EXIT_DASHES);
     g.beginPath();
     g.roundRect(zone.x, zone.y, zone.w, zone.h, 12);
     g.stroke();
     g.setLineDash(SOLID_LINE);
-    const { exitX: x } = this.sim;
-    const y = this.sim.exitY - pulse * 5;
+    const { exitX: x } = sim;
     g.lineWidth = 3.5;
     g.lineCap = 'round';
+    g.lineJoin = 'round';
     g.beginPath();
-    g.moveTo(x - 10, y + 3);
-    g.lineTo(x, y - 7);
-    g.lineTo(x + 10, y + 3);
+    // two chevrons climbing into the exit
+    for (let i = 0; i < 2; i++) {
+      const y = sim.exitY + 4 + i * 11 - pulse * (5 + near * 4);
+      g.moveTo(x - 10, y + 3);
+      g.lineTo(x, y - 7);
+      g.lineTo(x + 10, y + 3);
+    }
     g.stroke();
     g.restore();
   }
@@ -571,16 +742,10 @@ export class AbductView {
     }
     // glow where the beam lands and at the emitter
     g.globalAlpha = power;
-    g.fillStyle = this.mintGlow!;
-    g.translate(x, y + 8);
-    g.scale(0.95, 0.62);
-    g.fillRect(-100, -100, 200, 200);
-    g.scale(1 / 0.95, 1 / 0.62);
-    g.translate(emitterX - x, CEILING - y - 8);
-    g.scale(0.6, 0.3);
-    g.fillRect(-100, -100, 200, 200);
-    g.scale(1 / 0.6, 1 / 0.3);
-    g.translate(-emitterX, -CEILING);
+    if (this.mintGlow) {
+      g.drawImage(this.mintGlow, x - 95, y + 8 - 62, 190, 124);
+      g.drawImage(this.mintGlow, emitterX - 60, CEILING - 30, 120, 60);
+    }
 
     const phase = this.ctx.reducedMotion ? 0 : elapsed;
     const count = this.ctx.reducedMotion ? 12 : PARTICLE_COUNT;
@@ -592,12 +757,57 @@ export class AbductView {
       g.fillStyle = i % 4 === 0 ? '#edffe7' : MINT;
       g.fillRect(emitterX + (x - emitterX) * t + offset, CEILING + (y - CEILING) * t, size, size);
     }
-    g.globalAlpha = 1;
-    g.globalCompositeOperation = 'source-over';
+    g.restore();
+  }
+
+  /** The saucer parked over the roof: hull, chasing rim lights and the beam nozzle. */
+  private saucer(g: CanvasRenderingContext2D, dragging: boolean): void {
+    const { emitterX: x } = this.sim;
+    const rm = this.ctx.reducedMotion;
+    const t = this.ctx.time;
+    const y = CEILING - 31 + (rm ? 0 : Math.sin(t * 2.1) * 1.8);
+    g.save();
     g.lineWidth = 3;
-    ellipse(g, emitterX, CEILING - 12, 40, 11, '#647899', INK);
-    ellipse(g, emitterX, CEILING - 15, 30, 5, '#a7b7ce');
-    ellipse(g, emitterX, CEILING - 5, 23, 5, MINT);
+    g.lineJoin = 'round';
+    // nozzle through the roof
+    g.beginPath();
+    g.moveTo(x - 15, y + 6);
+    g.lineTo(x + 15, y + 6);
+    g.lineTo(x + 25, CEILING - 3);
+    g.lineTo(x - 25, CEILING - 3);
+    g.closePath();
+    g.fillStyle = '#56648c';
+    g.fill();
+    g.strokeStyle = INK;
+    g.stroke();
+    ellipse(g, x, CEILING - 4, 23, 5, MINT, INK);
+    // hull
+    ellipse(g, x, y, 84, 15, '#9fb3d6', INK);
+    g.beginPath();
+    g.ellipse(x, y + 3, 76, 10, 0, 0, Math.PI);
+    g.fillStyle = '#7b8db3';
+    g.fill();
+    g.beginPath();
+    g.ellipse(x, y - 5, 58, 5, 0, 0, Math.PI * 2);
+    g.fillStyle = 'rgba(255,255,255,0.28)';
+    g.fill();
+    const head = Math.floor(t * 7) % HULL_LIGHTS;
+    for (let i = 0; i < HULL_LIGHTS; i++) {
+      const lx = x + (i - 3) * 22;
+      const ly = y + 5 - Math.abs(i - 3) * 1.4;
+      const on = rm ? i % 2 === 0 : i === head || (dragging && (i + 1) % HULL_LIGHTS === head);
+      g.beginPath();
+      g.arc(lx, ly, 4.2, 0, Math.PI * 2);
+      g.fillStyle = on ? '#FFD27A' : '#4a4470';
+      g.fill();
+      if (on) {
+        g.globalCompositeOperation = 'lighter';
+        drawGlow(g, GLOW.amber, lx, ly, 13, 13, 0.7);
+        g.globalCompositeOperation = 'source-over';
+      }
+    }
+    g.globalCompositeOperation = 'lighter';
+    drawGlow(g, GLOW.mint, x, CEILING - 2, 46, 16, dragging ? 0.9 : 0.6);
     g.restore();
   }
 
@@ -620,7 +830,7 @@ export class AbductView {
       }
       g.stroke();
     }
-    g.fillStyle = dragging ? '#8effce40' : '#8effce22';
+    g.fillStyle = dragging ? '#7CFFCB40' : '#7CFFCB22';
     g.beginPath();
     g.arc(0, 0, radius, 0, Math.PI * 2);
     g.fill();
@@ -629,107 +839,169 @@ export class AbductView {
   }
 
   private sleepEffects(g: CanvasRenderingContext2D): void {
-    const { body, snoreFx, mumbleFx, mumble, wake } = this.sim;
+    const { body, snoreFx, mumbleFx, wake, elapsed } = this.sim;
+    const rm = this.ctx.reducedMotion;
     const x = body.x[Joint.Head]!;
     const y = body.y[Joint.Head]!;
+    if (wake.awake > 0) {
+      this.bang(g, x, y);
+      return;
+    }
     if (mumbleFx > 0) {
-      const pad = 18;
-      g.font = MUMBLE_FONT;
-      if (mumble !== this.measuredMumble) {
-        this.measuredMumble = mumble;
-        this.mumbleWidth = Math.min(VIEW_W - 44, Math.ceil(g.measureText(mumble).width) + pad * 2);
-      }
-      const w = this.mumbleWidth;
-      const left = clamp(x - w / 2, 22, VIEW_W - 22 - w);
-      const top = clamp(y < 216 ? y + 48 : y - 106, HUD_HEIGHT + 9, FLOOR - 49);
-      roundBox(g, left, top, w, 42, 15, '#e9ddd2', '#6c5277');
-      g.fillStyle = INK;
-      g.textAlign = 'center';
-      g.fillText(mumble, left + w / 2, top + 27, w - pad * 2);
+      this.speech(g, x, y);
       return;
     }
 
-    if (wake.awake === 0) {
-      const beside = y < 250;
-      const direction = x < VIEW_W / 2 ? 1 : -1;
-      const dreamX = clamp(x + (beside ? direction * 80 : 0), 56, VIEW_W - 56);
-      const dreamY = clamp(y - (beside ? 18 : 89), CEILING + 29, FLOOR - 65);
-      g.globalAlpha = 0.91;
-      ellipse(g, dreamX, dreamY, 34, 27, '#e9ddd2', '#8b7597');
-      ellipse(g, dreamX + (beside ? -direction * 30 : 6), dreamY + 31, 5, 4, '#e9ddd2');
-      this.sprite(g, DREAMS[wake.bonks % DREAMS.length]!, dreamX - 30, dreamY - 25, 60, 50);
-      g.globalAlpha = 1;
+    // dream bubble: a thought trail leads from the head to the cloud
+    const dream = wake.bonks % DREAMS.length;
+    if (dream !== this.lastDream) {
+      this.lastDream = dream;
+      this.dreamPop = 0;
     }
+    const beside = y < 258;
+    const direction = x < VIEW_W / 2 ? 1 : -1;
+    const dreamX = clamp(x + (beside ? direction * 92 : 10), 56, VIEW_W - 56);
+    const dreamY = clamp(y - (beside ? 22 : 98), CEILING + 31, FLOOR - 65) + (rm ? 0 : Math.sin(elapsed * 1.6) * 2.5);
+    const dx = dreamX - x;
+    const dy = dreamY - y;
+    const d = Math.hypot(dx, dy) || 1;
+    const from = 39;
+    const to = d - 31;
+    g.lineWidth = 2;
+    g.globalAlpha = 0.93;
+    if (to > from + 4) {
+      for (let i = 0; i < 3; i++) {
+        const s = from + (to - from) * ((i + 0.6) / 3.2);
+        ellipse(g, x + (dx / d) * s, y + (dy / d) * s, 3 + i * 2.2, 2.6 + i * 1.9, BUBBLE, '#8b7597');
+      }
+    }
+    const pop = rm ? 1 : easeOutBack(this.dreamPop);
+    g.save();
+    g.translate(dreamX, dreamY);
+    g.scale(pop, pop);
+    g.lineWidth = 2.5;
+    ellipse(g, 0, 0, 36, 29, BUBBLE, '#8b7597');
+    this.sprite(g, DREAMS[dream]!, -30, -25, 60, 50);
+    g.restore();
+    g.globalAlpha = 1;
+
     if (snoreFx > 0) {
-      const drift = this.ctx.reducedMotion ? 0 : (1.1 - snoreFx) * 31;
+      // Zzz drifts up and swells as the snore goes on
+      const k = clamp01((1.1 - snoreFx) / 1.1);
+      const drift = rm ? 0 : k * 34;
+      const size = 40 * (rm ? 1 : 0.7 + 0.5 * k);
       g.globalAlpha = Math.min(1, snoreFx * 2.6);
       const snoreX = y < 250 && x < VIEW_W / 2 ? x - 78 : x + 36;
-      this.sprite(g, 'ui/zzz', clamp(snoreX, 25, VIEW_W - 65), clamp(y - 62 - drift, CEILING + 3, FLOOR - 39), 40, 40);
+      this.sprite(g, 'ui/zzz', clamp(snoreX, 25, VIEW_W - 65), clamp(y - 62 - drift, CEILING + 3, FLOOR - 39) - (size - 40), size, size);
       g.globalAlpha = 1;
     }
   }
 
-  private hud(g: CanvasRenderingContext2D, tutorial: boolean): void {
+  /** Sleep-talk bubble with a tail pointing at the speaker's head. */
+  private speech(g: CanvasRenderingContext2D, x: number, y: number): void {
+    const { mumble, mumbleFx } = this.sim;
+    const pad = 18;
+    const h = 42;
+    g.font = MUMBLE_FONT;
+    if (mumble !== this.measuredMumble) {
+      this.measuredMumble = mumble;
+      this.mumbleWidth = Math.min(VIEW_W - 44, Math.ceil(g.measureText(mumble).width) + pad * 2);
+    }
+    const w = this.mumbleWidth;
+    const left = clamp(x - w / 2, 22, VIEW_W - 22 - w);
+    const top = clamp(y < 226 ? y + 58 : y - 116, CEILING + 6, FLOOR - 49);
+    const below = top > y;
+    const baseX = clamp(x, left + 26, left + w - 26);
+    const baseY = below ? top + 2 : top + h - 2;
+    const dx = x - baseX;
+    const dy = y - baseY;
+    const d = Math.hypot(dx, dy) || 1;
+    const reach = Math.min(d - 34, 40);
+    const pop = this.ctx.reducedMotion ? 1 : easeOutBack((MUMBLE_SECONDS - mumbleFx) / 0.22);
     g.save();
-    g.fillStyle = '#15172bec';
-    g.fillRect(0, 0, VIEW_W, HUD_HEIGHT);
+    g.globalAlpha = clamp01(mumbleFx / 0.18);
+    g.translate(baseX, baseY);
+    g.scale(pop, pop);
+    g.translate(-baseX, -baseY);
+    g.lineJoin = 'round';
+    g.lineWidth = 5;
+    g.strokeStyle = BUBBLE_EDGE;
+    g.fillStyle = BUBBLE;
+    // outline both shapes first, then fill both, so no line shows where the tail joins
+    g.beginPath();
+    g.roundRect(left, top, w, h, 15);
+    g.stroke();
+    if (reach > 5) {
+      g.beginPath();
+      g.moveTo(baseX - 11, baseY);
+      g.lineTo(baseX + (dx / d) * reach, baseY + (dy / d) * reach);
+      g.lineTo(baseX + 11, baseY);
+      g.closePath();
+      g.stroke();
+      g.fill();
+    }
+    g.beginPath();
+    g.roundRect(left, top, w, h, 15);
+    g.fill();
+    g.fillStyle = INK;
+    g.textAlign = 'center';
+    g.textBaseline = 'alphabetic';
+    g.fillText(mumble, left + w / 2, top + 27, w - pad * 2);
+    g.restore();
+  }
+
+  /** Wide-awake "!" burst over the head. */
+  private bang(g: CanvasRenderingContext2D, x: number, y: number): void {
+    const rm = this.ctx.reducedMotion;
+    const age = this.wakeAge;
+    const pop = rm ? 1 : easeOutBack(age / 0.24, 3.2);
+    const wobble = rm ? 0 : Math.sin(age * 34) * 0.14 * Math.max(0, 1 - age * 1.4) + Math.sin(age * 9) * 0.04;
+    g.save();
+    g.translate(clamp(x + 34, 50, VIEW_W - 50), clamp(y - 74, CEILING + 40, FLOOR - 60));
+    g.rotate(0.2 + wobble);
+    g.scale(pop, pop);
+    g.beginPath();
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2;
+      const r = i % 2 === 0 ? 34 : 23;
+      if (i === 0) g.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    g.closePath();
+    g.lineJoin = 'round';
+    g.lineWidth = 4;
+    g.fillStyle = '#FF5D73';
+    g.fill();
+    g.strokeStyle = INK;
+    g.stroke();
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.roundRect(-4.5, -19, 9, 22, 3.5);
+    g.arc(0, 12, 5, 0, Math.PI * 2);
+    g.fill();
+    g.restore();
+  }
+
+  private hud(g: CanvasRenderingContext2D, tutorial: boolean): void {
     const { wake, elapsed, body } = this.sim;
+    const { ctx } = this;
     const second = Math.floor(elapsed);
     if (second !== this.lastSecond) {
       this.lastSecond = second;
       this.clock = Math.floor(second / 60) + ':' + String(second % 60).padStart(2, '0');
     }
-    g.textAlign = 'left';
-    g.fillStyle = '#d3c4df';
-    g.font = '700 16px system-ui';
-    g.fillText(body.gripActive ? 'GRABBING ON' : wake.awake > 0 ? 'AWAKE' : 'WAKE', 25, 39);
-    roundBox(g, 24, 53, 248, 18, 9, '#332b48');
-    if (wake.value > 0.3) {
-      roundBox(g, 24, 53, 248 * wake.value / 100, 18, 8, wake.value > 73 ? '#ff907e' : '#91e8bb');
-    }
-    g.fillStyle = '#c7b6d8';
-    g.fillText('TIME', 295, 39);
-    g.fillStyle = '#f1e8f4';
-    g.font = '600 26px monospace';
-    g.fillText(this.clock, 294, 69);
-    g.lineWidth = 1.5;
-    roundBox(g, RESTART.x, RESTART.y, RESTART.w, RESTART.h, 13, '#322942', '#6a5578');
-    g.fillStyle = '#f1e8f4';
-    g.textAlign = 'center';
-    g.font = '700 15px system-ui';
-    g.fillText('Restart', RESTART.x + RESTART.w / 2, RESTART.y + 36);
+    const m = this.meter;
+    m.label = body.gripActive ? 'HOLDING ON!' : wake.awake > 0 ? 'AWAKE!' : 'WAKE';
+    m.value = wake.value / 100;
+    m.alarm = wake.awake > 0;
+    m.flash = this.meterFlash;
+    m.t = ctx.time;
+    m.reduced = ctx.reducedMotion;
+    hudMeter(g, METER.x, METER.y, METER.w, METER.h, m);
+    hudTimer(g, TIMER.x, TIMER.y, TIMER.w, TIMER.h, this.clock);
+    hudButton(g, RESTART, 'restart', 'RESTART', false);
 
-    if (tutorial || body.gripActive) {
-      roundBox(g, 40, 883, 460, 52, 14, '#1e2239', '#73608b');
-      g.fillStyle = MINT;
-      if (body.gripActive) {
-        g.font = '600 21px system-ui';
-        g.fillText('Shake the beam to break their grip!', 270, 917, 410);
-      } else {
-        g.font = '600 19px system-ui';
-        g.textAlign = 'left';
-        g.fillText('Drag to move the beam — gently!', 119, 917, 345);
-        g.translate(-16, 0);
-        g.strokeStyle = MINT;
-        g.lineWidth = 2.4;
-        g.lineCap = 'round';
-        g.lineJoin = 'round';
-        g.beginPath();
-        g.moveTo(105, 916);
-        g.lineTo(102, 909);
-        g.lineTo(106, 906);
-        g.lineTo(110, 911);
-        g.lineTo(110, 899);
-        g.quadraticCurveTo(113, 896, 116, 899);
-        g.lineTo(116, 905);
-        g.lineTo(124, 908);
-        g.lineTo(124, 915);
-        g.lineTo(120, 922);
-        g.lineTo(110, 922);
-        g.closePath();
-        g.stroke();
-      }
-    }
-    g.restore();
+    if (body.gripActive) hudPrompt(g, VIEW_W / 2, 909, 54, 'Shake the beam to break their grip!', 20, 'shake', ctx.time, ctx.reducedMotion, 480);
+    else if (tutorial) hudPrompt(g, VIEW_W / 2, 909, 54, 'Drag to move the beam — gently!', 21, 'drag', ctx.time, ctx.reducedMotion, 480);
   }
 }

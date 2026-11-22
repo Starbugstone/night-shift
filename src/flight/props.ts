@@ -6,9 +6,17 @@ import { roundRectPath } from '../ui/draw';
 
 const INK = '#1b1433';
 
+const sizes = new WeakMap<PropDef, { w: number; h: number }>();
+
+/** Draw size of a prop (cached per definition, so render loops don't allocate). */
 export function propSize(p: PropDef): { w: number; h: number } {
-  const spec = ART[p.key];
-  return { w: p.w ?? spec?.w ?? 100, h: p.h ?? spec?.h ?? 100 };
+  let size = sizes.get(p);
+  if (!size) {
+    const spec = ART[p.key];
+    size = { w: p.w ?? spec?.w ?? 100, h: p.h ?? spec?.h ?? 100 };
+    sizes.set(p, size);
+  }
+  return size;
 }
 
 export function drawProp(g: CanvasRenderingContext2D, assets: Assets, p: PropDef): void {
@@ -207,19 +215,37 @@ export function drawVehicle(g: CanvasRenderingContext2D, assets: Assets, key: st
   g.fillRect(x + w - 22, y + 2, 14, 7);
 }
 
-export function drawDog(g: CanvasRenderingContext2D, assets: Assets, x: number, y: number, t: number): void {
-  if (assets.get('flight/dog_top')) {
-    const breath = 1 + Math.sin(t * 2.2) * 0.03;
-    g.save();
-    g.translate(x, y);
-    g.scale(breath, breath);
-    g.drawImage(assets.get('flight/dog_top')!, -35, -35, 70, 70);
+/** dog_top.svg's ear, in its 70×70 box (redrawn on top of the sprite to twitch it). */
+const EAR = 'M19 33Q21 26 28 28L31 41Q29 52 23 47Z';
+let earPath: Path2D | null = null;
+
+/** Sleeping dog: slow breathing, an ear that twitches now and then (and flaps while it barks). */
+export function drawDog(g: CanvasRenderingContext2D, assets: Assets, x: number, y: number, t: number, barking = false, reduced = false): void {
+  const img = assets.get('flight/dog_top');
+  const breath = reduced ? 0 : Math.sin(t * 2.2);
+  g.save();
+  g.translate(x, y);
+  if (img) {
+    g.scale(1 + breath * 0.035, 1 + breath * 0.022);
+    g.drawImage(img, -35, -35, 70, 70);
+    const cycle = (t + x * 0.013) % 3.4;
+    const twitch = reduced ? 0 : barking ? Math.sin(t * 24) * 0.32 : cycle < 0.4 ? Math.sin((cycle / 0.4) * Math.PI * 3) * 0.45 : 0;
+    if (twitch !== 0) {
+      earPath ??= new Path2D(EAR);
+      g.translate(-35 + 25, -35 + 29);
+      g.rotate(twitch);
+      g.translate(-25, -29);
+      g.fillStyle = '#895e55';
+      g.fill(earPath);
+      g.lineWidth = 2.5;
+      g.lineJoin = 'round';
+      g.strokeStyle = INK;
+      g.stroke(earPath);
+    }
     g.restore();
     return;
   }
-  g.save();
-  g.translate(x, y);
-  const b = 1 + Math.sin(t * 2.2) * 0.04;
+  const b = 1 + breath * 0.04;
   g.scale(b, b);
   g.fillStyle = '#a8703c';
   g.beginPath();

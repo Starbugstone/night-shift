@@ -40,6 +40,21 @@ export function panel(
   }
 }
 
+/** Thin inner highlight along the top edge of a panel drawn at (x, y, w) with corner radius r. */
+export function panelHighlight(g: CanvasRenderingContext2D, x: number, y: number, w: number, r = 22, alpha = 0.14): void {
+  g.beginPath();
+  g.moveTo(x + r, y + 5);
+  g.lineTo(x + w - r, y + 5);
+  g.lineWidth = 2;
+  g.lineCap = 'round';
+  g.strokeStyle = '#ffffff';
+  const a = g.globalAlpha;
+  g.globalAlpha = a * alpha;
+  g.stroke();
+  g.globalAlpha = a;
+  g.lineCap = 'butt';
+}
+
 export function text(
   g: CanvasRenderingContext2D,
   s: string,
@@ -201,8 +216,65 @@ export function drawGlorb(g: CanvasRenderingContext2D, assets: Assets, cx: numbe
   g.fill();
 }
 
-/** Fallback portrait for Vrell / Zib. */
-export function drawPortrait(g: CanvasRenderingContext2D, assets: Assets, who: 'vrell' | 'zib', cx: number, cy: number, size: number, t: number): void {
+// Eye shapes lifted from the portrait SVGs (200×200 box, inside each file's own group transform),
+// so a blink can be painted over the sprite without a second image.
+const VRELL_EYES = 'M49 83Q62 75 80 83Q75 98 58 96Q51 93 49 83ZM95 80Q111 69 131 76Q126 91 109 92Q100 91 95 80Z';
+const VRELL_LIDS = 'M51 88Q64 93 78 87M97 85Q112 89 129 80';
+const ZIB_LIDS = 'M54 96Q72 106 91 96M106 93Q123 103 140 92';
+let vrellEyes: Path2D | null = null;
+let vrellLids: Path2D | null = null;
+let zibLids: Path2D | null = null;
+
+/** True for a few frames every few seconds (with the odd double blink). */
+export function isBlinking(t: number, offset = 0): boolean {
+  const c = (t + offset) % 3.9;
+  return c < 0.13 || (c > 0.32 && c < 0.43 && Math.floor((t + offset) / 3.9) % 3 === 1);
+}
+
+function drawBlink(g: CanvasRenderingContext2D, who: 'vrell' | 'zib', cx: number, cy: number, size: number): void {
+  const k = size / 200;
+  g.save();
+  g.translate(cx - size / 2, cy - size / 2);
+  g.scale(k, k);
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  if (who === 'vrell') {
+    g.translate(1, -3);
+    g.scale(0.994, 1.009);
+    vrellEyes ??= new Path2D(VRELL_EYES);
+    vrellLids ??= new Path2D(VRELL_LIDS);
+    g.fillStyle = '#a387b1';
+    g.fill(vrellEyes);
+    g.lineWidth = 3;
+    g.strokeStyle = '#1b1433';
+    g.stroke(vrellEyes);
+    g.lineWidth = 3.5;
+    g.stroke(vrellLids);
+  } else {
+    g.translate(-10, 0);
+    g.scale(1.055, 1);
+    zibLids ??= new Path2D(ZIB_LIDS);
+    g.fillStyle = '#64c5a1';
+    g.strokeStyle = '#1b1433';
+    g.lineWidth = 3.5;
+    g.beginPath();
+    g.ellipse(72, 92, 21, 23, 0, 0, Math.PI * 2);
+    g.fill();
+    g.stroke();
+    g.beginPath();
+    g.ellipse(123, 88, 19, 24, 0, 0, Math.PI * 2);
+    g.fill();
+    g.stroke();
+    g.lineWidth = 4.5;
+    g.stroke(zibLids);
+  }
+  g.restore();
+}
+
+/** Vrell / Zib portrait in a round frame. They blink (pass `blink = false` to hold still). */
+export function drawPortrait(
+  g: CanvasRenderingContext2D, assets: Assets, who: 'vrell' | 'zib', cx: number, cy: number, size: number, t: number, blink = true,
+): void {
   const key = who === 'vrell' ? 'ui/vrell_portrait' : 'ui/zib_portrait';
   g.save();
   g.beginPath();
@@ -210,7 +282,9 @@ export function drawPortrait(g: CanvasRenderingContext2D, assets: Assets, who: '
   g.fillStyle = who === 'vrell' ? '#3a2f80' : '#24385f';
   g.fill();
   g.clip();
-  if (!sprite(g, assets, key, cx, cy, size, size)) {
+  if (sprite(g, assets, key, cx, cy, size, size)) {
+    if (blink && isBlinking(t, who === 'vrell' ? 0 : 1.7)) drawBlink(g, who, cx, cy, size);
+  } else {
     const s = size / 200;
     const bob = Math.sin(t * 2) * 2 * s;
     if (who === 'vrell') {
@@ -308,15 +382,5 @@ export function clamp(v: number, a: number, b: number): number {
   return v < a ? a : v > b ? b : v;
 }
 
-/** Overshooting ease for pop-ins. */
-export function easeOutBack(t: number): number {
-  const c1 = 1.70158;
-  const c3 = c1 + 1;
-  const x = clamp(t, 0, 1) - 1;
-  return 1 + c3 * x * x * x + c1 * x * x;
-}
-
-export function easeOutCubic(t: number): number {
-  const x = 1 - clamp(t, 0, 1);
-  return 1 - x * x * x;
-}
+// Easing lives in core/fx; re-exported here because every screen already imports from this file.
+export { easeOutBack, easeOutCubic } from '../core/fx';

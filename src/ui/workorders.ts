@@ -3,7 +3,8 @@ import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS, LOCKED_CARDS } from '../levels/levels';
 import { MAX_STARS, isLevelUnlocked, nextRank, rankFor, totalStars } from '../levels/progress';
-import { clamp, drawGlorb, drawStar, fmtTime, outlinedText, panel, paragraph, roundRectPath, text, wrap } from './draw';
+import { GLOW, drawGlow, easeOutCubic } from '../core/fx';
+import { clamp, drawGlorb, drawStar, fmtTime, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text, wrap } from './draw';
 import { C, font } from './theme';
 import { Button, drawNightSky } from './widgets';
 
@@ -40,6 +41,7 @@ export class WorkOrdersScene implements Scene {
   private readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
   private readonly upgrades = new Button(336, 186, 180, 60, 'Upgrades', 'amber', 24);
   private readonly cards: Card[] = [];
+  private headerGrad: CanvasGradient | null = null;
 
   constructor(private readonly shell: Shell) {
     for (let i = 0; i < LEVELS.length; i++) this.cards.push({ kind: 'level', index: i, shake: 0 });
@@ -129,16 +131,24 @@ export class WorkOrdersScene implements Scene {
       if (y > VIEW_H || y + CARD_H < LIST_TOP - 20) continue;
       const c = this.cards[i]!;
       const sx = c.shake > 0 && !rm ? Math.sin(c.shake * 40) * 10 * c.shake : 0;
-      if (c.kind === 'level') this.levelCard(g, c.index, CARD_X + sx, y);
-      else this.teaserCard(g, c.index, CARD_X + sx, y);
+      // cards deal in from below, one after another
+      const deal = rm ? 1 : easeOutCubic((this.t - 0.05 - i * 0.07) / 0.32);
+      if (deal <= 0) continue;
+      g.globalAlpha = deal;
+      const dy = (1 - deal) * 46;
+      if (c.kind === 'level') this.levelCard(g, c.index, CARD_X + sx, y + dy);
+      else this.teaserCard(g, c.index, CARD_X + sx, y + dy);
+      g.globalAlpha = 1;
     }
     g.restore();
 
     // ---- header
-    const hg = g.createLinearGradient(0, 0, 0, LIST_TOP);
-    hg.addColorStop(0, '#0d0924');
-    hg.addColorStop(1, '#171038');
-    g.fillStyle = hg;
+    if (!this.headerGrad) {
+      this.headerGrad = g.createLinearGradient(0, 0, 0, LIST_TOP);
+      this.headerGrad.addColorStop(0, '#0d0924');
+      this.headerGrad.addColorStop(1, '#171038');
+    }
+    g.fillStyle = this.headerGrad;
     g.fillRect(0, 0, VIEW_W, LIST_TOP - 6);
     g.fillStyle = 'rgba(124,255,203,0.25)';
     g.fillRect(0, LIST_TOP - 8, VIEW_W, 2);
@@ -149,10 +159,15 @@ export class WorkOrdersScene implements Scene {
     const stars = totalStars(save);
     const rank = rankFor(stars);
     panel(g, 24, 100, VIEW_W - 48, 76, C.panel, 18, C.ink, 3, 4);
+    panelHighlight(g, 24, 100, VIEW_W - 48, 18);
     text(g, 'RANK', 44, 120, 14, C.muted, 'left', 800);
     text(g, rank.title, 44, 146, rank.title.length > 16 ? 22 : 26, C.text, 'left', 800);
-    drawGlorb(g, assets, 414, 138, 40);
-    text(g, String(save.glorbs), 440, 139, 26, C.mint, 'left', 800);
+    // glorb purse, set into the rank panel
+    roundRectPath(g, 384, 114, 118, 48, 24);
+    g.fillStyle = 'rgba(18,13,43,0.55)';
+    g.fill();
+    drawGlorb(g, assets, 410, 138, 38);
+    text(g, String(save.glorbs), 434, 139, 26, C.mint, 'left', 800, false, 62);
     const nr = nextRank(stars);
     // Left column under the rank panel stops short of the Upgrades button.
     const colW = this.upgrades.x - 44 - 12;
@@ -180,9 +195,11 @@ export class WorkOrdersScene implements Scene {
     const unlocked = isLevelUnlocked(save, i);
     const prog = save.levels[lv.id];
     panel(g, x, y, CARD_W, CARD_H, unlocked ? C.panel : '#211a4a', 22, C.ink, 4, 6);
+    panelHighlight(g, x, y, CARD_W, 22, unlocked ? 0.14 : 0.07);
     roundRectPath(g, x + 4, y + 4, 12, CARD_H - 8, 6);
     g.fillStyle = unlocked ? C.mint : '#4a4470';
     g.fill();
+    this.mugshot(g, lv.map.theme === 'farm' ? 'human/doyle_head' : 'human/larry_head', x + CARD_W - 62, y + 58, unlocked, i);
     text(g, `WORK ORDER #000${lv.num}`, x + 34, y + 26, 14, unlocked ? C.mint : C.muted, 'left', 800);
     const titleLines = wrap(g, lv.title, CARD_W - 150, 24, 800);
     g.font = font(24, 800);
@@ -195,12 +212,32 @@ export class WorkOrdersScene implements Scene {
       for (let s = 0; s < 3; s++) drawStar(g, assets, x + 52 + s * 44, y + CARD_H - 32, 38, prog.stars[s] === true);
       text(g, `Par ${fmtTime(lv.parSec)}`, x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
       text(g, prog.bestTimeSec !== null ? `Best ${fmtTime(prog.bestTimeSec)}` : 'Not yet attempted', x + CARD_W - 24, y + CARD_H - 22, 15, C.amberHi, 'right', 600);
-      // open pill
-      const pulse = this.shell.ctx.reducedMotion ? 0 : Math.sin(this.t * 4) * 2;
-      panel(g, x + CARD_W - 96, y + 18, 78, 56, C.mint, 18, C.ink, 3, 4);
-      text(g, '›', x + CARD_W - 57 + pulse, y + 44, 40, C.ink, 'center', 900);
+      // "open" badge on the mugshot
+      const pulse = this.shell.ctx.reducedMotion ? 0 : Math.sin(this.t * 4 + i) * 2;
+      const bx = x + CARD_W - 34;
+      const by = y + 88;
+      g.beginPath();
+      g.arc(bx, by + 3, 18, 0, Math.PI * 2);
+      g.fillStyle = 'rgba(5,3,20,0.45)';
+      g.fill();
+      g.beginPath();
+      g.arc(bx, by, 18, 0, Math.PI * 2);
+      g.fillStyle = C.mint;
+      g.fill();
+      g.lineWidth = 3;
+      g.strokeStyle = C.ink;
+      g.stroke();
+      g.lineWidth = 4;
+      g.lineCap = 'round';
+      g.lineJoin = 'round';
+      g.beginPath();
+      g.moveTo(bx - 4 + pulse, by - 7);
+      g.lineTo(bx + 4 + pulse, by);
+      g.lineTo(bx - 4 + pulse, by + 7);
+      g.stroke();
+      g.lineCap = 'butt';
     } else {
-      this.padlock(g, x + CARD_W - 58, y + 52);
+      this.padlock(g, x + CARD_W - 34, y + 84);
       text(g, `Deliver ${LEVELS[i - 1]?.human ?? '…'} to unlock`, x + 34, y + CARD_H - 30, 17, C.amberHi, 'left', 700);
     }
   }
@@ -225,6 +262,53 @@ export class WorkOrdersScene implements Scene {
     text(g, c.requires, x + 34, y + 92, 17, C.amber, 'left', 700);
     paragraph(g, c.blurb, x + 34, y + 110, CARD_W - 140, 16, 'rgba(169,162,214,0.85)', 22, 'left', 500, true);
     this.padlock(g, x + CARD_W - 58, y + 52);
+  }
+
+  /** Round mugshot of the specimen, asleep. Locked orders show a redacted silhouette. */
+  private mugshot(g: CanvasRenderingContext2D, key: string, cx: number, cy: number, unlocked: boolean, i: number): void {
+    const { assets, ctx } = this.shell;
+    const r = 38;
+    if (unlocked) {
+      g.globalCompositeOperation = 'lighter';
+      drawGlow(g, GLOW.mint, cx, cy, r + 22, r + 22, 0.22);
+      g.globalCompositeOperation = 'source-over';
+    }
+    g.beginPath();
+    g.arc(cx, cy, r, 0, Math.PI * 2);
+    g.fillStyle = unlocked ? '#1b2f55' : '#171233';
+    g.fill();
+    g.save();
+    g.clip();
+    // snoring: the head rocks a little
+    const rock = ctx.reducedMotion || !unlocked ? 0 : Math.sin(this.t * 1.8 + i * 2) * 0.06;
+    g.translate(cx, cy + 8);
+    g.rotate(-0.12 + rock);
+    if (!unlocked) g.globalAlpha *= 0.28;
+    if (!sprite(g, assets, key, 0, 0, 70, 80)) {
+      g.beginPath();
+      g.arc(0, -4, 26, 0, Math.PI * 2);
+      g.fillStyle = '#d5a182';
+      g.fill();
+    }
+    g.restore();
+    g.beginPath();
+    g.arc(cx, cy, r, 0, Math.PI * 2);
+    g.lineWidth = 4;
+    g.strokeStyle = unlocked ? C.mint : '#4a4470';
+    g.stroke();
+    g.lineWidth = 2;
+    g.strokeStyle = C.ink;
+    g.beginPath();
+    g.arc(cx, cy, r + 3, 0, Math.PI * 2);
+    g.stroke();
+    if (unlocked && !ctx.reducedMotion) {
+      // a little z drifting off the mugshot
+      const k = (this.t * 0.5 + i * 0.4) % 1;
+      const alpha = g.globalAlpha;
+      g.globalAlpha = alpha * Math.sin(Math.PI * k);
+      text(g, 'z', cx - r + 2 - k * 6, cy - r + 8 - k * 14, 15 + k * 6, C.mint, 'center', 900);
+      g.globalAlpha = alpha;
+    }
   }
 
   private padlock(g: CanvasRenderingContext2D, cx: number, cy: number): void {

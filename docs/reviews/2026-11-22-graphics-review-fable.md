@@ -166,3 +166,148 @@ animated effect checks `ctx.reducedMotion`; no gameplay geometry moves.
 6. **Menus:** title scene depth, work-order mugshots, report bursts and stamp
    slam, Vrell blink, panel highlights, cached header gradient.
 7. **Transitions:** iris wipe into the room, flash out of it.
+
+---
+
+# What shipped
+
+Two passes. Pass 1 is commit `2d9b6aa`; pass 2 is the working tree that followed it. No
+gameplay geometry moved in either (ring positions, colliders, routes, par times and manifest
+sprite sizes are untouched), there are no new runtime dependencies, and every animated effect
+checks `ctx.reducedMotion`.
+
+After-screenshots for pass 2 are in `review/fable/after2/` (git-ignored): `ui-*`,
+`flight-L1-*`, `flight-L2-*`, `room-<id>-*`, and three `reduced-motion-*` captures.
+
+## Pass 1 (review items 1–3, 6, 9)
+
+- **Art:** lit west bedroom window on `farmhouse_top`; skylight and north loading dock on
+  `laundromat_top`; `exit_window` redrawn with the sash raised (code overlay removed);
+  `flight/dirt_road_h|v` sprites for farm roads.
+- **Beam:** additive two-pass beam with a bright core, a glow pool on the specimen and at the
+  emitter, rising motes, brighter while dragging.
+- **Room lighting:** lamp, fireplace (flickering) and exit-moonlight pools; soft floor shadow
+  under the specimen; cached vignette on both phases.
+- **Readability:** larger spinning reticle with ticks; pulsing exit zone with a chevron.
+
+## Pass 2 (review items 4, 5, 7, 8, 10–16)
+
+### One FX module — `src/core/fx.ts`
+- `Particles`: one fixed pool per scene (typed arrays, oldest slot recycled, zero allocation
+  per spawn or per frame). Five kinds: star, puff, spark, ring, twinkle; optional homing.
+- `radialSprite` / `lightSprite` / `drawGlow`: radial gradients baked once into small canvases.
+  All big per-frame radial-gradient fills (room light pools, beam glow, street lamps, neon
+  glow) are now bitmap blits.
+- `drawShadow`: soft drop shadow from a sprite's own silhouette (tinted quarter-res copy).
+- `CachedLayer`: static full-screen art painted once and blitted 1:1 (used for room backdrops).
+- `drawEdgeTint`, easing helpers (`easeOutBack` with overshoot, `easeInCubic`, `bump`).
+
+### One HUD kit — `src/ui/hud.ts` (review #4)
+- `hudPanel`, `hudMeter` (icon badge + label + bar with warn/danger ticks, gloss, flash,
+  jitter and red outline when hot), `hudTimer` (digits in fixed cells), `hudButton` (vector
+  icon + caps label), `hudPrompt` (mint tutorial pill with a finger glyph).
+- Flight (`QUIT · SUSPICION · TIME`) and abduction (`WAKE · TIME · RESTART`) sit on the same
+  row (`HUD_ROW`), same indigo panels, ink outline, drop shadow and top highlight as the menu
+  panels, same mint (`#7CFFCB`), same type. Hit areas: quit 64×62 at (14,16); restart 104×62
+  at (422,16).
+- The flat HUD slab over the room is gone: the top band now shows the night sky, the roof slab
+  and the **saucer parked over the roof** (hull, chasing rim lights, beam nozzle) with the HUD
+  floating on it (review #8, top half).
+
+### Authored moments (review #5)
+- **Bonk:** amber stars, dust puffs, sparks and an impact ring *at the contact point* (the
+  ragdoll now records where each solid was hit), a tiny squash on the specimen, a flash on the
+  Wake bar. Power-line bumps in flight get stars and sparks too.
+- **Wake-up:** a red "!" burst pops over the head, red ring and sparks, sweat drops while awake,
+  the Wake meter flashes white then goes red with a jittering outline, a red pulse round the
+  screen edge. The cat's yowl gets its own red stars.
+- **Lock-on:** two expanding rings, sixteen mint sparks and white twinkles; the entry ring
+  **snaps** tight round the saucer (overshoot) and spins up; the progress arc gets a track and a
+  glowing head; the rim lights race; the view dives in (24 % zoom) with a mint edge glow.
+- **Delivery:** rings at the exit, a swarm of twinkles that home into it, a bloom of beam light,
+  then a pale-mint flash that carries into the report.
+- **Specimen Report:** the stamp falls from 2.6×, lands at 0.88× and overshoots back, throwing
+  an ink ring, ink sparks and paper dust from under it, with a short shake; each earned star
+  spins in with a ring, star burst and twinkles; "NEW!" is a red badge that pops; Glorbs count
+  up in their own pill with a click and a coin hop per tick and a twinkle burst at the total.
+- Reduced motion: no shake, squash, zoom or sparks — rings and a couple of stars only.
+
+### Flight details (review #9, #12, #14, #16)
+- Soft silhouette shadows under buildings, trees, bales, the tractor and vehicles, thrown
+  down-right from the top-left moon; the saucer's own shadow is a soft blob that drifts as it bobs.
+- Headlight cones are feathered sprites (full strength inside ~80 % of the real cone, fading
+  out just past its edge, so what looks lit is what gets you spotted) with a bright lamp glow.
+- Dog: breathing, and an ear that twitches every few seconds (flaps while barking).
+- Neon sign: tube-style letters with a glow each, one letter buzzing; the whole sign still
+  drops out exactly with the hazard (`neonOn`).
+- Saucer: hover bob (lift + scale), light chase round the ten rim pads, mint glow on the ground.
+- Power lines: a thin moonlit edge so wires read before the first bonk.
+
+### Abduction details (review #7)
+- Snore breathing: the torso sprite swells with each snore; quick panting once awake. The cat
+  breathes too.
+- Sleep-talk bubble pops in with a tail aimed at the head; the dream bubble has a thought
+  trail to the head, bobs, and pops when the dream changes; Zzz swells as it drifts.
+- The exit glows and its chevrons climb faster as the specimen gets close.
+
+### Screens (review #10, #13, #15)
+- **Title:** moon halo, drifting cloud bands, a shooting star, an additive beam with a pool on
+  the rooftops, rising motes and a sleeper in a nightcap dangling in it; logo drops in, the
+  button pops and breathes; Zib blinks in the dome.
+- **Work Orders:** specimen mugshots (asleep, rocking, with a drifting "z") and an "open" badge;
+  locked orders show a redacted mugshot with the padlock; cards deal in; panel highlights; the
+  header gradient is cached; Glorb purse set into the rank panel.
+- **Specimen Report:** tighter timeline so something is always landing; Vrell is at his desk
+  from the start, scribbling ("…") until the numbers are in.
+- **Memo:** the page slaps down slightly crooked and straightens; "new mail" dot.
+- **Vrell and Zib blink** on every portrait (memo, report, abort, flight bubble) — painted over
+  the sprite from the SVG's own eye shapes, no extra art.
+
+### Transitions (review #11)
+- `SceneManager.go(..., transition)`: `fade` (menus), `iris` and `flash`.
+- Flight → room: a mint-rimmed iris closes on the saucer and opens from the beam emitter of the
+  room. Room → report on delivery: mint flash. Reduced motion: plain fade for all.
+
+### Housekeeping
+- Contact sheet lists `flight/dirt_road_h` and `flight/dirt_road_v`.
+- `AGENTS.md` has a short "Shared rendering helpers" section.
+
+## Frame cost
+
+Measured in headless Chromium at 375×690 CSS px, DPR 2, on this dev box. **Headless Chromium
+rasterises on the CPU**, so absolute numbers are far worse than a phone GPU and only the
+before/after ratio means anything. Two samples per scene: 300 `requestAnimationFrame` deltas,
+and 120 × (`render()` + forced flush). Before = commit `2d9b6aa`.
+
+| Scene | render + flush, mean / p95 (ms) — before | after | rAF delta, mean / p95 (ms) — before | after | 4× CPU throttle, render + flush mean (ms) — before | after |
+|---|---|---|---|---|---|---|
+| Room `farm_window` (beam dragging) | 16.6 / 18.2 | **12.5 / 14.1** | 17.8 / 33.3 | 16.7 / 16.8 | 66.3 | **54.7** |
+| Room `laundry_skylight` (fan, beam dragging) | 13.8 / 19.8 | **11.6 / 13.1** | 16.9 / 16.8 | 16.7 / 16.7 | 52.9 | **51.0** |
+| Flight 2, town (van cones, neon, lamps) | 11.9 / 13.2 | 12.4 / 15.6 | 16.7 / 16.7 | 16.7 / 16.7 | 49.9 | 56.9 |
+| Flight 1, farm (pickup cone, trees) | 14.2 / 16.2 | 14.9 / 17.1 | 16.8 / 16.8 | 16.7 / 16.8 | 52.8 | 60.6 |
+
+Rooms got 16–25 % cheaper despite the extra effects, because the SVG backdrop is now a cached
+bitmap and the light pools are sprites. Flight got 4–5 % dearer unthrottled (about +0.6 ms) and
+about 14 % dearer under 4× CPU throttle: the new prop shadows, glows and HUD panels cost more
+fill than the lamp/neon gradient-to-sprite change saved. A CPU profile of 300 flight frames
+puts 93 % of the time in the software rasteriser and about 1 ms per frame in script, so the
+extra is pixel fill (GPU work on a phone), not JavaScript. Unthrottled, all four scenes hold
+16.7 ms frames. This has not been measured on a real phone.
+
+## Remaining ideas (not done)
+
+- **Pre-rasterise all SVG sprites at load.** The room test showed ~20 % off the frame when art
+  is bitmap rather than re-painted vectors; flight would want a cached ground layer. It changes
+  the `Assets` contract (canvas instead of `HTMLImageElement`) and costs memory, so it is its
+  own change. Worth measuring on a real phone first.
+- Bottom band under the floor (review #8, bottom half) is still only used for the prompt pill.
+- Washers that spin, a cat tail flick, fireplace flame sprites (review #12).
+- Per-context Vrell expressions (eyebrow / mood mark) beyond the blink (review #13).
+- Ring label pills and Zib's bubble still use the menu `panel()` rather than the HUD kit.
+- A dog tail wag and a bark "pop" on the dog itself.
+- Upgrades screen got only panel highlights; a purchase burst would be cheap with `Particles`.
+- If flight needs the fill back on a slow phone, the cheapest cuts are the tree shadows
+  (`SHADOW_OFF.tree = 0`) and the saucer ground glow.
+- L1 has no power lines, so the power-line bonk stars only show on L2.
+- No test covers rendering; a headless smoke test that renders each scene once would catch
+  draw-time exceptions in CI.

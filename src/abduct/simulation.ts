@@ -73,6 +73,14 @@ export class AbductSimulation {
   shake = 0;
   slurp = 0;
   delivered = false;
+  /** Visual events for the view: each counter only ever goes up. */
+  bonkSeq = 0;
+  bonkX = 0;
+  bonkY = 0;
+  /** 0.3..1, how hard the last bonk was. */
+  bonkPower = 0;
+  wakeSeq = 0;
+  catSeq = 0;
 
   private accumulator = 0;
   private nextSnore = 1.2;
@@ -213,14 +221,21 @@ export class AbductSimulation {
       this.catCooldown = 2.2;
       this.catAwake = 1.7;
       this.audio.sfx('yowl');
-      this.onBonk(335, true);
+      this.catSeq++;
+      const cat = this.cat!;
+      this.onBonk(335, true, clamp(this.body.chestX, cat.x, cat.x + cat.w), cat.y);
     }
 
     let speed = 0;
+    let hardest = -1;
     for (let i = 0; i < this.body.impacts.length; i++) {
-      if (i !== this.catIndex) speed = Math.max(speed, this.body.impacts[i]!);
+      if (i !== this.catIndex && this.body.impacts[i]! > speed) {
+        speed = this.body.impacts[i]!;
+        hardest = i;
+      }
     }
-    this.onBonk(speed, false);
+    if (hardest >= 0) this.onBonk(speed, false, this.body.impactX[hardest]!, this.body.impactY[hardest]!);
+    else this.onBonk(0, false, 0, 0);
 
     if (this.wake.awake === 0 && this.elapsed >= this.nextSnore) {
       this.snores++;
@@ -238,13 +253,18 @@ export class AbductSimulation {
     }
   }
 
-  private onBonk(speed: number, cat: boolean): void {
+  private onBonk(speed: number, cat: boolean, x: number, y: number): void {
     const wasAwake = this.wake.awake > 0;
     if (!this.wake.impact(speed, cat)) return;
+    this.bonkSeq++;
+    this.bonkX = x;
+    this.bonkY = y;
+    this.bonkPower = clamp(speed / 320, 0.3, 1);
     this.audio.sfx('bonk', clamp(speed / 320, 0.3, 1));
     if (speed >= 195) this.shake = clamp(speed / 300, 0.6, 1.6);
 
     if (this.wake.awake > 0 && !wasAwake) {
+      this.wakeSeq++;
       this.audio.sfx('wake');
       this.mumbleFx = 0;
       this.snoreFx = 0;

@@ -3,9 +3,10 @@ import { VIEW_H, VIEW_W } from '../contracts';
 import { ART } from '../art-manifest';
 import { SPOTTED_CAPTIONS, SPOTTED_SHOUTS, ZIB_LINES, pick, type ZibEvent } from '../levels/humor';
 import { meterMultiplier } from '../levels/progress';
-import type { LevelDef, RoadDef, VehicleDef } from '../levels/types';
+import type { LevelDef, NeonDef, PropDef, PropKind, RoadDef, VehicleDef } from '../levels/types';
 import { clamp, drawPortrait, easeOutBack, fmtTime, outlinedText, panel, paragraph, roundRectPath, text, wrap } from '../ui/draw';
-import { drawVignette } from '../core/fx';
+import { GLOW, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles, drawEdgeTint, drawGlow, drawShadow, drawVignette, easeInCubic, radialSprite } from '../core/fx';
+import { HUD_ROW, hudButton, hudMeter, hudPanel, hudPrompt, hudTimer, type MeterState } from '../ui/hud';
 import { C, font } from '../ui/theme';
 import { Button } from '../ui/widgets';
 import { circleSegment, pointInCircle, pointInCone, type SegHit } from './geometry';
@@ -33,6 +34,17 @@ const LOCK_ANIM = 0.9;
 const ROAD_W = 120;
 /** Plain road surface, used to paint clean junctions (matches road_v/road_h asphalt). */
 const ROAD_BASE = { farm: '#6e5841', town: '#343756' } as const;
+/** How far each kind of prop throws its shadow (moon top-left → shadow down-right); 0 = flat. */
+const SHADOW_OFF: Record<PropKind, number> = {
+  farmhouse: 14, barn: 14, laundromat: 14, diner: 13, house: 13, tree: 13, tractor: 7, haybale: 7, streetlight: 0, field: 0,
+};
+const BARK_DASH = [14, 12];
+const NO_DASH: number[] = [];
+/** Rim lights on saucer_top.svg: 10 pads on a circle of r 58.5 about (80, 76) in its 160 box. */
+const RIM_LIGHTS = 10;
+const RIM_R = (58.5 / 160) * SAUCER_DRAW;
+const RIM_CY = (-4 / 160) * SAUCER_DRAW;
+const CONE_R = 300;
 
 interface VehicleRT {
   def: VehicleDef;
@@ -65,7 +77,19 @@ export class FlightScene implements Scene {
   private readonly ringPts: Vec2[];
   private readonly hit: SegHit = { nx: 0, ny: 0, depth: 0 };
   private readonly lineFlash: number[];
-  private readonly quit = new Button(14, 14, 64, 64, '✕', 'ghost', 30);
+  private readonly quit = new Button(14, HUD_ROW.y, 64, HUD_ROW.h, '', 'ghost', 30);
+  /** Lock-on burst and bump sparks (world space). */
+  private readonly fx = new Particles(64);
+  private readonly meter: MeterState = {
+    label: 'SUSPICION', value: 0, warn: 0.4, danger: 0.7, icon: 'eye', t: 0, reduced: false, flash: 0, alarm: false,
+  };
+  private meterFlash = 0;
+  private clock = '0:00';
+  private clockSec = -1;
+  /** Feathered headlight sprites, by cone half-angle. */
+  private readonly cones = new Map<number, HTMLCanvasElement | null>();
+  /** Per-neon letter x offsets (measured once). */
+  private readonly neonX: Float32Array[] = [];
   private readonly speckles: Float32Array;
   /** Wooden poles to draw: unique power-line ends that are not already a streetlight. */
   private readonly poles: [number, number][] = [];
@@ -97,8 +121,8 @@ export class FlightScene implements Scene {
   private steerWobble = 0;
 
   private coneGrad: CanvasGradient | null = null;
-  private lampGrad: CanvasGradient | null = null;
-  private neonGrad: CanvasGradient | null = null;
+  private lampGlow: HTMLCanvasElement | null = null;
+  private neonGlow: HTMLCanvasElement | null = null;
 
   constructor(private readonly opts: FlightOptions) {
     this.ctx = opts.ctx;
@@ -180,6 +204,11 @@ export class FlightScene implements Scene {
     this.zibCd = 3.4;
   }
 
+  /** Where the saucer is on screen (the scene transition irises in on it). */
+  screenFocus(): Vec2 {
+    return { x: this.saucer.x - this.camX, y: this.saucer.y - this.camY };
+  }
+
   private updateVehicles(dt: number): void {
     const t = this.hazT;
     for (const v of this.vehicles) {
@@ -199,6 +228,8 @@ export class FlightScene implements Scene {
     this.shake = Math.max(0, this.shake - dt * 3);
     for (let i = 0; i < this.lineFlash.length; i++) this.lineFlash[i] = Math.max(0, this.lineFlash[i]! - dt * 3);
     this.st += dt;
+    this.meterFlash = Math.max(0, this.meterFlash - dt * 3);
+    this.fx.update(dt);
 
     if (this.state === 'spotted') {
       if ((this.st > 0.9 && p.pressed) || this.st > 3.4) {
@@ -281,7 +312,11 @@ export class FlightScene implements Scene {
           s.stun = 0.4;
           this.bumpCd = 0.4;
           this.lineFlash[i] = 1;
-          if (!this.ctx.reducedMotion) this.shake = 1;
+          this.fx.burst(P_STAR, s.x - h.nx * R * 0.7, s.y - h.ny * R * 0.7, this.ctx.reducedMotion ? 2 : 4, 120, 260, 0.55, 11, PC.amber, 0, 2.2);
+          if (!this.ctx.reducedMotion) {
+            this.shake = 1;
+            this.fx.burst(P_SPARK, s.x - h.nx * R * 0.7, s.y - h.ny * R * 0.7, 8, 200, 420, 0.3, 3.5, PC.white, 0, 3);
+          }
           this.ctx.audio.sfx('bonk', 0.8);
           this.say('powerline', true);
         }
@@ -321,7 +356,10 @@ export class FlightScene implements Scene {
     }
     this.sus.update(dt, rate, meterMultiplier(this.ctx.upgrades));
     const high = this.sus.value > 0.7;
-    if (high && !this.wasHighSus) this.say('highSus', true);
+    if (high && !this.wasHighSus) {
+      this.say('highSus', true);
+      this.meterFlash = 1;
+    }
     this.wasHighSus = high;
     if (this.sus.full) {
       this.state = 'spotted';
@@ -347,6 +385,7 @@ export class FlightScene implements Scene {
       this.ctx.audio.sfx('beam_on', 0.6);
       this.say('locked', true);
       if (this.tutStep < 3) this.tutStep = 3;
+      this.lockBurst(this.ringPts[idx]!);
     } else if (idx >= 0 && Math.floor(before01 * 4) !== Math.floor(this.lock.fraction * 4)) {
       this.ctx.audio.sfx('click', 0.4);
     }
@@ -359,6 +398,16 @@ export class FlightScene implements Scene {
     }
 
     this.followCamera(dt);
+  }
+
+  /** The moment of lock-on: the ring snaps shut and throws light. */
+  private lockBurst(ring: Vec2): void {
+    const fx = this.fx;
+    fx.spawn(P_RING, ring.x, ring.y, 0, 0, 0.55, 170, PC.mint);
+    fx.spawn(P_RING, ring.x, ring.y, 0, 0, 0.36, 100, PC.white);
+    if (this.ctx.reducedMotion) return;
+    fx.burst(P_SPARK, ring.x, ring.y, 16, 260, 480, 0.42, 4, PC.mint, 0, 3);
+    fx.burst(P_TWINKLE, ring.x, ring.y, 9, 70, 210, 0.7, 10, PC.white, 0, 2);
   }
 
   private followCamera(dt: number): void {
@@ -383,20 +432,32 @@ export class FlightScene implements Scene {
       this.coneGrad.addColorStop(0, 'rgba(255,244,190,0.62)');
       this.coneGrad.addColorStop(0.7, 'rgba(255,230,150,0.25)');
       this.coneGrad.addColorStop(1, 'rgba(255,230,150,0)');
-      this.lampGrad = g.createRadialGradient(0, 0, 0, 0, 0, 100);
-      this.lampGrad.addColorStop(0, 'rgba(255,200,110,0.45)');
-      this.lampGrad.addColorStop(1, 'rgba(255,200,110,0)');
-      this.neonGrad = g.createRadialGradient(0, 0, 0, 0, 0, 100);
-      this.neonGrad.addColorStop(0, 'rgba(255,90,200,0.5)');
-      this.neonGrad.addColorStop(0.75, 'rgba(255,90,200,0.16)');
-      this.neonGrad.addColorStop(1, 'rgba(255,90,200,0)');
+      this.lampGlow = radialSprite('flight-lamp', [
+        [0, 'rgba(255,200,110,0.45)'],
+        [1, 'rgba(255,200,110,0)'],
+      ]);
+      this.neonGlow = radialSprite('flight-neon', [
+        [0, 'rgba(255,90,200,0.5)'],
+        [0.75, 'rgba(255,90,200,0.16)'],
+        [1, 'rgba(255,90,200,0)'],
+      ]);
     }
     const shx = this.shake > 0 ? Math.sin(t * 80) * 7 * this.shake : 0;
     const shy = this.shake > 0 ? Math.cos(t * 67) * 5 * this.shake : 0;
     const cx = Math.round(this.camX * 2) / 2;
     const cy = Math.round(this.camY * 2) / 2;
+    const s = this.saucer;
+    const locking = this.state === 'locking';
+    const lockK = locking ? Math.min(1, this.st / LOCK_ANIM) : 0;
 
     g.save();
+    if (locking && !rm) {
+      // the view dives in on the saucer while the beam charges
+      const z = 1 + 0.24 * easeInCubic(lockK);
+      g.translate(s.x - cx, s.y - cy);
+      g.scale(z, z);
+      g.translate(-(s.x - cx), -(s.y - cy));
+    }
     g.translate(-cx + shx, -cy + shy);
 
     this.drawGround(g, cx, cy);
@@ -404,16 +465,31 @@ export class FlightScene implements Scene {
     this.drawJunctions(g);
     for (const p of m.groundProps) if (this.visible(p.x, p.y, 220)) drawProp(g, assets, p);
 
-    // target building with a soft pulse outline
+    // soft shadows first, so no shadow lands on top of a neighbouring roof
     const tgt = m.target;
+    this.propShadow(g, tgt);
+    for (const p of m.props) if (this.visible(p.x, p.y, 220)) this.propShadow(g, p);
+    for (const v of this.vehicles) {
+      const spec = ART[v.def.key];
+      if (!spec) continue;
+      g.save();
+      g.translate(v.path.x + 7, v.path.y + 9);
+      g.rotate(v.path.heading + Math.PI / 2);
+      drawShadow(g, assets.get(v.def.key), spec.w, spec.h, 0.34);
+      g.restore();
+    }
+
+    // target building with a soft pulse outline
     const ts = propSize(tgt);
     const pulse = rm ? 0.5 : 0.5 + 0.5 * Math.sin(t * 3);
     roundRectPath(g, tgt.x - ts.w / 2 - 10, tgt.y - ts.h / 2 - 10, ts.w + 20, ts.h + 20, 20);
-    g.fillStyle = `rgba(124,255,203,${(0.08 + 0.08 * pulse).toFixed(3)})`;
+    g.globalAlpha = 0.08 + 0.08 * pulse;
+    g.fillStyle = C.mint;
     g.fill();
+    g.globalAlpha = 1;
     drawProp(g, assets, tgt);
     for (const p of m.props) if (this.visible(p.x, p.y, 200)) drawProp(g, assets, p);
-    for (const d of m.dogs) drawDog(g, assets, d.x, d.y, t);
+    for (const d of m.dogs) drawDog(g, assets, d.x, d.y, t, this.inBark, rm);
     for (const v of this.vehicles) {
       g.save();
       g.translate(v.path.x, v.path.y);
@@ -422,13 +498,9 @@ export class FlightScene implements Scene {
       g.restore();
     }
 
-    // saucer shadow on the ground
-    const s = this.saucer;
-    const bob = rm ? 0 : Math.sin(t * 3) * 0.5 + 0.5;
-    g.fillStyle = 'rgba(5,3,20,0.35)';
-    g.beginPath();
-    g.ellipse(s.x + 22 + bob * 6, s.y + 34 + bob * 8, 46, 40, 0, 0, Math.PI * 2);
-    g.fill();
+    // saucer shadow on the ground: drifts and shrinks as the saucer bobs up
+    const bob = rm ? 0 : Math.sin(t * 2.4) * 0.5 + 0.5;
+    drawGlow(g, GLOW.dark, s.x + 22 + bob * 5, s.y + 34 + bob * 7, 66 - bob * 5, 58 - bob * 5, 0.7);
 
     // night wash
     g.fillStyle = 'rgba(10,8,40,0.26)';
@@ -436,48 +508,40 @@ export class FlightScene implements Scene {
 
     // lights
     g.globalCompositeOperation = 'lighter';
-    for (const l of m.lamps) {
-      if (!this.visible(l.x, l.y, 120)) continue;
-      g.save();
-      g.translate(l.x, l.y);
-      g.fillStyle = this.lampGrad!;
-      g.fillRect(-100, -100, 200, 200);
-      g.restore();
+    if (this.lampGlow) {
+      for (const l of m.lamps) if (this.visible(l.x, l.y, 120)) g.drawImage(this.lampGlow, l.x - 100, l.y - 100, 200, 200);
     }
-    for (const n of m.neons) {
-      const on = neonOn(this.hazT);
-      g.save();
-      g.translate(n.x, n.y);
-      const k = n.r / 100;
-      g.scale(k, k);
-      g.globalAlpha = on ? 1 : 0.25;
-      g.fillStyle = this.neonGrad!;
-      g.fillRect(-100, -100, 200, 200);
-      g.restore();
+    if (this.neonGlow) {
+      g.globalAlpha = neonOn(this.hazT) ? 1 : 0.25;
+      for (const n of m.neons) if (this.visible(n.x, n.y, n.r)) g.drawImage(this.neonGlow, n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
       g.globalAlpha = 1;
     }
     for (const v of this.vehicles) {
+      // feathered cone: soft at the sides, bright at the lamps
+      const cone = this.coneSprite(v.def.coneHalf);
       g.save();
       g.translate(v.ox, v.oy);
       g.rotate(v.coneAngle);
-      const k = v.def.coneRange / 300;
+      const k = v.def.coneRange / CONE_R;
       g.scale(k, k);
-      g.beginPath();
-      g.moveTo(0, 0);
-      g.arc(0, 0, 300, -v.def.coneHalf, v.def.coneHalf);
-      g.closePath();
-      g.fillStyle = this.coneGrad!;
-      g.fill();
+      if (cone) g.drawImage(cone, 0, -cone.height / 2);
+      else {
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.arc(0, 0, CONE_R, -v.def.coneHalf, v.def.coneHalf);
+        g.closePath();
+        g.fillStyle = this.coneGrad!;
+        g.fill();
+      }
       g.restore();
+      drawGlow(g, GLOW.warm, v.ox, v.oy, 34, 34, 0.85);
     }
+    // the saucer's own glow on the ground
+    drawGlow(g, GLOW.mint, s.x, s.y + 4, 86, 86, 0.2 + bob * 0.06 + lockK * 0.5);
     g.globalCompositeOperation = 'source-over';
 
     // neon sign itself
-    for (const n of m.neons) {
-      const on = neonOn(this.hazT);
-      panel(g, n.x - 44, n.y - 22, 88, 44, '#2a1430', 10, C.ink, 3, 0);
-      text(g, n.text, n.x, n.y + 1, 26, on ? '#ff7ad9' : '#5a3a5a', 'center', 900);
-    }
+    for (let i = 0; i < m.neons.length; i++) this.drawNeon(g, m.neons[i]!, i);
 
     // bark radius
     for (const d of m.dogs) {
@@ -485,14 +549,17 @@ export class FlightScene implements Scene {
       const peak = (r - d.rMin) / (d.rMax - d.rMin);
       g.beginPath();
       g.arc(d.x, d.y, r, 0, Math.PI * 2);
-      g.fillStyle = `rgba(255,140,60,${(0.06 + peak * 0.1).toFixed(3)})`;
+      g.globalAlpha = 0.06 + peak * 0.1;
+      g.fillStyle = '#ff8c3c';
       g.fill();
-      g.setLineDash([14, 12]);
-      g.lineDashOffset = -t * 30;
+      g.setLineDash(BARK_DASH);
+      g.lineDashOffset = rm ? 0 : -t * 30;
       g.lineWidth = 4;
-      g.strokeStyle = `rgba(255,170,90,${(0.35 + peak * 0.5).toFixed(3)})`;
+      g.globalAlpha = 0.35 + peak * 0.5;
+      g.strokeStyle = '#ffaa5a';
       g.stroke();
-      g.setLineDash([]);
+      g.setLineDash(NO_DASH);
+      g.globalAlpha = 1;
       if (this.inBark) outlinedText(g, 'WOOF!', d.x, d.y - 50, 26, C.amberHi, C.ink, 900);
       else if (peak > 0.85) text(g, 'woof?', d.x + 34, d.y - 34, 18, C.amberHi, 'center', 800, true);
       else {
@@ -512,15 +579,24 @@ export class FlightScene implements Scene {
       const midx = (l.ax + l.bx) / 2;
       const midy = (l.ay + l.by) / 2 + POWER_LINE.sag;
       const flash = this.lineFlash[i]!;
-      g.lineWidth = 3;
-      g.strokeStyle = flash > 0 ? `rgba(255,240,150,${(0.5 + flash * 0.5).toFixed(3)})` : '#0b0818';
-      for (let k = -1; k <= 1; k += 2) {
-        const ox = nx * k * POWER_LINE.wireGap;
-        const oy = ny * k * POWER_LINE.wireGap;
-        g.beginPath();
-        g.moveTo(l.ax + ox, l.ay + oy);
-        g.quadraticCurveTo(midx + ox, midy + oy, l.bx + ox, l.by + oy);
-        g.stroke();
+      // dark wire, then a thin moonlit edge on its upper-left side so it reads before the first bonk
+      for (let pass = 0; pass < 2; pass++) {
+        const lift = pass === 0 ? 0 : -1.2;
+        g.lineWidth = pass === 0 ? 3 : 1;
+        g.strokeStyle = pass === 0 ? '#0b0818' : 'rgba(176,186,255,0.5)';
+        if (flash > 0) {
+          g.strokeStyle = '#fff096';
+          g.globalAlpha = pass === 0 ? 0.5 + flash * 0.5 : flash;
+        }
+        for (let k = -1; k <= 1; k += 2) {
+          const ox = nx * k * POWER_LINE.wireGap + lift;
+          const oy = ny * k * POWER_LINE.wireGap + lift;
+          g.beginPath();
+          g.moveTo(l.ax + ox, l.ay + oy);
+          g.quadraticCurveTo(midx + ox, midy + oy, l.bx + ox, l.by + oy);
+          g.stroke();
+        }
+        g.globalAlpha = 1;
       }
     }
     for (const [px, py] of this.poles) {
@@ -538,15 +614,121 @@ export class FlightScene implements Scene {
 
     // saucer
     this.drawSaucer(g, t);
+    this.fx.draw(g);
 
     g.restore();
     drawVignette(g, 0.9);
+    if (locking) {
+      drawEdgeTint(g, GLOW.mint, lockK * 0.8);
+      if (this.st < 0.16) {
+        g.globalAlpha = (1 - this.st / 0.16) * (rm ? 0.12 : 0.3);
+        g.fillStyle = '#d9fff0';
+        g.fillRect(0, 0, VIEW_W, VIEW_H);
+        g.globalAlpha = 1;
+      }
+    }
     this.drawHud(g, t);
     if (this.state === 'spotted') this.drawSpotted(g, t);
   }
 
   private visible(x: number, y: number, margin: number): boolean {
     return x > this.camX - margin && x < this.camX + VIEW_W + margin && y > this.camY - margin && y < this.camY + VIEW_H + margin;
+  }
+
+  private propShadow(g: CanvasRenderingContext2D, p: PropDef): void {
+    const off = SHADOW_OFF[p.kind];
+    if (off === 0) return;
+    const img = this.ctx.assets.get(p.key);
+    if (!img) return;
+    const { w, h } = propSize(p);
+    g.save();
+    g.translate(p.x + off, p.y + off * 1.15);
+    if (p.rot) g.rotate(p.rot);
+    drawShadow(g, img, w, h, 0.36);
+    g.restore();
+  }
+
+  /**
+   * Headlight cone sprite for one half-angle, pointing along +x from the left-middle of the
+   * canvas with radius CONE_R. Stacked sectors feather the sides: full strength inside ~80% of
+   * the real cone, fading out just past its edge, so what looks lit is what gets you spotted.
+   */
+  private coneSprite(half: number): HTMLCanvasElement | null {
+    const key = Math.round(half * 1000);
+    const hit = this.cones.get(key);
+    if (hit !== undefined) return hit;
+    let c: HTMLCanvasElement | null = document.createElement('canvas');
+    const outer = Math.min(Math.PI / 2 - 0.02, half * 1.1);
+    const inner = half * 0.78;
+    c.width = CONE_R + 2;
+    c.height = Math.ceil(2 * CONE_R * Math.sin(outer)) + 4;
+    const v = c.getContext('2d');
+    if (v) {
+      v.translate(0, c.height / 2);
+      const grad = v.createRadialGradient(0, 0, 8, 0, 0, CONE_R);
+      grad.addColorStop(0, 'rgba(255,244,190,0.7)');
+      grad.addColorStop(0.7, 'rgba(255,230,150,0.27)');
+      grad.addColorStop(1, 'rgba(255,230,150,0)');
+      v.fillStyle = grad;
+      v.globalCompositeOperation = 'lighter';
+      const layers = 10;
+      v.globalAlpha = 1 / layers;
+      for (let i = 0; i < layers; i++) {
+        const a = outer + (inner - outer) * (i / (layers - 1));
+        v.beginPath();
+        v.moveTo(0, 0);
+        v.arc(0, 0, CONE_R, -a, a);
+        v.closePath();
+        v.fill();
+      }
+    } else c = null;
+    this.cones.set(key, c);
+    return c;
+  }
+
+  /** Neon sign: glowing tube letters; one letter buzzes, and the whole sign drops out with the hazard. */
+  private drawNeon(g: CanvasRenderingContext2D, n: NeonDef, index: number): void {
+    const on = neonOn(this.hazT);
+    const rm = this.ctx.reducedMotion;
+    const len = n.text.length;
+    g.font = font(26, 900);
+    let xs = this.neonX[index];
+    if (!xs) {
+      // letter centres, laid out from the measured advance of each glyph
+      xs = new Float32Array(len);
+      let total = 0;
+      for (let i = 0; i < len; i++) total += g.measureText(n.text[i]!).width + 3;
+      let x = -total / 2;
+      for (let i = 0; i < len; i++) {
+        const w = g.measureText(n.text[i]!).width + 3;
+        xs[i] = x + w / 2;
+        x += w;
+      }
+      this.neonX[index] = xs;
+    }
+    panel(g, n.x - 48, n.y - 25, 96, 50, '#22102a', 12, C.ink, 3, 4);
+    roundRectPath(g, n.x - 41, n.y - 18, 82, 36, 8);
+    g.lineWidth = 2;
+    g.strokeStyle = on ? '#ff7ad9' : '#4b2f4d';
+    g.stroke();
+    const buzz = rm ? -1 : Math.floor(this.hazT * 0.8) % (len + 2);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.lineJoin = 'round';
+    for (let i = 0; i < len; i++) {
+      const lx = n.x + xs[i]!;
+      const lit = on && !(i === buzz && Math.sin(this.hazT * 63) > 0.15);
+      if (lit) {
+        g.globalCompositeOperation = 'lighter';
+        drawGlow(g, GLOW.pink, lx, n.y, 24, 24, 0.5);
+        g.globalCompositeOperation = 'source-over';
+        g.lineWidth = 4;
+        g.strokeStyle = '#ff4fc8';
+        g.strokeText(n.text[i]!, lx, n.y + 1);
+        g.fillStyle = '#ffe6f7';
+      } else g.fillStyle = on ? '#8a4a80' : '#5a3a5a';
+      g.fillText(n.text[i]!, lx, n.y + 1);
+    }
   }
 
   private drawGround(g: CanvasRenderingContext2D, cx: number, cy: number): void {
@@ -634,17 +816,19 @@ export class FlightScene implements Scene {
     const active = this.lock.ring === i;
     const locked = this.lockedRing === i;
     const rm = this.ctx.reducedMotion;
-    const pulse = rm ? 1 : 1 + Math.sin(t * 3 + i) * 0.05;
+    // locked: the ring snaps tight around the saucer (overshoots, then holds) and spins up
+    const snap = locked ? (rm ? 1 : easeOutBack(this.st / 0.28)) : 0;
+    const pulse = (rm ? 1 : 1 + Math.sin(t * 3 + i) * 0.05) * (1 - 0.24 * snap);
     g.save();
     g.translate(e.x, e.y);
     g.scale(pulse, pulse);
     g.globalCompositeOperation = 'lighter';
     g.beginPath();
     g.arc(0, 0, RING_R, 0, Math.PI * 2);
-    g.fillStyle = active || locked ? 'rgba(124,255,203,0.28)' : 'rgba(124,255,203,0.12)';
+    g.fillStyle = locked ? 'rgba(124,255,203,0.42)' : active ? 'rgba(124,255,203,0.28)' : 'rgba(124,255,203,0.12)';
     g.fill();
     g.globalCompositeOperation = 'source-over';
-    g.rotate(rm ? 0 : t * 0.7);
+    g.rotate(rm ? 0 : t * 0.7 + (locked ? this.st * 5 : 0));
     const img = this.ctx.assets.get('flight/entry_ring');
     if (img) g.drawImage(img, -RING_R, -RING_R, RING_R * 2, RING_R * 2);
     else {
@@ -661,14 +845,24 @@ export class FlightScene implements Scene {
       g.stroke();
     }
     g.restore();
-    if (active && this.lock.fraction > 0) {
-      g.beginPath();
-      g.arc(e.x, e.y, RING_R + 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * this.lock.fraction);
+    if (active && this.lock.fraction > 0 && !locked) {
+      // progress arc on a faint track, with a bright head
+      const f = this.lock.fraction;
       g.lineWidth = 10;
+      g.beginPath();
+      g.arc(e.x, e.y, RING_R + 10, 0, Math.PI * 2);
+      g.strokeStyle = 'rgba(27,20,51,0.55)';
+      g.stroke();
+      g.beginPath();
+      g.arc(e.x, e.y, RING_R + 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * f);
       g.lineCap = 'round';
       g.strokeStyle = C.mint;
       g.stroke();
       g.lineCap = 'butt';
+      const ha = -Math.PI / 2 + Math.PI * 2 * f;
+      g.globalCompositeOperation = 'lighter';
+      drawGlow(g, GLOW.white, e.x + Math.cos(ha) * (RING_R + 10), e.y + Math.sin(ha) * (RING_R + 10), 16, 16, 0.9);
+      g.globalCompositeOperation = 'source-over';
     }
     // label pill
     const a = `${e.route} — `;
@@ -709,18 +903,19 @@ export class FlightScene implements Scene {
     // beam while locking
     if (this.state === 'locking') {
       const a = Math.min(1, this.st / 0.3);
+      const flick = rm ? 0 : Math.sin(t * 20) * 5;
       g.globalCompositeOperation = 'lighter';
-      g.fillStyle = `rgba(124,255,203,${(0.35 * a).toFixed(3)})`;
-      g.beginPath();
-      g.arc(s.x, s.y, 40 + a * 30 + Math.sin(t * 20) * 4, 0, Math.PI * 2);
-      g.fill();
+      drawGlow(g, GLOW.mint, s.x, s.y, 80 + a * 50 + flick, 80 + a * 50 + flick, 0.75 * a);
+      drawGlow(g, GLOW.white, s.x, s.y, 40 + a * 16, 40 + a * 16, 0.5 * a);
       g.globalCompositeOperation = 'source-over';
     }
+    // hovering: a gentle bob (scale + a few px of lift); it flattens out with speed
     const hover = 1 - k;
-    const bob = rm ? 1 : 1 + Math.sin(t * 3) * 0.03 * hover;
+    const wave = rm ? 0 : Math.sin(t * 2.4);
+    const bob = 1 + wave * 0.028 * hover;
     const lockShrink = this.state === 'locking' ? 1 - Math.min(0.15, this.st * 0.2) : 1;
     g.save();
-    g.translate(s.x, s.y);
+    g.translate(s.x, s.y - (wave * 0.5 + 0.5) * 3 * hover);
     if (this.steerWobble !== 0 && !rm) g.rotate(this.steerWobble * 0.3);
     if (s.stun > 0 && !rm) g.rotate(Math.sin(t * 40) * 0.25);
     const va = Math.atan2(s.vy, s.vx);
@@ -728,8 +923,19 @@ export class FlightScene implements Scene {
     g.scale((1 - 0.14 * k) * bob * lockShrink, (1 + 0.04 * k) * bob * lockShrink);
     g.rotate(-va);
     const img = this.ctx.assets.get('flight/saucer_top');
-    if (img) g.drawImage(img, -SAUCER_DRAW / 2, -SAUCER_DRAW / 2, SAUCER_DRAW, SAUCER_DRAW);
-    else drawSaucerFallback(g, SAUCER_DRAW, t);
+    if (img) {
+      g.drawImage(img, -SAUCER_DRAW / 2, -SAUCER_DRAW / 2, SAUCER_DRAW, SAUCER_DRAW);
+      // light chase round the rim pads: a bright head with a short tail (faster while locking)
+      g.globalCompositeOperation = 'lighter';
+      const head = rm ? -1 : Math.floor(t * (this.state === 'locking' ? 26 : 9)) % RIM_LIGHTS;
+      for (let i = 0; i < RIM_LIGHTS; i++) {
+        const back = head < 0 ? 2 : (head - i + RIM_LIGHTS) % RIM_LIGHTS;
+        if (back > 2) continue;
+        const a = -Math.PI / 2 + (i / RIM_LIGHTS) * Math.PI * 2;
+        drawGlow(g, i % 2 === 0 ? GLOW.amber : GLOW.mint, Math.cos(a) * RIM_R, RIM_CY + Math.sin(a) * RIM_R, 11, 11, back === 0 ? 1 : back === 1 ? 0.55 : 0.25);
+      }
+      g.globalCompositeOperation = 'source-over';
+    } else drawSaucerFallback(g, SAUCER_DRAW, t);
     g.restore();
   }
 
@@ -738,34 +944,27 @@ export class FlightScene implements Scene {
   private drawHud(g: CanvasRenderingContext2D, t: number): void {
     const assets = this.ctx.assets;
     const rm = this.ctx.reducedMotion;
-    this.quit.render(g);
 
-    // suspicion meter
-    const v = this.sus.value;
-    const shake = v > 0.7 && !rm ? Math.sin(t * 50) * 2 : 0;
-    panel(g, 90 + shake, 16, 330, 62, 'rgba(27,20,51,0.88)', 18, C.ink, 3, 0);
-    text(g, 'SUSPICION', 108 + shake, 34, 14, v > 0.7 ? C.red : C.muted, 'left', 900);
-    roundRectPath(g, 108 + shake, 46, 294, 20, 10);
-    g.fillStyle = '#120d2b';
-    g.fill();
-    if (v > 0.005) {
-      roundRectPath(g, 108 + shake, 46, Math.max(20, 294 * v), 20, 10);
-      g.fillStyle = v > 0.7 ? (Math.floor(t * 8) % 2 === 0 || rm ? C.red : C.amber) : v > 0.4 ? C.amber : C.mint;
-      g.fill();
+    // shared HUD row: quit · suspicion · time
+    hudButton(g, this.quit, 'close', 'QUIT', this.quit.pressedDown);
+    const m = this.meter;
+    m.value = this.sus.value;
+    m.t = t;
+    m.reduced = rm;
+    m.flash = this.meterFlash;
+    hudMeter(g, 90, HUD_ROW.y, 330, HUD_ROW.h, m);
+    const sec = Math.floor(this.time);
+    if (sec !== this.clockSec) {
+      this.clockSec = sec;
+      this.clock = fmtTime(sec);
     }
-    const eye = v > 0.4 ? '◉' : '◡';
-    text(g, eye, 398 + shake, 33, 18, v > 0.7 ? C.red : C.muted, 'center', 900);
-
-    // timer
-    panel(g, 430, 16, 96, 62, 'rgba(27,20,51,0.88)', 18, C.ink, 3, 0);
-    text(g, 'TIME', 478, 32, 13, C.muted, 'center', 900);
-    text(g, fmtTime(this.time), 478, 56, 24, C.text, 'center', 800);
+    hudTimer(g, 430, HUD_ROW.y, 96, HUD_ROW.h, this.clock);
 
     // banner
     if (this.time < 2.4 && this.spotted === 0 && this.state === 'fly') {
       const a = clamp(Math.min(this.time * 4, (2.4 - this.time) * 2), 0, 1);
       g.globalAlpha = a;
-      panel(g, 60, 100, VIEW_W - 120, 70, 'rgba(27,20,51,0.9)', 20, C.mint, 2, 0);
+      hudPanel(g, 60, 100 - (rm ? 0 : (1 - a) * 14), VIEW_W - 120, 70, C.mint);
       text(g, `WORK ORDER #000${this.level.num}`, VIEW_W / 2, 122, 15, C.mint, 'center', 900);
       text(g, this.level.map.theme === 'farm' ? 'Collect: Farmer Doyle' : 'Collect: Laundromat Larry', VIEW_W / 2, 148, 21, C.text, 'center', 800);
       g.globalAlpha = 1;
@@ -801,18 +1000,7 @@ export class FlightScene implements Scene {
     // tutorial prompt
     if (this.ctx.tutorial && this.tutStep < 3 && this.state === 'fly') {
       const msg = this.tutStep === 0 ? 'Drag anywhere to fly' : this.tutStep === 1 ? 'Let go to hover' : 'Hover in a ring for 1 s to lock on';
-      g.font = font(24, 800);
-      const w = g.measureText(msg).width + 80;
-      const y = FLIGHT_HUD.tutY;
-      panel(g, (VIEW_W - w) / 2, y - FLIGHT_HUD.tutH / 2, w, FLIGHT_HUD.tutH, C.mint, 30, C.ink, 3, 4);
-      text(g, msg, VIEW_W / 2 + 18, y + 1, 24, C.ink, 'center', 800);
-      // finger glyph
-      const fx = (VIEW_W - w) / 2 + 30;
-      const fy = y + (this.tutStep === 0 && !rm ? Math.sin(t * 4) * 6 : 0);
-      g.beginPath();
-      g.arc(fx, fy, 12, 0, Math.PI * 2);
-      g.fillStyle = this.tutStep === 1 ? 'rgba(27,20,51,0.3)' : C.ink;
-      g.fill();
+      hudPrompt(g, VIEW_W / 2, FLIGHT_HUD.tutY, FLIGHT_HUD.tutH, msg, 24, this.tutStep === 0 ? 'drag' : this.tutStep === 1 ? 'release' : 'hold', t, rm, 510);
     }
 
     // Zib bubble (hidden behind the SPOTTED! overlay — the witness has the floor)

@@ -201,6 +201,9 @@ export class Ragdoll {
   private readonly restHeadY: number;
   readonly impacts: Float64Array;
   readonly touched: Uint8Array;
+  /** Where the hardest hit on each solid landed this step (valid when `impacts[i] > 0`). */
+  readonly impactX: Float64Array;
+  readonly impactY: Float64Array;
   beamX: number;
   beamY: number;
   beamActive = true;
@@ -213,6 +216,8 @@ export class Ragdoll {
     this.pelvisRadius = pose.pelvisRadius ?? RADII[Joint.Pelvis]!;
     this.impacts = new Float64Array(solids.length);
     this.touched = new Uint8Array(solids.length);
+    this.impactX = new Float64Array(solids.length);
+    this.impactY = new Float64Array(solids.length);
     this.x[Joint.Neck] = pose.neckX;
     this.y[Joint.Neck] = pose.neckY;
     const angles = [
@@ -375,7 +380,11 @@ export class Ragdoll {
       const vx = (this.vx[a]! + this.vx[b]!) * 0.5 - c.vx;
       const vy = (this.vy[a]! + this.vy[b]!) * 0.5 - c.vy;
       const inward = Math.max(0, -(vx * c.nx + vy * c.ny));
-      this.impacts[i] = Math.max(this.impacts[i]!, inward);
+      if (inward > this.impacts[i]!) {
+        this.impacts[i] = inward;
+        this.impactX[i] = (x[a]! + x[b]!) * 0.5 - c.nx * (radius - c.depth);
+        this.impactY[i] = (y[a]! + y[b]!) * 0.5 - c.ny * (radius - c.depth);
+      }
       this.touched[i] = 1;
 
       const dx = c.nx * c.depth;

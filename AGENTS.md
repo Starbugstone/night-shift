@@ -32,6 +32,18 @@ Edit only your area. Tests go in `tests/<area>-*.test.ts`. Do **not** run
 the index or other agents' files — the coordinator commits. Do not run
 `npm install` of new packages without saying why in your report.
 
+## Shared rendering helpers (use these before drawing your own)
+
+- `src/core/fx.ts` — `Particles` (one fixed-size pool per scene: stars, puffs, sparks, rings,
+  twinkles), `drawGlow` / `lightSprite` / `radialSprite` (cached light blobs; never fill a big
+  radial gradient per frame), `drawShadow` (soft sprite silhouette), `CachedLayer` (static
+  full-screen art painted once), `drawVignette` / `drawEdgeTint`, easing.
+- `src/ui/hud.ts` — the one in-game HUD kit (`hudPanel`, `hudMeter`, `hudTimer`, `hudButton`,
+  `hudPrompt`) on the shared `HUD_ROW`. Both phases use it; don't hand-draw HUD boxes.
+- `SceneManager.go(name, make, instant, transition)` — `fade` (default), `iris`, `flash`.
+- Every animated effect checks `ctx.reducedMotion`. Gameplay tells (cone edge, bark ring, neon
+  on/off) must stay honest: decorate them, don't move them.
+
 ## Art
 
 Load art by manifest key through `ctx.assets.get(key)`; files are at
