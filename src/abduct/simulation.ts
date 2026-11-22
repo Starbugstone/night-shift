@@ -1,0 +1,364 @@
+import { ART } from '../art-manifest';
+import type { AbductResult, Audio, UpgradeId } from '../contracts';
+import { clamp, Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid } from './ragdoll';
+import type { Area, Room } from './rooms/layout';
+import { AWAKE_SECONDS, WakeMeter } from './wake';
+
+export const SAUCER_X = 270;
+export const BEAM_ORIGIN_Y = 127;
+export const FLOOR = 846;
+const SLURP_SECONDS = 0.56;
+const GRIP_STRAIN = 132;
+const HANDS = [Joint.NearHand, Joint.FarHand] as const;
+const FLAIL_JOINTS = [...HANDS, Joint.NearFoot, Joint.FarFoot] as const;
+const CAT_LIFT = ART['room/cat_awake']!.h - ART['room/cat_sleeping']!.h;
+const MUMBLES = [
+  'Five more minutes…',
+  'Not the geese, Linda.',
+  'I’m the captain of the pudding.',
+  'The moon owes me six dollars.',
+  'That’s my emergency lasagna.',
+  'Put the hamster on payroll.',
+  'No, the barn is wearing ME.',
+  'I already folded Tuesday.',
+  'The soup needs a seat belt.',
+  'Tell the mayor I’m a sandwich.',
+  'Where’s my formal slipper?',
+  'I did the taxes in crayon.',
+  'Don’t iron the waffles.',
+  'The cheese knows what it did.',
+  'Sir, this is a pillow.',
+] as const;
+
+interface LooseItem {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  captured: boolean;
+  side: number;
+  stolen: boolean;
+}
+
+function rectangle(area: Area, inset = 0): Rect {
+  return {
+    kind: 'rect',
+    x: area.x + inset, y: area.y + inset,
+    w: area.w - inset * 2, h: area.h - inset * 2,
+    vx: 0, vy: 0,
+  };
+}
+
+function contains(area: Area, x: number, y: number, margin = 0): boolean {
+  return x >= area.x - margin && x <= area.x + area.w + margin &&
+    y >= area.y - margin && y <= area.y + area.h + margin;
+}
+
+export class AbductSimulation {
+  readonly body: Ragdoll;
+  readonly wake: WakeMeter;
+  readonly item: LooseItem;
+  readonly fanBlades: readonly Blade[];
+  readonly sign: Blade | undefined;
+  readonly cart: Rect | undefined;
+  readonly solids: readonly Solid[];
+  elapsed = 0;
+  snores = 0;
+  snoreFx = 0;
+  mumble = '';
+  mumbleFx = 0;
+  catAwake = 0;
+  shake = 0;
+  slurp = 0;
+  delivered = false;
+
+  private accumulator = 0;
+  private nextSnore = 1.2;
+  private nextFlail = 0;
+  private flailEnds = 0;
+  private grabbed = false;
+  private strain = 0;
+  private grip: Rect | undefined;
+  private gripOffsetX = 0;
+  private gripOffsetY = 0;
+  private strainX = 0;
+  private strainY = 0;
+  private readonly cat: Rect | undefined;
+  private catIndex = -1;
+  private signIndex = -1;
+  private catCooldown = 0;
+  private readonly grabSurfaces: Rect[] = [];
+  private readonly contact = new Contact();
+  private readonly itemRadius: number;
+  private readonly itemFloorOffset: number;
+
+  constructor(
+    readonly room: Room,
+    upgrades: ReadonlySet<UpgradeId>,
+    private readonly audio: Audio,
+    private readonly random: () => number = Math.random,
+  ) {
+    const solids: Solid[] = [
+      rectangle({ x: -120, y: 106, w: 139, h: 860 }),
+      rectangle({ x: 521, y: 106, w: 139, h: 860 }),
+      rectangle({ x: 0, y: 3, w: 540, h: 117 }),
+      rectangle({ x: 0, y: FLOOR, w: 540, h: 180 }),
+    ];
+
+    for (const masonry of room.masonry ?? []) solids.push(rectangle(masonry));
+    for (const { sprite, solid, grabbable } of room.furniture) {
+      if (!solid) continue;
+      const shape = rectangle(sprite, 5);
+      solids.push(shape);
+      if (grabbable) this.grabSurfaces.push(shape);
+    }
+
+    if (room.cat) {
+      this.catIndex = solids.length;
+      this.cat = rectangle(room.cat, 6);
+      solids.push(this.cat);
+    }
+
+    this.fanBlades = room.fan ? [
+      { kind: 'blade', ...room.fan, from: 19, to: 207, r: 11, omega: room.fan.speed },
+      { kind: 'blade', ...room.fan, angle: room.fan.angle + Math.PI, from: 19, to: 207, r: 11, omega: room.fan.speed },
+    ] : [];
+    if (room.fan) {
+      const hub: Circle = { kind: 'circle', x: room.fan.x, y: room.fan.y, r: 22, vx: 0, vy: 0 };
+      solids.push(hub, ...this.fanBlades);
+    }
+
+    if (room.cart) {
+      this.cart = rectangle(room.cart.sprite, 5);
+      this.grabSurfaces.push(this.cart);
+      solids.push(this.cart);
+    }
+    if (room.sign) {
+      this.sign = {
+        kind: 'blade',
+        x: room.sign.x, y: room.sign.y + room.sign.h / 2, angle: 0,
+        from: 29, to: room.sign.w - 29, r: 29, omega: 0,
+      };
+      this.signIndex = solids.length;
+      solids.push(this.sign);
+    }
+    this.solids = solids;
+    this.body = new Ragdoll(room.pose, solids, upgrades.has('beam_dampener'));
+    this.wake = new WakeMeter(upgrades.has('hush_drive'));
+    const item = room.item.sprite;
+    this.item = { x: item.x + item.w * 0.5, y: item.y + item.h * 0.5, vx: 0, vy: 0, captured: false, side: 1, stolen: false };
+    this.itemRadius = item.h * 0.5 - 3;
+    this.itemFloorOffset = item.h * 0.5;
+    this.strainX = this.body.beamX;
+    this.strainY = this.body.beamY;
+  }
+
+  get complete(): boolean { return this.delivered && this.slurp >= 1; }
+
+  moveBeam(x: number, y: number): void {
+    this.body.beamX = clamp(x, 47, 491);
+    this.body.beamY = clamp(y, 146, 800);
+  }
+
+  update(dt: number): void {
+    this.accumulator += clamp(dt, 0, 0.1);
+    while (this.accumulator + 1e-9 >= STEP && !this.complete) {
+      this.accumulator -= STEP;
+      if (this.delivered) {
+        this.slurp = Math.min(1, this.slurp + STEP / SLURP_SECONDS);
+      } else {
+        this.step();
+      }
+    }
+  }
+
+  result(aborted = false): AbductResult {
+    return {
+      delivered: this.delivered && !aborted,
+      woke: this.wake.woke,
+      timeSec: this.elapsed,
+      bonks: this.wake.bonks,
+      dignity: Math.round(this.wake.dignity),
+      snores: this.snores,
+      itemsStolen: this.item.stolen && !aborted ? [this.room.item.name] : [],
+      aborted,
+    };
+  }
+
+  private step(): void {
+    this.elapsed += STEP;
+    this.wake.tick(STEP, this.body.gripActive);
+    this.catCooldown = Math.max(0, this.catCooldown - STEP);
+    this.catAwake = Math.max(0, this.catAwake - STEP);
+    this.snoreFx = Math.max(0, this.snoreFx - STEP);
+    this.mumbleFx = Math.max(0, this.mumbleFx - STEP);
+    this.shake = Math.max(0, this.shake - STEP * 6);
+    this.moveHazards();
+    this.updateGrip();
+    this.body.step();
+
+    if (this.sign && this.body.impacts[this.signIndex]! > 55) {
+      this.sign.omega = clamp(this.sign.omega + this.body.impacts[this.signIndex]! * 0.004, -1.5, 1.5);
+    }
+    if (this.catIndex >= 0 && this.catCooldown === 0 && this.body.touched[this.catIndex]) {
+      this.catCooldown = 2.2;
+      this.catAwake = 1.7;
+      this.audio.sfx('yowl');
+      this.onBonk(335, true);
+    }
+
+    let speed = 0;
+    for (let i = 0; i < this.body.impacts.length; i++) {
+      if (i !== this.catIndex) speed = Math.max(speed, this.body.impacts[i]!);
+    }
+    this.onBonk(speed, false);
+
+    if (this.wake.awake === 0 && this.elapsed >= this.nextSnore) {
+      this.snores++;
+      this.snoreFx = 1.1;
+      this.nextSnore = this.elapsed + 1.85 + this.random() * 0.65;
+      this.audio.sfx('snore', this.room.human === 'doyle' ? 0.75 : 0.53);
+    }
+
+    this.updateItem();
+    if (!this.body.gripActive && contains(this.room.exitZone, this.body.chestX, this.body.chestY)) {
+      this.delivered = true;
+      this.item.stolen = this.item.captured && contains(this.room.exitZone, this.item.x, this.item.y, 48) &&
+        Math.hypot(this.body.chestX - this.item.x, this.body.chestY - this.item.y) < 108;
+      this.audio.sfx('success');
+    }
+  }
+
+  private onBonk(speed: number, cat: boolean): void {
+    const wasAwake = this.wake.awake > 0;
+    if (!this.wake.impact(speed, cat)) return;
+    this.audio.sfx('bonk', clamp(speed / 320, 0.3, 1));
+    if (speed >= 195) this.shake = clamp(speed / 300, 0.6, 1.6);
+
+    if (this.wake.awake > 0 && !wasAwake) {
+      this.audio.sfx('wake');
+      this.mumbleFx = 0;
+      this.snoreFx = 0;
+      this.nextSnore = this.elapsed + 3.5;
+      this.grabbed = false;
+      this.flailEnds = this.elapsed + AWAKE_SECONDS;
+      this.nextFlail = this.elapsed;
+    } else if (!wasAwake && !cat && speed >= 145) {
+      this.mumble = MUMBLES[Math.floor(this.random() * MUMBLES.length)]!;
+      this.mumbleFx = 1.6;
+      this.audio.sfx('mumble');
+    }
+  }
+
+  private moveHazards(): void {
+    for (const blade of this.fanBlades) blade.angle += blade.omega * STEP;
+    if (this.cart && this.room.cart) {
+      const { sprite, travel, speed } = this.room.cart;
+      const phase = this.elapsed * speed;
+      this.cart.x = sprite.x + 5 + travel * Math.sin(phase);
+      this.cart.vx = travel * speed * Math.cos(phase);
+    }
+    if (this.cat && this.room.cat) {
+      const lift = this.catAwake > 0 ? CAT_LIFT : 0;
+      this.cat.y = this.room.cat.y + 6 - lift;
+      this.cat.h = this.room.cat.h - 12 + lift;
+    }
+    if (this.sign) {
+      this.sign.omega += (-this.sign.angle * 15 - this.sign.omega * 3.1) * STEP;
+      this.sign.angle += this.sign.omega * STEP;
+    }
+  }
+
+  private updateGrip(): void {
+    const body = this.body;
+    if (this.wake.awake > 0 && this.elapsed < this.flailEnds && this.elapsed >= this.nextFlail) {
+      for (const joint of FLAIL_JOINTS) body.kick(joint, (this.random() - 0.5) * 350, (this.random() - 0.56) * 360);
+      this.nextFlail = this.elapsed + 0.19 + this.random() * 0.12;
+    }
+
+    if (this.wake.awake > 0 && !this.grabbed && this.elapsed < this.flailEnds) this.tryGrab();
+    if (this.grip) {
+      body.gripX = this.grip.x + this.gripOffsetX;
+      body.gripY = this.grip.y + this.gripOffsetY;
+      const pull = Math.hypot(body.beamX - body.chestX, body.beamY - body.chestY);
+      const yank = Math.hypot(body.beamX - this.strainX, body.beamY - this.strainY) / STEP;
+      this.strain = Math.max(0, this.strain + (Math.max(0, pull - 45) * 2.5 + yank * 0.60 - 40) * STEP);
+      if (this.strain >= GRIP_STRAIN) {
+        this.grip = undefined;
+        body.gripActive = false;
+        body.kick(body.gripJoint, (body.beamX - body.chestX) * 1.9, (body.beamY - body.chestY) * 1.9);
+      }
+    }
+    this.strainX = body.beamX;
+    this.strainY = body.beamY;
+  }
+
+  private tryGrab(): void {
+    const body = this.body;
+    let distance = 77;
+    for (const joint of HANDS) {
+      const x = body.x[joint]!;
+      const y = body.y[joint]!;
+      for (const surface of this.grabSurfaces) {
+        const left = surface.x - 11;
+        const top = surface.y - 11;
+        const right = surface.x + surface.w + 11;
+        const bottom = surface.y + surface.h + 11;
+        let px = clamp(x, left, right);
+        let py = clamp(y, top, bottom);
+        const nearest = Math.min(px - left, right - px, py - top, bottom - py);
+        if (nearest > 0) {
+          if (nearest === px - left) px = left;
+          else if (nearest === right - px) px = right;
+          else if (nearest === py - top) py = top;
+          else py = bottom;
+        }
+        const reach = Math.hypot(x - px, y - py);
+        if (reach >= distance) continue;
+        distance = reach;
+        this.grip = surface;
+        this.gripOffsetX = px - surface.x;
+        this.gripOffsetY = py - surface.y;
+        body.gripJoint = joint;
+      }
+    }
+    if (this.grip) {
+      this.grabbed = true;
+      body.gripActive = true;
+      this.strain = 0;
+    }
+  }
+
+  private updateItem(): void {
+    const item = this.item;
+    const body = this.body;
+    const dy = item.y - body.chestY;
+    const t = clamp((item.y - BEAM_ORIGIN_Y) / Math.max(30, body.chestY - BEAM_ORIGIN_Y), 0, 1);
+    const columnX = SAUCER_X + (body.chestX - SAUCER_X) * t;
+    if (!item.captured && dy > -115 && dy < 60 && Math.abs(item.x - columnX) < 57) {
+      item.captured = true;
+      item.side = item.x < body.chestX ? -1 : 1;
+    }
+
+    if (item.captured) {
+      const targetX = clamp(body.chestX + item.side * 32, 38, 502);
+      item.vx += clamp((targetX - item.x) * 23 - item.vx * 6, -1600, 1600) * STEP;
+      item.vy += clamp((body.chestY + 12 - item.y) * 24 - item.vy * 6, -1600, 1600) * STEP;
+    } else {
+      item.vy += 440 * STEP;
+    }
+    item.x += item.vx * STEP;
+    item.y += item.vy * STEP;
+
+    const c = this.contact;
+    for (const solid of this.solids) {
+      if (!c.find(item.x, item.y, this.itemRadius, solid)) continue;
+      item.x += c.nx * c.depth;
+      item.y += c.ny * c.depth;
+      const inward = Math.min(0, (item.vx - c.vx) * c.nx + (item.vy - c.vy) * c.ny);
+      item.vx = (item.vx - inward * 1.2 * c.nx) * 0.85;
+      item.vy = (item.vy - inward * 1.2 * c.ny) * 0.85;
+    }
+    item.y = Math.min(item.y, FLOOR - this.itemFloorOffset);
+  }
+}
