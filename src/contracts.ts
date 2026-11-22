@@ -42,7 +42,9 @@ export type SfxName =
   | 'success'
   | 'fail'
   | 'click'
-  | 'stamp';
+  | 'stamp'
+  /** Soft rising 'uh-oh' tick while a meter climbs (added by shell). */
+  | 'alert';
 
 export interface Audio {
   sfx(name: SfxName, volume?: number): void;
