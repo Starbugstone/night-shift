@@ -44,13 +44,30 @@ export type SfxName =
   | 'click'
   | 'stamp'
   /** Soft rising 'uh-oh' tick while a meter climbs (added by shell). */
-  | 'alert';
+  | 'alert'
+  // ---- v2 (deep levels). Shell implements; anyone may play them.
+  | 'laser'
+  | 'alarm'
+  | 'crash'
+  | 'creak'
+  | 'scream'
+  | 'siren'
+  | 'dash'
+  | 'lullaby'
+  | 'checkpoint'
+  | 'sunrise';
 
 export interface Audio {
   sfx(name: SfxName, volume?: number): void;
 }
 
-export type UpgradeId = 'beam_dampener' | 'hush_drive';
+export type UpgradeId =
+  | 'beam_dampener'
+  | 'hush_drive'
+  /** v2, flight: flick to dash (owned by flight code). */
+  | 'afterburner'
+  /** v2, abduction: double-tap once per building to calm every wake meter (owned by abduct code). */
+  | 'snooze_ray';
 
 export interface GameContext {
   pointer: PointerState;
@@ -75,13 +92,54 @@ export interface Scene {
 
 // ---------------------------------------------------------------- abduction
 
-/** Abduction room ids, implemented in src/abduct/rooms/. */
-export type RoomId = 'farm_window' | 'farm_chimney' | 'laundry_skylight' | 'laundry_loading';
+/**
+ * Abduction route ids, implemented in src/abduct/rooms/. A route = one building interior
+ * + the exit you must reach (= the entry ring the saucer locked onto).
+ * Tutorial routes are single rooms; v2 routes are multi-room scrolling interiors.
+ */
+export type RoomId =
+  // L1, L2 (tutorials)
+  | 'farm_window'
+  | 'farm_chimney'
+  | 'laundry_skylight'
+  | 'laundry_loading'
+  // L3 Cul-de-Sac Sweep
+  | 'dave_roof'
+  | 'dave_patio'
+  | 'barb_chimney'
+  | 'barb_backdoor'
+  | 'gary_skylight'
+  | 'gary_garagedoor'
+  // L4 Downtown Graveyard Shift
+  | 'nigel_skylight'
+  | 'nigel_loading'
+  | 'kev_vent'
+  | 'kev_fireescape'
+  | 'mayor_clocktower'
+  | 'mayor_elevator';
+
+/** How punishing an abduction is. Tutorials: all false. Deep levels: all true. */
+export interface AbductRules {
+  /** Specimen fully waking fails the attempt (else: only costs the star, old behaviour). */
+  wakeFails: boolean;
+  /** Tighter bonk threshold / faster wake fill / slower decay. */
+  hard: boolean;
+}
 
 export interface AbductStart {
   levelId: string;
   roomId: RoomId;
+  /** Optional for back-compat; missing = tutorial rules. */
+  rules?: AbductRules;
 }
+
+export type AbductFailReason =
+  /** Specimen woke (only when rules.wakeFails). */
+  | 'woke'
+  /** A second sleeper (spouse, dog, bouncer...) woke. */
+  | 'sleeper'
+  /** Laser tripwire or security camera. */
+  | 'alarm';
 
 export interface AbductResult {
   delivered: boolean;
@@ -96,6 +154,10 @@ export interface AbductResult {
   itemsStolen: string[];
   /** Player tapped "give up" / restart. */
   aborted: boolean;
+  /** Set when the attempt failed for a reason other than aborting (delivered is false). */
+  failReason?: AbductFailReason;
+  /** Short display name of what caused the failure, e.g. "Brenda", "Gary's laser". */
+  failBy?: string;
 }
 
 /** Implemented by src/abduct/index.ts. */
@@ -113,4 +175,26 @@ export interface FlightResult {
   timeSec: number;
   /** Times spotted (flight restarted) before success. */
   spotted: number;
+}
+
+// ---------------------------------------------------------------- v2 autopilots (tests + e2e bot)
+
+/**
+ * Test-only. Flight scenes expose `debug.autopilot()`: the finger a competent player would
+ * hold this frame, in logical screen coords (steering = finger offset from the saucer).
+ */
+export interface FlightAutopilotIntent {
+  down: boolean;
+  x: number;
+  y: number;
+}
+
+/**
+ * Test-only. Abduction scenes expose `debug.autopilot()`: the beam drag a competent player
+ * would make this frame, as a finger delta in logical px (the beam follows relative drag).
+ * `{dx:0, dy:0}` = hold still (e.g. waiting for a laser to switch off).
+ */
+export interface AbductAutopilotIntent {
+  dx: number;
+  dy: number;
 }

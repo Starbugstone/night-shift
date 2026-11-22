@@ -50,3 +50,17 @@ Load art by manifest key through `ctx.assets.get(key)`; files are at
 `public/art/<key>.svg`, served from `import.meta.env.BASE_URL + 'art/'`.
 Every draw must have a primitive fallback (art may be missing or still
 being made). Draw sprites into a rect of the manifest size.
+
+## v2 "Deeper Shift" (2026-11-23)
+
+Design: `docs/GDD-2-deeper.md` (it overrides `docs/GDD.md` where they differ).
+New shared types in `src/contracts.ts`: the extended `RoomId`, `AbductRules`,
+`AbductFailReason`, the v2 `SfxName`s, the `afterburner` and `snooze_ray` upgrades, and
+the autopilot intents. The art keys for v2 are in `src/art-manifest.ts` under the
+v2 banner. Code owners may append keys in their own marked APPEND section and must
+always draw a primitive fallback.
+
+Proof of solvability: every abduction route and every deep-level flight map must
+have a headless vitest autopilot run that completes it without failing. Each scene
+also exposes `debug.autopilot()` (see contracts) so that `scripts/e2e-playthrough.cjs`
+can play the game through real pointer input.
