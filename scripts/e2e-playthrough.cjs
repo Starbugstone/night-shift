@@ -1,4 +1,4 @@
-// End-to-end bot: plays L1 (chimney) and L2 (loading door) through real pointer input.
+// End-to-end bot: plays all four routes (L1 window/chimney, L2 skylight/loading door) through real pointer input.
 // Usage: npx vite --port 5199 & PLAYWRIGHT_PATH=<path to playwright> node scripts/e2e-playthrough.cjs
 // Screenshots use canvas.toDataURL (page.screenshot hangs on this WSL box).
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
@@ -64,37 +64,32 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   async function abduct() {
     await waitScene('abduct', 20000);
     await sleep(500);
-    const route = await page.evaluate(async () => {
-      const a = window.__nightShift.active.debug;
-      return a.room ? a.room.route : null;
-    });
-    if (!route) throw new Error('no route');
+    const route = await page.evaluate(() => window.__nightShift.active.debug.room.route);
     const ANCHOR = [270, 520];
     let fx = ANCHOR[0], fy = ANCHOR[1];
-    const [ax, ay] = map(fx, fy);
-    await page.mouse.move(ax, ay); await page.mouse.down();
+    const press = async () => { const [qx, qy] = map(fx, fy); await page.mouse.move(qx, qy); await page.mouse.down(); await sleep(50); };
+    await press();
+    const t0 = Date.now();
     for (const p of route) {
-      const b = await page.evaluate(() => { const d = window.__nightShift.active.debug; return { x: d.body.beamX, y: d.body.beamY }; });
-      const frames = Math.ceil(p.seconds * 30);
-      let prevX = b.x, prevY = b.y;
-      for (let f = 1; f <= frames; f++) {
-        const t = f / frames;
-        const nx = b.x + (p.x - b.x) * t, ny = b.y + (p.y - b.y) * t;
-        let ddx = nx - prevX, ddy = ny - prevY;
-        if (fx + ddx < 30 || fx + ddx > 510 || fy + ddy < 160 || fy + ddy > 880) {
-          await page.mouse.up(); fx = ANCHOR[0]; fy = ANCHOR[1];
-          const [qx, qy] = map(fx, fy); await page.mouse.move(qx, qy); await page.mouse.down(); await sleep(40);
-        }
-        fx += ddx; fy += ddy; prevX = nx; prevY = ny;
-        const [qx, qy] = map(fx, fy);
-        await page.mouse.move(qx, qy);
-        await sleep(33);
+      const tEnd = Date.now() + p.seconds * 1000;
+      const b0 = await page.evaluate(() => { const d = window.__nightShift.active.debug; return { x: d.body.beamX, y: d.body.beamY }; });
+      const tStart = Date.now();
+      while (true) {
+        const info = await page.evaluate(() => { const a = window.__nightShift.active; if (!a || !a.debug) return null; const d = a.debug; return { x: d.body.beamX, y: d.body.beamY, done: d.delivered }; });
+        if (!info || info.done) break;
+        const k = Math.min(1, (Date.now() - tStart) / (tEnd - tStart));
+        const tx = b0.x + (p.x - b0.x) * k, ty = b0.y + (p.y - b0.y) * k;
+        const ddx = tx - info.x, ddy = ty - info.y;
+        if (fx + ddx < 30 || fx + ddx > 510 || fy + ddy < 170 || fy + ddy > 880) { await page.mouse.up(); fx = ANCHOR[0]; fy = ANCHOR[1]; await press(); continue; }
+        fx += ddx; fy += ddy;
+        const [qx, qy] = map(fx, fy); await page.mouse.move(qx, qy);
+        if (k >= 1 && Math.hypot(p.x - info.x, p.y - info.y) < 4) break;
+        if (Date.now() - tEnd > 8000) break;
+        await sleep(16);
       }
     }
     await page.mouse.up();
-    const t0 = Date.now();
-    while (Date.now() - t0 < 15000 && (await st()) === 'abduct') await sleep(200);
-    return page.evaluate(() => { const a = window.__nightShift.active; return null; });
+    while (Date.now() - t0 < 120000 && (await st()) === 'abduct') await sleep(200);
   }
 
   await page.goto(BASE + '?reset=1');
@@ -103,13 +98,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const results = {};
   const runs = [
     { level: 1, ring: 1, via: [{ x: 150, y: 1500 }, { x: 150, y: 450 }], name: 'L1-chimney' },
+    { level: 1, ring: 0, via: [{ x: 150, y: 1400 }, { x: 150, y: 590 }], name: 'L1-window' },
+    { level: 2, ring: 0, via: [{ x: 540, y: 1400 }, { x: 540, y: 700 }], name: 'L2-skylight' },
     { level: 2, ring: 1, via: [{ x: 540, y: 1500 }, { x: 540, y: 700 }, { x: 640, y: 330 }], name: 'L2-loading' },
   ];
   for (const r of runs) {
+    await page.goto(BASE + '?unlock=1'); await sleep(2000);
     await fly(r.level, r.ring, r.via);
     await shot(`${r.name}-a-flight-end`);
     try { await abduct(); } catch (e) { results[r.name] = 'abduct error ' + e.message; await shot(`${r.name}-err`); continue; }
-    await sleep(2500);
+    await sleep(6000);
     await shot(`${r.name}-b-report`);
     results[r.name] = { scene: await st(), save: await page.evaluate(() => JSON.parse(JSON.stringify(window.__nightShift.save))) };
   }
