@@ -136,18 +136,10 @@ function mouseRoute(id: RoomId, delay: number, shift: number): AbductSimulation 
   for (let t = 0; t < delay; t++) frame();
   press();
   for (let command = 0; sim.elapsed < 100 && !sim.complete; command++) {
-    const { dx, dy } = sim.autopilot();
-    if (pointer.x + dx < 60 || pointer.x + dx > 480 || pointer.y + dy < 160 || pointer.y + dy > 820) {
-      pointer.released = true;
-      pointer.down = false;
-      frame();
-      pointer.x = 270;
-      pointer.y = 480;
-      press();
-    }
-    pointer.x += dx;
-    pointer.y += dy;
-    frame(CADENCE[(command + shift) % CADENCE.length]! / 120);
+    // The mouse points like a finger: hold the button where the beam should head.
+    const dt = CADENCE[(command + shift) % CADENCE.length]! / 120;
+    Object.assign(pointer, sim.autopilotFinger(dt));
+    frame(dt);
   }
   expect(sim.body.follow).toBe(FOLLOW.mouse);
   const result = sim.result();

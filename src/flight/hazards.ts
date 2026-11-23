@@ -180,7 +180,8 @@ export interface WindowHazard {
 /** Jokes, no gameplay: a lawn sprinkler, or Gary's own tripwire across his drive. */
 export interface GagHazard {
   type: 'gag';
-  kind: 'sprinkler' | 'tripwire';
+  /** Jokes only: Zib comments when you fly close. A crop circle is drawn by its field (a ground prop). */
+  kind: 'sprinkler' | 'tripwire' | 'cropcircle';
   x: number;
   y: number;
   bx: number;

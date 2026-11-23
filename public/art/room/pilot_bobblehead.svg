@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="54" height="74" viewBox="0 0 54 74" stroke-linejoin="round" stroke-linecap="round">
+<title>The mayor's pocket-sized air force</title>
+<!-- Oversized flight helmet nods off-axis on a bent spring. -->
+<path d="M7 65q6-5 19-5t20 4v6q-17 6-39 0Z" fill="#895e55" stroke="#1b1433" stroke-width="2.4"/>
+<ellipse cx="26" cy="65" rx="19" ry="4" fill="#bb9161" stroke="#1b1433" stroke-width="1.6"/>
+<path d="M18 55h16l1 7q3 4-5 3l-4-2-2 2h-9q-1-4 3-5Z" fill="#343756" stroke="#1b1433" stroke-width="2"/>
+<path d="M19 45q7-4 12 0l6 8-2 6-6-2-13 1-3-9-6-6 4-5 7 7Z" fill="#648b82" stroke="#1b1433" stroke-width="2.3"/>
+<path d="m21 46 4 6 5-7m-5 7v5" fill="none" stroke="#28575c" stroke-width="1.8"/>
+<path d="m28 51 5 1-2 2-3-1Z" fill="#ffbd68"/>
+<path d="m20 35 9 2-11 3 11 1-8 3 7 1" fill="none" stroke="#1b1433" stroke-width="3.7"/>
+<path d="m20 35 9 2-11 3 11 1-8 3 7 1" fill="none" stroke="#a7b7ce" stroke-width="1.6"/>
+<g transform="rotate(9 29 21)">
+ <path d="M9 26q-2-12 6-19 7-7 20-4 11 4 12 14l-3 11q-4 9-14 10-13 2-18-7Z" fill="#e5cc9f" stroke="#1b1433" stroke-width="2.7"/>
+ <path d="M8 24Q5 8 19 4 38-3 46 13l2 9-8 2-3-7-17 1-3 10Z" fill="#e9d9b6" stroke="#1b1433" stroke-width="2.5"/>
+ <path d="M24 4q7 2 10 11l6 1q-1-8-7-12Z" fill="#b36561"/>
+ <path d="M12 18q0-6 7-10" fill="none" stroke="#fff4d4" stroke-width="2.6"/>
+ <path d="M15 17q15-3 31 1l-2 8-11-1-3-4-3 4-10 2Z" fill="#495374" stroke="#1b1433" stroke-width="2.5"/>
+ <path d="m19 20 5-1m10 1h6" stroke="#b9d1d1" stroke-width="1.7"/>
+ <path d="m32 25 3 3-3 2m-5 3q4 1 8-1" fill="none" stroke="#895e55" stroke-width="1.5"/>
+ <rect x="8" y="19" width="9" height="14" rx="4" fill="#647899" stroke="#1b1433" stroke-width="2.4"/>
+</g>
+<path d="m5 43-2-9q0-2 3-2l4 3 4-1 1 3-5 3 1 3Z" fill="#e5cc9f" stroke="#1b1433" stroke-width="2"/>
+<path d="m8 46 6-4" stroke="#28575c" stroke-width="2"/>
+</svg>

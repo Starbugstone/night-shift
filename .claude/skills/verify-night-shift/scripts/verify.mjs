@@ -246,11 +246,11 @@ async function pilotRoom(game, roomId, { keepReport = false } = {}) {
   assert(initial.matches, 'Active room must be ' + roomId);
   game.record('room-start', { roomId, ...initial });
   await game.capture(roomId + '-room-start');
-  let x = 270;
-  let y = 480;
+  // The beam heads for a held pointer: press where the pilot wants it and keep the button down.
+  const first = await game.observe(() => window.__nightShift.active.debug.autopilotFinger(3 / 60));
   let result;
   let captured = false;
-  await game.down(x, y);
+  await game.down(first.x, first.y);
   for (let command = 0; command < 2400; command++) {
     const status = await game.observe(() => {
       const sim = window.__nightShift.active.debug;
@@ -264,16 +264,8 @@ async function pilotRoom(game, roomId, { keepReport = false } = {}) {
       await game.capture(roomId + '-room-mid-drag');
       captured = true;
     }
-    const { dx, dy } = await game.observe(() => window.__nightShift.active.debug.autopilot());
-    if (x + dx < 60 || x + dx > 480 || y + dy < 145 || y + dy > 820) {
-      await game.up();
-      x = 270;
-      y = 480;
-      await game.down(x, y);
-    }
-    x += dx;
-    y += dy;
-    await game.move(x, y, 3);
+    const finger = await game.observe(() => window.__nightShift.active.debug.autopilotFinger(3 / 60));
+    await game.move(Math.min(538, Math.max(2, finger.x)), Math.min(958, Math.max(2, finger.y)), 3);
   }
   await game.up();
   game.record('room-end', { result });

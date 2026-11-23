@@ -73,37 +73,37 @@ const SUBJECTS = {
     pose: { ...BED_POSE, neckX: 131, neckY: 568 },
     item: { sprite: art('slipper', 292, 584), name: 'orthodontic slipper' },
     caption: 'The dentist will be billing for this wake-up call.',
-    mumbles: ['Floss the moon, please.', 'That’s a load-bearing molar.', 'The plaque has a lawyer.', 'No, the drill dreams about me.'],
+    mumbles: ['Floss the moon, please.', 'That’s a load-bearing molar.', 'The plaque has a lawyer.', 'No, the drill dreams about me.', 'The mash needs more altitude.'],
   },
   barb: {
     pose: { ...BED_POSE, neckX: 139, neckY: 558 },
     item: { sprite: art('slipper', 286, 608), name: 'team-issued slipper' },
     caption: 'Coach is calling a mandatory time-out.',
-    mumbles: ['Give me twenty more naps.', 'That’s a foul on the pillow.', 'Stop stretching the mascot.', 'Everybody hydrate the couch.'],
+    mumbles: ['Give me twenty more naps.', 'That’s a foul on the pillow.', 'Stop stretching the mascot.', 'Everybody hydrate the couch.', 'Go Saucers! Defence!'],
   },
   gary: {
     pose: { ...CHAIR_POSE, neckX: 123, neckY: 503 },
     item: { sprite: art('coffee_mug', 315, 516), name: 'neighbourhood watch mug' },
     caption: 'Gary finally caught something. It was his own abduction.',
-    mumbles: ['That squirrel is casing us.', 'Put the begonias on the watchlist.', 'Enhance the wheelie bin.', 'The cul-de-sac needs a password.'],
+    mumbles: ['That squirrel is casing us.', 'Put the begonias on the watchlist.', 'Enhance the wheelie bin.', 'The cul-de-sac needs a password.', 'The truth is out there. Lock the back door.', 'The Hendersons moved the hedge again.'],
   },
   nigel: {
     pose: { ...CHAIR_POSE, neckX: 120, neckY: 507 },
     item: { sprite: art('coffee_mug', 346, 562), name: 'fossilized coffee' },
     caption: 'The museum has added you to its Incident Collection.',
-    mumbles: ['The mummy has a parking pass.', 'Stop feeding the fossils.', 'The T. rex owes me a tenner.', 'Please don’t tap on the sarcophagus.'],
+    mumbles: ['The mummy has a parking pass.', 'Stop feeding the fossils.', 'The T. rex owes me a tenner.', 'Please don’t tap on the sarcophagus.', "Don't panic. Where's my towel?"],
   },
   kev: {
     pose: { ...CHAIR_POSE, neckX: 135, neckY: 500 },
     item: { sprite: art('coffee_mug', 394, 538), name: 'limited-edition DJ mug' },
     caption: 'The beat dropped. So did the performance review.',
-    mumbles: ['Next up, forty minutes of beige.', 'Drop the bass gently.', 'My headphones are in a union.', 'This one goes out to the duvet.'],
+    mumbles: ['Next track: ten hours of white noise.', 'Drop the bass gently.', 'My headphones are in a union.', 'This one goes out to the duvet.', 'This one goes out to the Martians.'],
   },
   mayor: {
     pose: { ...CHAIR_POSE, neckX: 124, neckY: 502 },
     item: { sprite: art('coffee_mug', 361, 544), name: 'municipal mug' },
     caption: 'You’ve been added to next Tuesday’s agenda.',
-    mumbles: ['I hereby declare it bedtime.', 'Motion to table the blanket.', 'The potholes are polling well.', 'My pillow has diplomatic immunity.'],
+    mumbles: ['I hereby declare it bedtime.', 'Motion to table the blanket.', 'The potholes are polling well.', 'My pillow has diplomatic immunity.', 'July 4th speech first. Then upload the virus.'],
   },
 } satisfies Record<string, { pose: Pose; item: Room['item']; caption: string; mumbles: readonly string[] }>;
 
@@ -124,7 +124,7 @@ const daveHall = [
 ] as const;
 const daveHome = building([
   room('Master bedroom', 'suburb_bedroom', box(0, 0, 760, 700),
-    [art('portrait_cow', 205, 150)],
+    [art('portrait_cow', 205, 150), art('potato_butte', 400, 522)],
     // A low nightstand, not the old wardrobe: the way out of bed to the door is open.
     [art('nightstand', 400, 576)], [daveBed]),
   room('Upstairs hall', 'hallway', box(760, 0, 760, 700),
@@ -164,7 +164,7 @@ export const davePatio = route(daveHome, 'dave', 'PATIO DOOR', EXITS.davePatio,
 
 const barbHome = building([
   room('Living room', 'living_room', box(0, 0, 800, 700),
-    [fit('chimney_stack', 516, 0, 201, 477)], [art('tv_static', 357, 586), art('fireplace', 486, 466)], [barbCouch]),
+    [fit('chimney_stack', 516, 0, 201, 477), art('roswell_pennant', 156, 253)], [art('tv_static', 357, 586), art('fireplace', 486, 466)], [barbCouch]),
   room('Fireplace flue', 'duct', box(465, -1220, 370, 1220),
     [EXITS.barbChimney, fit('ladder', 479, -519, 44, 505)]),
   room('Kitchen', 'kitchen', box(800, 0, 760, 700),
@@ -196,7 +196,7 @@ const garyGarage = [
 ] as const;
 const garyHome = building([
   room('Garage HQ', 'garage', box(0, 0, 1000, 700),
-    [art('power_tools', 220, 72), fit('ladder', 745, 0, 54, 686)],
+    [art('saucer_poster', 182, 224), art('power_tools', 220, 72), fit('ladder', 745, 0, 54, 686)],
     [art('monitor_bank', 232, 546)], [garyChair]),
   room('Loft storage', 'attic', box(370, -920, 630, 920),
     [EXITS.garySkylight, fit('ladder', 745, -240, 54, 240)], [art('boxes', 489, -124), art('bookcase', 866, -234)]),
@@ -224,7 +224,7 @@ export const garyGaragedoor = route(garyHome, 'gary', 'GARAGE DOOR', EXITS.garyG
 
 const nigelHome = building([
   room('Security office', 'office', box(0, 0, 760, 700),
-    [], [], [officeChair(93), nigelDesk]),
+    [art('towel_42', 221, 230)], [], [officeChair(93), nigelDesk]),
   room('Dinosaur hall', 'museum', box(760, 0, 940, 700),
     [], [art('dino_skull', 938, 270), art('dino_ribs', 1138, 486), art('dino_legs', 1398, 426)], [], [art('dino_skull', 938, 270)]),
   room('Laser vault', 'vault', box(1700, 0, 930, 700),
@@ -255,7 +255,7 @@ export const nigelLoading = route(nigelHome, 'nigel', 'LOADING BAY', EXITS.nigel
 const kevDance = [point(244, 331), point(526, 309), point(760, 311)] as const;
 const kevHome = building([
   room('DJ booth', 'club', box(0, 0, 660, 700),
-    [], [art('speaker_stack', 480, 466)], [officeChair(106), kevDesk]),
+    [art('tripod_single', 212, 232)], [art('speaker_stack', 480, 466)], [officeChair(106), kevDesk]),
   room('Dance floor', 'club', box(660, 0, 900, 700),
     [], [art('speaker_stack', 1350, 466)]),
   room('Vent duct', 'duct', box(880, -1000, 500, 1000),
@@ -288,7 +288,7 @@ export const kevFireescape = route(kevHome, 'kev', 'FIRE ESCAPE', EXITS.kevFiree
 const mayorHall = [point(260, 311), point(664, 253), point(1288, 389, 'City hall camera', 237)] as const;
 const mayorHome = building([
   room('Mayor’s office', 'office', box(0, 0, 760, 700),
-    [art('mayor_portrait', 367, 76)], [art('flag_stand', 574, 466)], [officeChair(95), mayorDesk]),
+    [art('mayor_portrait', 367, 76), art('pilot_bobblehead', 293, 502)], [art('flag_stand', 574, 466)], [officeChair(95), mayorDesk]),
   room('City hall corridor', 'corridor', box(760, 0, 880, 700),
     [], [art('water_cooler', 1038, 536)]),
   room('Clock tower', 'clocktower', box(1120, -1070, 520, 1070),

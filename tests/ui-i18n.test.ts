@@ -36,7 +36,7 @@ function at(root: unknown, keys: readonly (string | number)[]): unknown {
 
 /** Strings that read the same in French: names, brands, symbols, loan words. */
 const SAME_IN_FRENCH = new Set([
-  '‹', '—', ' — ', ', ', 'Zzz', 'Zz', 'Glorbs', 'CAM 03', 'BURGERS', 'Zib', 'Vrell',
+  '‹', '—', ' — ', ', ', 'Zzz', 'Zz', 'Glorbs', 'SPIN CITY', 'CAM 03', 'BURGERS', 'Zib', 'Vrell',
   'Larry', 'Gary', 'Dave', 'Barb', 'Nigel', 'Brenda', 'Biscuit', 'Coach Barb', 'Aquarium', 'lasers',
   'Ptérodactyle', 'Pterodactyl', '{n}/3', '{n}/3  ({names})', '{name} · {route}', '★ {n}/{max}', '+{n} Glorbs', 's',
   '{total}  (fly {fly} · beam {beam})', 'long, Biscuit',

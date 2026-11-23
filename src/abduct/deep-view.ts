@@ -11,10 +11,11 @@ import {
 } from '../core/fx';
 import { HUD_ROW, hudButton, hudMeter, hudPanel, hudTimer, type MeterState } from '../ui/hud';
 import { HumanArt, RESTART } from './draw';
-import { gt, tr } from '../i18n';
+import { getLang, gt, localArt, tr } from '../i18n';
 import { wrap as wrapText } from '../ui/draw';
 import type { TurnControl } from './turn';
 import { drawTurnButtons, drawTurnTell } from './turn-draw';
+import { drawSouvenirPop, POP_SECONDS, souvenirLabel } from './souvenir';
 import { LASER_TELL, inside, type HazardState, type SleeperState } from './interior';
 import { clamp, Joint, type Blade, type Circle, type Rect, type SwingingRect } from './ragdoll';
 import type { Building, Cycle, InteriorRoom, Opening } from './rooms/interior';
@@ -117,6 +118,111 @@ function label(g: CanvasRenderingContext2D, text: string, x: number, y: number, 
   g.fillStyle = style;
   g.fillText(text, x, y, maxWidth);
 }
+
+// Each silhouette is drawn in the native coordinates of its room prop.
+const DECOR_FALLBACKS: Readonly<Record<string, (g: CanvasRenderingContext2D) => void>> = {
+  'room/potato_butte': g => {
+    g.fillStyle = '#a7b7ce';
+    g.beginPath();
+    g.ellipse(43, 49, 40, 11, 0, 0, TAU);
+    g.fill();
+    g.fillStyle = '#e5cc9f';
+    g.beginPath();
+    g.moveTo(12, 49);
+    g.lineTo(26, 33);
+    g.lineTo(33, 12);
+    g.lineTo(53, 11);
+    g.lineTo(61, 34);
+    g.lineTo(73, 49);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#ffbd68';
+    g.fillRect(39, 7, 12, 6);
+  },
+  'room/roswell_pennant': g => {
+    g.fillStyle = '#426f73';
+    g.beginPath();
+    g.moveTo(20, 5);
+    g.lineTo(181, 40);
+    g.lineTo(20, 81);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#e5cc9f';
+    g.fillRect(20, 6, 7, 74);
+    label(g, 'ROSWELL', 80, 43, 'bold 18px system-ui', '#ffedc9', 88);
+  },
+  'room/saucer_poster': g => {
+    g.fillStyle = '#d6bb94';
+    g.fillRect(5, 4, 134, 114);
+    g.fillStyle = '#425664';
+    g.fillRect(12, 11, 120, 58);
+    g.fillStyle = '#c4c7b6';
+    g.beginPath();
+    g.ellipse(75, 36, 25, 7, -0.18, 0, TAU);
+    g.fill();
+    const french = getLang() === 'fr';
+    label(g, french ? 'LA VÉRITÉ' : 'I WANT TO', 72, 80, 'bold 16px system-ui', INK, 123);
+    label(g, french ? 'S’EST TIRÉE' : 'BE LEAVING', 72, 101, 'bold 20px system-ui', INK, 123);
+  },
+  'room/towel_42': g => {
+    g.fillStyle = '#bb9161';
+    g.beginPath();
+    g.arc(43, 12, 8, 0, TAU);
+    g.fill();
+    g.fillStyle = '#b86f69';
+    g.beginPath();
+    g.moveTo(37, 20);
+    g.quadraticCurveTo(48, 10, 54, 32);
+    g.lineTo(66, 91);
+    g.quadraticCurveTo(42, 103, 12, 92);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#ffdfac';
+    g.fillRect(17, 84, 44, 4);
+    label(g, '42', 39, 59, 'bold 28px system-ui', '#ffedc9', 38);
+  },
+  'room/tripod_single': g => {
+    g.fillStyle = '#26263f';
+    g.beginPath();
+    g.arc(82, 51, 47, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#e5cc9f';
+    g.fillRect(5, 8, 82, 88);
+    g.fillStyle = '#c77670';
+    g.fillRect(10, 13, 72, 78);
+    g.beginPath();
+    g.moveTo(20, 66);
+    g.lineTo(43, 40);
+    g.lineTo(46, 72);
+    g.moveTo(43, 40);
+    g.lineTo(73, 58);
+    g.stroke();
+    g.fillStyle = '#81a49b';
+    g.beginPath();
+    g.arc(43, 37, 13, 0, TAU);
+    g.fill();
+    g.stroke();
+  },
+  'room/pilot_bobblehead': g => {
+    g.fillStyle = '#895e55';
+    g.fillRect(7, 64, 39, 7);
+    g.fillStyle = '#648b82';
+    g.fillRect(17, 45, 18, 18);
+    g.fillStyle = '#a7b7ce';
+    g.fillRect(23, 29, 5, 16);
+    g.fillStyle = '#e5cc9f';
+    g.beginPath();
+    g.ellipse(27, 20, 19, 17, 0.12, 0, TAU);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#495374';
+    g.fillRect(16, 17, 30, 8);
+  },
+};
 
 function ring(g: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, width: number): void {
   g.beginPath();
@@ -328,6 +434,7 @@ export function drawSnooze(g: CanvasRenderingContext2D, sim: AbductSimulation, r
 export class DeepAbductView {
   private readonly human: HumanArt;
   private readonly roomPaths: Map<InteriorRoom, Navigation>;
+  private readonly posterKey = localArt('room/saucer_poster');
   private readonly wakeMeter = meter(tr().abduct.wake);
   private readonly cameraMeter = meter(tr().abduct.cameraFuse, 'eye');
   private readonly sleeperMeters: readonly MeterState[];
@@ -346,6 +453,12 @@ export class DeepAbductView {
   private lastTime = 0;
   private lastSecond = -1;
   private lastBonk = 0;
+  private lastItem = 0;
+  /** Seconds since the souvenir was grabbed (0 = no label up). */
+  private popAge = 0;
+  private popX = 0;
+  private popY = 0;
+  private popLabel = '';
   private lastWake = 0;
   private wasDelivered = false;
   private clock = '0:00';
@@ -498,6 +611,7 @@ export class DeepAbductView {
       g.globalCompositeOperation = 'source-over';
     }
     this.fx.draw(g);
+    drawSouvenirPop(g, this.popX, this.popY, this.popAge, this.popLabel, rm);
     drawSnooze(g, sim, rm);
     g.restore();
 
@@ -782,9 +896,17 @@ export class DeepAbductView {
   }
 
   private drawArt(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number, solid = false): void {
-    const image = this.ctx.assets.get(key);
+    const image = this.ctx.assets.get(key === 'room/saucer_poster' ? this.posterKey : key);
     if (image) {
       drawSprite(g, image, x, y, w, h);
+    } else if (DECOR_FALLBACKS[key]) {
+      g.save();
+      g.translate(x, y);
+      g.lineWidth = 2.5;
+      g.lineJoin = 'round';
+      g.strokeStyle = INK;
+      DECOR_FALLBACKS[key](g);
+      g.restore();
     } else if (key === 'room/watch_dog') {
       this.watchDog(g, x, y, w, h);
     } else if (key === 'room/chimney_stack') {
@@ -1861,6 +1983,17 @@ export class DeepAbductView {
     this.meterFlash = Math.max(0, this.meterFlash - dt * 3);
     const awake = sim.wake.awake > 0 && !sim.delivered;
     this.wakeAge = awake ? this.wakeAge + (dt > 0 ? dt : 1 / 60) : 0;
+    // a souvenir joins the trip: "+1 slipper" and a mint pop where it was grabbed
+    if (this.popAge > 0) this.popAge = this.popAge + dt < POP_SECONDS ? this.popAge + dt : 0;
+    if (this.lastItem !== sim.itemSeq) {
+      this.lastItem = sim.itemSeq;
+      this.popAge = 0.0001;
+      this.popX = sim.item.x;
+      this.popY = sim.item.y;
+      this.popLabel = souvenirLabel(sim.room.item.name);
+      fx.spawn(P_RING, sim.item.x, sim.item.y, 0, 0, 0.4, 56, PC.mint);
+      if (!rm) fx.burst(P_TWINKLE, sim.item.x, sim.item.y, 6, 60, 140, 0.5, 7, PC.mint, 0, 3);
+    }
     if (this.lastBonk !== sim.bonkSeq) {
       this.lastBonk = sim.bonkSeq;
       const { bonkX: x, bonkY: y, bonkPower: power } = sim;

@@ -14,6 +14,10 @@ export class AbductPilot {
   private crossAt = -1;
   private trainingSpeed = 0;
   private readonly intent: AbductAutopilotIntent = { dx: 0, dy: 0 };
+  /** Where the last move() steers the beam and how fast (px/s; 0 = hold still). For pointing drivers. */
+  aimX = 0;
+  aimY = 0;
+  speed = 0;
 
   /** `pace` scales every drag speed (difficulty evaluator: people drag faster than the proof bot). */
   constructor(private readonly room: Room, public pace = 1) {}
@@ -49,6 +53,7 @@ export class AbductPilot {
     const { intent } = this;
     intent.dx = 0;
     intent.dy = 0;
+    this.speed = 0;
     if (this.room.interior && interior) {
       const { checkpoints } = this.room.interior;
       let checkpoint = checkpoints[this.index];
@@ -68,22 +73,26 @@ export class AbductPilot {
         this.crossAt = time + body.follow.pilotDelay;
       }
       if (checkpoint.cross && time < this.crossAt) return intent;
-      return this.delta(checkpoint.x - body.beamX, checkpoint.y - body.beamY, dt * speed);
+      return this.delta(checkpoint.x, checkpoint.y, body, dt, speed);
     }
 
     let target = this.room.route[this.index];
-    if (target && Math.hypot(target.x - body.beamX, target.y - body.beamY) < 0.01) {
+    if (target && Math.hypot(target.x - body.beamX, target.y - body.beamY) < 1) {
       target = this.room.route[++this.index];
       this.trainingSpeed = 0;
     }
     if (!target) return intent;
-    const dx = target.x - body.beamX;
-    const dy = target.y - body.beamY;
-    if (this.trainingSpeed === 0) this.trainingSpeed = Math.hypot(dx, dy) / target.seconds;
-    return this.delta(dx, dy, dt * this.trainingSpeed);
+    if (this.trainingSpeed === 0) this.trainingSpeed = Math.hypot(target.x - body.beamX, target.y - body.beamY) / target.seconds;
+    return this.delta(target.x, target.y, body, dt, this.trainingSpeed);
   }
 
-  private delta(dx: number, dy: number, limit: number): AbductAutopilotIntent {
+  private delta(x: number, y: number, body: Ragdoll, dt: number, speed: number): AbductAutopilotIntent {
+    this.aimX = x;
+    this.aimY = y;
+    this.speed = speed;
+    const dx = x - body.beamX;
+    const dy = y - body.beamY;
+    const limit = dt * speed;
     const distance = Math.hypot(dx, dy);
     if (distance > 0) {
       const ratio = Math.min(1, limit / distance);

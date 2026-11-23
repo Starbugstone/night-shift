@@ -118,6 +118,7 @@ export type DeepZibEvent =
   | 'crane'
   | 'sprinkler'
   | 'tripwire'
+  | 'cropcircle'
   | 'dash'
   | 'checkpoint'
   | 'dawn'

@@ -1,7 +1,8 @@
 // End-to-end bot: plays all four tutorial routes (L1 window/chimney, L2 skylight/loading door), then
 // full deep shifts of L3 and L4, all through real pointer input.
-// Every abduction (tutorial and deep) is driven by the scene's own per-frame autopilot,
-// `debug.autopilot()`, a finger delta applied as a held drag, integrated inside the page each frame.
+// Every abduction (tutorial and deep) is driven by the scene's own per-frame autopilot through
+// `debug.autopilotFinger()`: the screen point to hold the mouse button at (the beam heads for it).
+// The mouse stays down for the whole room.
 // Deep flights use the flight `debug.autopilot()` (an absolute finger position, logical px);
 // tutorial flights steer through fixed waypoints.
 // Run it against a preview build, not the dev server (HMR reloads kill long runs):
@@ -80,9 +81,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
 
   /**
    * Real-mouse side of the abduction driver. The pilot runs every frame inside the page
-   * (installDriver) and integrates its per-frame drag into a finger target, seeing the beam where
-   * the moves still in flight will put it; this moves the real mouse to that target, re-anchoring
-   * near the screen edges. Call step() while the scene is 'abduct', reset() when it changes.
+   * (installDriver) and says where to hold the pointer; this keeps the real mouse button down and
+   * moves it there. Call step() while the scene is 'abduct', reset() when it changes.
    */
   function abductDriver() {
     const ANCHOR = [270, 520];
@@ -113,22 +113,18 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         if (!drv) { await installDriver(); return; }
         if (!down) {
           await waitForPointer(false);
-          await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; d.on = true; }, ANCHOR);
-          fx = ANCHOR[0]; fy = ANCHOR[1];
+          // Press where the pilot wants the pointer, so the grab itself does not yank the body.
+          const at = await page.evaluate(() => {
+            const d = window.__e2eDrv;
+            const f = window.__nightShift.active.debug.autopilotFinger(1 / 60);
+            d.fx = f.x; d.fy = f.y; d.on = true;
+            return [f.x, f.y];
+          });
+          fx = at[0]; fy = at[1];
           await press();
           return;
         }
-        const tx = drv.fx, ty = drv.fy;
-        if (tx < 30 || tx > 510 || ty < 170 || ty > 900) {
-          // Wait for the release frame before moving to the anchor so the old drag ends in place.
-          // Carry the unsent part of the drag over to the new grip.
-          await release();
-          const nx = ANCHOR[0] + (tx - fx), ny = ANCHOR[1] + (ty - fy);
-          await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; }, [nx, ny]);
-          fx = ANCHOR[0]; fy = ANCHOR[1];
-          await press();
-          return;
-        }
+        const tx = Math.min(538, Math.max(2, drv.fx)), ty = Math.min(958, Math.max(2, drv.fy));
         if (Math.abs(tx - fx) < 0.05 && Math.abs(ty - fy) < 0.05) { await sleep(POLL_MS); return; }
         // no pause after a move: input latency here is latency for the pilot's laser timing
         fx = tx; fy = ty;
@@ -186,16 +182,9 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
           drv.flight = { down: it.down, x: it.x, y: it.y };
         } else drv.flight = null;
         if (ns && ns.scene === 'abduct' && a && a.debug && typeof a.debug.autopilot === 'function' && drv.on && p && p.down) {
-          const body = a.debug.body;
-          const bx = body.beamX;
-          const by = body.beamY;
-          // predict: the beam will move by however far the finger still has to travel
-          body.beamX = bx + (drv.fx - p.x);
-          body.beamY = by + (drv.fy - p.y);
-          let it;
-          try { it = a.debug.autopilot(); } finally { body.beamX = bx; body.beamY = by; }
-          drv.fx += it.dx;
-          drv.fy += it.dy;
+          const f = a.debug.autopilotFinger(1 / 60);
+          drv.fx = f.x;
+          drv.fy = f.y;
         }
         requestAnimationFrame(tick);
       };

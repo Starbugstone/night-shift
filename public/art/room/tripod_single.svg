@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="132" height="102" viewBox="0 0 132 102" stroke-linejoin="round" stroke-linecap="round">
+<title>Kev's invasion single, 45 rpm</title>
+<!-- A black seven-inch slipped halfway out of its worn picture sleeve. -->
+<circle cx="82" cy="51" r="47" fill="#26263f" stroke="#1b1433" stroke-width="3.2"/>
+<path d="M92 7q18 5 27 19l-21 15-12-5Z" fill="#4b475f"/>
+<g fill="none" stroke="#71627b" stroke-width="1.25">
+ <path d="M91 12q29 7 32 32m-29-27q21 7 25 26m-15 34q-7 8-18 9m23-7q-9 11-22 13"/>
+</g>
+<circle cx="82" cy="51" r="16" fill="#deb589" stroke="#1b1433" stroke-width="2"/>
+<path d="M83 40q6-1 10 4m-11 15h7" fill="none" stroke="#a64e5e" stroke-width="2"/>
+<circle cx="82" cy="51" r="3.2" fill="#343756"/>
+<path d="m4 9 82-5 7 87-84 8Z" fill="#e5cc9f" stroke="#1b1433" stroke-width="3.2"/>
+<path d="m9 14 73-4 6 75-75 8Z" fill="#c77670"/>
+<circle cx="40" cy="40" r="22" fill="#ffcf93"/>
+<path d="M12 63 40 43 13 77m70-52L53 41l31-7m1 12-35 1 35 11" fill="#df9980"/>
+<path d="M13 79q16-9 26-7l18-9 16 2 13-6 2 26-75 8Z" fill="#657a82"/>
+<path d="m13 85 5-1-1-9 6-1 1 7 7 1-1-10 6-1 1 7 10-1 1-7 7-1v6l9-3-1-15 8 2 1 11 14-4 2 19-75 8Z" fill="#394359"/>
+<!-- The invader is a three-legged mobile disco; it came on roller skates. -->
+<g fill="none" stroke="#1b1433" stroke-width="5">
+ <path d="m40 42-14 9-5 13m25-22-3 14 8 12m0-28 12 7 8 12"/>
+</g>
+<g fill="none" stroke="#cfbf9c" stroke-width="2">
+ <path d="m40 42-14 9-5 13m25-22-3 14 8 12m0-28 12 7 8 12"/>
+</g>
+<path d="m15 63 9-2 5 3-1 3-13 2Zm32 5 9-2 6 3-1 3-14 2Zm19-9 8-2 6 3-1 3-13 2Z" fill="#cca083" stroke="#1b1433" stroke-width="1.9"/>
+<g fill="#1b1433"><circle cx="18" cy="69" r="2"/><circle cx="26" cy="68" r="2"/><circle cx="50" cy="75" r="2"/><circle cx="58" cy="74" r="2"/><circle cx="69" cy="65" r="2"/><circle cx="77" cy="64" r="2"/></g>
+<g transform="rotate(-10 44 35)">
+ <circle cx="44" cy="35" r="12" fill="#81a49b" stroke="#1b1433" stroke-width="2.4"/>
+ <path d="M41 24q-7 12 0 22m7-22q6 10-1 22m-14-14q11 4 22-1m-20 8q11 3 19-1" fill="none" stroke="#456572" stroke-width="1.6"/>
+ <path d="M31 34q13 3 26-2l2 4q-13 8-28 2Z" fill="#343756" stroke="#1b1433" stroke-width="1.8"/>
+ <ellipse cx="49" cy="36" rx="3.5" ry="1.7" fill="#ffcf82"/>
+</g>
+<path d="m28 19 1 4 4 1-4 1-1 4-1-4-4-1 4-1Z" fill="#ffedc9"/>
+<path d="m13 92 2-6 7 5m58-80-5 1 7 4" fill="#e5cc9f"/>
+<path d="m23 89 16-2m3 0 4-.5" stroke="#e5cc9f" stroke-width="1.7"/>
+<!-- Brass spring clips hold the single on the booth wall. -->
+<path d="m17 9 1-5 9-1 1 5-4 3-1-4-2 4Z" fill="#bb9161" stroke="#1b1433" stroke-width="1.6"/>
+<path d="m74 92 1-6 4-1 2 5 3-1v4l-10 1Z" fill="#bb9161" stroke="#1b1433" stroke-width="1.7"/>
+</svg>

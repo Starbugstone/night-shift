@@ -173,6 +173,11 @@ export class SynthAudio implements Audio {
         this.noise(t, 0.3, 0.4 * v, 'bandpass', 600, 1.2, 3200);
         this.tone('sine', 180, 520, t, 0.22, 0.2 * v);
         break;
+      case 'pickup':
+        // a quick rising slurp and a bright blip: something small just joined the trip
+        this.tone('sine', 360, 1300, t, 0.14, 0.26 * v);
+        this.tone('triangle', 1250, 1680, t + 0.11, 0.12, 0.16 * v);
+        break;
       case 'lullaby': {
         const notes = [784, 659, 698, 587, 659, 523];
         notes.forEach((f, i) => this.tone('sine', f, f, t + i * 0.22, 0.4, 0.13 * v, 5, 4, true));

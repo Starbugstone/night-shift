@@ -303,8 +303,17 @@ export const ART: Record<string, ArtSpec> = {
   'room/watch_dog': { w: 89, h: 62 }, // Gary's/Nigel's patrolling guard dog: standing side view, mid-trot, facing right (the renderer flips it), sleepy eye, red collar
   'room/cuckoo_bird': { w: 86, h: 44 }, // Mayor's clock tower pop-out: furious cuckoo facing left, beak at the left edge, scissor arm running off the right edge
 
+  'room/potato_butte': { w: 86, h: 64 }, // Dave's fork-carved midnight snack
+  'room/roswell_pennant': { w: 186, h: 88 }, // Barb's felt basketball pennant
+  'room/saucer_poster': { w: 144, h: 122 }, // Gary's taped photograph of a flying bin lid
+  'room/saucer_poster_fr': { w: 144, h: 122 }, // French slogan pasted over the print
+  'room/towel_42': { w: 84, h: 108 }, // Nigel's embroidered emergency towel
+  'room/tripod_single': { w: 132, h: 102 }, // Kev's seven-inch with a roller-skating Martian
+  'room/pilot_bobblehead': { w: 54, h: 74 }, // the Mayor's spring-necked desk pilot
+
   // ---- APPEND: shell/flight/UI code (Opus) — extra keys you need, with a one-line art note each
   'flight/garden_gnome_top': { w: 30, h: 30 }, // L3 joke: Gary's tripwire posts; a garden gnome seen from above (red hat), drawn at both ends of a red laser line
+  'flight/crop_field_top': { w: 480, h: 340 }, // L3 outskirts: fenced wheat field with a crop circle (scripts/art-crop-field.mjs)
 };
 
 export type ArtKey = keyof typeof ART;

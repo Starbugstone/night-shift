@@ -291,11 +291,16 @@ export class DeepFlightScene implements Scene {
       this.say(cause, !this.seen.has(cause), true);
       this.seen.add(cause);
     }
-    // gags: the sprinkler and Gary's tripwire only ever produce jokes
+    // gags: the sprinkler, Gary's tripwire and the crop circle only ever produce jokes. A tripwire
+    // is measured from its middle; the others sit at (x, y).
     let near = -1;
     for (let i = 0; i < field.defs.length; i++) {
       const d = field.defs[i]!;
-      if (d.type === 'gag' && Math.hypot(s.x - (d.x + d.bx) / 2, s.y - (d.y + d.by) / 2) < (d.kind === 'tripwire' ? 90 : 120)) near = i;
+      if (d.type !== 'gag') continue;
+      const wire = d.kind === 'tripwire';
+      const cx = wire ? (d.x + d.bx) / 2 : d.x;
+      const cy = wire ? (d.y + d.by) / 2 : d.y;
+      if (Math.hypot(s.x - cx, s.y - cy) < (wire ? 90 : d.kind === 'cropcircle' ? 150 : 120)) near = i;
     }
     if (near >= 0 && near !== this.gagNear) {
       const d = field.defs[near]!;
@@ -753,7 +758,7 @@ export class DeepFlightScene implements Scene {
           break;
         }
         case 'gag':
-          if (!this.visible(d.x, d.y, 160)) break;
+          if (d.kind === 'cropcircle' || !this.visible(d.x, d.y, 160)) break;
           if (d.kind === 'sprinkler') {
             const img = assets.get('flight/sprinkler_top');
             if (img) drawSprite(g, img, d.x - 20, d.y - 20, 40, 40);

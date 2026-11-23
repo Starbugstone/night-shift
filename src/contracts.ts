@@ -75,6 +75,8 @@ export type SfxName =
   | 'siren'
   | 'dash'
   | 'lullaby'
+  /** A souvenir (slipper, mug) gets sucked into the beam. */
+  | 'pickup'
   | 'checkpoint'
   | 'sunrise';
 

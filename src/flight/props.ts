@@ -137,6 +137,34 @@ export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: num
       g.fillRect(x + w / 2 - 4, y + 8, 8, h - 16);
       break;
     }
+    case 'crop_field': {
+      // fenced wheat with a pale flattened ring, a centre disc and a trailing chain of dots
+      box(g, x + 2, y + 2, w - 4, h - 4, 14, '#a07a4a');
+      g.strokeStyle = '#7d5c3c';
+      g.lineWidth = 3;
+      for (let k = 16; k < h - 8; k += 14) {
+        g.beginPath();
+        g.moveTo(x + 12, y + k);
+        g.lineTo(x + w - 12, y + k);
+        g.stroke();
+      }
+      const cx = x + w * 0.49;
+      const cy = y + h * 0.48;
+      g.strokeStyle = '#e5cc9f';
+      g.lineWidth = 15;
+      g.beginPath();
+      g.arc(cx, cy, h * 0.28, 0, Math.PI * 2);
+      g.stroke();
+      g.fillStyle = '#e5cc9f';
+      g.beginPath();
+      g.arc(cx, cy, h * 0.13, 0, Math.PI * 2);
+      for (const [dx, r] of [[0.28, 14], [0.36, 9], [0.42, 6]] as const) {
+        g.moveTo(cx + w * dx + r, cy);
+        g.arc(cx + w * dx, cy, r, 0, Math.PI * 2);
+      }
+      g.fill();
+      break;
+    }
     case 'field': {
       box(g, x + 2, y + 2, w - 4, h - 4, 10, '#4a5a30');
       g.strokeStyle = '#6b7a3c';

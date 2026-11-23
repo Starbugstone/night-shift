@@ -21,7 +21,8 @@ export type PropKind =
   | 'pool'
   | 'trampoline'
   | 'hedge'
-  | 'park';
+  | 'park'
+  | 'crop_field';
 
 /** A sprite placed by its centre. Size defaults to the manifest size. */
 export interface PropDef {

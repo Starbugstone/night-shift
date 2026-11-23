@@ -203,6 +203,8 @@ const L3_HAZARDS: HazardDef[] = [
   // jokes
   { type: 'gag', kind: 'sprinkler', x: 640, y: 2080, bx: 0, by: 0 },
   { type: 'gag', kind: 'tripwire', x: 1470, y: 2150, bx: 1560, by: 2150 },
+  // the crop circle in the field on the edge of town (the field itself is a ground prop)
+  { type: 'gag', kind: 'cropcircle', x: 246, y: 2697, bx: 0, by: 0 },
 ];
 
 export const LEVEL3: DeepLevelDef = {
@@ -242,6 +244,8 @@ export const LEVEL3: DeepLevelDef = {
       { dir: 'h', at: 420, from: 1020, to: 1920 },
     ],
     groundProps: [
+      // the edge of town, past Birch Lane: someone has been busy in old Mr. Henley's wheat
+      { key: 'flight/crop_field_top', kind: 'crop_field', x: 250, y: 2705 },
       { key: 'flight/pool_top', kind: 'pool', x: 400, y: 1080 },
       { key: 'flight/pool_top', kind: 'pool', x: 1700, y: 1000 },
       { key: 'flight/pool_top', kind: 'pool', x: 680, y: 1880 },
@@ -268,7 +272,7 @@ export const LEVEL3: DeepLevelDef = {
       // outside the loop
       sub('c', 120, 1900),
       E_B,
-      sub('a', 500, 2700),
+      sub('a', 640, 2700),
       sub('c', 1640, 2700),
       hedge(620, 1980),
       hedge(860, 1980),
@@ -281,7 +285,6 @@ export const LEVEL3: DeepLevelDef = {
       tree(560, 1060),
       tree(2000, 2180),
       tree(160, 2200),
-      tree(300, 2700),
       tree(820, 2680),
       tree(1380, 2700),
       tree(1900, 2700),
@@ -442,7 +445,7 @@ const L4_HAZARDS: HazardDef[] = [
   { type: 'camera', x: 700, y: HR_MID.y - 108, range: 280, half: 0.3, base: PI / 2, amp: 0.8, rate: 1.0, phase: 0.5 },
   // billboards: neon scrambles steering
   { type: 'neon', x: 1080, y: 2700, r: 150, text: 'BURGERS', billboard: true },
-  { type: 'neon', x: 1260, y: 1250, r: 140, text: 'OPEN 24H', billboard: true },
+  { type: 'neon', x: 1260, y: 1250, r: 140, text: "DON'T PANIC", billboard: true },
   // the crane: rotating boom, solid
   { type: 'crane', x: 380, y: 1330, len: 430, rate: 0.6, a0: 0, width: 26 },
   // pigeons

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="186" height="88" viewBox="0 0 186 88" stroke-linejoin="round" stroke-linecap="round">
+<title>Roswell's visiting team, the Saucers</title>
+<!-- Soft wool felt: a rolled tip and four ties tied off on the hoist. -->
+<path d="m25 14-16-9 1 6-7 1 21 10m-1 46L5 81l9-1 1 5 12-14" fill="#b96a67" stroke="#1b1433" stroke-width="2.8"/>
+<path d="M22 5Q91 18 181 39l-6 7Q93 60 27 81l-7-4Z" fill="#426f73" stroke="#1b1433" stroke-width="3.2"/>
+<path d="M29 10q53 9 110 24l-17 1q-39-11-93-19Z" fill="#59908a"/>
+<path d="M30 71q79-22 142-28l-1 3Q90 64 29 78Z" fill="#28575c"/>
+<path d="M31 14q45 8 75 16M33 70q31-9 55-14" fill="none" stroke="#c3b799" stroke-width="1.4" stroke-dasharray="4 4"/>
+<path d="M20 5q3-3 10 0l-2 75q-3 3-9-1Z" fill="#dfbf94" stroke="#1b1433" stroke-width="2.6"/>
+<path d="m24 9-1 65" stroke="#fff0c6" stroke-width="1.6"/>
+<g transform="rotate(-14 50 43)">
+ <path d="M36 42q0-14 13-16 13-2 17 13l-2 9-25 2Z" fill="#dc896a" stroke="#1b1433" stroke-width="2.3"/>
+ <path d="M41 29q9 7 7 15m10-15q-5 4-4 14m-14-6q10 1 20-4" fill="none" stroke="#895366" stroke-width="1.8"/>
+ <path d="M32 43q4-4 7-5 11 8 25-1l5 3q-1 7-19 10-14 2-18-7Z" fill="#ffcf82" stroke="#1b1433" stroke-width="2.5"/>
+ <path d="M38 43q8 4 16 2" fill="none" stroke="#fff0c6" stroke-width="2"/>
+ <path d="M35 50h6m-8 4h4" stroke="#e5cc9f" stroke-width="1.8"/>
+</g>
+<g transform="translate(66 34) scale(0.7447 1.0000)" fill="none" stroke="#ffedc9" stroke-width="2.65">
+ <path transform="translate(0)" d="M1 14V1H6Q10 1 10 5Q10 8 6 8H1M6 8L10 14"/><path transform="translate(14)" d="M5.5 1Q1 1 1 6V9Q1 14 5.5 14Q10 14 10 9V6Q10 1 5.5 1Z"/><path transform="translate(28)" d="M9 2Q6 -1 2 2Q-1 6 5 7Q12 8 9 12Q6 16 1 13"/><path transform="translate(42)" d="M0 1l1.5 13 3.7-7 3.4 7L11 1"/><path transform="translate(56)" d="M9 1H1V14H9M1 7H7"/><path transform="translate(70)" d="M1 1V14H9"/><path transform="translate(84)" d="M1 1V14H9"/>
+</g>
+<path d="m171 43 10-4q1 5-7 8Z" fill="#79948a" stroke="#1b1433" stroke-width="1.6"/>
+<g fill="#b5c2c1" stroke="#594050" stroke-width="1.4"><circle cx="25" cy="10" r="2.5"/><circle cx="23" cy="75" r="2.5"/></g>
+</svg>

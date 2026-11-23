@@ -6,6 +6,10 @@ import { ROOMS } from './rooms';
 import { FOLLOW } from './ragdoll';
 import { CEILING } from './rooms/layout';
 import { AbductSimulation } from './simulation';
+import { pointStep } from './point';
+import { SOUVENIR_HINT } from './souvenir';
+
+export { POINT, pointReach, pointSpeed } from './point';
 import { TURN_BUTTONS_DEEP, TURN_BUTTONS_ROOM, TurnControl } from './turn';
 
 const TAP_LENGTH = 0.24;
@@ -13,6 +17,8 @@ const DOUBLE_TAP = 0.32;
 const TAP_TRAVEL = 22;
 /** The turn hint stays up this long after the first drag, until the player turns once. */
 const TURN_HINT_SECONDS = 7;
+
+const ORIGIN = { x: 0, y: 0 } as const;
 
 interface AbductScene extends Scene {
   debug: AbductSimulation;
@@ -42,6 +48,10 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
   const turn = new TurnControl(simulation.interior ? TURN_BUTTONS_DEEP : TURN_BUTTONS_ROOM);
   let twisted = false;
   let turnHintUntil = -1;
+  // Training rooms show the souvenir hint first; the turn hint gets its full time after it.
+  const turnHintWait = simulation.interior ? 0 : SOUVENIR_HINT.delay + SOUVENIR_HINT.seconds;
+  /** This press steers by pointing (touch, mouse, pen: see ./point.ts); headless input keeps the 1:1 drag. */
+  let pointing = false;
 
   function endDrag(): void {
     if (!dragging) return;
@@ -72,6 +82,7 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
           travel = 0;
           // A mouse or pen aims with the eye: the body has to stop where the cursor stops.
           simulation.body.follow = pointer.kind === 'mouse' || pointer.kind === 'pen' ? FOLLOW.mouse : FOLLOW.touch;
+          pointing = pointer.kind !== undefined;
           ctx.audio.sfx('beam_on');
         }
       }
@@ -98,11 +109,25 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
         const dy = refY - lastY;
         if (dx !== 0 || dy !== 0) {
           tutorial = false;
-          if (turnHintUntil < 0) turnHintUntil = clock + TURN_HINT_SECONDS;
-          simulation.moveBeam(simulation.body.beamX + dx, simulation.body.beamY + dy);
+          if (turnHintUntil < 0) turnHintUntil = clock + TURN_HINT_SECONDS + turnHintWait;
+          if (!pointing) simulation.moveBeam(simulation.body.beamX + dx, simulation.body.beamY + dy);
           travel += Math.hypot(dx, dy);
           lastX = refX;
           lastY = refY;
+        }
+        // Pointing: head for the world point under the finger. A twist turns in place.
+        if (pointing && !twist && pointer.down) {
+          const camera = simulation.interior ? simulation.camera : ORIGIN;
+          const { body } = simulation;
+          const toX = pointer.x + camera.x - body.beamX;
+          const toY = pointer.y + camera.y - body.beamY;
+          const distance = Math.hypot(toX, toY);
+          const step = pointStep(distance, dt);
+          if (step > 0) {
+            tutorial = false;
+            if (turnHintUntil < 0) turnHintUntil = clock + TURN_HINT_SECONDS + turnHintWait;
+            simulation.moveBeam(body.beamX + (toX / distance) * step, body.beamY + (toY / distance) * step);
+          }
         }
         if (pointer.released && simulation.snoozeOwned && travel <= TAP_TRAVEL && clock - pressAt <= TAP_LENGTH) {
           if (clock - firstTapAt <= DOUBLE_TAP && Math.hypot(pointer.x - firstTapX, pointer.y - firstTapY) <= 80) {

@@ -11,6 +11,7 @@ import type { TurnControl } from './turn';
 import { drawTurnButtons, drawTurnTell } from './turn-draw';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Human, type Sprite } from './rooms/layout';
 import { getLang, gt, tr } from '../i18n';
+import { drawSouvenirMarker, drawSouvenirPop, POP_SECONDS, SOUVENIR_HINT, souvenirLabel } from './souvenir';
 
 /** Art with English words painted in: other languages draw the primitive fallback instead. */
 const ENGLISH_LETTERED: ReadonlySet<string> = new Set(['room/sign_no_sleeping']);
@@ -359,6 +360,14 @@ export class AbductView {
   private seenBonk = 0;
   private seenWake = 0;
   private seenCat = 0;
+  private seenItem = 0;
+  /** Seconds since the souvenir was grabbed (0 = no label up). */
+  private popAge = 0;
+  private popX = 0;
+  private popY = 0;
+  private popLabel = '';
+  /** Sim time of the first lift, for the training-room souvenir hint. */
+  private firstMoveAt = -1;
   private seenDelivered = false;
   /** 0..1 after a bonk, decays fast: tiny squash on the specimen. */
   private squash = 0;
@@ -476,6 +485,11 @@ export class AbductView {
       this.reticle(g, dragging, turn);
     }
     this.fx.draw(g);
+    if (this.souvenirHint()) {
+      const item = room.item.sprite;
+      drawSouvenirMarker(g, sim.item.x, sim.item.y, sim.item.y - item.h * 0.5, ctx.time, ctx.reducedMotion);
+    }
+    drawSouvenirPop(g, this.popX, this.popY, this.popAge, this.popLabel, ctx.reducedMotion);
     g.restore();
     drawVignette(g);
     drawEdgeTint(g, GLOW.red, this.alarm * (ctx.reducedMotion ? 0.5 : 0.5 + 0.25 * Math.sin(ctx.time * 9)));
@@ -487,6 +501,17 @@ export class AbductView {
     }
     this.hud(g, tutorial, turn, turnHint);
     g.restore();
+  }
+
+  /**
+   * Training rooms (this view only draws levels 1 and 2): after the first lift, point out the loose
+   * item until it is grabbed or the hint times out.
+   */
+  private souvenirHint(): boolean {
+    const { sim } = this;
+    if (this.firstMoveAt < 0 || sim.item.captured || sim.delivered || sim.failure || sim.body.gripActive) return false;
+    const since = sim.elapsed - this.firstMoveAt;
+    return since >= SOUVENIR_HINT.delay && since < SOUVENIR_HINT.delay + SOUVENIR_HINT.seconds;
   }
 
   /** Turn simulation events into particles and short timers. */
@@ -523,6 +548,17 @@ export class AbductView {
         fx.burst(P_STAR, x, cat.y, rm ? 2 : 4, 140, 260, 0.6, 10, PC.red, 320, 1.4, -Math.PI / 2, Math.PI);
         fx.spawn(P_RING, x, cat.y + 10, 0, 0, 0.36, 70, PC.red);
       }
+    }
+    if (this.firstMoveAt < 0 && sim.moved) this.firstMoveAt = sim.elapsed;
+    if (this.popAge > 0) this.popAge = this.popAge + dt < POP_SECONDS ? this.popAge + dt : 0;
+    if (sim.itemSeq !== this.seenItem) {
+      this.seenItem = sim.itemSeq;
+      this.popAge = 0.0001;
+      this.popX = sim.item.x;
+      this.popY = sim.item.y;
+      this.popLabel = souvenirLabel(sim.room.item.name);
+      fx.spawn(P_RING, sim.item.x, sim.item.y, 0, 0, 0.4, 56, PC.mint);
+      if (!rm) fx.burst(P_TWINKLE, sim.item.x, sim.item.y, 6, 60, 140, 0.5, 7, PC.mint, 0, 3);
     }
     if (sim.wakeSeq !== this.seenWake) {
       this.seenWake = sim.wakeSeq;
@@ -1024,7 +1060,8 @@ export class AbductView {
     if (turn && !this.sim.delivered) drawTurnButtons(g, turn);
 
     if (body.gripActive) hudPrompt(g, VIEW_W / 2, 909, 54, ab.shakeGrip, 20, 'shake', ctx.time, ctx.reducedMotion, 480);
-    else if (tutorial) hudPrompt(g, VIEW_W / 2, 909, 54, ab.dragBeam, 21, 'drag', ctx.time, ctx.reducedMotion, 480);
+    else if (tutorial) hudPrompt(g, VIEW_W / 2, 909, 54, ab.pointBeam, 21, 'drag', ctx.time, ctx.reducedMotion, 480);
+    else if (this.souvenirHint()) hudPrompt(g, VIEW_W / 2, 909, 54, ab.souvenirHint, 20, 'drag', ctx.time, ctx.reducedMotion, 480);
     else if (turnHint) hudPrompt(g, VIEW_W / 2, 909, 54, turnHint, 21, 'drag', ctx.time, ctx.reducedMotion, 480);
   }
 }

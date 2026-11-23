@@ -1,6 +1,7 @@
 import { ART } from '../art-manifest';
 import { VIEW_H, VIEW_W, type AbductAutopilotIntent, type AbductResult, type AbductRules, type Audio, type UpgradeId } from '../contracts';
 import { AbductPilot } from './autopilot';
+import { POINT, pointReach } from './point';
 import { InteriorSimulation, type InteriorFailure } from './interior';
 import { clamp, Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
@@ -18,6 +19,17 @@ const HUMAN_NAMES = {
   gary: 'Gary', nigel: 'Night Guard Nigel', kev: 'DJ Kev', mayor: 'Mayor Whitlock',
 } as const;
 const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
+/** Pop-culture decor and the sleep-talk it sets off when the specimen floats past it (once). */
+const PROP_CUES: Readonly<Record<string, string>> = {
+  'room/saucer_poster': 'The truth is out there. Lock the back door.',
+  'room/pilot_bobblehead': 'July 4th speech first. Then upload the virus.',
+  'room/potato_butte': 'The mash needs more altitude.',
+  'room/roswell_pennant': 'Go Saucers! Defence!',
+  'room/towel_42': "Don't panic. Where's my towel?",
+  'room/tripod_single': 'This one goes out to the Martians.',
+};
+/** The cue plays this long after the lift, while the specimen is still in the prop's room. */
+const PROP_CUE_DELAY = 1.2;
 const GRIP_STRAIN = 132;
 /** Bonk speed of squashing a snagged body against a wall. */
 const SQUASH_SPEED = 140;
@@ -106,6 +118,8 @@ export class AbductSimulation {
   bonkPower = 0;
   wakeSeq = 0;
   catSeq = 0;
+  /** Goes up when the loose item (a souvenir) is sucked into the beam. */
+  itemSeq = 0;
 
   private accumulator = 0;
   private nextSnore = 1.2;
@@ -126,6 +140,9 @@ export class AbductSimulation {
   private readonly contact = new Contact();
   private readonly itemRadius: number;
   private beamMoved = false;
+  /** The room's pop-culture prop (centre) and its line, until it has been said. */
+  private propCue: { room: Area; line: string } | undefined;
+  private liftAt = -1;
   private squashed = false;
   private lift = 0;
 
@@ -203,12 +220,50 @@ export class AbductSimulation {
     this.itemRadius = item.h * 0.5;
     this.strainX = this.body.beamX;
     this.strainY = this.body.beamY;
+    for (const section of room.interior?.building.rooms ?? []) {
+      for (const prop of section.decor) {
+        const line = PROP_CUES[prop.key];
+        if (line && room.interior!.mumbles.includes(line)) this.propCue = { room: section, line };
+      }
+    }
   }
+
+  /** The player has moved the beam (the specimen has been lifted). */
+  get moved(): boolean { return this.beamMoved; }
 
   get complete(): boolean { return this.failure ? this.failureTime >= FAILURE_SECONDS : this.delivered && this.slurp >= 1; }
 
   autopilot(): AbductAutopilotIntent {
     return this.delivered || this.failure ? HOLD_INTENT : this.pilot.move(this.body, this.elapsed, this.interior);
+  }
+
+  /**
+   * Where to hold a pointer (screen px) so pointing moves the beam the way the autopilot plans:
+   * ahead of the beam by the reach for the planned speed, or on the aim point for the last step.
+   * Drives the headless touch proofs and the browser bots. Advances the pilot like autopilot().
+   */
+  autopilotFinger(dt = 1 / 60): { x: number; y: number } {
+    this.autopilot();
+    const { body } = this;
+    const cx = this.interior ? this.camera.x : 0;
+    const cy = this.interior ? this.camera.y : 0;
+    let x = body.beamX;
+    let y = body.beamY;
+    const pilot = this.pilot;
+    if (pilot.speed > 0 && !this.delivered && !this.failure) {
+      const dx = pilot.aimX - x;
+      const dy = pilot.aimY - y;
+      const d = Math.hypot(dx, dy);
+      if (d > 0) {
+        // Planned speed, but never past the aim point this frame: pointing at the reach for d/dt
+        // lands the beam on it exactly (pointStep), without easing in.
+        const speed = Math.min(pilot.speed, d / dt);
+        const reach = speed < POINT.min ? POINT.dead + d : pointReach(speed);
+        x += (dx / d) * reach;
+        y += (dy / d) * reach;
+      }
+    }
+    return { x: x - cx, y: y - cy };
   }
 
   snooze(): void {
@@ -318,6 +373,13 @@ export class AbductSimulation {
     if (interior?.failure) this.failure ??= interior.failure;
     if (this.failure) return;
 
+    const cue = this.propCue;
+    if (this.beamMoved && this.liftAt < 0) this.liftAt = this.elapsed;
+    if (cue && this.liftAt >= 0 && this.elapsed - this.liftAt >= PROP_CUE_DELAY && this.wake.awake === 0 && this.mumbleFx === 0) {
+      this.propCue = undefined;
+      if (contains(cue.room, this.body.chestX, this.body.chestY)) this.sleepTalk(cue.line);
+    }
+
     if (this.wake.awake === 0 && this.elapsed >= this.nextSnore) {
       this.snores++;
       this.snoreFx = 1.1;
@@ -350,9 +412,9 @@ export class AbductSimulation {
     if (this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
   }
 
-  private sleepTalk(): void {
+  private sleepTalk(line?: string): void {
     const mumbles = this.room.interior?.mumbles ?? MUMBLES;
-    this.mumble = mumbles[Math.floor(this.random() * mumbles.length)]!;
+    this.mumble = line ?? mumbles[Math.floor(this.random() * mumbles.length)]!;
     this.mumbleFx = 1.6;
     this.audio.sfx('mumble');
   }
@@ -462,6 +524,8 @@ export class AbductSimulation {
     if (this.beamMoved && !item.captured && dy > -115 && dy < 78 && Math.abs(item.x - columnX) < 57) {
       item.captured = true;
       item.side = item.x < body.chestX ? -1 : 1;
+      this.itemSeq++;
+      this.audio.sfx('pickup');
     }
 
     if (item.captured) {
