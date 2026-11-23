@@ -8,6 +8,10 @@ without waking them.
 
 **Play:** https://starbugstone.github.io/night-shift/
 
+**How it's made:** [60 fps explainer videos](https://starbugstone.github.io/night-shift/how-its-made.html)
+covering flight and detection, hazards, deep shifts, the ragdoll interiors, sleepers and noise,
+the autopilot proofs and progression ([page source](public/how-its-made.html), [media](public/media/README.md)).
+
 ## Develop
 
 ```sh

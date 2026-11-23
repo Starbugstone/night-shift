@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#120d2b">
+<title>Night Shift: how it's made</title>
+<meta name="description" content="60 fps explainer videos and stills showing how Night Shift's flight, detection, ragdoll abductions, hazards, autopilot proofs and progression work.">
+<style>
+  :root { --bg: #120d2b; --panel: #1b1440; --ink: #ece6ff; --muted: #a9a2d6; --mint: #7cffcb; --amber: #ffc24d; }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Ubuntu, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+  header h1 { font-size: clamp(28px, 6vw, 44px); line-height: 1.1; margin: 0 0 10px; }
+  header p { color: var(--muted); margin: 0 0 8px; max-width: 70ch; }
+  a { color: var(--mint); }
+  .play { display: inline-block; margin: 10px 0 6px; padding: 10px 18px; border-radius: 999px; background: var(--mint); color: #120d2b; font-weight: 700; text-decoration: none; }
+  nav.toc { margin: 18px 0 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  nav.toc a { font-size: 14px; text-decoration: none; padding: 4px 10px; border: 1px solid rgba(124,255,203,0.35); border-radius: 999px; }
+  .clip { margin-top: 34px; padding: 16px; background: var(--panel); border-radius: 14px; border: 1px solid rgba(124,255,203,0.12); }
+  .clip h2 { font-size: 21px; margin: 0 0 12px; display: flex; gap: 10px; align-items: center; }
+  .clip h2 .n { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--mint); color: #120d2b; font-size: 15px; display: grid; place-items: center; }
+  video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 8px; background: #000; }
+  .cap { margin: 12px 0 4px; }
+  .meta { margin: 0; color: var(--muted); font-size: 14px; }
+  .stills { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 12px; }
+  .stills img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); }
+  footer { margin-top: 40px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Night Shift: how it's made</h1>
+    <p>Eight short films about how the game works, captured from the real game at 60 fps. Each frame is exactly 1/60 s of game time: the capture replaces the browser's clock, so a slow machine can't drop or stretch frames.</p>
+    <p>The overlays are drawn from the live simulation (hit shapes, colliders, camera cones, wake meters), so what you see outlined is what the code tests. Saucer and specimen are driven with real mouse input, by hand or by the game's own autopilots.</p>
+    <a class="play" href="./">Play Night Shift</a>
+    <nav class="toc"><a href="#01-flight-detection">1. Flight and the 1-second fuse</a><a href="#02-flight-hazards">2. Flight hazards on L3 and L4</a><a href="#03-deep-shift">3. The structure of a deep shift</a><a href="#04-interiors">4. Multi-room interiors</a><a href="#05-abduct-hazards">5. Abduction hazards</a><a href="#06-sleepers-noise">6. Second sleepers and noise</a><a href="#07-beatable">7. Beatable, and not trivial</a><a href="#08-progression">8. Progression and humour</a></nav>
+  </header>
+
+    <article class="clip" id="01-flight-detection">
+      <h2><span class="n">1</span> Flight and the 1-second fuse</h2>
+      <video controls playsinline preload="metadata" poster="media/01-flight-detection-a-steering.png" width="1920" height="1080">
+        <source src="media/01-flight-detection.mp4" type="video/mp4">
+      </video>
+      <p class="cap">Inertial steering toward your finger, braking into a hover, then the L3 police cruiser's headlights find us: the fuse fills in exactly 60 frames, Exhibit A develops, and we respawn at the checkpoint.</p>
+      <p class="meta">0:25 · 1920×1080 · 60 fps · 4.2 MB · <a href="media/01-flight-detection.mp4" download>download</a></p>
+      <div class="stills"><a href="media/01-flight-detection-a-steering.png"><img src="media/01-flight-detection-a-steering.png" alt="Flight and the 1-second fuse: steering" loading="lazy" width="1920" height="1080"></a><a href="media/01-flight-detection-b-fuse.png"><img src="media/01-flight-detection-b-fuse.png" alt="Flight and the 1-second fuse: fuse" loading="lazy" width="1920" height="1080"></a><a href="media/01-flight-detection-c-exhibit-a.png"><img src="media/01-flight-detection-c-exhibit-a.png" alt="Flight and the 1-second fuse: exhibit a" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+
+    <article class="clip" id="02-flight-hazards">
+      <h2><span class="n">2</span> Flight hazards on L3 and L4</h2>
+      <video controls playsinline preload="metadata" poster="media/02-flight-hazards-a-porch.png" width="1920" height="1080">
+        <source src="media/02-flight-hazards.mp4" type="video/mp4">
+      </video>
+      <p class="cap">The cruiser, a porch light arming, clicking on and catching us (Exhibit A: doorbell camera), Mrs. Pruitt's ghost cone and snap, the helicopter spotlight, a rooftop camera beside a flickering office window, the crane boom, pigeons and the Afterburner dash, each outlined with its real hit shape from the hazard code.</p>
+      <p class="meta">0:41 · 1920×1080 · 60 fps · 11.2 MB · <a href="media/02-flight-hazards.mp4" download>download</a></p>
+      <div class="stills"><a href="media/02-flight-hazards-a-porch.png"><img src="media/02-flight-hazards-a-porch.png" alt="Flight hazards on L3 and L4: porch" loading="lazy" width="1920" height="1080"></a><a href="media/02-flight-hazards-b-pruitt.png"><img src="media/02-flight-hazards-b-pruitt.png" alt="Flight hazards on L3 and L4: pruitt" loading="lazy" width="1920" height="1080"></a><a href="media/02-flight-hazards-c-crane.png"><img src="media/02-flight-hazards-c-crane.png" alt="Flight hazards on L3 and L4: crane" loading="lazy" width="1920" height="1080"></a><a href="media/02-flight-hazards-d-dash.png"><img src="media/02-flight-hazards-d-dash.png" alt="Flight hazards on L3 and L4: dash" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+
+    <article class="clip" id="03-deep-shift">
+      <h2><span class="n">3</span> The structure of a deep shift</h2>
+      <video controls playsinline preload="metadata" poster="media/03-deep-shift-a-arrows-minimap.png" width="1920" height="1080">
+        <source src="media/03-deep-shift.mp4" type="video/mp4">
+      </video>
+      <p class="cap">A whole L3 shift played by the autopilots through the real mouse: three specimens in any order, off-screen arrows and the minimap, one sunrise clock across flight and abduction, checkpoints that move with each delivery, and the Specimen Report.</p>
+      <p class="meta">0:43 · 1920×1080 · 60 fps · 11.5 MB · <a href="media/03-deep-shift.mp4" download>download</a></p>
+      <div class="stills"><a href="media/03-deep-shift-a-arrows-minimap.png"><img src="media/03-deep-shift-a-arrows-minimap.png" alt="The structure of a deep shift: arrows minimap" loading="lazy" width="1920" height="1080"></a><a href="media/03-deep-shift-b-clock-in-abduction.png"><img src="media/03-deep-shift-b-clock-in-abduction.png" alt="The structure of a deep shift: clock in abduction" loading="lazy" width="1920" height="1080"></a><a href="media/03-deep-shift-c-checkpoint.png"><img src="media/03-deep-shift-c-checkpoint.png" alt="The structure of a deep shift: checkpoint" loading="lazy" width="1920" height="1080"></a><a href="media/03-deep-shift-d-report.png"><img src="media/03-deep-shift-d-report.png" alt="The structure of a deep shift: report" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+
+    <article class="clip" id="04-interiors">
+      <h2><span class="n">4</span> Multi-room interiors</h2>
+      <video controls playsinline preload="metadata" poster="media/04-interiors-a-ragdoll-beam.png" width="1920" height="1080">
+        <source src="media/04-interiors.mp4" type="video/mp4">
+      </video>
+      <p class="cap">The verlet ragdoll and its 21 contact circles, the beam moved by relative drag, walls built round each room with openings cut in, the camera following the specimen through Coach Barb's house, and the tiled backdrops.</p>
+      <p class="meta">0:37 · 1920×1080 · 60 fps · 9.8 MB · <a href="media/04-interiors.mp4" download>download</a></p>
+      <div class="stills"><a href="media/04-interiors-a-ragdoll-beam.png"><img src="media/04-interiors-a-ragdoll-beam.png" alt="Multi-room interiors: ragdoll beam" loading="lazy" width="1920" height="1080"></a><a href="media/04-interiors-b-walls-tiles.png"><img src="media/04-interiors-b-walls-tiles.png" alt="Multi-room interiors: walls tiles" loading="lazy" width="1920" height="1080"></a><a href="media/04-interiors-c-colliders.png"><img src="media/04-interiors-c-colliders.png" alt="Multi-room interiors: colliders" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+
+    <article class="clip" id="05-abduct-hazards">
+      <h2><span class="n">5</span> Abduction hazards</h2>
+      <video controls playsinline preload="metadata" poster="media/05-abduct-hazards-a-vacuum.png" width="1920" height="1080">
+        <source src="media/05-abduct-hazards.mp4" type="video/mp4">
+      </video>
+      <p class="cap">A robot vacuum that shoves, Gary's laser charging and firing, his camera catching Gary's head (not one point, the whole body), the Mayor's gears and pendulum, and the elevator shaft with its timed shutter.</p>
+      <p class="meta">0:35 · 1920×1080 · 60 fps · 7.9 MB · <a href="media/05-abduct-hazards.mp4" download>download</a></p>
+      <div class="stills"><a href="media/05-abduct-hazards-a-vacuum.png"><img src="media/05-abduct-hazards-a-vacuum.png" alt="Abduction hazards: vacuum" loading="lazy" width="1920" height="1080"></a><a href="media/05-abduct-hazards-b-laser.png"><img src="media/05-abduct-hazards-b-laser.png" alt="Abduction hazards: laser" loading="lazy" width="1920" height="1080"></a><a href="media/05-abduct-hazards-c-camera-body.png"><img src="media/05-abduct-hazards-c-camera-body.png" alt="Abduction hazards: camera body" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+
+    <article class="clip" id="06-sleepers-noise">
+      <h2><span class="n">6</span> Second sleepers and noise</h2>
+      <video controls playsinline preload="metadata" poster="media/06-sleepers-noise-a-brenda.png" width="1920" height="1080">
+        <source src="media/06-sleepers-noise.mp4" type="video/mp4">
+      </video>
+      <p class="cap">Brenda, Tiny and Biscuit each hear within a radius, and noise falls off with distance. Their wake meters appear as live readouts until we wake Biscuit on purpose and get the failure card.</p>
+      <p class="meta">0:35 · 1920×1080 · 60 fps · 9.2 MB · <a href="media/06-sleepers-noise.mp4" download>download</a></p>
+      <div class="stills"><a href="media/06-sleepers-noise-a-brenda.png"><img src="media/06-sleepers-noise-a-brenda.png" alt="Second sleepers and noise: brenda" loading="lazy" width="1920" height="1080"></a><a href="media/06-sleepers-noise-b-biscuit-noise.png"><img src="media/06-sleepers-noise-b-biscuit-noise.png" alt="Second sleepers and noise: biscuit noise" loading="lazy" width="1920" height="1080"></a><a href="media/06-sleepers-noise-c-failure-card.png"><img src="media/06-sleepers-noise-c-failure-card.png" alt="Second sleepers and noise: failure card" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+
+    <article class="clip" id="07-beatable">
+      <h2><span class="n">7</span> Beatable, and not trivial</h2>
+      <video controls playsinline preload="metadata" poster="media/07-beatable-a-autopilot-plan.png" width="1920" height="1080">
+        <source src="media/07-beatable.mp4" type="video/mp4">
+      </video>
+      <p class="cap">The flight autopilot's exposure map and plan against a beeline that gets spotted, then the abduction pilot with its finger landing 3 frames late against a straight drag at the exit that bonks Gary awake in under 3 s, and the numbers from the headless vitest proofs.</p>
+      <p class="meta">0:35 · 1920×1080 · 60 fps · 7.5 MB · <a href="media/07-beatable.mp4" download>download</a></p>
+      <div class="stills"><a href="media/07-beatable-a-autopilot-plan.png"><img src="media/07-beatable-a-autopilot-plan.png" alt="Beatable, and not trivial: autopilot plan" loading="lazy" width="1920" height="1080"></a><a href="media/07-beatable-b-beeline-spotted.png"><img src="media/07-beatable-b-beeline-spotted.png" alt="Beatable, and not trivial: beeline spotted" loading="lazy" width="1920" height="1080"></a><a href="media/07-beatable-c-pilot-waits.png"><img src="media/07-beatable-c-pilot-waits.png" alt="Beatable, and not trivial: pilot waits" loading="lazy" width="1920" height="1080"></a><a href="media/07-beatable-d-beeline-fails.png"><img src="media/07-beatable-d-beeline-fails.png" alt="Beatable, and not trivial: beeline fails" loading="lazy" width="1920" height="1080"></a><a href="media/07-beatable-e-proofs.png"><img src="media/07-beatable-e-proofs.png" alt="Beatable, and not trivial: proofs" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+
+    <article class="clip" id="08-progression">
+      <h2><span class="n">8</span> Progression and humour</h2>
+      <video controls playsinline preload="metadata" poster="media/08-progression-a-work-orders.png" width="1920" height="1080">
+        <source src="media/08-progression.mp4" type="video/mp4">
+      </video>
+      <p class="cap">Work Orders with Training and deep cards, rank, the four-card Beam Shop (buying the Snooze Ray), a memo from Supervisor Vrell and a real Specimen Report.</p>
+      <p class="meta">0:26 · 1920×1080 · 60 fps · 3.5 MB · <a href="media/08-progression.mp4" download>download</a></p>
+      <div class="stills"><a href="media/08-progression-a-work-orders.png"><img src="media/08-progression-a-work-orders.png" alt="Progression and humour: work orders" loading="lazy" width="1920" height="1080"></a><a href="media/08-progression-b-beam-shop.png"><img src="media/08-progression-b-beam-shop.png" alt="Progression and humour: beam shop" loading="lazy" width="1920" height="1080"></a><a href="media/08-progression-c-vrell-memo.png"><img src="media/08-progression-c-vrell-memo.png" alt="Progression and humour: vrell memo" loading="lazy" width="1920" height="1080"></a><a href="media/08-progression-d-specimen-report.png"><img src="media/08-progression-d-specimen-report.png" alt="Progression and humour: specimen report" loading="lazy" width="1920" height="1080"></a></div>
+    </article>
+  <footer>Captured with <code>scripts/capture/</code> (Playwright, a virtual clock and ffmpeg). Sped-up stretches are labelled “time-lapse” in the video.</footer>
+</main>
+</body>
+</html>
