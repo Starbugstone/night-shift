@@ -89,30 +89,45 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     let fx = ANCHOR[0], fy = ANCHOR[1];
     let down = false;
     const moveTo = async (lx, ly) => { const [px, py] = map(lx, ly); await page.mouse.move(px, py); };
+    const waitForPointer = async (down) => {
+      await page.waitForFunction((expected) => window.__nightShift.pointer.down === expected, down);
+    };
+    const press = async () => {
+      await moveTo(fx, fy);
+      await page.mouse.down();
+      down = true;
+      await waitForPointer(true);
+    };
+    const release = async () => {
+      await page.mouse.up();
+      down = false;
+      await waitForPointer(false);
+    };
     return {
       async reset() {
-        if (down) { await page.mouse.up(); down = false; await sleep(60); }
+        if (down) await release();
         await page.evaluate(() => { if (window.__e2eDrv) window.__e2eDrv.on = false; });
         fx = ANCHOR[0]; fy = ANCHOR[1];
       },
       async step(drv) {
         if (!drv) { await installDriver(); return; }
         if (!down) {
+          await waitForPointer(false);
           await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; d.on = true; }, ANCHOR);
           fx = ANCHOR[0]; fy = ANCHOR[1];
-          await moveTo(fx, fy); await page.mouse.down(); down = true; await sleep(30); return;
+          await press();
+          return;
         }
         const tx = drv.fx, ty = drv.fy;
         if (tx < 30 || tx > 510 || ty < 170 || ty > 900) {
-          // lift, carry the not-yet-sent part of the drag over to the anchor, press again. The lift
-          // and the press must land in different game frames: a release and a press in the same
-          // frame reads as a release, and the drag ends.
-          await page.mouse.up(); down = false;
-          await sleep(60);
+          // Wait for the release frame before moving to the anchor so the old drag ends in place.
+          // Carry the unsent part of the drag over to the new grip.
+          await release();
           const nx = ANCHOR[0] + (tx - fx), ny = ANCHOR[1] + (ty - fy);
           await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; }, [nx, ny]);
           fx = ANCHOR[0]; fy = ANCHOR[1];
-          await moveTo(fx, fy); await page.mouse.down(); down = true; await sleep(20); return;
+          await press();
+          return;
         }
         if (Math.abs(tx - fx) < 0.05 && Math.abs(ty - fy) < 0.05) { await sleep(POLL_MS); return; }
         // no pause after a move: input latency here is latency for the pilot's laser timing

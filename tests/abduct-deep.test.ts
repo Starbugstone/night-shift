@@ -17,6 +17,8 @@ const DEEP = [
   'nigel_skylight', 'nigel_loading', 'kev_vent', 'kev_fireescape', 'mayor_clocktower', 'mayor_elevator',
 ] as const satisfies readonly RoomId[];
 const HARD = { wakeFails: true, hard: true };
+// These cases run several rooms or input schedules in one test.
+const ROOM_SWEEP_TIMEOUT_MS = 10_000;
 const CADENCE = [4, 5, 6, 4, 6, 4, 5, 5]; // 33–50 ms, simulated at 120 Hz
 const FINGER_X = 270;
 const FINGER_Y = 480;
@@ -80,17 +82,26 @@ function flyRoute(id: RoomId, delay: number, cadenceShift: number): AbductSimula
 it.each([...TRAINING, ...DEEP])('%s delivers asleep under hard rules with jittered pointer input', (id) => {
   const runs = [flyRoute(id, 0, 0), flyRoute(id, 31, 3), flyRoute(id, 97, 6), flyRoute(id, 257, 2)];
   process.stdout.write(`[abduction ${id}] ${runs.map(sim => `${sim.elapsed.toFixed(2)}s (${sim.wake.bonks} bonks)`).join(', ')}\n`);
-});
+}, ROOM_SWEEP_TIMEOUT_MS);
 
-function flyWithMouseLatency(id: RoomId, latency: number, startFrames = 30, cadenceHz = 240): AbductSimulation {
+function flyWithMouseLatency(
+  id: RoomId,
+  latency: number,
+  startFrames = 30,
+  cadenceHz = 240,
+  { cssSubpixels = 1, observeFrame }: {
+    cssSubpixels?: number;
+    observeFrame?: (sim: AbductSimulation) => void;
+  } = {},
+): AbductSimulation {
   const { scene, ctx, onDone, frame, press, release } = sceneFor(id);
   const sim = scene.debug;
   const { pointer } = ctx;
   const scale = 375 / 540;
   const top = (690 - 960 * scale) / 2;
   const mouse = (x: number, y: number) => ({
-    x: Math.round(x * scale) / scale,
-    y: (Math.round(y * scale + top) - top) / scale,
+    x: Math.round(x * scale * cssSubpixels) / (cssSubpixels * scale),
+    y: (Math.round((y * scale + top) * cssSubpixels) / cssSubpixels - top) / scale,
   });
   const anchor = { x: 270, y: 520 };
   const quantizedAnchor = mouse(anchor.x, anchor.y);
@@ -125,6 +136,7 @@ function flyWithMouseLatency(id: RoomId, latency: number, startFrames = 30, cade
       Object.assign(pointer, pending.shift()!);
       frame(CADENCE[(i + latency) % CADENCE.length]! / cadenceHz);
     }
+    observeFrame?.(sim);
   }
   const result = sim.result();
   expect(result, `${latency} frames of mouse latency, ${result.timeSec.toFixed(2)}s, ${result.failBy ?? 'no failure'}`)
@@ -137,6 +149,25 @@ function flyWithMouseLatency(id: RoomId, latency: number, startFrames = 30, cade
 it.each(DEEP)('%s delivers with whole CSS-pixel mouse input delayed by 1–3 frames', (id) => {
   const times = [1, 2, 3].map(delay => flyWithMouseLatency(id, delay).elapsed.toFixed(2));
   process.stdout.write(`[abduction mouse latency ${id}] ${times.join(', ')}s\n`);
+});
+
+it.each([
+  { latency: 1, startFrames: 67 },
+  { latency: 3, startFrames: 22 },
+  { latency: 3, startFrames: 89 },
+  { latency: 6, startFrames: 22 },
+])('dave_roof keeps Dave clear of the bulb with $latency frames of input delay and a $startFrames-frame start offset', ({
+  latency, startFrames,
+}) => {
+  let firstBulbContact: number | undefined;
+  flyWithMouseLatency('dave_roof', latency, startFrames, 120, {
+    cssSubpixels: 64,
+    observeFrame(sim) {
+      const bulb = sim.interior!.hazards.find(hazard => hazard.spec.name === 'Attic bulb')!;
+      if (sim.body.touched[bulb.firstSolid]) firstBulbContact ??= sim.elapsed;
+    },
+  });
+  expect(firstBulbContact).toBeUndefined();
 });
 
 it('mayor_elevator clears the camera with three frames of latency at a slower cadence', () => {
@@ -166,7 +197,7 @@ it('a brisk straight-line beeline never delivers a deep specimen', () => {
   }
   process.stdout.write(`[abduction beeline] failures: ${failures.join(', ')} · blocked: ${blocked.join(', ')}\n`);
   expect(failures.length).toBeGreaterThan(DEEP.length / 2);
-});
+}, ROOM_SWEEP_TIMEOUT_MS);
 
 it('freezes the scene on a secondary sleeper waking and reports the named cause once', () => {
   const { scene, ctx, onDone, frame } = sceneFor('dave_roof');

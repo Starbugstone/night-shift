@@ -152,7 +152,8 @@ const daveHome = building([
 
 export const daveRoof = route(daveHome, 'dave', 'ROOF HATCH', EXITS.daveRoof,
   box(883, -755, 106, 57), [...daveHall, point(1192, -250, 'Attic ladder hatch', 195),
-    point(1285, -414), point(1150, -399), point(935, -422), point(935, -740)], true);
+    // Pass below the bulb, then climb outside its leftward swing before turning toward the exit.
+    point(1285, -398), point(1145, -375), point(868, -403), point(868, -681), point(935, -739)], true);
 export const davePatio = route(daveHome, 'dave', 'PATIO DOOR', EXITS.davePatio,
   box(1629, 1188, 86, 155), [
     point(330, 328), point(650, 318), point(650, 970, undefined, 36), point(840, 1013),
