@@ -3,11 +3,16 @@ import { VIEW_H, VIEW_W, type GameContext } from '../contracts';
 import { GLOW, PC, P_SPARK, P_STAR, Particles, drawEdgeTint, drawGlow } from '../core/fx';
 import { HUD_ROW, hudButton, hudMeter, hudPanel, hudTimer, type MeterState } from '../ui/hud';
 import { HumanArt, RESTART } from './draw';
-import { coneEdge, inside, type HazardState, type SleeperState } from './interior';
+import { inside, type HazardState, type SleeperState } from './interior';
 import { clamp, Joint, type Blade, type Circle, type Rect, type SwingingRect } from './ragdoll';
 import type { Building, InteriorRoom, Opening } from './rooms/interior';
 import type { Area, Sprite } from './rooms/layout';
 import type { AbductSimulation } from './simulation';
+
+/** Sunrise clock, between the sleeper meter and the camera fuse on row two. */
+export const DEEP_HUD_SUNRISE_SLOT = { x: 202, y: 86, w: 132, h: 64 } as const;
+/** Sunrise warning, beside the Snooze Ray and above the room/exit bar. */
+export const DEEP_HUD_WARNING_SLOT = { x: 230, y: 831, w: 296, h: 45 } as const;
 
 const TAU = Math.PI * 2;
 const INK = '#1a162b';
@@ -144,6 +149,7 @@ export class DeepAbductView {
   private lastSecond = -1;
   private lastBonk = 0;
   private clock = '0:00';
+  private exitTitleWidth = 0;
   private currentRoom: InteriorRoom;
   private cameraX = 0;
   private cameraY = 0;
@@ -184,8 +190,16 @@ export class DeepAbductView {
     for (const room of building.rooms) {
       if (!this.visible(room)) continue;
       this.backdrop(g, room);
+      for (const prop of room.mounts) {
+        const centerX = prop.x + prop.w / 2;
+        const anchors = prop.key === 'room/dino_skull' ? 49 : 0;
+        this.mount(g, centerX - anchors, room.y + 14, centerX - anchors, prop.y + (anchors ? 28 : 17));
+        if (anchors) this.mount(g, centerX + anchors, room.y + 14, centerX + anchors, prop.y + 28);
+        if (!room.furniture.includes(prop)) this.asset(g, prop);
+      }
       for (const prop of room.decor) if (prop !== sim.room.exit) this.asset(g, prop);
-      for (const prop of room.furniture) this.asset(g, prop, true);
+      for (const { sprite } of room.supports) this.asset(g, sprite);
+      for (const prop of room.furniture) this.asset(g, prop);
     }
     for (const wall of building.walls) {
       if (!this.visible(wall)) continue;
@@ -241,13 +255,46 @@ export class DeepAbductView {
     const image = this.ctx.assets.get(room.backdrop);
     if (image) {
       const spec = ART[room.backdrop]!;
-      const scale = Math.max(w / spec.w, h / spec.h);
-      g.save();
-      g.beginPath();
-      g.rect(x, y, w, h);
-      g.clip();
-      g.drawImage(image, x + (w - spec.w * scale) / 2, y + (h - spec.h * scale) / 2, spec.w * scale, spec.h * scale);
-      g.restore();
+      const left = x;
+      const width = w;
+      const top = y;
+      const floor = y + h - 14;
+      const floorDepth = 32;
+      const baseboard = floor - floorDepth;
+      // All deep-room art has a wall above source y=600. Keep the wall and
+      // baseboard separate so a shaft can repeat the wall without adding floors.
+      const wallSlice = 600;
+      const scale = Math.min(1, width / spec.w);
+      const tileW = spec.w * scale;
+      const span = baseboard - top;
+      // The stairwell SVG has a painted bannister that cannot follow relocated stairs.
+      const stairwell = room.backdrop === 'room/bg_stairwell';
+      const sourceH = stairwell ? 150 : wallSlice;
+      const tileH = stairwell || h > 800 ? sourceH * scale : span;
+      for (let tileX = left, col = 0; tileX < left + width; tileX += tileW, col++) {
+        if (tileX + tileW < this.cameraX || tileX > this.cameraX + VIEW_W) continue;
+        const drawW = Math.min(tileW, left + width - tileX);
+        g.save();
+        g.translate(col % 2 ? tileX + drawW : tileX, 0);
+        if (col % 2) g.scale(-1, 1);
+        const sourceX = col % 2 ? spec.w - drawW / scale : 0;
+        for (let tileY = top, row = 0; tileY < baseboard; tileY += tileH, row++) {
+          const drawH = Math.min(tileH, baseboard - tileY);
+          if (tileY + drawH < this.cameraY || tileY > this.cameraY + VIEW_H) continue;
+          const slice = sourceH * drawH / tileH;
+          if (row % 2) {
+            g.save();
+            g.translate(0, tileY + drawH);
+            g.scale(1, -1);
+            g.drawImage(image, sourceX, sourceH - slice, drawW / scale, slice, 0, 0, drawW, drawH);
+            g.restore();
+          } else {
+            g.drawImage(image, sourceX, 0, drawW / scale, slice, 0, tileY, drawW, drawH);
+          }
+        }
+        g.drawImage(image, sourceX, wallSlice, drawW / scale, 67, 0, baseboard, drawW, floorDepth + 14);
+        g.restore();
+      }
       return;
     }
 
@@ -258,21 +305,59 @@ export class DeepAbductView {
     g.globalAlpha = 0.14;
     const start = Math.max(x + 25, x + 25 + Math.floor((this.cameraX - x - 25) / 58) * 58);
     for (let line = start; line < x + w - 15 && line < this.cameraX + VIEW_W; line += 58) g.fillRect(line, y, 2, h);
-    g.fillRect(x, y + h - 94, w, 94);
+    g.fillRect(x, y + h - 46, w, 32);
     g.globalAlpha = 0.6;
-    g.fillRect(x, y + h - 95, w, 3);
+    g.fillRect(x, y + h - 46, w, 3);
     g.globalAlpha = 1;
   }
 
   private asset(g: CanvasRenderingContext2D, s: Sprite, solid = false): void {
     if (!this.visible(s)) return;
+    if (s.key === 'room/ladder') {
+      this.ladder(g, s);
+      return;
+    }
     this.drawArt(g, s.key, s.x, s.y, s.w, s.h, solid);
+  }
+
+  private ladder(g: CanvasRenderingContext2D, { x, y, w, h }: Area): void {
+    g.fillStyle = INK;
+    g.fillRect(x, y, 12, h);
+    g.fillRect(x + w - 12, y, 12, h);
+    g.fillStyle = '#bb9161';
+    g.fillRect(x + 2, y, 8, h);
+    g.fillRect(x + w - 10, y, 8, h);
+    const first = Math.max(16, 16 + Math.floor((this.cameraY - y - 16) / 28) * 28);
+    for (let rung = first; rung < h - 6 && y + rung < this.cameraY + VIEW_H; rung += 28) {
+      g.fillStyle = INK;
+      g.fillRect(x + 9, y + rung, w - 18, 8);
+      g.fillStyle = '#e5cc9f';
+      g.fillRect(x + 10, y + rung + 2, w - 20, 3);
+    }
+  }
+
+  private mount(g: CanvasRenderingContext2D, x: number, y: number, endX: number, endY: number, width = 4): void {
+    g.fillStyle = '#756986';
+    g.fillRect(x - 10, y, 20, 6);
+    g.beginPath();
+    g.moveTo(x, y + 5);
+    g.lineTo(endX, endY);
+    g.lineWidth = width;
+    g.strokeStyle = INK;
+    g.stroke();
+    g.lineWidth = Math.max(1, width - 3);
+    g.strokeStyle = '#a398ad';
+    g.stroke();
   }
 
   private drawArt(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number, solid = false): void {
     const image = this.ctx.assets.get(key);
     if (image) {
       g.drawImage(image, x, y, w, h);
+    } else if (key === 'room/watch_dog') {
+      this.watchDog(g, x, y, w, h);
+    } else if (key === 'room/chimney_stack') {
+      this.chimney(g, x, y, w, h);
     } else {
       g.fillStyle = solid ? '#594a68' : '#554361';
       g.lineWidth = 2.5;
@@ -307,8 +392,11 @@ export class DeepAbductView {
     if (vertical) {
       g.fillRect(at - 19, from - 7, 38, 7);
       g.fillRect(at - 19, to, 38, 7);
-      g.fillStyle = 'rgba(152,134,185,0.19)';
+      g.fillStyle = 'rgba(62,47,74,0.52)';
       g.fillRect(at - 5, from, 10, to - from);
+      g.fillStyle = 'rgba(212,181,174,0.48)';
+      g.fillRect(at - 7, from, 2, to - from);
+      g.fillRect(at + 5, from, 2, to - from);
     } else {
       g.fillRect(from - 7, at - 16, 7, 32);
       g.fillRect(to, at - 16, 7, 32);
@@ -331,7 +419,15 @@ export class DeepAbductView {
     g.strokeRect(zone.x, zone.y, zone.w, zone.h);
     g.setLineDash(EMPTY_DASH);
     g.lineDashOffset = 0;
-    label(g, sim.room.interior!.exitName, sim.exitX, zone.y - 19, '900 14px system-ui', MINT, 240);
+    const title = sim.room.interior!.exitName;
+    if (this.exitTitleWidth === 0) {
+      g.font = '900 14px system-ui';
+      this.exitTitleWidth = g.measureText(title).width + 22;
+    }
+    const width = this.exitTitleWidth;
+    const titleY = sim.room.roofExit ? Math.max(y + h, zone.y + zone.h) + 17 : y - 17;
+    hudPanel(g, sim.exitX - width / 2, titleY - 12, width, 24);
+    label(g, title, sim.exitX, titleY, '900 14px system-ui', MINT, width - 12);
   }
 
   private hazard(g: CanvasRenderingContext2D, state: HazardState): void {
@@ -340,6 +436,7 @@ export class DeepAbductView {
       case 'swing': {
         const shape = state.shapes[0] as SwingingRect;
         if (!this.visibleCircle(shape.x, shape.y, Math.hypot(shape.h, shape.w / 2))) return;
+        if (spec.mountY !== undefined) this.mount(g, shape.x, spec.mountY, shape.x, shape.y);
         g.save();
         g.translate(shape.x, shape.y);
         g.rotate(shape.angle);
@@ -351,7 +448,11 @@ export class DeepAbductView {
       case 'fan': {
         if (!this.visibleCircle(spec.x, spec.y, spec.length + 18)) return;
         const hub = state.shapes[0] as Circle;
-        if (spec.duct) ring(g, spec.x, spec.y, spec.length + 10, '#6a7585', 4);
+        if (spec.duct) {
+          ring(g, spec.x, spec.y, spec.length + 10, '#6a7585', 4);
+        } else if (spec.mountY !== undefined) {
+          this.mount(g, spec.x, spec.mountY, spec.x, spec.y, 9);
+        }
         for (let i = 1; i < state.shapes.length; i++) {
           const blade = state.shapes[i] as Blade;
           g.save();
@@ -393,7 +494,14 @@ export class DeepAbductView {
       case 'patrol': {
         const shape = state.shapes[0] as Rect;
         if (this.visible(shape)) {
-          this.drawArt(g, spec.sprite.key, shape.x, shape.y, shape.w, shape.h, true);
+          const facingLeft = spec.barks && shape.vx < 0;
+          if (facingLeft) {
+            g.save();
+            g.translate(2 * shape.x + shape.w, 0);
+            g.scale(-1, 1);
+          }
+          this.drawArt(g, spec.sprite.key, shape.x, shape.y, shape.w, shape.h);
+          if (facingLeft) g.restore();
           if (spec.barks && state.pulse > 0) ring(g, shape.x + shape.w / 2, shape.y + shape.h / 2, 20 + (1 - state.pulse) * 95, AMBER, 3);
         }
         break;
@@ -409,7 +517,7 @@ export class DeepAbductView {
         }
         break;
       case 'laser':
-        if (this.visible(spec.area)) this.laser(g, state, spec.area);
+        if (this.visible(spec.area)) this.laser(g, state, spec.area, spec.mountY);
         break;
       case 'gate':
       case 'pop': {
@@ -419,7 +527,7 @@ export class DeepAbductView {
           g.save();
           g.translate(shape.x, shape.y);
           g.rotate(shape.angle);
-          this.drawArt(g, spec.key, -shape.w / 2, 0, shape.w, shape.h, true);
+          this.shutter(g, -shape.w / 2, 0, shape.w, shape.h, true);
           g.restore();
           ring(g, shape.x, shape.y, 6, state.tell ? AMBER : MINT, 2.5);
           return;
@@ -430,14 +538,7 @@ export class DeepAbductView {
         g.fillRect(x, y, w, h);
         if (shape.active) {
           if (spec.kind === 'gate') {
-            g.save();
-            g.beginPath();
-            g.rect(shape.x, shape.y, shape.w, shape.h);
-            g.clip();
-            const artX = spec.axis === 'x' ? shape.x + shape.w - w : x;
-            const artY = spec.axis === 'y' ? shape.y + shape.h - h : y;
-            this.drawArt(g, spec.key, artX, artY, w, h);
-            g.restore();
+            this.shutter(g, shape.x, shape.y, shape.w, shape.h, spec.axis === 'y');
           } else {
             this.bird(g, shape);
           }
@@ -446,6 +547,19 @@ export class DeepAbductView {
         g.strokeStyle = state.tell ? AMBER : '#a791bc';
         if (shape.active) g.strokeRect(shape.x, shape.y, shape.w, shape.h);
         else g.strokeRect(x, y, w, h);
+        if (spec.kind === 'gate') {
+          g.fillStyle = '#796b89';
+          if (spec.axis === 'y') g.fillRect(x - 4, y - 8, w + 8, 11);
+          else g.fillRect(x - 8, y - 4, 11, h + 8);
+        } else {
+          g.fillStyle = '#796b89';
+          g.fillRect(x + w, y + h / 2 - 5, 28, 10);
+          g.fillStyle = '#604569';
+          g.strokeStyle = INK;
+          g.lineWidth = 3;
+          g.fillRect(x + w - 3, y - 6, 23, h + 12);
+          g.strokeRect(x + w - 3, y - 6, 23, h + 12);
+        }
         break;
       }
       case 'camera':
@@ -475,7 +589,76 @@ export class DeepAbductView {
     }
   }
 
-  private laser(g: CanvasRenderingContext2D, state: HazardState, area: Area): void {
+  private shutter(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, vertical: boolean): void {
+    g.fillStyle = '#495374';
+    g.fillRect(x, y, w, h);
+    g.fillStyle = '#a7b7ce';
+    const length = vertical ? h : w;
+    for (let slat = 5; slat < length - 2; slat += 15) {
+      if (vertical) g.fillRect(x + 3, y + slat, w - 6, 2);
+      else g.fillRect(x + slat, y + 3, 2, h - 6);
+    }
+    g.fillStyle = '#bb9161';
+    if (vertical) g.fillRect(x, y + Math.max(0, h - 4), w, Math.min(h, 4));
+    else g.fillRect(x + Math.max(0, w - 4), y, Math.min(w, 4), h);
+  }
+
+  private chimney(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+    g.fillStyle = '#545168';
+    g.fillRect(x, y, w, h);
+    g.strokeStyle = '#454157';
+    g.lineWidth = 3;
+    g.beginPath();
+    for (let row = 0; row < h; row += 23) {
+      g.moveTo(x, y + row);
+      g.lineTo(x + w, y + row);
+      const offset = row % 46 === 0 ? 26 : 57;
+      for (let mortar = offset; mortar < w; mortar += 62) {
+        g.moveTo(x + mortar, y + row);
+        g.lineTo(x + mortar, y + Math.min(row + 23, h));
+      }
+    }
+    g.stroke();
+    g.fillStyle = '#68637a';
+    g.fillRect(x + w - 11, y, 3, h);
+  }
+
+  private watchDog(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+    g.save();
+    g.translate(x, y);
+    g.scale(w / 89, h / 62);
+    g.fillStyle = '#bb9161';
+    g.strokeStyle = INK;
+    g.lineWidth = 3;
+    g.lineJoin = 'round';
+    g.beginPath();
+    g.moveTo(14, 50);
+    g.quadraticCurveTo(13, 35, 2, 27);
+    g.quadraticCurveTo(16, 29, 22, 34);
+    g.quadraticCurveTo(38, 25, 56, 34);
+    g.quadraticCurveTo(60, 23, 67, 21);
+    g.lineTo(68, 4);
+    g.lineTo(78, 19);
+    g.quadraticCurveTo(86, 20, 88, 34);
+    g.lineTo(73, 39);
+    g.lineTo(68, 60);
+    g.lineTo(58, 60);
+    g.lineTo(56, 49);
+    g.lineTo(27, 49);
+    g.lineTo(24, 60);
+    g.lineTo(14, 60);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#594050';
+    g.fillRect(58, 31, 6, 14);
+    g.fillStyle = INK;
+    g.fillRect(75, 25, 3, 3);
+    g.fillRect(84, 29, 4, 5);
+    g.restore();
+  }
+
+  private laser(g: CanvasRenderingContext2D, state: HazardState, area: Area, mountY?: number): void {
     const { x, y, w, h } = area;
     const vertical = h > w;
     const blinking = this.ctx.reducedMotion || Math.floor(this.sim.elapsed * 21) % 2 === 0;
@@ -489,47 +672,65 @@ export class DeepAbductView {
     const nearY = vertical ? y : y + h / 2;
     const farX = vertical ? nearX : x + w;
     const farY = vertical ? y + h : nearY;
-    this.drawArt(g, 'room/laser_emitter', nearX - 12, nearY - 14, 24, 28);
-    this.drawArt(g, 'room/laser_emitter', farX - 12, farY - 14, 24, 28);
-    ring(g, nearX, nearY, 5, state.level ? RED : state.tell ? AMBER : MINT, 2.5);
-    ring(g, farX, farY, 5, state.level ? RED : state.tell ? AMBER : MINT, 2.5);
+    if (mountY !== undefined) this.mount(g, nearX - 9, mountY, nearX - 9, nearY, 6);
+    const color = state.level ? RED : state.tell ? AMBER : MINT;
+    this.emitter(g, nearX, nearY, vertical ? Math.PI / 2 : 0, color);
+    this.emitter(g, farX, farY, vertical ? -Math.PI / 2 : Math.PI, color);
+  }
+
+  private emitter(g: CanvasRenderingContext2D, x: number, y: number, angle: number, color: string): void {
+    g.save();
+    g.translate(x, y);
+    g.rotate(angle);
+    this.drawArt(g, 'room/laser_emitter', -19, -14, 24, 28);
+    g.restore();
+    ring(g, x, y, 5, color, 2.5);
   }
 
   private bird(g: CanvasRenderingContext2D, shape: Rect): void {
+    const { x, y, w, h } = shape;
+    g.save();
+    g.beginPath();
+    g.rect(x, y, w, h);
+    g.clip();
+    const center = x + 23;
     g.fillStyle = '#bc795e';
-    g.fillRect(shape.x, shape.y, shape.w, shape.h);
-    if (shape.w > 26) {
-      g.fillStyle = LIGHT;
-      g.fillRect(shape.x + shape.w - 22, shape.y + 9, 9, 9);
-      g.fillStyle = INK;
-      g.fillRect(shape.x + shape.w - 18, shape.y + 11, 4, 5);
-      g.fillStyle = AMBER;
-      g.fillRect(shape.x + shape.w - 13, shape.y + 22, 13, 7);
-    }
+    g.beginPath();
+    g.ellipse(x + w * 0.6, y + h * 0.62, w * 0.55, h * 0.38, 0, 0, TAU);
+    g.ellipse(center, y + 12, 15, 12, 0, 0, TAU);
+    g.fill();
+    g.fillStyle = AMBER;
+    g.beginPath();
+    g.moveTo(center - 10, y + 12);
+    g.lineTo(x, y + 19);
+    g.lineTo(center - 10, y + 23);
+    g.fill();
+    g.fillStyle = INK;
+    g.fillRect(center - 10, y + 9, 4, 4);
+    g.restore();
   }
 
   private cameraCone(g: CanvasRenderingContext2D, state: HazardState): void {
-    const { spec, angle } = state;
-    if (spec.kind !== 'camera' || !this.visibleCircle(spec.x, spec.y, spec.range)) return;
-    const interior = this.sim.interior!;
-    const watching = interior.watching === state;
+    const { spec, angle, cone } = state;
+    if (spec.kind !== 'camera' || !cone || !this.visibleCircle(spec.x, spec.y, spec.range)) return;
+    const watching = state.detecting;
+    cone.update(angle);
     g.beginPath();
-    g.moveTo(spec.x, spec.y);
-    for (let i = 0; i <= 16; i++) {
-      const a = angle - spec.spread + spec.spread * 2 * i / 16;
-      const r = coneEdge(interior.building, spec.x, spec.y, a, spec.range);
-      g.lineTo(spec.x + Math.cos(a) * r, spec.y + Math.sin(a) * r);
-    }
+    g.moveTo(cone.points[0]!, cone.points[1]!);
+    for (let i = 1; i < cone.count; i++) g.lineTo(cone.points[i * 2]!, cone.points[i * 2 + 1]!);
     g.closePath();
     g.fillStyle = watching ? 'rgba(255,90,113,0.28)' : 'rgba(255,188,105,0.17)';
     g.fill();
     g.strokeStyle = watching ? RED : '#e5ab71';
     g.lineWidth = watching ? 2.8 : 1.7;
     g.stroke();
+    if (spec.mountY !== undefined) {
+      this.mount(g, spec.x, spec.mountY, spec.x - Math.cos(angle) * 36, spec.y - Math.sin(angle) * 36, 9);
+    }
     g.save();
     g.translate(spec.x, spec.y);
     g.rotate(angle);
-    this.drawArt(g, 'room/security_camera', -53, -17, 67, 37);
+    this.drawArt(g, 'room/security_camera', -61, -20, 67, 38);
     g.restore();
     ring(g, spec.x, spec.y, 6, watching ? RED : AMBER, 3);
   }
@@ -698,9 +899,10 @@ export class DeepAbductView {
     const center = gap ? (gap.from + gap.to) / 2 : 0;
     const x = (gap ? gap.axis === 'vertical' ? gap.at : center : this.sim.exitX) - this.cameraX;
     const y = (gap ? gap.axis === 'vertical' ? center : gap.at : this.sim.exitY) - this.cameraY;
-    if (!gap && x >= 42 && x <= VIEW_W - 42 && y >= 155 && y < VIEW_H - 112) return;
+    const bottom = DEEP_HUD_WARNING_SLOT.y - 20;
+    if (!gap && x >= 42 && x <= VIEW_W - 42 && y >= 155 && y < bottom) return;
     const cx = clamp(x, 42, VIEW_W - 42);
-    const cy = clamp(y, 168, VIEW_H - 124);
+    const cy = clamp(y, 168, bottom);
     if (Math.hypot(x - VIEW_W / 2, y - VIEW_H / 2) < 48) return;
     const angle = Math.atan2(y - VIEW_H / 2, x - VIEW_W / 2);
     g.save();
@@ -733,9 +935,9 @@ export class DeepAbductView {
     hudButton(g, RESTART, 'restart', 'RESTART', false);
     for (let i = 0; i < interior.sleepers.length; i++) {
       const sleeper = interior.sleepers[i]!;
-      this.drawMeter(g, this.sleeperMeters[i]!, sleeper.wake / 100, sleeper.wake >= 100, 14 + 159 * i, 86, 151);
+      this.drawMeter(g, this.sleeperMeters[i]!, sleeper.wake / 100, sleeper.wake >= 100, 14, 86, 180);
     }
-    if (interior.watching || interior.exposure > 0) this.drawMeter(g, this.cameraMeter, interior.exposure, interior.exposure >= 1, 347, 86, 179);
+    if (interior.watching || interior.exposure > 0) this.drawMeter(g, this.cameraMeter, interior.exposure, interior.exposure >= 1, 342, 86, 184);
 
     hudPanel(g, 14, 887, 512, 56);
     label(g, this.currentRoom.name, 155, 914, '850 18px system-ui', LIGHT, 251);

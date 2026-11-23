@@ -1,5 +1,5 @@
 import { building, type Building, type Checkpoint, type Hazard, type InteriorRoom, type Opening, type Sleeper } from './interior';
-import { BED_POSE, CHAIR_POSE, prop, sprite, type Area, type Human, type Room, type Sprite } from './layout';
+import { BED_POSE, CHAIR_POSE, prop, sprite, type Area, type Furniture, type Human, type Room, type Sprite } from './layout';
 import type { Pose } from '../ragdoll';
 
 const box = (x: number, y: number, w: number, h: number): Area => ({ x, y, w, h });
@@ -8,25 +8,26 @@ const fit = (key: string, x: number, y: number, w: number, h: number): Sprite =>
 const point = (x: number, y: number, cross?: string, speed?: number): Checkpoint => ({ x, y, cross, speed });
 const room = (
   name: string, backdrop: string, area: Area, decor: readonly Sprite[] = [], furniture: readonly Sprite[] = [],
-): InteriorRoom => ({ ...area, name, backdrop: 'room/bg_' + backdrop, decor, furniture });
+  supports: readonly Furniture[] = [], mounts: readonly Sprite[] = [],
+): InteriorRoom => ({ ...area, name, backdrop: 'room/bg_' + backdrop, decor, furniture, supports, mounts });
 const opening = (
   axis: Opening['axis'], at: number, from: number, to: number, trim: Opening['trim'],
 ): Opening => ({ axis, at, from, to, trim });
-const door = (x: number, y: number, h = 345): Opening => opening('vertical', x, y, y + h, 'door');
+const door = (x: number, top: number, floor = 686): Opening => opening('vertical', x, top, floor, 'door');
 const hatch = (y: number, x: number, trim: Opening['trim']): Opening => opening('horizontal', y, x, x + 164, trim);
-const swing = (name: string, sprite: Sprite, amplitude = 0.55, speed = 1.8, phase = 0): Hazard =>
-  ({ kind: 'swing', name, sprite, amplitude, speed, phase });
-const fan = (name: string, x: number, y: number, length: number, speed: number, duct = false): Hazard =>
-  ({ kind: 'fan', name, x, y, length, speed, phase: 0.6, duct });
+const swing = (name: string, sprite: Sprite, amplitude = 0.55, speed = 1.8, mountY?: number): Hazard =>
+  ({ kind: 'swing', name, sprite, amplitude, speed, phase: 0, mountY });
+const fan = (name: string, x: number, y: number, length: number, speed: number, duct: boolean, mountY?: number): Hazard =>
+  ({ kind: 'fan', name, x, y, length, speed, phase: 0.6, duct, mountY });
 const gate = (
-  name: string, key: string, area: Area, axis: 'x' | 'y', period: number, open: number, phase: number, hinged = false,
-): Hazard => ({ kind: 'gate', name, key: 'room/' + key, area, axis, cycle: { period, open, phase }, hinged });
-const laser = (name: string, area: Area, period: number, open: number, phase: number): Hazard =>
-  ({ kind: 'laser', name, area, cycle: { period, open, phase } });
+  name: string, area: Area, axis: 'x' | 'y', period: number, open: number, phase: number, hinged = false,
+): Hazard => ({ kind: 'gate', name, area, axis, cycle: { period, open, phase }, hinged });
+const laser = (name: string, area: Area, period: number, open: number, phase: number, mountY?: number): Hazard =>
+  ({ kind: 'laser', name, area, cycle: { period, open, phase }, mountY });
 const patrol = (name: string, sprite: Sprite, dx: number, dy: number, speed: number, barks = false): Hazard =>
   ({ kind: 'patrol', name, sprite, dx, dy, speed, phase: 0.6, barks });
-const camera = (name: string, x: number, y: number, angle: number, sweep: number, speed: number, range: number): Hazard =>
-  ({ kind: 'camera', name, x, y, angle, spread: 0.22, sweep, speed, range, phase: 1 });
+const camera = (name: string, x: number, mountY: number, angle: number, sweep: number, speed: number, range: number): Hazard =>
+  ({ kind: 'camera', name, x, y: mountY + 65, mountY, angle, spread: 0.22, sweep, speed, range, phase: 1 });
 const fragile = (name: string, sprite: Sprite): Hazard => ({ kind: 'fragile', name, sprite });
 const draft = (name: string, area: Area, ax: number, ay: number): Hazard => ({ kind: 'draft', name, area, ax, ay });
 const sleeper = (name: string, x: number, feet: number, radius: number): Sleeper => {
@@ -38,55 +39,69 @@ const sleeper = (name: string, x: number, feet: number, radius: number): Sleeper
   return { name, asleep, awake, radius };
 };
 
+// Spawn furniture has a shaped collider, so the body can sit in front of the backrest
+// and a loose item can rest on the actual cushion or tabletop.
+function support(key: string, x: number, y: number, ...surfaces: readonly Area[]): Furniture {
+  return prop(art(key, x, y), surfaces.map(a => box(x + a.x, y + a.y, a.w, a.h)));
+}
+
+const officeChair = (x: number) => support('office_chair', x, 536, box(10, 78, 90, 17), box(45, 95, 20, 48));
+const daveBed = support('double_bed', 60, 546, box(15, 58, 288, 56));
+const barbCouch = support('couch', 69, 566, box(22, 62, 234, 44));
+const garyChair = support('camping_chair', 93, 556, box(25, 78, 77, 16), box(40, 94, 55, 30));
+const nigelDesk = support('security_desk', 266, 566, box(7, 26, 247, 87));
+const kevDesk = support('dj_booth', 234, 556, box(26, 12, 189, 33), box(7, 45, 224, 82));
+const mayorDesk = support('mayor_desk', 234, 556, box(10, 18, 259, 94));
+
 const EXITS = {
-  daveRoof: art('exit_roof_hatch', 857, -752),
-  davePatio: art('exit_patio_door', 1584, 960),
-  barbChimney: art('exit_chimney_top', 639, -1202),
-  barbBackdoor: art('exit_back_door', 2228, 393),
-  garySkylight: art('exit_skylight', 434, -902),
-  garyGaragedoor: art('exit_loading_door', 2044, 369),
-  nigelSkylight: art('exit_skylight', 2374, 49),
-  nigelLoading: art('exit_loading_door', 1574, 992),
-  kevVent: art('exit_vent', 966, -977),
-  kevFireescape: art('exit_fire_escape', 2282, 382),
+  daveRoof: art('exit_roof_hatch', 857, -766),
+  davePatio: art('exit_patio_door', 1584, 1146),
+  barbChimney: art('exit_chimney_top', 639, -1206),
+  barbBackdoor: art('exit_back_door', 2244, 466),
+  garySkylight: art('exit_skylight', 434, -906),
+  garyGaragedoor: art('exit_loading_door', 2044, 446),
+  nigelSkylight: fit('exit_skylight', 2354, 14, 240, 96),
+  nigelLoading: art('exit_loading_door', 1574, 1146),
+  kevVent: art('exit_vent', 966, -986),
+  kevFireescape: art('exit_fire_escape', 2282, 486),
   mayorClocktower: art('clock_face_back', 1260, -1050),
-  mayorElevator: art('exit_roof_hatch', 1761, -1307),
+  mayorElevator: art('exit_roof_hatch', 1761, -1316),
 } as const;
 
 const SUBJECTS = {
   dave: {
-    pose: { ...BED_POSE, neckX: 131, neckY: 552 },
-    item: { sprite: art('slipper', 304, 651), name: 'orthodontic slipper' },
+    pose: { ...BED_POSE, neckX: 131, neckY: 568 },
+    item: { sprite: art('slipper', 292, 584), name: 'orthodontic slipper' },
     caption: 'The dentist will be billing for this wake-up call.',
     mumbles: ['Floss the moon, please.', 'That’s a load-bearing molar.', 'The plaque has a lawyer.', 'No, the drill dreams about me.'],
   },
   barb: {
     pose: { ...BED_POSE, neckX: 139, neckY: 558 },
-    item: { sprite: art('slipper', 315, 665), name: 'team-issued slipper' },
+    item: { sprite: art('slipper', 286, 608), name: 'team-issued slipper' },
     caption: 'Coach is calling a mandatory time-out.',
     mumbles: ['Give me twenty more naps.', 'That’s a foul on the pillow.', 'Stop stretching the mascot.', 'Everybody hydrate the couch.'],
   },
   gary: {
     pose: { ...CHAIR_POSE, neckX: 123, neckY: 503 },
-    item: { sprite: art('coffee_mug', 258, 577), name: 'neighbourhood watch mug' },
+    item: { sprite: art('coffee_mug', 315, 516), name: 'neighbourhood watch mug' },
     caption: 'Gary finally caught something. It was his own abduction.',
     mumbles: ['That squirrel is casing us.', 'Put the begonias on the watchlist.', 'Enhance the wheelie bin.', 'The cul-de-sac needs a password.'],
   },
   nigel: {
     pose: { ...CHAIR_POSE, neckX: 120, neckY: 507 },
-    item: { sprite: art('coffee_mug', 317, 584), name: 'fossilized coffee' },
+    item: { sprite: art('coffee_mug', 346, 562), name: 'fossilized coffee' },
     caption: 'The museum has added you to its Incident Collection.',
     mumbles: ['The mummy has a parking pass.', 'Stop feeding the fossils.', 'The T. rex owes me a tenner.', 'Please don’t tap on the sarcophagus.'],
   },
   kev: {
     pose: { ...CHAIR_POSE, neckX: 135, neckY: 500 },
-    item: { sprite: art('coffee_mug', 286, 578), name: 'limited-edition DJ mug' },
+    item: { sprite: art('coffee_mug', 394, 538), name: 'limited-edition DJ mug' },
     caption: 'The beat dropped. So did the performance review.',
     mumbles: ['Next up, forty minutes of beige.', 'Drop the bass gently.', 'My headphones are in a union.', 'This one goes out to the duvet.'],
   },
   mayor: {
     pose: { ...CHAIR_POSE, neckX: 124, neckY: 502 },
-    item: { sprite: art('coffee_mug', 300, 582), name: 'municipal mug' },
+    item: { sprite: art('coffee_mug', 361, 544), name: 'municipal mug' },
     caption: 'You’ve been added to next Tuesday’s agenda.',
     mumbles: ['I hereby declare it bedtime.', 'Motion to table the blanket.', 'The potholes are polling well.', 'My pillow has diplomatic immunity.'],
   },
@@ -97,7 +112,7 @@ function route(
   checkpoints: readonly Checkpoint[], roofExit = false,
 ): Room {
   const { pose, item, caption, mumbles } = SUBJECTS[human];
-  const furniture = home.rooms.flatMap(section => section.furniture.map(piece => prop(piece)));
+  const furniture = home.rooms.flatMap(section => [...section.furniture.map(piece => prop(piece)), ...section.supports]);
   return {
     human, pose, item, furniture, exit, exitZone, roofExit, backdrop: home.rooms[0]!.backdrop, par: 90, route: [],
     interior: { building: home, checkpoints, caption, mumbles, exitName },
@@ -109,61 +124,58 @@ const daveHall = [
 ] as const;
 const daveHome = building([
   room('Master bedroom', 'suburb_bedroom', box(0, 0, 760, 700),
-    [art('double_bed', 60, 523), art('portrait_cow', 205, 150)],
-    [art('wardrobe', 470, 443), art('nightstand', 383, 574)]),
+    [art('portrait_cow', 205, 150)],
+    [art('wardrobe', 407, 446)], [daveBed]),
   room('Upstairs hall', 'hallway', box(760, 0, 760, 700),
-    [art('grandfather_clock', 878, 416), art('ladder', 1162, 39)],
-    [art('bookcase', 1290, 456)]),
+    [art('grandfather_clock', 878, 426), fit('ladder', 1210, 0, 52, 686)],
+    [art('bookcase', 1290, 466)]),
   room('Attic', 'attic', box(760, -780, 760, 780),
-    [EXITS.daveRoof, art('ladder', 1162, -236)], [art('boxes', 842, -133), art('boxes', 1348, -130), art('shelf', 883, -294)]),
+    [EXITS.daveRoof, fit('ladder', 1210, -240, 52, 240)], [art('boxes', 842, -124), art('boxes', 1348, -124), art('shelf', 883, -294)]),
   room('Stairwell', 'stairwell', box(0, 700, 760, 700),
-    [fit('stairs', 207, 858, 476, 510)], [art('bookcase', 22, 1156)]),
+    [fit('stairs', 85, 700, 584, 686)]),
   room('Living room', 'living_room', box(760, 700, 1000, 700),
-    [EXITS.davePatio, art('tv_static', 955, 1282)], [art('couch', 1010, 1262), art('nightstand', 1401, 1276)]),
+    [EXITS.davePatio], [art('tv_static', 829, 1286), art('couch', 1010, 1266), art('nightstand', 1390, 1276)]),
 ], [
-  door(760, 210), hatch(0, 1110, 'ladder'), hatch(700, 204, 'stairs'), door(760, 881),
+  door(760, 210), hatch(0, 1110, 'ladder'), hatch(700, 568, 'stairs'), door(760, 881, 1386),
 ], [
-  swing('Grandfather clock', art('pendulum', 901, 455), 0.62, 2.5),
-  patrol('Hall vacuum', art('robot_vacuum', 983, 654), 118, 0, 1.65),
-  gate('Attic ladder hatch', 'exit_roof_hatch', box(1110, -17, 164, 34), 'x', 6.8, 3.85, 2.25),
-  swing('Attic bulb', art('hanging_bulb', 1040, -606), 0.72, 2.2),
+  swing('Grandfather clock', art('pendulum', 901, 465), 0.62, 2.5),
+  patrol('Hall vacuum', art('robot_vacuum', 1023, 662), 52, 0, 1.65),
+  gate('Attic ladder hatch', box(1110, -17, 164, 34), 'x', 6.8, 3.85, 2.25),
+  swing('Attic bulb', art('hanging_bulb', 1040, -606), 0.72, 2.2, -766),
   fragile('Dental trophy', art('trophy', 921, -354)),
-  { kind: 'creak', name: 'Creaky stairs', area: box(195, 728, 540, 575) },
-  swing('Living room chandelier', art('chandelier', 942, 715), 0.38, 2.1),
-  fan('Living room fan', 1113, 1160, 133, 2.6),
-  fragile('Fish tank', art('fish_tank', 1359, 1176)),
-  gate('Patio screen', 'garage_door', box(1600, 881, 34, 390), 'y', 6.9, 3.85, 1.7),
-], [sleeper('Brenda', 229, 608, 330)]);
+  { kind: 'creak', name: 'Creaky stairs', area: box(85, 728, 584, 658) },
+  swing('Living room chandelier', art('chandelier', 818, 714), 0.38, 2.1),
+  fan('Living room fan', 1120, 830, 100, 2.6, false, 714),
+  fragile('Fish tank', fit('fish_tank', 1390, 1212, 90, 64)),
+  gate('Patio screen', box(1525, 881, 34, 505), 'y', 6.9, 3.85, 1.7),
+], [sleeper('Brenda', 99, 562, 330)]);
 
 export const daveRoof = route(daveHome, 'dave', 'ROOF HATCH', EXITS.daveRoof,
-  box(883, -733, 106, 62), [...daveHall, point(1192, -250, 'Attic ladder hatch', 195),
-    point(1285, -414), point(1150, -399), point(935, -422), point(935, -716)], true);
+  box(883, -755, 106, 57), [...daveHall, point(1192, -250, 'Attic ladder hatch', 195),
+    point(1285, -414), point(1150, -399), point(935, -422), point(935, -740)], true);
 export const davePatio = route(daveHome, 'dave', 'PATIO DOOR', EXITS.davePatio,
-  box(1667, 1008, 68, 110), [
-    point(286, 429), point(286, 934, undefined, 36), point(392, 1001), point(650, 981), point(856, 981),
-    point(991, 912), point(1253, 924, 'Living room fan', 132), point(1470, 985),
-    point(1712, 1018, 'Patio screen', 175),
+  box(1629, 1188, 86, 155), [
+    point(330, 328), point(650, 318), point(650, 970, undefined, 36), point(840, 1013),
+    point(1000, 1086), point(1245, 1086), point(1468, 1060), point(1656, 1095, 'Patio screen', 175), point(1670, 1224),
   ]);
 
 const barbHome = building([
   room('Living room', 'living_room', box(0, 0, 800, 700),
-    [art('couch', 69, 529), art('fireplace', 478, 26)],
-    [art('tv_static', 405, 580), art('bookcase', 659, 458)]),
+    [fit('chimney_stack', 516, 0, 201, 477)], [art('tv_static', 357, 586), art('fireplace', 486, 466)], [barbCouch]),
   room('Fireplace flue', 'duct', box(465, -1220, 370, 1220),
-    [EXITS.barbChimney, fit('ladder', 479, -682, 44, 455)]),
+    [EXITS.barbChimney, fit('ladder', 479, -519, 44, 505)]),
   room('Kitchen', 'kitchen', box(800, 0, 760, 700),
-    [art('hanging_pans', 1180, 77)],
-    [art('counter', 1014, 571), art('fridge', 1350, 479)]),
+    [], [art('counter', 1014, 576), art('fridge', 1350, 486)], [], [art('hanging_pans', 1180, 77)]),
   room('Utility room', 'utility', box(1560, 0, 820, 700),
-    [EXITS.barbBackdoor, art('dog_bed', 1729, 646)], [art('dryer', 1835, 551), art('boxes', 2043, 575)]),
+    [EXITS.barbBackdoor], [art('dryer', 1580, 556)]),
 ], [hatch(0, 535, 'flue'), door(800, 190), door(1560, 321)], [
   draft('Soot draft', box(479, -1180, 340, 1170), -105, 310),
-  gate('Soot damper', 'exit_roof_hatch', box(479, -547, 342, 28), 'x', 7.3, 3.95, 1.25),
-  swing('Hanging pans', art('hanging_pans', 964, 115), 0.4, 2.15),
-  fragile('Dinner plates', art('plate_stack', 1176, 511)),
-  patrol('Kitchen vacuum', art('robot_vacuum', 978, 654), 106, 0, 1.7),
-  gate('Swinging back door', 'swing_door', box(2182, 303, 32, 378), 'y', 7, 3.7, 0.7, true),
-], [sleeper('Biscuit', 1739, 666, 380)]);
+  gate('Soot damper', box(479, -547, 342, 28), 'x', 7.3, 3.95, 1.25),
+  swing('Hanging pans', art('hanging_pans', 964, 115), 0.4, 2.15, 14),
+  fragile('Dinner plates', art('plate_stack', 1176, 516)),
+  patrol('Kitchen vacuum', art('robot_vacuum', 878, 662), 56, 0, 1.7),
+  gate('Swinging back door', box(2158, 368, 32, 318), 'y', 7, 3.7, 0.7, true),
+], [sleeper('Biscuit', 1710, 686, 380)]);
 
 export const barbChimney = route(barbHome, 'barb', 'CHIMNEY', EXITS.barbChimney,
   box(662, -1164, 92, 70), [
@@ -171,10 +183,9 @@ export const barbChimney = route(barbHome, 'barb', 'CHIMNEY', EXITS.barbChimney,
     point(673, -792, 'Soot damper', 200), point(723, -957), point(708, -1140),
   ], true);
 export const barbBackdoor = route(barbHome, 'barb', 'BACK DOOR', EXITS.barbBackdoor,
-  box(2263, 428, 72, 109), [
-    point(317, 351), point(624, 313), point(912, 302), point(1198, 346), point(1438, 442),
-    point(1640, 445), point(1805, 350), point(2043, 345), point(2073, 432),
-    point(2308, 448, 'Swinging back door', 176),
+  box(2260, 503, 88, 141), [
+    point(317, 310), point(624, 262), point(912, 302), point(1198, 309), point(1438, 310),
+    point(1700, 350), point(1795, 511), point(2308, 543, 'Swinging back door', 247),
   ]);
 
 const garyGarage = [
@@ -182,18 +193,18 @@ const garyGarage = [
 ] as const;
 const garyHome = building([
   room('Garage HQ', 'garage', box(0, 0, 1000, 700),
-    [art('camping_chair', 93, 554), art('power_tools', 220, 72)],
-    [art('monitor_bank', 232, 544)]),
+    [art('power_tools', 220, 72), fit('ladder', 745, 0, 54, 686)],
+    [art('monitor_bank', 232, 546)], [garyChair]),
   room('Loft storage', 'attic', box(370, -920, 630, 920),
-    [EXITS.garySkylight, art('ladder', 745, -245)], [art('boxes', 489, -250), fit('bookcase', 902, -374, 84, 191)]),
+    [EXITS.garySkylight, fit('ladder', 745, -240, 54, 240)], [art('boxes', 489, -124), art('bookcase', 866, -234)]),
   room('Side workshop', 'garage', box(1000, 0, 1240, 700),
-    [EXITS.garyGaragedoor, art('power_tools', 1306, 118)], [art('workbench', 1205, 572), art('boxes', 1642, 572), art('boxes', 1780, 580)]),
+    [EXITS.garyGaragedoor, art('power_tools', 1306, 118)], [art('workbench', 1205, 576), art('boxes', 1524, 576), art('boxes', 1666, 576)]),
 ], [hatch(0, 694, 'ladder'), door(1000, 282)], [
   laser("Gary's laser", box(535, 14, 10, 672), 6.4, 3.35, 0.4),
-  swing('Work lamp', art('work_lamp', 862, 30), 0.65, 2.3),
-  camera("Gary's camera", 1226, 119, 0.8, 1.0, 1.1, 380),
-  patrol('Watch dog', fit('biscuit_awake', 1950, 607, 89, 62), 30, 0, 1.07, true),
-  gate('Garage door', 'garage_door', box(2070, 282, 34, 404), 'y', 7.15, 3.95, 3.4),
+  swing('Work lamp', art('work_lamp', 862, 30), 0.65, 2.3, 14),
+  camera("Gary's camera", 1226, 14, 1.29, 0.82, 1.38, 355),
+  patrol('Watch dog', fit('watch_dog', 1845, 624, 89, 62), 30, 0, 1.07, true),
+  gate('Garage door', box(1990, 282, 34, 404), 'y', 7.15, 3.95, 3.4),
 ]);
 
 export const garySkylight = route(garyHome, 'gary', 'GARAGE SKYLIGHT', EXITS.garySkylight,
@@ -202,97 +213,95 @@ export const garySkylight = route(garyHome, 'gary', 'GARAGE SKYLIGHT', EXITS.gar
     point(535, -705), point(535, -865),
   ], true);
 export const garyGaragedoor = route(garyHome, 'gary', 'GARAGE DOOR', EXITS.garyGaragedoor,
-  box(2138, 411, 78, 116), [
-    ...garyGarage, point(919, 399), point(1097, 407), point(1315, 430, "Gary's camera", 188),
-    point(1517, 376), point(1796, 320), point(1930, 414), point(2180, 423, 'Garage door', 186),
+  box(2080, 489, 106, 148), [
+    ...garyGarage, point(771, 469), point(945, 440), point(1629, 448, "Gary's camera", 240),
+    point(1670, 354, undefined, 29), point(1796, 320, undefined, 29), point(1930, 414, undefined, 29), point(2144, 541, 'Garage door', 186),
   ]);
 
 const nigelHome = building([
   room('Security office', 'office', box(0, 0, 760, 700),
-    [art('office_chair', 93, 536), art('security_desk', 199, 562)],
-    [art('bookcase', 475, 466)]),
+    [], [], [officeChair(93), nigelDesk]),
   room('Dinosaur hall', 'museum', box(760, 0, 940, 700),
-    [], [art('dino_skull', 938, 270), art('dino_ribs', 1183, 481), art('dino_legs', 1456, 413)]),
+    [], [art('dino_skull', 938, 270), art('dino_ribs', 1138, 486), art('dino_legs', 1398, 426)], [], [art('dino_skull', 938, 270)]),
   room('Laser vault', 'vault', box(1700, 0, 930, 700),
-    [EXITS.nigelSkylight], [art('display_case', 1827, 514), art('display_case', 2235, 515)]),
+    [EXITS.nigelSkylight], [art('display_case', 1827, 526), art('display_case', 2235, 526)]),
   room('Gift shop', 'museum', box(0, 700, 760, 700),
-    [art('shelf', 391, 1135)], [art('bookcase', 460, 1156)]),
+    [fit('ladder', 608, 700, 55, 686)], [art('shelf', 232, 1135), art('bookcase', 416, 1166), art('postcard_rack', 36, 1206)]),
   room('Loading bay', 'garage', box(760, 700, 1010, 700),
-    [EXITS.nigelLoading], [art('boxes', 905, 1269), art('boxes', 1315, 1269)]),
-], [door(760, 175), door(1700, 212), hatch(700, 226, 'ladder'), door(760, 890)], [
-  swing('Pterodactyl', art('pterodactyl', 1145, 83), 0.58, 2.0),
+    [EXITS.nigelLoading], [art('boxes', 905, 1276), art('boxes', 1315, 1276)]),
+], [door(760, 175), door(1700, 212), hatch(700, 555, 'ladder'), door(760, 890, 1386)], [
+  swing('Pterodactyl', art('pterodactyl', 1145, 83), 0.58, 2.0, 14),
   laser('Vault grid', box(2058, 14, 10, 672), 6.1, 3.2, 0.95),
-  laser('Skylight grid', box(2298, 178, 318, 10), 5.8, 3.2, 1.8),
-  { kind: 'gear', name: 'Postcard rack', sprite: fit('postcard_rack', 544, 1130, 112, 112), speed: -2.2 },
-  fragile('Snow globe', art('snow_globe', 457, 1095)),
-  gate('Cargo shutter', 'cargo_shutter', box(1532, 887, 34, 479), 'y', 7, 3.85, 2.2),
+  laser('Skylight grid', box(2298, 178, 318, 10), 5.8, 3.2, 1.8, 14),
+  fragile('Snow globe', art('snow_globe', 296, 1095)),
+  gate('Cargo shutter', box(1520, 887, 34, 499), 'y', 7, 3.85, 2.2),
 ]);
 export const nigelSkylight = route(nigelHome, 'nigel', 'MUSEUM SKYLIGHT', EXITS.nigelSkylight,
-  box(2407, 64, 134, 70), [
+  box(2407, 47, 134, 85), [
     point(263, 308), point(560, 260), point(830, 275), point(891, 196), point(1100, 180),
     point(1270, 272), point(1472, 299), point(1750, 311), point(1930, 328), point(2227, 328, 'Vault grid', 197),
-    point(2467, 335), point(2474, 78, 'Skylight grid', 177),
+    point(2467, 301), point(2474, 78, 'Skylight grid', 220),
   ], true);
 export const nigelLoading = route(nigelHome, 'nigel', 'LOADING BAY', EXITS.nigelLoading,
-  box(1655, 1020, 77, 115), [
-    point(308, 531), point(308, 896), point(391, 969), point(691, 1000), point(858, 1001),
-    point(1100, 1020), point(1186, 899), point(1395, 994), point(1684, 1044, 'Cargo shutter', 188),
+  box(1619, 1192, 106, 151), [
+    point(305, 372), point(635, 365), point(635, 955), point(858, 1001),
+    point(1100, 1020), point(1186, 899), point(1395, 994), point(1666, 1090, 'Cargo shutter', 188), point(1674, 1224),
   ]);
 
 const kevDance = [point(244, 331), point(526, 309), point(760, 311)] as const;
 const kevHome = building([
   room('DJ booth', 'club', box(0, 0, 660, 700),
-    [art('office_chair', 106, 536), art('dj_booth', 210, 550)],
-    [art('speaker_stack', 480, 461)]),
+    [], [art('speaker_stack', 480, 466)], [officeChair(106), kevDesk]),
   room('Dance floor', 'club', box(660, 0, 900, 700),
-    [], [art('speaker_stack', 1350, 463)]),
+    [], [art('speaker_stack', 1350, 466)]),
   room('Vent duct', 'duct', box(880, -1000, 500, 1000),
-    [EXITS.kevVent, fit('ladder', 890, -622, 46, 440)]),
+    [EXITS.kevVent, fit('ladder', 898, -647, 46, 633)]),
   room('Green room', 'club', box(1560, 0, 900, 700),
-    [EXITS.kevFireescape], [art('coat_rack', 1691, 485), fit('couch', 2047, 606, 174, 80)]),
+    [EXITS.kevFireescape], [art('coat_rack', 1691, 486), art('nightstand', 1990, 576), fit('couch', 2090, 626, 140, 60)]),
 ], [door(660, 185), hatch(0, 1041, 'vent'), door(1560, 274)], [
-  swing('Disco ball', fit('disco_ball', 1148, 74, 87, 92), 0.69, 1.9),
-  { kind: 'speaker', name: 'Bass stack', sprite: art('speaker_stack', 805, 462), radius: 267, period: 1.44 },
-  fan('Duct fan', 1273, -451, 108, -2.35, true),
-  draft('Vent updraft', box(894, -969, 462, 943), 75, -385),
-  gate('Roof vent flap', 'exit_vent', box(894, -677, 472, 30), 'x', 7.1, 4, 3.7),
-  fragile('Champagne tower', art('champagne_tower', 1952, 470)),
-  gate('Fire-escape sash', 'swing_door', box(2266, 261, 32, 421), 'y', 7.25, 3.88, 4.15),
+  swing('Disco ball', art('disco_ball', 1250, 74), 0.69, 1.9, 14),
+  { kind: 'speaker', name: 'Bass stack', sprite: art('speaker_stack', 805, 466), radius: 267, period: 1.44 },
+  fan('Duct fan', 1245, -451, 102, -2.35, true),
+  draft('Vent updraft', box(894, -969, 462, 943), 45, -385),
+  gate('Roof vent flap', box(894, -677, 472, 30), 'x', 7.1, 4, 3.7),
+  fragile('Champagne tower', fit('champagne_tower', 1990, 468, 90, 108)),
+  gate('Fire-escape sash', box(2242, 261, 32, 425), 'y', 7.25, 3.88, 4.15),
 ], [sleeper('Tiny', 1855, 686, 390)]);
 export const kevVent = route(kevHome, 'kev', 'ROOF VENT', EXITS.kevVent,
   box(995, -958, 102, 62), [
-    ...kevDance, point(955, 289), point(1123, 214), point(1123, -207),
-    point(1023, -333), point(1027, -531, 'Duct fan', 142),
+    ...kevDance, point(950, 244), point(1123, 190), point(1123, -139),
+    point(978, -250), point(975, -500),
     point(1050, -854, 'Roof vent flap', 181), point(1046, -944),
   ], true);
 export const kevFireescape = route(kevHome, 'kev', 'FIRE ESCAPE', EXITS.kevFireescape,
-  box(2350, 406, 76, 115), [
+  box(2325, 527, 98, 122), [
     ...kevDance, point(1010, 371), point(1266, 362), point(1455, 395), point(1650, 405),
-    point(1822, 292), point(2068, 281), point(2131, 397), point(2397, 422, 'Fire-escape sash', 187),
+    point(1822, 292), point(2068, 281), point(2131, 397), point(2377, 541, 'Fire-escape sash', 187),
   ]);
 
-const mayorHall = [point(260, 321), point(527, 309), point(828, 318), point(1174, 309, 'City hall camera', 196)] as const;
+const mayorHall = [point(260, 311), point(664, 253), point(1288, 389, 'City hall camera', 237)] as const;
 const mayorHome = building([
   room('Mayor’s office', 'office', box(0, 0, 760, 700),
-    [art('office_chair', 95, 532), art('mayor_desk', 185, 552), art('mayor_portrait', 367, 76)],
-    [art('flag_stand', 574, 465)]),
+    [art('mayor_portrait', 367, 76)], [art('flag_stand', 574, 466)], [officeChair(95), mayorDesk]),
   room('City hall corridor', 'corridor', box(760, 0, 880, 700),
-    [], [art('water_cooler', 1142, 550), art('vase', 1404, 618)]),
+    [], [art('water_cooler', 1038, 536)]),
   room('Clock tower', 'clocktower', box(1120, -1070, 520, 1070),
-    [EXITS.mayorClocktower, fit('ladder', 1244, -230, 56, 245)]),
+    [EXITS.mayorClocktower, fit('ladder', 1244, -230, 56, 230)]),
   room('Elevator shaft', 'shaft', box(1640, -1330, 480, 2030),
-    [EXITS.mayorElevator, fit('ladder', 1664, -186, 46, 595)]),
-], [door(760, 174, 420), hatch(0, 1190, 'ladder'), opening('vertical', 1640, 300, 653, 'shaft')], [
-  camera('City hall camera', 1021, 112, 1.58, 0.61, 1.6, 354),
-  camera('Elevator lobby camera', 1568, 121, 1.3, 0.62, 1.47, 325),
+    [EXITS.mayorElevator, fit('ladder', 1674, -453, 46, 1139)]),
+], [door(760, 174), hatch(0, 1190, 'ladder'), opening('vertical', 1640, 300, 686, 'shaft')], [
+  fragile('Vase', art('vase', 1404, 616)),
+  camera('City hall camera', 1021, 14, 1.63, 0.67, 2.36, 322),
+  camera('Elevator lobby camera', 1568, 14, 1.3, 0.65, 1.47, 335),
   { kind: 'gear', name: 'Drive gear', sprite: art('gear_big', 1379, -435), speed: 1.8 },
   { kind: 'gear', name: 'Idle gear', sprite: art('gear_small', 1138, -472), speed: -3.6 },
-  swing('Tower pendulum', fit('pendulum', 1465, -900, 54, 187), 0.87, 2.05),
-  gate('Clock service hatch', 'exit_roof_hatch', box(1134, -671, 492, 27), 'x', 7.5, 4.05, 1.1),
-  gate('Shaft safety shutter', 'cargo_shutter', box(1654, -488, 452, 35), 'x', 7.35, 4.05, 1.9),
-  patrol('Elevator car', fit('elevator_car', 1912, -677, 182, 181), 0, 261, 0.8),
-  patrol('Counterweight', art('counterweight', 2027, -854), 0, 190, 1.5),
-  { kind: 'pop', name: 'Cuckoo bird', area: box(1314, -942, 93, 44), cycle: { period: 3.6, open: 2.52, phase: 2.5 } },
+  swing('Tower pendulum', art('pendulum', 1370, -920), 0.87, 2.05),
+  gate('Clock service hatch', box(1134, -671, 492, 27), 'x', 7.5, 4.05, 1.1),
+  gate('Shaft safety shutter', box(1654, -488, 452, 35), 'x', 7.35, 4.05, 1.9),
+  // Car and counterweight travel on separate tracks on opposite sides of the shutter.
+  patrol('Elevator car', art('elevator_car', 1830, -195), 0, 240, 0.8),
+  patrol('Counterweight', art('counterweight', 2044, -876), 0, 210, 1.5),
+  { kind: 'pop', name: 'Cuckoo bird', area: box(1514, -841, 86, 44), cycle: { period: 3.6, open: 2.52, phase: 2.5 } },
 ]);
 export const mayorClocktower = route(mayorHome, 'mayor', 'CLOCK TOWER', EXITS.mayorClocktower,
   box(1332, -1004, 106, 92), [
@@ -301,7 +310,7 @@ export const mayorClocktower = route(mayorHome, 'mayor', 'CLOCK TOWER', EXITS.ma
   ], true);
 export const mayorElevator = route(mayorHome, 'mayor', 'ELEVATOR ROOF', EXITS.mayorElevator,
   box(1784, -1296, 114, 61), [
-    ...mayorHall, point(1368, 399), point(1737, 421, 'Elevator lobby camera', 191),
-    point(1841, 188), point(1785, -183), point(1785, -741, 'Shaft safety shutter', 225),
+    ...mayorHall, point(1339, 442), point(1745, 464, 'Elevator lobby camera', 203),
+    point(1735, 190), point(1730, -202), point(1730, -741, 'Shaft safety shutter', 225),
     point(1779, -1050), point(1840, -1273),
   ], true);

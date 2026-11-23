@@ -1,3 +1,4 @@
+import { CameraCone } from './camera-cone';
 import type { AbductFailReason, Audio } from '../contracts';
 import { clamp, type Blade, type Circle, type Ragdoll, type Rect, type Solid, STEP, type SwingingRect } from './ragdoll';
 import type { Building, Checkpoint, Cycle, Hazard, Sleeper } from './rooms/interior';
@@ -24,10 +25,14 @@ export class HazardState {
   level = 0;
   tell = false;
   broken = false;
+  detecting = false;
   pulse = 0;
   next = 0;
 
-  constructor(readonly spec: Hazard) {
+  readonly cone: CameraCone | undefined;
+
+  constructor(readonly spec: Hazard, building: Building) {
+    this.cone = spec.kind === 'camera' ? new CameraCone(building, spec) : undefined;
     switch (spec.kind) {
       case 'swing': {
         const { sprite: s } = spec;
@@ -122,7 +127,7 @@ export class InteriorSimulation {
   ) {
     this.x = startX;
     this.y = startY;
-    this.hazards = building.hazards.map(spec => new HazardState(spec));
+    this.hazards = building.hazards.map(spec => new HazardState(spec, building));
     this.sleepers = building.sleepers.map(spec => new SleeperState(spec));
     for (const state of this.hazards) {
       this.namedHazards.set(state.spec.name, state);
@@ -189,8 +194,8 @@ export class InteriorSimulation {
           state.tell = (p >= cycle.open - 0.55 && p < cycle.open) || p >= cycle.period - 0.22;
           state.level = size;
           if (shape.kind === 'swingingRect') {
-            shape.angle = (size - 1) * Math.PI / 2;
-            shape.omega = opening ? -1.08 : closing ? 1.08 : 0;
+            shape.angle = (1 - size) * Math.PI / 2;
+            shape.omega = opening ? 1.08 : closing ? -1.08 : 0;
             break;
           }
           if (shape.kind !== 'rect') break;
@@ -201,6 +206,10 @@ export class InteriorSimulation {
           } else {
             shape.w = area.w * size;
             shape.vx = opening ? -area.w / GATE_TRAVEL : closing ? area.w / GATE_TRAVEL : 0;
+            if (spec.kind === 'pop') {
+              shape.x = area.x + area.w - shape.w;
+              shape.vx *= -1;
+            }
           }
           // The moving edge travels with the panel. Cap its transfer to the
           // body so a closing gate bonks it without flinging it through a wall.
@@ -252,7 +261,8 @@ export class InteriorSimulation {
           }
           break;
         case 'camera':
-          if (this.seesBody(state, body)) this.watching ??= state;
+          state.detecting = state.cone?.overlapsBody(body, state.angle) ?? false;
+          if (state.detecting) this.watching ??= state;
           break;
         case 'fragile':
           if (!state.broken && body.impacts[state.firstSolid]! >= BREAK_SPEED) {
@@ -365,15 +375,26 @@ export class InteriorSimulation {
     }
     if (spec.kind === 'camera') {
       const duration = Math.hypot(target.x - from.x, target.y - from.y) / speed;
-      let seen = 0;
-      for (let t = 0; t <= duration; t += 0.08) {
-        const p = t / duration;
+      let seen = this.exposure;
+      let grace = this.cameraGrace;
+      // The beam leads the body by a fraction of a second at crossing speed.
+      // Forecast the space occupied by its head, torso and trailing limbs.
+      for (let t = 0; t <= duration + 0.65; t += 0.08) {
+        const p = clamp((t - 0.32) / duration, 0, 1);
         const x = from.x + (target.x - from.x) * p;
-        const y = from.y + (target.y - from.y) * p;
-        const angle = spec.angle + Math.sin((time + t + 0.46) * spec.speed + spec.phase) * spec.sweep;
-        if (inCone(spec, angle, x, y, 0.16)) seen += 0.08;
+        const y = from.y + (target.y - from.y) * p + 9;
+        const angle = spec.angle + Math.sin((time + t) * spec.speed + spec.phase) * spec.sweep;
+        const dx = Math.cos(angle);
+        const dy = Math.sin(angle);
+        if (nearCone(spec, dx, dy, x, y - 55) || nearCone(spec, dx, dy, x, y + 35) ||
+            nearCone(spec, dx, dy, x, y + 120)) {
+          seen += 0.08;
+          grace = CAMERA_GRACE;
+          if (seen >= 0.8) return false;
+        } else if (grace > 0) grace -= 0.08;
+        else seen = Math.max(0, seen - 0.08 * CAMERA_DECAY);
       }
-      return seen + this.exposure < 0.68;
+      return true;
     }
     return true;
   }
@@ -384,54 +405,14 @@ export class InteriorSimulation {
     if (reason === 'alarm') this.audio.sfx('alarm');
     else this.audio.sfx(by === 'Biscuit' ? 'bark' : 'scream');
   }
-
-  private seesBody(state: HazardState, body: Ragdoll): boolean {
-    const { spec } = state;
-    if (spec.kind !== 'camera' || !inCone(spec, state.angle, body.chestX, body.chestY)) return false;
-    // Only walls block a camera. It cannot detect through a ceiling or around
-    // the next room's corner as the viewport scrolls.
-    for (const wall of this.building.walls) {
-      if (segmentHits(spec.x, spec.y, body.chestX, body.chestY, wall)) return false;
-    }
-    return true;
-  }
 }
 
-function inCone(
-  spec: Extract<Hazard, { kind: 'camera' }>, angle: number, x: number, y: number, margin = 0,
-): boolean {
+function nearCone(spec: Extract<Hazard, { kind: 'camera' }>, forwardX: number, forwardY: number, x: number, y: number): boolean {
   const dx = x - spec.x;
   const dy = y - spec.y;
-  const d2 = dx * dx + dy * dy;
-  if (d2 > spec.range * spec.range) return false;
-  return dx * Math.cos(angle) + dy * Math.sin(angle) > Math.sqrt(d2) * Math.cos(spec.spread + margin);
-}
-
-function segmentHits(x: number, y: number, tx: number, ty: number, rect: Area): boolean {
-  const dx = tx - x;
-  const dy = ty - y;
-  if (dx === 0 && (x <= rect.x || x >= rect.x + rect.w)) return false;
-  if (dy === 0 && (y <= rect.y || y >= rect.y + rect.h)) return false;
-  const x1 = dx === 0 ? -Infinity : (rect.x - x) / dx;
-  const x2 = dx === 0 ? Infinity : (rect.x + rect.w - x) / dx;
-  const y1 = dy === 0 ? -Infinity : (rect.y - y) / dy;
-  const y2 = dy === 0 ? Infinity : (rect.y + rect.h - y) / dy;
-  return Math.max(0, Math.min(x1, x2), Math.min(y1, y2)) < Math.min(1, Math.max(x1, x2), Math.max(y1, y2));
-}
-
-export function coneEdge(building: Building, x: number, y: number, angle: number, range: number): number {
-  const dx = Math.cos(angle);
-  const dy = Math.sin(angle);
-  let edge = range;
-  for (const wall of building.walls) {
-    if (dx === 0 && (x <= wall.x || x >= wall.x + wall.w)) continue;
-    if (dy === 0 && (y <= wall.y || y >= wall.y + wall.h)) continue;
-    const a = dx === 0 ? -Infinity : (wall.x - x) / dx;
-    const b = dx === 0 ? Infinity : (wall.x + wall.w - x) / dx;
-    const c = dy === 0 ? -Infinity : (wall.y - y) / dy;
-    const d = dy === 0 ? Infinity : (wall.y + wall.h - y) / dy;
-    const first = Math.max(0, Math.min(a, b), Math.min(c, d));
-    if (first < Math.min(edge, Math.max(a, b), Math.max(c, d))) edge = first;
-  }
-  return edge;
+  const r = 45;
+  if (dx * dx + dy * dy > (spec.range + r) ** 2) return false;
+  const forward = dx * forwardX + dy * forwardY;
+  const side = Math.abs(dx * forwardY - dy * forwardX);
+  return forward >= -r && side * Math.cos(spec.spread) - forward * Math.sin(spec.spread) < r;
 }

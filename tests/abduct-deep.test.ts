@@ -2,7 +2,7 @@ import { expect, it, vi } from 'vitest';
 import type { GameContext, RoomId, UpgradeId } from '../src/contracts';
 import { createAbductScene } from '../src/abduct';
 import { CAMERA_FUSE, InteriorSimulation } from '../src/abduct/interior';
-import { Ragdoll, STEP } from '../src/abduct/ragdoll';
+import { Joint, Ragdoll, STEP } from '../src/abduct/ragdoll';
 import { ROOMS } from '../src/abduct/rooms';
 import type { Building } from '../src/abduct/rooms/interior';
 import { CHAIR_POSE } from '../src/abduct/rooms/layout';
@@ -154,6 +154,44 @@ it('requires a full second of continuous camera exposure to trip the alarm', () 
   sim.step(body, frames * STEP, false);
   expect(sim.failure).toEqual({ reason: 'alarm', by: 'Fixed camera' });
 });
+
+it('detects a foot that enters the visible camera cone with the chest outside', () => {
+  const camera = {
+    kind: 'camera', name: 'Fixed camera', x: 100, y: 240,
+    angle: 0, spread: 0.22, range: 240, sweep: 0, speed: 0, phase: 0,
+  } as const;
+  const body = new Ragdoll(CHAIR_POSE, []);
+  body.x.fill(230);
+  body.y.fill(395);
+  // The foot centre is just below the cone and its collision radius crosses the edge.
+  body.y[Joint.NearFoot] = 279;
+  const home: Building = {
+    rooms: [], openings: [], sleepers: [], bounds: { x: 0, y: 0, w: 540, h: 960 },
+    walls: [], hazards: [camera],
+  };
+  const sim = new InteriorSimulation(home, [], body.chestX, body.chestY, { sfx() {} }, false);
+  sim.step(body, STEP, false);
+  expect(sim.watching?.spec).toBe(camera);
+  expect(sim.exposure).toBeCloseTo(STEP);
+
+  const behindWall = new InteriorSimulation({
+    ...home, walls: [{ x: 167, y: 180, w: 14, h: 134 }],
+  }, [], body.chestX, body.chestY, { sfx() {} }, false);
+  behindWall.step(body, STEP, false);
+  expect(behindWall.watching).toBeUndefined();
+  expect(behindWall.exposure).toBe(0);
+});
+
+it.each(['dave_roof', 'barb_chimney', 'gary_skylight', 'nigel_loading', 'kev_vent', 'mayor_elevator'] as const)(
+  '%s keeps its loose item on the spawn furniture while the beam is idle', (id) => {
+    const sim = new AbductSimulation(ROOMS[id], new Set(), { sfx() {} }, () => 0.5, HARD);
+    const { x, y } = sim.item;
+    for (let step = 0; step < 240; step++) sim.update(STEP);
+    expect(sim.item.x).toBeCloseTo(x);
+    expect(sim.item.y).toBeCloseTo(y, 0);
+    expect(sim.failure).toBeUndefined();
+  },
+);
 
 it('shows the laser tell for its last 0.35 seconds of clearance', () => {
   const sim = new AbductSimulation(ROOMS.gary_skylight, new Set(), { sfx() {} }, () => 0.5, HARD);

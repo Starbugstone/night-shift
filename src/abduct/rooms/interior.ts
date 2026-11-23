@@ -1,10 +1,12 @@
-import type { Area, Sprite } from './layout';
+import type { Area, Furniture, Sprite } from './layout';
 
 export interface InteriorRoom extends Area {
   name: string;
   backdrop: string;
   decor: readonly Sprite[];
   furniture: readonly Sprite[];
+  supports: readonly Furniture[];
+  mounts: readonly Sprite[];
 }
 
 export interface Opening {
@@ -23,13 +25,13 @@ export interface Cycle {
 }
 
 export type Hazard =
-  | { kind: 'swing'; name: string; sprite: Sprite; amplitude: number; speed: number; phase: number }
-  | { kind: 'fan'; name: string; x: number; y: number; length: number; speed: number; phase: number; duct: boolean }
-  | { kind: 'laser'; name: string; area: Area; cycle: Cycle }
-  | { kind: 'gate'; name: string; key: string; area: Area; axis: 'x' | 'y'; cycle: Cycle; hinged?: boolean }
+  | { kind: 'swing'; name: string; sprite: Sprite; amplitude: number; speed: number; phase: number; mountY?: number }
+  | { kind: 'fan'; name: string; x: number; y: number; length: number; speed: number; phase: number; duct: boolean; mountY?: number }
+  | { kind: 'laser'; name: string; area: Area; cycle: Cycle; mountY?: number }
+  | { kind: 'gate'; name: string; area: Area; axis: 'x' | 'y'; cycle: Cycle; hinged?: boolean }
   | { kind: 'patrol'; name: string; sprite: Sprite; dx: number; dy: number; speed: number; phase: number; barks?: boolean }
   | { kind: 'pop'; name: string; area: Area; cycle: Cycle }
-  | { kind: 'camera'; name: string; x: number; y: number; angle: number; spread: number; range: number; sweep: number; speed: number; phase: number }
+  | { kind: 'camera'; name: string; x: number; y: number; mountY?: number; angle: number; spread: number; range: number; sweep: number; speed: number; phase: number }
   | { kind: 'fragile'; name: string; sprite: Sprite }
   | { kind: 'creak'; name: string; area: Area }
   | { kind: 'speaker'; name: string; sprite: Sprite; radius: number; period: number }

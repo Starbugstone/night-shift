@@ -278,6 +278,18 @@ export class Ragdoll {
     return false;
   }
 
+  /** Samples the same joint and bone volumes used for contact physics. */
+  overlapsCircles(test: (x: number, y: number, radius: number) => boolean): boolean {
+    for (let i = 0; i < RADII.length; i++) {
+      if (test(this.x[i]!, this.y[i]!, i === Joint.Pelvis ? this.pelvisRadius : RADII[i]!)) return true;
+    }
+    for (let i = 0; i < BONES.length; i++) {
+      const [a, b] = BONES[i]!;
+      if (test((this.x[a]! + this.x[b]!) * 0.5, (this.y[a]! + this.y[b]!) * 0.5, MIDPOINT_RADII[i]!)) return true;
+    }
+    return false;
+  }
+
   private collectCandidates(): void {
     let left = Infinity;
     let top = Infinity;
