@@ -294,6 +294,8 @@ export const ART: Record<string, ArtSpec> = {
   'ui/stamp_spotted': { w: 240, h: 120 }, // text "SPOTTED"
 
   // ---- APPEND: abduction code (Sol) — extra keys you need, with a one-line art note each
+  'room/watch_dog': { w: 89, h: 62 }, // Gary's/Nigel's patrolling guard dog: standing side view, mid-trot, facing right (the renderer flips it), sleepy eye, red collar
+  'room/cuckoo_bird': { w: 86, h: 44 }, // Mayor's clock tower pop-out: furious cuckoo facing left, beak at the left edge, scissor arm running off the right edge
 
   // ---- APPEND: shell/flight/UI code (Opus) — extra keys you need, with a one-line art note each
   'flight/garden_gnome_top': { w: 30, h: 30 }, // L3 joke: Gary's tripwire posts; a garden gnome seen from above (red hat), drawn at both ends of a red laser line

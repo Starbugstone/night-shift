@@ -92,7 +92,22 @@ export const GLOW = {
   red: '255,93,115',
   pink: '255,110,210',
   dark: '6,4,22',
+  cold: '200,222,255',
+  lamp: '255,226,150',
+  dawn: '255,160,92',
 } as const;
+
+const solids = new Map<string, string>();
+
+/** `rgb(r,g,b)` for one of the "r,g,b" triplets used here, built once (no per-frame strings). */
+export function rgbOf(rgb: string): string {
+  let s = solids.get(rgb);
+  if (!s) {
+    s = `rgb(${rgb})`;
+    solids.set(rgb, s);
+  }
+  return s;
+}
 
 function glowSprite(rgb: string): HTMLCanvasElement | null {
   return radialSprite(`glow|${rgb}`, [
@@ -162,6 +177,107 @@ export function drawShadow(g: CanvasRenderingContext2D, img: HTMLImageElement | 
   const a = g.globalAlpha;
   g.globalAlpha = a * alpha;
   g.drawImage(c, -w / 2 - SHADOW_PAD, -h / 2 - SHADOW_PAD, c.width * 4, c.height * 4);
+  g.globalAlpha = a;
+}
+
+// ---------------------------------------------------------------- pre-rasterised sprites
+
+/**
+ * Device px per logical px that sprite bitmaps are kept at. The canvas host sets it to the
+ * backing store's own scale, so a cached sprite blits 1:1 (no resampling) at any screen size.
+ */
+let bitmapScale = 2;
+/** Don't cache anything bigger than this many bitmap pixels (a 540x540 tile at 3x is 2.6 M). */
+const BITMAP_MAX_PX = 3_000_000;
+let bitmaps = new WeakMap<HTMLImageElement, Map<number, HTMLCanvasElement | null>>();
+
+/** Called when the canvas is (re)sized. A new scale drops every cached bitmap. */
+export function setBitmapScale(k: number): void {
+  const next = Math.max(0.5, Math.min(3, k));
+  if (Math.abs(next - bitmapScale) < 0.0005) return;
+  bitmapScale = next;
+  bitmaps = new WeakMap();
+}
+
+/** Bitmap px per logical px of everything `bitmapOf` returns. */
+export function bitmapPx(): number {
+  return bitmapScale;
+}
+
+/**
+ * A sprite's bitmap at its draw size. Browsers replay an SVG image as vectors on every
+ * drawImage; a big map draws dozens of them a frame, so each (image, size) is rasterised once
+ * and blitted from then on. The image fills (0, 0, w, h) x `bitmapPx()` of the canvas, which is
+ * rounded up to whole pixels. Null when the image is too big to cache or cannot be drawn.
+ */
+export function bitmapOf(img: HTMLImageElement, w: number, h: number, opaque = false): HTMLCanvasElement | null {
+  let sized = bitmaps.get(img);
+  if (!sized) {
+    sized = new Map();
+    bitmaps.set(img, sized);
+  }
+  const id = Math.round(w * 4) * 16384 + Math.round(h * 4);
+  const hit = sized.get(id);
+  if (hit !== undefined) return hit;
+  let c: HTMLCanvasElement | null = null;
+  const bw = Math.ceil(w * bitmapScale);
+  const bh = Math.ceil(h * bitmapScale);
+  if (bw > 0 && bh > 0 && bw * bh <= BITMAP_MAX_PX && typeof document !== 'undefined') {
+    try {
+      c = document.createElement('canvas');
+      c.width = bw;
+      c.height = bh;
+      // a tile with no see-through pixels can be copied without blending
+      const v = c.getContext('2d', { alpha: !opaque });
+      if (!v) throw new Error('no 2d');
+      v.drawImage(img, 0, 0, w * bitmapScale, h * bitmapScale);
+    } catch {
+      c = null;
+    }
+  }
+  sized.set(id, c);
+  return c;
+}
+
+/** drawImage(img, x, y, w, h) through the bitmap cache. `opaque`: the art covers its whole box. */
+export function drawSprite(g: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number, opaque = false): void {
+  const c = bitmapOf(img, w, h, opaque);
+  // drawn at the bitmap's own size, so an unrotated sprite maps pixel for pixel
+  if (c) g.drawImage(c, x, y, c.width / bitmapScale, c.height / bitmapScale);
+  else g.drawImage(img, x, y, w, h);
+}
+
+// ---------------------------------------------------------------- directional washes
+
+const washes = new Map<string, HTMLCanvasElement | null>();
+
+/**
+ * Screen-wide linear wash (dawn light, a searchlight sweep): nothing at (x0, y0), `rgb` at full
+ * alpha at (x1, y1), both in 0..1 of the view. Cached as a tiny bitmap and stretched.
+ */
+export function drawWash(g: CanvasRenderingContext2D, rgb: string, x0: number, y0: number, x1: number, y1: number, alpha: number): void {
+  if (alpha <= 0.004) return;
+  const key = `${rgb}|${x0}|${y0}|${x1}|${y1}`;
+  let c = washes.get(key);
+  if (c === undefined) {
+    c = document.createElement('canvas');
+    c.width = 36;
+    c.height = 64;
+    const v = c.getContext('2d');
+    if (v) {
+      const grad = v.createLinearGradient(x0 * 36, y0 * 64, x1 * 36, y1 * 64);
+      grad.addColorStop(0, `rgba(${rgb},0)`);
+      grad.addColorStop(0.55, `rgba(${rgb},0.38)`);
+      grad.addColorStop(1, `rgba(${rgb},1)`);
+      v.fillStyle = grad;
+      v.fillRect(0, 0, 36, 64);
+    } else c = null;
+    washes.set(key, c);
+  }
+  if (!c) return;
+  const a = g.globalAlpha;
+  g.globalAlpha = a * Math.min(1, alpha);
+  g.drawImage(c, 0, 0, VIEW_W, VIEW_H);
   g.globalAlpha = a;
 }
 
@@ -249,8 +365,10 @@ export const PC = {
   inkRed: 7,
   pink: 8,
   sweat: 9,
+  soot: 10,
+  lilac: 11,
 } as const;
-const COLORS = ['#FFD27A', '#7CFFCB', '#ffffff', '#FF5D73', '#d9ccc0', '#F4EFE2', '#1f9a6c', '#d33a52', '#ff7ad9', '#a8dcff'] as const;
+const COLORS = ['#FFD27A', '#7CFFCB', '#ffffff', '#FF5D73', '#d9ccc0', '#F4EFE2', '#1f9a6c', '#d33a52', '#ff7ad9', '#a8dcff', '#3a3348', '#c8a4ff'] as const;
 const OUTLINE = '#1b1433';
 
 // unit 5-point star, precomputed

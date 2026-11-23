@@ -9,6 +9,9 @@ const FLASH_IN = 0.34;
 const NIGHT = '#0b0820';
 const MINT = '#7CFFCB';
 const FLASH = '#d9fff0';
+const SUNRISE = '#ffd9a0';
+const SUNRISE_OUT = 0.5;
+const SUNRISE_IN = 0.6;
 /** Far enough to clear every corner from any point on screen. */
 const IRIS_MAX = Math.hypot(VIEW_W, VIEW_H);
 
@@ -18,10 +21,11 @@ const IRIS_MAX = Math.hypot(VIEW_W, VIEW_H);
  * - `iris`: a mint-rimmed iris closes on (x, y), then opens from (toX, toY) — the saucer's view
  *   diving into the room.
  * - `flash`: a pale mint flash (the specimen leaving the room).
+ * - `sunrise`: the view whites out to warm daylight (the sun coming up on a deep shift).
  * With reduced motion everything is a plain fade.
  */
 export interface Transition {
-  style: 'fade' | 'iris' | 'flash';
+  style: 'fade' | 'iris' | 'flash' | 'sunrise';
   x?: number;
   y?: number;
   toX?: number;
@@ -58,11 +62,13 @@ export class SceneManager {
   }
 
   private get outDur(): number {
-    return this.tr.style === 'iris' ? IRIS_OUT : this.tr.style === 'flash' ? FLASH_OUT : FADE;
+    const s = this.tr.style;
+    return s === 'iris' ? IRIS_OUT : s === 'flash' ? FLASH_OUT : s === 'sunrise' ? SUNRISE_OUT : FADE;
   }
 
   private get inDur(): number {
-    return this.tr.style === 'iris' ? IRIS_IN : this.tr.style === 'flash' ? FLASH_IN : FADE;
+    const s = this.tr.style;
+    return s === 'iris' ? IRIS_IN : s === 'flash' ? FLASH_IN : s === 'sunrise' ? SUNRISE_IN : FADE;
   }
 
   /** Queue a scene; `make` runs at the transition midpoint. */
@@ -122,8 +128,9 @@ export class SceneManager {
     if (cover <= 0) return;
     if (this.tr.style === 'iris') this.iris(g, cover);
     else {
-      g.globalAlpha = this.tr.style === 'flash' && this.phase === 'in' ? cover * cover : cover;
-      g.fillStyle = this.tr.style === 'flash' ? FLASH : NIGHT;
+      const bright = this.tr.style === 'flash' || this.tr.style === 'sunrise';
+      g.globalAlpha = bright && this.phase === 'in' ? cover * cover : cover;
+      g.fillStyle = this.tr.style === 'flash' ? FLASH : this.tr.style === 'sunrise' ? SUNRISE : NIGHT;
       g.fillRect(0, 0, VIEW_W, VIEW_H);
       g.globalAlpha = 1;
     }

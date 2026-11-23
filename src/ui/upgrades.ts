@@ -1,8 +1,10 @@
 import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
+import type { UpgradeId } from '../contracts';
+import { P_RING, P_STAR, P_TWINKLE, PC, Particles, easeOutBack } from '../core/fx';
 import { UPGRADES, buyUpgrade, canBuy } from '../levels/progress';
-import { drawGlorb, outlinedText, panel, panelHighlight, paragraph, sprite, text } from './draw';
+import { drawGlorb, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text } from './draw';
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
 
@@ -10,6 +12,13 @@ const CARD_Y = 192;
 const CARD_H = 172;
 const GAP = 12;
 const BUY_W = 168;
+/** Where each upgrade does its work, shown as a tag on its card. */
+const WHERE: Record<UpgradeId, { label: string; color: string }> = {
+  beam_dampener: { label: 'IN THE ROOM', color: '#c8a4ff' },
+  hush_drive: { label: 'FLIGHT + ROOM', color: C.mint },
+  afterburner: { label: 'IN FLIGHT', color: C.amberHi },
+  snooze_ray: { label: 'IN THE ROOM', color: '#c8a4ff' },
+};
 
 export class UpgradesScene implements Scene {
   private t = 0;
@@ -17,8 +26,14 @@ export class UpgradesScene implements Scene {
   private readonly buys: Button[] = [];
   private bought = -1;
   private boughtT = 0;
+  private readonly fx = new Particles(64);
+  /** The purse counts down to the new balance instead of jumping. */
+  private shown: number;
+  private shownText = '';
+  private shownFor = -1;
 
   constructor(private readonly shell: Shell) {
+    this.shown = shell.save.glorbs;
     for (let i = 0; i < UPGRADES.length; i++) {
       this.buys.push(new Button(VIEW_W - 24 - 16 - BUY_W, CARD_Y + i * (CARD_H + GAP) + CARD_H - 64, BUY_W, 52, 'Buy', 'primary', 21));
     }
@@ -27,6 +42,12 @@ export class UpgradesScene implements Scene {
   update(dt: number): void {
     this.t += dt;
     this.boughtT = Math.max(0, this.boughtT - dt);
+    this.fx.update(dt);
+    const target = this.shell.save.glorbs;
+    if (this.shown !== target) {
+      const step = Math.max(1, Math.ceil(Math.abs(target - this.shown) * dt * 6));
+      this.shown += Math.sign(target - this.shown) * Math.min(step, Math.abs(target - this.shown));
+    }
     const p = this.shell.ctx.pointer;
     if (this.back.update(p, dt, this.shell.audio)) return this.shell.toWorkOrders();
     for (let i = 0; i < UPGRADES.length; i++) {
@@ -43,6 +64,14 @@ export class UpgradesScene implements Scene {
           this.shell.audio.sfx('success');
           this.bought = i;
           this.boughtT = 1.2;
+          // installed: a ring and a spray of stars off the button
+          const cx = b.x + b.w / 2;
+          const cy = b.y + b.h / 2;
+          this.fx.spawn(P_RING, cx, cy, 0, 0, 0.5, 150, PC.mint);
+          if (!this.shell.ctx.reducedMotion) {
+            this.fx.burst(P_STAR, cx, cy, 7, 160, 340, 0.7, 12, PC.amber, 420, 1.2, -Math.PI / 2, Math.PI * 1.4);
+            this.fx.burst(P_TWINKLE, cx, cy, 8, 60, 220, 0.7, 10, PC.mint, 0, 2);
+          }
         }
       }
     }
@@ -56,8 +85,12 @@ export class UpgradesScene implements Scene {
     text(g, 'Supplies for the discerning abductor', VIEW_W / 2 + 20, 82, 17, C.muted, 'center', 600, true);
     panel(g, VIEW_W / 2 - 120, 112, 240, 64, C.panel, 32, C.ink, 3, 4);
     drawGlorb(g, assets, VIEW_W / 2 - 74, 144, 42);
-    text(g, `${save.glorbs}`, VIEW_W / 2 - 44, 145, 28, C.mint, 'left', 900);
-    const nw = g.measureText(`${save.glorbs}`).width;
+    if (this.shownFor !== this.shown) {
+      this.shownFor = this.shown;
+      this.shownText = String(this.shown);
+    }
+    text(g, this.shownText, VIEW_W / 2 - 44, 145, 28, this.shown !== save.glorbs ? C.amberHi : C.mint, 'left', 900);
+    const nw = g.measureText(this.shownText).width;
     text(g, 'Glorbs', VIEW_W / 2 - 34 + nw, 146, 18, C.muted, 'left', 700);
 
     for (let i = 0; i < UPGRADES.length; i++) {
@@ -69,14 +102,32 @@ export class UpgradesScene implements Scene {
       panelHighlight(g, 24 - pop, y - pop, VIEW_W - 48 + pop * 2, 20);
       // icon
       panel(g, 42, y + 16, 80, 80, C.night2, 16, C.ink, 3, 0);
-      if (!sprite(g, assets, u.icon, 82, y + 56, 76, 76)) this.fallbackIcon(g, u.id, 82, y + 56);
-      text(g, u.name, 140, y + 36, 25, C.text, 'left', 900);
-      text(g, u.effect, 140, y + 66, 16, C.mint, 'left', 800, false, VIEW_W - 190);
+      // what you can afford bobs gently; the rest sits still
+      const bob = !owned && this.buys[i]!.enabled && !ctx.reducedMotion ? Math.sin(this.t * 3 + i) * 2.5 : 0;
+      if (!sprite(g, assets, u.icon, 82, y + 56 + bob, 76, 76)) this.fallbackIcon(g, u.id, 82, y + 56 + bob);
+      // where it works
+      const where = WHERE[u.id];
+      g.font = '900 11px system-ui, sans-serif';
+      const ww = g.measureText(where.label).width + 16;
+      roundRectPath(g, VIEW_W - 40 - ww, y + 12, ww, 20, 10);
+      g.fillStyle = 'rgba(18,13,43,0.6)';
+      g.fill();
+      g.lineWidth = 1.5;
+      g.strokeStyle = where.color;
+      g.stroke();
+      text(g, where.label, VIEW_W - 40 - ww / 2, y + 23, 11, where.color, 'center', 900);
+      text(g, u.name, 140, y + 44, 25, C.text, 'left', 900);
+      text(g, u.effect, 140, y + 72, 16, C.mint, 'left', 800, false, VIEW_W - 190);
       paragraph(g, u.desc, 42, y + 108, VIEW_W - 84 - BUY_W - 12, 14, C.muted, 19, 'left', 500, true);
       if (owned) {
         g.save();
         g.translate(VIEW_W - 40 - BUY_W / 2, y + CARD_H - 38);
         g.rotate(-0.12);
+        // the stamp comes down hard on a fresh purchase
+        if (this.bought === i && this.boughtT > 0 && !ctx.reducedMotion) {
+          const k = 2.2 - 1.2 * easeOutBack((1.2 - this.boughtT) / 0.22, 2.4);
+          g.scale(k, k);
+        }
         panel(g, -78, -22, 156, 44, 'rgba(0,0,0,0)', 10, C.mint, 4, 0);
         text(g, 'INSTALLED', 0, 2, 21, C.mint, 'center', 900);
         g.restore();
@@ -84,6 +135,7 @@ export class UpgradesScene implements Scene {
       this.buys[i]!.render(g);
     }
     text(g, 'All sales final. Refunds are a human concept.', VIEW_W / 2, 940, 15, 'rgba(169,162,214,0.7)', 'center', 600, true);
+    this.fx.draw(g);
   }
 
   private fallbackIcon(g: CanvasRenderingContext2D, id: string, cx: number, cy: number): void {

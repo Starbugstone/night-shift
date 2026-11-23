@@ -1,4 +1,5 @@
 import { VIEW_H, VIEW_W } from '../contracts';
+import { setBitmapScale } from './fx';
 
 /** How the 540×960 logical space maps onto the window (CSS px). */
 export interface Viewport {
@@ -53,6 +54,8 @@ export function setupCanvas(canvas: HTMLCanvasElement): CanvasHost {
       canvas.height = bh;
     }
     g.imageSmoothingEnabled = true;
+    // sprite bitmaps are cached at the backing store's own scale, so they blit 1:1
+    setBitmapScale(scale * dpr);
   };
   resize();
   window.addEventListener('resize', resize);

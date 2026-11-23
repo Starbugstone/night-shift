@@ -167,6 +167,17 @@ export function sprite(
   return true;
 }
 
+/** Head sprite of a deep-level specimen from its short name ("Dave" -> human/dave_head). */
+export function headKey(short: string): string {
+  let key = headKeys.get(short);
+  if (!key) {
+    key = `human/${short.toLowerCase()}_head`;
+    headKeys.set(short, key);
+  }
+  return key;
+}
+const headKeys = new Map<string, string>();
+
 export function starPath(g: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
   g.beginPath();
   for (let i = 0; i < 10; i++) {

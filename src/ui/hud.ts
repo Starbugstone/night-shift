@@ -273,17 +273,32 @@ export interface FuseState {
   seconds: number;
 }
 
+/** "0.0" .. "2.0", so the countdown never builds a string per frame. */
+const TENTHS: string[] = [];
+for (let i = 0; i <= 20; i++) TENTHS.push((i / 10).toFixed(1));
+let fuseCaption = '';
+let fuseCaptionFor = -1;
+
 /**
- * Suspicion as a 1-second fuse: an eye that opens as the meter fills and a fuse cord that burns
- * down from the right, spark at the burning end. `assets` may supply ui/eye_closed / ui/eye_open.
+ * Suspicion as a 1-second fuse: an eye that opens as the meter fills, a fuse cord that burns
+ * down from the right with a spark at the burning end, and the seconds left in big digits.
+ * `assets` may supply ui/eye_closed / ui/eye_open.
  */
 export function hudFuse(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, f: FuseState, eyeClosed?: HTMLImageElement, eyeOpen?: HTMLImageElement): void {
   const v = f.value < 0 ? 0 : f.value > 1 ? 1 : f.value;
   const hot = v > 0.6 || (f.exposed && v > 0.25);
-  const jitter = hot && !f.reduced ? Math.sin(f.t * 55) * 2 * v : 0;
+  const jitter = hot && !f.reduced ? Math.sin(f.t * 55) * 2.5 * v : 0;
   const px = x + jitter;
   const blink = f.reduced || Math.floor(f.t * 10) % 2 === 0;
   hudPanel(g, px, y, w, h, f.exposed && blink ? C.red : hot ? C.amber : C.ink);
+  if (f.exposed) {
+    // the whole chip floods red while something can see you
+    roundRectPath(g, px + 2, y + 2, w - 4, h - 4, R - 2);
+    g.globalAlpha = (f.reduced ? 0.3 : 0.2 + 0.2 * Math.abs(Math.sin(f.t * (8 + v * 14)))) * (0.5 + v * 0.5);
+    g.fillStyle = C.red;
+    g.fill();
+    g.globalAlpha = 1;
+  }
 
   // the eye: opens with the meter
   const ex = px + 38;
@@ -295,7 +310,8 @@ export function hudFuse(g: CanvasRenderingContext2D, x: number, y: number, w: nu
   g.fill();
   const img = v > 0.55 ? eyeOpen : eyeClosed;
   if (img && (v <= 0.02 || v > 0.55)) {
-    g.drawImage(img, ex - 25, ey - 16, 50, 32);
+    const s = v > 0.55 && !f.reduced ? 1 + 0.08 * Math.sin(f.t * 30) : 1;
+    g.drawImage(img, ex - 25 * s, ey - 16 * s, 50 * s, 32 * s);
   } else {
     const lid = 2 + 13 * open;
     const tone = v > 0.6 ? C.red : v > 0.02 ? C.amber : C.mint;
@@ -340,24 +356,47 @@ export function hudFuse(g: CanvasRenderingContext2D, x: number, y: number, w: nu
     }
   }
 
-  text(g, f.exposed ? 'SEEN!' : 'SUSPICION', px + 74, y + 18, 14, f.exposed ? C.red : C.muted, 'left', 900);
-  text(g, `${f.seconds.toFixed(f.seconds % 1 === 0 ? 1 : 2)} s fuse`, px + w - 14, y + 18, 12, 'rgba(169,162,214,0.8)', 'right', 700);
+  const burning = v > 0.005;
+  text(g, f.exposed ? 'SEEN!' : burning ? 'COOLING…' : 'SUSPICION', px + 74, y + 18, f.exposed ? 17 : 14, f.exposed ? '#ffd9de' : burning ? C.amberHi : C.muted, 'left', 900);
+  if (burning) {
+    // seconds left before SPOTTED, in tenths
+    const left = Math.max(0, Math.min(20, Math.ceil((1 - v) * f.seconds * 10)));
+    text(g, TENTHS[left]!, px + w - 30, y + 19, 22, f.exposed ? '#ffffff' : C.amberHi, 'right', 900);
+    text(g, 's', px + w - 15, y + 21, 14, f.exposed ? '#ffd9de' : C.amberHi, 'right', 900);
+  } else {
+    if (fuseCaptionFor !== f.seconds) {
+      fuseCaptionFor = f.seconds;
+      fuseCaption = `${f.seconds.toFixed(f.seconds % 1 === 0 ? 1 : 2)} s fuse`;
+    }
+    text(g, fuseCaption, px + w - 14, y + 18, 12, 'rgba(169,162,214,0.8)', 'right', 700);
+  }
 
   // fuse cord: full length = time left; burns from the right towards the bomb (the eye)
-  const bx = px + 74;
-  const by = y + 40;
-  const bw = w - 90;
+  const bx = px + 76;
+  const by = y + 42;
+  const bw = w - 94;
   const left = 1 - v;
   g.lineCap = 'round';
-  g.lineWidth = 6;
+  g.lineWidth = 11;
   g.strokeStyle = 'rgba(18,13,43,0.9)';
   g.beginPath();
   g.moveTo(bx, by);
   g.lineTo(bx + bw, by);
   g.stroke();
   const endX = bx + bw * left;
+  if (burning) {
+    // what has burnt away: a dying ember trail
+    g.lineWidth = 3;
+    g.setLineDash(EMBER_DASH);
+    g.strokeStyle = f.exposed ? '#ff5d73' : '#8a4a52';
+    g.beginPath();
+    g.moveTo(Math.min(bx + bw, endX + 9), by);
+    g.lineTo(bx + bw, by);
+    g.stroke();
+    g.setLineDash(NO_DASH);
+  }
   if (left > 0.002) {
-    g.lineWidth = 6;
+    g.lineWidth = 8;
     g.strokeStyle = '#c9a574';
     g.beginPath();
     g.moveTo(bx, by);
@@ -368,27 +407,47 @@ export function hudFuse(g: CanvasRenderingContext2D, x: number, y: number, w: nu
     g.strokeStyle = '#8a6a44';
     g.beginPath();
     for (let k = bx + 6; k < endX - 4; k += 10) {
-      g.moveTo(k, by - 3);
-      g.lineTo(k + 4, by + 3);
+      g.moveTo(k, by - 3.5);
+      g.lineTo(k + 4, by + 3.5);
     }
     g.stroke();
   }
   g.lineCap = 'butt';
   // the spark: only while it is burning (exposed or not yet cooled)
-  if (v > 0.005) {
+  if (burning) {
     const fl = f.reduced ? 1 : 0.75 + 0.25 * Math.sin(f.t * 47) + (f.exposed ? 0.3 : 0);
     g.globalCompositeOperation = 'lighter';
     g.beginPath();
-    g.arc(endX, by, 9 * fl, 0, Math.PI * 2);
+    g.arc(endX, by, 11 * fl, 0, Math.PI * 2);
     g.fillStyle = f.exposed ? 'rgba(255,120,80,0.75)' : 'rgba(255,190,110,0.5)';
     g.fill();
+    if (f.exposed) {
+      // crackle: six rays turning with the clock
+      g.lineWidth = 2.5;
+      g.lineCap = 'round';
+      g.strokeStyle = '#ffe9a8';
+      g.beginPath();
+      const turn = f.reduced ? 0 : f.t * 9;
+      for (let k = 0; k < 6; k++) {
+        const a = turn + (k * Math.PI) / 3;
+        const r0 = 7;
+        const r1 = 13 + (k % 2) * 5 * fl;
+        g.moveTo(endX + Math.cos(a) * r0, by + Math.sin(a) * r0);
+        g.lineTo(endX + Math.cos(a) * r1, by + Math.sin(a) * r1);
+      }
+      g.stroke();
+      g.lineCap = 'butt';
+    }
     g.beginPath();
-    g.arc(endX, by, 4, 0, Math.PI * 2);
+    g.arc(endX, by, 4.5, 0, Math.PI * 2);
     g.fillStyle = '#fff6c9';
     g.fill();
     g.globalCompositeOperation = 'source-over';
   }
 }
+
+const EMBER_DASH = [2, 7];
+const NO_DASH: number[] = [];
 
 /** Sunrise clock chip: a little clock face and the time; warms up near sunrise. */
 export function hudSunClock(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: string, k: number, dawn: number, t: number, reduced: boolean, face?: HTMLImageElement): void {
@@ -398,6 +457,29 @@ export function hudSunClock(g: CanvasRenderingContext2D, x: number, y: number, w
   const cx = x + 30;
   const cy = y + h / 2;
   const r = 20;
+  if (hot) {
+    // the chip itself warms up, and the sun comes up behind the dial
+    const a0 = g.globalAlpha;
+    roundRectPath(g, x + 2, y + 2, w - 4, h - 4, R - 2);
+    g.globalAlpha = a0 * (0.12 + 0.3 * dawn);
+    g.fillStyle = '#ff9a55';
+    g.fill();
+    g.globalAlpha = a0 * (0.35 + 0.65 * dawn);
+    g.strokeStyle = C.amberHi;
+    g.lineWidth = 3;
+    g.lineCap = 'round';
+    g.beginPath();
+    const turn = reduced ? 0 : t * 0.9;
+    for (let i = 0; i < 10; i++) {
+      const a = turn + (i * Math.PI) / 5;
+      const r1 = r + 4 + (i % 2 === 0 ? 5 : 2) * dawn;
+      g.moveTo(cx + Math.cos(a) * (r + 2), cy + Math.sin(a) * (r + 2));
+      g.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+    }
+    g.stroke();
+    g.lineCap = 'butt';
+    g.globalAlpha = a0;
+  }
   if (face) g.drawImage(face, cx - r - 2, cy - r - 2, (r + 2) * 2, (r + 2) * 2);
   else {
     g.beginPath();

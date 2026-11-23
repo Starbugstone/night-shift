@@ -2,6 +2,7 @@
 import type { Assets } from '../contracts';
 import { ART } from '../art-manifest';
 import type { PropDef, PropKind } from '../levels/types';
+import { drawSprite } from '../core/fx';
 import { roundRectPath } from '../ui/draw';
 
 const INK = '#1b1433';
@@ -25,7 +26,7 @@ export function drawProp(g: CanvasRenderingContext2D, assets: Assets, p: PropDef
   g.save();
   g.translate(p.x, p.y);
   if (p.rot) g.rotate(p.rot);
-  if (img) g.drawImage(img, -w / 2, -h / 2, w, h);
+  if (img) drawSprite(g, img, -w / 2, -h / 2, w, h);
   else drawFallback(g, p.kind, w, h, p.tint);
   g.restore();
 }
@@ -285,7 +286,7 @@ export function drawDog(g: CanvasRenderingContext2D, assets: Assets, x: number, 
   g.translate(x, y);
   if (img) {
     g.scale(1 + breath * 0.035, 1 + breath * 0.022);
-    g.drawImage(img, -35, -35, 70, 70);
+    drawSprite(g, img, -35, -35, 70, 70);
     const cycle = (t + x * 0.013) % 3.4;
     const twitch = reduced ? 0 : barking ? Math.sin(t * 24) * 0.32 : cycle < 0.4 ? Math.sin((cycle / 0.4) * Math.PI * 3) * 0.45 : 0;
     if (twitch !== 0) {

@@ -302,7 +302,8 @@ export class Game implements Shell {
           onSunrise: () => {
             if (done) return;
             done = true;
-            this.toDeepReport(run);
+            // the sun comes up over everything
+            this.toDeepReport(run, { style: 'sunrise' });
           },
           onQuit: () => {
             if (done) return;
@@ -341,7 +342,7 @@ export class Game implements Shell {
         return new DeepAbductScene(inner, run, this.assets, () => this.ctx.reducedMotion, () => {
           if (done) return;
           done = true;
-          this.toDeepReport(run);
+          this.toDeepReport(run, { style: 'sunrise' });
         });
       },
       false,

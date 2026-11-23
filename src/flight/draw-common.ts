@@ -1,7 +1,7 @@
 // Drawing shared by the tutorial flight scene and the deep-level flight scene.
 import type { Assets, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
-import { GLOW, drawGlow, easeOutBack } from '../core/fx';
+import { GLOW, drawGlow, drawSprite, easeOutBack, rgbOf } from '../core/fx';
 import { clamp, drawPortrait, panel, paragraph, text, wrap } from '../ui/draw';
 import { C, font } from '../ui/theme';
 import type { EntryDef, RoadDef } from '../levels/types';
@@ -41,10 +41,10 @@ export function drawRoad(g: CanvasRenderingContext2D, assets: Assets, r: RoadDef
     // only the tiles in view
     if (r.dir === 'h') {
       const x0 = x + Math.max(0, Math.floor((camX - x) / 540)) * 540;
-      for (let xx = x0; xx < Math.min(x + w, camX + VIEW_W); xx += 540) g.drawImage(img, xx, y, 540.5, W);
+      for (let xx = x0; xx < Math.min(x + w, camX + VIEW_W); xx += 540) drawSprite(g, img, xx, y, 540.5, W);
     } else {
       const y0 = y + Math.max(0, Math.floor((camY - y) / 540)) * 540;
-      for (let yy = y0; yy < Math.min(y + h, camY + VIEW_H); yy += 540) g.drawImage(img, x, yy, W, 540.5);
+      for (let yy = y0; yy < Math.min(y + h, camY + VIEW_H); yy += 540) drawSprite(g, img, x, yy, W, 540.5);
     }
   } else if (farm) {
     drawDirtRoad(g, r.dir, x, y, w, h);
@@ -141,17 +141,29 @@ export class ConeSprites {
     return c;
   }
 
-  /** Draw a cone from (x,y) along `angle`, `range` long. Adds a crisp edge so the hit shape reads. */
-  draw(g: CanvasRenderingContext2D, x: number, y: number, angle: number, half: number, range: number, rgb = '255,236,170', edge = 0.35): void {
+  /**
+   * Draw a cone from (x,y) along `angle`, `range` long, with a crisp edge so the hit shape reads.
+   * `hot` (0..1): this cone is the one seeing the saucer, so it burns red. `lead` (-1 / 0 / +1):
+   * which side it is sweeping towards; that edge is drawn heavier.
+   */
+  draw(g: CanvasRenderingContext2D, x: number, y: number, angle: number, half: number, range: number, rgb = '255,236,170', edge = 0.35, hot = 0, lead = 0): void {
     const spr = this.get(half, rgb);
     g.save();
     g.translate(x, y);
     g.rotate(angle);
+    const k = range / CONE_R;
     if (spr) {
-      const k = range / CONE_R;
       g.globalCompositeOperation = 'lighter';
       g.scale(k, k);
       g.drawImage(spr, 0, -spr.height / 2);
+      if (hot > 0) {
+        const red = this.get(half, GLOW.red);
+        if (red) {
+          g.globalAlpha = Math.min(1, hot);
+          g.drawImage(red, 0, -red.height / 2);
+          g.globalAlpha = 1;
+        }
+      }
       g.scale(1 / k, 1 / k);
       g.globalCompositeOperation = 'source-over';
     }
@@ -160,13 +172,35 @@ export class ConeSprites {
       g.moveTo(0, 0);
       g.arc(0, 0, range, -half, half);
       g.closePath();
-      g.lineWidth = 2;
-      g.strokeStyle = `rgba(${rgb},${edge})`;
+      g.lineJoin = 'round';
+      if (hot > 0) {
+        g.lineWidth = 4.5;
+        g.strokeStyle = HOT_EDGE;
+        g.globalAlpha = 0.55 + 0.45 * hot;
+      } else {
+        g.lineWidth = 2.5;
+        g.strokeStyle = rgbOf(rgb);
+        g.globalAlpha = Math.min(1, edge);
+      }
       g.stroke();
+      if (lead !== 0) {
+        // the edge it is sweeping towards
+        g.beginPath();
+        g.moveTo(0, 0);
+        g.lineTo(Math.cos(lead * half) * range, Math.sin(lead * half) * range);
+        g.lineWidth = 5;
+        g.lineCap = 'round';
+        g.globalAlpha = Math.min(1, edge * 2.2);
+        g.stroke();
+        g.lineCap = 'butt';
+      }
+      g.globalAlpha = 1;
     }
     g.restore();
   }
 }
+
+const HOT_EDGE = '#ff5d73';
 
 export interface SaucerLook {
   locking: boolean;
@@ -175,8 +209,10 @@ export interface SaucerLook {
   wobble: number;
   /** Afterburner state for the cooldown ring (optional). */
   dash?: DashState | null;
-  /** Blinking while in the post-respawn safe window. */
+  /** Seconds left of the post-respawn safe window: the saucer sits in a shield bubble. */
   ghost?: number;
+  /** Full length of that window, for the bubble's countdown arc. */
+  ghostMax?: number;
 }
 
 export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Saucer, t: number, rm: boolean, look: SaucerLook): void {
@@ -186,7 +222,8 @@ export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Sauce
   // streaks
   if (k > 0.4 && !rm) {
     const kk = Math.min(1, k);
-    g.strokeStyle = dashing ? 'rgba(255,210,122,0.85)' : `rgba(124,255,203,${((kk - 0.4) * 0.8).toFixed(3)})`;
+    g.strokeStyle = dashing ? '#ffd27a' : C.mint;
+    g.globalAlpha = dashing ? 0.85 : (kk - 0.4) * 0.8;
     g.lineWidth = dashing ? 6 : 4;
     g.lineCap = 'round';
     const ux = s.vx / (sp || 1);
@@ -201,6 +238,7 @@ export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Sauce
       g.stroke();
     }
     g.lineCap = 'butt';
+    g.globalAlpha = 1;
   }
   if (look.locking) {
     const a = Math.min(1, look.st / 0.3);
@@ -215,7 +253,7 @@ export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Sauce
   const bob = 1 + wave * 0.028 * hover;
   const lockShrink = look.locking ? 1 - Math.min(0.15, look.st * 0.2) : 1;
   const ghost = look.ghost ?? 0;
-  if (ghost > 0) g.globalAlpha = rm ? 0.6 : 0.45 + 0.35 * (Math.floor(t * 12) % 2);
+  if (ghost > 0) g.globalAlpha = rm ? 0.75 : 0.72 + 0.14 * Math.sin(t * 9);
   g.save();
   g.translate(s.x, s.y - (wave * 0.5 + 0.5) * 3 * hover);
   if (look.wobble !== 0 && !rm) g.rotate(look.wobble * 0.3);
@@ -227,7 +265,7 @@ export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Sauce
   g.rotate(-va);
   const img = assets.get('flight/saucer_top');
   if (img) {
-    g.drawImage(img, -SAUCER_DRAW / 2, -SAUCER_DRAW / 2, SAUCER_DRAW, SAUCER_DRAW);
+    drawSprite(g, img, -SAUCER_DRAW / 2, -SAUCER_DRAW / 2, SAUCER_DRAW, SAUCER_DRAW);
     g.globalCompositeOperation = 'lighter';
     const head = rm ? -1 : Math.floor(t * (look.locking ? 26 : 9)) % RIM_LIGHTS;
     for (let i = 0; i < RIM_LIGHTS; i++) {
@@ -240,6 +278,30 @@ export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Sauce
   } else drawSaucerFallback(g, SAUCER_DRAW, t);
   g.restore();
   g.globalAlpha = 1;
+  if (ghost > 0) {
+    // checkpoint shield: nothing can see you until the arc runs out
+    const r = SAUCER_DRAW / 2 + 15;
+    const left = Math.min(1, ghost / (look.ghostMax ?? 1.6));
+    g.globalCompositeOperation = 'lighter';
+    drawGlow(g, GLOW.mint, s.x, s.y, r + 26, r + 26, 0.22 + 0.2 * left);
+    g.globalCompositeOperation = 'source-over';
+    g.beginPath();
+    g.arc(s.x, s.y, r, 0, Math.PI * 2);
+    g.globalAlpha = 0.14;
+    g.fillStyle = C.mint;
+    g.fill();
+    g.globalAlpha = 0.4;
+    g.lineWidth = 3;
+    g.strokeStyle = C.mint;
+    g.stroke();
+    g.globalAlpha = 1;
+    g.beginPath();
+    g.arc(s.x, s.y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left);
+    g.lineWidth = 5;
+    g.lineCap = 'round';
+    g.stroke();
+    g.lineCap = 'butt';
+  }
   // afterburner cooldown ring: fills back up round the saucer, flashes when ready
   const d = look.dash;
   if (d) {
@@ -292,15 +354,15 @@ export function drawEntryRing(g: CanvasRenderingContext2D, assets: Assets, e: En
   g.globalCompositeOperation = 'source-over';
   g.rotate(rm ? 0 : t * 0.7 + (look.locked ? look.st * 5 : 0));
   const img = assets.get('flight/entry_ring');
-  if (img) g.drawImage(img, -RING_R, -RING_R, RING_R * 2, RING_R * 2);
+  if (img) drawSprite(g, img, -RING_R, -RING_R, RING_R * 2, RING_R * 2);
   else {
-    g.setLineDash([16, 10]);
+    g.setLineDash(RING_DASH);
     g.lineWidth = 6;
     g.strokeStyle = C.mint;
     g.beginPath();
     g.arc(0, 0, RING_R - 4, 0, Math.PI * 2);
     g.stroke();
-    g.setLineDash([]);
+    g.setLineDash(NO_DASH);
     g.lineWidth = 2;
     g.beginPath();
     g.arc(0, 0, RING_R * 0.55, 0, Math.PI * 2);
@@ -325,19 +387,30 @@ export function drawEntryRing(g: CanvasRenderingContext2D, assets: Assets, e: En
     drawGlow(g, GLOW.white, e.x + Math.cos(ha) * (RING_R + 10), e.y + Math.sin(ha) * (RING_R + 10), 16, 16, 0.9);
     g.globalCompositeOperation = 'source-over';
   }
-  // label pill
-  const a = `${e.route} — `;
-  g.font = font(19, 800);
-  const wa = g.measureText(a).width;
-  const wb = g.measureText(e.difficulty).width;
-  const w = wa + wb + 28;
+  // label pill (text and widths measured once per entry)
+  let lab = labels.get(e);
+  if (!lab) {
+    const a = `${e.route} — `;
+    g.font = font(19, 800);
+    lab = {
+      a,
+      wa: g.measureText(a).width,
+      wb: g.measureText(e.difficulty).width,
+      calm: e.difficulty.includes('easy') || e.difficulty.includes('safe') || e.difficulty.includes('short'),
+    };
+    labels.set(e, lab);
+  }
+  const w = lab.wa + lab.wb + 28;
   const ly = e.labelSide === 'above' ? e.y - RING_R - 34 : e.y + RING_R + 34;
   const x0 = clamp(e.x - w / 2, camX + 8, camX + VIEW_W - 8 - w);
   panel(g, x0, ly - 20, w, 40, 'rgba(27,20,51,0.9)', 20, C.mint, 2, 0);
-  text(g, a, x0 + 14, ly + 1, 19, C.mint, 'left', 800);
-  const calm = e.difficulty.includes('easy') || e.difficulty.includes('safe') || e.difficulty.includes('short');
-  text(g, e.difficulty, x0 + 14 + wa, ly + 1, 19, calm ? C.text : C.amberHi, 'left', 800);
+  text(g, lab.a, x0 + 14, ly + 1, 19, C.mint, 'left', 800);
+  text(g, e.difficulty, x0 + 14 + lab.wa, ly + 1, 19, lab.calm ? C.text : C.amberHi, 'left', 800);
 }
+
+const RING_DASH = [16, 10];
+const NO_DASH: number[] = [];
+const labels = new WeakMap<EntryDef, { a: string; wa: number; wb: number; calm: boolean }>();
 
 /** Zib's speech bubble in the bottom-left corner (screen space). */
 export function drawZibBubble(g: CanvasRenderingContext2D, assets: Assets, msg: string, zibT: number, t: number, rm: boolean, panic = false): void {

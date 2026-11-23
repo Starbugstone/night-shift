@@ -4,7 +4,7 @@ import type { Shell } from '../core/shell';
 import { LEVELS, LOCKED_CARDS } from '../levels/levels';
 import { MAX_STARS, isLevelUnlocked, nextRank, rankFor, totalStars } from '../levels/progress';
 import { GLOW, drawGlow, easeOutCubic } from '../core/fx';
-import { clamp, drawGlorb, drawStar, fmtTime, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text, wrap } from './draw';
+import { clamp, drawGlorb, drawStar, fmtTime, headKey, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text, wrap } from './draw';
 import { C, font } from './theme';
 import { Button, drawNightSky } from './widgets';
 
@@ -196,20 +196,45 @@ export class WorkOrdersScene implements Scene {
     const prog = save.levels[lv.id];
     panel(g, x, y, CARD_W, CARD_H, unlocked ? C.panel : '#211a4a', 22, C.ink, 4, 6);
     panelHighlight(g, x, y, CARD_W, 22, unlocked ? 0.14 : 0.07);
-    roundRectPath(g, x + 4, y + 4, 12, CARD_H - 8, 6);
-    g.fillStyle = unlocked ? C.mint : '#4a4470';
-    g.fill();
-    this.mugshot(g, lv.mugshot, x + CARD_W - 62, y + 58, unlocked, i);
     const training = lv.kind === 'tutorial';
+    // spine: mint for training, hot for the real shifts
+    roundRectPath(g, x + 4, y + 4, 12, CARD_H - 8, 6);
+    g.fillStyle = !unlocked ? '#4a4470' : training ? C.mint : C.amber;
+    g.fill();
+    if (unlocked && !training) {
+      roundRectPath(g, x + 4, y + 4 + (CARD_H - 8) * 0.5, 12, (CARD_H - 8) * 0.5, 6);
+      g.fillStyle = C.red;
+      g.fill();
+    }
+    if (lv.kind === 'deep') {
+      // three specimens on this order: three mugshots
+      const cx = x + CARD_W - 66;
+      const cy = y + 60;
+      const tg = lv.map.targets;
+      this.mugshot(g, headKey(tg[0].short), cx - 26, cy - 14, unlocked, i, 25);
+      this.mugshot(g, headKey(tg[1].short), cx + 24, cy - 16, unlocked, i + 1, 25);
+      this.mugshot(g, headKey(tg[2].short), cx - 2, cy + 24, unlocked, i + 2, 25);
+    } else this.mugshot(g, lv.mugshot, x + CARD_W - 62, y + 58, unlocked, i, 38);
     text(g, `WORK ORDER #000${lv.num}`, x + 34, y + 26, 14, unlocked ? C.mint : C.muted, 'left', 800);
     g.font = font(14, 800);
     const tagX = x + 44 + g.measureText(`WORK ORDER #000${lv.num}`).width;
     const tag = training ? 'TRAINING' : 'DEEP SHIFT ×3';
-    const tw = g.measureText(tag).width + 16;
-    roundRectPath(g, tagX, y + 15, tw, 22, 11);
-    g.fillStyle = training ? 'rgba(124,255,203,0.14)' : 'rgba(255,93,115,0.2)';
+    g.font = font(13, 900);
+    const tw = g.measureText(tag).width + (training ? 40 : 18);
+    roundRectPath(g, tagX, y + 14, tw, 24, 12);
+    g.fillStyle = training ? 'rgba(124,255,203,0.16)' : 'rgba(255,93,115,0.24)';
     g.fill();
-    text(g, tag, tagX + tw / 2, y + 27, 12, training ? C.mint : '#ff8a9a', 'center', 900);
+    g.lineWidth = 1.5;
+    g.strokeStyle = training ? 'rgba(124,255,203,0.6)' : 'rgba(255,138,154,0.75)';
+    g.stroke();
+    if (training) {
+      // a learner plate
+      roundRectPath(g, tagX + 6, y + 18, 17, 16, 3);
+      g.fillStyle = '#f4efe2';
+      g.fill();
+      text(g, 'L', tagX + 14.5, y + 27, 13, '#d33a52', 'center', 900);
+    }
+    text(g, tag, tagX + (training ? 28 : 9), y + 27, 13, training ? C.mint : '#ffa3b0', 'left', 900);
     const titleLines = wrap(g, lv.title, CARD_W - 150, 24, 800);
     g.font = font(24, 800);
     g.fillStyle = unlocked ? C.text : C.muted;
@@ -219,12 +244,34 @@ export class WorkOrdersScene implements Scene {
     text(g, unlocked ? lv.location : 'LOCKED', x + 34, ty, 16, unlocked ? C.muted : C.amber, 'left', 700);
     if (unlocked) {
       for (let s = 0; s < 3; s++) drawStar(g, assets, x + 52 + s * 44, y + CARD_H - 32, 38, prog.stars[s] === true);
-      text(g, lv.kind === 'deep' ? `Sunrise in ${fmtTime(lv.budgetSec)}` : `Par ${fmtTime(lv.parSec)}`, x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
+      if (lv.kind === 'deep') {
+        const label = this.sunriseLabel(lv.budgetSec);
+        text(g, label, x + CARD_W - 24, y + CARD_H - 44, 16, C.amberHi, 'right', 800);
+        // a small sun coming up beside it
+        const sx = x + CARD_W - 42 - g.measureText(label).width;
+        const sy = y + CARD_H - 43;
+        g.strokeStyle = C.amberHi;
+        g.lineWidth = 2;
+        g.lineCap = 'round';
+        g.beginPath();
+        const turn = this.shell.ctx.reducedMotion ? 0 : this.t * 0.6;
+        for (let k = 0; k < 8; k++) {
+          const a = turn + (k * Math.PI) / 4;
+          g.moveTo(sx + Math.cos(a) * 8, sy + Math.sin(a) * 8);
+          g.lineTo(sx + Math.cos(a) * 11.5, sy + Math.sin(a) * 11.5);
+        }
+        g.stroke();
+        g.lineCap = 'butt';
+        g.beginPath();
+        g.arc(sx, sy, 5.5, 0, Math.PI * 2);
+        g.fillStyle = C.amberHi;
+        g.fill();
+      } else text(g, `Par ${fmtTime(lv.parSec)}`, x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
       text(g, prog.bestTimeSec !== null ? `Best ${fmtTime(prog.bestTimeSec)}` : 'Not yet attempted', x + CARD_W - 24, y + CARD_H - 22, 15, C.amberHi, 'right', 600);
       // "open" badge on the mugshot
       const pulse = this.shell.ctx.reducedMotion ? 0 : Math.sin(this.t * 4 + i) * 2;
       const bx = x + CARD_W - 34;
-      const by = y + 88;
+      const by = lv.kind === 'deep' ? y + 96 : y + 88;
       g.beginPath();
       g.arc(bx, by + 3, 18, 0, Math.PI * 2);
       g.fillStyle = 'rgba(5,3,20,0.45)';
@@ -274,9 +321,8 @@ export class WorkOrdersScene implements Scene {
   }
 
   /** Round mugshot of the specimen, asleep. Locked orders show a redacted silhouette. */
-  private mugshot(g: CanvasRenderingContext2D, key: string, cx: number, cy: number, unlocked: boolean, i: number): void {
+  private mugshot(g: CanvasRenderingContext2D, key: string, cx: number, cy: number, unlocked: boolean, i: number, r: number): void {
     const { assets, ctx } = this.shell;
-    const r = 38;
     if (unlocked) {
       g.globalCompositeOperation = 'lighter';
       drawGlow(g, GLOW.mint, cx, cy, r + 22, r + 22, 0.22);
@@ -290,8 +336,9 @@ export class WorkOrdersScene implements Scene {
     g.clip();
     // snoring: the head rocks a little
     const rock = ctx.reducedMotion || !unlocked ? 0 : Math.sin(this.t * 1.8 + i * 2) * 0.06;
-    g.translate(cx, cy + 8);
+    g.translate(cx, cy + r * 0.21);
     g.rotate(-0.12 + rock);
+    g.scale(r / 38, r / 38);
     if (!unlocked) g.globalAlpha *= 0.28;
     if (!sprite(g, assets, key, 0, 0, 70, 80)) {
       g.beginPath();
@@ -318,6 +365,16 @@ export class WorkOrdersScene implements Scene {
       text(g, 'z', cx - r + 2 - k * 6, cy - r + 8 - k * 14, 15 + k * 6, C.mint, 'center', 900);
       g.globalAlpha = alpha;
     }
+  }
+
+  private readonly sunriseLabels = new Map<number, string>();
+  private sunriseLabel(sec: number): string {
+    let s = this.sunriseLabels.get(sec);
+    if (!s) {
+      s = `Sunrise in ${fmtTime(sec)}`;
+      this.sunriseLabels.set(sec, s);
+    }
+    return s;
   }
 
   private padlock(g: CanvasRenderingContext2D, cx: number, cy: number): void {

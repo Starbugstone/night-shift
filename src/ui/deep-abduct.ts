@@ -1,7 +1,7 @@
 // Wraps an abduction scene during a deep shift: the sunrise clock keeps running, shown in the chip
 // slot the abduction view leaves free on its second HUD row, and the room warms up in the last 30 s.
 import type { Assets, Scene } from '../contracts';
-import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT } from '../abduct/deep-view';
+import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT, deepShift } from '../abduct/deep-view';
 import { GLOW, drawEdgeTint } from '../core/fx';
 import type { DeepRun } from '../levels/run';
 import { hudPanel, hudSunClock } from './hud';
@@ -43,8 +43,11 @@ export class DeepAbductScene implements Scene {
   }
 
   render(g: CanvasRenderingContext2D): void {
-    this.inner.render(g);
     const dawn = this.run.dawn;
+    // the room view warms its windows and counts the specimens already aboard
+    deepShift.dawn = dawn;
+    deepShift.delivered = this.run.deliveredCount;
+    this.inner.render(g);
     if (dawn > 0) drawEdgeTint(g, GLOW.warm, dawn * 0.8);
     const key = Math.floor(this.run.elapsed * 4);
     if (key !== this.clockKey) {
@@ -66,6 +69,8 @@ export class DeepAbductScene implements Scene {
   }
 
   dispose(): void {
+    deepShift.dawn = 0;
+    deepShift.delivered = -1;
     this.inner.dispose?.();
   }
 }
