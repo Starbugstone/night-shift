@@ -19,6 +19,8 @@ const HUMAN_NAMES = {
 } as const;
 const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
 const GRIP_STRAIN = 132;
+/** Bonk speed of squashing a snagged body against a wall. */
+const SQUASH_SPEED = 140;
 const HANDS = [Joint.NearHand, Joint.FarHand] as const;
 const FLAIL_JOINTS = [...HANDS, Joint.NearFoot, Joint.FarFoot] as const;
 const CAT_LIFT = ART['room/cat_awake']!.h - ART['room/cat_sleeping']!.h;
@@ -124,6 +126,7 @@ export class AbductSimulation {
   private readonly contact = new Contact();
   private readonly itemRadius: number;
   private beamMoved = false;
+  private squashed = false;
   private lift = 0;
 
   constructor(
@@ -301,9 +304,12 @@ export class AbductSimulation {
       this.onWake(wasAwake);
       if (interior.failure) this.failure ??= interior.failure;
       if (this.failure) return;
-      if (interior.strain > 0.55 && speed < 167) {
-        this.onBonk(167, false, this.body.chestX, this.body.chestY);
-      }
+      // Dragging a snagged body into a wall squashes it: one bonk per snag, not one per
+      // bonk cooldown. The amber beam (strain > 0.24) is the tell; easing off clears it.
+      if (interior.strain > 0.55 && !this.squashed) {
+        this.squashed = true;
+        if (speed < SQUASH_SPEED) this.onBonk(SQUASH_SPEED, false, this.body.chestX, this.body.chestY);
+      } else if (interior.strain < 0.15) this.squashed = false;
       const smooth = 1 - Math.exp(-STEP * 5.4);
       this.camera.x += (this.body.chestX - VIEW_W * 0.5 - this.camera.x) * smooth;
       this.camera.y += (this.body.chestY - VIEW_H * 0.49 - this.camera.y) * smooth;

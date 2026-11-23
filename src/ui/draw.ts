@@ -87,6 +87,8 @@ export function outlinedText(
   outline: string = C.ink,
   weight = 900,
   align: CanvasTextAlign = 'center',
+  /** Squeeze to fit this width (only if it would overflow). */
+  maxW?: number,
 ): void {
   g.font = font(size, weight);
   g.textAlign = align;
@@ -94,6 +96,12 @@ export function outlinedText(
   g.lineJoin = 'round';
   g.lineWidth = Math.max(4, size * 0.18);
   g.strokeStyle = outline;
+  if (maxW !== undefined) {
+    g.strokeText(s, x, y, maxW);
+    g.fillStyle = color;
+    g.fillText(s, x, y, maxW);
+    return;
+  }
   g.strokeText(s, x, y);
   g.fillStyle = color;
   g.fillText(s, x, y);

@@ -9,12 +9,7 @@ import { drawPortrait, easeOutBack, headKey, outlinedText, panel, panelHighlight
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
 
-const TITLES: Record<string, string> = {
-  woke: 'SPECIMEN AWAKE',
-  sleeper: 'SOMEONE WOKE UP',
-  alarm: 'ALARM!',
-  aborted: 'SHIFT PAUSED',
-};
+import { fmt, gt, tr } from '../i18n';
 
 let rotation = 0;
 
@@ -31,8 +26,8 @@ export class DeepChoiceScene implements Scene {
   private readonly building: string;
   private readonly status: string;
   private readonly retry: Button;
-  private readonly back = new Button(70, 676, VIEW_W - 140, 76, 'Back to flight', 'secondary', 26);
-  private readonly quit = new Button(70, 772, VIEW_W - 140, 60, 'Abandon shift', 'ghost', 22);
+  private readonly back = new Button(70, 676, VIEW_W - 140, 76, tr().common.backToFlight, 'secondary', 26);
+  private readonly quit = new Button(70, 772, VIEW_W - 140, 60, tr().deepChoice.abandon, 'ghost', 22);
 
   constructor(
     private readonly shell: Shell,
@@ -41,15 +36,17 @@ export class DeepChoiceScene implements Scene {
   ) {
     const f = run.lastFail!;
     const reason = f.reason ?? 'aborted';
-    this.title = TITLES[reason] ?? 'FAILED';
+    const d = tr().deepChoice;
+    this.title = (d.titles as Record<string, string>)[reason] ?? d.failed;
     this.line = abductFailLine(f.reason, f.by, f.roomId, rotation++ + run.failedAbductions);
     const tg = run.level.map.targets[f.target]!;
-    this.building = `${tg.short} · ${tg.entries[f.entry]!.route}`;
-    this.retry = new Button(50, 540, VIEW_W - 100, 116, `Retry (${tg.short})`, 'primary', 36);
+    const entry = tg.entries[f.entry]!;
+    this.building = fmt(d.building, { name: gt(tg.short), route: tr().routes[entry.roomId].route });
+    this.retry = new Button(50, 540, VIEW_W - 100, 116, fmt(d.retry, { name: gt(tg.short) }), 'primary', 36);
     const left = run.remaining;
     const m = Math.floor(left / 60);
     const sec = Math.floor(left % 60);
-    this.status = `Sunrise in ${m}:${sec < 10 ? '0' : ''}${sec}`;
+    this.status = fmt(d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
   }
 
   update(dt: number): void {
@@ -108,7 +105,7 @@ export class DeepChoiceScene implements Scene {
     const bw = w - 168 - 26;
     const k = Math.min(1, run.elapsed / run.budget);
     const hot = run.dawn > 0;
-    text(g, this.status, bx, y + 6, 15, hot ? C.amberHi : C.muted, 'left', 800);
+    text(g, this.status, bx, y + 6, 15, hot ? C.amberHi : C.muted, 'left', 800, false, bw);
     roundRectPath(g, bx, y + 22, bw, 14, 7);
     g.fillStyle = '#16102e';
     g.fill();
@@ -142,9 +139,9 @@ export class DeepChoiceScene implements Scene {
     g.translate(VIEW_W / 2, 120);
     g.rotate(-0.05);
     g.scale(pop, pop);
-    outlinedText(g, this.title, 0, 0, this.title.length > 13 ? 42 : 50, C.red, C.ink, 900);
+    outlinedText(g, this.title, 0, 0, this.title.length > 13 ? 42 : 50, C.red, C.ink, 900, 'center', VIEW_W - 60);
     g.restore();
-    text(g, this.building, VIEW_W / 2, 178, 18, C.muted, 'center', 800);
+    text(g, this.building, VIEW_W / 2, 178, 18, C.muted, 'center', 800, false, VIEW_W - 60);
     panel(g, 40, 210, VIEW_W - 80, 290, C.panel, 22, C.ink, 4, 6);
     panelHighlight(g, 40, 210, VIEW_W - 80, 22);
     g.save();

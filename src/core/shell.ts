@@ -1,5 +1,6 @@
 import type { AbductResult, FlightResult, GameContext, RoomId, UpgradeId } from '../contracts';
 import type { SaveData } from '../levels/save';
+import type { Lang } from '../i18n';
 import type { SynthAudio } from '../audio/sfx';
 import type { PointerInput } from './input';
 import type { AssetLoader } from './assets';
@@ -18,6 +19,8 @@ export interface Shell {
   /** Replace the save (and persist). */
   setSave(s: SaveData): void;
   toggleMute(): void;
+  /** Switch the display language (saved; clears a `?lang=` override). */
+  setLanguage(lang: Lang): void;
 
   toTitle(): void;
   toWorkOrders(): void;

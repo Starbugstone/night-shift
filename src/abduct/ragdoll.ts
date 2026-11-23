@@ -102,6 +102,54 @@ const GRAVITY = 480;
 const ITERATIONS = 8;
 const TAU = Math.PI * 2;
 
+/**
+ * How the beam pulls the chest toward the beam point: spring per px (`k`), damping per px/s (`c`),
+ * acceleration cap (`max`), and `lead`, the share of the beam's own velocity fed into the damping
+ * (0 = damp toward rest, so the body trails a moving beam; 1 = damp toward the beam's motion, so
+ * it keeps up). Then, once the beam has stopped, an optional `hold`: a stiff, near-critically
+ * damped spring that closes the last gap fast and stops the body dead instead of letting it drift.
+ *
+ * Touch keeps the lazy follow: the finger covers the body anyway and the swing is the comedy.
+ * A mouse aims with the eye, so the body has to go and stop where the cursor goes and stops.
+ * Spring and cap stay the touch ones (a snagged limb is not yanked any harder, a body pressed to a
+ * wall never fakes a bonk), and the hold's `drop` keeps the body hanging at the same height under
+ * the reticle (~9 px of gravity sag): rooms, cones and lasers were laid out for that height.
+ * Only the chest is affected; arms, legs and head still trail and flop.
+ *
+ * `pilotDelay`: this follow brings the body along that much sooner than touch at crossing speed.
+ * The autopilot waits that long after committing to a timed crossing, so the crossing predictor
+ * (tuned on the touch lag) still sees the body where it will really be.
+ */
+export const FOLLOW = {
+  touch: { k: 30, c: 7, max: 4800, lead: 0, hold: null, pilotDelay: 0 },
+  mouse: { k: 30, c: 12, max: 4800, lead: 1, hold: { k: 220, c: 34, drop: 7.6 }, pilotDelay: 0.18 },
+} as const;
+export type FollowTuning = {
+  readonly k: number; readonly c: number; readonly max: number; readonly lead: number;
+  readonly hold: { readonly k: number; readonly c: number; readonly drop: number } | null;
+  readonly pilotDelay: number;
+};
+/** Smoothing of the beam velocity (s): input arrives once per frame, physics runs twice. */
+const BEAM_V_SMOOTH = 1 - Math.exp(-STEP / 0.02);
+/** The beam counts as stopped below this speed (px/s) ... */
+const HOLD_SPEED = 6;
+/** ... and the hold fades in over this long once it has been stopped for HOLD_DELAY (s). */
+const HOLD_DELAY = 0.025;
+const HOLD_RAMP = 0.08;
+
+/**
+ * Turning the specimen in the beam. `k`/`c` = angular spring and damping on the torso,
+ * `max` = angular acceleration cap (rad/s²), `lead` = how far the target may run ahead of the
+ * body (rad) so a blocked turn never winds up. Limbs get `limb` of the turning push, so they
+ * trail and swing out instead of turning like a plank.
+ */
+export const TURN = { k: 34, c: 9, max: 46, lead: 1.4, limb: 0.35 } as const;
+
+/** Wraps an angle into (-π, π]. */
+export function wrapPi(a: number): number {
+  return a - Math.round(a / TAU) * TAU;
+}
+
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -223,6 +271,20 @@ export class Ragdoll {
   gripActive = false;
   gripX = 0;
   gripY = 0;
+  /** Chest follow spring; the scene switches it to `FOLLOW.mouse` for mouse and pen. */
+  follow: FollowTuning = FOLLOW.touch;
+  /**
+   * Target rotation from upright, radians (+ = clockwise on screen). Only used once `turning`
+   * is set (the player rotated at least once); before that the body behaves exactly as v2 shipped.
+   */
+  turn = 0;
+  turning = false;
+  private beamVx = 0;
+  private beamVy = 0;
+  /** Seconds the beam has been (nearly) still; drives the hold blend. */
+  private stillFor = 0;
+  private lastBeamX = 0;
+  private lastBeamY = 0;
 
   constructor(pose: Pose, readonly solids: readonly Solid[], private readonly dampener = false) {
     this.pelvisRadius = pose.pelvisRadius ?? RADII[Joint.Pelvis]!;
@@ -246,12 +308,28 @@ export class Ragdoll {
     this.oldY.set(this.y);
     this.beamX = this.chestX;
     this.beamY = this.chestY;
+    this.lastBeamX = this.beamX;
+    this.lastBeamY = this.beamY;
     this.restHeadX = this.x[Joint.Head]! - this.beamX;
     this.restHeadY = this.y[Joint.Head]! - this.beamY;
   }
 
   get chestX(): number { return this.x[Joint.Neck]! * 0.65 + this.x[Joint.Pelvis]! * 0.35; }
   get chestY(): number { return this.y[Joint.Neck]! * 0.65 + this.y[Joint.Pelvis]! * 0.35; }
+
+  /** Current torso rotation from upright (neck straight above pelvis), radians, + = clockwise. */
+  get tilt(): number {
+    return wrapPi(Math.atan2(this.y[Joint.Pelvis]! - this.y[Joint.Neck]!, this.x[Joint.Pelvis]! - this.x[Joint.Neck]!) - Math.PI / 2);
+  }
+
+  /** Turns the target by `radians` (+ = clockwise). The target never leads the body by more than `TURN.lead`. */
+  rotate(radians: number): void {
+    if (radians === 0 || !Number.isFinite(radians)) return;
+    const tilt = this.tilt;
+    const from = this.turning ? this.turn : tilt;
+    this.turning = true;
+    this.turn = tilt + clamp(wrapPi(from - tilt) + radians, -TURN.lead, TURN.lead);
+  }
 
   kick(joint: Joint, vx: number, vy: number): void {
     this.oldX[joint] = this.oldX[joint]! - vx * STEP;
@@ -322,8 +400,45 @@ export class Ragdoll {
     const y = this.y;
     const chestVx = (this.chestX - this.oldX[Joint.Neck]! * 0.65 - this.oldX[Joint.Pelvis]! * 0.35) / STEP;
     const chestVy = (this.chestY - this.oldY[Joint.Neck]! * 0.65 - this.oldY[Joint.Pelvis]! * 0.35) / STEP;
-    const pullX = clamp((this.beamX - this.chestX) * 30 - chestVx * 7, -4800, 4800);
-    const pullY = clamp((this.beamY - this.chestY) * 30 - chestVy * 7, -4800, 4800);
+    const follow = this.follow;
+    let { k, c } = follow;
+    let drop = 0;
+    if (follow.hold || follow.lead !== 0) {
+      this.beamVx += (clamp((this.beamX - this.lastBeamX) / STEP, -1500, 1500) - this.beamVx) * BEAM_V_SMOOTH;
+      this.beamVy += (clamp((this.beamY - this.lastBeamY) / STEP, -1500, 1500) - this.beamVy) * BEAM_V_SMOOTH;
+      this.stillFor = Math.hypot(this.beamVx, this.beamVy) < HOLD_SPEED ? this.stillFor + STEP : 0;
+      if (follow.hold) {
+        const h = clamp((this.stillFor - HOLD_DELAY) / HOLD_RAMP, 0, 1);
+        k += (follow.hold.k - k) * h;
+        c += (follow.hold.c - c) * h;
+        drop = follow.hold.drop * h;
+      }
+    }
+    const leadX = this.beamVx * follow.lead;
+    const leadY = this.beamVy * follow.lead;
+    this.lastBeamX = this.beamX;
+    this.lastBeamY = this.beamY;
+    const pullX = clamp((this.beamX - this.chestX) * k + (leadX - chestVx) * c, -follow.max, follow.max);
+    const pullY = clamp((this.beamY + drop - this.chestY) * k + (leadY - chestVy) * c, -follow.max, follow.max);
+    // Upright bias (neck lifted, pelvis pushed down) and the head's lift, turned to the target.
+    // At turn = 0 these are exactly the untouched numbers: (0, -280), (0, 180), (0, -72).
+    const turned = this.beamActive && this.turning;
+    const upX = turned ? -Math.sin(this.turn) : 0;
+    const upY = turned ? Math.cos(this.turn) : 1;
+    let spin = 0;
+    const cx = this.chestX;
+    const cy = this.chestY;
+    if (turned) {
+      const nx = x[Joint.Pelvis]! - x[Joint.Neck]!;
+      const ny = y[Joint.Pelvis]! - y[Joint.Neck]!;
+      const ox = this.oldX[Joint.Pelvis]! - this.oldX[Joint.Neck]!;
+      const oy = this.oldY[Joint.Pelvis]! - this.oldY[Joint.Neck]!;
+      const omega = Math.atan2(ox * ny - oy * nx, ox * nx + oy * ny) / STEP;
+      const tilt = wrapPi(Math.atan2(ny, nx) - Math.PI / 2);
+      const error = clamp(wrapPi(this.turn - tilt), -TURN.lead, TURN.lead);
+      this.turn = tilt + error;
+      spin = clamp(error * TURN.k - omega * TURN.c, -TURN.max, TURN.max);
+    }
     this.impacts.fill(0);
     this.touched.fill(0);
     this.contactX.fill(0);
@@ -337,15 +452,22 @@ export class Ragdoll {
       let ay = GRAVITY;
       if (this.beamActive) {
         if (i === Joint.Neck || i === Joint.Pelvis) {
-          ax = pullX;
-          ay = pullY + (i === Joint.Neck ? -280 : 180);
+          const bias = i === Joint.Neck ? -280 : 180;
+          ax = pullX + upX * bias;
+          ay = pullY + upY * bias;
         } else if (i === Joint.Head) {
-          const targetX = this.beamX + this.restHeadX * (1 - lift);
-          const targetY = this.beamY + this.restHeadY * (1 - lift) - 72 * lift;
+          const targetX = this.beamX + this.restHeadX * (1 - lift) - 72 * lift * upX;
+          const targetY = this.beamY + this.restHeadY * (1 - lift) - 72 * lift * upY;
           ax = clamp((targetX - x[i]!) * 8 - vx * 1.9, -1550, 1550);
           ay = clamp((targetY - y[i]!) * 8 - vy * 1.9, -1550, 1550);
         } else {
           ay *= 0.55;
+        }
+        if (spin !== 0) {
+          // tangential push about the chest: the torso turns, the limbs come along late
+          const share = i === Joint.Neck || i === Joint.Pelvis || i === Joint.Head ? 1 : TURN.limb;
+          ax -= spin * (y[i]! - cy) * share;
+          ay += spin * (x[i]! - cx) * share;
         }
       }
 

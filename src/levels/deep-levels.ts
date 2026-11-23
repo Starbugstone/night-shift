@@ -40,18 +40,23 @@ function box(b: PropDef): { x0: number; y0: number; x1: number; y1: number } {
   return { x0: b.x - w / 2, y0: b.y - h / 2, x1: b.x + w / 2, y1: b.y + h / 2 };
 }
 
+// Playtest (2026-11-23): L3 spotted players too easily. Smaller lights, fewer of them; the
+// difficulty evaluator (.claude/skills/evaluate-difficulty) holds L3 to its target band.
+const PORCH_TRIGGER = 100;
+const PORCH_LIT = 175;
+
 /**
- * Motion-sensor light on a house wall: trips if you linger 0.4 s within 110 px, then lights
- * 200 px for 3 s. North/south walls take a world x along the wall, east/west walls a world y.
+ * Motion-sensor light on a house wall: trips if you linger 0.4 s within PORCH_TRIGGER px, then
+ * lights PORCH_LIT px for 3 s. North/south walls take a world x along the wall, east/west walls a world y.
  */
 function porch(house: PropDef, wall: 'n' | 's' | 'e' | 'w', along: number): HazardDef {
   const b = box(house);
   const x = wall === 'e' ? b.x1 : wall === 'w' ? b.x0 : along;
   const y = wall === 'n' ? b.y0 : wall === 's' ? b.y1 : along;
-  return { type: 'porch', x, y, trigger: 110, r: 200 };
+  return { type: 'porch', x, y, trigger: PORCH_TRIGGER, r: PORCH_LIT };
 }
 /** The same light on its own garden post, out in a yard or a drive. */
-const yardLight = (x: number, y: number): HazardDef => ({ type: 'porch', x, y, trigger: 110, r: 200, mount: 'post' });
+const yardLight = (x: number, y: number): HazardDef => ({ type: 'porch', x, y, trigger: PORCH_TRIGGER, r: PORCH_LIT, mount: 'post' });
 
 // ====================================================================== L3
 
@@ -135,27 +140,24 @@ const L3_HAZARDS: HazardDef[] = [
     sweepRate: 1.9,
   },
   // Gary's own CCTV, on the garage corner, sweeping his drive and roof
-  { type: 'camera', x: 1440, y: 1930, range: 300, half: 0.3, base: 0.35, amp: 0.6, rate: 1.3, phase: 0 },
-  // motion-sensor lights on the walls along the way
-  porch(SE_A, 'w', 2290),
+  // Its sweep crosses the garage-door ring: lock on between passes.
+  { type: 'camera', x: 1440, y: 1930, range: 295, half: 0.27, base: 0.35, amp: 0.45, rate: 1.1, phase: 0 },
+  // motion-sensor lights on the walls along the way (none on Maple Court itself, the way north)
   porch(SW_B, 'n', 820),
   porch(SE_B, 'n', 1370),
-  porch(N_A, 'n', 1300),
   yardLight(860, 560),
   porch(N_A, 'e', 1250),
-  yardLight(420, 2000),
   porch(E_B, 'n', 2000),
   porch(PRUITT, 'w', 1300),
   // Lights by the doors: each lights its ring (~170-200 px) without being tripped from it, and its
   // trigger sits across the obvious way in. Come in from the side or wait out the 3 s.
-  yardLight(718, 1080),
   yardLight(859, 861),
   porch(DAVE, 'e', 741),
   yardLight(1560, 961),
   porch(BARB, 'e', 840),
-  // Gary's own motion lights on posts: the drive, the side return and the back garden
-  yardLight(1515, 2205),
-  yardLight(1780, 1960),
+  // Gary's own motion lights on posts. The drive light is the one door trap left on the map: it
+  // lights the garage-door ring, so come in over the side return, not straight up the drive.
+  { type: 'porch', x: 1515, y: 2205, trigger: 110, r: 200, mount: 'post' },
   yardLight(1600, 1785),
   // yard dogs: one in Dave's garden by the patio, one on Barb's back step between her chimney and back door
   { type: 'dog', x: 760, y: 968, rMin: 55, rMax: 175, period: 1.9, phase: 0 },
@@ -187,19 +189,7 @@ const L3_HAZARDS: HazardDef[] = [
     r: 46,
     phase: 900,
   },
-  {
-    type: 'flock',
-    kind: 'bat',
-    path: [
-      { x: 1300, y: 1250 },
-      { x: 2040, y: 1350 },
-      { x: 1500, y: 2700 },
-      { x: 1200, y: 2000 },
-    ],
-    speed: 320,
-    r: 50,
-    phase: 300,
-  },
+
   // power lines along the north kerb of Birch Lane and Elm Avenue (gaps at Maple Court and the ends)
   { type: 'wire', kind: 'power', ax: 20, ay: 1420, bx: 480, by: 1420 },
   { type: 'wire', kind: 'power', ax: 480, ay: 1420, bx: 960, by: 1420 },
@@ -239,6 +229,8 @@ export const LEVEL3: DeepLevelDef = {
     theme: 'suburb',
     w: 2160,
     h: 2880,
+    // The first deep level gives a beat longer to react than L4's 1 s fuse.
+    fuseSec: 1.3,
     start: { x: 1080, y: 2700 },
     roads: [
       { dir: 'h', at: 2460, from: 0, to: 2160 },

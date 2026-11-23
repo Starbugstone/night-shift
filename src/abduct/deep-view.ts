@@ -11,6 +11,10 @@ import {
 } from '../core/fx';
 import { HUD_ROW, hudButton, hudMeter, hudPanel, hudTimer, type MeterState } from '../ui/hud';
 import { HumanArt, RESTART } from './draw';
+import { gt, tr } from '../i18n';
+import { wrap as wrapText } from '../ui/draw';
+import type { TurnControl } from './turn';
+import { drawTurnButtons, drawTurnTell } from './turn-draw';
 import { LASER_TELL, inside, type HazardState, type SleeperState } from './interior';
 import { clamp, Joint, type Blade, type Circle, type Rect, type SwingingRect } from './ragdoll';
 import type { Building, Cycle, InteriorRoom, Opening } from './rooms/interior';
@@ -49,17 +53,13 @@ const STAR_COUNT = 39;
 const MUMBLE_SECONDS = 1.6;
 /** Radius of the ring that burns round the specimen while a camera can see it. */
 const SEEN_R = 70;
-const SLEEPER_CAPTIONS: Record<string, string> = {
-  Brenda: 'Brenda was promised one night off.',
-  Biscuit: 'The dog would like a word with the management.',
-  Tiny: 'Your names are officially off the guest list.',
-};
-/** What a second sleeper says when it wakes. */
-const SLEEPER_SHOUTS: Record<string, string> = {
-  Brenda: 'DAVE?! Who is THAT?',
-  Biscuit: 'WOOF! WOOF! WOOF!',
-  Tiny: 'NOT ON THE LIST!',
-};
+/** A second sleeper's caption and wake-up shout, by name (lines in src/i18n: abduct). */
+function sleeperCaption(name: string): string | undefined {
+  return (tr().abduct.sleeperCaptions as Record<string, string>)[name];
+}
+function sleeperShout(name: string): string | undefined {
+  return (tr().abduct.sleeperShouts as Record<string, string>)[name];
+}
 const WALL_COLORS = ['#423354', '#5b4b70', '#322943'] as const;
 const PALETTES: Record<string, readonly [string, string]> = {
   'room/bg_suburb_bedroom': ['#332749', '#615071'],
@@ -197,7 +197,8 @@ export function drawFailure(g: CanvasRenderingContext2D, sim: AbductSimulation, 
     }
     g.restore();
   }
-  const heading = alarm ? 'ALARM TRIPPED' : failure.reason === 'sleeper' ? 'LIGHT SLEEPER WOKE' : 'SPECIMEN WOKE';
+  const ab = tr().abduct;
+  const heading = alarm ? ab.alarmTripped : failure.reason === 'sleeper' ? ab.sleeperWoke : ab.specimenWoke;
   const slam = reducedMotion ? 1 : 1 + 0.4 * Math.max(0, 1 - age / 0.13);
   const cx = 270;
   const cy = 693;
@@ -291,9 +292,17 @@ export function drawFailure(g: CanvasRenderingContext2D, sim: AbductSimulation, 
   g.restore();
 
   label(g, heading, 0, -52, '900 15px system-ui', '#ffd9de', 448);
-  label(g, failure.by, 46, -12, '900 30px system-ui', LIGHT, 350);
-  const caption = SLEEPER_CAPTIONS[failure.by] ?? sim.room.interior?.caption ?? 'Unscheduled human feedback received.';
-  label(g, caption, 46, 34, '650 16px system-ui', MUTED, 356);
+  // `failure.by` and the caption are ids from the room data (English): shown in the current language
+  label(g, gt(failure.by), 46, -12, '900 30px system-ui', LIGHT, 350);
+  const source = sim.room.interior?.caption;
+  const caption = sleeperCaption(failure.by) ?? (source ? gt(source) : ab.defaultCaption);
+  // one line when it fits; a longer caption (French) wraps onto two smaller lines
+  g.font = '650 16px system-ui';
+  if (g.measureText(caption).width <= 356) label(g, caption, 46, 34, '650 16px system-ui', MUTED, 356);
+  else {
+    const lines = wrapText(g, caption, 356, 14, 650);
+    for (let i = 0; i < Math.min(2, lines.length); i++) label(g, lines[i]!, 46, 25 + i * 19, '650 14px system-ui', MUTED, 356);
+  }
   g.restore();
 }
 
@@ -319,8 +328,8 @@ export function drawSnooze(g: CanvasRenderingContext2D, sim: AbductSimulation, r
 export class DeepAbductView {
   private readonly human: HumanArt;
   private readonly roomPaths: Map<InteriorRoom, Navigation>;
-  private readonly wakeMeter = meter('WAKE');
-  private readonly cameraMeter = meter('CAMERA FUSE', 'eye');
+  private readonly wakeMeter = meter(tr().abduct.wake);
+  private readonly cameraMeter = meter(tr().abduct.cameraFuse, 'eye');
   private readonly sleeperMeters: readonly MeterState[];
   private readonly fx = new Particles(96);
   private readonly stars = new Float32Array(STAR_COUNT * 2);
@@ -343,6 +352,8 @@ export class DeepAbductView {
   private exitTitleWidth = 0;
   private measuredMumble = '';
   private mumbleWidth = 0;
+  /** The mumble in the current language (the sim keeps the English line as its id). */
+  private shownMumble = '';
   private currentRoom: InteriorRoom;
   private cameraX = 0;
   private cameraY = 0;
@@ -356,7 +367,7 @@ export class DeepAbductView {
     this.human = new HumanArt(sim.room.human, ctx);
     this.currentRoom = building.rooms[0]!;
     this.roomPaths = navigation(building, sim.exitX, sim.exitY);
-    this.sleeperMeters = sleepers.map(sleeper => meter(sleeper.spec.name.toUpperCase()));
+    this.sleeperMeters = sleepers.map(sleeper => meter(gt(sleeper.spec.name).toLocaleUpperCase()));
     this.prevAngle = new Float32Array(hazards.length);
     this.lead = new Int8Array(hazards.length);
     this.sleeperAwake = new Float32Array(sleepers.length);
@@ -407,7 +418,7 @@ export class DeepAbductView {
     }
   }
 
-  render(g: CanvasRenderingContext2D, _tutorial: boolean, dragging: boolean): void {
+  render(g: CanvasRenderingContext2D, _tutorial: boolean, dragging: boolean, turn?: TurnControl, _turnHint?: string): void {
     const { sim, ctx } = this;
     const interior = sim.interior!;
     const { building } = interior;
@@ -473,7 +484,10 @@ export class DeepAbductView {
     const beamViewY = clamp(beamY, this.cameraY + 102, this.cameraY + VIEW_H - 93);
     if (!sim.delivered) this.beam(g, beamViewX, beamViewY, dragging);
     this.subject(g);
-    if (!sim.delivered) this.reticle(g, beamViewX, beamViewY, dragging);
+    if (!sim.delivered) {
+      if (turn) drawTurnTell(g, beamViewX, beamViewY, dragging ? 23 : 18, turn, sim.body.tilt, ctx.reducedMotion);
+      this.reticle(g, beamViewX, beamViewY, dragging);
+    }
     this.seen(g);
     if (sim.delivered) {
       // the exit swallows the specimen in a bloom of beam light
@@ -498,7 +512,7 @@ export class DeepAbductView {
       g.fillRect(0, 0, VIEW_W, VIEW_H);
       g.globalAlpha = 1;
     }
-    this.hud(g);
+    this.hud(g, turn);
     drawFailure(g, sim, rm, ctx.assets);
   }
 
@@ -859,7 +873,7 @@ export class DeepAbductView {
     }
     g.stroke();
     g.lineCap = 'butt';
-    const title = sim.room.interior!.exitName;
+    const title = gt(sim.room.interior!.exitName);
     if (this.exitTitleWidth === 0) {
       g.font = '900 14px system-ui';
       this.exitTitleWidth = g.measureText(title).width + 22;
@@ -984,7 +998,7 @@ export class DeepAbductView {
             const cy = shape.y + shape.h / 2;
             ring(g, cx, cy, 20 + (1 - state.pulse) * 95, AMBER, 3);
             g.globalAlpha = Math.min(1, state.pulse * 2);
-            label(g, 'WOOF!', cx, shape.y - 22 - (1 - state.pulse) * 14, '900 22px system-ui', AMBER, 100);
+            label(g, tr().abduct.woof, cx, shape.y - 22 - (1 - state.pulse) * 14, '900 22px system-ui', AMBER, 100);
             g.globalAlpha = 1;
           }
         }
@@ -998,7 +1012,7 @@ export class DeepAbductView {
           if (state.pulse > 0) {
             ring(g, x + w / 2, y + h / 2, 23 + (1 - state.pulse) * 92, AMBER, 2);
             g.globalAlpha = Math.min(1, state.pulse * 2);
-            label(g, 'CRASH!', x + w / 2, y - 12 - (1 - state.pulse) * 16, '900 22px system-ui', AMBER, 110);
+            label(g, tr().abduct.crash, x + w / 2, y - 12 - (1 - state.pulse) * 16, '900 22px system-ui', AMBER, 110);
             g.globalAlpha = 1;
           }
         } else {
@@ -1069,7 +1083,7 @@ export class DeepAbductView {
           this.cuckooHouse(g, x, y, w, h, state.tell);
           this.dial(g, x + w + 12, y - 30, spec.cycle, state.tell);
           if (shape.active && state.level > 0.6 && shape.w > w * 0.8) {
-            label(g, 'CUCKOO!', x + w / 2, y - 16, '900 17px system-ui', AMBER, 110);
+            label(g, tr().abduct.cuckoo, x + w / 2, y - 16, '900 17px system-ui', AMBER, 110);
           }
         }
         break;
@@ -1564,7 +1578,7 @@ export class DeepAbductView {
       g.stroke();
       label(g, '!', 0, 1, '900 30px system-ui', '#ffffff', 30);
       g.restore();
-      const shout = SLEEPER_SHOUTS[spec.name];
+      const shout = sleeperShout(spec.name);
       if (shout && age > 0.12) {
         const bx = clamp(x, this.cameraX + 140, this.cameraX + VIEW_W - 140);
         const by = spec.awake.y - 64;
@@ -1759,7 +1773,8 @@ export class DeepAbductView {
     g.font = '650 16px system-ui';
     if (mumble !== this.measuredMumble) {
       this.measuredMumble = mumble;
-      this.mumbleWidth = Math.min(VIEW_W - 44, Math.ceil(g.measureText(mumble).width) + pad * 2);
+      this.shownMumble = gt(mumble);
+      this.mumbleWidth = Math.min(VIEW_W - 44, Math.ceil(g.measureText(this.shownMumble).width) + pad * 2);
     }
     const w = this.mumbleWidth;
     const left = clamp(x - w / 2, this.cameraX + 22, this.cameraX + VIEW_W - 22 - w);
@@ -1801,7 +1816,7 @@ export class DeepAbductView {
     g.fillStyle = INK;
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
-    g.fillText(mumble, left + w / 2, boxTop + 27, w - pad * 2);
+    g.fillText(this.shownMumble, left + w / 2, boxTop + 27, w - pad * 2);
     g.restore();
   }
 
@@ -1932,7 +1947,7 @@ export class DeepAbductView {
     g.restore();
   }
 
-  private hud(g: CanvasRenderingContext2D): void {
+  private hud(g: CanvasRenderingContext2D, turn: TurnControl | undefined): void {
     const { sim, ctx } = this;
     const interior = sim.interior!;
     const second = Math.floor(sim.elapsed);
@@ -1941,10 +1956,11 @@ export class DeepAbductView {
       this.clock = Math.floor(second / 60) + ':' + String(second % 60).padStart(2, '0');
     }
     this.wakeMeter.flash = this.meterFlash;
-    this.wakeMeter.label = sim.wake.awake > 0 ? 'AWAKE!' : 'WAKE';
+    this.wakeMeter.label = sim.wake.awake > 0 ? tr().abduct.awake : tr().abduct.wake;
     this.drawMeter(g, this.wakeMeter, sim.wake.value / 100, sim.wake.awake > 0, 14, HUD_ROW.y, 296);
     hudTimer(g, 318, HUD_ROW.y, 96, HUD_ROW.h, this.clock);
-    hudButton(g, RESTART, 'restart', 'RESTART', false);
+    hudButton(g, RESTART, 'restart', tr().common.restart, false);
+    if (turn && !sim.delivered && !sim.failure) drawTurnButtons(g, turn);
     for (let i = 0; i < interior.sleepers.length; i++) {
       const sleeper = interior.sleepers[i]!;
       const state = this.sleeperMeters[i]!;
@@ -1952,12 +1968,13 @@ export class DeepAbductView {
       this.drawMeter(g, state, sleeper.wake / 100, sleeper.wake >= 100, 14, 86, 180);
     }
     if (interior.watching || interior.exposure > 0) {
-      this.cameraMeter.label = interior.watching ? 'ON CAMERA!' : 'CAMERA FUSE';
+      this.cameraMeter.label = interior.watching ? tr().abduct.onCamera : tr().abduct.cameraFuse;
       this.drawMeter(g, this.cameraMeter, interior.exposure, interior.exposure >= 1 || !!interior.watching, 342, 86, 184);
     }
 
-    hudPanel(g, 14, 887, 512, 56);
-    label(g, this.currentRoom.name, 149, 914, '850 18px system-ui', LIGHT, 240);
+    // room / exit bar, between the two TURN buttons in the bottom corners
+    hudPanel(g, 84, 887, 372, 56);
+    label(g, gt(this.currentRoom.name), 183, 914, '850 18px system-ui', LIGHT, 180);
     // specimens aboard so far tonight: three pips where the divider was
     const have = deepShift.delivered;
     if (have >= 0) {
@@ -1974,10 +1991,10 @@ export class DeepAbductView {
       g.fillStyle = '#695b92';
       g.fillRect(284, 898, 2, 32);
     }
-    label(g, sim.room.interior!.exitName, 409, 914, '900 14px system-ui', MINT, 210);
+    label(g, gt(sim.room.interior!.exitName), 372, 914, '900 14px system-ui', MINT, 150);
     if (sim.snoozeOwned && !sim.snoozeUsed && !sim.failure && !sim.delivered) {
       hudPanel(g, 14, 831, 204, 45, '#c8a4ff');
-      label(g, 'Double-tap · Snooze Ray', 116, 853, '750 13px system-ui', ctx.reducedMotion ? LIGHT : '#ddc8ff', 188);
+      label(g, tr().abduct.snoozeHint, 116, 853, '750 13px system-ui', ctx.reducedMotion ? LIGHT : '#ddc8ff', 188);
     }
   }
 

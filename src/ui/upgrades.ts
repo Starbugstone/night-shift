@@ -4,20 +4,21 @@ import type { Shell } from '../core/shell';
 import type { UpgradeId } from '../contracts';
 import { P_RING, P_STAR, P_TWINKLE, PC, Particles, easeOutBack } from '../core/fx';
 import { UPGRADES, buyUpgrade, canBuy } from '../levels/progress';
-import { drawGlorb, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text } from './draw';
+import { drawGlorb, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text, wrap } from './draw';
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
+import { fmt, tr } from '../i18n';
 
 const CARD_Y = 192;
 const CARD_H = 172;
 const GAP = 12;
 const BUY_W = 168;
 /** Where each upgrade does its work, shown as a tag on its card. */
-const WHERE: Record<UpgradeId, { label: string; color: string }> = {
-  beam_dampener: { label: 'IN THE ROOM', color: '#c8a4ff' },
-  hush_drive: { label: 'FLIGHT + ROOM', color: C.mint },
-  afterburner: { label: 'IN FLIGHT', color: C.amberHi },
-  snooze_ray: { label: 'IN THE ROOM', color: '#c8a4ff' },
+const WHERE: Record<UpgradeId, { label: 'whereRoom' | 'whereBoth' | 'whereFlight'; color: string }> = {
+  beam_dampener: { label: 'whereRoom', color: '#c8a4ff' },
+  hush_drive: { label: 'whereBoth', color: C.mint },
+  afterburner: { label: 'whereFlight', color: C.amberHi },
+  snooze_ray: { label: 'whereRoom', color: '#c8a4ff' },
 };
 
 export class UpgradesScene implements Scene {
@@ -56,7 +57,7 @@ export class UpgradesScene implements Scene {
       const owned = this.shell.save.upgrades.includes(u.id);
       b.visible = !owned;
       b.enabled = canBuy(this.shell.save, u.id);
-      b.label = b.enabled ? `Buy · ${u.price}` : `Need ${u.price}`;
+      b.label = fmt(b.enabled ? tr().shop.buy : tr().shop.need, { price: u.price });
       if (b.update(p, dt, this.shell.audio)) {
         const next = buyUpgrade(this.shell.save, u.id);
         if (next) {
@@ -81,8 +82,9 @@ export class UpgradesScene implements Scene {
     const { assets, save, ctx } = this.shell;
     drawNightSky(g, this.t, ctx.reducedMotion);
     this.back.render(g);
-    outlinedText(g, 'BEAM SHOP', VIEW_W / 2 + 20, 48, 40, C.mint);
-    text(g, 'Supplies for the discerning abductor', VIEW_W / 2 + 20, 82, 17, C.muted, 'center', 600, true);
+    const shop = tr().shop;
+    outlinedText(g, shop.title, VIEW_W / 2 + 20, 48, 40, C.mint, C.ink, 900, 'center', VIEW_W - 150);
+    text(g, shop.subtitle, VIEW_W / 2 + 20, 82, 17, C.muted, 'center', 600, true, VIEW_W - 150);
     panel(g, VIEW_W / 2 - 120, 112, 240, 64, C.panel, 32, C.ink, 3, 4);
     drawGlorb(g, assets, VIEW_W / 2 - 74, 144, 42);
     if (this.shownFor !== this.shown) {
@@ -91,7 +93,7 @@ export class UpgradesScene implements Scene {
     }
     text(g, this.shownText, VIEW_W / 2 - 44, 145, 28, this.shown !== save.glorbs ? C.amberHi : C.mint, 'left', 900);
     const nw = g.measureText(this.shownText).width;
-    text(g, 'Glorbs', VIEW_W / 2 - 34 + nw, 146, 18, C.muted, 'left', 700);
+    text(g, tr().common.glorbs, VIEW_W / 2 - 34 + nw, 146, 18, C.muted, 'left', 700);
 
     for (let i = 0; i < UPGRADES.length; i++) {
       const u = UPGRADES[i]!;
@@ -107,18 +109,24 @@ export class UpgradesScene implements Scene {
       if (!sprite(g, assets, u.icon, 82, y + 56 + bob, 76, 76)) this.fallbackIcon(g, u.id, 82, y + 56 + bob);
       // where it works
       const where = WHERE[u.id];
+      const whereLabel = shop[where.label];
+      const ut = shop.upgrades[u.id];
       g.font = '900 11px system-ui, sans-serif';
-      const ww = g.measureText(where.label).width + 16;
+      const ww = g.measureText(whereLabel).width + 16;
       roundRectPath(g, VIEW_W - 40 - ww, y + 12, ww, 20, 10);
       g.fillStyle = 'rgba(18,13,43,0.6)';
       g.fill();
       g.lineWidth = 1.5;
       g.strokeStyle = where.color;
       g.stroke();
-      text(g, where.label, VIEW_W - 40 - ww / 2, y + 23, 11, where.color, 'center', 900);
-      text(g, u.name, 140, y + 44, 25, C.text, 'left', 900);
-      text(g, u.effect, 140, y + 72, 16, C.mint, 'left', 800, false, VIEW_W - 190);
-      paragraph(g, u.desc, 42, y + 108, VIEW_W - 84 - BUY_W - 12, 14, C.muted, 19, 'left', 500, true);
+      text(g, whereLabel, VIEW_W - 40 - ww / 2, y + 23, 11, where.color, 'center', 900);
+      // the name stops short of the where-tag
+      text(g, ut.name, 140, y + 44, 25, C.text, 'left', 900, false, VIEW_W - 40 - ww - 12 - 140);
+      text(g, ut.effect, 140, y + 72, 16, C.mint, 'left', 800, false, VIEW_W - 190);
+      // the blurb gets the card's width below the button's top edge; a long one steps down a size
+      const descW = VIEW_W - 84 - BUY_W - 12;
+      const descSize = wrap(g, ut.desc, descW, 14, 500, true).length <= 3 ? 14 : 12.5;
+      paragraph(g, ut.desc, 42, y + 108, descW, descSize, C.muted, descSize === 14 ? 19 : 16, 'left', 500, true);
       if (owned) {
         g.save();
         g.translate(VIEW_W - 40 - BUY_W / 2, y + CARD_H - 38);
@@ -129,12 +137,12 @@ export class UpgradesScene implements Scene {
           g.scale(k, k);
         }
         panel(g, -78, -22, 156, 44, 'rgba(0,0,0,0)', 10, C.mint, 4, 0);
-        text(g, 'INSTALLED', 0, 2, 21, C.mint, 'center', 900);
+        text(g, shop.installed, 0, 2, 21, C.mint, 'center', 900, false, 140);
         g.restore();
       }
       this.buys[i]!.render(g);
     }
-    text(g, 'All sales final. Refunds are a human concept.', VIEW_W / 2, 940, 15, 'rgba(169,162,214,0.7)', 'center', 600, true);
+    text(g, shop.salesFinal, VIEW_W / 2, 940, 15, 'rgba(169,162,214,0.7)', 'center', 600, true, VIEW_W - 40);
     this.fx.draw(g);
   }
 
@@ -174,7 +182,7 @@ export class UpgradesScene implements Scene {
       }
       g.lineCap = 'butt';
     } else if (id === 'snooze_ray') {
-      text(g, 'Zz', cx, cy - 4, 30, C.mint, 'center', 900, true);
+      text(g, tr().shop.snoozeIcon, cx, cy - 4, 30, C.mint, 'center', 900, true);
       g.strokeStyle = C.mint;
       g.lineWidth = 3;
       g.beginPath();
@@ -190,7 +198,7 @@ export class UpgradesScene implements Scene {
       g.beginPath();
       g.ellipse(cx, cy - 8, 18, 14, 0, Math.PI, 0);
       g.fill();
-      text(g, 'shh', cx + 14, cy - 32, 18, C.amberHi, 'center', 900, true);
+      text(g, tr().shop.hushIcon, cx + 14, cy - 32, 18, C.amberHi, 'center', 900, true);
     }
   }
 }

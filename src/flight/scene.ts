@@ -1,7 +1,8 @@
 import type { FlightResult, GameContext, Scene, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { ART } from '../art-manifest';
-import { SPOTTED_CAPTIONS, SPOTTED_SHOUTS, ZIB_LINES, pick, type ZibEvent } from '../levels/humor';
+import { pick, zibLine, type ZibEvent } from '../levels/humor';
+import { fmt, gt, tr } from '../i18n';
 import type { NeonDef, PropDef, PropKind, RoadDef, TutorialLevelDef, VehicleDef } from '../levels/types';
 import { clamp, drawPortrait, easeOutBack, fmtTime, outlinedText, panel, paragraph, roundRectPath, text, wrap } from '../ui/draw';
 import { GLOW, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles, drawEdgeTint, drawGlow, drawShadow, drawVignette, easeInCubic, radialSprite } from '../core/fx';
@@ -200,7 +201,7 @@ export class FlightScene implements Scene {
 
   private say(evt: ZibEvent, force = false): void {
     if (!force && this.zibCd > 0) return;
-    this.zibText = pick(ZIB_LINES[evt], this.zibN++ + (evt.length % 2));
+    this.zibText = zibLine(evt, this.zibN++ + (evt.length % 2));
     this.zibT = 2.8;
     this.zibCd = 3.4;
   }
@@ -372,8 +373,8 @@ export class FlightScene implements Scene {
     if (this.sus.full) {
       this.state = 'spotted';
       this.st = 0;
-      this.caption = pick(SPOTTED_CAPTIONS, Math.random() * 1000);
-      this.shout = pick(SPOTTED_SHOUTS, Math.random() * 1000);
+      this.caption = pick(tr().humor.spottedCaptions, Math.random() * 1000);
+      this.shout = pick(tr().humor.spottedShouts, Math.random() * 1000);
       this.ctx.audio.sfx('spotted');
       return;
     }
@@ -568,8 +569,8 @@ export class FlightScene implements Scene {
       g.stroke();
       g.setLineDash(NO_DASH);
       g.globalAlpha = 1;
-      if (this.inBark) outlinedText(g, 'WOOF!', d.x, d.y - 50, 26, C.amberHi, C.ink, 900);
-      else if (peak > 0.85) text(g, 'woof?', d.x + 34, d.y - 34, 18, C.amberHi, 'center', 800, true);
+      if (this.inBark) outlinedText(g, tr().flight.woof, d.x, d.y - 50, 26, C.amberHi, C.ink, 900);
+      else if (peak > 0.85) text(g, tr().flight.woofQ, d.x + 34, d.y - 34, 18, C.amberHi, 'center', 800, true);
       else {
         g.globalAlpha = 0.8;
         text(g, 'z', d.x + 28, d.y - 28 - ((t * 12) % 14), 18, C.text, 'center', 800);
@@ -668,17 +669,19 @@ export class FlightScene implements Scene {
   private drawNeon(g: CanvasRenderingContext2D, n: NeonDef, index: number): void {
     const on = neonOn(this.hazT);
     const rm = this.ctx.reducedMotion;
-    const len = n.text.length;
+    // the sign's word in the current language (the map keeps the English one as its id)
+    const word = gt(n.text);
+    const len = word.length;
     g.font = font(26, 900);
     let xs = this.neonX[index];
     if (!xs) {
       // letter centres, laid out from the measured advance of each glyph
       xs = new Float32Array(len);
       let total = 0;
-      for (let i = 0; i < len; i++) total += g.measureText(n.text[i]!).width + 3;
+      for (let i = 0; i < len; i++) total += g.measureText(word[i]!).width + 3;
       let x = -total / 2;
       for (let i = 0; i < len; i++) {
-        const w = g.measureText(n.text[i]!).width + 3;
+        const w = g.measureText(word[i]!).width + 3;
         xs[i] = x + w / 2;
         x += w;
       }
@@ -702,10 +705,10 @@ export class FlightScene implements Scene {
         g.globalCompositeOperation = 'source-over';
         g.lineWidth = 4;
         g.strokeStyle = '#ff4fc8';
-        g.strokeText(n.text[i]!, lx, n.y + 1);
+        g.strokeText(word[i]!, lx, n.y + 1);
         g.fillStyle = '#ffe6f7';
       } else g.fillStyle = on ? '#8a4a80' : '#5a3a5a';
-      g.fillText(n.text[i]!, lx, n.y + 1);
+      g.fillText(word[i]!, lx, n.y + 1);
     }
   }
 
@@ -767,7 +770,7 @@ export class FlightScene implements Scene {
     const rm = this.ctx.reducedMotion;
 
     // shared HUD row: quit · suspicion · time
-    hudButton(g, this.quit, 'close', 'QUIT', this.quit.pressedDown);
+    hudButton(g, this.quit, 'close', tr().common.quit, this.quit.pressedDown);
     const f = this.fuse;
     f.value = this.sus.value;
     f.exposed = this.exposed && this.state === 'fly';
@@ -787,8 +790,9 @@ export class FlightScene implements Scene {
       const a = clamp(Math.min(this.time * 4, (2.4 - this.time) * 2), 0, 1);
       g.globalAlpha = a;
       hudPanel(g, 60, 100 - (rm ? 0 : (1 - a) * 14), VIEW_W - 120, 70, C.mint);
-      text(g, `WORK ORDER #000${this.level.num}`, VIEW_W / 2, 122, 15, C.mint, 'center', 900);
-      text(g, this.level.map.theme === 'farm' ? 'Collect: Farmer Doyle' : 'Collect: Laundromat Larry', VIEW_W / 2, 148, 21, C.text, 'center', 800);
+      const fl = tr().flight;
+      text(g, fmt(fl.orderNo, { num: this.level.num }), VIEW_W / 2, 122, 15, C.mint, 'center', 900, false, VIEW_W - 150);
+      text(g, fmt(fl.collect, { name: tr().levels[this.level.id].collect }), VIEW_W / 2, 148, 21, C.text, 'center', 800, false, VIEW_W - 150);
       g.globalAlpha = 1;
     }
 
@@ -816,12 +820,13 @@ export class FlightScene implements Scene {
       g.strokeStyle = C.ink;
       g.stroke();
       g.restore();
-      text(g, 'specimen', ex, ey + (Math.sin(ang) < 0 ? 34 : -34), 15, C.mint, 'center', 800);
+      text(g, tr().flight.specimen, ex, ey + (Math.sin(ang) < 0 ? 34 : -34), 15, C.mint, 'center', 800);
     }
 
     // tutorial prompt
     if (this.ctx.tutorial && this.tutStep < 3 && this.state === 'fly') {
-      const msg = this.tutStep === 0 ? 'Drag anywhere to fly' : this.tutStep === 1 ? 'Let go to hover' : 'Hover in a ring for 1 s to lock on';
+      const fl = tr().flight;
+      const msg = this.tutStep === 0 ? fl.tutDrag : this.tutStep === 1 ? fl.tutRelease : fl.tutHold;
       hudPrompt(g, VIEW_W / 2, FLIGHT_HUD.tutY, FLIGHT_HUD.tutH, msg, 24, this.tutStep === 0 ? 'drag' : this.tutStep === 1 ? 'release' : 'hold', t, rm, 510);
     }
 
@@ -865,21 +870,23 @@ export class FlightScene implements Scene {
     g.translate(VIEW_W / 2, 220);
     g.rotate(-0.08);
     g.scale(pop, pop);
-    outlinedText(g, 'SPOTTED!', 0, 0, 86, C.amberHi, C.ink, 900);
+    outlinedText(g, tr().flight.spotted, 0, 0, 86, C.amberHi, C.ink, 900, 'center', VIEW_W - 60);
     g.restore();
     if (st > 0.3) {
-      panel(g, 50, 290, VIEW_W - 100, 96, C.paper, 18, C.ink, 3, 4);
-      paragraph(g, this.caption, 70, 302, VIEW_W - 140, 20, C.paperInk, 26, 'center', 700, true);
-      text(g, `Times spotted tonight: ${this.spotted + 1}`, VIEW_W / 2, 410, 17, C.muted, 'center', 800);
+      // three lines fit; a longer caption (French) steps down a size rather than spill
+      const size = wrap(g, this.caption, VIEW_W - 140, 20, 700, true).length <= 3 ? 20 : 17;
+      paragraph(g, this.caption, 70, 302, VIEW_W - 140, size, C.paperInk, size === 20 ? 26 : 21, 'center', 700, true);
+      text(g, fmt(tr().flight.timesSpotted, { n: this.spotted + 1 }), VIEW_W / 2, 410, 17, C.muted, 'center', 800, false, VIEW_W - 80);
     }
     // Retry prompt: a pill at the bottom, drawn over the witness so the shout bubble can't hide it.
     if (st > 0.9) {
       const a = rm ? 1 : 0.75 + 0.25 * Math.sin(t * 5);
       g.font = font(26, 900);
-      const w = g.measureText('Tap to try again').width + 64;
+      const tap = tr().flight.tapRetry;
+      const w = Math.min(VIEW_W - 40, g.measureText(tap).width + 64);
       panel(g, (VIEW_W - w) / 2, SPOTTED_RETRY_Y - 32, w, 64, C.ink, 32, C.mint, 3, 4);
       g.globalAlpha = a;
-      text(g, 'Tap to try again', VIEW_W / 2, SPOTTED_RETRY_Y + 1, 26, C.mint, 'center', 900);
+      text(g, tap, VIEW_W / 2, SPOTTED_RETRY_Y + 1, 26, C.mint, 'center', 900, false, w - 40);
       g.globalAlpha = 1;
     }
   }

@@ -7,7 +7,13 @@ import {
 import { HUD_ROW, hudButton, hudMeter, hudPrompt, hudTimer, type MeterState } from '../ui/hud';
 import { clamp, Joint, type Ragdoll } from './ragdoll';
 import type { AbductSimulation } from './simulation';
+import type { TurnControl } from './turn';
+import { drawTurnButtons, drawTurnTell } from './turn-draw';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Human, type Sprite } from './rooms/layout';
+import { getLang, gt, tr } from '../i18n';
+
+/** Art with English words painted in: other languages draw the primitive fallback instead. */
+const ENGLISH_LETTERED: ReadonlySet<string> = new Set(['room/sign_no_sleeping']);
 
 /** Restart button (top-right of the shared HUD row). */
 export const RESTART = { x: 422, y: HUD_ROW.y, w: 104, h: HUD_ROW.h };
@@ -199,8 +205,8 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
       g.fillStyle = INK;
       g.font = 'bold 17px system-ui';
       g.textAlign = 'center';
-      g.fillText('NO SLEEPING', w / 2, 30);
-      g.fillText('ON DUTY', w / 2, 52);
+      g.fillText(tr().abduct.noSleeping, w / 2, 30, w - 16);
+      g.fillText(tr().abduct.onDuty, w / 2, 52, w - 16);
       break;
     case 'room/coffee_mug':
       ellipse(g, 24, 14, 5, 7, '#d6c0a5', INK);
@@ -214,7 +220,7 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
     case 'ui/zzz':
       g.fillStyle = MINT;
       g.font = 'bold 24px system-ui';
-      g.fillText('Zzz', 1, 27);
+      g.fillText(tr().abduct.zzz, 1, 27);
       break;
     case 'ui/dream_sheep':
       ellipse(g, 27, 27, 21, 14, '#e8e2db', INK);
@@ -330,6 +336,8 @@ export class AbductView {
   private clock = '0:00';
   private measuredMumble = '';
   private mumbleWidth = 0;
+  /** The mumble in the current language (the sim keeps the English line as its id). */
+  private shownMumble = '';
   private readonly lights: Light[] = [];
   private warmGlow: HTMLCanvasElement | null = null;
   private coolGlow: HTMLCanvasElement | null = null;
@@ -377,7 +385,7 @@ export class AbductView {
     }
   }
 
-  render(g: CanvasRenderingContext2D, tutorial: boolean, dragging: boolean): void {
+  render(g: CanvasRenderingContext2D, tutorial: boolean, dragging: boolean, turn?: TurnControl, turnHint?: string): void {
     const { sim, ctx } = this;
     const { room, body } = sim;
     const dt = this.lastTime < 0 ? 0 : clamp(ctx.time - this.lastTime, 0, 0.05);
@@ -465,7 +473,7 @@ export class AbductView {
       g.globalCompositeOperation = 'source-over';
     } else {
       this.sleepEffects(g);
-      this.reticle(g, dragging);
+      this.reticle(g, dragging, turn);
     }
     this.fx.draw(g);
     g.restore();
@@ -477,7 +485,7 @@ export class AbductView {
       g.fillRect(0, 0, VIEW_W, VIEW_H);
       g.globalAlpha = 1;
     }
-    this.hud(g, tutorial);
+    this.hud(g, tutorial, turn, turnHint);
     g.restore();
   }
 
@@ -560,7 +568,8 @@ export class AbductView {
   }
 
   private sprite(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number): void {
-    const image = this.ctx.assets.get(key);
+    // art lettered in English gives way to the drawn fallback in other languages
+    const image = getLang() !== 'en' && ENGLISH_LETTERED.has(key) ? undefined : this.ctx.assets.get(key);
     if (image) g.drawImage(image, x, y, w, h);
     else fallback(g, key, x, y, w, h);
   }
@@ -820,9 +829,10 @@ export class AbductView {
     g.restore();
   }
 
-  private reticle(g: CanvasRenderingContext2D, dragging: boolean): void {
+  private reticle(g: CanvasRenderingContext2D, dragging: boolean, turn: TurnControl | undefined): void {
     const { beamX, beamY } = this.sim.body;
     const radius = dragging ? 24 : 19;
+    if (turn) drawTurnTell(g, beamX, beamY, radius, turn, this.sim.body.tilt, this.ctx.reducedMotion);
     const spin = this.ctx.reducedMotion ? 0 : this.sim.elapsed * 1.4;
     g.save();
     g.translate(beamX, beamY);
@@ -914,7 +924,8 @@ export class AbductView {
     g.font = MUMBLE_FONT;
     if (mumble !== this.measuredMumble) {
       this.measuredMumble = mumble;
-      this.mumbleWidth = Math.min(VIEW_W - 44, Math.ceil(g.measureText(mumble).width) + pad * 2);
+      this.shownMumble = gt(mumble);
+      this.mumbleWidth = Math.min(VIEW_W - 44, Math.ceil(g.measureText(this.shownMumble).width) + pad * 2);
     }
     const w = this.mumbleWidth;
     const left = clamp(x - w / 2, 22, VIEW_W - 22 - w);
@@ -955,7 +966,7 @@ export class AbductView {
     g.fillStyle = INK;
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
-    g.fillText(mumble, left + w / 2, top + 27, w - pad * 2);
+    g.fillText(this.shownMumble, left + w / 2, top + 27, w - pad * 2);
     g.restore();
   }
 
@@ -991,7 +1002,7 @@ export class AbductView {
     g.restore();
   }
 
-  private hud(g: CanvasRenderingContext2D, tutorial: boolean): void {
+  private hud(g: CanvasRenderingContext2D, tutorial: boolean, turn: TurnControl | undefined, turnHint: string | undefined): void {
     const { wake, elapsed, body } = this.sim;
     const { ctx } = this;
     const second = Math.floor(elapsed);
@@ -1000,7 +1011,8 @@ export class AbductView {
       this.clock = Math.floor(second / 60) + ':' + String(second % 60).padStart(2, '0');
     }
     const m = this.meter;
-    m.label = body.gripActive ? 'HOLDING ON!' : wake.awake > 0 ? 'AWAKE!' : 'WAKE';
+    const ab = tr().abduct;
+    m.label = body.gripActive ? ab.holdingOn : wake.awake > 0 ? ab.awake : ab.wake;
     m.value = wake.value / 100;
     m.alarm = wake.awake > 0;
     m.flash = this.meterFlash;
@@ -1008,9 +1020,11 @@ export class AbductView {
     m.reduced = ctx.reducedMotion;
     hudMeter(g, METER.x, METER.y, METER.w, METER.h, m);
     hudTimer(g, TIMER.x, TIMER.y, TIMER.w, TIMER.h, this.clock);
-    hudButton(g, RESTART, 'restart', 'RESTART', false);
+    hudButton(g, RESTART, 'restart', tr().common.restart, false);
+    if (turn && !this.sim.delivered) drawTurnButtons(g, turn);
 
-    if (body.gripActive) hudPrompt(g, VIEW_W / 2, 909, 54, 'Shake the beam to break their grip!', 20, 'shake', ctx.time, ctx.reducedMotion, 480);
-    else if (tutorial) hudPrompt(g, VIEW_W / 2, 909, 54, 'Drag to move the beam — gently!', 21, 'drag', ctx.time, ctx.reducedMotion, 480);
+    if (body.gripActive) hudPrompt(g, VIEW_W / 2, 909, 54, ab.shakeGrip, 20, 'shake', ctx.time, ctx.reducedMotion, 480);
+    else if (tutorial) hudPrompt(g, VIEW_W / 2, 909, 54, ab.dragBeam, 21, 'drag', ctx.time, ctx.reducedMotion, 480);
+    else if (turnHint) hudPrompt(g, VIEW_W / 2, 909, 54, turnHint, 21, 'drag', ctx.time, ctx.reducedMotion, 480);
   }
 }

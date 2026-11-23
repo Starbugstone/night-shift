@@ -1,6 +1,7 @@
 import type { RoomId } from '../contracts';
 import { LEVEL3, LEVEL4 } from './deep-levels';
 import type { DeepLevelDef, LevelDef, LockedCard, TutorialLevelDef } from './types';
+import { en } from '../i18n/en';
 
 const PI = Math.PI;
 
@@ -10,18 +11,12 @@ export const LEVELS: readonly LevelDef[] = [
     mugshot: 'human/doyle_head',
     id: 'level1',
     num: 1,
-    title: 'Farmer Doyle Sleeps Like a Log',
-    location: 'Doyle Farm · Route 9',
-    blurb: 'Big man. Bigger snore. Light-sleeper dog.',
-    human: 'Farmer Doyle',
+    title: en.levels.level1.title,
+    location: en.levels.level1.location,
+    blurb: en.levels.level1.blurb,
+    human: en.levels.level1.human,
     parSec: 42,
-    memo: {
-      re: 'Work Order #0001 — Farmer Doyle',
-      body:
-        'Welcome to the night shift, Zib. Your first specimen is Farmer Doyle, 58: sleeps like a log, snores like a chainsaw. Avoid the pickup\'s headlights and the dog by the porch. The dog is a light sleeper and a heavy gossip.',
-      joke:
-        'Reminder: specimens must arrive undamaged, unbruised and ideally unaware. Last quarter\'s intern returned a man still holding his toaster.',
-    },
+    memo: { re: en.levels.level1.re, body: en.levels.level1.body, joke: en.levels.level1.joke },
     map: {
       theme: 'farm',
       w: 1080,
@@ -97,18 +92,12 @@ export const LEVELS: readonly LevelDef[] = [
     mugshot: 'human/larry_head',
     id: 'level2',
     num: 2,
-    title: 'Laundromat Larry, Night Attendant',
-    location: 'Spin City Laundromat · Main St',
-    blurb: 'Asleep in a rolling chair. Holding coffee.',
-    human: 'Larry',
+    title: en.levels.level2.title,
+    location: en.levels.level2.location,
+    blurb: en.levels.level2.blurb,
+    human: en.levels.level2.human,
     parSec: 48,
-    memo: {
-      re: 'Work Order #0002 — Laundromat Larry',
-      body:
-        'Larry is the night attendant at Spin City Laundromat. He has been asleep on duty for six years; we admire the commitment. Avoid the delivery van. The diner\'s neon sign scrambles steering. Power lines are solid. I cannot stress this enough.',
-      joke:
-        'If Larry\'s coffee mug comes along, log it as an "Earth artefact". Do not drink it. We still don\'t know what decaf is.',
-    },
+    memo: { re: en.levels.level2.re, body: en.levels.level2.body, joke: en.levels.level2.joke },
     map: {
       theme: 'town',
       w: 1080,
@@ -189,23 +178,8 @@ export const LEVELS: readonly LevelDef[] = [
   LEVEL4,
 ];
 
-export const LOCKED_CARDS: readonly LockedCard[] = [
-  {
-    title: 'The Gym Bro',
-    requires: 'Requires: Beam Strength II',
-    blurb: 'Bench-presses 140 kg. Mostly protein shake by weight.',
-  },
-  {
-    title: "Grandma's Bingo Night",
-    requires: 'Requires: Hearing Aid Jammer',
-    blurb: 'Forty grandmas. One of them is armed with a dabber.',
-  },
-  {
-    title: 'A Whole Cruise Ship',
-    requires: 'Requires: A Much Bigger Saucer',
-    blurb: 'Budget approved by nobody. Buffet included.',
-  },
-];
+/** Coming-soon cards (English; shown via tr().lockedCards). */
+export const LOCKED_CARDS: readonly LockedCard[] = en.lockedCards;
 
 export function isDeep(l: LevelDef): l is DeepLevelDef {
   return l.kind === 'deep';

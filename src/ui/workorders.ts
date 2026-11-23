@@ -2,7 +2,8 @@ import type { Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS, LOCKED_CARDS } from '../levels/levels';
-import { MAX_STARS, isLevelUnlocked, nextRank, rankFor, totalStars } from '../levels/progress';
+import { MAX_STARS, RANKS, isLevelUnlocked, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
+import { fmt, langVersion, tr } from '../i18n';
 import { GLOW, drawGlow, easeOutCubic } from '../core/fx';
 import { clamp, drawGlorb, drawStar, fmtTime, headKey, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text, wrap } from './draw';
 import { C, font } from './theme';
@@ -14,11 +15,10 @@ const CARD_W = VIEW_W - 48;
 const CARD_H = 184;
 const GAP = 20;
 
-const LOCK_TOASTS = [
-  'Vrell: "Paperwork pending."',
-  'Vrell: "That work order is above your pay grade. You have no pay grade."',
-  'Vrell: "Denied. Please enjoy this padlock."',
-];
+/** Rank title and flavour in the current language. */
+function rankText(r: Rank): { title: string; flavour: string } {
+  return tr().ranks[RANKS.indexOf(r)] ?? r;
+}
 
 interface Card {
   kind: 'level' | 'teaser';
@@ -39,7 +39,7 @@ export class WorkOrdersScene implements Scene {
   private toastT = 0;
   private toastN = 0;
   private readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
-  private readonly upgrades = new Button(336, 186, 180, 60, 'Upgrades', 'amber', 24);
+  private readonly upgrades = new Button(336, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
   private readonly cards: Card[] = [];
   private headerGrad: CanvasGradient | null = null;
 
@@ -111,8 +111,12 @@ export class WorkOrdersScene implements Scene {
     }
     card.shake = 1;
     this.shell.audio.sfx('bonk', 0.4);
+    const w = tr().workOrders;
+    const prev = LEVELS[card.index - 1];
     this.toast =
-      card.kind === 'level' ? `Deliver ${LEVELS[card.index - 1]?.human ?? 'the last specimen'} first.` : LOCK_TOASTS[this.toastN++ % LOCK_TOASTS.length]!;
+      card.kind === 'level'
+        ? fmt(w.deliverFirst, { name: prev ? tr().levels[prev.id].human : w.lastSpecimen })
+        : w.lockToasts[this.toastN++ % w.lockToasts.length]!;
     this.toastT = 2.4;
   }
 
@@ -153,15 +157,17 @@ export class WorkOrdersScene implements Scene {
     g.fillStyle = 'rgba(124,255,203,0.25)';
     g.fillRect(0, LIST_TOP - 8, VIEW_W, 2);
     this.back.render(g);
-    outlinedText(g, 'WORK ORDERS', VIEW_W / 2 + 20, 48, 38, C.mint);
-    text(g, 'Tonight\'s specimens · tap to open', VIEW_W / 2 + 20, 80, 17, C.muted, 'center', 600);
+    const w = tr().workOrders;
+    // clear of the back button on the left
+    outlinedText(g, w.title, VIEW_W / 2 + 20, 48, 38, C.mint, C.ink, 900, 'center', VIEW_W - 150);
+    text(g, w.subtitle, VIEW_W / 2 + 20, 80, 17, C.muted, 'center', 600, false, VIEW_W - 150);
 
     const stars = totalStars(save);
-    const rank = rankFor(stars);
+    const rank = rankText(rankFor(stars));
     panel(g, 24, 100, VIEW_W - 48, 76, C.panel, 18, C.ink, 3, 4);
     panelHighlight(g, 24, 100, VIEW_W - 48, 18);
-    text(g, 'RANK', 44, 120, 14, C.muted, 'left', 800);
-    text(g, rank.title, 44, 146, rank.title.length > 16 ? 22 : 26, C.text, 'left', 800);
+    text(g, w.rank, 44, 120, 14, C.muted, 'left', 800);
+    text(g, rank.title, 44, 146, rank.title.length > 16 ? 22 : 26, C.text, 'left', 800, false, 384 - 44 - 12);
     // glorb purse, set into the rank panel
     roundRectPath(g, 384, 114, 118, 48, 24);
     g.fillStyle = 'rgba(18,13,43,0.55)';
@@ -171,9 +177,9 @@ export class WorkOrdersScene implements Scene {
     const nr = nextRank(stars);
     // Left column under the rank panel stops short of the Upgrades button.
     const colW = this.upgrades.x - 44 - 12;
-    text(g, `★ ${stars}/${MAX_STARS}`, 44, 198, 22, C.amberHi, 'left', 800);
+    text(g, fmt(w.stars, { n: stars, max: MAX_STARS }), 44, 198, 22, C.amberHi, 'left', 800);
     if (nr) {
-      text(g, `Next rank at ★${nr.minStars}`, 44, 224, 15, C.muted, 'left', 700);
+      text(g, fmt(w.nextRank, { n: nr.minStars }), 44, 224, 15, C.muted, 'left', 700, false, colW);
       text(g, rank.flavour, 44, 244, 14, 'rgba(169,162,214,0.8)', 'left', 600, true, colW);
     } else text(g, rank.flavour, 44, 232, 15, C.muted, 'left', 600, true, colW);
     this.upgrades.render(g);
@@ -194,6 +200,8 @@ export class WorkOrdersScene implements Scene {
     const lv = LEVELS[i]!;
     const unlocked = isLevelUnlocked(save, i);
     const prog = save.levels[lv.id];
+    const w = tr().workOrders;
+    const lt = tr().levels[lv.id];
     panel(g, x, y, CARD_W, CARD_H, unlocked ? C.panel : '#211a4a', 22, C.ink, 4, 6);
     panelHighlight(g, x, y, CARD_W, 22, unlocked ? 0.14 : 0.07);
     const training = lv.kind === 'tutorial';
@@ -215,10 +223,11 @@ export class WorkOrdersScene implements Scene {
       this.mugshot(g, headKey(tg[1].short), cx + 24, cy - 16, unlocked, i + 1, 25);
       this.mugshot(g, headKey(tg[2].short), cx - 2, cy + 24, unlocked, i + 2, 25);
     } else this.mugshot(g, lv.mugshot, x + CARD_W - 62, y + 58, unlocked, i, 38);
-    text(g, `WORK ORDER #000${lv.num}`, x + 34, y + 26, 14, unlocked ? C.mint : C.muted, 'left', 800);
+    const orderNo = fmt(w.orderNo, { num: lv.num });
+    text(g, orderNo, x + 34, y + 26, 14, unlocked ? C.mint : C.muted, 'left', 800);
     g.font = font(14, 800);
-    const tagX = x + 44 + g.measureText(`WORK ORDER #000${lv.num}`).width;
-    const tag = training ? 'TRAINING' : 'DEEP SHIFT ×3';
+    const tagX = x + 44 + g.measureText(orderNo).width;
+    const tag = training ? w.training : w.deepShift;
     g.font = font(13, 900);
     const tw = g.measureText(tag).width + (training ? 40 : 18);
     roundRectPath(g, tagX, y + 14, tw, 24, 12);
@@ -232,16 +241,16 @@ export class WorkOrdersScene implements Scene {
       roundRectPath(g, tagX + 6, y + 18, 17, 16, 3);
       g.fillStyle = '#f4efe2';
       g.fill();
-      text(g, 'L', tagX + 14.5, y + 27, 13, '#d33a52', 'center', 900);
+      text(g, w.learner, tagX + 14.5, y + 27, 13, '#d33a52', 'center', 900);
     }
     text(g, tag, tagX + (training ? 28 : 9), y + 27, 13, training ? C.mint : '#ffa3b0', 'left', 900);
-    const titleLines = wrap(g, lv.title, CARD_W - 150, 24, 800);
+    const titleLines = wrap(g, lt.title, CARD_W - 150, 24, 800);
     g.font = font(24, 800);
     g.fillStyle = unlocked ? C.text : C.muted;
     g.textAlign = 'left';
     for (let k = 0; k < Math.min(2, titleLines.length); k++) g.fillText(titleLines[k]!, x + 34, y + 56 + k * 28);
     const ty = y + 56 + Math.min(2, titleLines.length) * 28;
-    text(g, unlocked ? lv.location : 'LOCKED', x + 34, ty, 16, unlocked ? C.muted : C.amber, 'left', 700);
+    text(g, unlocked ? lt.location : w.locked, x + 34, ty, 16, unlocked ? C.muted : C.amber, 'left', 700, false, CARD_W - 150);
     if (unlocked) {
       for (let s = 0; s < 3; s++) drawStar(g, assets, x + 52 + s * 44, y + CARD_H - 32, 38, prog.stars[s] === true);
       if (lv.kind === 'deep') {
@@ -266,8 +275,8 @@ export class WorkOrdersScene implements Scene {
         g.arc(sx, sy, 5.5, 0, Math.PI * 2);
         g.fillStyle = C.amberHi;
         g.fill();
-      } else text(g, `Par ${fmtTime(lv.parSec)}`, x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
-      text(g, prog.bestTimeSec !== null ? `Best ${fmtTime(prog.bestTimeSec)}` : 'Not yet attempted', x + CARD_W - 24, y + CARD_H - 22, 15, C.amberHi, 'right', 600);
+      } else text(g, fmt(w.par, { time: fmtTime(lv.parSec) }), x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
+      text(g, prog.bestTimeSec !== null ? fmt(w.best, { time: fmtTime(prog.bestTimeSec) }) : w.notAttempted, x + CARD_W - 24, y + CARD_H - 22, 15, C.amberHi, 'right', 600);
       // "open" badge on the mugshot
       const pulse = this.shell.ctx.reducedMotion ? 0 : Math.sin(this.t * 4 + i) * 2;
       const bx = x + CARD_W - 34;
@@ -294,12 +303,13 @@ export class WorkOrdersScene implements Scene {
       g.lineCap = 'butt';
     } else {
       this.padlock(g, x + CARD_W - 34, y + 84);
-      text(g, `Deliver ${LEVELS[i - 1]?.human ?? '…'} to unlock`, x + 34, y + CARD_H - 30, 17, C.amberHi, 'left', 700);
+      const prev = LEVELS[i - 1];
+      text(g, fmt(w.deliverToUnlock, { name: prev ? tr().levels[prev.id].human : '…' }), x + 34, y + CARD_H - 30, 17, C.amberHi, 'left', 700, false, CARD_W - 110);
     }
   }
 
   private teaserCard(g: CanvasRenderingContext2D, i: number, x: number, y: number): void {
-    const c = LOCKED_CARDS[i]!;
+    const c = tr().lockedCards[i] ?? LOCKED_CARDS[i]!;
     panel(g, x, y, CARD_W, CARD_H, '#1a1440', 22, C.ink, 4, 6);
     g.save();
     roundRectPath(g, x, y, CARD_W, CARD_H, 22);
@@ -313,9 +323,9 @@ export class WorkOrdersScene implements Scene {
       g.stroke();
     }
     g.restore();
-    text(g, 'CLASSIFIED', x + 34, y + 26, 14, C.red, 'left', 900);
-    text(g, c.title, x + 34, y + 60, 24, C.muted, 'left', 800);
-    text(g, c.requires, x + 34, y + 92, 17, C.amber, 'left', 700);
+    text(g, tr().workOrders.classified, x + 34, y + 26, 14, C.red, 'left', 900);
+    text(g, c.title, x + 34, y + 60, 24, C.muted, 'left', 800, false, CARD_W - 120);
+    text(g, c.requires, x + 34, y + 92, 17, C.amber, 'left', 700, false, CARD_W - 120);
     paragraph(g, c.blurb, x + 34, y + 110, CARD_W - 140, 16, 'rgba(169,162,214,0.85)', 22, 'left', 500, true);
     this.padlock(g, x + CARD_W - 58, y + 52);
   }
@@ -367,12 +377,13 @@ export class WorkOrdersScene implements Scene {
     }
   }
 
-  private readonly sunriseLabels = new Map<number, string>();
+  private readonly sunriseLabels = new Map<string, string>();
   private sunriseLabel(sec: number): string {
-    let s = this.sunriseLabels.get(sec);
+    const key = `${langVersion()}|${sec}`;
+    let s = this.sunriseLabels.get(key);
     if (!s) {
-      s = `Sunrise in ${fmtTime(sec)}`;
-      this.sunriseLabels.set(sec, s);
+      s = fmt(tr().workOrders.sunriseIn, { time: fmtTime(sec) });
+      this.sunriseLabels.set(key, s);
     }
     return s;
   }

@@ -2,6 +2,7 @@
 // indigo pill panels with an ink outline, a small drop shadow and an inner top highlight.
 import { roundRectPath, text } from './draw';
 import { C, font } from './theme';
+import { fmt, getLang, langVersion, num, tr } from '../i18n';
 
 const PANEL_FILL = 'rgba(38,30,88,0.93)';
 const TRACK = '#120d2b';
@@ -165,7 +166,7 @@ const COLON_W = 8;
 /** Timer chip. Digits sit in fixed cells so the clock doesn't shimmy as numbers change. */
 export function hudTimer(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: string): void {
   hudPanel(g, x, y, w, h);
-  text(g, 'TIME', x + w / 2, y + 19, 13, C.muted, 'center', 900);
+  text(g, tr().hud.time, x + w / 2, y + 19, 13, C.muted, 'center', 900, false, w - 12);
   let total = 0;
   for (let i = 0; i < time.length; i++) total += time.charCodeAt(i) === 58 ? COLON_W : DIGIT_W;
   let cx = x + w / 2 - total / 2;
@@ -180,7 +181,8 @@ export function hudTimer(g: CanvasRenderingContext2D, x: number, y: number, w: n
   }
 }
 
-export type HudIcon = 'close' | 'restart';
+/** `turn_left` / `turn_right`: anticlockwise / clockwise arc arrows (abduction rotate buttons). */
+export type HudIcon = 'close' | 'restart' | 'turn_left' | 'turn_right';
 
 /** Square-ish HUD button: vector icon over a tiny caps label. */
 export function hudButton(g: CanvasRenderingContext2D, r: HudRect, icon: HudIcon, label: string, pressed: boolean): void {
@@ -199,6 +201,26 @@ export function hudButton(g: CanvasRenderingContext2D, r: HudRect, icon: HudIcon
     g.moveTo(cx + 8, cy - 8);
     g.lineTo(cx - 8, cy + 8);
     g.stroke();
+  } else if (icon === 'turn_left' || icon === 'turn_right') {
+    // an arc over the top, head at the leading end; anticlockwise is the mirror image
+    g.save();
+    if (icon === 'turn_left') {
+      g.translate(cx * 2, 0);
+      g.scale(-1, 1);
+    }
+    const end = -0.12;
+    g.arc(cx, cy + 3, 11, Math.PI + 0.12, Math.PI * 2 + end);
+    g.stroke();
+    const ax = cx + Math.cos(end) * 11;
+    const ay = cy + 3 + Math.sin(end) * 11;
+    g.fillStyle = C.text;
+    g.beginPath();
+    g.moveTo(ax - 6.5, ay - 1);
+    g.lineTo(ax + 6.5, ay - 1);
+    g.lineTo(ax, ay + 7);
+    g.closePath();
+    g.fill();
+    g.restore();
   } else {
     g.arc(cx, cy, 9.5, -0.35, Math.PI * 1.45);
     g.stroke();
@@ -276,8 +298,11 @@ export interface FuseState {
 /** "0.0" .. "2.0", so the countdown never builds a string per frame. */
 const TENTHS: string[] = [];
 for (let i = 0; i <= 20; i++) TENTHS.push((i / 10).toFixed(1));
+/** The same with a decimal comma (French). */
+const TENTHS_COMMA = TENTHS.map((s) => s.replace('.', ','));
 let fuseCaption = '';
 let fuseCaptionFor = -1;
+let fuseCaptionLang = -1;
 
 /**
  * Suspicion as a 1-second fuse: an eye that opens as the meter fills, a fuse cord that burns
@@ -357,16 +382,19 @@ export function hudFuse(g: CanvasRenderingContext2D, x: number, y: number, w: nu
   }
 
   const burning = v > 0.005;
-  text(g, f.exposed ? 'SEEN!' : burning ? 'COOLING…' : 'SUSPICION', px + 74, y + 18, f.exposed ? 17 : 14, f.exposed ? '#ffd9de' : burning ? C.amberHi : C.muted, 'left', 900);
+  const hs = tr().hud;
+  // the label keeps clear of the digits / fuse caption at the right end
+  text(g, f.exposed ? hs.seen : burning ? hs.cooling : hs.suspicion, px + 74, y + 18, f.exposed ? 17 : 14, f.exposed ? '#ffd9de' : burning ? C.amberHi : C.muted, 'left', 900, false, x + w - px - 74 - 76);
   if (burning) {
     // seconds left before SPOTTED, in tenths
     const left = Math.max(0, Math.min(20, Math.ceil((1 - v) * f.seconds * 10)));
-    text(g, TENTHS[left]!, px + w - 30, y + 19, 22, f.exposed ? '#ffffff' : C.amberHi, 'right', 900);
-    text(g, 's', px + w - 15, y + 21, 14, f.exposed ? '#ffd9de' : C.amberHi, 'right', 900);
+    text(g, (getLang() === 'fr' ? TENTHS_COMMA : TENTHS)[left]!, px + w - 30, y + 19, 22, f.exposed ? '#ffffff' : C.amberHi, 'right', 900);
+    text(g, hs.seconds, px + w - 15, y + 21, 14, f.exposed ? '#ffd9de' : C.amberHi, 'right', 900);
   } else {
-    if (fuseCaptionFor !== f.seconds) {
+    if (fuseCaptionFor !== f.seconds || fuseCaptionLang !== langVersion()) {
       fuseCaptionFor = f.seconds;
-      fuseCaption = `${f.seconds.toFixed(f.seconds % 1 === 0 ? 1 : 2)} s fuse`;
+      fuseCaptionLang = langVersion();
+      fuseCaption = fmt(hs.fuse, { s: num(f.seconds, f.seconds % 1 === 0 ? 1 : 2) });
     }
     text(g, fuseCaption, px + w - 14, y + 18, 12, 'rgba(169,162,214,0.8)', 'right', 700);
   }
@@ -510,6 +538,6 @@ export function hudSunClock(g: CanvasRenderingContext2D, x: number, y: number, w
   // inside the border, and both squeeze to the width right of the dial.
   const tx = x + 58;
   const tw = Math.max(20, w - 58 - 10);
-  text(g, hot ? 'SUNRISE!' : 'SHIFT', tx, cy - 11, 12, hot ? C.amberHi : C.muted, 'left', 900, false, tw);
+  text(g, hot ? tr().hud.sunrise : tr().hud.shift, tx, cy - 11, 12, hot ? C.amberHi : C.muted, 'left', 900, false, tw);
   text(g, time, tx, cy + 9, 22, hot ? C.amberHi : C.text, 'left', 800, false, tw);
 }

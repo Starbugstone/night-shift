@@ -39,14 +39,19 @@ for (const level of [LEVEL3, LEVEL4]) {
       expect(r.done).toBe(true);
     });
 
-    it('a naive beeline at each target gets spotted, whatever the start time', () => {
+    // L3 was softened after playtesting (2026-11-23): a lucky beeline may slip through, but not
+    // usually. L4 still catches it at every start time. The L3 rule matches its difficulty band.
+    const mustCatch = level.id === 'level3' ? 2 : 4;
+    it(`a naive beeline at each target gets spotted in at least ${mustCatch} of 4 start times`, () => {
       // same naive route, started 0..8 s into the hazard cycles
+      let caught = 0;
       for (const delay of [0, 2.5, 5, 8]) {
         const r = runHeadless(level.map, [], beelineController, 240, false, delay);
         log(`[beeline ${level.id} +${delay}s] ${fmt(r)} · first spot: ${r.spots[0] ? `${r.spots[0].cause} at ${r.spots[0].t.toFixed(1)} s` : 'none'}`);
         if (delay === 0) overview(level, `${level.id}-beeline`, r);
-        expect(r.spots.length, `delay ${delay}`).toBeGreaterThan(0);
+        if (r.spots.length > 0) caught++;
       }
+      expect(caught).toBeGreaterThanOrEqual(mustCatch);
     });
   });
 }

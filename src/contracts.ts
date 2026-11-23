@@ -20,6 +20,27 @@ export interface PointerState {
   /** True only on the frame the pointer went down / up. */
   pressed: boolean;
   released: boolean;
+  // ---- v2.1 (abduction precision + rotation). All optional: scenes that ignore them keep working.
+  /** Device behind the primary pointer (set on press, and by mouse hover). Missing = treat as touch. */
+  kind?: PointerKind;
+  /** A second finger while the primary is down (touch). Same once-per-frame semantics. */
+  second?: SecondPointer;
+  /** Mouse wheel this frame, logical px (+ = scroll down). */
+  wheel?: number;
+  /** Right-button drag this frame, logical px of horizontal travel (mouse only). */
+  rightDx?: number;
+  /** Rotate keys held: -1 = Q / A (anticlockwise), +1 = E / D (clockwise), 0 = none or both. */
+  turnKeys?: number;
+}
+
+export type PointerKind = 'mouse' | 'touch' | 'pen';
+
+export interface SecondPointer {
+  down: boolean;
+  x: number;
+  y: number;
+  pressed: boolean;
+  released: boolean;
 }
 
 /** Loaded art. `get` returns undefined until loaded or when the file is missing;

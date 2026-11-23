@@ -164,6 +164,8 @@ export interface DeepMap {
   hazards: HazardDef[];
   /** Warm light pools (decor). */
   lamps: Vec2[];
+  /** Seconds of continuous exposure that fill the Suspicion fuse (before Hush Drive). Default 1. */
+  fuseSec?: number;
 }
 
 /** L3+: three specimens, one big map, a sunrise clock. */

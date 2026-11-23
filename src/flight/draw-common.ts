@@ -1,4 +1,5 @@
 // Drawing shared by the tutorial flight scene and the deep-level flight scene.
+import { langVersion, tr } from '../i18n';
 import type { Assets, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { GLOW, drawGlow, drawSprite, easeOutBack, rgbOf } from '../core/fx';
@@ -389,14 +390,18 @@ export function drawEntryRing(g: CanvasRenderingContext2D, assets: Assets, e: En
   }
   // label pill (text and widths measured once per entry)
   let lab = labels.get(e);
-  if (!lab) {
-    const a = `${e.route} — `;
+  if (!lab || lab.lang !== langVersion()) {
+    // shown in the current language; the colour still keys off the English difficulty
+    const rt = tr().routes[e.roomId];
+    const a = rt.route + tr().flight.entrySep;
     g.font = font(19, 800);
     lab = {
       a,
+      b: rt.difficulty,
       wa: g.measureText(a).width,
-      wb: g.measureText(e.difficulty).width,
+      wb: g.measureText(rt.difficulty).width,
       calm: e.difficulty.includes('easy') || e.difficulty.includes('safe') || e.difficulty.includes('short'),
+      lang: langVersion(),
     };
     labels.set(e, lab);
   }
@@ -405,12 +410,12 @@ export function drawEntryRing(g: CanvasRenderingContext2D, assets: Assets, e: En
   const x0 = clamp(e.x - w / 2, camX + 8, camX + VIEW_W - 8 - w);
   panel(g, x0, ly - 20, w, 40, 'rgba(27,20,51,0.9)', 20, C.mint, 2, 0);
   text(g, lab.a, x0 + 14, ly + 1, 19, C.mint, 'left', 800);
-  text(g, e.difficulty, x0 + 14 + lab.wa, ly + 1, 19, lab.calm ? C.text : C.amberHi, 'left', 800);
+  text(g, lab.b, x0 + 14 + lab.wa, ly + 1, 19, lab.calm ? C.text : C.amberHi, 'left', 800);
 }
 
 const RING_DASH = [16, 10];
 const NO_DASH: number[] = [];
-const labels = new WeakMap<EntryDef, { a: string; wa: number; wb: number; calm: boolean }>();
+const labels = new WeakMap<EntryDef, { a: string; b: string; wa: number; wb: number; calm: boolean; lang: number }>();
 
 /** Zib's speech bubble in the bottom-left corner (screen space). */
 export function drawZibBubble(g: CanvasRenderingContext2D, assets: Assets, msg: string, zibT: number, t: number, rm: boolean, panic = false): void {

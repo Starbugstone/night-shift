@@ -1,5 +1,6 @@
 // Save data: load, validate, migrate. DOM-free (storage is injected).
 import type { UpgradeId } from '../contracts';
+import { isLangPref, type LangPref } from '../i18n';
 
 export const SAVE_KEY = 'night-shift-save-v1';
 export const SAVE_VERSION = 1;
@@ -30,6 +31,8 @@ export interface SaveData {
   allUnlocked: boolean;
   /** Reports filed so far; rotates Vrell's comments. */
   reports: number;
+  /** Display language; `auto` follows the browser. Older saves have none: auto. */
+  lang: LangPref;
 }
 
 export interface KeyValueStore {
@@ -51,6 +54,7 @@ export function defaultSave(): SaveData {
     muted: false,
     allUnlocked: false,
     reports: 0,
+    lang: 'auto',
   };
 }
 
@@ -95,6 +99,7 @@ export function validateSave(raw: unknown): SaveData {
   out.muted = raw.muted === true;
   out.allUnlocked = raw.allUnlocked === true;
   out.reports = Math.floor(finiteNonNeg(raw.reports, 0));
+  out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
   return out;
 }
 

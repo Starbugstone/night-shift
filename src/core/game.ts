@@ -8,6 +8,7 @@ import { applyDeepRun, applyRun, isLevelUnlocked } from '../levels/progress';
 import { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
 import { clearSave, loadSave, writeSave, type KeyValueStore, type SaveData } from '../levels/save';
+import { getLang, resolveLang, setLang, tr, type Lang } from '../i18n';
 import { AbortScene } from '../ui/abort';
 import { DeepAbductScene } from '../ui/deep-abduct';
 import { DeepChoiceScene } from '../ui/deep-choice';
@@ -46,6 +47,8 @@ export interface DebugHook {
   readonly save: SaveData;
   /** The live scene object, for automated test scripts only. */
   readonly active: unknown;
+  /** Display language in use ('en' | 'fr'). */
+  readonly lang: Lang;
   goto(name: string, arg?: unknown): void;
 }
 
@@ -114,6 +117,22 @@ export class Game implements Shell {
     if (!this._save.muted) this.audio.sfx('click');
   }
 
+  /** `?lang=fr|en` for testing: beats the saved choice until the player picks one. */
+  private langOverride: string | null = null;
+
+  setLanguage(lang: Lang): void {
+    this.langOverride = null;
+    this.setSave({ ...this._save, lang });
+    this.applyLanguage();
+  }
+
+  private applyLanguage(): void {
+    const nav = typeof navigator !== 'undefined' ? navigator.language : undefined;
+    setLang(resolveLang(this._save.lang, nav, this.langOverride));
+    document.title = tr().meta.docTitle;
+    document.documentElement.lang = getLang();
+  }
+
   // ---------------------------------------------------------------- boot
 
   boot(): void {
@@ -126,6 +145,8 @@ export class Game implements Shell {
     if (params.get('unlock') === '1') {
       this.setSave({ ...this._save, allUnlocked: true, glorbs: Math.max(this._save.glorbs, 999) });
     }
+    this.langOverride = params.get('lang');
+    this.applyLanguage();
     this.installDebugHook();
     this.scenes.go(
       'loading',
@@ -396,6 +417,9 @@ export class Game implements Shell {
       },
       get save() {
         return game._save;
+      },
+      get lang() {
+        return getLang();
       },
       get active() {
         return game.scenes.active;

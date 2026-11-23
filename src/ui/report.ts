@@ -5,9 +5,10 @@ import { VIEW_W } from '../contracts';
 import { P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles } from '../core/fx';
 import type { Shell } from '../core/shell';
 import { itemsPhrase, vrellComment } from '../levels/humor';
-import { LEVELS, routeName } from '../levels/levels';
-import { DEEP_STAR_LABELS, STAR_LABELS, countStars, type RunOutcome } from '../levels/progress';
-import { drawGlorb, drawPortrait, drawStar, easeOutBack, easeOutCubic, fmtTime, panel, paragraph, roundRectPath, sprite, text } from './draw';
+import { LEVELS } from '../levels/levels';
+import { RANKS, countStars, type RunOutcome } from '../levels/progress';
+import { fmt, gt, localArt, tr } from '../i18n';
+import { drawGlorb, drawPortrait, drawStar, easeOutBack, easeOutCubic, fmtTime, panel, paragraph, roundRectPath, sprite, text, wrap } from './draw';
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
 
@@ -48,18 +49,19 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
   const lv = LEVELS[levelIndex]!;
   const par = lv.kind === 'tutorial' ? lv.parSec : 0;
   const total = flight.timeSec + abduct.timeSec;
+  const r = tr().report;
   return {
-    subtitle: `Form 27-B/6 · Subject: ${lv.human} · Via: ${routeName(flight.roomId)}`,
+    subtitle: fmt(r.subtitle, { name: tr().levels[lv.id].human, route: tr().routes[flight.roomId].route }),
     rows: [
-      ['Total time', `${fmtTime(total)}  (fly ${fmtTime(flight.timeSec)} · beam ${fmtTime(abduct.timeSec)})`],
-      ['Times bonked', String(abduct.bonks)],
-      ['Dignity remaining', `${Math.round(Math.max(0, Math.min(100, abduct.dignity)))}%`],
-      ['Snores recorded', String(abduct.snores)],
-      ['Items stolen from Earth', itemsPhrase(abduct.itemsStolen)],
-      ['Times spotted', String(flight.spotted)],
+      [r.totalTime, fmt(r.totalTimeValue, { total: fmtTime(total), fly: fmtTime(flight.timeSec), beam: fmtTime(abduct.timeSec) })],
+      [r.bonked, String(abduct.bonks)],
+      [r.dignity, fmt(r.percent, { n: Math.round(Math.max(0, Math.min(100, abduct.dignity))) })],
+      [r.snores, String(abduct.snores)],
+      [r.items, itemsPhrase(abduct.itemsStolen)],
+      [r.spotted, String(flight.spotted)],
     ],
     stamp: abduct.delivered ? 'delivered' : 'failed',
-    starLabels: STAR_LABELS,
+    starLabels: tr().starLabels.tutorial,
     comment: vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports),
     delivered: abduct.delivered,
   };
@@ -69,22 +71,23 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
 export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   const lv = run.level;
   const sunrise = run.phase === 'sunrise';
-  const names = run.order.map((i) => lv.map.targets[i]!.short).join(', ');
+  const r = tr().report;
+  const names = run.order.map((i) => gt(lv.map.targets[i]!.short)).join(r.listSep);
   const n = run.deliveredCount;
   const left = Math.max(0, lv.budgetSec - run.elapsed);
   return {
-    subtitle: `Form 27-B/6 (bulk) · ${lv.location}`,
+    subtitle: fmt(r.subtitleDeep, { location: tr().levels[lv.id].location }),
     rows: [
-      ['Shift time', sunrise ? `ran out: sun up at ${lv.hours[1]}:00 AM` : `${fmtTime(run.elapsed)} used · ${fmtTime(left)} to spare`],
-      ['Specimens delivered', `${n}/3${names ? `  (${names})` : ''}`],
-      ['Times spotted', String(run.spotted)],
-      ['Failed abductions', String(run.failedAbductions + run.aborts)],
-      ['Times bonked', String(run.totals.bonks)],
-      ['Avg. dignity remaining', n > 0 ? `${Math.round(run.totals.dignity / n)}%` : '—'],
-      ['Items stolen from Earth', itemsPhrase(run.totals.items)],
+      [r.shiftTime, sunrise ? fmt(r.ranOut, { h: lv.hours[1] }) : fmt(r.usedSpare, { used: fmtTime(run.elapsed), left: fmtTime(left) })],
+      [r.delivered, names ? fmt(r.deliveredNames, { n, names }) : fmt(r.deliveredValue, { n })],
+      [r.spotted, String(run.spotted)],
+      [r.failedAbductions, String(run.failedAbductions + run.aborts)],
+      [r.bonked, String(run.totals.bonks)],
+      [r.avgDignity, n > 0 ? fmt(r.percent, { n: Math.round(run.totals.dignity / n) }) : tr().common.dash],
+      [r.items, itemsPhrase(run.totals.items)],
     ],
     stamp: sunrise ? 'sunrise' : 'delivered',
-    starLabels: DEEP_STAR_LABELS,
+    starLabels: tr().starLabels.deep,
     comment: sunrise
       ? sunriseMemo(outcome.save.reports)
       : deepComment(
@@ -98,8 +101,8 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
 export class ReportScene implements Scene {
   private t = 0;
   private played = { stamp: false, stars: [false, false, false], glorbs: false };
-  private readonly retry = new Button(24, 846, 232, 84, 'Retry', 'secondary', 30);
-  private readonly next = new Button(272, 846, 244, 84, 'Next', 'primary', 30);
+  private readonly retry = new Button(24, 846, 232, 84, tr().common.retry, 'secondary', 30);
+  private readonly next = new Button(272, 846, 244, 84, tr().common.next, 'primary', 30);
   private readonly comment: string;
   private readonly rows: Array<[string, string]>;
   private readonly delivered: boolean;
@@ -122,8 +125,8 @@ export class ReportScene implements Scene {
     this.rows = model.rows;
     this.delivered = model.delivered;
     const hasNext = levelIndex + 1 < LEVELS.length;
-    this.next.label = model.delivered && hasNext ? 'Next' : 'Work orders';
-    if (this.next.label.length > 6) this.next.size = 26;
+    this.next.label = model.delivered && hasNext ? tr().common.next : tr().common.workOrders;
+    if (this.next.label.length > 9) this.next.size = 26;
   }
 
   update(dt: number): void {
@@ -222,7 +225,8 @@ export class ReportScene implements Scene {
       g.arc(x, CY + 14, 5, 0, Math.PI * 2);
       g.fill();
     }
-    text(g, 'SPECIMEN REPORT', VIEW_W / 2, CY + 52, 31, C.paperInk, 'center', 900);
+    const r = tr().report;
+    text(g, r.title, VIEW_W / 2, CY + 52, 31, C.paperInk, 'center', 900, false, CW - 40);
     text(g, this.model.subtitle, VIEW_W / 2, CY + 83, 15, '#6f6597', 'center', 700, false, CW - 40);
     g.fillStyle = '#6a3fbf';
     g.fillRect(CX + 26, CY + 100, CW - 52, 3);
@@ -259,7 +263,8 @@ export class ReportScene implements Scene {
       g.globalAlpha = rm ? fall : 0.2 + 0.8 * fall * fall;
       const stamp = this.model.stamp;
       const key = stamp === 'delivered' ? 'ui/stamp_delivered' : stamp === 'sunrise' ? 'ui/stamp_sunrise' : 'ui/stamp_failed';
-      if (!sprite(g, assets, key, 0, 0, 240, 120)) {
+      // lettered stamp art per language (ui/stamp_delivered_fr…); ink the words if it is missing
+      if (!sprite(g, assets, localArt(key), 0, 0, 240, 120)) {
         const col = stamp === 'delivered' ? '#1f9a6c' : stamp === 'sunrise' ? '#d9782a' : '#d33a52';
         roundRectPath(g, -120, -46, 240, 92, 14);
         g.lineWidth = 8;
@@ -268,7 +273,7 @@ export class ReportScene implements Scene {
         roundRectPath(g, -108, -35, 216, 70, 8);
         g.lineWidth = 3;
         g.stroke();
-        text(g, stamp === 'delivered' ? 'DELIVERED' : stamp === 'sunrise' ? 'SUNRISE' : 'REJECTED', 0, 2, 40, col, 'center', 900);
+        text(g, stamp === 'delivered' ? r.stampDelivered : stamp === 'sunrise' ? r.stampSunrise : r.stampRejected, 0, 2, 40, col, 'center', 900, false, 196);
       }
       g.restore();
     }
@@ -295,7 +300,7 @@ export class ReportScene implements Scene {
           g.rotate(0.2);
           g.scale(pop, pop);
           panel(g, -25, -11, 50, 22, C.red, 11, C.ink, 2, 0);
-          text(g, 'NEW!', 0, 1, 13, '#ffffff', 'center', 900);
+          text(g, r.newStar, 0, 1, 13, '#ffffff', 'center', 900, false, 44);
           g.restore();
         }
       } else if (!earned && age > 0 && age < 0.3 && !rm) {
@@ -304,7 +309,7 @@ export class ReportScene implements Scene {
         text(g, '—', sx, STAR_Y - 44 - age * 30, 18, '#9a92bf', 'center', 900);
         g.globalAlpha = 1;
       }
-      text(g, this.model.starLabels[i]!, sx, STAR_Y + 46, 16, earned && k > 0 ? C.paperInk : '#9a92bf', 'center', 800);
+      text(g, this.model.starLabels[i]!, sx, STAR_Y + 46, 16, earned && k > 0 ? C.paperInk : '#9a92bf', 'center', 800, false, 124);
     }
 
     // glorbs: the payout sits in its own pill and counts up
@@ -320,11 +325,13 @@ export class ReportScene implements Scene {
       g.stroke();
       const hop = rm ? 0 : this.coinHop;
       drawGlorb(g, assets, VIEW_W / 2 - 74, GLORB_Y - 1 - hop * 7, 40 + hop * 5);
-      text(g, `+${Math.max(0, this.shownGlorbs)} Glorbs`, VIEW_W / 2 - 46, GLORB_Y, 26 + hop * 1.5, got ? '#1f9a6c' : '#9a92bf', 'left', 900);
+      text(g, fmt(r.plusGlorbs, { n: Math.max(0, this.shownGlorbs) }), VIEW_W / 2 - 46, GLORB_Y, 26 + hop * 1.5, got ? '#1f9a6c' : '#9a92bf', 'left', 900, false, 160);
       g.globalAlpha = 1;
       let extra = '';
-      if (this.outcome.rankAfter.title !== this.outcome.rankBefore.title) extra = `PROMOTED: ${this.outcome.rankAfter.title}!`;
-      else if (this.outcome.unlockedNext) extra = 'New work order unlocked!';
+      if (this.outcome.rankAfter.title !== this.outcome.rankBefore.title) {
+        const rank = tr().ranks[RANKS.indexOf(this.outcome.rankAfter)] ?? this.outcome.rankAfter;
+        extra = fmt(r.promoted, { rank: rank.title });
+      } else if (this.outcome.unlockedNext) extra = r.unlocked;
       if (extra && t >= GLORB_AT + GLORB_COUNT) {
         const pop = rm ? 1 : easeOutBack((t - GLORB_AT - GLORB_COUNT) / 0.25);
         g.save();
@@ -360,7 +367,11 @@ export class ReportScene implements Scene {
         }
       } else {
         g.globalAlpha = vrellIn * Math.min(1, (t - COMMENT_AT) / 0.25);
-        paragraph(g, this.comment, CX + 122, CY + 696, CW - 154, 16, C.paperInk, 21, 'left', 600, true);
+        // the bubble holds four lines: a long quip (French) steps down a size
+        const size = wrap(g, this.comment, CW - 154, 16, 600, true).length <= 4 ? 16 : wrap(g, this.comment, CW - 154, 14, 600, true).length <= 5 ? 14 : 13;
+        const lh = size === 16 ? 21 : size === 14 ? 17 : 16;
+        const lines = wrap(g, this.comment, CW - 154, size, 600, true).length;
+        paragraph(g, this.comment, CX + 122, CY + 736 - (lines * lh) / 2, CW - 154, size, C.paperInk, lh, 'left', 600, true);
       }
       g.globalAlpha = 1;
     }
@@ -372,6 +383,6 @@ export class ReportScene implements Scene {
       this.retry.render(g);
       this.next.render(g);
     }
-    if (t < END) text(g, 'tap to skip', VIEW_W / 2, 940, 13, C.muted, 'center', 600);
+    if (t < END) text(g, tr().common.tapToSkip, VIEW_W / 2, 940, 13, C.muted, 'center', 600);
   }
 }

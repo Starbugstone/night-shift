@@ -3,9 +3,11 @@ import type { AbductResult, FlightResult, UpgradeId } from '../contracts';
 import { LEVELS, isDeep } from './levels';
 import { cloneSave, type LevelId, type SaveData, type Stars } from './save';
 import type { LevelDef } from './types';
+import { en } from '../i18n/en';
 
-export const STAR_LABELS = ['Delivered', 'Still asleep', 'Night owl'] as const;
-export const DEEP_STAR_LABELS = ['Delivered all 3', 'Ghost', 'Night owl'] as const;
+/** English labels (the shown ones come from src/i18n: starLabels). */
+export const STAR_LABELS: readonly string[] = en.starLabels.tutorial;
+export const DEEP_STAR_LABELS: readonly string[] = en.starLabels.deep;
 
 export function starLabels(l: LevelDef): readonly string[] {
   return isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
@@ -44,13 +46,9 @@ export interface Rank {
   flavour: string;
 }
 
-export const RANKS: readonly Rank[] = [
-  { title: 'Intern', minStars: 0, flavour: 'Unpaid. Mostly.' },
-  { title: 'Probationary Abductor', minStars: 3, flavour: 'Promising, if bonky.' },
-  { title: 'Abductor', minStars: 5, flavour: 'Lanyard privileges unlocked.' },
-  { title: 'Senior Abductor', minStars: 8, flavour: 'Has own parking ring.' },
-  { title: 'Abduction Lead', minStars: 11, flavour: 'Signs other people\'s forms. Rarely reads them.' },
-];
+/** Thresholds; titles and flavour are the English ones from src/i18n (shown via tr().ranks[i]). */
+const RANK_STARS = [0, 3, 5, 8, 11] as const;
+export const RANKS: readonly Rank[] = RANK_STARS.map((minStars, i) => ({ ...en.ranks[i]!, minStars }));
 
 export function rankFor(stars: number): Rank {
   let r = RANKS[0]!;
@@ -168,33 +166,25 @@ export interface UpgradeDef {
 export const UPGRADES: readonly UpgradeDef[] = [
   {
     id: 'beam_dampener',
-    name: 'Beam Dampener',
-    effect: 'Less limb swing',
-    desc: 'Specimens arrive 30% less noodly. Warranty void if used on actual noodles.',
+    ...en.shop.upgrades.beam_dampener,
     price: 25,
     icon: 'ui/upgrade_dampener',
   },
   {
     id: 'hush_drive',
-    name: 'Hush Drive',
-    effect: 'Spotting fuse 1.25 s · Wake fills slower',
-    desc: 'A tiny muffler for your anti-gravity. Dogs now hear only a faint, polite hum.',
+    ...en.shop.upgrades.hush_drive,
     price: 35,
     icon: 'ui/upgrade_hush',
   },
   {
     id: 'afterburner',
-    name: 'Afterburner',
-    effect: 'Flick to dash · 2.5 s recharge',
-    desc: 'Flick your thumb and the saucer lunges at 2.2× speed for a moment. Ideal for cones. Not for parking.',
+    ...en.shop.upgrades.afterburner,
     price: 60,
     icon: 'ui/upgrade_afterburner',
   },
   {
     id: 'snooze_ray',
-    name: 'Snooze Ray',
-    effect: 'Double-tap: calm every sleeper',
-    desc: 'Once per building, a double-tap hums a lullaby that knocks 40 off every wake meter. Side effects: yawning.',
+    ...en.shop.upgrades.snooze_ray,
     price: 80,
     icon: 'ui/upgrade_snooze',
   },

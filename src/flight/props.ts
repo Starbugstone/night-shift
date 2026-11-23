@@ -4,6 +4,7 @@ import { ART } from '../art-manifest';
 import type { PropDef, PropKind } from '../levels/types';
 import { drawSprite } from '../core/fx';
 import { roundRectPath } from '../ui/draw';
+import { tr } from '../i18n';
 
 const INK = '#1b1433';
 
@@ -203,7 +204,7 @@ export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: num
       g.font = '800 20px system-ui, sans-serif';
       g.textAlign = 'center';
       g.textBaseline = 'middle';
-      g.fillText('SPIN CITY', 0, y + h * 0.88);
+      g.fillText(tr().flight.spinCity, 0, y + h * 0.88);
       break;
     }
     case 'diner': {

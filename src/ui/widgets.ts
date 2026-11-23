@@ -84,7 +84,8 @@ export class Button {
       g.fillStyle = 'rgba(255,255,255,0.28)';
       g.fill();
     }
-    text(g, this.label, x + w / 2, y + h / 2 + 1, this.size, fg, 'center', 800);
+    // squeeze long labels (French runs longer) instead of spilling past the edges
+    text(g, this.label, x + w / 2, y + h / 2 + 1, this.size, fg, 'center', 800, false, Math.max(10, w - 20));
     if (this.flash > 0) {
       roundRectPath(g, x, y, w, h, Math.min(22, h / 2));
       g.fillStyle = `rgba(255,255,255,${(this.flash * 0.35).toFixed(3)})`;

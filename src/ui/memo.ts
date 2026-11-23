@@ -2,7 +2,7 @@ import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
-import { DEEP_STAR_LABELS, STAR_LABELS } from '../levels/progress';
+import { fmt, tr } from '../i18n';
 import { drawPortrait, drawStar, easeOutBack, fmtTime, panel, text, wrap } from './draw';
 import { C, font } from './theme';
 import { Button, drawNightSky } from './widgets';
@@ -19,10 +19,12 @@ export class MemoScene implements Scene {
   private t = 0;
   private chars = 0;
   private readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
-  private readonly start = new Button(90, 852, VIEW_W - 180, 84, 'Start shift', 'primary', 32);
+  private readonly start = new Button(90, 852, VIEW_W - 180, 84, tr().memo.startShift, 'primary', 32);
   private bodyLines: string[] | null = null;
   private jokeLines: string[] | null = null;
   private totalChars = 0;
+  private bodySize = BODY_SIZE;
+  private bodyLH = BODY_LH;
 
   constructor(
     private readonly shell: Shell,
@@ -49,8 +51,10 @@ export class MemoScene implements Scene {
     const { assets, ctx } = this.shell;
     drawNightSky(g, this.t, ctx.reducedMotion);
     const lv = this.level;
+    const m = tr().memo;
+    const lt = tr().levels[lv.id];
     this.back.render(g);
-    text(g, 'INCOMING MEMO', VIEW_W / 2 + 20, 48, 22, C.mint, 'center', 900);
+    text(g, m.incoming, VIEW_W / 2 + 20, 48, 22, C.mint, 'center', 900, false, 230);
     // "new mail" dot
     g.beginPath();
     g.arc(VIEW_W / 2 - 108, 47, 5, 0, Math.PI * 2);
@@ -80,26 +84,35 @@ export class MemoScene implements Scene {
     }
 
     drawPortrait(g, assets, 'vrell', PX + 76, py + 86, 112, this.t);
-    text(g, `TO: Intern Zib`, PX + 148, py + 46, 17, C.paperInk, 'left', 700);
-    text(g, `FROM: Supervisor Vrell`, PX + 148, py + 72, 17, C.paperInk, 'left', 700);
-    const reLines = wrap(g, `RE: ${lv.memo.re}`, PW - 168, 17, 800);
+    text(g, m.to, PX + 148, py + 46, 17, C.paperInk, 'left', 700, false, PW - 168);
+    text(g, m.from, PX + 148, py + 72, 17, C.paperInk, 'left', 700, false, PW - 168);
+    const reLines = wrap(g, fmt(m.re, { re: lt.re }), PW - 168, 17, 800);
     g.font = font(17, 800);
     g.fillStyle = '#6a3fbf';
     g.textAlign = 'left';
     for (let i = 0; i < Math.min(2, reLines.length); i++) g.fillText(reLines[i]!, PX + 148, py + 98 + i * 22);
-    text(g, lv.title, PX + 28, py + 182, 21, C.paperInk, 'left', 900);
+    text(g, lt.title, PX + 28, py + 182, 21, C.paperInk, 'left', 900, false, PW - 56);
     g.fillStyle = '#6a3fbf';
     g.fillRect(PX + 28, py + 198, PW - 56, 3);
 
     // typewriter body + joke
     if (!this.bodyLines) {
-      this.bodyLines = wrap(g, lv.memo.body, PW - 56, BODY_SIZE, 500);
-      this.jokeLines = wrap(g, lv.memo.joke, PW - 84, JOKE_SIZE, 600, true);
-      this.totalChars = lv.memo.body.length + lv.memo.joke.length;
+      // French runs longer: step the body down a size if body + joke would reach the goals block
+      this.bodySize = BODY_SIZE;
+      this.bodyLH = BODY_LH;
+      for (;;) {
+        this.bodyLines = wrap(g, lt.body, PW - 56, this.bodySize, 500);
+        this.jokeLines = wrap(g, lt.joke, PW - 84, JOKE_SIZE, 600, true);
+        const bottom = 228 + this.bodyLines.length * this.bodyLH + 6 - 14 + this.jokeLines.length * JOKE_LH + 20;
+        if (bottom <= 736 - 160 - 22 || this.bodySize <= 16) break;
+        this.bodySize -= 1;
+        this.bodyLH = Math.round(this.bodySize * 1.35);
+      }
+      this.totalChars = lt.body.length + lt.joke.length;
     }
     let budget = Math.floor(this.chars);
     let y = py + 228;
-    g.font = font(BODY_SIZE, 500);
+    g.font = font(this.bodySize, 500);
     g.fillStyle = C.paperInk;
     g.textAlign = 'left';
     g.textBaseline = 'middle';
@@ -107,9 +120,9 @@ export class MemoScene implements Scene {
       if (budget <= 0) break;
       g.fillText(budget >= line.length ? line : line.slice(0, budget), PX + 28, y);
       budget -= line.length + 1;
-      y += BODY_LH;
+      y += this.bodyLH;
     }
-    const jokeTop = py + 228 + this.bodyLines.length * BODY_LH + 6;
+    const jokeTop = py + 228 + this.bodyLines.length * this.bodyLH + 6;
     if (budget > 0 && this.jokeLines) {
       const jh = this.jokeLines.length * JOKE_LH + 20;
       panel(g, PX + 18, jokeTop - 14, PW - 36, jh, '#fff6c9', 12, '#d8c48a', 2, 0);
@@ -131,24 +144,20 @@ export class MemoScene implements Scene {
 
     // star goals
     const gy = py + ph - 160;
-    text(g, 'PERFORMANCE GOALS', PX + 28, gy, 15, '#6a3fbf', 'left', 900);
-    const goals =
-      lv.kind === 'deep'
-        ? [
-            `${DEEP_STAR_LABELS[0]} — before sunrise (${fmtTime(lv.budgetSec)})`,
-            `${DEEP_STAR_LABELS[1]} — never spotted, no failed jobs`,
-            `${DEEP_STAR_LABELS[2]} — ${fmtTime(lv.parMarginSec)} of night to spare`,
-          ]
-        : [`${STAR_LABELS[0]} — specimen through the hatch`, `${STAR_LABELS[1]} — never wakes up`, `${STAR_LABELS[2]} — whole job under ${fmtTime(lv.parSec)}`];
+    text(g, m.goals, PX + 28, gy, 15, '#6a3fbf', 'left', 900);
+    const labels = lv.kind === 'deep' ? tr().starLabels.deep : tr().starLabels.tutorial;
+    const lines = lv.kind === 'deep' ? m.deepGoals : m.tutorialGoals;
+    const times = lv.kind === 'deep' ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec)] : ['', '', fmtTime(lv.parSec)];
+    const goals = [0, 1, 2].map((k) => fmt(lines[k]!, { star: labels[k]!, time: times[k]! }));
     const best = this.shell.save.levels[lv.id].stars;
     for (let i = 0; i < 3; i++) {
       drawStar(g, assets, PX + 46, gy + 34 + i * 38, 30, best[i] === true);
-      text(g, goals[i]!, PX + 72, gy + 34 + i * 38, 17, C.paperInk, 'left', 700);
+      text(g, goals[i]!, PX + 72, gy + 34 + i * 38, 17, C.paperInk, 'left', 700, false, PW - 72 - 20);
     }
-    text(g, '— Vrell. Sent from my clipboard.', PX + PW - 24, py + ph - 22, 14, '#7a70a0', 'right', 600, true);
+    text(g, m.signoff, PX + PW - 24, py + ph - 22, 14, '#7a70a0', 'right', 600, true, PW - 48);
     g.restore();
 
     this.start.render(g);
-    if (typing) text(g, 'tap to skip', VIEW_W / 2, 838, 14, C.muted, 'center', 600);
+    if (typing) text(g, tr().common.tapToSkip, VIEW_W / 2, 838, 14, C.muted, 'center', 600);
   }
 }

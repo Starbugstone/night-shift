@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "difficulty": "vitest run tests/levels-difficulty.test.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

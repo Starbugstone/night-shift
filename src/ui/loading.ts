@@ -1,8 +1,8 @@
 import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { AssetLoader } from '../core/assets';
-import { LOADING_TIPS } from '../levels/humor';
-import { outlinedText, panel, paragraph, roundRectPath, text } from './draw';
+import { fmt, tr } from '../i18n';
+import { outlinedText, panel, paragraph, roundRectPath, text, wrap } from './draw';
 import { C } from './theme';
 import { drawNightSky } from './widgets';
 
@@ -13,7 +13,7 @@ export class LoadingScene implements Scene {
   private t = 0;
   private shown = 0;
   private finished = false;
-  private readonly tip = LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)]!;
+  private readonly tipSeed = Math.random();
 
   constructor(
     private readonly assets: AssetLoader,
@@ -63,7 +63,8 @@ export class LoadingScene implements Scene {
       g.fill();
     }
 
-    outlinedText(g, 'Clocking in…', VIEW_W / 2, 600, 40, C.mint);
+    const s = tr().loading;
+    outlinedText(g, s.clockingIn, VIEW_W / 2, 600, 40, C.mint, undefined, 900, 'center', VIEW_W - 60);
     const bw = 380;
     const bx = (VIEW_W - bw) / 2;
     roundRectPath(g, bx, 640, bw, 24, 12);
@@ -75,9 +76,13 @@ export class LoadingScene implements Scene {
     roundRectPath(g, bx + 3, 643, Math.max(18, (bw - 6) * this.shown), 18, 9);
     g.fillStyle = C.mint;
     g.fill();
-    text(g, `Calibrating tractor beam · ${Math.round(this.shown * 100)}%`, VIEW_W / 2, 690, 18, C.muted);
+    text(g, fmt(s.calibrating, { pct: Math.round(this.shown * 100) }), VIEW_W / 2, 690, 18, C.muted, 'center', 600, false, VIEW_W - 60);
 
-    panel(g, 50, 760, VIEW_W - 100, 110, 'rgba(42,33,96,0.92)', 20, C.ink, 3, 4);
-    paragraph(g, this.tip, 74, 778, VIEW_W - 148, 21, C.text, 27, 'center', 600);
+    const tip = s.tips[Math.floor(this.tipSeed * s.tips.length)]!;
+    // the card grows for a long tip (French runs longer) and stays centred on the same spot
+    const lines = wrap(g, tip, VIEW_W - 148, 21, 600).length;
+    const h = Math.max(110, 36 + lines * 27);
+    panel(g, 50, 815 - h / 2, VIEW_W - 100, h, 'rgba(42,33,96,0.92)', 20, C.ink, 3, 4);
+    paragraph(g, tip, 74, 815 - (lines * 27) / 2, VIEW_W - 148, 21, C.text, 27, 'center', 600);
   }
 }

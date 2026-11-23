@@ -1,13 +1,18 @@
 import { VIEW_H, VIEW_W, type AbductResult, type AbductStart, type GameContext, type RoomId, type Scene, type Vec2 } from '../contracts';
+import { tr } from '../i18n';
 import { DeepAbductView, drawFailure, drawSnooze } from './deep-view';
 import { AbductView, RESTART } from './draw';
 import { ROOMS } from './rooms';
+import { FOLLOW } from './ragdoll';
 import { CEILING } from './rooms/layout';
 import { AbductSimulation } from './simulation';
+import { TURN_BUTTONS_DEEP, TURN_BUTTONS_ROOM, TurnControl } from './turn';
 
 const TAP_LENGTH = 0.24;
 const DOUBLE_TAP = 0.32;
 const TAP_TRAVEL = 22;
+/** The turn hint stays up this long after the first drag, until the player turns once. */
+const TURN_HINT_SECONDS = 7;
 
 interface AbductScene extends Scene {
   debug: AbductSimulation;
@@ -34,6 +39,9 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
   let firstTapY = 0;
   let clock = 0;
   let finished = false;
+  const turn = new TurnControl(simulation.interior ? TURN_BUTTONS_DEEP : TURN_BUTTONS_ROOM);
+  let twisted = false;
+  let turnHintUntil = -1;
 
   function endDrag(): void {
     if (!dragging) return;
@@ -55,25 +63,46 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
           onDone(simulation.result(true));
           return;
         }
-        if (pointer.down || pointer.released) {
+        if ((pointer.down || pointer.released) && !turn.pressPrimary(pointer.x, pointer.y)) {
           dragging = true;
           lastX = pointer.x;
           lastY = pointer.y;
+          twisted = false;
           pressAt = clock;
           travel = 0;
+          // A mouse or pen aims with the eye: the body has to stop where the cursor stops.
+          simulation.body.follow = pointer.kind === 'mouse' || pointer.kind === 'pen' ? FOLLOW.mouse : FOLLOW.touch;
           ctx.audio.sfx('beam_on');
         }
       }
 
+      if (playable) {
+        const radians = turn.update(pointer, dt);
+        if (radians !== 0) simulation.body.rotate(radians);
+      } else {
+        turn.reset();
+      }
+
       if (playable && dragging && (pointer.down || pointer.released)) {
-        const dx = pointer.x - lastX;
-        const dy = pointer.y - lastY;
+        // Two fingers twisting: the midpoint drags the beam, so the twist itself does not.
+        const second = pointer.second;
+        const twist = turn.twisting && second !== undefined;
+        const refX = twist ? (pointer.x + second.x) / 2 : pointer.x;
+        const refY = twist ? (pointer.y + second.y) / 2 : pointer.y;
+        if (twist !== twisted) {
+          twisted = twist;
+          lastX = refX;
+          lastY = refY;
+        }
+        const dx = refX - lastX;
+        const dy = refY - lastY;
         if (dx !== 0 || dy !== 0) {
           tutorial = false;
+          if (turnHintUntil < 0) turnHintUntil = clock + TURN_HINT_SECONDS;
           simulation.moveBeam(simulation.body.beamX + dx, simulation.body.beamY + dy);
           travel += Math.hypot(dx, dy);
-          lastX = pointer.x;
-          lastY = pointer.y;
+          lastX = refX;
+          lastY = refY;
         }
         if (pointer.released && simulation.snoozeOwned && travel <= TAP_TRAVEL && clock - pressAt <= TAP_LENGTH) {
           if (clock - firstTapAt <= DOUBLE_TAP && Math.hypot(pointer.x - firstTapX, pointer.y - firstTapY) <= 80) {
@@ -98,13 +127,20 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
       }
     },
     render(g) {
-      view.render(g, tutorial && !simulation.delivered, dragging);
+      const playable = !simulation.delivered && !simulation.failure;
+      const hint = playable && !turn.used && !simulation.body.gripActive && clock < turnHintUntil
+        ? (ctx.pointer.kind === 'mouse' || ctx.pointer.kind === 'pen' ? tr().abduct.turnHintMouse : tr().abduct.turnHintTouch)
+        : undefined;
+      view.render(g, tutorial && !simulation.delivered, dragging, turn, hint);
       if (!simulation.interior) {
         drawSnooze(g, simulation, ctx.reducedMotion);
         drawFailure(g, simulation, ctx.reducedMotion);
       }
     },
-    dispose: endDrag,
+    dispose() {
+      endDrag();
+      turn.reset();
+    },
     debug: simulation,
   };
 }

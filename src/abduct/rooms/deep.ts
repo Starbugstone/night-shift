@@ -14,7 +14,7 @@ const opening = (
   axis: Opening['axis'], at: number, from: number, to: number, trim: Opening['trim'],
 ): Opening => ({ axis, at, from, to, trim });
 const door = (x: number, top: number, floor = 686): Opening => opening('vertical', x, top, floor, 'door');
-const hatch = (y: number, x: number, trim: Opening['trim']): Opening => opening('horizontal', y, x, x + 164, trim);
+const hatch = (y: number, x: number, trim: Opening['trim'], width = 164): Opening => opening('horizontal', y, x, x + width, trim);
 const swing = (name: string, sprite: Sprite, amplitude = 0.55, speed = 1.8, mountY?: number): Hazard =>
   ({ kind: 'swing', name, sprite, amplitude, speed, phase: 0, mountY });
 const fan = (name: string, x: number, y: number, length: number, speed: number, duct: boolean, mountY?: number): Hazard =>
@@ -125,39 +125,41 @@ const daveHall = [
 const daveHome = building([
   room('Master bedroom', 'suburb_bedroom', box(0, 0, 760, 700),
     [art('portrait_cow', 205, 150)],
-    [art('wardrobe', 407, 446)], [daveBed]),
+    // A low nightstand, not the old wardrobe: the way out of bed to the door is open.
+    [art('nightstand', 400, 576)], [daveBed]),
   room('Upstairs hall', 'hallway', box(760, 0, 760, 700),
     [art('grandfather_clock', 878, 426), fit('ladder', 1210, 0, 52, 686)],
     [art('bookcase', 1290, 466)]),
   room('Attic', 'attic', box(760, -780, 760, 780),
-    [EXITS.daveRoof, fit('ladder', 1210, -240, 52, 240)], [art('boxes', 842, -124), art('boxes', 1348, -124), art('shelf', 883, -294)]),
+    [EXITS.daveRoof, fit('ladder', 1210, -240, 52, 240)], [art('boxes', 842, -124), art('boxes', 1348, -124)]),
   room('Stairwell', 'stairwell', box(0, 700, 760, 700),
     [fit('stairs', 85, 700, 584, 686)]),
   room('Living room', 'living_room', box(760, 700, 1000, 700),
     [EXITS.davePatio], [art('tv_static', 829, 1286), art('couch', 1010, 1266), art('nightstand', 1390, 1276)]),
 ], [
-  door(760, 210), hatch(0, 1110, 'ladder'), hatch(700, 568, 'stairs'), door(760, 881, 1386),
+  door(760, 210), hatch(0, 1110, 'ladder'), hatch(700, 548, 'stairs', 198), door(760, 881, 1386),
 ], [
-  swing('Grandfather clock', art('pendulum', 901, 465), 0.62, 2.5),
+  swing('Grandfather clock', art('pendulum', 901, 465), 0.45, 2.1),
   patrol('Hall vacuum', art('robot_vacuum', 1023, 662), 52, 0, 1.65),
   gate('Attic ladder hatch', box(1110, -17, 164, 34), 'x', 6.8, 3.85, 2.25),
-  swing('Attic bulb', art('hanging_bulb', 1040, -606), 0.72, 2.2, -766),
+  swing('Attic bulb', art('hanging_bulb', 1040, -606), 0.55, 1.9, -766),
   fragile('Dental trophy', art('trophy', 921, -354)),
   { kind: 'creak', name: 'Creaky stairs', area: box(85, 728, 584, 658) },
-  swing('Living room chandelier', art('chandelier', 818, 714), 0.38, 2.1),
   fan('Living room fan', 1120, 830, 100, 2.6, false, 714),
   fragile('Fish tank', fit('fish_tank', 1390, 1212, 90, 64)),
   gate('Patio screen', box(1525, 881, 34, 505), 'y', 6.9, 3.85, 1.7),
 ], [sleeper('Brenda', 99, 562, 330)]);
 
 export const daveRoof = route(daveHome, 'dave', 'ROOF HATCH', EXITS.daveRoof,
-  box(883, -755, 106, 57), [...daveHall, point(1192, -250, 'Attic ladder hatch', 195),
-    // Pass below the bulb, then climb outside its leftward swing before turning toward the exit.
-    point(1285, -398), point(1145, -375), point(868, -403), point(868, -681), point(935, -739)], true);
+  box(883, -755, 106, 97), [...daveHall, point(1192, -250, 'Attic ladder hatch', 195),
+    // Pass well below the bulb (the old shelf is gone), then climb outside its leftward swing.
+    point(1285, -398), point(1145, -362), point(868, -372), point(868, -681), point(935, -739)], true);
 export const davePatio = route(daveHome, 'dave', 'PATIO DOOR', EXITS.davePatio,
   box(1629, 1188, 86, 155), [
     point(330, 328), point(650, 318), point(650, 970, undefined, 36), point(840, 1013),
-    point(1000, 1086), point(1245, 1086), point(1468, 1060), point(1656, 1095, 'Patio screen', 175), point(1670, 1224),
+    point(1000, 1086), point(1245, 1086),
+    // Lift the trailing feet over the fish tank before lining up on the screen door.
+    point(1330, 980), point(1495, 980), point(1656, 1095, 'Patio screen', 175), point(1670, 1224),
   ]);
 
 const barbHome = building([

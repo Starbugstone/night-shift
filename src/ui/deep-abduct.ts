@@ -1,5 +1,6 @@
 // Wraps an abduction scene during a deep shift: the sunrise clock keeps running, shown in the chip
 // slot the abduction view leaves free on its second HUD row, and the room warms up in the last 30 s.
+import { tr } from '../i18n';
 import type { Assets, Scene } from '../contracts';
 import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT, deepShift } from '../abduct/deep-view';
 import { GLOW, drawEdgeTint } from '../core/fx';
@@ -64,7 +65,7 @@ export class DeepAbductScene implements Scene {
       const warn = DEEP_HUD_WARNING_SLOT;
       const on = this.reduced() || Math.floor(this.t * 2) % 2 === 0;
       hudPanel(g, warn.x, warn.y, warn.w, warn.h, on ? C.amber : C.ink);
-      text(g, 'SUN\'S COMING UP!', warn.x + warn.w / 2, warn.y + warn.h / 2, 16, on ? C.amberHi : C.muted, 'center', 900, false, warn.w - 20);
+      text(g, tr().hud.sunComing, warn.x + warn.w / 2, warn.y + warn.h / 2, 16, on ? C.amberHi : C.muted, 'center', 900, false, warn.w - 20);
     }
   }
 

@@ -7,7 +7,8 @@
 import type { FlightAutopilotIntent, GameContext, Scene, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { ART } from '../art-manifest';
-import { DEEP_ZIB, pick, spotCaption, spotShout, SPOT_ZIB, type DeepZibEvent } from '../levels/humor';
+import { deepZibLine, spotCaption, spotShout, spotZibLine, type DeepZibEvent } from '../levels/humor';
+import { fmt, gt, langVersion, localArt, num, tr } from '../i18n';
 import type { DeepRun } from '../levels/run';
 import type { DeepLevelDef, PropDef, PropKind } from '../levels/types';
 import { GLOW, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles, bitmapPx, drawEdgeTint, drawGlow, drawShadow, drawSprite, drawVignette, drawWash, easeInCubic, easeOutBack, radialSprite } from '../core/fx';
@@ -51,15 +52,10 @@ const CONE_WATCH = '200,220,255';
 const CONE_CCTV = '255,150,165';
 const BLUE = '90,140,255';
 
-/** A delivered specimen is missed, eventually. Shown over their building. */
-const MISSED: Record<string, readonly string[]> = {
-  Dave: ['Dave? DAVE?', 'He sleepwalks. It is fine.'],
-  Barb: ['Coach? ...Coach?', 'Biscuit, where did she go?'],
-  Gary: ['HQ, come in. HQ?', 'Watch log: Gary has left the chair.'],
-  Nigel: ['Nigel? The desk is empty.', 'The dinosaurs are unsupervised.'],
-  Kev: ['No DJ. No refunds.', 'Who is playing this silence?'],
-  Mayor: ['Mr. Mayor? Sir?', 'His tea is still warm.'],
-};
+/** A delivered specimen is missed, eventually (lines by short name, in src/i18n: flight.missed). */
+function missedLines(short: string): readonly string[] | undefined {
+  return (tr().flight.missed as Record<string, readonly string[]>)[short];
+}
 
 export interface DeepFlightOptions {
   ctx: GameContext;
@@ -198,7 +194,7 @@ export class DeepFlightScene implements Scene {
 
   private say(evt: DeepZibEvent, force = false, panic = false): void {
     if (!force && this.zibCd > 0) return;
-    this.zibText = pick(DEEP_ZIB[evt], this.zibN++ + this.run.spotted);
+    this.zibText = deepZibLine(evt, this.zibN++ + this.run.spotted);
     this.zibT = 2.8;
     this.zibCd = 3.2;
     this.zibPanic = panic;
@@ -350,7 +346,7 @@ export class DeepFlightScene implements Scene {
       const seed = this.run.spotted * 7 + Math.floor(this.ctx.time * 3);
       this.caption = spotCaption(cause, seed);
       this.shout = spotShout(cause, seed);
-      this.spotLine = pick(SPOT_ZIB[cause] ?? SPOT_ZIB.police!, seed);
+      this.spotLine = spotZibLine(cause, seed);
       audio.sfx('spotted');
       if (cause === 'police' || cause === 'patrol') audio.sfx('siren', 0.8);
       return;
@@ -627,9 +623,9 @@ export class DeepFlightScene implements Scene {
     panel(g, b.x - 62, b.y - 20, 124, 40, 'rgba(27,20,51,0.85)', 20, C.mint, 2, 0);
     g.globalAlpha = 1;
     tick(g, b.x - 44, b.y, 7, C.mint);
-    text(g, 'COLLECTED', b.x + 10, b.y + 1, 14, C.mint, 'center', 900);
+    text(g, tr().flight.collected, b.x + 10, b.y + 1, 14, C.mint, 'center', 900, false, 92);
     // somebody has noticed: a worried voice from the house, now and then
-    const lines = MISSED[tg.short];
+    const lines = missedLines(tg.short);
     if (!lines) return;
     const cycle = (t * 0.16 + i * 0.37) % 1;
     if (cycle > 0.36) return;
@@ -929,7 +925,7 @@ export class DeepFlightScene implements Scene {
           g.arc(d.x, d.y, d.rMax, 0, TAU);
           g.stroke();
           g.globalAlpha = 1;
-          if (st.cause === i) outlinedText(g, 'WOOF!', d.x, d.y - 50, 26, C.amberHi, C.ink, 900);
+          if (st.cause === i) outlinedText(g, tr().flight.woof, d.x, d.y - 50, 26, C.amberHi, C.ink, 900);
           break;
         }
         case 'heli':
@@ -1308,10 +1304,10 @@ export class DeepFlightScene implements Scene {
     if (on && !buzz) {
       g.lineWidth = 4;
       g.strokeStyle = '#ff4fc8';
-      g.strokeText(d.text, d.x, d.y + 1);
+      g.strokeText(gt(d.text), d.x, d.y + 1, 200);
       g.fillStyle = '#ffe6f7';
     } else g.fillStyle = '#6a3a60';
-    g.fillText(d.text, d.x, d.y + 1);
+    g.fillText(gt(d.text), d.x, d.y + 1, 200);
   }
 
   /** Things above the street: wires, the crane boom, flocks, the helicopter. */
@@ -1646,7 +1642,7 @@ export class DeepFlightScene implements Scene {
     const lift = rm ? 0 : Math.min(1, k / 0.3) * 10 + Math.sin(t * 5) * 2;
     g.globalAlpha = a;
     panel(g, s.x - 70, s.y - 118 - lift, 140, 34, 'rgba(27,20,51,0.92)', 17, C.mint, 2.5, 3);
-    text(g, 'CHECKPOINT', s.x, s.y - 100 - lift, 15, C.mint, 'center', 900);
+    text(g, tr().flight.checkpoint, s.x, s.y - 100 - lift, 15, C.mint, 'center', 900, false, 124);
     g.globalAlpha = 1;
   }
 
@@ -1680,7 +1676,7 @@ export class DeepFlightScene implements Scene {
     const rm = this.ctx.reducedMotion;
     const sim = this.sim;
     const run = this.run;
-    hudButton(g, this.quit, 'close', 'QUIT', this.quit.pressedDown);
+    hudButton(g, this.quit, 'close', tr().common.quit, this.quit.pressedDown);
     const f = this.fuse;
     f.value = this.state === 'spotted' ? 1 : sim.st.sus;
     f.exposed = this.state === 'spotted' || (this.state === 'fly' && sim.st.cause >= 0);
@@ -1710,7 +1706,7 @@ export class DeepFlightScene implements Scene {
         if (sim.delivered[i]) continue;
         const tg = m.targets[i]!;
         if (this.targetOnScreen(tg)) continue;
-        drawTargetArrow(g, assets, tg.building, sim.camX, sim.camY, tg.short, C.mint, t + i, rm, top, 180);
+        drawTargetArrow(g, assets, tg.building, sim.camX, sim.camY, gt(tg.short), C.mint, t + i, rm, top, 180);
       }
     }
 
@@ -1720,8 +1716,9 @@ export class DeepFlightScene implements Scene {
       g.globalAlpha = a;
       hudPanel(g, 60, 400, VIEW_W - 120, 86, C.mint);
       text(g, this.bannerTop(), VIEW_W / 2, 424, 14, C.mint, 'center', 900);
-      text(g, 'Collect all three before dawn', VIEW_W / 2, 452, 20, C.text, 'center', 800);
-      text(g, 'Seen for 1 second = spotted', VIEW_W / 2, 474, 14, C.amberHi, 'center', 700);
+      text(g, tr().flight.collectAll, VIEW_W / 2, 452, 20, C.text, 'center', 800, false, VIEW_W - 150);
+      const fuse = Math.round(this.fuse.seconds * 10) / 10;
+      text(g, fmt(tr().flight.seenRule, { s: num(fuse, Number.isInteger(fuse) ? 0 : 1) }), VIEW_W / 2, 474, 14, C.amberHi, 'center', 700, false, VIEW_W - 150);
       g.globalAlpha = 1;
     } else if (this.deliverT > 0 && this.state === 'fly') this.drawDeliveredBanner(g);
 
@@ -1771,7 +1768,7 @@ export class DeepFlightScene implements Scene {
   private chipWidth(g: CanvasRenderingContext2D, i: number): number {
     if (this.chipW[i] === 0) {
       g.font = font(15, 800);
-      this.chipW[i] = g.measureText(this.level.map.targets[i]!.short).width + 58;
+      this.chipW[i] = g.measureText(gt(this.level.map.targets[i]!.short)).width + 58;
     }
     return this.chipW[i]!;
   }
@@ -1803,13 +1800,13 @@ export class DeepFlightScene implements Scene {
     g.arc(x + 19, y + 17, 12, 0, TAU);
     g.stroke();
     if (done) tick(g, x + 27, y + 25, 5.5, C.mint);
-    text(g, tg.short, x + 38, y + 18, 15, done ? C.mint : C.text, 'left', 800);
+    text(g, gt(tg.short), x + 38, y + 18, 15, done ? C.mint : C.text, 'left', 800);
     g.restore();
   }
 
   private bannerText = '';
   private bannerTop(): string {
-    if (!this.bannerText) this.bannerText = `WORK ORDER #000${this.level.num} · SUNRISE AT ${this.level.hours[1]}:00`;
+    if (!this.bannerText) this.bannerText = fmt(tr().flight.banner, { num: this.level.num, h: this.level.hours[1] });
     return this.bannerText;
   }
 
@@ -1825,7 +1822,7 @@ export class DeepFlightScene implements Scene {
     g.translate(VIEW_W / 2, 300);
     g.scale(pop, pop);
     hudPanel(g, -150, -42, 300, 84, C.mint);
-    text(g, 'SPECIMEN SECURED', 0, -20, 14, C.mint, 'center', 900);
+    text(g, tr().flight.secured, 0, -20, 14, C.mint, 'center', 900, false, 270);
     for (let i = 0; i < 3; i++) {
       const px = -118 + i * 30;
       const landed = i < count - 1 || (i === count - 1 && age > 0.45);
@@ -1838,7 +1835,7 @@ export class DeepFlightScene implements Scene {
       g.strokeStyle = landed ? C.ink : '#6b63a3';
       g.stroke();
     }
-    text(g, COUNTS[Math.min(3, count)]!, 60, 15, 24, C.text, 'center', 900);
+    text(g, countText(Math.min(3, count)), 60, 15, 24, C.text, 'center', 900, false, 150);
     g.restore();
   }
 
@@ -1913,9 +1910,10 @@ export class DeepFlightScene implements Scene {
     g.translate(VIEW_W / 2, 166);
     g.rotate(-0.08);
     g.scale(pop, pop);
-    const stamp = this.ctx.assets.get('ui/stamp_spotted');
+    // lettered stamp art per language (ui/stamp_spotted_fr…); the words alone if it is missing
+    const stamp = this.ctx.assets.get(localArt('ui/stamp_spotted'));
     if (stamp) g.drawImage(stamp, -150, -75, 300, 150);
-    else outlinedText(g, 'SPOTTED!', 0, 0, 80, C.amberHi, C.ink, 900);
+    else outlinedText(g, tr().flight.spotted, 0, 0, 80, C.amberHi, C.ink, 900, 'center', 440);
     g.restore();
     // the witness pops up behind the caption card
     const wk = rm ? 1 : clamp((st - 0.22) / 0.3, 0, 1);
@@ -1934,7 +1932,7 @@ export class DeepFlightScene implements Scene {
       g.fillStyle = C.mint;
       g.fillRect(58, 921, (VIEW_W - 116) * k, 3);
     }
-    text(g, 'back to the last checkpoint…', VIEW_W / 2, 944, 13, C.muted, 'center', 700);
+    text(g, tr().flight.backToCheckpoint, VIEW_W / 2, 944, 13, C.muted, 'center', 700);
     // the flash goes off over everything
     if (st < 0.22) {
       g.globalAlpha = (1 - st / 0.22) * (rm ? 0.25 : 1);
@@ -1945,7 +1943,17 @@ export class DeepFlightScene implements Scene {
   }
 }
 
-const COUNTS = ['0 of 3', '1 of 3', '2 of 3', '3 of 3'] as const;
+/** "2 of 3", built once per language. */
+let counts: string[] = [];
+let countsLang = -1;
+function countText(n: number): string {
+  if (countsLang !== langVersion()) {
+    countsLang = langVersion();
+    counts = [0, 1, 2, 3].map((k) => fmt(tr().flight.countOf, { n: k }));
+  }
+  return counts[n]!;
+}
+
 /** A tick mark centred on (x, y). */
 function tick(g: CanvasRenderingContext2D, x: number, y: number, r: number, color: string): void {
   g.lineCap = 'round';

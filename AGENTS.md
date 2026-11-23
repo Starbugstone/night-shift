@@ -72,5 +72,11 @@ have a headless vitest autopilot run that completes it without failing. Each sce
 also exposes `debug.autopilot()` (see contracts) so that `scripts/e2e-playthrough.cjs`
 can play the game through real pointer input.
 
+Solvable is not the same as fair: the autopilot plays perfectly. Every deep level also has a
+difficulty band for human-model players (reaction delay, wobble, human drag speed), checked by
+`npm run difficulty` (part of `npm test`). Use
+[.claude/skills/evaluate-difficulty/SKILL.md](.claude/skills/evaluate-difficulty/SKILL.md) when
+tuning a level or adding one.
+
 Use [.claude/skills/verify-night-shift/SKILL.md](.claude/skills/verify-night-shift/SKILL.md)
 for browser verification recipes, the feature map, and evidence capture.

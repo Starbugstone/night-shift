@@ -190,7 +190,7 @@ export class DeepFlightSim {
   ) {
     this.field = new HazardField(map.hazards);
     this.st = newFlightState(this.field.porchCount);
-    this.mult = suspicionMultiplier(upgrades);
+    this.mult = suspicionMultiplier(upgrades) / (map.fuseSec ?? 1);
     this.afterburner = upgrades.has('afterburner');
     map.targets.forEach((tg, ti) =>
       tg.entries.forEach((e, ei) => {

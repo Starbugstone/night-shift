@@ -1,6 +1,7 @@
 // The SPOTTED moment on a deep shift: "Exhibit A", a flash photo of the saucer taken through
 // whatever saw it (a dashcam, Mrs. Pruitt's binoculars, a doorbell, a dog...), and the witness.
 // One canvas is allocated the first time you are spotted and reused after that.
+import { fmt, tr } from '../i18n';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { GLOW, drawGlow, easeOutBack } from '../core/fx';
 import { panel, roundRectPath, text } from '../ui/draw';
@@ -17,17 +18,10 @@ const PH = 240;
 const SRC_W = 288;
 const SRC_H = 192;
 
-const LABELS: Record<SpotCause, string> = {
-  police: 'Exhibit A · Unit 4 dashcam',
-  patrol: 'Exhibit A · patrol car dashcam',
-  traffic: 'Exhibit A · taxi dashcam (1 star)',
-  porch: 'Exhibit A · doorbell camera',
-  watcher: "Exhibit A · Mrs. Pruitt's binoculars",
-  dog: 'Exhibit A · photo taken by a dog',
-  heli: 'Exhibit A · Air Unit 1, gun camera',
-  camera: 'Exhibit A · CCTV, camera 3',
-  window: 'Exhibit A · phone, 14th floor',
-};
+/** The caption over the photo, in the current language. */
+function photoLabel(cause: SpotCause): string {
+  return (tr().flight.photo.labels as Record<string, string>)[cause] ?? '';
+}
 
 export class SpottedPhoto {
   private canvas: HTMLCanvasElement | null = null;
@@ -127,7 +121,7 @@ export class SpottedPhoto {
       }
       g.lineCap = 'butt';
     }
-    text(g, LABELS[cause], 0, PH / 2 + 38, 19, C.paperInk, 'center', 800, true, PW);
+    text(g, photoLabel(cause), 0, PH / 2 + 38, 19, C.paperInk, 'center', 800, true, PW);
     g.restore();
   }
 
@@ -165,10 +159,10 @@ export class SpottedPhoto {
           g.lineTo(PW / 2 + sw - 13, 66);
           g.lineTo(PW / 2 + sw + 13, 66);
           g.fill();
-          text(g, 'FARE 12.40', PW - 12, PH - 12, 13, '#ffcf4a', 'right', 900);
-        } else text(g, cause === 'police' ? 'UNIT 4' : 'PATROL 2', PW - 12, PH - 12, 13, '#cfd6ff', 'right', 900);
+          text(g, tr().flight.photo.fare, PW - 12, PH - 12, 13, '#ffcf4a', 'right', 900);
+        } else text(g, cause === 'police' ? tr().flight.photo.unit4 : tr().flight.photo.patrol2, PW - 12, PH - 12, 13, '#cfd6ff', 'right', 900);
         if (rec) dot(g, 18, 18);
-        text(g, 'REC', 30, 19, 13, '#ffffff', 'left', 900);
+        text(g, tr().flight.photo.rec, 30, 19, 13, '#ffffff', 'left', 900);
         break;
       }
       case 'watcher':
@@ -180,7 +174,7 @@ export class SpottedPhoto {
         g.fillStyle = 'rgba(224,48,78,0.9)';
         roundRectPath(g, PW / 2 - 92, 10, 184, 24, 12);
         g.fill();
-        text(g, 'MOTION AT YOUR DOOR', PW / 2, 23, 13, '#ffffff', 'center', 900);
+        text(g, tr().flight.photo.motion, PW / 2, 23, 13, '#ffffff', 'center', 900);
         break;
       case 'camera': {
         g.fillStyle = 'rgba(80,255,170,0.1)';
@@ -201,7 +195,7 @@ export class SpottedPhoto {
         }
         g.stroke();
         if (rec) dot(g, 28, 28);
-        text(g, 'CAM 03', 40, 29, 13, '#d9fff0', 'left', 900);
+        text(g, tr().flight.photo.cam, 40, 29, 13, '#d9fff0', 'left', 900);
         break;
       }
       case 'heli': {
@@ -219,8 +213,8 @@ export class SpottedPhoto {
         g.moveTo(this.px, this.py + 30);
         g.lineTo(this.px, this.py + 96);
         g.stroke();
-        text(g, 'AIR-1 · TARGET: UNCLEAR', 12, 20, 13, '#d9e6ff', 'left', 900);
-        text(g, 'ALT 300 FT', 12, PH - 14, 13, '#d9e6ff', 'left', 900);
+        text(g, tr().flight.photo.air, 12, 20, 13, '#d9e6ff', 'left', 900);
+        text(g, tr().flight.photo.alt, 12, PH - 14, 13, '#d9e6ff', 'left', 900);
         break;
       }
       case 'dog': {
@@ -248,8 +242,8 @@ export class SpottedPhoto {
         g.fillStyle = '#e0304e';
         roundRectPath(g, 106, 10, 54, 22, 6);
         g.fill();
-        text(g, 'LIVE', 133, 22, 13, '#ffffff', 'center', 900);
-        text(g, '2 watching', 168, 22, 12, '#ffffff', 'left', 700);
+        text(g, tr().flight.photo.live, 133, 22, 13, '#ffffff', 'center', 900);
+        text(g, tr().flight.photo.watching, 168, 22, 12, '#ffffff', 'left', 700);
         for (let i = 0; i < 3; i++) {
           const k = rm ? 0.3 + i * 0.2 : (st * 0.7 + i * 0.33) % 1;
           g.globalAlpha = 1 - k;
@@ -259,7 +253,7 @@ export class SpottedPhoto {
         break;
       }
     }
-    text(g, `${clock} AM`, PW - (cause === 'window' ? 108 : 12), 20, 13, 'rgba(255,255,255,0.9)', 'right', 800);
+    text(g, fmt(tr().flight.photo.clock, { clock }), PW - (cause === 'window' ? 108 : 12), 20, 13, 'rgba(255,255,255,0.9)', 'right', 800);
   }
 }
 
