@@ -8,6 +8,12 @@ import { farmWindow } from './farm-window';
 import { laundryLoading } from './laundry-loading';
 import { laundrySkylight } from './laundry-skylight';
 import type { Room } from './layout';
+// L5 pier code
+import { bubblesRoof, bubblesTunnel, peteGallery, peteSlipway, salDock, salLoft } from './deep-pier';
+// L6 clinic code
+import { hankFront, hankRear, oseiHelipad, oseiPharmacy, pembertonChute, pembertonWindow } from './deep-clinic';
+// L7 cruise code
+import { captainFunnel, captainMast, gregAwning, gregCabin, marcoPromenade, marcoSkylight } from './deep-ship';
 
 export const ROOMS: Readonly<Record<RoomId, Room>> = {
   farm_window: farmWindow,
@@ -26,4 +32,25 @@ export const ROOMS: Readonly<Record<RoomId, Room>> = {
   kev_fireescape: kevFireescape,
   mayor_clocktower: mayorClocktower,
   mayor_elevator: mayorElevator,
+  // L5 pier code
+  bubbles_roof: bubblesRoof,
+  bubbles_tunnel: bubblesTunnel,
+  pete_gallery: peteGallery,
+  pete_slipway: peteSlipway,
+  sal_loft: salLoft,
+  sal_dock: salDock,
+  // L6 clinic code
+  hank_front: hankFront,
+  hank_rear: hankRear,
+  osei_helipad: oseiHelipad,
+  osei_pharmacy: oseiPharmacy,
+  pemberton_window: pembertonWindow,
+  pemberton_chute: pembertonChute,
+  // L7 cruise code
+  captain_mast: captainMast,
+  captain_funnel: captainFunnel,
+  marco_skylight: marcoSkylight,
+  marco_promenade: marcoPromenade,
+  greg_awning: gregAwning,
+  greg_cabin: gregCabin,
 };

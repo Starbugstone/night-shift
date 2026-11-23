@@ -19,12 +19,13 @@ function abduct(over: Partial<AbductResult> = {}): AbductResult {
 
 describe('levels and routes', () => {
   it('has two training levels and two deep levels, 12 stars in all', () => {
-    expect(LEVELS.map((l) => l.kind)).toEqual(['tutorial', 'tutorial', 'deep', 'deep']);
-    expect(MAX_STARS).toBe(12);
+    // v3 (L5-L7) adds deep levels as each lands: every level after the two tutorials is deep
+    expect(LEVELS.map((l) => l.kind)).toEqual(['tutorial', 'tutorial', ...LEVELS.slice(2).map(() => 'deep')]);
+    expect(MAX_STARS).toBe(LEVELS.length * 3);
   });
 
   it('knows every route, and which level each belongs to', () => {
-    expect(ROOM_IDS).toHaveLength(16);
+    expect(ROOM_IDS).toHaveLength(4 + 6 * (LEVELS.length - 2));
     for (const id of ROOM_IDS) expect(isRoomId(id)).toBe(true);
     expect(isRoomId('nope')).toBe(false);
     expect(levelIndexForRoom('farm_chimney')).toBe(0);
@@ -32,22 +33,20 @@ describe('levels and routes', () => {
     expect(levelIndexForRoom('gary_skylight')).toBe(2);
     expect(levelIndexForRoom('mayor_elevator')).toBe(3);
     const all = LEVELS.flatMap(levelRooms);
-    expect(new Set(all).size).toBe(16);
+    expect(new Set(all).size).toBe(ROOM_IDS.length);
     expect(new Set(all)).toEqual(new Set(ROOM_IDS));
     expect(deepSlot(LEVEL3, 'barb_backdoor')).toEqual({ target: 1, entry: 1 });
   });
 });
 
 describe('progression', () => {
-  it('unlocks L3 after L2 is delivered, and L4 after L3', () => {
+  it('offers L3 and L4 without any deliveries, stars, or upgrades', () => {
     const s = defaultSave();
-    expect(isLevelUnlocked(s, 2)).toBe(false);
-    s.levels.level2.delivered = true;
     expect(isLevelUnlocked(s, 2)).toBe(true);
-    expect(isLevelUnlocked(s, 3)).toBe(false);
-    s.levels.level3.delivered = true;
     expect(isLevelUnlocked(s, 3)).toBe(true);
-    expect(isLevelUnlocked(s, 4)).toBe(false);
+    // v3: every deep level is open from the start; nothing past the last one
+    for (let i = 2; i < LEVELS.length; i++) expect(isLevelUnlocked(s, i), LEVELS[i]!.id).toBe(true);
+    expect(isLevelUnlocked(s, LEVELS.length)).toBe(false);
   });
 
   it('deep stars: all three, ghost, night owl', () => {
@@ -66,7 +65,7 @@ describe('progression', () => {
     expect(DEEP_PAY_MULT).toBe(2);
     expect(full.glorbs).toBe((5 + 3 * 10) * 2);
     expect(full.save.levels.level3.delivered).toBe(true);
-    expect(full.unlockedNext).toBe(true); // L4 opens
+    expect(full.unlockedNext).toBe(false);
     const sun = applyDeepRun(s, 'level3', { delivered: 2, elapsedSec: 300, spotted: 3, failedAbductions: 0, sunrise: true });
     expect(sun.glorbs).toBe(0);
     expect(sun.save.levels.level3.attempts).toBe(1);

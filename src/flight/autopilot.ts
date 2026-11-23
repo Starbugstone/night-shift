@@ -13,7 +13,9 @@ import type { DeepMap } from '../levels/types';
 import { circleSegment, pointInCircle, pointInCone } from './geometry';
 import { HazardField, Route } from './hazards';
 import { DeepFlightSim, copyFlightState, newFlightState, stepFlight, type FlightState } from './deep-sim';
-import { POWER_LINE, SAUCER } from './sim';
+import { LOCK, POWER_LINE, RING_R, SAUCER } from './sim';
+import { lighthouseCovers } from './lighthouse'; // L5 pier code
+import { AmbPhase, ambulancePose, ambulanceTrip, type AmbulancePose } from './ambulance';
 
 export const CELL = 40;
 const SAMPLE_SPAN = 90;
@@ -87,6 +89,7 @@ export function exposureGrid(m: DeepMap): ExposureGrid {
   const lit = new Float64Array(field.porchCount).fill(1);
   const samples = Math.round(SAMPLE_SPAN / SAMPLE_DT);
   const cx = (c: number): number => c * CELL + CELL / 2;
+  const ambPose: AmbulancePose = { x: 0, y: 0, heading: 0, ox: 0, oy: 0, phase: 0 };
 
   const raster = (k: number, x: number, y: number, r: number, test: (px: number, py: number) => boolean): void => {
     const c0 = Math.max(0, Math.floor((x - r) / CELL));
@@ -141,6 +144,28 @@ export function exposureGrid(m: DeepMap): ExposureGrid {
         case 'window':
           if (field.on[i]) raster(k, d.x, d.y, d.r, (px, py) => pointInCircle(px, py, d.x, d.y, d.r));
           break;
+        // L5 pier code: the lighthouse beam (shadow wedges stay dark, so they become hold points)
+        case 'lighthouse': {
+          const a = field.a[i]!;
+          raster(k, d.x, d.y, d.range, (px, py) => lighthouseCovers(d, a, px, py));
+          break;
+        }
+        // L6 clinic code: plan as if every ambulance is always out on its run
+        case 'ambulance': {
+          if (ambulancePose(d, field.routes[i]!, (k * SAMPLE_DT) % ambulanceTrip(d, field.routes[i]!), ambPose) !== AmbPhase.Driving) break;
+          const { x, y, ox, oy, heading } = ambPose;
+          raster(k, x, y, d.beaconR, (px, py) => pointInCircle(px, py, x, y, d.beaconR));
+          raster(k, ox, oy, d.coneRange, (px, py) => pointInCone(px, py, ox, oy, heading, d.coneHalf, d.coneRange));
+          break;
+        }
+        // L7 cruise code: a steward's torch (photographers frame you only once you are there: see below)
+        case 'steward': {
+          const x = field.x2[i]!;
+          const y = field.y2[i]!;
+          const a = field.a[i]!;
+          raster(k, x, y, d.coneRange, (px, py) => pointInCone(px, py, x, y, a, d.coneHalf, d.coneRange));
+          break;
+        }
         default:
           break;
       }
@@ -168,6 +193,14 @@ export function exposureGrid(m: DeepMap): ExposureGrid {
           extra[i] = extra[i]! + 14;
           noHold[i] = 1;
         } else if (d.type === 'porch' && pointInCircle(x, y, d.x, d.y, d.r + 20)) {
+          noHold[i] = 1;
+        } else if (d.type === 'photographer' && pointInCircle(x, y, d.x, d.y, d.range)) {
+          // L7 cruise code: a photographer frames whoever lingers in range; pass through, never wait there
+          extra[i] = extra[i]! + 0.8;
+          noHold[i] = 1;
+        } else if (d.type === 'ambulance' && pointInCircle(x, y, d.bayX, d.bayY, d.trigger + 30)) {
+          // L6 clinic code: don't scramble ambulances on the way past
+          extra[i] = extra[i]! + 10;
           noHold[i] = 1;
         }
       }
@@ -359,7 +392,7 @@ export class FlightAutopilot {
   ) {
     this.grid = exposureGrid(sim.map);
     this.rf = new HazardField(sim.map.hazards);
-    this.rs = newFlightState(this.rf.porchCount);
+    this.rs = newFlightState(this.rf.porchCount, this.rf.ambCount, this.rf.photoCount);
   }
 
   /** Current planned path (for debug drawing). */
@@ -497,6 +530,7 @@ export class FlightAutopilot {
     this.rpi.pi = this.pi;
     let peak = rs.sus;
     let held = 0;
+    let lock = 0;
     const f = this.rf2;
     f.down = this.finger.down;
     f.dx = this.finger.dx;
@@ -510,6 +544,13 @@ export class FlightAutopilot {
       if (rs.sus > peak) peak = rs.sus;
       if (peak >= 1) return 1;
       const s = rs.s;
+      // L7 cruise code: a photographer frames whoever stops at a ring, so on its maps the look-ahead
+      // also models the lock-on, which ends the flight leg (and the exposure) the moment it completes
+      if (this.rf.photoCount > 0 && mode === 'go' && stop === this.path.length - 1) {
+        const inRing = Math.hypot(goalP.x - s.x, goalP.y - s.y) < RING_R * LOCK.insideFrac && Math.hypot(s.vx, s.vy) < LOCK.maxSpeed;
+        lock = inRing ? lock + ROLL_DT : Math.max(0, lock - ROLL_DT * LOCK.drain);
+        if (lock >= LOCK.time) break;
+      }
       if (Math.hypot(goalP.x - s.x, goalP.y - s.y) < 30 && Math.hypot(s.vx, s.vy) < 140) {
         held += ROLL_DT;
         if (held >= settle) break;

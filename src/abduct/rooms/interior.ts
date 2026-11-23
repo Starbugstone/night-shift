@@ -1,3 +1,5 @@
+import type { Wetness } from '../moisture';
+import type { ProbeDrone } from '../probe';
 import type { Area, Furniture, Sprite } from './layout';
 
 export interface InteriorRoom extends Area {
@@ -31,12 +33,17 @@ export type Hazard =
   | { kind: 'gate'; name: string; area: Area; axis: 'x' | 'y'; cycle: Cycle; hinged?: boolean }
   | { kind: 'patrol'; name: string; sprite: Sprite; dx: number; dy: number; speed: number; phase: number; barks?: boolean }
   | { kind: 'pop'; name: string; area: Area; cycle: Cycle }
-  | { kind: 'camera'; name: string; x: number; y: number; mountY?: number; angle: number; spread: number; range: number; sweep: number; speed: number; phase: number }
+  | { kind: 'camera'; name: string; x: number; y: number; mountY?: number; angle: number; spread: number; range: number; sweep: number; speed: number; phase: number
+    /** L5 pier code: a lighthouse lens, drawn as the lens's light (no CCTV body or REC light). */
+    lens?: boolean }
   | { kind: 'fragile'; name: string; sprite: Sprite }
   | { kind: 'creak'; name: string; area: Area }
   | { kind: 'speaker'; name: string; sprite: Sprite; radius: number; period: number }
   | { kind: 'draft'; name: string; area: Area; ax: number; ay: number }
-  | { kind: 'gear'; name: string; sprite: Sprite; speed: number };
+  | { kind: 'gear'; name: string; sprite: Sprite; speed: number }
+  // L7 cruise code (src/abduct/swell.ts): the ship's roll, and things on castors that slide with it
+  | { kind: 'swell'; name: string; period: number; pull: number; phase: number }
+  | { kind: 'castor'; name: string; sprite: Sprite; travel: number; period: number; phase: number; lag: number };
 
 export interface Sleeper {
   name: string;
@@ -61,6 +68,8 @@ export interface Checkpoint {
   cross?: string;
   /** Beam speed while committing to the crossing. */
   speed?: number;
+  /** L6: on reaching this point, hold the body for probe drone n (index into the route's probes) until its reading is taken. */
+  probe?: number;
 }
 
 export interface InteriorRoute {
@@ -69,6 +78,10 @@ export interface InteriorRoute {
   caption: string;
   mumbles: readonly string[];
   exitName: string;
+  /** L5: water zones and refill points (src/abduct/moisture.ts). */
+  wet?: Wetness;
+  /** L6: Form 7-B probe drones (src/abduct/probe.ts); the exit stays shut until every reading is taken. */
+  probes?: readonly ProbeDrone[];
 }
 
 export function building(

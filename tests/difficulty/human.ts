@@ -83,6 +83,9 @@ export interface AbductRun {
   stall: { checkpoint: number; x: number; y: number };
   /** Times the hand had to drag back to a snagged body. */
   recoveries: number;
+  /** L5 pier code: lowest moisture reached (1 = no sheath) and whether she dried out. */
+  minMoisture: number;
+  driedOut: boolean;
 }
 
 export const HARD_RULES: AbductRules = { wakeFails: true, hard: true };
@@ -121,6 +124,7 @@ export function playAbduction(
   let snagX = 0;
   let snagY = 0;
   let recoveries = 0;
+  let minMoisture = 1;
   while (sim.elapsed - t0 < 180 && !sim.complete) {
     const { body } = sim;
     pilot.pace = sim.elapsed - heard < 2.5 ? Math.min(profile.pace, 1.4) : profile.pace;
@@ -161,6 +165,7 @@ export function playAbduction(
     peakWake = Math.max(peakWake, sim.wake.value);
     for (const s of sim.interior?.sleepers ?? []) peakSleeper = Math.max(peakSleeper, s.wake);
     peakCamera = Math.max(peakCamera, sim.interior?.exposure ?? 0);
+    if (sim.wet?.sheathed) minMoisture = Math.min(minMoisture, sim.wet.level);
   }
   const result = sim.result();
   return {
@@ -173,6 +178,8 @@ export function playAbduction(
     peakSleeper: Math.round(peakSleeper),
     peakCamera: Math.round(peakCamera * 100) / 100,
     recoveries,
+    minMoisture: Math.round(minMoisture * 100) / 100,
+    driedOut: !!sim.wet?.dried,
     stall: { checkpoint: pilot.checkpoint, x: Math.round(sim.body.chestX), y: Math.round(sim.body.chestY) },
   };
 }

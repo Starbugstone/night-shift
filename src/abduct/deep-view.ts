@@ -11,6 +11,8 @@ import {
 } from '../core/fx';
 import { HUD_ROW, hudButton, hudMeter, hudPanel, hudTimer, type MeterState } from '../ui/hud';
 import { HumanArt, RESTART } from './draw';
+import { DolphinArt, type SpecimenArt } from './dolphin-art';
+import { WetView } from './wet-view';
 import { getLang, gt, localArt, tr } from '../i18n';
 import { wrap as wrapText } from '../ui/draw';
 import type { TurnControl } from './turn';
@@ -21,6 +23,10 @@ import { clamp, Joint, type Blade, type Circle, type Rect, type SwingingRect } f
 import type { Building, Cycle, InteriorRoom, Opening } from './rooms/interior';
 import type { Area, Sprite } from './rooms/layout';
 import type { AbductSimulation } from './simulation';
+// L6 clinic code: Form 7-B drones, the shut exit and the clipboard
+import { drawClipboard, drawExitLock, drawProbes, letteredKey } from './probe-draw';
+// L7 cruise code: the swell's dial, soup and castor tells
+import { drawCastorTell, drawSwellDial, drawSwellSoup } from './swell-draw';
 
 /** Sunrise clock, between the sleeper meter and the camera fuse on row two. */
 export const DEEP_HUD_SUNRISE_SLOT = { x: 202, y: 86, w: 132, h: 64 } as const;
@@ -432,7 +438,10 @@ export function drawSnooze(g: CanvasRenderingContext2D, sim: AbductSimulation, r
 }
 
 export class DeepAbductView {
-  private readonly human: HumanArt;
+  private readonly human: SpecimenArt;
+  /** L5: water zones, refills and drips (src/abduct/wet-view.ts). */
+  private readonly wetView: WetView | undefined;
+  private readonly moistureMeter = meter(gt('Moisture').toLocaleUpperCase());
   private readonly roomPaths: Map<InteriorRoom, Navigation>;
   private readonly posterKey = localArt('room/saucer_poster');
   private readonly wakeMeter = meter(tr().abduct.wake);
@@ -477,7 +486,11 @@ export class DeepAbductView {
 
   constructor(private readonly sim: AbductSimulation, private readonly ctx: GameContext) {
     const { building, sleepers, hazards } = sim.interior!;
-    this.human = new HumanArt(sim.room.human, ctx);
+    this.human = sim.body.plan.kind === 'dolphin' ? new DolphinArt(ctx, sim.wet) : new HumanArt(sim.room.human, ctx);
+    this.wetView = sim.wet ? new WetView(sim.wet) : undefined;
+    // amber below a quarter (the outline's tell), red only once she is dry (the fuse)
+    this.moistureMeter.warn = 0.75;
+    this.moistureMeter.danger = 0.999;
     this.currentRoom = building.rooms[0]!;
     this.roomPaths = navigation(building, sim.exitX, sim.exitY);
     this.sleeperMeters = sleepers.map(sleeper => meter(gt(sleeper.spec.name).toLocaleUpperCase()));
@@ -525,6 +538,13 @@ export class DeepAbductView {
         break;
       case 'room/water_cooler':
         this.gags.push({ kind: 'cooler', x: s.x, y: s.y, w: s.w, h: s.h });
+        break;
+      // L6 clinic code: indoors the only amber is the vending machine and the heart monitors
+      case 'room/vending_machine':
+        this.lights.push({ x, y: s.y + 70, r: 170, rgb: GLOW.amber, alpha: 0.42, flicker: 3 });
+        break;
+      case 'room/heart_monitor':
+        this.lights.push({ x, y: s.y + 30, r: 110, rgb: GLOW.amber, alpha: 0.36, flicker: 3 });
         break;
       default:
         break;
@@ -591,12 +611,17 @@ export class DeepAbductView {
 
     this.exit(g);
     for (let i = 0; i < interior.hazards.length; i++) this.hazard(g, interior.hazards[i]!, i);
+    drawSwellSoup(g, building, sim.elapsed, this.cameraX, this.cameraY, VIEW_W, VIEW_H); // L7 cruise code
     for (let i = 0; i < interior.sleepers.length; i++) this.sleeper(g, interior.sleepers[i]!, i, dt);
     const { beamX, beamY } = sim.body;
     const beamViewX = clamp(beamX, this.cameraX + 27, this.cameraX + VIEW_W - 27);
     const beamViewY = clamp(beamY, this.cameraY + 102, this.cameraY + VIEW_H - 93);
     if (!sim.delivered) this.beam(g, beamViewX, beamViewY, dragging);
+    this.wetView?.drawBack(g, this.cameraX, this.cameraY, sim.elapsed, rm);
     this.subject(g);
+    // L6 clinic code
+    if (interior.probes) drawProbes(g, interior.probes, sim.body, ctx.assets, sim.elapsed, rm);
+    this.wetView?.drawFront(g, this.cameraX, this.cameraY, sim.elapsed, rm);
     if (!sim.delivered) {
       if (turn) drawTurnTell(g, beamViewX, beamViewY, dragging ? 23 : 18, turn, sim.body.tilt, ctx.reducedMotion);
       this.reticle(g, beamViewX, beamViewY, dragging);
@@ -627,6 +652,7 @@ export class DeepAbductView {
       g.globalAlpha = 1;
     }
     this.hud(g, turn);
+    drawSwellDial(g, building, sim.elapsed, ctx.assets, rm); // L7 cruise code
     drawFailure(g, sim, rm, ctx.assets);
   }
 
@@ -896,7 +922,7 @@ export class DeepAbductView {
   }
 
   private drawArt(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number, solid = false): void {
-    const image = this.ctx.assets.get(key === 'room/saucer_poster' ? this.posterKey : key);
+    const image = this.ctx.assets.get(key === 'room/saucer_poster' ? this.posterKey : letteredKey(key));
     if (image) {
       drawSprite(g, image, x, y, w, h);
     } else if (DECOR_FALLBACKS[key]) {
@@ -964,6 +990,13 @@ export class DeepAbductView {
     const { x, y, w, h, key } = sim.room.exit;
     const zone = sim.room.exitZone;
     const rm = ctx.reducedMotion;
+    // L6 clinic code: until Form 7-B is complete the exit is shut (amber, never red)
+    const probes = sim.interior?.probes;
+    if (probes && !probes.done) {
+      this.drawArt(g, key, x, y, w, h);
+      drawExitLock(g, probes, zone, sim.elapsed, rm);
+      return;
+    }
     const pulse = rm ? 0.5 : 0.5 + 0.5 * Math.sin(sim.elapsed * 3.2);
     // the closer the specimen, the louder the exit
     const near = 1 - clamp((Math.hypot(sim.body.chestX - sim.exitX, sim.body.chestY - sim.exitY) - 60) / 300, 0, 1);
@@ -1219,6 +1252,14 @@ export class DeepAbductView {
       case 'draft':
         if (this.visible(spec.area)) this.draft(g, spec.area, spec.ay);
         break;
+      // L7 cruise code: a trolley or deckchair stack on castors, rolling with the swell
+      case 'castor': {
+        const shape = state.shapes[0] as Rect;
+        if (!this.visible({ x: shape.x - spec.travel, y: shape.y, w: shape.w + spec.travel * 2, h: shape.h })) return;
+        this.drawArt(g, spec.sprite.key, shape.x, shape.y, shape.w, shape.h, true);
+        drawCastorTell(g, spec, shape, this.sim.elapsed, this.ctx.reducedMotion);
+        break;
+      }
       case 'speaker': {
         this.asset(g, spec.sprite, true);
         const cx = spec.sprite.x + spec.sprite.w / 2;
@@ -1505,16 +1546,18 @@ export class DeepAbductView {
     if (spec.mountY !== undefined) {
       this.mount(g, spec.x, spec.mountY, spec.x - Math.cos(angle) * 36, spec.y - Math.sin(angle) * 36, 9);
     }
-    g.save();
-    g.translate(spec.x, spec.y);
-    g.rotate(angle);
-    this.drawArt(g, 'room/security_camera', -61, -20, 67, 38);
-    g.restore();
+    if (!spec.lens) { // L5 pier code: a lighthouse lens has no camera body
+      g.save();
+      g.translate(spec.x, spec.y);
+      g.rotate(angle);
+      this.drawArt(g, 'room/security_camera', -61, -20, 67, 38);
+      g.restore();
+    }
     ring(g, spec.x, spec.y, 6, watching ? RED : AMBER, 3);
     // the lens glints; the REC light blinks, solid once it has you
     g.globalCompositeOperation = 'lighter';
     drawGlow(g, watching ? GLOW.red : GLOW.amber, spec.x, spec.y, watching ? 30 * beat : 16, watching ? 30 * beat : 16, 0.95);
-    if (watching || rm || Math.floor(t * 2.5 + index) % 2 === 0) {
+    if (!spec.lens && (watching || rm || Math.floor(t * 2.5 + index) % 2 === 0)) {
       drawGlow(g, GLOW.red, spec.x - Math.cos(angle) * 44, spec.y - Math.sin(angle) * 44 - 14, 11, 11, 1);
     }
     g.globalCompositeOperation = 'source-over';
@@ -2100,10 +2143,18 @@ export class DeepAbductView {
       state.flash = this.sleeperHop[i]! * 0.7;
       this.drawMeter(g, state, sleeper.wake / 100, sleeper.wake >= 100, 14, 86, 180);
     }
+    const wet = sim.wet;
+    if (wet?.sheathed && !interior.watching && interior.exposure <= 0) {
+      // L5: the moisture sheath drains like a fuse; amber below a quarter, red when dry
+      this.moistureMeter.label = gt(wet.level <= 0 ? 'Drying out!' : 'Moisture').toLocaleUpperCase();
+      this.drawMeter(g, this.moistureMeter, 1 - wet.level, wet.level <= 0, 342, 86, 184);
+    }
     if (interior.watching || interior.exposure > 0) {
       this.cameraMeter.label = interior.watching ? tr().abduct.onCamera : tr().abduct.cameraFuse;
       this.drawMeter(g, this.cameraMeter, interior.exposure, interior.exposure >= 1 || !!interior.watching, 342, 86, 184);
     }
+    // L6 clinic code: the Form 7-B clipboard
+    if (interior.probes) drawClipboard(g, interior.probes, ctx.assets, 312, 158, 214);
 
     // room / exit bar, between the two TURN buttons in the bottom corners
     hudPanel(g, 84, 887, 372, 56);

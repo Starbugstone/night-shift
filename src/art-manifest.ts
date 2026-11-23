@@ -314,6 +314,237 @@ export const ART: Record<string, ArtSpec> = {
   // ---- APPEND: shell/flight/UI code (Opus) — extra keys you need, with a one-line art note each
   'flight/garden_gnome_top': { w: 30, h: 30 }, // L3 joke: Gary's tripwire posts; a garden gnome seen from above (red hat), drawn at both ends of a red laser line
   'flight/crop_field_top': { w: 480, h: 340 }, // L3 outskirts: fenced wheat field with a crop circle (scripts/art-crop-field.mjs)
+
+  // =====================================================================
+  // v3 "New Shifts" (docs/GDD-3-new-shifts.md), L5–L7. Listed by the coordinator.
+  // Same style rules as v2 (docs/ART_BRIEF.md). Humans use the doyle/larry rig and sizes.
+  // Lettered art (signs) also gets a `_fr` variant. Code owners may APPEND per level below.
+  // =====================================================================
+
+  // ---- v3 L5 "Pier Pressure" (Barnacle Bay) — flight. Sea is dark Pine, never cyan.
+  'flight/ground_sea': { w: 540, h: 540 }, // seamless dark Pine sea, faint Ice wave dashes; shared by L5 and L7
+  'flight/ground_sand': { w: 540, h: 540 }, // seamless desaturated Ochre sand, a few pebbles
+  'flight/boardwalk_v': { w: 90, h: 540 }, // wooden boardwalk planks running north–south, tiles vertically
+  'flight/boardwalk_h': { w: 540, h: 90 }, // same, east–west
+  'flight/marine_park_top': { w: 360, h: 300 }, // Bubbles: round open show pool (dark water, ripple rings), striped bleachers south, flat service roof north with a roof panel
+  'flight/lighthouse_top': { w: 220, h: 220 }, // Pete: round white tower top on a rock, lamp housing in the centre (lamp unlit; code draws the beam), gallery rail
+  'flight/fish_market_top': { w: 300, h: 220 }, // Sal: corrugated market roof with a loft hatch, dock door on the east side, crates stacked outside
+  'flight/beach_hut_top': { w: 90, h: 80 }, // filler: striped little beach hut roof
+  'flight/boat_moored_top': { w: 70, h: 160 }, // moored sailing boat, bow north, mast dot + furled sail (a tall prop: casts a beam shadow)
+  'flight/patrol_boat_top': { w: 80, h: 150 }, // harbour patrol boat, bow north, searchlight on the bow
+  'flight/gull_flock': { w: 120, h: 90 }, // 6–8 gulls from above, wings out
+  'flight/chip_kiosk_top': { w: 100, h: 80 }, // chip kiosk roof with a warm amber lamp spot
+  'flight/harbour_crane_top': { w: 140, h: 140 }, // dockside crane from above (tall prop: casts a beam shadow)
+
+  // ---- v3 L5 — the dolphin rig (custom body plan; side view, nose pointing right, belly down)
+  'human/bubbles_head': { w: 90, h: 60 }, // snout + melon; asleep: one eye shut, one half-lidded, fixed smile, tiny "z" from the blowhole
+  'human/bubbles_head_awake': { w: 90, h: 60 }, // both eyes wide, mouth open (squeaking)
+  'human/bubbles_torso': { w: 100, h: 84 }, // chest + belly, dorsal fin baked in; Slate/Denim back, Mist belly, one Ice highlight
+  'human/bubbles_tail': { w: 40, h: 76 }, // tail stock, joint at top-centre
+  'human/bubbles_fluke': { w: 76, h: 40 }, // tail fluke, joint at top-centre
+  'human/bubbles_flipper': { w: 26, h: 50 }, // one flipper (used for near and far), joint at top-centre
+
+  // ---- v3 L5 — humans
+  // pete: harbourmaster/lighthouse keeper, cable-knit jumper, oilskin hat, white beard, rubber boots.
+  // sal: fish-market accountant, cardigan, visor, pencil behind ear, half-moon glasses on a chain.
+  'human/pete_head': { w: 70, h: 80 },
+  'human/pete_head_awake': { w: 70, h: 80 },
+  'human/pete_torso': { w: 80, h: 120 },
+  'human/pete_upper_arm': { w: 26, h: 60 },
+  'human/pete_lower_arm': { w: 24, h: 60 },
+  'human/pete_upper_leg': { w: 32, h: 70 },
+  'human/pete_lower_leg': { w: 30, h: 72 },
+  'human/sal_head': { w: 70, h: 80 },
+  'human/sal_head_awake': { w: 70, h: 80 },
+  'human/sal_torso': { w: 80, h: 120 },
+  'human/sal_upper_arm': { w: 26, h: 60 },
+  'human/sal_lower_arm': { w: 24, h: 60 },
+  'human/sal_upper_leg': { w: 32, h: 70 },
+  'human/sal_lower_leg': { w: 30, h: 72 },
+
+  // ---- v3 L5 — second sleepers, backdrops, props
+  'room/barnacle_asleep': { w: 160, h: 90 }, // sea lion asleep on its side on a wet rock, whiskers drooping
+  'room/barnacle_awake': { w: 160, h: 120 }, // sea lion up on its flippers, barking
+  'room/kipper_asleep': { w: 90, h: 50 }, // scruffy harbour cat curled on a fish crate lid
+  'room/kipper_awake': { w: 90, h: 70 }, // cat arched, hissing
+  'room/bg_show_pool': { w: 540, h: 720 }, // show-pool hall: tiled wall, bleacher shadows, dim lilac light
+  'room/bg_aquarium_tunnel': { w: 540, h: 720 }, // glass viewing tunnel, dark Pine water outside, kelp silhouettes
+  'room/bg_jelly_hall': { w: 540, h: 720 }, // dark hall with UV-lilac glowing tanks (no jellies: those are props)
+  'room/bg_lamp_room': { w: 540, h: 720 }, // lighthouse lamp room: whitewash, brass, round windows
+  'room/bg_lighthouse_stairs': { w: 540, h: 720 }, // inside the tower: curved whitewashed wall, iron rail
+  'room/bg_boat_shed': { w: 540, h: 720 }, // wooden boat shed, slipway, nets on the walls
+  'room/bg_fish_market': { w: 540, h: 720 }, // market hall: tiled wall, price boards (no text), ice trays
+  'room/bg_cold_store': { w: 540, h: 720 }, // frosty cold store: steel walls, frost, a cold blue tint
+  'room/show_pool': { w: 540, h: 160 }, // pool front: tiled rim and dark Pine water (code draws the wavy surface line)
+  'room/hoop': { w: 120, h: 140 }, // show hoop on a rope, pivot at top-centre
+  'room/beach_ball': { w: 60, h: 60 }, // floating striped beach ball
+  'room/jellyfish': { w: 70, h: 100 }, // UV-lilac jellyfish, bell up, trailing tendrils
+  'room/mop_bucket': { w: 80, h: 90 }, // janitor's mop bucket with water (a refill point)
+  'room/sprinkler_head': { w: 40, h: 30 }, // ceiling fire sprinkler (refill point when it sprays)
+  'room/rocking_chair': { w: 140, h: 150 }, // Pete's rocking chair, side view
+  'room/fresnel_lens': { w: 160, h: 200 }, // the big lighthouse lens on its stand
+  'room/counterweight_lighthouse': { w: 60, h: 140 }, // clockwork weight on a chain
+  'room/crab_pots': { w: 120, h: 140 }, // stacked hanging crab pots, pivot at top-centre
+  'room/hanging_scales': { w: 100, h: 140 }, // market bucket scales, pivot at top-centre
+  'room/fish_crates': { w: 140, h: 110 }, // tower of fish crates (fragile: topples)
+  'room/freezer_hook': { w: 60, h: 120 }, // hook on a rail trolley with a frozen fish
+  'room/ledger_desk': { w: 260, h: 130 }, // Sal's desk with the open ledger, adding machine, lamp
+  'room/sardine_tin': { w: 50, h: 30 }, // souvenir: an empty sardine tin
+  'room/penguin': { w: 50, h: 70 }, // sleepy penguin (decor)
+  'room/porthole_tank': { w: 180, h: 180 }, // delivery picture: round Bureau porthole tank, dolphin fin over the rim
+
+  // ---- v3 L6 "Probe Compliance" (St. Mildred's General) — flight. No red cross anywhere.
+  'flight/ground_campus': { w: 540, h: 540 }, // seamless hospital-campus lawn with pine needles, low contrast
+  'flight/endoscopy_wing_top': { w: 320, h: 240 }, // Hank: low wing, glass entrance canopy south (crescent-moon sign), service door north
+  'flight/oncall_block_top': { w: 260, h: 220 }, // Osei: block with a rooftop helipad H-circle (no cross) and a pharmacy hatch east
+  'flight/recovery_ward_top': { w: 300, h: 220 }, // Pemberton: ward roof with skylight strip, laundry chute vent on the west side
+  'flight/ambulance_top': { w: 80, h: 160 }, // ambulance from above, nose north, beacon on the roof (no cross: a crescent moon)
+  'flight/ambulance_bay_top': { w: 200, h: 120 }, // two-bay garage roof, roll doors on the south edge
+  'flight/pine_top': { w: 80, h: 80 }, // pine tree crown from above
+  'flight/clinic_annex_top': { w: 220, h: 180 }, // filler hospital building roof with AC units
+
+  // ---- v3 L6 — humans
+  // hank: waiting-room patient, hospital wristband, cardigan over pyjamas, clutching ticket 347.
+  // osei: gastroenterologist, scrubs, stethoscope, surgical cap, deep under-eye bags.
+  // pemberton: post-procedure patient, hospital gown (closed, tied), fluffy socks, sleep mask on forehead.
+  'human/hank_head': { w: 70, h: 80 },
+  'human/hank_head_awake': { w: 70, h: 80 },
+  'human/hank_torso': { w: 80, h: 120 },
+  'human/hank_upper_arm': { w: 26, h: 60 },
+  'human/hank_lower_arm': { w: 24, h: 60 },
+  'human/hank_upper_leg': { w: 32, h: 70 },
+  'human/hank_lower_leg': { w: 30, h: 72 },
+  'human/osei_head': { w: 70, h: 80 },
+  'human/osei_head_awake': { w: 70, h: 80 },
+  'human/osei_torso': { w: 80, h: 120 },
+  'human/osei_upper_arm': { w: 26, h: 60 },
+  'human/osei_lower_arm': { w: 24, h: 60 },
+  'human/osei_upper_leg': { w: 32, h: 70 },
+  'human/osei_lower_leg': { w: 30, h: 72 },
+  'human/pemberton_head': { w: 70, h: 80 },
+  'human/pemberton_head_awake': { w: 70, h: 80 },
+  'human/pemberton_torso': { w: 80, h: 120 },
+  'human/pemberton_upper_arm': { w: 26, h: 60 },
+  'human/pemberton_lower_arm': { w: 24, h: 60 },
+  'human/pemberton_upper_leg': { w: 32, h: 70 },
+  'human/pemberton_lower_leg': { w: 30, h: 72 },
+
+  // ---- v3 L6 — second sleepers, backdrops, props
+  'room/gladys_asleep': { w: 120, h: 150 }, // night nurse slumped at the nurses' station, cardigan, reading glasses
+  'room/gladys_awake': { w: 120, h: 170 }, // nurse bolt upright, finger to lips "SHH"
+  'room/roland_asleep': { w: 160, h: 80 }, // auditor asleep in a hospital bed clutching a rubber stamp
+  'room/roland_awake': { w: 160, h: 110 }, // sitting up, stamp raised, outraged
+  'room/bg_waiting_room': { w: 540, h: 720 }, // Mist walls, Teal dado stripe, dim strip lights
+  'room/bg_ward': { w: 540, h: 720 }, // hospital ward, curtain rails, night lights
+  'room/bg_on_call': { w: 540, h: 720 }, // on-call room: small, a corkboard, a tired lamp
+  'room/bg_pharmacy': { w: 540, h: 720 }, // pharmacy back room, pale shelving
+  'room/bg_recovery_bay': { w: 540, h: 720 }, // recovery bay: monitors, Lav shadows
+  'room/bg_linen_room': { w: 540, h: 720 }, // linen room: folded sheets, a chute opening
+  'room/probe_drone_thermo': { w: 70, h: 70 }, // mint Bureau drone holding a brass thermometer, little propeller
+  'room/probe_drone_hammer': { w: 70, h: 70 }, // same drone holding a rubber reflex hammer
+  'room/probe_drone_feather': { w: 70, h: 70 }, // same drone holding a goose-down tickle feather
+  'room/waiting_chairs': { w: 300, h: 110 }, // row of three joined plastic waiting chairs
+  'room/ticket_sign': { w: 160, h: 80 }, // red LED-style "NOW SERVING 12" ticket display (lettered)
+  'room/ticket_sign_fr': { w: 160, h: 80 }, // « NUMÉRO 12 »
+  'room/internal_affairs_sign': { w: 240, h: 60 }, // hanging corridor sign "DEPT. OF INTERNAL AFFAIRS" with an arrow (lettered)
+  'room/internal_affairs_sign_fr': { w: 240, h: 60 }, // « SERVICE DES AFFAIRES INTERNES »
+  'room/prep_jug': { w: 40, h: 60 }, // souvenir: a big jug of prep drink labelled with a frowny face
+  'room/bunk_bed': { w: 300, h: 220 }, // on-call bunk bed
+  'room/hospital_bed': { w: 320, h: 150 }, // recovery bed with rails
+  'room/privacy_curtain': { w: 160, h: 260 }, // curtain on a ceiling rail, pale lilac
+  'room/iv_stand': { w: 50, h: 200 }, // wheeled IV stand
+  'room/heart_monitor': { w: 70, h: 150 }, // wheeled heart monitor (code draws the trace)
+  'room/pill_shelf': { w: 140, h: 200 }, // pharmacy shelf of pill bottles (fragile)
+  'room/revolving_door': { w: 200, h: 240 }, // revolving door frame (code draws the turning leaves)
+  'room/laundry_cart': { w: 140, h: 110 }, // wheeled laundry cart
+  'room/vending_machine': { w: 110, h: 220 }, // snack machine with warm amber glow
+  'room/xray_lightbox': { w: 120, h: 90 }, // wall lightbox (code draws the bones of whatever passes)
+
+  // ---- v3 L7 "A Whole Cruise Ship" (SS Buffet Royale) — flight. Ship bow-north, sea is ground_sea.
+  'flight/ship_bow_top': { w: 900, h: 720 }, // cream bow section, tapering to the point at the top, anchor chains, deck planking
+  'flight/ship_mid_top': { w: 900, h: 540 }, // midship deck section (repeatable): planking, rails both sides, lifeboat davits
+  'flight/ship_stern_top': { w: 900, h: 600 }, // rounded stern with a little flag; wake drawn by code
+  'flight/ship_bridge_top': { w: 320, h: 200 }, // Captain: bridge roof with radar dish and wing doors
+  'flight/ship_galley_top': { w: 280, h: 200 }, // Marco: galley roof with a ribbed skylight and hood vents
+  'flight/ship_lido_top': { w: 320, h: 240 }, // Greg: lido deck with a Teal pool, loungers, striped awning
+  'flight/funnel_top': { w: 140, h: 140 }, // plum funnel from above, dark mouth
+  'flight/lifeboat_top': { w: 60, h: 130 }, // orange lifeboat under a cover
+  'flight/photographer_top': { w: 50, h: 50 }, // ship photographer from above: hat, big camera with flash
+  'flight/radar_mast_top': { w: 60, h: 60 }, // radar mast top (code draws the two cones)
+  'flight/deck_lights_h': { w: 540, h: 20 }, // string of deck bulbs, tiles horizontally (decor, no light pools)
+
+  // ---- v3 L7 — humans
+  // sterling: ship's captain, white uniform jacket, peaked cap, magnificent beard (no real insignia).
+  // marco: chef, whites, tall toque, extravagant moustache, ladle in his belt.
+  // greg: tourist, Hawaiian-print shirt, sunglasses on at night, three white towels draped over him.
+  'human/sterling_head': { w: 70, h: 80 },
+  'human/sterling_head_awake': { w: 70, h: 80 },
+  'human/sterling_torso': { w: 80, h: 120 },
+  'human/sterling_upper_arm': { w: 26, h: 60 },
+  'human/sterling_lower_arm': { w: 24, h: 60 },
+  'human/sterling_upper_leg': { w: 32, h: 70 },
+  'human/sterling_lower_leg': { w: 30, h: 72 },
+  'human/marco_head': { w: 70, h: 80 },
+  'human/marco_head_awake': { w: 70, h: 80 },
+  'human/marco_torso': { w: 80, h: 120 },
+  'human/marco_upper_arm': { w: 26, h: 60 },
+  'human/marco_lower_arm': { w: 24, h: 60 },
+  'human/marco_upper_leg': { w: 32, h: 70 },
+  'human/marco_lower_leg': { w: 30, h: 72 },
+  'human/greg_head': { w: 70, h: 80 },
+  'human/greg_head_awake': { w: 70, h: 80 },
+  'human/greg_torso': { w: 80, h: 120 },
+  'human/greg_upper_arm': { w: 26, h: 60 },
+  'human/greg_lower_arm': { w: 24, h: 60 },
+  'human/greg_upper_leg': { w: 32, h: 70 },
+  'human/greg_lower_leg': { w: 30, h: 72 },
+
+  // ---- v3 L7 — second sleeper, backdrops, props
+  'room/anchovy_asleep': { w: 80, h: 45 }, // small ship's cat curled on a console, tiny sailor collar
+  'room/anchovy_awake': { w: 80, h: 65 }, // cat up, ears back, yowling
+  'room/bg_bridge': { w: 540, h: 720 }, // ship's bridge at night: wide dark windows, brass, instrument glow
+  'room/bg_galley': { w: 540, h: 720 }, // steel galley: tiles, extractor hoods
+  'room/bg_dining_room': { w: 540, h: 720 }, // ballroom/dining room: Brick and Gold, brass rails
+  'room/bg_lido_bar': { w: 540, h: 720 }, // lido bar under an awning, deck boards, night sea beyond the rail
+  'room/bg_cabin_corridor': { w: 540, h: 720 }, // narrow cabin corridor, numbered doors (no text), portholes
+  'room/bg_engine_casing': { w: 540, h: 720 }, // engine casing: pipes, gauges, warm dim light
+  'room/captains_chair': { w: 120, h: 150 }, // captain's high chair at the wheel
+  'room/ships_wheel': { w: 120, h: 120 }, // brass-and-wood wheel
+  'room/brass_compass': { w: 60, h: 60 }, // binnacle compass
+  'room/chart_lamp': { w: 50, h: 110 }, // swinging chart lamp, pivot at top-centre
+  'room/dessert_trolley': { w: 140, h: 120 }, // trolley piled with desserts and a wobbling jelly, castors (slides)
+  'room/deckchair_stack': { w: 120, h: 140 }, // stacked deckchairs on a dolly (slides)
+  'room/hanging_ladles': { w: 200, h: 90 }, // rack of copper ladles, pivot at top-centre
+  'room/chocolate_fountain': { w: 100, h: 130 }, // tiered chocolate fountain (fragile)
+  'room/busboy_bot': { w: 70, h: 90 }, // little dish-collecting robot with a tray
+  'room/lounger': { w: 280, h: 100 }, // lido sun lounger
+  'room/lifebuoy': { w: 70, h: 70 }, // ring lifebuoy on a rope, pivot at top-centre
+  'room/porthole': { w: 80, h: 80 }, // brass porthole, night sea outside (decor)
+  'room/plumb_dial': { w: 80, h: 100 }, // brass inclinometer (code draws the needle and the amber bead)
+  'room/soup_pot': { w: 120, h: 110 }, // big stock pot (code draws the tilting soup surface)
+  'room/complimentary_towel': { w: 60, h: 40 }, // souvenir: a folded towel swan
+  'room/exit_porthole': { w: 120, h: 120 }, // large porthole exit, glass swung open
+
+  // ---- v3 UI (report additions and HUD bits)
+  'ui/id_photo_frame': { w: 220, h: 260 }, // Bureau ID card frame: empty photo window, fake barcode, no text
+  'ui/stamp_approved': { w: 240, h: 120 }, // text "APPROVED" (crooked rubber stamp)
+  'ui/stamp_approved_fr': { w: 240, h: 120 }, // « APPROUVÉ »
+  'ui/tabloid_masthead': { w: 300, h: 60 }, // tabloid masthead "THE GRIMSBY GAZETTE" in a red banner
+  'ui/tabloid_masthead_fr': { w: 300, h: 60 }, // « LA GAZETTE DE GRIMSBY »
+  'ui/clipboard_7b': { w: 120, h: 150 }, // small clipboard (code writes the Form 7-B lines and ticks)
+  'ui/droplet': { w: 40, h: 48 }, // mint water droplet icon (moisture meter)
+
+  // ---- APPEND: L5 pier code — extra keys, one-line art note each
+  'flight/lifeguard_tower_top': { w: 90, h: 90 }, // lifeguard tower on stilts from above: little hut roof, ladder (a tall prop: casts a beam shadow)
+  'room/sea_lion_rocks': { w: 400, h: 100 }, // wet, rounded rocks for Barnacle to sleep on, a rock pool on one side
+  'room/tunnel_divider': { w: 70, h: 380 }, // thick glass divider panel in the flooded viewing tunnel, steel frame, faint Ice glints
+  // ---- APPEND: L6 clinic code — extra keys, one-line art note each
+  'room/pager': { w: 44, h: 30 }, // Dr. Osei's pager on the nightstand, side view: chunky black pager, tiny amber screen (code draws the buzz rings)
+  // ---- APPEND: L7 cruise code — extra keys, one-line art note each
+  'room/eclair': { w: 50, h: 24 }, // souvenir: one chocolate éclair from Marco's 24-hour dessert trolley, side view
+  'flight/steward_top': { w: 44, h: 44 }, // deck steward from above: white cap, epaulettes, a torch held out in front (code draws the beam)
+  // ---- APPEND: report code — extra keys, one-line art note each
+  // (no new keys) ui/id_photo_frame: keep the photo window transparent at x/y 22–198; src/ui/report-photo.ts WINDOW draws the pose there.
 };
 
 export type ArtKey = keyof typeof ART;

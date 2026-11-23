@@ -124,7 +124,17 @@ export type DeepZibEvent =
   | 'dawn'
   | 'nearRing'
   | 'locked'
-  | 'respawn';
+  | 'respawn'
+  // L5 pier code: the lighthouse beam sees you, a gull flock bumps you
+  | 'lighthouse'
+  | 'gull'
+  // L6 clinic code: an ambulance sees you / is scrambled
+  | 'ambulance'
+  | 'scramble'
+  // L7 cruise code: a photographer frames you / is lining up; a steward's torch; the radar
+  | 'photographer'
+  | 'framed'
+  | 'steward';
 
 export const DEEP_ZIB: Record<DeepZibEvent, readonly string[]> = en.humor.deepZib;
 
@@ -204,6 +214,9 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
   else if (r.remaining < 20) list = c.close;
   else if (r.levelId === 'level3' && rotation % 2 === 0) list = c.gary;
   else if (r.levelId === 'level4' && rotation % 2 === 0) list = c.mayor;
+  else if (r.levelId === 'level5' && rotation % 2 === 0) list = c.pier; // L5 pier code
+  else if (r.levelId === 'level6' && rotation % 2 === 0) list = c.clinic; // L6 clinic code
+  else if (r.levelId === 'level7' && rotation % 2 === 0) list = c.cruise; // L7 cruise code
   else list = c.default;
   return fmt(pick(list, rotation), { spotted: r.spotted, failed: r.failed, remaining: Math.round(r.remaining) });
 }

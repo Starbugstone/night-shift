@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="120" viewBox="0 0 80 120">
+<title>Hank torso</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M31 5q11 -5 22 0q20 7 21 26l-3 28q10 28 5 45l-5 9q-31 11 -62 0q-5 -13 0 -33l1 -32q-13 -33 9 -39Z" fill="#594050" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 43l8 17q-1 25 -6 46q23 7 55 2l-1 5q-28 8 -55 -1l-5 -4q6 -33 4 -65Z" fill="#47384c"/>
+<path d="M28 7l22 48 14 -44 -13 -6 -12 6Z" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<path d="M40 17l10 26m2 -28 3 12" fill="none" stroke="#d4dce4" stroke-width="2"/>
+<path d="M24 7l7 1 19 41 10 -40 7 4 -12 44 -2 55h-8l2 -56Z" fill="#80626e" stroke="#1b1433" stroke-width="2"/>
+<g transform="rotate(-10 25 75)">
+<path d="M10 63h29v5q-4 3 0 5v11H10v-8q4 -3 0 -5Z" fill="#ffedc9" stroke="#1b1433" stroke-width="1.7"/>
+<path d="M14 67h5l-3 4q6 -1 4 4q-2 3 -6 1m12 -10 -4 7h7m-2 -7v11m4 -10h6l-4 10" fill="none" stroke="#594050" stroke-width="1.5"/>
+</g>
+<rect x="12" y="76" width="21" height="13" rx="4" fill="#80626e" stroke="#1b1433" stroke-width="2"/>
+<path d="M13 78h19" fill="none" stroke="#9a7580" stroke-width="2"/>
+<ellipse cx="50" cy="63" rx="2" ry="2" fill="#e5cc9f"/>
+<ellipse cx="50" cy="80" rx="2" ry="2" fill="#e5cc9f"/>
+<ellipse cx="50" cy="97" rx="2" ry="2" fill="#e5cc9f"/>
+</g>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="70" height="80" viewBox="0 0 70 80">
+<title>Pemberton head awake</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M21 77l1 -12q-13 -5 -13 -22q-3 -25 19 -32q21 -7 28 11l2 15q12 5 9 11q-2 4 -12 3l4 9q4 10 -14 12l-3 5Z" fill="#ebaa89" stroke="#1b1433" stroke-width="3"/>
+<path d="M13 51q11 12 28 12q12 -1 17 -6q5 11 -10 13l-7 5H24v-11q-7 -2 -11 -13Z" fill="#c58e80"/>
+<path d="M5 40q-5 -15 6 -24q-6 -7 1 -10l10 2q3 -8 11 -5l8 5q10 -8 16 2l-3 11 -31 11 -8 14Z" fill="#d4dce4" stroke="#1b1433" stroke-width="3"/>
+<path d="M5 23l12 -9q17 -6 37 -6l7 5 -1 12q-3 6 -10 4l-5 -4q-5 8 -13 7l-9 -3 -16 4Z" fill="#604569" stroke="#1b1433" stroke-width="3"/>
+<path d="M25 18q8 -5 16 -4m6 -1 5 -1" fill="none" stroke="#a387b1" stroke-width="2.8"/>
+<ellipse cx="15" cy="45" rx="6.5" ry="8" fill="#ebaa89" stroke="#1b1433" stroke-width="2.5"/>
+<path d="M14 45q2 -4 5 -1" fill="none" stroke="#895e55" stroke-width="2"/>
+<path d="M36 35q8 -4 14 -2" fill="none" stroke="#594050" stroke-width="2.6"/>
+<ellipse cx="45" cy="40" rx="8.4" ry="9" fill="#ffedc9" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="48" cy="40" rx="2.5" ry="3" fill="#1b1433"/>
+<ellipse cx="51" cy="58" rx="7" ry="7" fill="#594050" stroke="#1b1433" stroke-width="2"/>
+</g>
+</svg>

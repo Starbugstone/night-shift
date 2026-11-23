@@ -5,6 +5,7 @@ import { VIEW_H, VIEW_W } from '../contracts';
 import type { DeepMap } from '../levels/types';
 import type { SegHit } from './geometry';
 import { BUMP_STUN, HazardField } from './hazards';
+import { newPhotoState } from './photographer'; // L7 cruise code
 import {
   DASH,
   FLIGHT_HUD,
@@ -38,6 +39,10 @@ export interface FlightState {
   cool: number;
   porchArm: Float64Array;
   porchLit: Float64Array;
+  /** L6 clinic code: hazard time each ambulance was last scrambled (-Infinity = never). */
+  ambT: Float64Array;
+  /** L7 cruise code: per photographer, the hazard time of its last half-press and the frame centre. */
+  photo: Float64Array;
   /** Detection ignored while > 0. */
   safe: number;
   bumpCd: number;
@@ -51,7 +56,7 @@ export interface FlightState {
   dashed: boolean;
 }
 
-export function newFlightState(porches: number): FlightState {
+export function newFlightState(porches: number, ambulances = 0, photographers = 0): FlightState {
   return {
     t: 0,
     s: { x: 0, y: 0, vx: 0, vy: 0, stun: 0 },
@@ -60,6 +65,8 @@ export function newFlightState(porches: number): FlightState {
     cool: 0,
     porchArm: new Float64Array(porches),
     porchLit: new Float64Array(porches),
+    ambT: new Float64Array(ambulances).fill(-Infinity),
+    photo: newPhotoState(photographers),
     safe: 0,
     bumpCd: 0,
     cause: -1,
@@ -84,6 +91,8 @@ export function copyFlightState(dst: FlightState, src: FlightState): void {
   dst.cool = src.cool;
   dst.porchArm.set(src.porchArm);
   dst.porchLit.set(src.porchLit);
+  if (dst.ambT.length === src.ambT.length) dst.ambT.set(src.ambT);
+  if (dst.photo.length === src.photo.length) dst.photo.set(src.photo);
   dst.safe = src.safe;
   dst.bumpCd = src.bumpCd;
   dst.cause = src.cause;
@@ -114,6 +123,8 @@ export function stepFlight(
   afterburner: boolean,
 ): void {
   st.t += dt;
+  field.ambT = st.ambT;
+  field.photo = st.photo;
   field.sample(st.t);
   const s = st.s;
   st.dashed = false;
@@ -139,6 +150,8 @@ export function stepFlight(
   }
 
   st.click = field.stepPorches(s.x, s.y, dt, st.porchArm, st.porchLit);
+  field.stepAmbulances(s.x, s.y, st.t);
+  field.stepPhotographers(s.x, s.y, saucerSpeed(s), st.t);
   if (st.safe > 0) {
     st.safe = Math.max(0, st.safe - dt);
     st.cause = -1;
@@ -189,7 +202,9 @@ export class DeepFlightSim {
     t0 = 0,
   ) {
     this.field = new HazardField(map.hazards);
-    this.st = newFlightState(this.field.porchCount);
+    this.st = newFlightState(this.field.porchCount, this.field.ambCount, this.field.photoCount);
+    this.field.ambT = this.st.ambT;
+    this.field.photo = this.st.photo;
     this.mult = suspicionMultiplier(upgrades) / (map.fuseSec ?? 1);
     this.afterburner = upgrades.has('afterburner');
     map.targets.forEach((tg, ti) =>

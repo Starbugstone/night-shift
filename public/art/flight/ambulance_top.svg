@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="160" viewBox="0 0 80 160">
+<title>Ambulance top</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="36" width="74" height="14" rx="6" fill="#343756" stroke="#1b1433" stroke-width="3"/>
+<rect x="4" y="120" width="72" height="14" rx="5" fill="#343756" stroke="#1b1433" stroke-width="3"/>
+<path d="M10 25Q12 4 36 3H46Q69 4 70 24L75 140Q76 155 60 157H20Q5 156 6 143Z" fill="#d4dce4" stroke="#1b1433" stroke-width="3"/>
+<path d="M63 17Q68 22 68 36l3 107q0 9 -10 11h-7q9 -6 9 -18Z" fill="#a7b7ce"/>
+<path d="M14 29Q38 20 65 29l-4 23q-22 -5 -43 0Z" fill="#343756" stroke="#1b1433" stroke-width="3"/>
+<path d="M20 31l15 -3 -12 18h-4Z" fill="#647899"/>
+<rect x="13" y="59" width="54" height="82" rx="6" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<rect x="16" y="63" width="48" height="74" rx="5" fill="#d4dce4"/>
+<rect x="12" y="52" width="56" height="11" rx="4" fill="#495374" stroke="#1b1433" stroke-width="3"/>
+<rect x="15" y="54" width="15" height="7" rx="2" fill="#647899"/>
+<rect x="50" y="54" width="15" height="7" rx="2" fill="#647899"/>
+<rect x="31" y="55" width="18" height="4" rx="1" fill="#d4dce4"/>
+<ellipse cx="40" cy="98" rx="17" ry="17" fill="#28575c" stroke="#1b1433" stroke-width="2"/>
+<g transform="translate(39 97) scale(1)">
+<path d="M4 -11A12 12 0 1 0 12 7Q-5 10 -3 -2Q-2 -7 4 -11Z" fill="#ffedc9"/>
+</g>
+<path d="M15 19l9 -3m31 0 9 3" fill="none" stroke="#ffedc9" stroke-width="4"/>
+<path d="M15 146h50m-25 0v7" fill="none" stroke="#495374" stroke-width="2.5"/>
+</g>
+</svg>

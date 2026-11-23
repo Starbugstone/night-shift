@@ -10,9 +10,13 @@ import { drawSaucerFallback } from './props';
 import { DASH, FLIGHT_HUD, RING_R, SAUCER, saucerSpeed, type DashState, type Saucer } from './sim';
 
 export const ROAD_W = 120;
-export type GroundTheme = 'farm' | 'town' | 'suburb' | 'city';
+export type GroundTheme = 'farm' | 'town' | 'suburb' | 'city' | 'pier' | 'clinic' | 'ship';
 /** Plain road surface, used to paint clean junctions (matches road_v/road_h asphalt). */
-export const ROAD_BASE: Record<GroundTheme, string> = { farm: '#6e5841', town: '#343756', suburb: '#343756', city: '#2f3150' };
+export const ROAD_BASE: Record<GroundTheme, string> = {
+  farm: '#6e5841', town: '#343756', suburb: '#343756', city: '#2f3150',
+  // v3 starting values; each level's code owner tunes its own
+  pier: '#4a3f3a', clinic: '#343a52', ship: '#3a3550',
+};
 export const CONE_R = 300;
 const SAUCER_DRAW = FLIGHT_HUD.saucer;
 /** Rim lights on saucer_top.svg: 10 pads on a circle of r 58.5 about (80, 76) in its 160 box. */

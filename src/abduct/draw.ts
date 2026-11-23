@@ -248,10 +248,22 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
 const SHIRTS: Record<Human, string> = {
   doyle: '#ac5961', larry: '#6482a6', dave: '#a284be', barb: '#dd6269',
   gary: '#e9b258', nigel: '#416790', kev: '#ae73bd', mayor: '#575783',
+  // L5 pier code (bubbles is drawn by src/abduct/dolphin-art.ts)
+  bubbles: '#6f86a8', pete: '#3f5b7a', sal: '#8a6f9a',
+  // L7 cruise code
+  sterling: '#eef0f4', marco: '#f4f1ea', greg: '#e36a8c',
+  // L6 clinic code
+  hank: '#b98b5e', osei: '#4f8f8a', pemberton: '#c9cfe0',
 };
 const PANTS: Record<Human, string> = {
   doyle: '#904951', larry: '#b4977f', dave: '#76569c', barb: '#744451',
   gary: '#926861', nigel: '#374e6c', kev: '#62496d', mayor: '#443d5c',
+  // L5 pier code
+  bubbles: '#dfe8f0', pete: '#e2c25a', sal: '#4c4a62',
+  // L7 cruise code
+  sterling: '#2c3550', marco: '#3a3a44', greg: '#5aa6c8',
+  // L6 clinic code
+  hank: '#7f8aa8', osei: '#3f7773', pemberton: '#c9cfe0',
 };
 
 export class HumanArt {

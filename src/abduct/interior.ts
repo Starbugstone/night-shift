@@ -3,6 +3,10 @@ import type { AbductFailReason, Audio } from '../contracts';
 import { clamp, type Blade, type Circle, type Ragdoll, type Rect, type Solid, STEP, type SwingingRect } from './ragdoll';
 import type { Building, Checkpoint, Cycle, Hazard, Sleeper } from './rooms/interior';
 import type { Area } from './rooms/layout';
+// L6 clinic code: Form 7-B probe drones
+import { ProbeSim, type ProbeDrone } from './probe';
+// L7 cruise code: the swell and its castors
+import { moveCastor, swellCanCross, swellPull } from './swell';
 
 export const LASER_TELL = 0.35;
 export const GATE_TRAVEL = 0.32;
@@ -77,6 +81,13 @@ export class HazardState {
       case 'creak':
         this.shapes = [];
         break;
+      // L7 cruise code
+      case 'swell':
+        this.shapes = [];
+        break;
+      case 'castor':
+        this.shapes = [solidRect(spec.sprite)];
+        break;
     }
   }
 }
@@ -114,6 +125,8 @@ export class InteriorSimulation {
   draftX = 0;
   draftY = 0;
   failure: InteriorFailure | undefined;
+  /** L6 clinic code: Form 7-B probe drones, when the route has any. */
+  readonly probes: ProbeSim | undefined;
 
   private readonly namedHazards = new Map<string, HazardState>();
   private x: number;
@@ -125,9 +138,11 @@ export class InteriorSimulation {
   constructor(
     readonly building: Building, solids: Solid[], startX: number, startY: number,
     private readonly audio: Audio, private readonly hush: boolean,
+    probes?: readonly ProbeDrone[],
   ) {
     this.x = startX;
     this.y = startY;
+    this.probes = probes && probes.length > 0 ? new ProbeSim(probes, audio) : undefined;
     this.hazards = building.hazards.map(spec => new HazardState(spec, building));
     this.sleepers = building.sleepers.map(spec => new SleeperState(spec));
     for (const state of this.hazards) {
@@ -223,6 +238,13 @@ export class InteriorSimulation {
             this.draftX += spec.ax;
             this.draftY += spec.ay;
           }
+          break;
+        // L7 cruise code: the roll pulls the whole ship sideways; castors slide with it
+        case 'swell':
+          this.draftX += swellPull(spec, time);
+          break;
+        case 'castor':
+          moveCastor(spec, state.shapes[0] as Rect, time);
           break;
         case 'fragile':
         case 'creak':
@@ -321,6 +343,11 @@ export class InteriorSimulation {
       }
       if (this.failure) return this.eventNoise;
     }
+    // L6 clinic code: probe readings, the giggle and reflex kicks
+    if (this.probes) {
+      this.eventNoise += this.probes.step(body, STEP, this);
+      if (this.failure) return this.eventNoise;
+    }
 
     if (this.watching) {
       this.cameraGrace = CAMERA_GRACE;
@@ -374,6 +401,8 @@ export class InteriorSimulation {
       // A blade parallel to the route leaves its perpendicular clearance open.
       return Math.abs(Math.cos(angle) * hy - Math.sin(angle) * hx) < Math.hypot(hx, hy) * 0.49;
     }
+    // L7 cruise code
+    if (spec.kind === 'swell' || spec.kind === 'castor') return swellCanCross(spec, from, target, time, speed);
     if (spec.kind === 'camera') {
       if (Math.hypot(this.x - from.x, this.y - from.y) > 22) return false;
       const duration = Math.hypot(target.x - from.x, target.y - from.y) / speed;

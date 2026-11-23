@@ -5,7 +5,7 @@ import { isLangPref, type LangPref } from '../i18n';
 export const SAVE_KEY = 'night-shift-save-v1';
 export const SAVE_VERSION = 1;
 
-export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4'] as const;
+export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
 
 export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive', 'afterburner', 'snooze_ray'];
@@ -49,7 +49,10 @@ export function defaultSave(): SaveData {
   return {
     version: SAVE_VERSION,
     glorbs: 0,
-    levels: { level1: defaultLevel(), level2: defaultLevel(), level3: defaultLevel(), level4: defaultLevel() },
+    levels: {
+      level1: defaultLevel(), level2: defaultLevel(), level3: defaultLevel(), level4: defaultLevel(),
+      level5: defaultLevel(), level6: defaultLevel(), level7: defaultLevel(),
+    },
     upgrades: [],
     muted: false,
     allUnlocked: false,

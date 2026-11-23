@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90" viewBox="0 0 120 90">
+<title>Xray lightbox</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="2" y="3" width="116" height="84" rx="5" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<rect x="7" y="8" width="106" height="68" rx="3" fill="#c4d5e1" stroke="#1b1433" stroke-width="3"/>
+<path d="M12 13h96" fill="none" stroke="#d4dce4" stroke-width="2"/>
+<rect x="45" y="5" width="31" height="6" rx="2" fill="#495374" stroke="#1b1433" stroke-width="1.7"/>
+<ellipse cx="108" cy="81" rx="2" ry="2" fill="#a7b7ce"/>
+<path d="M12 81h22" fill="none" stroke="#495374" stroke-width="2"/>
+</g>
+</svg>

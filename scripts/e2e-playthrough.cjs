@@ -263,9 +263,9 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     await browser.close();
     return;
   }
-  if (ONLY === 'deep' || ONLY === 'L3' || ONLY === 'L4') {
-    if (ONLY !== 'L4') results.L3 = await deepShift(3, 'L3');
-    if (ONLY !== 'L3') results.L4 = await deepShift(4, 'L4');
+  const DEEP_LEVELS = [3, 4, 5, 6, 7];
+  if (ONLY === 'deep' || /^L[3-7]$/.test(ONLY ?? '')) {
+    for (const n of DEEP_LEVELS) if (ONLY === 'deep' || ONLY === `L${n}`) results[`L${n}`] = await deepShift(n, `L${n}`);
     console.log(JSON.stringify({ results, errors }, null, 1));
     await browser.close();
     return;
@@ -289,10 +289,10 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     console.error('RESULT', r.name, results[r.name].scene);
   }
   if (ONLY !== 'tutorial') {
-    results.L3 = await deepShift(3, 'L3');
-    console.error('RESULT L3', results.L3.end.scene, results.L3.wallSec);
-    results.L4 = await deepShift(4, 'L4');
-    console.error('RESULT L4', results.L4.end.scene, results.L4.wallSec);
+    for (const n of DEEP_LEVELS) {
+      results[`L${n}`] = await deepShift(n, `L${n}`);
+      console.error(`RESULT L${n}`, results[`L${n}`].end.scene, results[`L${n}`].wallSec);
+    }
   }
   console.log(JSON.stringify({ results, errors }, null, 1));
   await browser.close();

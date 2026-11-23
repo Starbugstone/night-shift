@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="110" viewBox="0 0 140 110">
+<title>Laundry cart</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<g transform="translate(24 100) scale(0.95)">
+<path d="M1 -11v7" fill="none" stroke="#495374" stroke-width="5"/>
+<ellipse cx="0" cy="0" rx="7" ry="7" fill="#343756" stroke="#1b1433" stroke-width="2.5"/>
+<ellipse cx="0" cy="0" rx="2.5" ry="2.5" fill="#a7b7ce"/>
+</g>
+<g transform="translate(114 100) scale(0.95)">
+<path d="M1 -11v7" fill="none" stroke="#495374" stroke-width="5"/>
+<ellipse cx="0" cy="0" rx="7" ry="7" fill="#343756" stroke="#1b1433" stroke-width="2.5"/>
+<ellipse cx="0" cy="0" rx="2.5" ry="2.5" fill="#a7b7ce"/>
+</g>
+<rect x="12" y="84" width="117" height="9" rx="3" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<path d="M8 26q16 5 30 -3l60 1q20 6 34 -1l-8 59q-33 13 -103 1Z" fill="#d3b9d1" stroke="#1b1433" stroke-width="3"/>
+<path d="M16 32l10 46q21 6 47 5l-1 5q-25 0 -50 -5Z" fill="#a387b1"/>
+<path d="M46 37l-4 29m54 -29 9 32" fill="none" stroke="#a08eaf" stroke-width="2.3"/>
+<path d="M10 26q2 -11 22 -11q4 -11 21 -6l12 6q11 -9 23 -6q8 -5 19 -2q12 3 18 15l7 5Z" fill="#d4dce4" stroke="#1b1433" stroke-width="3"/>
+<path d="M27 24q8 -9 23 -6m17 2q10 -4 15 -2m17 -3q11 -1 14 5" fill="none" stroke="#a7b7ce" stroke-width="2"/>
+<rect x="3" y="25" width="134" height="9" rx="4" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+</g>
+</svg>

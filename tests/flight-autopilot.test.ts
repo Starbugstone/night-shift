@@ -3,6 +3,12 @@
 // naive beeline gets caught, so the maps are not trivially open.
 import { describe, expect, it } from 'vitest';
 import { LEVEL3, LEVEL4 } from '../src/levels/deep-levels';
+// L5 pier code
+import { LEVEL5 } from '../src/levels/deep-pier';
+// L6 clinic code
+import { LEVEL6 } from '../src/levels/deep-clinic';
+// L7 cruise code
+import { LEVEL7 } from '../src/levels/deep-ship';
 import type { DeepLevelDef } from '../src/levels/types';
 import { autopilotController, beelineController, runHeadless, type HeadlessResult } from './flight-deep-harness';
 
@@ -20,7 +26,7 @@ function overview(_level: DeepLevelDef, _name: string, _r: HeadlessResult): void
   // map + exposure + trail SVG dump lives in a scratch tool; no-op here
 }
 
-for (const level of [LEVEL3, LEVEL4]) {
+for (const level of [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7]) {
   describe(`${level.id} ${level.title}: flight legs`, () => {
     it('the autopilot (no afterburner) visits all three targets without being spotted', () => {
       const r = runHeadless(level.map, [], autopilotController(false), 400);
@@ -41,7 +47,9 @@ for (const level of [LEVEL3, LEVEL4]) {
 
     // L3 was softened after playtesting (2026-11-23): a lucky beeline may slip through, but not
     // usually. L4 still catches it at every start time. The L3 rule matches its difficulty band.
-    const mustCatch = level.id === 'level3' ? 2 : 4;
+    // L5 pier code: the lighthouse catches a beeline in 3 of 4 (its band asks for 2)
+  // L7: the ship's rings are guarded by timing (photographers, a lit porthole), so a lucky beeline can slip through
+  const mustCatch = level.id === 'level3' || level.id === 'level7' ? 2 : level.id === 'level5' ? 3 : 4;
     it(`a naive beeline at each target gets spotted in at least ${mustCatch} of 4 start times`, () => {
       // same naive route, started 0..8 s into the hazard cycles
       let caught = 0;

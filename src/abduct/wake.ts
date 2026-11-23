@@ -13,7 +13,11 @@ export class WakeMeter {
   awake = 0;
   private cooldown = 0;
 
-  constructor(private readonly hush: boolean, private readonly hard = false) {}
+  constructor(
+    private readonly hush: boolean, private readonly hard = false,
+    /** Bonk wake multiplier from the body plan (the dolphin's wet thwap: 0.8). */
+    private readonly bonkGain = 1,
+  ) {}
 
   tick(dt: number, held = false): void {
     this.cooldown = Math.max(0, this.cooldown - dt);
@@ -29,7 +33,7 @@ export class WakeMeter {
     const threshold = this.hard ? HARD_BONK_SPEED : BONK_SPEED;
     if (!cat && (speed <= threshold || this.cooldown > 0)) return false;
 
-    const gain = (cat ? 46 : clamp((speed - threshold) * 0.16, 0, 43)) * (this.hard ? 1.3 : 1);
+    const gain = (cat ? 46 : clamp((speed - threshold) * 0.16, 0, 43)) * (this.hard ? 1.3 : 1) * this.bonkGain;
     this.cooldown = 0.20;
     this.bonks++;
     this.dignity = Math.max(0, this.dignity - gain * 0.68);

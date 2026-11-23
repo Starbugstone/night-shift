@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="260" viewBox="0 0 160 260">
+<title>Privacy curtain</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="2" y="3" width="156" height="8" rx="3" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<path d="M5 5h148" fill="none" stroke="#a7b7ce" stroke-width="2"/>
+<ellipse cx="10" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="30" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="50" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="70" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="90" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="110" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="130" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<ellipse cx="150" cy="14" rx="3.7" ry="7" fill="none" stroke="#1b1433" stroke-width="2"/>
+<path d="M5 20q7 -5 17 0q9 7 20 0q10 -5 20 1q9 6 20 -1q11 -5 20 1q11 5 20 -1q11 -6 28 0l6 229q-11 8 -25 1q-13 8 -26 2q-13 7 -27 1q-17 8 -31 0q-16 7 -27 -1q-9 6 -18 -1Z" fill="#d3b9d1" stroke="#1b1433" stroke-width="3"/>
+<path d="M20 23q5 4 13 1l4 223q-5 6 -13 4Z" fill="#b8a6c5"/>
+<path d="M12 29l-2 197" fill="none" stroke="#e2d0df" stroke-width="2.7"/>
+<path d="M60 23q5 4 13 1l4 223q-5 6 -13 4Z" fill="#b8a6c5"/>
+<path d="M52 29l-2 197" fill="none" stroke="#e2d0df" stroke-width="2.7"/>
+<path d="M100 23q5 4 13 1l4 223q-5 6 -13 4Z" fill="#b8a6c5"/>
+<path d="M92 29l-2 197" fill="none" stroke="#e2d0df" stroke-width="2.7"/>
+<path d="M140 23q5 4 13 1l4 223q-5 6 -13 4Z" fill="#b8a6c5"/>
+<path d="M132 29l-2 197" fill="none" stroke="#e2d0df" stroke-width="2.7"/>
+<path d="M5 80q10 5 20 0q12 7 24 0q12 7 24 0q12 7 24 0q12 7 24 0q13 8 28 0" fill="none" stroke="#ab94b4" stroke-width="2"/>
+</g>
+</svg>

@@ -40,6 +40,45 @@ export const BANDS: Record<string, Band | undefined> = {
     beelineCaught: 2,
     tension: 20,
   },
+  // L5 pier code: docs/GDD-3-new-shifts.md "Feel targets" (skilled >= 75 %, casual >= 40 % per
+  // route; median sightings skilled <= 1, casual <= 2), plus the L3 "not trivial" checks.
+  level5: {
+    skilledRoute: 0.75,
+    casualRoute: 0.4,
+    casualBuilding: 0.6,
+    skilledSpots: 1,
+    casualSpots: 2,
+    flightDone: 0.8,
+    casualBudgetShare: 0.8,
+    beelineCaught: 2,
+    tension: 20,
+  },
+  // L6 clinic code: docs/GDD-3-new-shifts.md "Feel targets" (skilled >= 75 %, casual >= 40 % per
+  // route; median sightings skilled <= 1, casual <= 2), plus the L3 "not trivial" checks.
+  level6: {
+    skilledRoute: 0.75,
+    casualRoute: 0.4,
+    casualBuilding: 0.6,
+    skilledSpots: 1,
+    casualSpots: 2,
+    flightDone: 0.8,
+    casualBudgetShare: 0.8,
+    beelineCaught: 2,
+    tension: 20,
+  },
+  // L7 cruise code: docs/GDD-3-new-shifts.md "Feel targets" (skilled >= 75 %, casual >= 40 % per
+  // route; median sightings skilled <= 1, casual <= 2), plus the L3 "not trivial" checks.
+  level7: {
+    skilledRoute: 0.75,
+    casualRoute: 0.4,
+    casualBuilding: 0.6,
+    skilledSpots: 1,
+    casualSpots: 2,
+    flightDone: 0.8,
+    casualBudgetShare: 0.8,
+    beelineCaught: 2,
+    tension: 20,
+  },
 };
 
 export interface RouteReport {

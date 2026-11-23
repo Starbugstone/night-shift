@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="60" viewBox="0 0 24 60">
+<title>Hank lower arm</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M11 2q10 0 10 12l-2 24q-1 4 2 7q3 8 -3 10q-3 5 -10 2q-6 -2 -6 -10l2 -33Q2 4 11 2Z" fill="#ffc9a1" stroke="#1b1433" stroke-width="3"/>
+<path d="M16 47l2 5m-9 -2v4" fill="none" stroke="#ebaa89" stroke-width="1.8"/>
+<path d="M11 2q11 0 10 12l-2 19q-7 4 -15 0l-1 -18Q2 3 11 2Z" fill="#594050" stroke="#1b1433" stroke-width="2.6"/>
+<path d="M5 29q7 3 14 0" fill="none" stroke="#47384c" stroke-width="2"/>
+<path d="M3 34q7 3 16 0v6q-6 4 -16 0Z" fill="#d4dce4" stroke="#1b1433" stroke-width="1.5"/>
+<path d="M7 37l3 1" fill="none" stroke="#495374" stroke-width="1"/>
+</g>
+</svg>

@@ -80,3 +80,27 @@ tuning a level or adding one.
 
 Use [.claude/skills/verify-night-shift/SKILL.md](.claude/skills/verify-night-shift/SKILL.md)
 for browser verification recipes, the feature map, and evidence capture.
+
+## v3 "New Shifts" (2026-11-23)
+
+Design: `docs/GDD-3-new-shifts.md` (L5 Pier Pressure, L6 Probe Compliance, L7 A Whole Cruise Ship,
+plus report additions). Art keys are in `src/art-manifest.ts` under the v3 banner.
+
+Ownership while the v3 agents run (one checkout, several agents):
+
+| Area | Owner |
+| --- | --- |
+| `src/levels/deep-pier.ts`, `src/abduct/rooms/deep-pier.ts`, dolphin body plan + moisture (`src/abduct/body-plan.ts`, `src/abduct/moisture.ts`), `src/flight/lighthouse.ts`, `tests/*-pier*.test.ts` | pier code |
+| `src/levels/deep-clinic.ts`, `src/abduct/rooms/deep-clinic.ts`, `src/abduct/probe.ts`, `src/flight/ambulance.ts`, `tests/*-clinic*.test.ts` | clinic code |
+| `src/levels/deep-ship.ts`, `src/abduct/rooms/deep-ship.ts`, `src/abduct/swell.ts`, `src/flight/photographer.ts`, `tests/*-ship*.test.ts` | cruise code |
+| `src/ui/report.ts`, `src/ui/report-*.ts`, `tests/ui-report*.test.ts` | report code |
+| `public/art/**` for L5 + L7 keys | art (Fable) |
+| `public/art/**` for L6 + v3 UI keys | art (Astra) |
+
+Shared engine files (`src/abduct/interior.ts`, `src/abduct/rooms/interior.ts`, `src/abduct/deep-view.ts`,
+`src/abduct/draw.ts`, `src/abduct/simulation.ts`, `src/abduct/autopilot.ts`, `src/abduct/ragdoll.ts`,
+`src/flight/hazards.ts`, `src/flight/deep-sim.ts`, `src/flight/deep-scene.ts`, `src/flight/autopilot.ts`,
+`src/levels/humor.ts`, `tests/difficulty/*`, the shared test files, `src/i18n/en.ts` + `fr.ts`): put new
+mechanics in your own module and add only small hook lines here. Re-read a shared file right before
+each edit, keep edits small, never reformat it, never undo another agent's lines. Registries carry
+`// L5 pier code` style anchor comments: add your lines directly under your own anchor.

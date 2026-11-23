@@ -1,6 +1,11 @@
 import type { RoomId } from '../contracts';
 import { LEVEL3, LEVEL4 } from './deep-levels';
-import type { DeepLevelDef, LevelDef, LockedCard, TutorialLevelDef } from './types';
+import { LEVEL5 } from './deep-pier'; // L5 pier code
+// L6 clinic code
+import { LEVEL6 } from './deep-clinic';
+// L7 cruise code
+import { LEVEL7 } from './deep-ship';
+import type { DeepLevelDef, LevelDef, TutorialLevelDef } from './types';
 import { en } from '../i18n/en';
 
 const PI = Math.PI;
@@ -176,10 +181,14 @@ export const LEVELS: readonly LevelDef[] = [
   },
   LEVEL3,
   LEVEL4,
+  // v3: L5 (pier code), L6 (clinic code), L7 (cruise code) register here, in that order
+  // L5 pier code
+  LEVEL5,
+  // L6 clinic code
+  LEVEL6,
+  // L7 cruise code
+  LEVEL7,
 ];
-
-/** Coming-soon cards (English; shown via tr().lockedCards). */
-export const LOCKED_CARDS: readonly LockedCard[] = en.lockedCards;
 
 export function isDeep(l: LevelDef): l is DeepLevelDef {
   return l.kind === 'deep';
@@ -206,6 +215,27 @@ export const ROOM_IDS: readonly RoomId[] = [
   'kev_fireescape',
   'mayor_clocktower',
   'mayor_elevator',
+  // L5 pier code
+  'bubbles_roof',
+  'bubbles_tunnel',
+  'pete_gallery',
+  'pete_slipway',
+  'sal_loft',
+  'sal_dock',
+  // L6 clinic code
+  'hank_front',
+  'hank_rear',
+  'osei_helipad',
+  'osei_pharmacy',
+  'pemberton_window',
+  'pemberton_chute',
+  // L7 cruise code
+  'captain_mast',
+  'captain_funnel',
+  'marco_skylight',
+  'marco_promenade',
+  'greg_awning',
+  'greg_cabin',
 ];
 
 export function isRoomId(s: string): s is RoomId {

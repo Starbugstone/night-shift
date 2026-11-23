@@ -139,7 +139,20 @@ export type RoomId =
   | 'kev_vent'
   | 'kev_fireescape'
   | 'mayor_clocktower'
-  | 'mayor_elevator';
+  | 'mayor_elevator'
+  // ---- v3 (docs/GDD-3-new-shifts.md): each level's code owner adds its six ids under its own line
+  // L5 Pier Pressure (pier code)
+  | 'bubbles_roof' | 'bubbles_tunnel' | 'pete_gallery' | 'pete_slipway' | 'sal_loft' | 'sal_dock'
+  // L6 Probe Compliance (clinic code)
+  | 'hank_front' | 'hank_rear' | 'osei_helipad' | 'osei_pharmacy' | 'pemberton_window' | 'pemberton_chute'
+  // L7 A Whole Cruise Ship (cruise code)
+  | 'captain_mast'
+  | 'captain_funnel'
+  | 'marco_skylight'
+  | 'marco_promenade'
+  | 'greg_awning'
+  | 'greg_cabin'
+  ;
 
 /** How punishing an abduction is. Tutorials: all false. Deep levels: all true. */
 export interface AbductRules {
@@ -181,6 +194,14 @@ export interface AbductResult {
   failReason?: AbductFailReason;
   /** Short display name of what caused the failure, e.g. "Brenda", "Gary's laser". */
   failBy?: string;
+  /**
+   * v3 report (docs/GDD-3-new-shifts.md "Report additions"): the specimen's pose at the wildest moment
+   * of the attempt, for the Bureau ID photo. Joint positions in world px relative to the chest, in the
+   * ragdoll's joint order; `human` is the specimen's art prefix ("dave", "bubbles"). Set by the report agent.
+   */
+  photo?: { human: string; x: readonly number[]; y: readonly number[] };
+  /** v3 L6: Form 7-B readings taken on the way out (English source strings, shown through gt()). Set by clinic code. */
+  probeReadings?: readonly string[];
 }
 
 /** Implemented by src/abduct/index.ts. */

@@ -1,7 +1,7 @@
 import type { Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
-import { LEVELS, LOCKED_CARDS } from '../levels/levels';
+import { LEVELS } from '../levels/levels';
 import { MAX_STARS, RANKS, isLevelUnlocked, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, langVersion, tr } from '../i18n';
 import { GLOW, drawGlow, easeOutCubic } from '../core/fx';
@@ -21,7 +21,7 @@ function rankText(r: Rank): { title: string; flavour: string } {
 }
 
 interface Card {
-  kind: 'level' | 'teaser';
+  kind: 'level' | 'concept';
   index: number;
   shake: number;
 }
@@ -37,7 +37,6 @@ export class WorkOrdersScene implements Scene {
   private tracking = false;
   private toast = '';
   private toastT = 0;
-  private toastN = 0;
   private readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
   private readonly upgrades = new Button(336, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
   private readonly cards: Card[] = [];
@@ -45,7 +44,7 @@ export class WorkOrdersScene implements Scene {
 
   constructor(private readonly shell: Shell) {
     for (let i = 0; i < LEVELS.length; i++) this.cards.push({ kind: 'level', index: i, shake: 0 });
-    for (let i = 0; i < LOCKED_CARDS.length; i++) this.cards.push({ kind: 'teaser', index: i, shake: 0 });
+    for (let i = 0; i < tr().missionConcepts.length; i++) this.cards.push({ kind: 'concept', index: i, shake: 0 });
   }
 
   private get maxScroll(): number {
@@ -104,7 +103,8 @@ export class WorkOrdersScene implements Scene {
     const within = contentY - i * (CARD_H + GAP);
     if (i < 0 || i >= this.cards.length || within > CARD_H) return;
     const card = this.cards[i]!;
-    if (card.kind === 'level' && isLevelUnlocked(this.shell.save, card.index)) {
+    if (card.kind === 'concept') return;
+    if (isLevelUnlocked(this.shell.save, card.index)) {
       this.shell.audio.sfx('click');
       this.shell.toMemo(card.index);
       return;
@@ -113,10 +113,7 @@ export class WorkOrdersScene implements Scene {
     this.shell.audio.sfx('bonk', 0.4);
     const w = tr().workOrders;
     const prev = LEVELS[card.index - 1];
-    this.toast =
-      card.kind === 'level'
-        ? fmt(w.deliverFirst, { name: prev ? tr().levels[prev.id].human : w.lastSpecimen })
-        : w.lockToasts[this.toastN++ % w.lockToasts.length]!;
+    this.toast = fmt(w.deliverFirst, { name: prev ? tr().levels[prev.id].human : w.lastSpecimen });
     this.toastT = 2.4;
   }
 
@@ -141,7 +138,7 @@ export class WorkOrdersScene implements Scene {
       g.globalAlpha = deal;
       const dy = (1 - deal) * 46;
       if (c.kind === 'level') this.levelCard(g, c.index, CARD_X + sx, y + dy);
-      else this.teaserCard(g, c.index, CARD_X + sx, y + dy);
+      else this.conceptCard(g, c.index, CARD_X, y + dy);
       g.globalAlpha = 1;
     }
     g.restore();
@@ -308,8 +305,9 @@ export class WorkOrdersScene implements Scene {
     }
   }
 
-  private teaserCard(g: CanvasRenderingContext2D, i: number, x: number, y: number): void {
-    const c = tr().lockedCards[i] ?? LOCKED_CARDS[i]!;
+  private conceptCard(g: CanvasRenderingContext2D, i: number, x: number, y: number): void {
+    const { missionConcepts, workOrders } = tr();
+    const c = missionConcepts[i]!;
     panel(g, x, y, CARD_W, CARD_H, '#1a1440', 22, C.ink, 4, 6);
     g.save();
     roundRectPath(g, x, y, CARD_W, CARD_H, 22);
@@ -323,11 +321,9 @@ export class WorkOrdersScene implements Scene {
       g.stroke();
     }
     g.restore();
-    text(g, tr().workOrders.classified, x + 34, y + 26, 14, C.red, 'left', 900);
-    text(g, c.title, x + 34, y + 60, 24, C.muted, 'left', 800, false, CARD_W - 120);
-    text(g, c.requires, x + 34, y + 92, 17, C.amber, 'left', 700, false, CARD_W - 120);
-    paragraph(g, c.blurb, x + 34, y + 110, CARD_W - 140, 16, 'rgba(169,162,214,0.85)', 22, 'left', 500, true);
-    this.padlock(g, x + CARD_W - 58, y + 52);
+    text(g, workOrders.missionConcept, x + 34, y + 32, 14, C.amberHi, 'left', 900);
+    text(g, c.title, x + 34, y + 68, 24, C.muted, 'left', 800, false, CARD_W - 68);
+    paragraph(g, c.blurb, x + 34, y + 92, CARD_W - 68, 16, 'rgba(169,162,214,0.85)', 22, 'left', 500, true);
   }
 
   /** Round mugshot of the specimen, asleep. Locked orders show a redacted silhouette. */

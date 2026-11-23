@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="220" viewBox="0 0 300 220">
+<title>Bunk bed</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="7" y="4" width="14" height="211" rx="5" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 9v198" fill="none" stroke="#a7b7ce" stroke-width="2.8"/>
+<rect x="275" y="4" width="14" height="211" rx="5" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<path d="M279 9v198" fill="none" stroke="#a7b7ce" stroke-width="2.8"/>
+<path d="M17 52q8 -14 30 -14h199q21 1 28 10l13 20H18Z" fill="#d4dce4" stroke="#1b1433" stroke-width="3"/>
+<g transform="translate(23 34) scale(1)">
+<path d="M0 18q2 -18 15 -16l40 5q7 2 8 12l-53 2Z" fill="#d3b9d1" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="translate(99 52) scale(1)">
+<path d="M0 0h150q20 0 26 13l-1 10H-8Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M6 4l-3 12m146 -11 4 10" fill="none" stroke="#28575c" stroke-width="2"/>
+</g>
+<rect x="7" y="68" width="282" height="12" rx="3" fill="#495374" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 71h272" fill="none" stroke="#a7b7ce" stroke-width="2"/>
+<path d="M17 145q8 -14 30 -14h199q21 1 28 10l13 20H18Z" fill="#d4dce4" stroke="#1b1433" stroke-width="3"/>
+<g transform="translate(23 127) scale(1)">
+<path d="M0 18q2 -18 15 -16l40 5q7 2 8 12l-53 2Z" fill="#d3b9d1" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="translate(99 145) scale(1)">
+<path d="M0 0h150q20 0 26 13l-1 10H-8Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M6 4l-3 12m146 -11 4 10" fill="none" stroke="#28575c" stroke-width="2"/>
+</g>
+<rect x="7" y="161" width="282" height="12" rx="3" fill="#495374" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 164h272" fill="none" stroke="#a7b7ce" stroke-width="2"/>
+<path d="M15 16h230v28m-182 -28v23m78 -23v23" fill="none" stroke="#1b1433" stroke-width="6"/>
+<path d="M15 16h230v28m-182 -28v23m78 -23v23" fill="none" stroke="#a7b7ce" stroke-width="3"/>
+<path d="M225 68l-14 146m48 -146 -14 146" fill="none" stroke="#1b1433" stroke-width="8"/>
+<path d="M225 68l-14 146m48 -146 -14 146" fill="none" stroke="#647899" stroke-width="4"/>
+<path d="M224 87h32" fill="none" stroke="#1b1433" stroke-width="6"/>
+<path d="M224 87h32" fill="none" stroke="#a7b7ce" stroke-width="3"/>
+<path d="M222 112h32" fill="none" stroke="#1b1433" stroke-width="6"/>
+<path d="M222 112h32" fill="none" stroke="#a7b7ce" stroke-width="3"/>
+<path d="M220 137h32" fill="none" stroke="#1b1433" stroke-width="6"/>
+<path d="M220 137h32" fill="none" stroke="#a7b7ce" stroke-width="3"/>
+<path d="M218 162h32" fill="none" stroke="#1b1433" stroke-width="6"/>
+<path d="M218 162h32" fill="none" stroke="#a7b7ce" stroke-width="3"/>
+<path d="M216 187h32" fill="none" stroke="#1b1433" stroke-width="6"/>
+<path d="M216 187h32" fill="none" stroke="#a7b7ce" stroke-width="3"/>
+</g>
+</svg>

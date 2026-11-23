@@ -6,8 +6,16 @@
 import type { Vec2 } from '../contracts';
 import { circleSegment, pointInCircle, pointInCone, wrapAngle, type SegHit } from './geometry';
 import { POWER_LINE, SAUCER, barkRadius, neonOn, neonScramble, type Saucer } from './sim';
+// L5 pier code: the lighthouse beam
+import { beamAngle, lighthouseCovers, type LighthouseHazard } from './lighthouse';
+// L6 clinic code: the ambulance scramble
+import { AmbPhase, ambulancePose, triggerAmbulances, type AmbulanceHazard, type AmbulancePose } from './ambulance';
+// L7 cruise code: the deck photographer and the deck stewards
+import { STEWARD_REACH, inFrame, newPhotoState, stewardPose, stewardSees, triggerPhotographers, PHOTO, type PhotographerHazard, type StewardHazard, type StewardPose } from './photographer';
 
-export type CarKey = 'flight/police_top' | 'flight/sedan_top' | 'flight/taxi_top' | 'flight/pickup_top' | 'flight/van_top';
+export type CarKey = 'flight/police_top' | 'flight/sedan_top' | 'flight/taxi_top' | 'flight/pickup_top' | 'flight/van_top'
+  // L5 pier code: the harbour patrol boat drives a water path
+  | 'flight/patrol_boat_top';
 
 /** A car on a route: police cruiser (light bar), patrol car or plain car. */
 export interface CarHazard {
@@ -88,7 +96,7 @@ export interface DogHazard {
 /** Bats or pigeons flying a closed loop. Solid: they bump the saucer. */
 export interface FlockHazard {
   type: 'flock';
-  kind: 'bat' | 'pigeon';
+  kind: 'bat' | 'pigeon' | 'gull';
   path: Vec2[];
   speed: number;
   r: number;
@@ -98,7 +106,8 @@ export interface FlockHazard {
 /** Power line or tram wire: a solid segment. */
 export interface WireHazard {
   type: 'wire';
-  kind: 'power' | 'tram';
+  /** bunting (L5): pier flags on a line, solid like a power line. */
+  kind: 'power' | 'tram' | 'bunting';
   ax: number;
   ay: number;
   bx: number;
@@ -133,7 +142,9 @@ export interface CameraHazard {
   rate: number;
   phase: number;
   /** 'roof' (default): on a building's roof edge. 'pole': a street CCTV pole in a plaza. */
-  mount?: 'roof' | 'pole';
+  mount?: 'roof' | 'pole' | 'radar';
+  /** L7 cruise code: turn steadily at this many rad/s from `base` instead of sweeping (a radar). */
+  spin?: number;
 }
 
 /** Neon sign / billboard: inside the glow, steering is scrambled while it is lit. */
@@ -201,7 +212,14 @@ export type HazardDef =
   | NeonHazard
   | CraneHazard
   | WindowHazard
-  | GagHazard;
+  | GagHazard
+  // L5 pier code
+  | LighthouseHazard
+  // L6 clinic code
+  | AmbulanceHazard
+  // L7 cruise code
+  | PhotographerHazard
+  | StewardHazard;
 
 export type HazardType = HazardDef['type'];
 
@@ -289,10 +307,19 @@ export class Route {
 // ------------------------------------------------------------------ runtime
 
 /** Reasons the saucer can be detected (for Zib's lines and the spotted caption). */
-export type SpotCause = 'police' | 'patrol' | 'traffic' | 'porch' | 'watcher' | 'dog' | 'heli' | 'camera' | 'window';
+export type SpotCause = 'police' | 'patrol' | 'traffic' | 'porch' | 'watcher' | 'dog' | 'heli' | 'camera' | 'window'
+  // L5 pier code
+  | 'lighthouse'
+  // L6 clinic code
+  | 'ambulance'
+  // L7 cruise code
+  | 'photographer'
+  | 'steward';
 
 /** Things that bump the saucer. */
-export type BumpCause = 'wire' | 'tram' | 'bat' | 'pigeon' | 'crane';
+export type BumpCause = 'wire' | 'tram' | 'bat' | 'pigeon' | 'crane'
+  // L5 pier code
+  | 'gull';
 
 const CAR_LEN = 150;
 /**
@@ -348,6 +375,18 @@ export class HazardField {
   /** Number of porch lights; porch hazard i -> porch slot porchSlot[i]. */
   readonly porchCount: number;
   readonly porchSlot: Int16Array;
+  // L6 clinic code: ambulance hazard i -> slot ambSlot[i] in `ambT` (hazard time of its last
+  // trigger, -Infinity = never). stepFlight points `ambT` at the flight state's array.
+  readonly ambCount: number;
+  readonly ambSlot: Int16Array;
+  ambT: Float64Array;
+  private readonly amb: AmbulancePose = { x: 0, y: 0, heading: 0, ox: 0, oy: 0, phase: 0 };
+  // L7 cruise code: photographer hazard i -> slot photoSlot[i] in `photo` (trigger time, frame x, y,
+  // PHOTO.stride per slot). stepFlight points `photo` at the flight state's array.
+  readonly photoCount: number;
+  readonly photoSlot: Int16Array;
+  photo: Float64Array;
+  private readonly steward: StewardPose = { x: 0, y: 0, heading: 0, torch: 0 };
   t = 0;
   private readonly tmp = { x: 0, y: 0 };
   private readonly hit: SegHit = { nx: 0, ny: 0, depth: 0 };
@@ -366,7 +405,11 @@ export class HazardField {
     this.cars = [];
     this.routes = [];
     this.porchSlot = new Int16Array(n).fill(-1);
+    this.ambSlot = new Int16Array(n).fill(-1);
+    this.photoSlot = new Int16Array(n).fill(-1);
+    let photo = 0;
     let porch = 0;
+    let amb = 0;
     for (let i = 0; i < n; i++) {
       const d = defs[i]!;
       let cars: CarRT[] = [];
@@ -382,11 +425,22 @@ export class HazardField {
         route = new Route(d.path, true);
       } else if (d.type === 'porch') {
         this.porchSlot[i] = porch++;
+      } else if (d.type === 'ambulance') {
+        route = new Route(d.path, false);
+        this.ambSlot[i] = amb++;
+      } else if (d.type === 'photographer') {
+        this.photoSlot[i] = photo++; // L7 cruise code
+      } else if (d.type === 'steward') {
+        route = new Route(d.path, false); // L7 cruise code
       }
       this.cars.push(cars);
       this.routes.push(route);
     }
     this.porchCount = porch;
+    this.ambCount = amb;
+    this.ambT = new Float64Array(amb).fill(-Infinity);
+    this.photoCount = photo;
+    this.photo = newPhotoState(photo);
     this.sample(0);
   }
 
@@ -499,8 +553,35 @@ export class HazardField {
         case 'camera':
           this.x[i] = d.x;
           this.y[i] = d.y;
-          this.a[i] = d.base + d.amp * Math.sin(t * d.rate + d.phase);
+          this.a[i] = d.spin ? d.base + d.spin * t : d.base + d.amp * Math.sin(t * d.rate + d.phase);
           break;
+        // L5 pier code: a = the beam's centre angle
+        case 'lighthouse':
+          this.x[i] = d.x;
+          this.y[i] = d.y;
+          this.a[i] = beamAngle(d, t);
+          break;
+        // L7 cruise code: a = which way the photographer faces (at the frame while shooting);
+        // b = seconds since the last half-press. Stewards: x, y, a = torch, x2, y2 = torch origin.
+        case 'photographer': {
+          const k = this.photoSlot[i]! * PHOTO.stride;
+          const tau = t - this.photo[k]!;
+          this.x[i] = d.x;
+          this.y[i] = d.y;
+          this.b[i] = tau;
+          this.a[i] = tau >= 0 && tau < PHOTO.iris + PHOTO.expose ? Math.atan2(this.photo[k + 2]! - d.y, this.photo[k + 1]! - d.x) : d.facing + 0.5 * Math.sin(t * 0.7 + d.x);
+          break;
+        }
+        case 'steward': {
+          stewardPose(d, this.routes[i]!, t, this.steward, this.tmp);
+          this.x[i] = this.steward.x;
+          this.y[i] = this.steward.y;
+          this.a[i] = this.steward.torch;
+          this.b[i] = this.steward.heading;
+          this.x2[i] = this.steward.x + Math.cos(this.steward.torch) * STEWARD_REACH;
+          this.y2[i] = this.steward.y + Math.sin(this.steward.torch) * STEWARD_REACH;
+          break;
+        }
         case 'neon':
           this.x[i] = d.x;
           this.y[i] = d.y;
@@ -523,6 +604,20 @@ export class HazardField {
           this.tell[i] = tau >= litFrom - WINDOW_TELL && tau < litFrom ? 1 : 0;
           this.x[i] = d.x;
           this.y[i] = d.y;
+          break;
+        }
+        case 'ambulance': {
+          // x, y = body, a = heading, x2, y2 = headlight origin, b = seconds since its trigger
+          const tau = t - this.ambT[this.ambSlot[i]!]!;
+          const ph = ambulancePose(d, this.routes[i]!, tau, this.amb);
+          this.x[i] = this.amb.x;
+          this.y[i] = this.amb.y;
+          this.a[i] = this.amb.heading;
+          this.x2[i] = this.amb.ox;
+          this.y2[i] = this.amb.oy;
+          this.b[i] = tau;
+          this.on[i] = ph === AmbPhase.Driving ? 1 : 0;
+          this.tell[i] = ph === AmbPhase.Tell ? 1 : 0;
           break;
         }
         case 'porch':
@@ -579,11 +674,35 @@ export class HazardField {
         case 'window':
           if (this.on[i] && pointInCircle(x, y, d.x, d.y, d.r)) return i;
           break;
+        case 'ambulance':
+          if (this.on[i] && (pointInCircle(x, y, this.x[i]!, this.y[i]!, d.beaconR) || pointInCone(x, y, this.x2[i]!, this.y2[i]!, this.a[i]!, d.coneHalf, d.coneRange))) return i;
+          break;
+        // L5 pier code
+        case 'lighthouse':
+          if (lighthouseCovers(d, this.a[i]!, x, y)) return i;
+          break;
+        // L7 cruise code
+        case 'photographer':
+          if (inFrame(d, this.photo, this.photoSlot[i]! * PHOTO.stride, this.t, x, y)) return i;
+          break;
+        case 'steward':
+          if (stewardSees(d, x, y, this.x[i]!, this.y[i]!, this.a[i]!)) return i;
+          break;
         default:
           break;
       }
     }
     return -1;
+  }
+
+  /** L6: scramble ambulances whose bay the saucer at (x, y) is near, at hazard time t. Returns the first index scrambled, or -1. */
+  stepAmbulances(x: number, y: number, t: number): number {
+    return this.ambCount > 0 ? triggerAmbulances(this.defs, this.routes, this.ambSlot, this.ambT, x, y, t) : -1;
+  }
+
+  /** L7: half-press every idle photographer with a slow saucer at (x, y) in range, at hazard time t. Returns the first, or -1. */
+  stepPhotographers(x: number, y: number, speed: number, t: number): number {
+    return this.photoCount > 0 ? triggerPhotographers(this.defs, this.photoSlot, this.photo, x, y, speed, t) : -1;
   }
 
   /** Total steering scramble from lit neon zones at (x,y), radians. */
@@ -686,6 +805,16 @@ export class HazardField {
         return 'heli';
       case 'camera':
         return 'camera';
+      case 'ambulance':
+        return 'ambulance';
+      // L5 pier code
+      case 'lighthouse':
+        return 'lighthouse';
+      // L7 cruise code
+      case 'photographer':
+        return 'photographer';
+      case 'steward':
+        return 'steward';
       default:
         return 'window';
     }
@@ -721,6 +850,16 @@ export class HazardField {
         return d.r;
       case 'flock':
         return d.r + 60;
+      case 'ambulance':
+        return d.coneRange + 160;
+      // L5 pier code
+      case 'lighthouse':
+        return d.range;
+      // L7 cruise code
+      case 'photographer':
+        return d.range + Math.hypot(d.halfW, d.halfH);
+      case 'steward':
+        return d.coneRange + 40;
       default:
         return 4000;
     }

@@ -37,3 +37,22 @@ Preconditions:
 - The 16 IDs in `src/contracts.ts` describe the catalog. `isRoomId` in `src/levels/levels.ts` accepts only the four tutorial IDs at this revision. The fallback is the title. The same guard also applies to the room argument of `window.__nightShift.goto`.
 - The standalone abduction dev mount and headless tests exercise the room code. Track their results independently of the game's browser routing, report and save.
 - Keep the browser-entry check failing until routing exists. Once it lands, verify the level assignment and hard rules as well as the room identity.
+
+## v3 routes (L5–L7, docs/GDD-3-new-shifts.md)
+
+| Level | Specimen | Route IDs | Signature to check |
+| --- | --- | --- | --- |
+| L5 Pier Pressure | Bubbles (dolphin) | `bubbles_roof`, `bubbles_tunnel` | 7-joint body plan, moisture sheath (amber below 25 %, red 1 s fuse at 0), refills, water float |
+| L5 | Pete | `pete_gallery`, `pete_slipway` | lamp-room lens cone |
+| L5 | Sal | `sal_loft`, `sal_dock` | ice-chute draft, Kipper |
+| L6 Probe Compliance | Hank | `hank_front`, `hank_rear` | two Form 7-B drones per route, exit shut (amber checkboxes) until both tick, feather kick tell |
+| L6 | Dr. Osei | `osei_helipad`, `osei_pharmacy` | pager speaker, lift car |
+| L6 | Mr. Pemberton | `pemberton_window`, `pemberton_chute` | Roland second sleeper |
+| L7 A Whole Cruise Ship | Captain Sterling | `captain_mast`, `captain_funnel` | the swell: plumb dial bead before reversal, Anchovy |
+| L7 | Chef Marco | `marco_skylight`, `marco_promenade` | castor dessert trolley parked at a doorway |
+| L7 | Greg | `greg_awning`, `greg_cabin` | deckchair stack, steward camera |
+
+Flight signatures: L5 lighthouse beam with shadow wedges, L6 triggered ambulances (1.2 s bay tell),
+L7 deck photographers (amber frame → iris → 1 s exposure). Headless proofs: `tests/abduct-pier.test.ts`,
+`tests/abduct-clinic.test.ts`, `tests/abduct-ship.test.ts`, `tests/flight-autopilot.test.ts`; whole shifts in the
+browser: `ONLY=L5` (or `L6`, `L7`, `deep`) `node scripts/e2e-playthrough.cjs`.

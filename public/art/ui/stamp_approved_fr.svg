@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+<title>APPROUVÉ</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<g transform="rotate(-3 120 60)">
+<rect x="4" y="18" width="232" height="84" rx="7" fill="none" stroke="#246b58" stroke-width="5"/>
+<rect x="10" y="24" width="220" height="72" rx="4" fill="none" stroke="#246b58" stroke-width="2"/>
+<path d="M19 31h28m146 0h27m-200 56h67m67 0h66" fill="none" stroke="#246b58" stroke-width="2.5"/>
+<g transform="translate(18 40) scale(1.8796 2.7143)">
+<g transform="translate(0 0)">
+<path d="M1 14L5.5 1L10 14M2.8 9H8.2" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+<g transform="translate(14 0)">
+<path d="M1 14V1H6Q10 1 10 5Q10 8 6 8H1" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+<g transform="translate(28 0)">
+<path d="M1 14V1H6Q10 1 10 5Q10 8 6 8H1" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+<g transform="translate(42 0)">
+<path d="M1 14V1H6Q10 1 10 5Q10 8 6 8H1M6 8L10 14" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+<g transform="translate(56 0)">
+<path d="M5.5 1Q1 1 1 6V9Q1 14 5.5 14Q10 14 10 9V6Q10 1 5.5 1Z" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+<g transform="translate(70 0)">
+<path d="M1 1V9Q1 15 6 14Q10 14 10 9V1" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+<g transform="translate(84 0)">
+<path d="M1 1L5.5 14L10 1" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+<g transform="translate(98 0)">
+<path d="M9 1H1V14H9M1 7H7M4 -1.5l3.5 -3" fill="none" stroke="#246b58" stroke-width="2.8"/>
+</g>
+</g>
+<path d="M102 87h12m10 0h13" fill="none" stroke="#246b58" stroke-width="2.2"/>
+<ellipse cx="119" cy="87" rx="2" ry="2" fill="#246b58"/>
+</g>
+</g>
+</svg>

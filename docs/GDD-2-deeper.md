@@ -100,12 +100,13 @@ Obstacle library (data-driven, reusable; every obstacle has a clear tell):
 ## Levels
 
 L1 and L2 stay as they are as the **tutorial levels**, apart from the 1 s
-detection. The Work Orders screen labels them "Training". L3 and L4 are the
-new deep levels. The three teaser cards stay locked after L4.
+detection. The Work Orders screen labels them "Training". Deliver Doyle in L1
+to open L2. L3 and L4 are deep shifts players can select from the start. Three
+non-playable mission concepts follow the playable work orders.
 
 ### L3: "Cul-de-Sac Sweep" (Maple Court, suburbia)
 
-Unlocks after L2 is delivered. Map ~2160×2880. Sunrise budget 420 s (Night owl: done by 260 s).
+Map ~2160×2880. Sunrise budget 420 s (Night owl: done by 260 s).
 Flight hazards:
 - a **police cruiser** circling the block loop, with a fast headlight cone and a
   rotating light-bar radius;
@@ -143,7 +144,7 @@ Specimens:
 
 ### L4: "Downtown Graveyard Shift" (Grimsby city centre)
 
-Unlocks after L3 is delivered. Map ~2160×3840. Sunrise budget 480 s (Night owl: done by 310 s).
+Map ~2160×3840. Sunrise budget 480 s (Night owl: done by 310 s).
 Flight hazards:
 - a **police helicopter**, whose searchlight sweeps a big circle along a loop;
 - **two patrol cars**;

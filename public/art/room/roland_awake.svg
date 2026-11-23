@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="110" viewBox="0 0 160 110">
+<title>Roland awake</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<g transform="translate(0 30) scale(1)">
+<rect x="4" y="43" width="152" height="30" rx="7" fill="#495374" stroke="#1b1433" stroke-width="3"/>
+<path d="M8 37q2 -18 24 -20l23 8 3 25 -47 5Z" fill="#d4dce4" stroke="#1b1433" stroke-width="3"/>
+<rect x="4" y="51" width="152" height="18" rx="6" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<rect x="6" y="67" width="148" height="8" rx="3" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+</g>
+<path d="M20 28q21 0 32 14l19 31 -11 9 -41 -5 -8 -14Z" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<g transform="translate(12 1) scale(0.91)">
+<path d="M6 20Q4 7 19 5q18 -4 26 11l1 7 8 6 -4 5 -5 -1q4 14 -10 17Q14 55 8 37Z" fill="#ffc9a1" stroke="#1b1433" stroke-width="3"/>
+<path d="M5 29Q0 21 6 13Q19 -2 40 10l4 7q-17 -8 -30 0l-1 15Z" fill="#594050" stroke="#1b1433" stroke-width="3"/>
+<path d="M10 14q10 -8 22 -6" fill="none" stroke="#a7b7ce" stroke-width="2"/>
+<ellipse cx="10" cy="31" rx="4" ry="5" fill="#ebaa89" stroke="#1b1433" stroke-width="2"/>
+<path d="M15 38q12 7 28 -4l1 6q-8 17 -25 8Z" fill="#a7b7ce" stroke="#1b1433" stroke-width="1.8"/>
+<path d="M9 25l16 -2" fill="none" stroke="#1b1433" stroke-width="2.5"/>
+<rect x="23" y="19" width="16" height="11" rx="2" fill="none" stroke="#1b1433" stroke-width="2.3"/>
+<ellipse cx="33" cy="24" rx="3.5" ry="4" fill="#ffedc9" stroke="#1b1433" stroke-width="1.4"/>
+<ellipse cx="35" cy="23" rx="1.5" ry="2" fill="#1b1433"/>
+<ellipse cx="35" cy="41" rx="4.5" ry="3.8" fill="#594050" stroke="#1b1433" stroke-width="1.6"/>
+</g>
+<path d="M47 49l14 -12 9 -15q7 -8 11 0l-4 19 -19 21Z" fill="#ffc9a1" stroke="#1b1433" stroke-width="3"/>
+<g transform="rotate(15 81 21)">
+<g transform="translate(70 1) scale(0.82)">
+<path d="M8 20v-5Q0 10 5 5q6 -6 12 -1q5 5 -2 11v5Z" fill="#594050" stroke="#1b1433" stroke-width="3"/>
+<rect x="1" y="19" width="22" height="7" rx="2" fill="#bb9161" stroke="#1b1433" stroke-width="3"/>
+<rect x="1" y="25" width="22" height="4" rx="1" fill="#604569" stroke="#1b1433" stroke-width="1.5"/>
+</g>
+</g>
+<g transform="translate(0 30) scale(1)">
+<path d="M50 47q19 -13 45 -10l35 4q16 -6 23 6l3 12 -102 2Z" fill="#a387b1" stroke="#1b1433" stroke-width="3"/>
+<path d="M45 47q6 -7 16 -9l10 1 -10 20H43Z" fill="#d3b9d1" stroke="#1b1433" stroke-width="2"/>
+<path d="M75 51q12 -6 22 -4m9 4 14 -1" fill="none" stroke="#604569" stroke-width="2"/>
+</g>
+<g transform="translate(0 30) scale(1)">
+<rect x="3" y="57" width="154" height="8" rx="3" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<rect x="3" y="42" width="7" height="35" rx="3" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<rect x="150" y="45" width="7" height="32" rx="3" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+</g>
+</g>
+</svg>

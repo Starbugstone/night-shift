@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="720" viewBox="0 0 540 720">
+<title>Bg waiting room</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="0" y="0" width="540" height="720" rx="0" fill="#afbdd0"/>
+<rect x="0" y="0" width="540" height="51" rx="0" fill="#a3b2c8"/>
+<rect x="0" y="47" width="540" height="6" rx="0" fill="#9cabc0"/>
+<path d="M90 54v369" fill="none" stroke="#a7b5c9" stroke-width="1.5"/>
+<path d="M263 54v369" fill="none" stroke="#a7b5c9" stroke-width="1.5"/>
+<path d="M436 54v369" fill="none" stroke="#a7b5c9" stroke-width="1.5"/>
+<rect x="41" y="76" width="150" height="9" rx="3" fill="#8999b0"/>
+<rect x="44" y="73" width="144" height="8" rx="4" fill="#a4b4c8"/>
+<rect x="49" y="75" width="134" height="3" rx="1" fill="#d4dce4"/>
+<rect x="347" y="76" width="147" height="9" rx="3" fill="#8999b0"/>
+<rect x="350" y="73" width="141" height="8" rx="4" fill="#a4b4c8"/>
+<rect x="355" y="75" width="131" height="3" rx="1" fill="#d4dce4"/>
+<rect x="0" y="441" width="540" height="192" rx="0" fill="#9faec4"/>
+<rect x="0" y="434" width="540" height="12" rx="0" fill="#698f9a"/>
+<rect x="0" y="431" width="540" height="3" rx="0" fill="#90a8b6"/>
+<rect x="0" y="625" width="540" height="12" rx="0" fill="#8994ad"/>
+<rect x="0" y="637" width="540" height="83" rx="0" fill="#a3a6be"/>
+<path d="M0 662h540M0 699h540M82 638l-16 23m200 -23 -2 23m178 -23 16 23m-308 2 -15 35m225 -35 11 35" fill="none" stroke="#999eb7" stroke-width="1.8"/>
+<g transform="translate(43 196) scale(1)">
+<rect x="2" y="3" width="94" height="73" rx="4" fill="#9daac0"/>
+<rect x="0" y="0" width="94" height="73" rx="3" fill="#bec8d5" stroke="#99a9be" stroke-width="2"/>
+<path d="M7 60l18 -19 13 11 15 -21 34 29Z" fill="#a6b9c7"/>
+<ellipse cx="24" cy="21" rx="7" ry="7" fill="#d1ced9"/>
+</g>
+<g transform="translate(372 286) scale(1)">
+<rect x="2" y="3" width="77" height="101" rx="4" fill="#9daac0"/>
+<rect x="0" y="0" width="77" height="101" rx="3" fill="#bec8d5" stroke="#99a9be" stroke-width="2"/>
+<g transform="translate(38 25) scale(1)">
+<path d="M4 -11A12 12 0 1 0 12 7Q-5 10 -3 -2Q-2 -7 4 -11Z" fill="#a4b1c5"/>
+</g>
+<path d="M12 51h52m-52 8h41m-41 11h49m-49 9h33" fill="none" stroke="#a4b1c5" stroke-width="2.5"/>
+</g>
+<ellipse cx="271" cy="174" rx="21" ry="21" fill="#c7ceda" stroke="#99a8bc" stroke-width="3"/>
+<path d="M271 159v16l8 5" fill="none" stroke="#93a2b7" stroke-width="3"/>
+</g>
+</svg>

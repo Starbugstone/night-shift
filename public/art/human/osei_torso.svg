@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="120" viewBox="0 0 80 120">
+<title>Osei torso</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M29 5q13 -6 25 1q18 4 19 23l-6 39 8 42q-21 12 -66 4l-5 -5q7 -34 6 -54l-6 -23Q3 13 29 5Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 43l8 17q-1 25 -6 46q23 7 55 2l-1 5q-28 8 -55 -1l-5 -4q6 -33 4 -65Z" fill="#28575c"/>
+<path d="M28 5l13 6 10 -7 9 5 -18 22 -20 -22Z" fill="#28575c" stroke="#1b1433" stroke-width="2"/>
+<path d="M31 8l11 5 8 -6 -8 15Z" fill="#986451"/>
+<path d="M23 12q-12 33 7 36q11 2 11 -17m14 -19q14 8 10 36l-6 15" fill="none" stroke="#1b1433" stroke-width="4"/>
+<ellipse cx="58" cy="65" rx="6" ry="6" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<ellipse cx="58" cy="65" rx="2" ry="2" fill="#a7b7ce"/>
+<rect x="14" y="65" width="25" height="27" rx="3" fill="#28575c" stroke="#1b1433" stroke-width="2"/>
+<rect x="18" y="59" width="16" height="22" rx="2" fill="#d4dce4" stroke="#1b1433" stroke-width="1.5"/>
+<ellipse cx="23" cy="65" rx="2" ry="2" fill="#647899"/>
+<path d="M22 73h8" fill="none" stroke="#495374" stroke-width="1.5"/>
+</g>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="70" height="80" viewBox="0 0 70 80">
+<title>Osei head</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M25 76l-2 -13Q12 58 13 40q-4 -23 13 -28q23 -9 30 9l1 14 8 8q3 4 -7 6l-2 11q-4 10 -14 11l-2 6Z" fill="#986451" stroke="#1b1433" stroke-width="3"/>
+<path d="M19 47q1 19 22 18l10 -2q-4 6 -11 6l-1 6H26l-1 -13Z" fill="#714a4b"/>
+<path d="M7 27Q3 18 13 12Q12 4 23 5Q32 -2 42 4Q57 2 61 17l-2 8q-24 -5 -44 9l-8 11 -4 -4 5 -9 -6 -2Z" fill="#829eb3" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 25q24 -17 48 -9l-1 8q-27 -3 -45 10Z" fill="#468c89" stroke="#1b1433" stroke-width="2"/>
+<path d="M17 15q5 -5 11 -5m5 -2 6 1" fill="none" stroke="#d4dce4" stroke-width="2.5"/>
+<ellipse cx="17" cy="43" rx="6" ry="8" fill="#986451" stroke="#1b1433" stroke-width="2.5"/>
+<path d="M15 42q3 -3 5 0" fill="none" stroke="#714a4b" stroke-width="2"/>
+<path d="M32 31q7 -5 15 -2" fill="none" stroke="#1b1433" stroke-width="3"/>
+<path d="M32 40q7 7 18 -1q-7 14 -18 5Z" fill="#714a4b"/>
+<path d="M33 37q8 6 15 -1" fill="none" stroke="#1b1433" stroke-width="2.6"/>
+<ellipse cx="49" cy="57" rx="4.2" ry="3.2" fill="#594050" stroke="#1b1433" stroke-width="2"/>
+<path d="M51 49l5 -1" fill="none" stroke="#c0876e" stroke-width="2"/>
+</g>
+</svg>

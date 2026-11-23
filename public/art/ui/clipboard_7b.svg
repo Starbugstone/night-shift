@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="150" viewBox="0 0 120 150">
+<title>Clipboard 7b</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="8" width="114" height="139" rx="8" fill="#895e55" stroke="#1b1433" stroke-width="3"/>
+<rect x="9" y="15" width="102" height="124" rx="5" fill="#e5cc9f" stroke="#1b1433" stroke-width="2.2"/>
+<path d="M12 16h95v104l-12 15H12Z" fill="#ffedc9" stroke="#1b1433" stroke-width="2"/>
+<path d="M95 135l1 -14 11 -1Z" fill="#e5cc9f" stroke="#1b1433" stroke-width="1.5"/>
+<path d="M37 10h11q0 -8 12 -8q11 1 11 8h10q7 1 7 6v9H31v-9q0 -6 6 -6Z" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<ellipse cx="60" cy="9" rx="3" ry="3" fill="#d4dce4" stroke="#1b1433" stroke-width="1.6"/>
+<path d="M36 20h46" fill="none" stroke="#a7b7ce" stroke-width="2"/>
+</g>
+</svg>

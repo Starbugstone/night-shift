@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="110" viewBox="0 0 300 110">
+<title>Waiting chairs</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M37 74l-8 31m19 -26 5 25m196 -30 -5 31m16 -29 14 27" fill="none" stroke="#1b1433" stroke-width="8"/>
+<path d="M37 74l-8 31m19 -26 5 25m196 -30 -5 31m16 -29 14 27" fill="none" stroke="#647899" stroke-width="4"/>
+<rect x="8" y="76" width="284" height="11" rx="4" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<g transform="translate(0 0) scale(1)">
+<g transform="rotate(-4 50 72)">
+<path d="M10 14Q11 5 23 4l46 -1q12 0 14 11l2 44 5 7q3 8 -7 10l-55 2q-15 -1 -17 -16Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M15 13q4 -6 13 -6l39 -1q8 0 10 6Z" fill="#85a7ad"/>
+<path d="M23 63q30 6 58 -3l7 7q-31 11 -64 3Z" fill="#28575c"/>
+<path d="M23 20l2 25" fill="none" stroke="#a7b7ce" stroke-width="2.8"/>
+</g>
+</g>
+<g transform="translate(98 0) scale(1)">
+<g transform="rotate(-1 50 72)">
+<path d="M10 14Q11 5 23 4l46 -1q12 0 14 11l2 44 5 7q3 8 -7 10l-55 2q-15 -1 -17 -16Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M15 13q4 -6 13 -6l39 -1q8 0 10 6Z" fill="#85a7ad"/>
+<path d="M23 63q30 6 58 -3l7 7q-31 11 -64 3Z" fill="#28575c"/>
+<path d="M23 20l2 25" fill="none" stroke="#a7b7ce" stroke-width="2.8"/>
+</g>
+</g>
+<g transform="translate(196 0) scale(1)">
+<g transform="rotate(3 50 72)">
+<path d="M10 14Q11 5 23 4l46 -1q12 0 14 11l2 44 5 7q3 8 -7 10l-55 2q-15 -1 -17 -16Z" fill="#468c89" stroke="#1b1433" stroke-width="3"/>
+<path d="M15 13q4 -6 13 -6l39 -1q8 0 10 6Z" fill="#85a7ad"/>
+<path d="M23 63q30 6 58 -3l7 7q-31 11 -64 3Z" fill="#28575c"/>
+<path d="M23 20l2 25" fill="none" stroke="#a7b7ce" stroke-width="2.8"/>
+</g>
+</g>
+<path d="M5 57v19h13m78 -21v19h13m83 -19v19h13m84 -20v19h8" fill="none" stroke="#1b1433" stroke-width="5"/>
+</g>
+</svg>

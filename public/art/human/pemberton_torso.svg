@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="120" viewBox="0 0 80 120">
+<title>Pemberton torso</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M29 5q13 -6 25 1q18 4 19 23l-6 39 8 42q-21 12 -66 4l-5 -5q7 -34 6 -54l-6 -23Q3 13 29 5Z" fill="#b5adca" stroke="#1b1433" stroke-width="3"/>
+<path d="M11 43l8 17q-1 25 -6 46q23 7 55 2l-1 5q-28 8 -55 -1l-5 -4q6 -33 4 -65Z" fill="#827c9e"/>
+<path d="M24 7q15 11 31 -1l5 4q-14 15 -34 5Z" fill="#d3b9d1" stroke="#1b1433" stroke-width="2"/>
+<path d="M27 18q-4 38 -6 77" fill="none" stroke="#827c9e" stroke-width="2.7"/>
+<path d="M42 41q3 -4 6 0l-2 3Z" fill="#827c9e"/>
+<path d="M59 53q3 -4 6 0l-2 3Z" fill="#827c9e"/>
+<path d="M35 63q3 -4 6 0l-2 3Z" fill="#827c9e"/>
+<path d="M48 83q3 -4 6 0l-2 3Z" fill="#827c9e"/>
+<path d="M63 95q3 -4 6 0l-2 3Z" fill="#827c9e"/>
+<path d="M31 101q3 -4 6 0l-2 3Z" fill="#827c9e"/>
+<path d="M23 34q-13 -10 -13 -3q2 7 14 5q12 5 13 0q-1 -6 -14 -2Z" fill="#e1d5e4" stroke="#1b1433" stroke-width="1.8"/>
+<path d="M23 36l-7 10m7 -10 7 7" fill="none" stroke="#827c9e" stroke-width="2.5"/>
+</g>
+</svg>

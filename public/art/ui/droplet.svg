@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">
+<title>Droplet</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M20 2q2 9 12 22q6 8 5 13q-2 9 -15 9Q5 46 3 34Q2 27 8 19Q17 7 20 2Z" fill="#64c5a1" stroke="#1b1433" stroke-width="3"/>
+<path d="M20 7q-2 12 -9 24q-3 6 1 11q-7 -3 -7 -11q1 -6 7 -14Z" fill="#7CFFCB"/>
+<path d="M33 27q8 16 -10 17q-7 0 -11 -4q16 3 21 -13Z" fill="#468c89"/>
+<path d="M16 19q-4 6 -5 10" fill="none" stroke="#d8ffdf" stroke-width="3.4"/>
+</g>
+</svg>

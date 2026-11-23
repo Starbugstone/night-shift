@@ -25,6 +25,14 @@ import { CRANE_TAIL, PORCH, TRAFFIC_SCALE, WATCHER_TELL, type SpotCause } from '
 import { drawDog, drawProp, propSize } from './props';
 import { FLIGHT_HUD, POWER_LINE, RING_R, SUSPICION } from './sim';
 import { SpottedPhoto, drawWitness } from './spotted';
+// L5 pier code
+import { drawLighthouseBeam, drawLighthouseShadows } from './lighthouse';
+import { drawBuntingFlags, drawPierGround } from './pier-ground';
+// L6 clinic code
+import { ambulanceScrambled, drawAmbulance, drawAmbulanceLights, drawCampusGround } from './ambulance-draw';
+// L7 cruise code
+import { drawPhotoFrame, drawRadarMast, drawShipCrew, drawStewardTorch, photoHalfPressed } from './photographer-draw';
+import { drawShipGround } from './ship-hull';
 
 const LOCK_ANIM = 0.9;
 /** The SPOTTED freeze lasts this long before the respawn (tap skips after SPOT_SKIP). */
@@ -82,6 +90,10 @@ export class DeepFlightScene implements Scene {
   private readonly fuse: FuseState = { value: 0, exposed: false, t: 0, reduced: false, seconds: 1 };
   private readonly seen = new Set<string>();
   private readonly lineFlash: Float32Array;
+  /** L6: per hazard, the ambulance's tell flag last frame (to catch a scramble). */
+  private readonly ambTell: Uint8Array;
+  /** L7: per hazard, the photographer's phase last frame (to catch a half-press). */
+  private readonly photoPrev: Uint8Array;
   private readonly speckles: Float32Array;
   private readonly ambient: Ambient;
   private readonly photo = new SpottedPhoto();
@@ -137,6 +149,8 @@ export class DeepFlightScene implements Scene {
     this.fuse.seconds = 1 / (SUSPICION.rate * this.sim.mult);
     const n = this.level.map.hazards.length;
     this.lineFlash = new Float32Array(n);
+    this.ambTell = new Uint8Array(n);
+    this.photoPrev = new Uint8Array(n);
     this.prevA = new Float32Array(n);
     this.lead = new Int8Array(n);
     this.prevSpot = new Float32Array(n * 2);
@@ -278,6 +292,18 @@ export class DeepFlightScene implements Scene {
         this.fx.spawn(P_RING, d.x, d.y, 0, 0, 0.34, d.r, PC.amber);
         if (!rm) this.fx.burst(P_SPARK, d.x, d.y, 6, 120, 220, 0.25, 3, PC.amber, 0, 3);
       }
+    }
+    // L6 clinic code: an ambulance bay door goes up
+    if (ambulanceScrambled(field, this.ambTell) >= 0) {
+      audio.sfx('siren', 0.35);
+      this.say('scramble', !this.seen.has('scramble'), true);
+      this.seen.add('scramble');
+    }
+    // L7 cruise code: a photographer half-presses on the saucer
+    if (photoHalfPressed(field, this.photoPrev) >= 0) {
+      audio.sfx('click', 0.5);
+      this.say('framed', !this.seen.has('framed'), true);
+      this.seen.add('framed');
     }
     if (st.bump >= 0) {
       const cause = field.bumpCause(st.bump);
@@ -545,7 +571,7 @@ export class DeepFlightScene implements Scene {
     const f = this.sim.field;
     for (let i = 0; i < f.defs.length; i++) {
       const d = f.defs[i]!;
-      if (d.type === 'camera' || d.type === 'watcher' || d.type === 'car') {
+      if (d.type === 'camera' || d.type === 'watcher' || d.type === 'car' || d.type === 'steward') {
         const a = d.type === 'car' ? f.cars[i]![0]!.cone : f.a[i]!;
         const da = Math.atan2(Math.sin(a - this.prevA[i]!), Math.cos(a - this.prevA[i]!));
         if (Math.abs(da) > 0.0004 && Math.abs(da) < 0.3) this.lead[i] = da > 0 ? 1 : -1;
@@ -570,6 +596,12 @@ export class DeepFlightScene implements Scene {
 
   private drawGround(g: CanvasRenderingContext2D, cx: number, cy: number): void {
     const m = this.level.map;
+    // L5 pier code
+    if (m.theme === 'pier') return drawPierGround(g, this.ctx.assets, m.ground ?? [], cx, cy, this.ctx.time, this.ctx.reducedMotion, this.speckles);
+    // L6 clinic code
+    if (m.theme === 'clinic') return drawCampusGround(g, this.ctx.assets, cx, cy, this.speckles);
+    // L7 cruise code
+    if (m.theme === 'ship') return drawShipGround(g, this.ctx.assets, cx, cy, this.speckles, this.ctx.time, this.ctx.reducedMotion);
     const img = this.ctx.assets.get(m.theme === 'suburb' ? 'flight/ground_suburb' : 'flight/ground_city');
     if (img) {
       const T = 540;
@@ -736,6 +768,11 @@ export class DeepFlightScene implements Scene {
         }
         case 'camera': {
           if (!this.visible(d.x, d.y, 60)) break;
+          // L7 cruise code: a radar mast's dish turns with its cones
+          if (d.mount === 'radar') {
+            drawRadarMast(g, assets, d.x, d.y, f.a[i]!);
+            break;
+          }
           if (d.mount === 'pole') drawPost(g, d.x, d.y, 58, 7, 15);
           g.save();
           g.translate(d.x, d.y);
@@ -757,6 +794,19 @@ export class DeepFlightScene implements Scene {
           g.restore();
           break;
         }
+        // L5 pier code: the shadow wedges lie on the ground
+        case 'lighthouse':
+          drawLighthouseShadows(g, d);
+          break;
+        // L6 clinic code
+        case 'ambulance':
+          if (this.visible(f.x[i]!, f.y[i]!, 200) || this.visible(d.bayX, d.bayY, 160)) drawAmbulance(g, assets, f, i, t, rm);
+          break;
+        // L7 cruise code
+        case 'photographer':
+        case 'steward':
+          if (this.visible(f.x[i]!, f.y[i]!, 60)) drawShipCrew(g, assets, f, i, rm);
+          break;
         case 'gag':
           if (d.kind === 'cropcircle' || !this.visible(d.x, d.y, 160)) break;
           if (d.kind === 'sprinkler') {
@@ -962,6 +1012,25 @@ export class DeepFlightScene implements Scene {
           break;
         case 'neon':
           if (this.visible(d.x, d.y, d.r)) this.drawNeon(g, i, t);
+          break;
+        // L5 pier code: the beam is its own hit area; the lamp glows amber
+        case 'lighthouse': {
+          drawLighthouseBeam(g, d, f.a[i]!, this.hot(i, t), t, rm);
+          g.globalCompositeOperation = 'lighter';
+          drawGlow(g, GLOW.amber, d.x, d.y, 46, 46, 0.95);
+          g.globalCompositeOperation = 'source-over';
+          break;
+        }
+        // L6 clinic code
+        case 'ambulance':
+          if (this.visible(f.x[i]!, f.y[i]!, d.coneRange + 120) || this.visible(d.bayX, d.bayY, d.trigger + 20)) drawAmbulanceLights(g, this.cones, f, i, t, rm, this.hot(i, t));
+          break;
+        // L7 cruise code
+        case 'photographer':
+          if (this.visible(d.x, d.y, d.range + 120)) drawPhotoFrame(g, f, i, t, rm, this.hot(i, t));
+          break;
+        case 'steward':
+          if (this.visible(f.x[i]!, f.y[i]!, d.coneRange + 40)) drawStewardTorch(g, this.cones, f, i, this.hot(i, t), this.lead[i]!);
           break;
         default:
           break;
@@ -1356,6 +1425,7 @@ export class DeepFlightScene implements Scene {
           }
           drawPole(g, d.ax, d.ay, tram);
           drawPole(g, d.bx, d.by, tram);
+          if (d.kind === 'bunting') drawBuntingFlags(g, d, POWER_LINE.sag); // L5 pier code
           break;
         }
         case 'crane': {
@@ -1406,7 +1476,7 @@ export class DeepFlightScene implements Scene {
           const x = f.x[i]!;
           const y = f.y[i]!;
           if (!this.visible(x, y, d.r + 60)) break;
-          const key = d.kind === 'bat' ? 'flight/bat_flock' : 'flight/pigeon_flock';
+          const key = d.kind === 'bat' ? 'flight/bat_flock' : d.kind === 'gull' ? 'flight/gull_flock' : 'flight/pigeon_flock';
           const img = assets.get(key);
           g.save();
           g.translate(x, y);
@@ -1611,6 +1681,9 @@ export class DeepFlightScene implements Scene {
         }
         break;
       case 'heli':
+      case 'ambulance':
+      case 'photographer': // L7 cruise code
+      case 'steward':
         o.x = f.x[i]!;
         o.y = f.y[i]!;
         break;
@@ -1622,6 +1695,7 @@ export class DeepFlightScene implements Scene {
       case 'watcher':
       case 'dog':
       case 'camera':
+      case 'lighthouse': // L5 pier code
         o.x = d.x;
         o.y = d.y;
         break;

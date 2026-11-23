@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="720" viewBox="0 0 540 720">
+<title>Bg recovery bay</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="0" y="0" width="540" height="720" rx="0" fill="#afbdd0"/>
+<rect x="0" y="0" width="540" height="51" rx="0" fill="#a3b2c8"/>
+<rect x="0" y="47" width="540" height="6" rx="0" fill="#9cabc0"/>
+<path d="M110 54v369" fill="none" stroke="#a7b5c9" stroke-width="1.5"/>
+<path d="M283 54v369" fill="none" stroke="#a7b5c9" stroke-width="1.5"/>
+<path d="M456 54v369" fill="none" stroke="#a7b5c9" stroke-width="1.5"/>
+<rect x="41" y="76" width="150" height="9" rx="3" fill="#8999b0"/>
+<rect x="44" y="73" width="144" height="8" rx="4" fill="#a4b4c8"/>
+<rect x="49" y="75" width="134" height="3" rx="1" fill="#d4dce4"/>
+<rect x="347" y="76" width="147" height="9" rx="3" fill="#8999b0"/>
+<rect x="350" y="73" width="141" height="8" rx="4" fill="#a4b4c8"/>
+<rect x="355" y="75" width="131" height="3" rx="1" fill="#d4dce4"/>
+<rect x="0" y="441" width="540" height="192" rx="0" fill="#9faec4"/>
+<rect x="0" y="434" width="540" height="12" rx="0" fill="#698f9a"/>
+<rect x="0" y="431" width="540" height="3" rx="0" fill="#90a8b6"/>
+<rect x="0" y="625" width="540" height="12" rx="0" fill="#8994ad"/>
+<rect x="0" y="637" width="540" height="83" rx="0" fill="#a3a6be"/>
+<path d="M0 662h540M0 699h540M82 638l-16 23m200 -23 -2 23m178 -23 16 23m-308 2 -15 35m225 -35 11 35" fill="none" stroke="#999eb7" stroke-width="1.8"/>
+<g transform="translate(81 249) scale(1)">
+<rect x="2" y="3" width="117" height="34" rx="4" fill="#9daac0"/>
+<rect x="0" y="0" width="117" height="34" rx="3" fill="#bec8d5" stroke="#99a9be" stroke-width="2"/>
+<rect x="9" y="7" width="44" height="20" rx="4" fill="#a1b0c2"/>
+<path d="M16 20h8l3 -6 5 10 4 -6h10" fill="none" stroke="#bcc5d1" stroke-width="2"/>
+<ellipse cx="77" cy="17" rx="6" ry="6" fill="#a8b5c6"/>
+<ellipse cx="97" cy="17" rx="6" ry="6" fill="#a8b5c6"/>
+<path d="M86 35v34q-1 12 -13 9" fill="none" stroke="#9caac1" stroke-width="3"/>
+</g>
+<g transform="translate(362 188) scale(1)">
+<rect x="2" y="3" width="85" height="70" rx="4" fill="#9daac0"/>
+<rect x="0" y="0" width="85" height="70" rx="3" fill="#bec8d5" stroke="#99a9be" stroke-width="2"/>
+<rect x="9" y="8" width="67" height="49" rx="1" fill="#a6afc4"/>
+<path d="M12 54l17 -20 7 6 8 -8 11 7 8 -12 11 27Z" fill="#b7bed0"/>
+</g>
+</g>
+</svg>

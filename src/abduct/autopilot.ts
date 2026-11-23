@@ -14,6 +14,9 @@ export class AbductPilot {
   private crossAt = -1;
   private trainingSpeed = 0;
   private readonly intent: AbductAutopilotIntent = { dx: 0, dy: 0 };
+  /** L6: checkpoint index whose probe drone is being served (-1 = none), and where to aim the beam. */
+  private probing = -1;
+  private readonly probeAim = { x: 0, y: 0 };
   /** Where the last move() steers the beam and how fast (px/s; 0 = hold still). For pointing drivers. */
   aimX = 0;
   aimY = 0;
@@ -43,7 +46,10 @@ export class AbductPilot {
       }
       if (i < this.index && checkpoints[i]!.cross) break;
     }
-    if (best < this.index) this.committed = false;
+    if (best < this.index) {
+      this.committed = false;
+      this.probing = -1;
+    }
     this.index = best;
   }
 
@@ -57,6 +63,21 @@ export class AbductPilot {
     if (this.room.interior && interior) {
       const { checkpoints } = this.room.interior;
       let checkpoint = checkpoints[this.index];
+      // L6 clinic code: at a probe point, steer the named joint into the drone's ring until the reading is in
+      const probes = interior.probes;
+      if (checkpoint?.probe !== undefined && probes && (this.probing === this.index || Math.hypot(checkpoint.x - body.beamX, checkpoint.y - body.beamY) < 1)) {
+        if (!probes.drones[checkpoint.probe]!.settled) {
+          this.probing = this.index;
+          probes.aim(checkpoint.probe, body, this.probeAim);
+          const base = checkpoint.speed ?? PILOT_CRUISE;
+          return this.delta(this.probeAim.x, this.probeAim.y, body, dt, Math.max(base, Math.min(base * this.pace, PILOT_DART)));
+        }
+        if (this.probing === this.index) {
+          this.probing = -1;
+          checkpoint = checkpoints[++this.index];
+          this.committed = false;
+        }
+      }
       if (checkpoint && Math.hypot(checkpoint.x - body.beamX, checkpoint.y - body.beamY) < 1) {
         checkpoint = checkpoints[++this.index];
         this.committed = false;

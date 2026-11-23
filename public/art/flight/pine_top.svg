@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+<title>Pine top</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<g transform="rotate(3 40 40)">
+<path d="M40 48Q27 43 17 25l9 1 -4 -12 9 4L37 3l7 13 6 -4 2 13 7 -1Q54 40 40 48Z" fill="#28575c" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="rotate(63 40 40)">
+<path d="M40 48Q27 43 17 25l9 1 -4 -12 9 4L37 3l7 13 6 -4 2 13 7 -1Q54 40 40 48Z" fill="#28575c" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="rotate(123 40 40)">
+<path d="M40 48Q27 43 17 25l9 1 -4 -12 9 4L37 3l7 13 6 -4 2 13 7 -1Q54 40 40 48Z" fill="#28575c" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="rotate(183 40 40)">
+<path d="M40 48Q27 43 17 25l9 1 -4 -12 9 4L37 3l7 13 6 -4 2 13 7 -1Q54 40 40 48Z" fill="#28575c" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="rotate(243 40 40)">
+<path d="M40 48Q27 43 17 25l9 1 -4 -12 9 4L37 3l7 13 6 -4 2 13 7 -1Q54 40 40 48Z" fill="#28575c" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="rotate(303 40 40)">
+<path d="M40 48Q27 43 17 25l9 1 -4 -12 9 4L37 3l7 13 6 -4 2 13 7 -1Q54 40 40 48Z" fill="#28575c" stroke="#1b1433" stroke-width="2.5"/>
+</g>
+<g transform="rotate(20 40 40)">
+<path d="M39 45Q29 40 23 29l9 3 -1 -9 6 3 2 -11 7 12 4 -1 -1 8 5 -2q-3 9 -15 13Z" fill="#42727a" stroke="#28575c" stroke-width="1.8"/>
+</g>
+<g transform="rotate(92 40 40)">
+<path d="M39 45Q29 40 23 29l9 3 -1 -9 6 3 2 -11 7 12 4 -1 -1 8 5 -2q-3 9 -15 13Z" fill="#42727a" stroke="#28575c" stroke-width="1.8"/>
+</g>
+<g transform="rotate(164 40 40)">
+<path d="M39 45Q29 40 23 29l9 3 -1 -9 6 3 2 -11 7 12 4 -1 -1 8 5 -2q-3 9 -15 13Z" fill="#42727a" stroke="#28575c" stroke-width="1.8"/>
+</g>
+<g transform="rotate(236 40 40)">
+<path d="M39 45Q29 40 23 29l9 3 -1 -9 6 3 2 -11 7 12 4 -1 -1 8 5 -2q-3 9 -15 13Z" fill="#42727a" stroke="#28575c" stroke-width="1.8"/>
+</g>
+<g transform="rotate(308 40 40)">
+<path d="M39 45Q29 40 23 29l9 3 -1 -9 6 3 2 -11 7 12 4 -1 -1 8 5 -2q-3 9 -15 13Z" fill="#42727a" stroke="#28575c" stroke-width="1.8"/>
+</g>
+<path d="M33 43l3 -10 3 2 3 -10 4 10 4 1 -8 10Z" fill="#56858a"/>
+</g>
+</svg>

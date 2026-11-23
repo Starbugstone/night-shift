@@ -1,3 +1,5 @@
+import { HUMAN_PLAN, ROLE_HEAD, ROLE_PULL, type BodyPlan } from './body-plan';
+
 export const STEP = 1 / 120;
 
 export enum Joint {
@@ -72,32 +74,10 @@ export interface Pose {
   farThigh: number;
   farShin: number;
   pelvisRadius?: number;
+  /** Non-human plans: bone angles in the plan's bone order (the named angles above are ignored). */
+  bones?: readonly number[];
 }
 
-const LENGTHS = [40, 108, 55, 53, 55, 53, 63, 64, 63, 64] as const;
-const BONES = [
-  [Joint.Neck, Joint.Head], [Joint.Neck, Joint.Pelvis],
-  [Joint.Neck, Joint.NearElbow], [Joint.NearElbow, Joint.NearHand],
-  [Joint.Neck, Joint.FarElbow], [Joint.FarElbow, Joint.FarHand],
-  [Joint.Pelvis, Joint.NearKnee], [Joint.NearKnee, Joint.NearFoot],
-  [Joint.Pelvis, Joint.FarKnee], [Joint.FarKnee, Joint.FarFoot],
-] as const;
-
-const RADII = [32, 22, 31, 13, 11, 13, 11, 16, 14, 16, 14];
-const INVERSE_MASS = [0.65, 0.34, 0.43, 1.15, 1.45, 1.15, 1.45, 0.95, 1.15, 0.95, 1.15];
-const ANGLE_LIMITS = [
-  // Relative to the direction of the incoming bone, in screen coordinates.
-  [Joint.Pelvis, Joint.Neck, Joint.Head, -1.30, 1.30],
-  [Joint.Pelvis, Joint.Neck, Joint.NearElbow, 0.85, 4.65],
-  [Joint.Pelvis, Joint.Neck, Joint.FarElbow, 0.85, 4.65],
-  [Joint.Neck, Joint.NearElbow, Joint.NearHand, -2.28, 0.60],
-  [Joint.Neck, Joint.FarElbow, Joint.FarHand, -2.28, 0.60],
-  [Joint.Neck, Joint.Pelvis, Joint.NearKnee, -1.95, 0.72],
-  [Joint.Neck, Joint.Pelvis, Joint.FarKnee, -1.95, 0.72],
-  [Joint.Pelvis, Joint.NearKnee, Joint.NearFoot, -0.45, 2.12],
-  [Joint.Pelvis, Joint.FarKnee, Joint.FarFoot, -0.45, 2.12],
-] as const;
-const MIDPOINT_RADII = [24, 34, 12, 10, 12, 10, 15, 13, 15, 13];
 const GRAVITY = 480;
 const ITERATIONS = 8;
 const TAU = Math.PI * 2;
@@ -243,20 +223,27 @@ export class Contact {
 }
 
 export class Ragdoll {
-  readonly x = new Float64Array(RADII.length);
-  readonly y = new Float64Array(RADII.length);
-  private readonly oldX = new Float64Array(RADII.length);
-  private readonly oldY = new Float64Array(RADII.length);
-  private readonly vx = new Float64Array(RADII.length);
-  private readonly vy = new Float64Array(RADII.length);
+  readonly x: Float64Array;
+  readonly y: Float64Array;
+  private readonly oldX: Float64Array;
+  private readonly oldY: Float64Array;
+  private readonly vx: Float64Array;
+  private readonly vy: Float64Array;
   private readonly contact = new Contact();
-  private readonly contactX = new Float64Array(RADII.length);
-  private readonly contactY = new Float64Array(RADII.length);
-  private readonly surfaceVx = new Float64Array(RADII.length);
-  private readonly surfaceVy = new Float64Array(RADII.length);
+  private readonly contactX: Float64Array;
+  private readonly contactY: Float64Array;
+  private readonly surfaceVx: Float64Array;
+  private readonly surfaceVy: Float64Array;
   private readonly candidates: Int32Array;
   private candidateCount = 0;
-  private readonly pelvisRadius: number;
+  /** Joint radii for this body (the plan's, with `pose.pelvisRadius` applied). */
+  readonly radii: Float64Array;
+  /**
+   * Extra per-joint acceleration (px/s², + = down), added only while `floating` is set: water
+   * buoyancy (src/abduct/moisture.ts). The owner rewrites it before each step.
+   */
+  readonly floatY: Float64Array;
+  floating = false;
   private readonly restHeadX: number;
   private readonly restHeadY: number;
   readonly impacts: Float64Array;
@@ -267,7 +254,7 @@ export class Ragdoll {
   beamX: number;
   beamY: number;
   beamActive = true;
-  gripJoint = Joint.NearHand;
+  gripJoint: number = Joint.NearHand;
   gripActive = false;
   gripX = 0;
   gripY = 0;
@@ -286,23 +273,38 @@ export class Ragdoll {
   private lastBeamX = 0;
   private lastBeamY = 0;
 
-  constructor(pose: Pose, readonly solids: readonly Solid[], private readonly dampener = false) {
-    this.pelvisRadius = pose.pelvisRadius ?? RADII[Joint.Pelvis]!;
+  constructor(
+    pose: Pose, readonly solids: readonly Solid[], private readonly dampener = false,
+    /** The skeleton; humans (the default) are exactly the v2 table. */
+    readonly plan: BodyPlan = HUMAN_PLAN,
+  ) {
+    const n = plan.joints;
+    this.x = new Float64Array(n);
+    this.y = new Float64Array(n);
+    this.oldX = new Float64Array(n);
+    this.oldY = new Float64Array(n);
+    this.vx = new Float64Array(n);
+    this.vy = new Float64Array(n);
+    this.contactX = new Float64Array(n);
+    this.contactY = new Float64Array(n);
+    this.surfaceVx = new Float64Array(n);
+    this.surfaceVy = new Float64Array(n);
+    this.floatY = new Float64Array(n);
+    this.radii = Float64Array.from(plan.radii);
+    if (plan.pelvis >= 0 && pose.pelvisRadius !== undefined) this.radii[plan.pelvis] = pose.pelvisRadius;
     this.candidates = new Int32Array(solids.length);
     this.impacts = new Float64Array(solids.length);
     this.touched = new Uint8Array(solids.length);
     this.impactX = new Float64Array(solids.length);
     this.impactY = new Float64Array(solids.length);
-    this.x[Joint.Neck] = pose.neckX;
-    this.y[Joint.Neck] = pose.neckY;
-    const angles = [
-      pose.head, pose.torso, pose.nearArm, pose.nearForearm, pose.farArm,
-      pose.farForearm, pose.nearThigh, pose.nearShin, pose.farThigh, pose.farShin,
-    ];
-    for (let i = 0; i < BONES.length; i++) {
-      const [a, b] = BONES[i]!;
-      this.x[b] = this.x[a]! + Math.cos(angles[i]!) * LENGTHS[i]!;
-      this.y[b] = this.y[a]! + Math.sin(angles[i]!) * LENGTHS[i]!;
+    this.x[plan.root] = pose.neckX;
+    this.y[plan.root] = pose.neckY;
+    const angles = plan.angles(pose);
+    for (let i = 0; i < plan.bones; i++) {
+      const a = plan.boneA[i]!;
+      const b = plan.boneB[i]!;
+      this.x[b] = this.x[a]! + Math.cos(angles[i]!) * plan.lengths[i]!;
+      this.y[b] = this.y[a]! + Math.sin(angles[i]!) * plan.lengths[i]!;
     }
     this.oldX.set(this.x);
     this.oldY.set(this.y);
@@ -310,16 +312,21 @@ export class Ragdoll {
     this.beamY = this.chestY;
     this.lastBeamX = this.beamX;
     this.lastBeamY = this.beamY;
-    this.restHeadX = this.x[Joint.Head]! - this.beamX;
-    this.restHeadY = this.y[Joint.Head]! - this.beamY;
+    const head = plan.head >= 0 ? plan.head : plan.root;
+    this.restHeadX = this.x[head]! - this.beamX;
+    this.restHeadY = this.y[head]! - this.beamY;
   }
 
-  get chestX(): number { return this.x[Joint.Neck]! * 0.65 + this.x[Joint.Pelvis]! * 0.35; }
-  get chestY(): number { return this.y[Joint.Neck]! * 0.65 + this.y[Joint.Pelvis]! * 0.35; }
+  /** Number of joints (11 for a human). */
+  get joints(): number { return this.plan.joints; }
 
-  /** Current torso rotation from upright (neck straight above pelvis), radians, + = clockwise. */
+  get chestX(): number { return this.x[this.plan.axisTop]! * this.plan.chestTop + this.x[this.plan.axisBottom]! * this.plan.chestBottom; }
+  get chestY(): number { return this.y[this.plan.axisTop]! * this.plan.chestTop + this.y[this.plan.axisBottom]! * this.plan.chestBottom; }
+
+  /** Current torso rotation from upright (axis top straight above axis bottom), radians, + = clockwise. */
   get tilt(): number {
-    return wrapPi(Math.atan2(this.y[Joint.Pelvis]! - this.y[Joint.Neck]!, this.x[Joint.Pelvis]! - this.x[Joint.Neck]!) - Math.PI / 2);
+    const { axisTop: top, axisBottom: bottom } = this.plan;
+    return wrapPi(Math.atan2(this.y[bottom]! - this.y[top]!, this.x[bottom]! - this.x[top]!) - Math.PI / 2);
   }
 
   /** Turns the target by `radians` (+ = clockwise). The target never leads the body by more than `TURN.lead`. */
@@ -331,39 +338,50 @@ export class Ragdoll {
     this.turn = tilt + clamp(wrapPi(from - tilt) + radians, -TURN.lead, TURN.lead);
   }
 
-  kick(joint: Joint, vx: number, vy: number): void {
+  /** Downward speed of a joint over the last step, px/s. */
+  speedY(joint: number): number {
+    return this.vy[joint]!;
+  }
+
+  kick(joint: number, vx: number, vy: number): void {
     this.oldX[joint] = this.oldX[joint]! - vx * STEP;
     this.oldY[joint] = this.oldY[joint]! - vy * STEP;
   }
 
   maxBoneError(): number {
+    const plan = this.plan;
     let error = 0;
-    for (let i = 0; i < BONES.length; i++) {
-      const [a, b] = BONES[i]!;
-      error = Math.max(error, Math.abs(Math.hypot(this.x[b]! - this.x[a]!, this.y[b]! - this.y[a]!) - LENGTHS[i]!));
+    for (let i = 0; i < plan.bones; i++) {
+      const a = plan.boneA[i]!;
+      const b = plan.boneB[i]!;
+      error = Math.max(error, Math.abs(Math.hypot(this.x[b]! - this.x[a]!, this.y[b]! - this.y[a]!) - plan.lengths[i]!));
     }
     return error;
   }
 
   overlaps(solid: Solid): boolean {
-    for (let i = 0; i < RADII.length; i++) {
-      if (this.contact.find(this.x[i]!, this.y[i]!, i === Joint.Pelvis ? this.pelvisRadius : RADII[i]!, solid)) return true;
+    const plan = this.plan;
+    for (let i = 0; i < plan.joints; i++) {
+      if (this.contact.find(this.x[i]!, this.y[i]!, this.radii[i]!, solid)) return true;
     }
-    for (let i = 0; i < BONES.length; i++) {
-      const [a, b] = BONES[i]!;
-      if (this.contact.find((this.x[a]! + this.x[b]!) * 0.5, (this.y[a]! + this.y[b]!) * 0.5, MIDPOINT_RADII[i]!, solid)) return true;
+    for (let i = 0; i < plan.bones; i++) {
+      const a = plan.boneA[i]!;
+      const b = plan.boneB[i]!;
+      if (this.contact.find((this.x[a]! + this.x[b]!) * 0.5, (this.y[a]! + this.y[b]!) * 0.5, plan.midRadii[i]!, solid)) return true;
     }
     return false;
   }
 
   /** Samples the same joint and bone volumes used for contact physics. */
   overlapsCircles(test: (x: number, y: number, radius: number) => boolean): boolean {
-    for (let i = 0; i < RADII.length; i++) {
-      if (test(this.x[i]!, this.y[i]!, i === Joint.Pelvis ? this.pelvisRadius : RADII[i]!)) return true;
+    const plan = this.plan;
+    for (let i = 0; i < plan.joints; i++) {
+      if (test(this.x[i]!, this.y[i]!, this.radii[i]!)) return true;
     }
-    for (let i = 0; i < BONES.length; i++) {
-      const [a, b] = BONES[i]!;
-      if (test((this.x[a]! + this.x[b]!) * 0.5, (this.y[a]! + this.y[b]!) * 0.5, MIDPOINT_RADII[i]!)) return true;
+    for (let i = 0; i < plan.bones; i++) {
+      const a = plan.boneA[i]!;
+      const b = plan.boneB[i]!;
+      if (test((this.x[a]! + this.x[b]!) * 0.5, (this.y[a]! + this.y[b]!) * 0.5, plan.midRadii[i]!)) return true;
     }
     return false;
   }
@@ -373,7 +391,7 @@ export class Ragdoll {
     let top = Infinity;
     let right = -Infinity;
     let bottom = -Infinity;
-    for (let i = 0; i < RADII.length; i++) {
+    for (let i = 0; i < this.plan.joints; i++) {
       left = Math.min(left, this.x[i]!);
       right = Math.max(right, this.x[i]!);
       top = Math.min(top, this.y[i]!);
@@ -398,8 +416,11 @@ export class Ragdoll {
   step(lift = 1, draftX = 0, draftY = 0): void {
     const x = this.x;
     const y = this.y;
-    const chestVx = (this.chestX - this.oldX[Joint.Neck]! * 0.65 - this.oldX[Joint.Pelvis]! * 0.35) / STEP;
-    const chestVy = (this.chestY - this.oldY[Joint.Neck]! * 0.65 - this.oldY[Joint.Pelvis]! * 0.35) / STEP;
+    const plan = this.plan;
+    const top = plan.axisTop;
+    const bottom = plan.axisBottom;
+    const chestVx = (this.chestX - this.oldX[top]! * plan.chestTop - this.oldX[bottom]! * plan.chestBottom) / STEP;
+    const chestVy = (this.chestY - this.oldY[top]! * plan.chestTop - this.oldY[bottom]! * plan.chestBottom) / STEP;
     const follow = this.follow;
     let { k, c } = follow;
     let drop = 0;
@@ -422,17 +443,19 @@ export class Ragdoll {
     const pullY = clamp((this.beamY + drop - this.chestY) * k + (leadY - chestVy) * c, -follow.max, follow.max);
     // Upright bias (neck lifted, pelvis pushed down) and the head's lift, turned to the target.
     // At turn = 0 these are exactly the untouched numbers: (0, -280), (0, 180), (0, -72).
+    // A plan resting on its side (the dolphin) biases along its rest axis instead.
     const turned = this.beamActive && this.turning;
-    const upX = turned ? -Math.sin(this.turn) : 0;
-    const upY = turned ? Math.cos(this.turn) : 1;
+    const rest = plan.restTilt;
+    const upX = turned ? -Math.sin(this.turn) : rest === 0 ? 0 : -Math.sin(rest);
+    const upY = turned ? Math.cos(this.turn) : rest === 0 ? 1 : Math.cos(rest);
     let spin = 0;
     const cx = this.chestX;
     const cy = this.chestY;
     if (turned) {
-      const nx = x[Joint.Pelvis]! - x[Joint.Neck]!;
-      const ny = y[Joint.Pelvis]! - y[Joint.Neck]!;
-      const ox = this.oldX[Joint.Pelvis]! - this.oldX[Joint.Neck]!;
-      const oy = this.oldY[Joint.Pelvis]! - this.oldY[Joint.Neck]!;
+      const nx = x[bottom]! - x[top]!;
+      const ny = y[bottom]! - y[top]!;
+      const ox = this.oldX[bottom]! - this.oldX[top]!;
+      const oy = this.oldY[bottom]! - this.oldY[top]!;
       const omega = Math.atan2(ox * ny - oy * nx, ox * nx + oy * ny) / STEP;
       const tilt = wrapPi(Math.atan2(ny, nx) - Math.PI / 2);
       const error = clamp(wrapPi(this.turn - tilt), -TURN.lead, TURN.lead);
@@ -444,32 +467,35 @@ export class Ragdoll {
     this.contactX.fill(0);
     this.contactY.fill(0);
 
-    for (let i = 0; i < RADII.length; i++) {
-      const damping = i > Joint.Pelvis && this.dampener ? 0.956 : 0.989;
+    const floatY = this.floating ? this.floatY : null;
+    for (let i = 0; i < plan.joints; i++) {
+      const damping = plan.damped[i] && this.dampener ? 0.956 : 0.989;
       const vx = (x[i]! - this.oldX[i]!) / STEP;
       const vy = (y[i]! - this.oldY[i]!) / STEP;
       let ax = 0;
       let ay = GRAVITY;
       if (this.beamActive) {
-        if (i === Joint.Neck || i === Joint.Pelvis) {
-          const bias = i === Joint.Neck ? -280 : 180;
+        const role = plan.role[i];
+        if (role === ROLE_PULL) {
+          const bias = plan.bias[i]!;
           ax = pullX + upX * bias;
           ay = pullY + upY * bias;
-        } else if (i === Joint.Head) {
+        } else if (role === ROLE_HEAD) {
           const targetX = this.beamX + this.restHeadX * (1 - lift) - 72 * lift * upX;
           const targetY = this.beamY + this.restHeadY * (1 - lift) - 72 * lift * upY;
           ax = clamp((targetX - x[i]!) * 8 - vx * 1.9, -1550, 1550);
           ay = clamp((targetY - y[i]!) * 8 - vy * 1.9, -1550, 1550);
         } else {
-          ay *= 0.55;
+          ay *= plan.limbGravity;
         }
         if (spin !== 0) {
           // tangential push about the chest: the torso turns, the limbs come along late
-          const share = i === Joint.Neck || i === Joint.Pelvis || i === Joint.Head ? 1 : TURN.limb;
+          const share = plan.turnShare[i]!;
           ax -= spin * (y[i]! - cy) * share;
           ay += spin * (x[i]! - cx) * share;
         }
       }
+      if (floatY !== null) ay += floatY[i]!;
 
       this.vx[i] = clamp(vx * damping + (ax + draftX) * STEP, -860, 860);
       this.vy[i] = clamp(vy * damping + (ay + draftY) * STEP, -860, 860);
@@ -480,23 +506,31 @@ export class Ragdoll {
     }
 
     this.collectCandidates();
+    const boneA = plan.boneA;
+    const boneB = plan.boneB;
     for (let iteration = 0; iteration < ITERATIONS; iteration++) {
-      for (let i = 0; i < BONES.length; i++) {
-        const [a, b] = BONES[i]!;
+      for (let i = 0; i < plan.bones; i++) {
+        const a = boneA[i]!;
+        const b = boneB[i]!;
         const dx = x[b]! - x[a]!;
         const dy = y[b]! - y[a]!;
         const distance = Math.hypot(dx, dy);
         if (distance < 0.00001) continue;
         const weightA = this.weight(a);
         const weightB = this.weight(b);
-        const correction = (distance - LENGTHS[i]!) / (distance * (weightA + weightB));
+        const correction = (distance - plan.lengths[i]!) / (distance * (weightA + weightB));
         x[a] = x[a]! + dx * correction * weightA;
         y[a] = y[a]! + dy * correction * weightA;
         x[b] = x[b]! - dx * correction * weightB;
         y[b] = y[b]! - dy * correction * weightB;
       }
 
-      for (const [a, b, c, min, max] of ANGLE_LIMITS) {
+      for (let l = 0; l < plan.limitCount; l++) {
+        const a = plan.limitA[l]!;
+        const b = plan.limitB[l]!;
+        const c = plan.limitC[l]!;
+        const min = plan.limitMin[l]!;
+        const max = plan.limitMax[l]!;
         const inX = x[b]! - x[a]!;
         const inY = y[b]! - y[a]!;
         const outX = x[c]! - x[b]!;
@@ -535,23 +569,22 @@ export class Ragdoll {
         x[this.gripJoint] = this.gripX;
         y[this.gripJoint] = this.gripY;
       }
-      for (let i = 0; i < BONES.length; i++) {
-        const [a, b] = BONES[i]!;
-        this.collide(a, b, MIDPOINT_RADII[i]!);
+      for (let i = 0; i < plan.bones; i++) {
+        this.collide(boneA[i]!, boneB[i]!, plan.midRadii[i]!);
       }
-      for (let i = 0; i < RADII.length; i++) {
-        this.collide(i, i, i === Joint.Pelvis ? this.pelvisRadius : RADII[i]!);
+      for (let i = 0; i < plan.joints; i++) {
+        this.collide(i, i, this.radii[i]!);
       }
     }
 
-    for (let i = 0; i < RADII.length; i++) this.resolveVelocity(i);
+    for (let i = 0; i < plan.joints; i++) this.resolveVelocity(i);
   }
 
-  private weight(joint: Joint): number {
-    return this.gripActive && this.gripJoint === joint ? 0 : INVERSE_MASS[joint]!;
+  private weight(joint: number): number {
+    return this.gripActive && this.gripJoint === joint ? 0 : this.plan.inverseMass[joint]!;
   }
 
-  private collide(a: Joint, b: Joint, radius: number): void {
+  private collide(a: number, b: number, radius: number): void {
     const x = this.x;
     const y = this.y;
     const c = this.contact;
@@ -588,14 +621,14 @@ export class Ragdoll {
     }
   }
 
-  private rememberContact(joint: Joint, contact: Contact): void {
+  private rememberContact(joint: number, contact: Contact): void {
     this.contactX[joint] = contact.nx;
     this.contactY[joint] = contact.ny;
     this.surfaceVx[joint] = contact.vx;
     this.surfaceVy[joint] = contact.vy;
   }
 
-  private resolveVelocity(joint: Joint): void {
+  private resolveVelocity(joint: number): void {
     const x = this.x[joint]!;
     const y = this.y[joint]!;
     const nx = this.contactX[joint]!;
@@ -608,8 +641,9 @@ export class Ragdoll {
       const vx = this.vx[joint]! - sx;
       const vy = this.vy[joint]! - sy;
       const normal = vx * nx + vy * ny;
-      this.oldX[joint] = x - (sx + (vx - normal * nx) * 0.91) * STEP;
-      this.oldY[joint] = y - (sy + (vy - normal * ny) * 0.91) * STEP;
+      const slip = this.plan.slip;
+      this.oldX[joint] = x - (sx + (vx - normal * nx) * slip) * STEP;
+      this.oldY[joint] = y - (sy + (vy - normal * ny) * slip) * STEP;
     } else {
       // Keep large pose repairs, including the first frame of a grab, out of
       // the next step's velocity while retaining momentum from the beam.

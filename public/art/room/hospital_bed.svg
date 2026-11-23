@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="150" viewBox="0 0 320 150">
+<title>Hospital bed</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<g transform="translate(39 139) scale(1)">
+<path d="M1 -11v7" fill="none" stroke="#495374" stroke-width="5"/>
+<ellipse cx="0" cy="0" rx="7" ry="7" fill="#343756" stroke="#1b1433" stroke-width="2.5"/>
+<ellipse cx="0" cy="0" rx="2.5" ry="2.5" fill="#a7b7ce"/>
+</g>
+<g transform="translate(283 139) scale(1)">
+<path d="M1 -11v7" fill="none" stroke="#495374" stroke-width="5"/>
+<ellipse cx="0" cy="0" rx="7" ry="7" fill="#343756" stroke="#1b1433" stroke-width="2.5"/>
+<ellipse cx="0" cy="0" rx="2.5" ry="2.5" fill="#a7b7ce"/>
+</g>
+<path d="M39 124l9 -9h224l10 10v6H35Z" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<path d="M94 117l48 -35m87 35 -53 -35" fill="none" stroke="#1b1433" stroke-width="12"/>
+<path d="M94 117l48 -35m87 35 -53 -35" fill="none" stroke="#a7b7ce" stroke-width="7"/>
+<path d="M10 51l15 -31 69 27 207 1 12 17 -4 16H78L8 62Z" fill="#d4dce4" stroke="#1b1433" stroke-width="3"/>
+<path d="M17 37l11 -21q6 -6 15 -2l44 16q9 5 4 15l-5 7Z" fill="#d3b9d1" stroke="#1b1433" stroke-width="3"/>
+<path d="M79 46q21 -9 43 -4l111 2q35 -4 67 1l9 17 -2 13H79l-7 -6Z" fill="#a3a2bd" stroke="#1b1433" stroke-width="3"/>
+<path d="M94 43q13 -4 28 -2l-12 32H92l3 -13 -8 -9Z" fill="#d4dce4" stroke="#1b1433" stroke-width="2.1"/>
+<path d="M6 54l74 25h231v12H78L4 66Z" fill="#495374" stroke="#1b1433" stroke-width="3"/>
+<rect x="3" y="3" width="9" height="63" rx="4" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<rect x="306" y="41" width="11" height="52" rx="4" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<g transform="translate(112 54) scale(1)">
+<rect x="0" y="0" width="76" height="35" rx="10" fill="none" stroke="#1b1433" stroke-width="7"/>
+<rect x="0" y="0" width="76" height="35" rx="10" fill="none" stroke="#a7b7ce" stroke-width="3.5"/>
+<path d="M18 1v32m41 -32v32" fill="none" stroke="#495374" stroke-width="3"/>
+</g>
+<g transform="translate(204 54) scale(1)">
+<rect x="0" y="0" width="76" height="35" rx="10" fill="none" stroke="#1b1433" stroke-width="7"/>
+<rect x="0" y="0" width="76" height="35" rx="10" fill="none" stroke="#a7b7ce" stroke-width="3.5"/>
+<path d="M18 1v32m41 -32v32" fill="none" stroke="#495374" stroke-width="3"/>
+</g>
+</g>
+</svg>

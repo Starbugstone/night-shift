@@ -54,6 +54,10 @@ export class DeepRun {
   readonly totals: RunTotals = { bonks: 0, snores: 0, items: [], dignity: 0, beamSec: 0 };
   /** Flight legs started (for Zib's lines). */
   legs = 0;
+  /** v3 report: ID photo of the last delivered specimen (else the first attempt's). */
+  photo: AbductResult['photo'];
+  /** v3 report (L6): Form 7-B readings of the delivered specimens. */
+  readonly probeReadings: string[] = [];
 
   constructor(
     readonly level: DeepLevelDef,
@@ -133,11 +137,13 @@ export class DeepRun {
     this.totals.bonks += res.bonks;
     this.totals.snores += res.snores;
     this.totals.beamSec += res.timeSec;
+    if (res.photo && (res.delivered || !this.photo)) this.photo = res.photo;
     if (res.delivered && !res.aborted) {
       this.delivered[cur.target] = true;
       this.order.push(cur.target);
       this.totals.dignity += res.dignity;
       this.totals.items.push(...res.itemsStolen);
+      if (res.probeReadings) this.probeReadings.push(...res.probeReadings);
       this.checkpoint = this.ringPos(cur.target, cur.entry);
       this.spawn = { ...this.checkpoint };
       this.lastFail = null;

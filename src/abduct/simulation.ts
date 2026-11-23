@@ -1,9 +1,12 @@
 import { ART } from '../art-manifest';
 import { VIEW_H, VIEW_W, type AbductAutopilotIntent, type AbductResult, type AbductRules, type Audio, type UpgradeId } from '../contracts';
 import { AbductPilot } from './autopilot';
+import { bodyPlanFor } from './body-plan';
+import { MoistureSim } from './moisture';
+import { PhotoCapture } from './photo';
 import { POINT, pointReach } from './point';
 import { InteriorSimulation, type InteriorFailure } from './interior';
-import { clamp, Contact, Joint, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
+import { clamp, Contact, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
 
@@ -17,6 +20,12 @@ const QUIET_RULES: AbductRules = { hard: false, wakeFails: false };
 const HUMAN_NAMES = {
   doyle: 'Farmer Doyle', larry: 'Larry', dave: 'Dentist Dave', barb: 'Coach Barb',
   gary: 'Gary', nigel: 'Night Guard Nigel', kev: 'DJ Kev', mayor: 'Mayor Whitlock',
+  // L5 pier code
+  bubbles: 'Bubbles', pete: 'Harbourmaster Pete', sal: 'Sal',
+  // L7 cruise code
+  sterling: 'Captain Sterling', marco: 'Chef Marco', greg: 'Greg',
+  // L6 clinic code
+  hank: 'Hank', osei: 'Dr. Osei', pemberton: 'Mr. Pemberton',
 } as const;
 const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
 /** Pop-culture decor and the sleep-talk it sets off when the specimen floats past it (once). */
@@ -27,14 +36,14 @@ const PROP_CUES: Readonly<Record<string, string>> = {
   'room/roswell_pennant': 'Go Saucers! Defence!',
   'room/towel_42': "Don't panic. Where's my towel?",
   'room/tripod_single': 'This one goes out to the Martians.',
+  // L6 clinic code
+  'room/ticket_sign': 'Now serving… me?',
 };
 /** The cue plays this long after the lift, while the specimen is still in the prop's room. */
 const PROP_CUE_DELAY = 1.2;
 const GRIP_STRAIN = 132;
 /** Bonk speed of squashing a snagged body against a wall. */
 const SQUASH_SPEED = 140;
-const HANDS = [Joint.NearHand, Joint.FarHand] as const;
-const FLAIL_JOINTS = [...HANDS, Joint.NearFoot, Joint.FarFoot] as const;
 const CAT_LIFT = ART['room/cat_awake']!.h - ART['room/cat_sleeping']!.h;
 const MUMBLES = [
   'Five more minutes…',
@@ -80,6 +89,8 @@ function contains(area: Area, x: number, y: number, margin = 0): boolean {
 
 export class AbductSimulation {
   readonly body: Ragdoll;
+  /** v3 report: Bureau ID photo pose (src/abduct/photo.ts). */
+  readonly photo: PhotoCapture;
   readonly wake: WakeMeter;
   readonly item: LooseItem;
   readonly fanBlades: readonly Blade[];
@@ -90,6 +101,8 @@ export class AbductSimulation {
   readonly cart: Rect | undefined;
   readonly solids: readonly Solid[];
   readonly interior: InteriorSimulation | undefined;
+  /** L5: moisture sheath and water zones, when the room has any. */
+  readonly wet: MoistureSim | undefined;
   readonly subjectName: string;
   readonly snoozeOwned: boolean;
   readonly camera = { x: 0, y: 0 };
@@ -203,11 +216,18 @@ export class AbductSimulation {
     }
     const hush = upgrades.has('hush_drive');
     this.interior = room.interior
-      ? new InteriorSimulation(room.interior.building, solids, room.pose.neckX, room.pose.neckY, audio, hush)
+      ? new InteriorSimulation(room.interior.building, solids, room.pose.neckX, room.pose.neckY, audio, hush, room.interior.probes)
       : undefined;
     this.solids = solids;
-    this.body = new Ragdoll(room.pose, solids, upgrades.has('beam_dampener'));
-    this.wake = new WakeMeter(hush, rules.hard);
+    const plan = bodyPlanFor(room.human);
+    this.body = new Ragdoll(room.pose, solids, upgrades.has('beam_dampener'), plan);
+    // L5: moisture sheath (the dolphin) and water zones (src/abduct/moisture.ts)
+    const wet = room.interior?.wet;
+    this.wet = wet || plan.kind === 'dolphin'
+      ? new MoistureSim(wet ?? { water: [], refills: [] }, plan.kind === 'dolphin', plan.joints, room.interior?.building.rooms ?? [])
+      : undefined;
+    this.photo = new PhotoCapture(this.body.x.length);
+    this.wake = new WakeMeter(hush, rules.hard, plan.bonkGain);
     this.subjectName = HUMAN_NAMES[room.human];
     this.snoozeOwned = upgrades.has('snooze_ray');
     this.pilot = new AbductPilot(room);
@@ -311,6 +331,9 @@ export class AbductSimulation {
       snores: this.snores,
       itemsStolen: this.item.stolen && !aborted ? [this.room.item.name] : [],
       aborted,
+      photo: this.photo.result(this.room.human),
+      // L6 clinic code: Form 7-B
+      ...(this.interior?.probes ? { probeReadings: this.interior.probes.readings() } : {}),
       ...(!aborted && this.failure ? { failReason: this.failure.reason, failBy: this.failure.by } : {}),
     };
   }
@@ -329,7 +352,9 @@ export class AbductSimulation {
     if (this.beamMoved) this.lift = Math.min(1, this.lift + STEP * 2);
     const interior = this.interior;
     interior?.prepare(this.elapsed, this.body.chestX, this.body.chestY);
+    this.wet?.prepare(this.body);
     this.body.step(this.lift, interior?.draftX, interior?.draftY);
+    this.photo.sample(this.body, this.elapsed);
 
     if (this.sign && this.body.impacts[this.signIndex]! > 55) {
       this.sign.omega = clamp(this.sign.omega + this.body.impacts[this.signIndex]! * 0.004, -1.5, 1.5);
@@ -356,6 +381,7 @@ export class AbductSimulation {
     if (interior) {
       const wasAwake = this.wake.awake > 0;
       this.wake.noise(interior.step(this.body, this.elapsed, wallContact));
+      if (this.wet) this.stepWet(interior);
       this.onWake(wasAwake);
       if (interior.failure) this.failure ??= interior.failure;
       if (this.failure) return;
@@ -389,7 +415,8 @@ export class AbductSimulation {
     }
 
     this.updateItem();
-    if (!this.body.gripActive && contains(this.room.exitZone, this.body.chestX, this.body.chestY)) {
+    // L6 clinic code: the exit stays shut until Form 7-B is complete
+    if (!this.body.gripActive && contains(this.room.exitZone, this.body.chestX, this.body.chestY) && (this.interior?.probes?.done ?? true)) {
       this.delivered = true;
       this.item.stolen = this.item.captured && contains(this.room.exitZone, this.item.x, this.item.y, 48) &&
         Math.hypot(this.body.chestX - this.item.x, this.body.chestY - this.item.y) < 108;
@@ -405,11 +432,28 @@ export class AbductSimulation {
     this.bonkY = y;
     this.bonkPower = clamp(speed / 320, 0.3, 1);
     this.audio.sfx('bonk', clamp(speed / 320, 0.3, 1));
+    this.wet?.bonk(this.bonkPower);
     if (speed >= 195) this.shake = clamp(speed / 300, 0.6, 1.6);
 
     this.interior?.noise((cat ? 46 : clamp((speed - 40) * 0.29, 0, 70)), x, y);
     this.onWake(wasAwake);
     if (this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
+  }
+
+  /** L5: splashes wake people up; a dolphin that dries out wakes squeaking. */
+  private stepWet(interior: InteriorSimulation): void {
+    const wet = this.wet!;
+    const splash = wet.step(this.body, this.elapsed, STEP);
+    if (splash > 0) {
+      this.wake.noise(splash);
+      interior.noise(splash * 2.1, wet.splashX, wet.splashY);
+      this.audio.sfx('bonk', 0.35 + wet.splashPower * 0.4);
+    }
+    if (wet.dried && !this.failure) {
+      this.failure = { reason: 'woke', by: this.subjectName };
+      this.wakeSeq++;
+      this.audio.sfx('scream');
+    }
   }
 
   private sleepTalk(line?: string): void {
@@ -458,7 +502,7 @@ export class AbductSimulation {
   private updateGrip(): void {
     const body = this.body;
     if (this.wake.awake > 0 && this.elapsed < this.flailEnds && this.elapsed >= this.nextFlail) {
-      for (const joint of FLAIL_JOINTS) body.kick(joint, (this.random() - 0.5) * 350, (this.random() - 0.56) * 360);
+      for (const joint of body.plan.flail) body.kick(joint, (this.random() - 0.5) * 350, (this.random() - 0.56) * 360);
       this.nextFlail = this.elapsed + 0.19 + this.random() * 0.12;
     }
 
@@ -482,7 +526,7 @@ export class AbductSimulation {
   private tryGrab(): void {
     const body = this.body;
     let distance = 77;
-    for (const joint of HANDS) {
+    for (const joint of body.plan.hands) {
       const x = body.x[joint]!;
       const y = body.y[joint]!;
       for (const surface of this.grabSurfaces) {

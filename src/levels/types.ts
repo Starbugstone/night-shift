@@ -1,5 +1,6 @@
 import type { RoomId, Vec2 } from '../contracts';
 import type { HazardDef } from '../flight/hazards';
+import type { GroundPatch } from '../flight/pier-ground'; // L5 pier code
 import type { LevelId } from './save';
 
 /** What to draw when a sprite is missing. */
@@ -22,7 +23,9 @@ export type PropKind =
   | 'trampoline'
   | 'hedge'
   | 'park'
-  | 'crop_field';
+  | 'crop_field'
+  // L5 pier code: every seaside prop (fallback drawn by key in src/flight/pier-ground.ts)
+  | 'pier';
 
 /** A sprite placed by its centre. Size defaults to the manifest size. */
 export interface PropDef {
@@ -116,12 +119,6 @@ export interface FlightMap {
   lamps: Vec2[];
 }
 
-export interface LockedCard {
-  title: string;
-  requires: string;
-  blurb: string;
-}
-
 interface LevelBase {
   id: LevelId;
   num: number;
@@ -154,7 +151,8 @@ export interface DeepTarget {
 }
 
 export interface DeepMap {
-  theme: 'suburb' | 'city';
+  /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
+  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship';
   w: number;
   h: number;
   start: Vec2;
@@ -167,6 +165,8 @@ export interface DeepMap {
   lamps: Vec2[];
   /** Seconds of continuous exposure that fill the Suspicion fuse (before Hush Drive). Default 1. */
   fuseSec?: number;
+  /** L5 pier code: sand and boardwalk patches over the sea (theme 'pier'). */
+  ground?: readonly GroundPatch[];
 }
 
 /** L3+: three specimens, one big map, a sunrise clock. */

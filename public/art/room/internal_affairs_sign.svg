@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="60" viewBox="0 0 240 60">
+<title>DEPT. OF INTERNAL AFFAIRS</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M22 2v11m194 -11v11" fill="none" stroke="#1b1433" stroke-width="3"/>
+<rect x="2" y="10" width="236" height="47" rx="5" fill="#28575c" stroke="#1b1433" stroke-width="3"/>
+<rect x="6" y="14" width="228" height="39" rx="3" fill="none" stroke="#83a8ad" stroke-width="1.4"/>
+<path d="M193 29h18l-5 -6 4 -3 14 13 -14 13 -4 -3 6 -8h-19Z" fill="#d4dce4"/>
+<g transform="translate(16 17) scale(0.8298 0.8571)">
+<g transform="translate(0 0)">
+<path d="M1 14V1H5Q10 1 10 7Q10 14 5 14Z" fill="none" stroke="#d4dce4" stroke-width="2.1"/>
+</g>
+<g transform="translate(14 0)">
+<path d="M9 1H1V14H9M1 7H7" fill="none" stroke="#d4dce4" stroke-width="2.1"/>
+</g>
+<g transform="translate(28 0)">
+<path d="M1 14V1H6Q10 1 10 5Q10 8 6 8H1" fill="none" stroke="#d4dce4" stroke-width="2.1"/>
+</g>
+<g transform="translate(42 0)">
+<path d="M0 1H10M5 1V14" fill="none" stroke="#d4dce4" stroke-width="2.1"/>
+</g>
+<g transform="translate(56 0)">
+<path d="M4 13h1" fill="none" stroke="#d4dce4" stroke-width="2.1"/>
+</g>
+<g transform="translate(70 0)">
+<path d="M5.5 1Q1 1 1 6V9Q1 14 5.5 14Q10 14 10 9V6Q10 1 5.5 1Z" fill="none" stroke="#d4dce4" stroke-width="2.1"/>
+</g>
+<g transform="translate(84 0)">
+<path d="M1 14V1H9M1 7H7" fill="none" stroke="#d4dce4" stroke-width="2.1"/>
+</g>
+</g>
+<g transform="translate(16 34) scale(0.7689 1.0000)">
+<g transform="translate(0 0)">
+<path d="M2 1H8M5 1V14M2 14H8" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(14 0)">
+<path d="M1 14V1L10 14V1" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(28 0)">
+<path d="M0 1H10M5 1V14" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(42 0)">
+<path d="M9 1H1V14H9M1 7H7" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(56 0)">
+<path d="M1 14V1H6Q10 1 10 5Q10 8 6 8H1M6 8L10 14" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(70 0)">
+<path d="M1 14V1L10 14V1" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(84 0)">
+<path d="M1 14L5.5 1L10 14M2.8 9H8.2" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(98 0)">
+<path d="M1 1V14H9" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(118 0)">
+<path d="M1 14L5.5 1L10 14M2.8 9H8.2" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(132 0)">
+<path d="M1 14V1H9M1 7H7" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(146 0)">
+<path d="M1 14V1H9M1 7H7" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(160 0)">
+<path d="M1 14L5.5 1L10 14M2.8 9H8.2" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(174 0)">
+<path d="M2 1H8M5 1V14M2 14H8" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(188 0)">
+<path d="M1 14V1H6Q10 1 10 5Q10 8 6 8H1M6 8L10 14" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+<g transform="translate(202 0)">
+<path d="M9 2Q6 -1 2 2Q-1 6 5 7Q12 8 9 12Q6 16 1 13" fill="none" stroke="#ffedc9" stroke-width="2.4"/>
+</g>
+</g>
+</g>
+</svg>

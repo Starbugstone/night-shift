@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="240" viewBox="0 0 200 240">
+<title>Revolving door</title>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M5 45q2 -39 94 -42q91 0 96 39l-3 13q-10 16 -34 23l-6 -11q25 -9 28 -20q-6 -20 -79 -23Q31 25 19 46q2 12 24 20l-4 13Q4 66 5 48Z" fill="#a7b7ce" stroke="#1b1433" stroke-width="3"/>
+<path d="M8 49q3 11 23 19v129q-15 -5 -24 -17Z" fill="#a0b4c6" stroke="#1b1433" stroke-width="3"/>
+<path d="M171 70q14 -5 23 -18l-1 132q-6 12 -22 18Z" fill="#91a6bc" stroke="#1b1433" stroke-width="3"/>
+<path d="M14 86v63m165 -57v77" fill="none" stroke="#d4dce4" stroke-width="2"/>
+<path d="M5 184q16 33 94 36q77 2 95 -34v19q-16 31 -95 32Q24 235 5 205Z" fill="#647899" stroke="#1b1433" stroke-width="3"/>
+<path d="M13 204q39 36 131 20" fill="none" stroke="#a7b7ce" stroke-width="2.5"/>
+<rect x="30" y="60" width="8" height="146" rx="3" fill="#495374" stroke="#1b1433" stroke-width="3"/>
+<rect x="163" y="60" width="8" height="146" rx="3" fill="#495374" stroke="#1b1433" stroke-width="3"/>
+</g>
+</svg>

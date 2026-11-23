@@ -7,7 +7,13 @@ export const FLOOR = 846;
 export const LEFT_WALL = 20;
 export const RIGHT_WALL = 520;
 
-export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'kev' | 'mayor';
+export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'kev' | 'mayor'
+  // L5 pier code (bubbles is the dolphin: src/abduct/body-plan.ts)
+  | 'bubbles' | 'pete' | 'sal'
+  // L7 cruise code
+  | 'sterling' | 'marco' | 'greg'
+  // L6 clinic code
+  | 'hank' | 'osei' | 'pemberton';
 
 export interface Sprite {
   key: string;

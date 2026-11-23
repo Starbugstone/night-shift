@@ -9,7 +9,10 @@ import { LEVELS } from '../levels/levels';
 import { RANKS, countStars, type RunOutcome } from '../levels/progress';
 import { fmt, gt, localArt, tr } from '../i18n';
 import { drawGlorb, drawPortrait, drawStar, easeOutBack, easeOutCubic, fmtTime, panel, paragraph, roundRectPath, sprite, text, wrap } from './draw';
-import { C } from './theme';
+import { coverStory, tabloidHeadline } from './report-extras';
+import { CH, CW, CX, CY, GLORB_Y, STAR_Y, layoutReport, type ReportLayout, type TextBlock } from './report-layout';
+import { drawIdPhoto, fitPhoto, WINDOW, type Photo, type PhotoFit } from './report-photo';
+import { C, font } from './theme';
 import { Button, drawNightSky } from './widgets';
 
 // Timeline (seconds): rows tick in, the stamp slams, stars pop one by one, Glorbs count up,
@@ -24,15 +27,13 @@ const GLORB_AT = STAR_AT + 3 * STAR_GAP + 0.05;
 const GLORB_COUNT = 0.55;
 const COMMENT_AT = GLORB_AT + GLORB_COUNT + 0.1;
 const END = COMMENT_AT + 0.4;
-
-// Card geometry
-const CX = 24;
-const CY = 28;
-const CW = VIEW_W - 48;
-const CH = 796;
-const STAMP_Y = CY + 420;
-const STAR_Y = CY + 546;
-const GLORB_Y = CY + 636;
+// v3: the ID card slides in just before the stamp, the cover story is typed after it, the tabloid
+// clipping slaps down last (only when the saucer was seen twice or more).
+const PHOTO_AT = STAMP_AT - 0.3;
+const APPROVED_AT = STAMP_AT + 0.2;
+const COVER_AT = STAMP_AT + 0.3;
+const TABLOID_AT = COMMENT_AT + 0.2;
+const TABLOID_END = TABLOID_AT + 0.45;
 
 export interface ReportModel {
   /** Small line under the title. */
@@ -42,6 +43,14 @@ export interface ReportModel {
   starLabels: readonly string[];
   comment: string;
   delivered: boolean;
+  /** v3: Bureau ID photo pose (missing = empty window). */
+  photo?: Photo;
+  /** v3: Vrell's cover story line. */
+  cover: string;
+  /** v3: tabloid headline (spotted twice or more), else null. */
+  headline: string | null;
+  /** v3 L6: Form 7-B readings (English source strings). */
+  readings: readonly string[];
 }
 
 /** L1 / L2: one flight, one room. */
@@ -64,6 +73,10 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
     starLabels: tr().starLabels.tutorial,
     comment: vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports),
     delivered: abduct.delivered,
+    ...(abduct.photo ? { photo: abduct.photo } : {}),
+    cover: coverStory({ levelId: lv.id, items: abduct.itemsStolen, spotted: flight.spotted, sunrise: false, seed: outcome.save.reports }),
+    headline: tabloidHeadline(lv.id, flight.spotted, outcome.save.reports),
+    readings: abduct.probeReadings ?? [],
   };
 }
 
@@ -95,6 +108,10 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
           outcome.save.reports,
         ),
     delivered: !sunrise && n >= 3,
+    ...(run.photo ? { photo: run.photo } : {}),
+    cover: coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, seed: outcome.save.reports }),
+    headline: tabloidHeadline(lv.id, run.spotted, outcome.save.reports),
+    readings: run.probeReadings,
   };
 }
 
@@ -114,6 +131,11 @@ export class ReportScene implements Scene {
   private shownGlorbs = -1;
   /** Kicks on every Glorb tick: the coin hops. */
   private coinHop = 0;
+  /** v3 layout (built on the first frame: it measures text). */
+  private layout: ReportLayout | null = null;
+  private readonly fit: PhotoFit | null;
+  private readonly end: number;
+  private playedExtras = { approved: false, tabloid: false };
 
   constructor(
     private readonly shell: Shell,
@@ -124,6 +146,8 @@ export class ReportScene implements Scene {
     this.comment = model.comment;
     this.rows = model.rows;
     this.delivered = model.delivered;
+    this.fit = model.photo ? fitPhoto(model.photo, WINDOW.w, WINDOW.h) : null;
+    this.end = model.headline ? TABLOID_END : END;
     const hasNext = levelIndex + 1 < LEVELS.length;
     this.next.label = model.delivered && hasNext ? tr().common.next : tr().common.workOrders;
     if (this.next.label.length > 9) this.next.size = 26;
@@ -147,8 +171,10 @@ export class ReportScene implements Scene {
       if (this.delivered && n < LEVELS.length) return this.shell.toMemo(n);
       return this.shell.toWorkOrders();
     }
-    const skipped = p.pressed && !this.retry.contains(p.x, p.y) && !this.next.contains(p.x, p.y) && this.t < END;
-    if (skipped) this.t = END;
+    const skipped = p.pressed && !this.retry.contains(p.x, p.y) && !this.next.contains(p.x, p.y) && this.t < this.end;
+    if (skipped) this.t = this.end;
+    const stampX = this.layout?.stamp.x ?? VIEW_W / 2;
+    const stampY = this.layout?.stamp.y ?? CY + 420;
 
     if (!this.played.stamp && this.t >= STAMP_AT) {
       this.played.stamp = true;
@@ -159,16 +185,27 @@ export class ReportScene implements Scene {
         // ink ring and paper dust thrown out from under the stamp
         const ink = this.delivered ? PC.inkGreen : PC.inkRed;
         const dust = this.dust;
-        dust.spawn(P_RING, VIEW_W / 2, STAMP_Y, 0, 0, 0.45, 210, ink);
+        dust.spawn(P_RING, stampX, stampY, 0, 0, 0.45, 160, ink);
         if (!rm) {
           for (let i = 0; i < 12; i++) {
             const side = i % 2 === 0 ? -1 : 1;
-            const x = VIEW_W / 2 + side * (80 + dust.rnd() * 50);
-            const y = STAMP_Y + (dust.rnd() - 0.5) * 90;
+            const x = stampX + side * (60 + dust.rnd() * 40);
+            const y = stampY + (dust.rnd() - 0.5) * 70;
             dust.spawn(P_PUFF, x, y, side * (90 + dust.rnd() * 150), -30 - dust.rnd() * 80, 0.5 + dust.rnd() * 0.3, 13 + dust.rnd() * 9, PC.dust, 60, 2.4);
           }
-          dust.burst(P_SPARK, VIEW_W / 2, STAMP_Y, 12, 420, 640, 0.34, 3.5, ink, 0, 3);
+          dust.burst(P_SPARK, stampX, stampY, 12, 420, 640, 0.34, 3.5, ink, 0, 3);
         }
+      }
+    }
+    if (!this.playedExtras.approved && this.t >= APPROVED_AT) {
+      this.playedExtras.approved = true;
+      if (this.delivered && this.model.photo && !skipped) audio.sfx('stamp', 0.45);
+    }
+    if (!this.playedExtras.tabloid && this.t >= TABLOID_AT) {
+      this.playedExtras.tabloid = true;
+      if (this.model.headline) {
+        audio.sfx('stamp', 0.8);
+        if (!skipped) this.shake = Math.max(this.shake, 0.6);
       }
     }
     for (let i = 0; i < 3; i++) {
@@ -207,10 +244,20 @@ export class ReportScene implements Scene {
     }
   }
 
+  private buildLayout(g: CanvasRenderingContext2D): ReportLayout {
+    const measure = (s: string, size: number, weight: number, italic: boolean): number => {
+      g.font = font(size, weight, italic);
+      return g.measureText(s).width;
+    };
+    const readings = this.model.readings.map((x) => gt(x));
+    return layoutReport(measure, { rows: this.rows.length, readings, cover: this.model.cover, headline: this.model.headline });
+  }
+
   render(g: CanvasRenderingContext2D): void {
     const { assets, ctx } = this.shell;
     const rm = ctx.reducedMotion;
     const t = this.t;
+    const L = (this.layout ??= this.buildLayout(g));
     drawNightSky(g, t, rm);
     g.save();
     if (this.shake > 0 && !rm) g.translate(Math.sin(t * 90) * 6 * this.shake, Math.cos(t * 70) * 4 * this.shake);
@@ -238,14 +285,71 @@ export class ReportScene implements Scene {
       const a = Math.min(1, (t - at) / 0.16);
       const dx = rm ? 0 : (1 - easeOutCubic(a)) * -18;
       g.globalAlpha = a;
-      const ry = CY + 128 + i * (this.rows.length > 6 ? 35 : 42);
+      const ry = L.rowY[i]!;
       const [label, value] = this.rows[i]!;
-      text(g, label, CX + 26 + dx, ry, 18, C.paperInk, 'left', 700);
+      text(g, label, CX + 26 + dx, ry, L.rowSize, C.paperInk, 'left', 700);
       // the value squeezes into whatever the label leaves (long name lists on deep shifts)
       const room = CW - 52 - g.measureText(label).width - 14;
-      text(g, value, CX + CW - 26 + dx, ry, i === 0 ? 16 : 19, '#4b2fa0', 'right', 800, false, room);
+      text(g, value, CX + CW - 26 + dx, ry, i === 0 ? L.rowSize - 2 : L.rowSize + 1, '#4b2fa0', 'right', 800, false, room);
       g.fillStyle = C.paperLine;
-      g.fillRect(CX + 26, ry + 19, CW - 52, 2);
+      g.fillRect(CX + 26, ry + L.rowLine, CW - 52, 2);
+      g.globalAlpha = 1;
+    }
+    // L6: the Form 7-B readings, typed under the stats
+    const rd = L.readings;
+    const readAt = ROW_AT + this.rows.length * ROW_GAP;
+    if (rd && t >= readAt) {
+      g.globalAlpha = Math.min(1, (t - readAt) / 0.16);
+      text(g, tr().reportExtras.readings, CX + 26, L.readingsY, L.rowSize, C.paperInk, 'left', 700, false, CW - 52);
+      // column-major grid: each specimen's two readings sit together
+      for (let i = 0; i < rd.cells.length; i++) {
+        const col = Math.floor(i / rd.lines);
+        const line = i % rd.lines;
+        text(g, rd.cells[i]!, rd.x + col * (rd.colW + 16), rd.y + rd.lh * (line + 0.5), rd.size, '#4b2fa0', 'left', 700, false, rd.colW);
+      }
+      g.globalAlpha = 1;
+    }
+
+    // Bureau ID photo: the card slides in from the left, APPROVED thumps onto its corner
+    if (t >= PHOTO_AT) {
+      const a = rm ? 1 : easeOutCubic(Math.min(1, (t - PHOTO_AT) / 0.25));
+      const ph = L.photo;
+      g.save();
+      g.globalAlpha = Math.min(1, a * 1.4);
+      g.translate((1 - a) * -60, 0);
+      g.translate(ph.x + ph.box.w / 2, ph.y + ph.box.h / 2);
+      g.rotate(-0.035);
+      g.translate(-ph.box.w / 2, -ph.box.h / 2);
+      // soft drop shadow
+      g.fillStyle = 'rgba(29,22,49,0.16)';
+      roundRectPath(g, 4, 5, ph.box.w, ph.box.h, 8);
+      g.fill();
+      drawIdPhoto(g, assets, this.model.photo, this.fit, 0, 0, ph.k);
+      g.restore();
+      if (this.delivered && this.model.photo && t >= APPROVED_AT) {
+        const k = rm ? 1 : Math.min(1, (t - APPROVED_AT) / 0.12);
+        const s = rm ? 1 : k < 1 ? 1.8 - 0.8 * k : 1;
+        const ap = L.approved;
+        g.save();
+        g.translate(ap.x, ap.y);
+        g.rotate(-0.28);
+        g.scale(s, s);
+        g.globalAlpha = 0.35 + 0.6 * k;
+        if (!sprite(g, assets, localArt('ui/stamp_approved'), 0, 0, ap.w, ap.h)) {
+          roundRectPath(g, -ap.w / 2, -ap.h * 0.36, ap.w, ap.h * 0.72, 6);
+          g.lineWidth = 3;
+          g.strokeStyle = '#1f9a6c';
+          g.stroke();
+          text(g, tr().reportExtras.approved, 0, 1, 17, '#1f9a6c', 'center', 900, false, ap.w - 12);
+        }
+        g.restore();
+      }
+    }
+
+    // Vrell's cover story, under the stamp
+    if (t >= COVER_AT) {
+      g.globalAlpha = rm ? 1 : Math.min(1, (t - COVER_AT) / 0.3);
+      drawBlock(g, L.cover, '#5b4a92', 600, true);
       g.globalAlpha = 1;
     }
 
@@ -257,9 +361,9 @@ export class ReportScene implements Scene {
       // 2.6× in the air → 0.88 on impact → overshoots back to 1
       const s = rm ? 1 : fall < 1 ? 2.6 - 1.72 * fall * fall : 0.88 + 0.12 * easeOutBack(settle, 3);
       g.save();
-      g.translate(VIEW_W / 2, STAMP_Y);
+      g.translate(L.stamp.x, L.stamp.y);
       g.rotate(-0.16 + (rm ? 0 : (1 - fall) * 0.2));
-      g.scale(s, s);
+      g.scale(s * L.stamp.scale, s * L.stamp.scale);
       g.globalAlpha = rm ? fall : 0.2 + 0.8 * fall * fall;
       const stamp = this.model.stamp;
       const key = stamp === 'delivered' ? 'ui/stamp_delivered' : stamp === 'sunrise' ? 'ui/stamp_sunrise' : 'ui/stamp_failed';
@@ -377,12 +481,52 @@ export class ReportScene implements Scene {
     }
 
     this.fx.draw(g);
+
+    // tabloid clipping: slaps down across the title strip
+    const tb = L.tabloid;
+    const clip = L.clip;
+    if (tb && clip && t >= TABLOID_AT) {
+      const k = rm ? 1 : Math.min(1, (t - TABLOID_AT) / 0.14);
+      const s = rm ? 1 : k < 1 ? 1.6 - 0.6 * k * k : 1;
+      g.save();
+      g.translate(clip.x + clip.w / 2, clip.y + clip.h / 2);
+      g.rotate(-0.03);
+      g.scale(s, s);
+      g.globalAlpha = rm ? 1 : 0.3 + 0.7 * k;
+      g.translate(-clip.x - clip.w / 2, -clip.y - clip.h / 2);
+      g.fillStyle = 'rgba(29,22,49,0.25)';
+      g.fillRect(clip.x + 4, clip.y + 6, clip.w, clip.h);
+      g.fillStyle = '#f3efe4';
+      g.fillRect(clip.x, clip.y, clip.w, clip.h);
+      g.lineWidth = 2;
+      g.strokeStyle = '#3a3350';
+      g.strokeRect(clip.x, clip.y, clip.w, clip.h);
+      // masthead banner
+      const mw = 200;
+      const mh = 40;
+      const mx = clip.x + clip.w / 2;
+      const my = clip.y + 6 + mh / 2;
+      if (!sprite(g, assets, localArt('ui/tabloid_masthead'), mx, my, mw, mh)) {
+        g.fillStyle = '#c8323f';
+        g.fillRect(mx - mw / 2, my - mh / 2 + 4, mw, mh - 8);
+        text(g, tr().reportExtras.masthead, mx, my, 17, '#ffffff', 'center', 900, false, mw - 14);
+      }
+      drawBlock(g, tb, '#1d1631', 900, false, 'center');
+      g.restore();
+    }
     g.restore();
 
     if (slide >= 1) {
       this.retry.render(g);
       this.next.render(g);
     }
-    if (t < END) text(g, tr().common.tapToSkip, VIEW_W / 2, 940, 13, C.muted, 'center', 600);
+    if (t < this.end) text(g, tr().common.tapToSkip, VIEW_W / 2, 940, 13, C.muted, 'center', 600);
   }
+}
+
+/** A fitted text block, lines centred vertically in its box. */
+function drawBlock(g: CanvasRenderingContext2D, b: TextBlock, color: string, weight: number, italic: boolean, align: CanvasTextAlign = 'left'): void {
+  const top = b.y + Math.max(0, (b.h - b.lines.length * b.lh) / 2);
+  const x = align === 'center' ? b.x + b.w / 2 : b.x;
+  for (let i = 0; i < b.lines.length; i++) text(g, b.lines[i]!, x, top + b.lh * (i + 0.5), b.size, color, align, weight, italic, b.w);
 }

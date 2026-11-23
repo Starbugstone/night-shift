@@ -63,7 +63,10 @@ describe('glorbs and ranks', () => {
     expect(rankFor(12).title).toBe('Abduction Lead');
     expect(nextRank(3)?.title).toBe('Abductor');
     expect(nextRank(8)?.title).toBe('Abduction Lead');
-    expect(nextRank(11)).toBeNull();
+    expect(rankFor(15).title).toBe('Head of Internal Affairs');
+    expect(rankFor(21).title).toBe('Fleet Admiral of Naps');
+    expect(nextRank(11)?.title).toBe('Head of Internal Affairs');
+    expect(nextRank(19)).toBeNull();
   });
 
   it('applyRun merges best stars, pays, and never mutates the input', () => {

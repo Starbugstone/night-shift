@@ -47,7 +47,7 @@ export interface Rank {
 }
 
 /** Thresholds; titles and flavour are the English ones from src/i18n (shown via tr().ranks[i]). */
-const RANK_STARS = [0, 3, 5, 8, 11] as const;
+const RANK_STARS = [0, 3, 5, 8, 11, 15, 19] as const;
 export const RANKS: readonly Rank[] = RANK_STARS.map((minStars, i) => ({ ...en.ranks[i]!, minStars }));
 
 export function rankFor(stars: number): Rank {
@@ -93,9 +93,9 @@ export function computeDeepStars(budgetSec: number, parMarginSec: number, r: Dee
 }
 
 export function isLevelUnlocked(save: SaveData, index: number): boolean {
-  if (index <= 0) return index === 0;
-  if (index >= LEVELS.length) return false;
-  if (save.allUnlocked) return true;
+  const level = LEVELS[index];
+  if (!level) return false;
+  if (index === 0 || isDeep(level) || save.allUnlocked) return true;
   const prev = LEVELS[index - 1]!;
   return save.levels[prev.id].delivered;
 }

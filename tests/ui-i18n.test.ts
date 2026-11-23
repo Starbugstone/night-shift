@@ -40,6 +40,12 @@ const SAME_IN_FRENCH = new Set([
   'Larry', 'Gary', 'Dave', 'Barb', 'Nigel', 'Brenda', 'Biscuit', 'Coach Barb', 'Aquarium', 'lasers',
   'Ptérodactyle', 'Pterodactyl', '{n}/3', '{n}/3  ({names})', '{name} · {route}', '★ {n}/{max}', '+{n} Glorbs', 's',
   '{total}  (fly {fly} · beam {beam})', 'long, Biscuit',
+  // L5 pier code
+  'Pete', 'Sal', 'Kipper',
+  // L6 clinic code
+  'Hank', 'Osei', 'Pemberton', 'Gladys', 'Roland',
+  // L7 cruise code
+  'Greg', 'Marco', 'CASINO', 'Doris',
 ]);
 
 afterEach(() => setLang('en'));
@@ -95,13 +101,13 @@ describe('string tables', () => {
       expect(value, path).not.toContain("'");
       expect(value, path).not.toMatch(/[A-Za-zÀ-ÿ0-9}][?!;%]/);
     }
-    expect(TABLES.fr.workOrders.lockToasts[0]).toBe('Vrell : « Dossier en cours de traitement. »');
+    expect(TABLES.fr.memo.to).toBe('À : Stagiaire Zib');
   });
 
   it('line lists that are picked by index have the same length', () => {
     expect(TABLES.fr.mumbles.length).toBe(en.mumbles.length);
     expect(TABLES.fr.ranks.length).toBe(en.ranks.length);
-    expect(TABLES.fr.lockedCards.length).toBe(en.lockedCards.length);
+    expect(TABLES.fr.missionConcepts.length).toBe(en.missionConcepts.length);
     expect(TABLES.fr.memo.deepGoals.length).toBe(3);
     expect(TABLES.fr.memo.tutorialGoals.length).toBe(3);
     expect(TABLES.fr.starLabels.tutorial.length).toBe(3);

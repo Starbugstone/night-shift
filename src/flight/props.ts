@@ -5,6 +5,7 @@ import type { PropDef, PropKind } from '../levels/types';
 import { drawSprite } from '../core/fx';
 import { roundRectPath } from '../ui/draw';
 import { tr } from '../i18n';
+import { drawPierProp } from './pier-ground'; // L5 pier code
 
 const INK = '#1b1433';
 
@@ -28,6 +29,7 @@ export function drawProp(g: CanvasRenderingContext2D, assets: Assets, p: PropDef
   g.translate(p.x, p.y);
   if (p.rot) g.rotate(p.rot);
   if (img) drawSprite(g, img, -w / 2, -h / 2, w, h);
+  else if (p.kind === 'pier') drawPierProp(g, p.key, w, h); // L5 pier code
   else drawFallback(g, p.kind, w, h, p.tint);
   g.restore();
 }
