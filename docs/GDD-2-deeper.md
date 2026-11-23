@@ -47,7 +47,7 @@ for a tutorial but we need to dig deeper."*
   must reach. An off-screen arrow and a compact minimap or target list show what
   is left.
 - **Sunrise clock.** The level has a fixed real-time budget, for example
-  2:00 AM → 6:00 AM shown as a clock, about 300 s. It runs during flight *and*
+  2:00 AM → 6:00 AM shown as a clock, about 420 s (L3; 480 s on L4). It runs during flight *and*
   abduction. Spotted respawns and failed abductions cost the time they took.
   At sunrise the sky warms over the final 30 s. Reaching sunrise = **level
   failed**, with a Report from Vrell.
@@ -105,7 +105,7 @@ new deep levels. The three teaser cards stay locked after L4.
 
 ### L3: "Cul-de-Sac Sweep" (Maple Court, suburbia)
 
-Unlocks after L2 is delivered. Map ~2160×2880. Sunrise budget ~300 s.
+Unlocks after L2 is delivered. Map ~2160×2880. Sunrise budget 420 s (Night owl: done by 260 s).
 Flight hazards:
 - a **police cruiser** circling the block loop, with a fast headlight cone and a
   rotating light-bar radius;
@@ -143,7 +143,7 @@ Specimens:
 
 ### L4: "Downtown Graveyard Shift" (Grimsby city centre)
 
-Unlocks after L3 is delivered. Map ~2160×3840. Sunrise budget ~360 s.
+Unlocks after L3 is delivered. Map ~2160×3840. Sunrise budget 480 s (Night owl: done by 310 s).
 Flight hazards:
 - a **police helicopter**, whose searchlight sweeps a big circle along a loop;
 - **two patrol cars**;

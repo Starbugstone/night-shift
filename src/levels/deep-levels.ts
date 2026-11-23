@@ -224,8 +224,9 @@ export const LEVEL3: DeepLevelDef = {
   blurb: 'Three specimens. One cruiser. One Mrs. Pruitt.',
   human: 'Dave, Barb & Gary',
   mugshot: 'human/gary_head',
-  budgetSec: 300,
-  parMarginSec: 45,
+  // A perfect bot needs ~220 s; humans need room for a retry or two. Night owl = done by 260 s.
+  budgetSec: 420,
+  parMarginSec: 160,
   hours: [2, 6],
   memo: {
     re: 'Work Order #0003 — Maple Court (bulk order)',
@@ -514,8 +515,9 @@ export const LEVEL4: DeepLevelDef = {
   blurb: 'A museum, a nightclub and City Hall. A helicopter.',
   human: 'Nigel, Kev & the Mayor',
   mugshot: 'human/mayor_head',
-  budgetSec: 360,
-  parMarginSec: 50,
+  // A perfect bot needs ~225 s. Night owl = done by 310 s.
+  budgetSec: 480,
+  parMarginSec: 170,
   hours: [1, 6],
   memo: {
     re: 'Work Order #0004 — Grimsby city centre',

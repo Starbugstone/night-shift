@@ -146,14 +146,15 @@ describe('the shift runner', () => {
   it('the sunrise clock runs in flight and abduction, not on menus, and ends the shift', () => {
     const run = new DeepRun(LEVEL3, 2);
     expect(run.clockText()).toBe('2:00');
-    run.tick(150);
+    const half = LEVEL3.budgetSec / 2;
+    run.tick(half);
     expect(run.clockText()).toBe('4:00');
     expect(run.dawn).toBe(0);
     run.startAbduct(0, 0);
     run.finishAbduct(abduct({ delivered: false, failReason: 'woke', failBy: 'Dave' }));
     expect(run.tick(500)).toBe(false); // choice screen: paused
     run.retry();
-    run.tick(130);
+    run.tick(half - 20);
     expect(run.dawn).toBeCloseTo(1 / 3, 5); // 20 s of night left of the last 30
     expect(run.tick(30)).toBe(true);
     expect(run.phase).toBe('sunrise');
@@ -171,7 +172,7 @@ describe('deep maps', () => {
       expect(isDeep(lv)).toBe(true);
       expect(m.w).toBe(2160);
       expect(m.h).toBe(lv.id === 'level3' ? 2880 : 3840);
-      expect(lv.budgetSec).toBe(lv.id === 'level3' ? 300 : 360);
+      expect(lv.budgetSec).toBe(lv.id === 'level3' ? 420 : 480);
       expect(m.targets).toHaveLength(3);
       expect(new Set(m.targets.map((t) => t.building.key)).size).toBe(3);
     });
