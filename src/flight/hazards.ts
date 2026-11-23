@@ -55,6 +55,8 @@ export interface PorchHazard {
   y: number;
   trigger: number;
   r: number;
+  /** 'wall' (default): a lamp on a house wall. 'post': a yard light on its own garden post. */
+  mount?: 'wall' | 'post';
 }
 
 /** Insomniac at a window (Mrs. Pruitt): a narrow binocular cone that sweeps and snaps between angles. */
@@ -130,6 +132,8 @@ export interface CameraHazard {
   amp: number;
   rate: number;
   phase: number;
+  /** 'roof' (default): on a building's roof edge. 'pole': a street CCTV pole in a plaza. */
+  mount?: 'roof' | 'pole';
 }
 
 /** Neon sign / billboard: inside the glow, steering is scrambled while it is lit. */
@@ -142,7 +146,10 @@ export interface NeonHazard {
   billboard: boolean;
 }
 
-/** Construction crane: the boom rotates about the tower and is solid. */
+/**
+ * Construction crane: the boom rotates about the tower and is solid, from the counterweight tail
+ * behind the pivot (CRANE_TAIL x len) to the tip.
+ */
 export interface CraneHazard {
   type: 'crane';
   x: number;
@@ -287,6 +294,16 @@ export type SpotCause = 'police' | 'patrol' | 'traffic' | 'porch' | 'watcher' | 
 export type BumpCause = 'wire' | 'tram' | 'bat' | 'pigeon' | 'crane';
 
 const CAR_LEN = 150;
+/**
+ * Traffic cars are drawn (and light from) this scale of the 80x150 sprite, so two opposing lanes
+ * TRAFFIC_LANE px either side of a 120 px road's centre pass with a gap and stay on the asphalt.
+ */
+export const TRAFFIC_SCALE = 0.68;
+/** Lane centres sit this far either side of a two-way road's centre line. */
+export const TRAFFIC_LANE = 32;
+/** The crane boom sprite pivots 60 px into its 520 px length, drawn so the tip is at `len`: the
+ *  counterweight tail behind the pivot is this fraction of `len`. */
+export const CRANE_TAIL = 60 / 460;
 const CORNER_BLEND = 60;
 
 export interface CarRT {
@@ -435,8 +452,8 @@ export class HazardField {
             }
             car.heading = h;
             car.cone = h;
-            car.ox = car.x + Math.cos(h) * CAR_LEN * 0.45;
-            car.oy = car.y + Math.sin(h) * CAR_LEN * 0.45;
+            car.ox = car.x + Math.cos(h) * CAR_LEN * TRAFFIC_SCALE * 0.45;
+            car.oy = car.y + Math.sin(h) * CAR_LEN * TRAFFIC_SCALE * 0.45;
           }
           break;
         }
@@ -611,7 +628,9 @@ export class HazardField {
       if (d.type === 'wire') {
         touched = circleSegment(s.x, s.y, R * POWER_LINE.hitFrac, d.ax, d.ay, d.bx, d.by, hit);
       } else if (d.type === 'crane') {
-        touched = circleSegment(s.x, s.y, R * POWER_LINE.hitFrac + d.width / 2, d.x, d.y, this.x2[i]!, this.y2[i]!, hit);
+        const tail = d.len * CRANE_TAIL;
+        const a = this.a[i]!;
+        touched = circleSegment(s.x, s.y, R * POWER_LINE.hitFrac + d.width / 2, d.x - Math.cos(a) * tail, d.y - Math.sin(a) * tail, this.x2[i]!, this.y2[i]!, hit);
       } else if (d.type === 'flock') {
         const dx = s.x - this.x[i]!;
         const dy = s.y - this.y[i]!;

@@ -14,9 +14,9 @@ import { Button } from '../ui/widgets';
 import { FlightAutopilot } from './autopilot';
 import { DeepFlightSim, SAFE_WINDOW } from './deep-sim';
 import { ConeSprites, drawEntryRing, drawJunctions, drawRoad, drawSaucer, drawTargetArrow, drawZibBubble } from './draw-common';
-import { PORCH, WATCHER_TELL } from './hazards';
+import { CRANE_TAIL, PORCH, TRAFFIC_SCALE, WATCHER_TELL } from './hazards';
 import { drawDog, drawProp, propSize } from './props';
-import { FLIGHT_HUD, POWER_LINE, SUSPICION, barkRadius } from './sim';
+import { FLIGHT_HUD, POWER_LINE, RING_R, SUSPICION, barkRadius } from './sim';
 import { drawPyjamaHuman } from './scene';
 
 const LOCK_ANIM = 0.9;
@@ -483,17 +483,18 @@ export class DeepFlightScene implements Scene {
         case 'car': {
           const c = f.cars[i]![0]!;
           if (!this.visible(c.x, c.y, 120)) break;
-          this.drawCar(g, c.key, c.x, c.y, c.heading, d.role === 'police', t);
+          this.drawCar(g, c.key, c.x, c.y, c.heading, d.role === 'police', t, 1);
           break;
         }
         case 'traffic':
-          for (const c of f.cars[i]!) if (c.live && this.visible(c.x, c.y, 120)) this.drawCar(g, c.key, c.x, c.y, c.heading, false, t);
+          for (const c of f.cars[i]!) if (c.live && this.visible(c.x, c.y, 120)) this.drawCar(g, c.key, c.x, c.y, c.heading, false, t, TRAFFIC_SCALE);
           break;
         case 'dog':
           if (this.visible(d.x, d.y, 80)) drawDog(g, assets, d.x, d.y, t, this.sim.st.cause === i, rm);
           break;
         case 'porch': {
           if (!this.visible(d.x, d.y, d.r)) break;
+          if (d.mount === 'post') drawPost(g, d.x, d.y, 34, 5, 11);
           const img = assets.get('flight/porch_light_top');
           if (img) g.drawImage(img, d.x - 15, d.y - 15, 30, 30);
           else {
@@ -509,6 +510,7 @@ export class DeepFlightScene implements Scene {
         }
         case 'camera': {
           if (!this.visible(d.x, d.y, 60)) break;
+          if (d.mount === 'pole') drawPost(g, d.x, d.y, 58, 7, 15);
           g.save();
           g.translate(d.x, d.y);
           g.rotate(f.a[i]! + Math.PI / 2);
@@ -578,19 +580,19 @@ export class DeepFlightScene implements Scene {
     }
   }
 
-  private drawCar(g: CanvasRenderingContext2D, key: string, x: number, y: number, heading: number, police: boolean, t: number): void {
+  private drawCar(g: CanvasRenderingContext2D, key: string, x: number, y: number, heading: number, police: boolean, t: number, scale: number): void {
     const spec = ART[key] ?? { w: 80, h: 150 };
     const img = this.ctx.assets.get(key);
+    const w = spec.w * scale;
+    const h = spec.h * scale;
     g.save();
-    g.translate(x + 6, y + 8);
+    g.translate(x + 6 * scale, y + 8 * scale);
     g.rotate(heading + Math.PI / 2);
-    drawShadow(g, img, spec.w, spec.h, 0.3);
+    drawShadow(g, img, w, h, 0.3);
     g.restore();
     g.save();
     g.translate(x, y);
     g.rotate(heading + Math.PI / 2);
-    const w = spec.w;
-    const h = spec.h;
     if (img) g.drawImage(img, -w / 2, -h / 2, w, h);
     else {
       roundRectPath(g, -w / 2 + 4, -h / 2 + 4, w - 8, h - 8, 14);
@@ -717,7 +719,7 @@ export class DeepFlightScene implements Scene {
           g.globalCompositeOperation = 'lighter';
           drawGlow(g, GLOW.amber, d.x, d.y, 40, 40, 0.7);
           g.globalCompositeOperation = 'source-over';
-          if (this.visible(d.x, d.y, 40)) text(g, '👁', d.x, d.y - 28, 20, C.text, 'center', 700);
+          if (this.visible(d.x, d.y, 40)) drawEye(g, d.x, d.y - 28);
           void WATCHER_TELL;
           break;
         }
@@ -766,18 +768,23 @@ export class DeepFlightScene implements Scene {
           const tell = f.tell[i] === 1;
           const flick = tell && !rm ? (Math.sin(t * 40) > 0.2 ? 1 : 0) : tell ? 1 : 0;
           const img = this.ctx.assets.get('flight/office_window_lit');
+          // the window lies along its facade: turned a quarter for east and west walls
+          g.save();
+          g.translate(d.wx, d.wy);
+          if (Math.abs(d.x - d.wx) > Math.abs(d.y - d.wy)) g.rotate(Math.PI / 2);
           if (on || flick) {
             g.globalAlpha = on ? 1 : 0.6;
-            if (img) g.drawImage(img, d.wx - 20, d.wy - 12, 40, 24);
+            if (img) g.drawImage(img, -20, -12, 40, 24);
             else {
               g.fillStyle = '#ffe9a8';
-              g.fillRect(d.wx - 18, d.wy - 10, 36, 20);
+              g.fillRect(-18, -10, 36, 20);
             }
             g.globalAlpha = 1;
           } else {
             g.fillStyle = '#2a2c48';
-            g.fillRect(d.wx - 18, d.wy - 10, 36, 20);
+            g.fillRect(-18, -10, 36, 20);
           }
+          g.restore();
           if (on) {
             g.globalCompositeOperation = 'lighter';
             drawGlow(g, '255,233,168', d.x, d.y, d.r * 1.1, d.r * 1.1, 0.7);
@@ -900,20 +907,25 @@ export class DeepFlightScene implements Scene {
             g.fillStyle = '#c9a23a';
             g.fillRect(d.x - 40, d.y - 40, 80, 80);
           }
+          const tail = d.len * CRANE_TAIL;
+          // shadow first: the boom's shape, offset down-right in world space like every other shadow
+          g.save();
+          g.translate(d.x + 14, d.y + 18);
+          g.rotate(a);
+          g.fillStyle = 'rgba(0,0,0,0.25)';
+          g.fillRect(-tail, -d.width / 2, d.len + tail, d.width);
+          g.restore();
           g.save();
           g.translate(d.x, d.y);
           g.rotate(a);
           const boom = assets.get('flight/crane_boom');
-          // shadow first
-          g.fillStyle = 'rgba(0,0,0,0.25)';
-          g.fillRect(14, -d.width / 2 + 18, d.len, d.width);
-          if (boom) g.drawImage(boom, -60 * (d.len / 460), -25 * (d.width / 50) * 1, 520 * (d.len / 460), 50 * (d.width / 50));
+          if (boom) g.drawImage(boom, -tail, -d.width / 2, d.len + tail, d.width);
           else {
             g.fillStyle = '#f2c230';
-            g.fillRect(-30, -d.width / 2, d.len + 30, d.width);
+            g.fillRect(-tail, -d.width / 2, d.len + tail, d.width);
             g.strokeStyle = C.ink;
             g.lineWidth = 3;
-            g.strokeRect(-30, -d.width / 2, d.len + 30, d.width);
+            g.strokeRect(-tail, -d.width / 2, d.len + tail, d.width);
             g.lineWidth = 2;
             g.beginPath();
             for (let k = 0; k < d.len; k += 26) {
@@ -1075,11 +1087,17 @@ export class DeepFlightScene implements Scene {
     // minimap
     this.drawMinimap(g, VIEW_W - MINI_W - 14, y);
 
-    // off-screen arrows to the targets that remain
-    for (let i = 0; i < 3; i++) {
-      if (sim.delivered[i]) continue;
-      const b = m.targets[i]!.building;
-      drawTargetArrow(g, assets, b, sim.camX, sim.camY, m.targets[i]!.short, C.mint, t + i, rm, 230, 180);
+    // Off-screen arrows to the targets that remain: kept below the minimap (marker 48 px, label
+    // under it), hidden once any of the building or its rings is on screen, and not over the
+    // SPOTTED freeze.
+    if (this.state !== 'spotted') {
+      const top = Math.max(230, Math.ceil(y + (m.h * MINI_W) / m.w + 3 + 24 + 8));
+      for (let i = 0; i < 3; i++) {
+        if (sim.delivered[i]) continue;
+        const tg = m.targets[i]!;
+        if (this.targetOnScreen(tg)) continue;
+        drawTargetArrow(g, assets, tg.building, sim.camX, sim.camY, tg.short, C.mint, t + i, rm, top, 180);
+      }
     }
 
     // shift banner
@@ -1094,6 +1112,15 @@ export class DeepFlightScene implements Scene {
     }
 
     if (this.zibT > 0 && this.state !== 'spotted') drawZibBubble(g, assets, this.zibText, this.zibT, t, rm, this.zibPanic);
+  }
+
+  /** Any part of the target's building, or either of its rings, inside the view. */
+  private targetOnScreen(tg: DeepLevelDef['map']['targets'][number]): boolean {
+    const { camX, camY } = this.sim;
+    const b = tg.building;
+    const { w, h } = propSize(b);
+    if (b.x + w / 2 > camX && b.x - w / 2 < camX + VIEW_W && b.y + h / 2 > camY && b.y - h / 2 < camY + VIEW_H) return true;
+    return tg.entries.some((e) => e.x + RING_R > camX && e.x - RING_R < camX + VIEW_W && e.y + RING_R > camY && e.y - RING_R < camY + VIEW_H);
   }
 
   private drawMinimap(g: CanvasRenderingContext2D, x: number, y: number): void {
@@ -1169,4 +1196,47 @@ export class DeepFlightScene implements Scene {
     if (left > 0) text(g, 'back to the last checkpoint…', VIEW_W / 2, 262, 15, C.text, 'center', 700);
     void FLIGHT_HUD;
   }
+}
+
+/**
+ * A lamp or camera on its own pole, from straight above: the head hides the pole, so the pole
+ * shows as its shadow, cast down-right like every other shadow, ending in the head's shadow.
+ */
+function drawPost(g: CanvasRenderingContext2D, x: number, y: number, len: number, w: number, head: number): void {
+  const sx = x + len * 0.6;
+  const sy = y + len * 0.8;
+  g.lineCap = 'round';
+  g.strokeStyle = 'rgba(5,3,20,0.42)';
+  g.lineWidth = w;
+  g.beginPath();
+  g.moveTo(x, y);
+  g.lineTo(sx, sy);
+  g.stroke();
+  g.lineCap = 'butt';
+  g.beginPath();
+  g.arc(sx, sy, head, 0, Math.PI * 2);
+  g.fillStyle = 'rgba(5,3,20,0.32)';
+  g.fill();
+}
+
+/** Mrs. Pruitt's watching eye, drawn (emoji fonts are missing on some systems). */
+function drawEye(g: CanvasRenderingContext2D, x: number, y: number): void {
+  g.beginPath();
+  g.moveTo(x - 13, y);
+  g.quadraticCurveTo(x, y - 12, x + 13, y);
+  g.quadraticCurveTo(x, y + 12, x - 13, y);
+  g.closePath();
+  g.fillStyle = '#f4efe2';
+  g.fill();
+  g.lineWidth = 2.5;
+  g.strokeStyle = C.ink;
+  g.stroke();
+  g.beginPath();
+  g.arc(x, y, 5, 0, Math.PI * 2);
+  g.fillStyle = '#3a2f5a';
+  g.fill();
+  g.beginPath();
+  g.arc(x + 1.5, y - 1.5, 1.6, 0, Math.PI * 2);
+  g.fillStyle = '#f4efe2';
+  g.fill();
 }

@@ -237,7 +237,9 @@ export class ReportScene implements Scene {
       const ry = CY + 128 + i * (this.rows.length > 6 ? 35 : 42);
       const [label, value] = this.rows[i]!;
       text(g, label, CX + 26 + dx, ry, 18, C.paperInk, 'left', 700);
-      text(g, value, CX + CW - 26 + dx, ry, i === 0 ? 16 : 19, '#4b2fa0', 'right', 800);
+      // the value squeezes into whatever the label leaves (long name lists on deep shifts)
+      const room = CW - 52 - g.measureText(label).width - 14;
+      text(g, value, CX + CW - 26 + dx, ry, i === 0 ? 16 : 19, '#4b2fa0', 'right', 800, false, room);
       g.fillStyle = C.paperLine;
       g.fillRect(CX + 26, ry + 19, CW - 52, 2);
       g.globalAlpha = 1;

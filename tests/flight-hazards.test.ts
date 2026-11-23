@@ -135,6 +135,17 @@ describe('hazards', () => {
     expect(Math.abs(s.x)).toBeGreaterThan(40);
   });
 
+  it('the crane counterweight tail behind the pivot is solid too', () => {
+    const d: HazardDef = { type: 'crane', x: 0, y: 0, len: 460, rate: 1, a0: 0, width: 20 };
+    const f = new HazardField([d]);
+    f.sample(0);
+    // boom points east; the tail reaches 60 px west of the pivot
+    const s = { x: -50, y: 30, vx: 0, vy: 0, stun: 0 };
+    expect(f.collide(s, { nx: 0, ny: 0, depth: 0 })).toBe(0);
+    const clear = { x: -110, y: 0, vx: 0, vy: 0, stun: 0 };
+    expect(f.collide(clear, { nx: 0, ny: 0, depth: 0 })).toBe(-1);
+  });
+
   it('the helicopter searchlight circles the helicopter', () => {
     const d: HazardDef = { type: 'heli', cx: 1000, cy: 1000, rx: 500, ry: 500, period: 20, phase: 0, spotR: 100, spotDist: 200, spotRate: 1 };
     const f = new HazardField([d]);

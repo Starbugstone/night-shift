@@ -424,6 +424,10 @@ export function hudSunClock(g: CanvasRenderingContext2D, x: number, y: number, w
   g.lineTo(cx + Math.cos(a) * (r - 5), cy + Math.sin(a) * (r - 5));
   g.stroke();
   g.lineCap = 'butt';
-  text(g, hot ? 'SUNRISE!' : 'SHIFT', x + 58, y + 19, 12, hot ? C.amberHi : C.muted, 'left', 900);
-  text(g, time, x + 58, y + 42, 22, hot ? C.amberHi : C.text, 'left', 800);
+  // Label and digits sit on the chip's centre line so any height >= 52 keeps the 22 px digits
+  // inside the border, and both squeeze to the width right of the dial.
+  const tx = x + 58;
+  const tw = Math.max(20, w - 58 - 10);
+  text(g, hot ? 'SUNRISE!' : 'SHIFT', tx, cy - 11, 12, hot ? C.amberHi : C.muted, 'left', 900, false, tw);
+  text(g, time, tx, cy + 9, 22, hot ? C.amberHi : C.text, 'left', 800, false, tw);
 }

@@ -1,6 +1,6 @@
 // L3 and L4: the deep levels (docs/GDD-2-deeper.md). Map data only.
 import { ART } from '../art-manifest';
-import type { HazardDef } from '../flight/hazards';
+import { TRAFFIC_LANE, type HazardDef } from '../flight/hazards';
 import type { DeepLevelDef, DeepTarget, EntryDef, PropDef } from './types';
 
 const PI = Math.PI;
@@ -31,8 +31,27 @@ const sub = (k: 'a' | 'b' | 'c', x: number, y: number, rot = 0): PropDef => ({
   tint: k === 'a' ? '#5a6aa0' : k === 'b' ? '#8a5a6a' : '#5f7f70',
 });
 const hedge = (x: number, y: number, rot = 0): PropDef => ({ key: 'flight/hedge_h', kind: 'hedge', x, y, rot });
-/** Motion-sensor light: trips if you linger 0.4 s within 110 px, then lights 200 px for 3 s. */
-const porch = (x: number, y: number): HazardDef => ({ type: 'porch', x, y, trigger: 110, r: 200 });
+
+/** Unrotated footprint of a prop, world px. */
+function box(b: PropDef): { x0: number; y0: number; x1: number; y1: number } {
+  const spec = ART[b.key]!;
+  const w = b.w ?? spec.w;
+  const h = b.h ?? spec.h;
+  return { x0: b.x - w / 2, y0: b.y - h / 2, x1: b.x + w / 2, y1: b.y + h / 2 };
+}
+
+/**
+ * Motion-sensor light on a house wall: trips if you linger 0.4 s within 110 px, then lights
+ * 200 px for 3 s. North/south walls take a world x along the wall, east/west walls a world y.
+ */
+function porch(house: PropDef, wall: 'n' | 's' | 'e' | 'w', along: number): HazardDef {
+  const b = box(house);
+  const x = wall === 'e' ? b.x1 : wall === 'w' ? b.x0 : along;
+  const y = wall === 'n' ? b.y0 : wall === 's' ? b.y1 : along;
+  return { type: 'porch', x, y, trigger: 110, r: 200 };
+}
+/** The same light on its own garden post, out in a yard or a drive. */
+const yardLight = (x: number, y: number): HazardDef => ({ type: 'porch', x, y, trigger: 110, r: 200, mount: 'post' });
 
 // ====================================================================== L3
 
@@ -41,6 +60,12 @@ const BARB: PropDef = { key: 'flight/barb_house_top', kind: 'suburb_house', x: 1
 const GARY: PropDef = { key: 'flight/gary_house_top', kind: 'suburb_house', x: 1560, y: 2010, tint: '#5a7a5a' };
 const PRUITT: PropDef = { key: 'flight/pruitt_house_top', kind: 'suburb_house', x: 790, y: 1240, tint: '#7a5a8a' };
 const PRUITT_WIN = anchor(PRUITT, 145, 123);
+// houses that carry porch lights
+const N_A = sub('a', 1360, 1240);
+const SW_B = sub('b', 860, 1720);
+const SE_B = sub('b', 1340, 1730);
+const SE_A = sub('a', 1340, 2240);
+const E_B = sub('b', 2040, 1900);
 
 const L3_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
   {
@@ -111,30 +136,30 @@ const L3_HAZARDS: HazardDef[] = [
   },
   // Gary's own CCTV, on the garage corner, sweeping his drive and roof
   { type: 'camera', x: 1440, y: 1930, range: 300, half: 0.3, base: 0.35, amp: 0.6, rate: 1.3, phase: 0 },
-  // motion-sensor porch lights on the front doors along the way
-  porch(1250, 2290),
-  porch(820, 1700),
-  porch(1370, 1690),
-  porch(1300, 1080),
-  porch(860, 560),
-  porch(1500, 1250),
-  porch(420, 2000),
-  porch(2000, 1700),
-  porch(560, 1300),
-  // Lights by the doors: each lights its ring (~185 px) without being tripped from it, and its
+  // motion-sensor lights on the walls along the way
+  porch(SE_A, 'w', 2290),
+  porch(SW_B, 'n', 820),
+  porch(SE_B, 'n', 1370),
+  porch(N_A, 'n', 1300),
+  yardLight(860, 560),
+  porch(N_A, 'e', 1250),
+  yardLight(420, 2000),
+  porch(E_B, 'n', 2000),
+  porch(PRUITT, 'w', 1300),
+  // Lights by the doors: each lights its ring (~170-200 px) without being tripped from it, and its
   // trigger sits across the obvious way in. Come in from the side or wait out the 3 s.
-  porch(718, 1080),
-  porch(859, 861),
-  porch(744, 741),
-  porch(1560, 961),
-  porch(1800, 833),
-  // Gary's own motion lights: the drive, the side return and the back garden
-  porch(1515, 2205),
-  porch(1790, 1960),
-  porch(1600, 1785),
+  yardLight(718, 1080),
+  yardLight(859, 861),
+  porch(DAVE, 'e', 741),
+  yardLight(1560, 961),
+  porch(BARB, 'e', 840),
+  // Gary's own motion lights on posts: the drive, the side return and the back garden
+  yardLight(1515, 2205),
+  yardLight(1780, 1960),
+  yardLight(1600, 1785),
   // yard dogs: one in Dave's garden by the patio, one on Barb's back step between her chimney and back door
-  { type: 'dog', x: 760, y: 962, rMin: 55, rMax: 175, period: 1.9, phase: 0 },
-  { type: 'dog', x: 1589, y: 676, rMin: 55, rMax: 175, period: 2.0, phase: 0.8 },
+  { type: 'dog', x: 760, y: 968, rMin: 55, rMax: 175, period: 1.9, phase: 0 },
+  { type: 'dog', x: 1589, y: 620, rMin: 55, rMax: 175, period: 2.0, phase: 0.8 },
   // bats: one loop round the north houses, one zig-zag over the south blocks
   {
     type: 'flock',
@@ -216,17 +241,18 @@ export const LEVEL3: DeepLevelDef = {
     start: { x: 1080, y: 2700 },
     roads: [
       { dir: 'h', at: 2460, from: 0, to: 2160 },
-      { dir: 'v', at: 1080, from: 420, to: 2460 },
-      { dir: 'h', at: 1500, from: 300, to: 1860 },
-      { dir: 'v', at: 300, from: 1500, to: 2460 },
+      // L-corners run on to the far kerb so the corner square is filled
+      { dir: 'v', at: 1080, from: 360, to: 2460 },
+      { dir: 'h', at: 1500, from: 240, to: 1860 },
+      { dir: 'v', at: 300, from: 1440, to: 2460 },
       { dir: 'v', at: 1860, from: 420, to: 2460 },
-      { dir: 'h', at: 420, from: 1080, to: 1920 },
+      { dir: 'h', at: 420, from: 1020, to: 1920 },
     ],
     groundProps: [
       { key: 'flight/pool_top', kind: 'pool', x: 400, y: 1080 },
-      { key: 'flight/pool_top', kind: 'pool', x: 1840, y: 1000 },
+      { key: 'flight/pool_top', kind: 'pool', x: 1700, y: 1000 },
       { key: 'flight/pool_top', kind: 'pool', x: 680, y: 1880 },
-      { key: 'flight/trampoline_top', kind: 'trampoline', x: 1400, y: 2300 },
+      { key: 'flight/trampoline_top', kind: 'trampoline', x: 1500, y: 2320 },
       { key: 'flight/trampoline_top', kind: 'trampoline', x: 1700, y: 1280 },
     ],
     props: [
@@ -235,33 +261,33 @@ export const LEVEL3: DeepLevelDef = {
       sub('c', 1380, 200),
       sub('b', 2000, 200),
       sub('b', 300, 1250),
-      sub('a', 1360, 1240),
-      sub('c', 1900, 1300),
+      N_A,
+      sub('c', 2030, 1300),
       PRUITT,
       // south-west block
       sub('a', 520, 1720),
-      sub('b', 860, 1720),
+      SW_B,
       sub('c', 520, 2230),
       sub('a', 860, 2230),
       // south-east block
-      sub('b', 1340, 1730),
-      sub('a', 1340, 2240),
+      SE_B,
+      SE_A,
       // outside the loop
       sub('c', 120, 1900),
-      sub('b', 2040, 1900),
+      E_B,
       sub('a', 500, 2700),
       sub('c', 1640, 2700),
       hedge(620, 1980),
       hedge(860, 1980),
-      hedge(1350, 1985),
-      hedge(1050, 1180, PI / 2),
+      hedge(1300, 1985),
+      hedge(990, 1180, PI / 2),
       tree(140, 760),
-      tree(1000, 860),
-      tree(1180, 700),
+      tree(940, 760),
+      tree(1220, 700),
       tree(2040, 700),
       tree(560, 1060),
-      tree(1900, 2180),
-      tree(180, 2200),
+      tree(2000, 2180),
+      tree(160, 2200),
       tree(300, 2700),
       tree(820, 2680),
       tree(1380, 2700),
@@ -288,8 +314,9 @@ export const LEVEL3: DeepLevelDef = {
 
 // ====================================================================== L4
 
-const MUSEUM: PropDef = { key: 'flight/museum_top', kind: 'civic', x: 700, y: 2960, tint: '#b8ad94' };
-const CLUB: PropDef = { key: 'flight/club_top', kind: 'civic', x: 1480, y: 2060, tint: '#3a2f5a' };
+// West Ave and East Ave run 480..600 and 1560..1680: the museum and the club stand 10 px off them
+const MUSEUM: PropDef = { key: 'flight/museum_top', kind: 'civic', x: 790, y: 2960, tint: '#b8ad94' };
+const CLUB: PropDef = { key: 'flight/club_top', kind: 'civic', x: 1410, y: 2060, tint: '#3a2f5a' };
 const CITYHALL: PropDef = { key: 'flight/cityhall_top', kind: 'civic', x: 1080, y: 430, tint: '#8f8a7a' };
 
 const L4_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
@@ -308,7 +335,7 @@ const L4_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
     building: CLUB,
     entries: [
       entry(CLUB, 'kev_vent', 'Roof vent', 'bass & fans', [195, 76], 'above'),
-      entry(CLUB, 'kev_fireescape', 'Fire escape', 'past Tiny', [25, 162], 'below'),
+      entry(CLUB, 'kev_fireescape', 'Fire escape', 'past Tiny', [27, 162], 'below'),
     ],
   },
   {
@@ -316,7 +343,7 @@ const L4_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
     short: 'Mayor',
     building: CITYHALL,
     entries: [
-      entry(CITYHALL, 'mayor_clocktower', 'Clock tower', 'gears', [250, 84], 'below'),
+      entry(CITYHALL, 'mayor_clocktower', 'Clock tower', 'gears', [250, 84], 'above'),
       entry(CITYHALL, 'mayor_elevator', 'Elevator shaft', 'moving car', [83, 184], 'below'),
     ],
   },
@@ -330,18 +357,37 @@ const hr = (k: 'a' | 'b' | 'c', x: number, y: number): PropDef => ({
   tint: k === 'a' ? '#3d4466' : k === 'b' ? '#4a3d5e' : '#35505a',
 });
 
-/** An insomniac office window on a roof's south edge, lighting the pavement below it. */
-const win = (wx: number, wy: number, period: number, on: number, phase: number, x = wx, y = wy + 95): HazardDef => ({
-  type: 'window',
-  wx,
-  wy,
-  x,
-  y,
-  r: 105,
-  period,
-  on,
-  phase,
-});
+// highrises that carry cameras or insomniac windows
+const HR_SE = hr('a', 1880, 2840);
+const HR_W = hr('b', 240, 2240);
+const HR_E = hr('c', 1880, 1300);
+const HR_MID = hr('a', 730, 1300);
+const HR_NW = hr('c', 260, 960);
+const HR_NE = hr('b', 1900, 1000);
+const HR_PLAZA = hr('c', 1060, 2150);
+
+/**
+ * An insomniac office window on one facade of a highrise, lighting a pool on the street in front
+ * of that facade. North/south facades take a world x, east/west facades a world y.
+ */
+function win(b: PropDef, facade: 'n' | 's' | 'e' | 'w', along: number, period: number, on: number, phase: number): HazardDef {
+  const r = box(b);
+  const INSET = 10;
+  const REACH = 95;
+  const nx = facade === 'e' ? 1 : facade === 'w' ? -1 : 0;
+  const ny = facade === 's' ? 1 : facade === 'n' ? -1 : 0;
+  const ex = facade === 'e' ? r.x1 : facade === 'w' ? r.x0 : along;
+  const ey = facade === 's' ? r.y1 : facade === 'n' ? r.y0 : along;
+  return { type: 'window', wx: ex - nx * INSET, wy: ey - ny * INSET, x: ex + nx * REACH, y: ey + ny * REACH, r: 105, period, on, phase };
+}
+
+/** A sweeping camera on a roof, `inset` px in from the given corner's parapets. */
+function roofCam(b: PropDef, corner: 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's', cam: Omit<Extract<HazardDef, { type: 'camera' }>, 'type' | 'x' | 'y'>, inset = 14): HazardDef {
+  const r = box(b);
+  const x = corner === 'n' || corner === 's' ? (r.x0 + r.x1) / 2 : corner.endsWith('w') ? r.x0 + inset : r.x1 - inset;
+  const y = corner.startsWith('n') ? r.y0 + inset : r.y1 - inset;
+  return { type: 'camera', x, y, ...cam };
+}
 
 const L4_HAZARDS: HazardDef[] = [
   // police helicopter: a big loop over the middle of town, searchlight circling
@@ -351,9 +397,10 @@ const L4_HAZARDS: HazardDef[] = [
     type: 'car',
     key: 'flight/police_top',
     role: 'patrol',
+    // turns round north of the ring road, never parked across its traffic
     path: [
       { x: 540, y: 760 },
-      { x: 540, y: 3420 },
+      { x: 540, y: 3280 },
     ],
     loop: false,
     speed: 340,
@@ -370,7 +417,7 @@ const L4_HAZARDS: HazardDef[] = [
     key: 'flight/police_top',
     role: 'patrol',
     path: [
-      { x: 1620, y: 3420 },
+      { x: 1620, y: 3280 },
       { x: 1620, y: 760 },
     ],
     loop: false,
@@ -383,23 +430,23 @@ const L4_HAZARDS: HazardDef[] = [
     sweepRate: 2,
     barR: 0,
   },
-  // traffic: the ring road (south) and Market St (middle), both ways
-  { type: 'traffic', dir: 'h', at: 3390, from: 0, to: 2160, sign: 1, speed: 380, gap: 560, offset: 0, coneRange: 210, coneHalf: 0.32, keys: ['flight/taxi_top', 'flight/sedan_top'] },
-  { type: 'traffic', dir: 'h', at: 3450, from: 0, to: 2160, sign: -1, speed: 340, gap: 640, offset: 200, coneRange: 210, coneHalf: 0.32, keys: ['flight/sedan_top', 'flight/taxi_top', 'flight/sedan_top'] },
-  { type: 'traffic', dir: 'h', at: 1570, from: 0, to: 2160, sign: 1, speed: 360, gap: 600, offset: 120, coneRange: 200, coneHalf: 0.32, keys: ['flight/taxi_top'] },
-  { type: 'traffic', dir: 'h', at: 1630, from: 0, to: 2160, sign: -1, speed: 360, gap: 620, offset: 400, coneRange: 200, coneHalf: 0.32, keys: ['flight/sedan_top'] },
+  // traffic: the ring road (south) and Market St (middle), both ways, one lane either side of the line
+  { type: 'traffic', dir: 'h', at: 3420 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 380, gap: 560, offset: 0, coneRange: 210, coneHalf: 0.32, keys: ['flight/taxi_top', 'flight/sedan_top'] },
+  { type: 'traffic', dir: 'h', at: 3420 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 340, gap: 640, offset: 200, coneRange: 210, coneHalf: 0.32, keys: ['flight/sedan_top', 'flight/taxi_top', 'flight/sedan_top'] },
+  { type: 'traffic', dir: 'h', at: 1600 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 360, gap: 600, offset: 120, coneRange: 200, coneHalf: 0.32, keys: ['flight/taxi_top'] },
+  { type: 'traffic', dir: 'h', at: 1600 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 360, gap: 620, offset: 400, coneRange: 200, coneHalf: 0.32, keys: ['flight/sedan_top'] },
   // rooftop cameras: the museum roof (sweeps skylight and loading bay), City Hall, and the route
-  { type: 'camera', x: 900, y: 2830, range: 300, half: 0.3, base: 2.4, amp: 0.65, rate: 1.2, phase: 0 },
-  { type: 'camera', x: 1250, y: 560, range: 300, half: 0.3, base: -2.3, amp: 0.55, rate: 1.4, phase: 1 },
-  // the Bassment's door camera, sweeping the roof vent
-  { type: 'camera', x: 1700, y: 1900, range: 300, half: 0.3, base: 2.5, amp: 0.6, rate: 1.3, phase: 0.4 },
-  // mid-town: the plaza between the club and Market St
-  { type: 'camera', x: 1080, y: 1900, range: 300, half: 0.32, base: PI / 2, amp: 1.1, rate: 0.9, phase: 0 },
-  { type: 'camera', x: 860, y: 2300, range: 280, half: 0.3, base: -0.6, amp: 0.8, rate: 1.2, phase: 2 },
+  roofCam(MUSEUM, 'ne', { range: 300, half: 0.3, base: 2.25, amp: 0.65, rate: 1.2, phase: 0 }, 15),
+  roofCam(CITYHALL, 'se', { range: 300, half: 0.3, base: -2.3, amp: 0.55, rate: 1.4, phase: 1 }),
+  // the Bassment's own camera, on its north-west corner, sweeping the roof vent and the fire escape
+  roofCam(CLUB, 'nw', { range: 300, half: 0.3, base: 0.9, amp: 0.6, rate: 1.3, phase: 0.4 }, 15),
+  // mid-town: CCTV poles in the plaza between the club and Market St
+  { type: 'camera', x: 1080, y: 1900, range: 300, half: 0.32, base: PI / 2, amp: 1.1, rate: 0.9, phase: 0, mount: 'pole' },
+  { type: 'camera', x: 860, y: 2300, range: 280, half: 0.3, base: -0.6, amp: 0.8, rate: 1.2, phase: 2, mount: 'pole' },
   { type: 'camera', x: 1880, y: 2860, range: 300, half: 0.3, base: PI, amp: 0.75, rate: 1.2, phase: 0 },
-  { type: 'camera', x: 260, y: 2060, range: 300, half: 0.3, base: 0.2, amp: 0.8, rate: 1.1, phase: 1 },
-  { type: 'camera', x: 1880, y: 1180, range: 300, half: 0.3, base: PI * 0.85, amp: 0.7, rate: 1.3, phase: 2 },
-  { type: 'camera', x: 700, y: 1120, range: 280, half: 0.3, base: PI / 2, amp: 0.8, rate: 1.0, phase: 0.5 },
+  roofCam(HR_W, 'n', { range: 300, half: 0.3, base: 0.2, amp: 0.8, rate: 1.1, phase: 1 }, 12),
+  roofCam(HR_E, 'n', { range: 300, half: 0.3, base: PI * 0.85, amp: 0.7, rate: 1.3, phase: 2 }, 12),
+  { type: 'camera', x: 700, y: HR_MID.y - 108, range: 280, half: 0.3, base: PI / 2, amp: 0.8, rate: 1.0, phase: 0.5 },
   // billboards: neon scrambles steering
   { type: 'neon', x: 1080, y: 2700, r: 150, text: 'BURGERS', billboard: true },
   { type: 'neon', x: 1260, y: 1250, r: 140, text: 'OPEN 24H', billboard: true },
@@ -432,19 +479,30 @@ const L4_HAZARDS: HazardDef[] = [
     r: 50,
     phase: 500,
   },
-  // insomniac office windows (the first one lights the club's fire escape)
-  win(1290, 2092, 4.6, 2.0, 0.7, 1385, 2092),
-  win(1880, 2690, 5.2, 2.2, 0),
-  win(260, 2400, 4.6, 2.0, 1.3),
-  win(1860, 1440, 5.0, 2.4, 2.1),
-  win(700, 1440, 4.4, 1.8, 0.4),
-  win(240, 860, 4.8, 2.2, 3.0),
-  win(1900, 860, 5.4, 2.0, 1.0),
+  // insomniac office windows (the first one, across the alley, lights the club's fire escape)
+  win(HR_PLAZA, 'e', 2092, 4.6, 2.0, 0.7),
+  win(HR_SE, 'n', 1880, 5.2, 2.2, 0),
+  win(HR_W, 's', 260, 4.6, 2.0, 1.3),
+  win(HR_E, 's', 1860, 5.0, 2.4, 2.1),
+  win(HR_MID, 's', 700, 4.4, 1.8, 0.4),
+  win(HR_NW, 'n', 240, 4.8, 2.2, 3.0),
+  win(HR_NE, 'n', 1900, 5.4, 2.0, 1.0),
   // tram wires over Market St's north kerb (gaps at the middle and the east end)
   { type: 'wire', kind: 'tram', ax: 20, ay: 2440, bx: 560, by: 2440 },
   { type: 'wire', kind: 'tram', ax: 560, ay: 2440, bx: 960, by: 2440 },
   { type: 'wire', kind: 'tram', ax: 1200, ay: 2440, bx: 1640, by: 2440 },
   { type: 'wire', kind: 'tram', ax: 1640, ay: 2440, bx: 1900, by: 2440 },
+];
+
+/** Streetlights on the pavement at the avenue corners, 80 px off both centre lines. */
+const L4_LAMPS = [
+  { x: 620, y: 3340 },
+  { x: 1700, y: 3340 },
+  { x: 620, y: 2420 },
+  { x: 1700, y: 2420 },
+  { x: 620, y: 1680 },
+  { x: 1700, y: 1680 },
+  { x: 1160, y: 840 },
 ];
 
 export const LEVEL4: DeepLevelDef = {
@@ -470,7 +528,7 @@ export const LEVEL4: DeepLevelDef = {
     theme: 'city',
     w: 2160,
     h: 3840,
-    start: { x: 1080, y: 3680 },
+    start: { x: 1080, y: 3640 },
     roads: [
       { dir: 'h', at: 3420, from: 0, to: 2160 },
       { dir: 'h', at: 2500, from: 0, to: 2160 },
@@ -480,33 +538,26 @@ export const LEVEL4: DeepLevelDef = {
       { dir: 'v', at: 1620, from: 760, to: 3420 },
       { dir: 'v', at: 1080, from: 760, to: 1600 },
     ],
-    groundProps: [{ key: 'flight/park_top', kind: 'park', x: 1080, y: 3080 }],
+    groundProps: [{ key: 'flight/park_top', kind: 'park', x: 1200, y: 3080 }],
     props: [
-      hr('a', 1880, 2840),
-      hr('b', 240, 2240),
-      hr('c', 1880, 1300),
-      hr('a', 700, 1300),
-      hr('c', 260, 960),
-      hr('b', 1900, 1000),
+      HR_SE,
+      HR_W,
+      HR_E,
+      HR_MID,
+      HR_NW,
+      HR_NE,
       hr('a', 1350, 1080),
       hr('c', 250, 3020),
       hr('b', 1900, 2140),
-      hr('c', 1150, 2150),
+      HR_PLAZA,
       hr('a', 260, 400),
       hr('c', 1880, 420),
       hr('b', 1350, 3700),
       hr('c', 700, 3700),
+      ...L4_LAMPS.map((l): PropDef => ({ key: 'flight/streetlight_top', kind: 'streetlight', x: l.x, y: l.y })),
     ],
     targets: L4_TARGETS,
     hazards: L4_HAZARDS,
-    lamps: [
-      { x: 540, y: 3330 },
-      { x: 1620, y: 3330 },
-      { x: 540, y: 2410 },
-      { x: 1620, y: 2410 },
-      { x: 540, y: 1690 },
-      { x: 1620, y: 1690 },
-      { x: 1080, y: 850 },
-    ],
+    lamps: L4_LAMPS,
   },
 };

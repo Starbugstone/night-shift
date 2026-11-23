@@ -1,10 +1,10 @@
-// Wraps an abduction scene during a deep shift: the sunrise clock keeps running, shown in a small
-// chip under the abduction HUD row, and the room warms up in the last 30 s.
+// Wraps an abduction scene during a deep shift: the sunrise clock keeps running, shown in the chip
+// slot the abduction view leaves free on its second HUD row, and the room warms up in the last 30 s.
 import type { Assets, Scene } from '../contracts';
-import { VIEW_H, VIEW_W } from '../contracts';
+import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT } from '../abduct/deep-view';
 import { GLOW, drawEdgeTint } from '../core/fx';
 import type { DeepRun } from '../levels/run';
-import { HUD_ROW, hudSunClock } from './hud';
+import { hudPanel, hudSunClock } from './hud';
 import { text } from './draw';
 import { C } from './theme';
 
@@ -51,13 +51,18 @@ export class DeepAbductScene implements Scene {
       this.clockKey = key;
       this.clock = this.run.clockText();
     }
-    const w = 130;
-    const x = VIEW_W - w - 14;
-    const y = HUD_ROW.y + HUD_ROW.h + 10;
+    const sun = DEEP_HUD_SUNRISE_SLOT;
     g.globalAlpha = 0.92;
-    hudSunClock(g, x, y, w, 52, this.clock, this.run.elapsed / this.run.budget, dawn, this.t, this.reduced(), this.assets.get('ui/sunrise_clock'));
+    hudSunClock(g, sun.x, sun.y, sun.w, sun.h, this.clock, this.run.elapsed / this.run.budget, dawn, this.t, this.reduced(), this.assets.get('ui/sunrise_clock'));
     g.globalAlpha = 1;
-    if (dawn > 0.5 && !this.reduced() && Math.floor(this.t * 2) % 2 === 0) text(g, 'SUN\'S COMING UP!', VIEW_W / 2, VIEW_H - 24, 16, C.amberHi, 'center', 900);
+    if (dawn > 0.5) {
+      // The last 15 s: a steady pill (reduced motion) or a blinking one, in the slot beside the
+      // Snooze Ray chip, clear of the room/exit bar below.
+      const warn = DEEP_HUD_WARNING_SLOT;
+      const on = this.reduced() || Math.floor(this.t * 2) % 2 === 0;
+      hudPanel(g, warn.x, warn.y, warn.w, warn.h, on ? C.amber : C.ink);
+      text(g, 'SUN\'S COMING UP!', warn.x + warn.w / 2, warn.y + warn.h / 2, 16, on ? C.amberHi : C.muted, 'center', 900, false, warn.w - 20);
+    }
   }
 
   dispose(): void {

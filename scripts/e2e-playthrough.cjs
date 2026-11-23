@@ -1,19 +1,31 @@
 // End-to-end bot: plays all four tutorial routes (L1 window/chimney, L2 skylight/loading door), then
 // full deep shifts of L3 and L4, all through real pointer input.
-// Deep shifts use the scenes' own autopilots: flight `debug.autopilot()` is an absolute finger
-// position (logical px), abduction `debug.autopilot()` is a finger delta applied as a held drag.
-// Usage: npx vite --port 5199 & PLAYWRIGHT_PATH=<path to playwright> node scripts/e2e-playthrough.cjs
-// Env: ONLY=tutorial|deep|L3|L4 to run a subset.
+// Every abduction (tutorial and deep) is driven by the scene's own per-frame autopilot,
+// `debug.autopilot()`, a finger delta applied as a held drag, integrated inside the page each frame.
+// Deep flights use the flight `debug.autopilot()` (an absolute finger position, logical px);
+// tutorial flights steer through fixed waypoints.
+// Run it against a preview build, not the dev server (HMR reloads kill long runs):
+//   npm run build && npx vite preview --port <free port> &
+//   source ~/.local/share/claude-media-tools/env.sh
+//   BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs
+// Env: ONLY=tutorial|deep|L3|L4|probe to run a subset (RUNS=L1-window,... picks tutorial routes, ROOM= the probe room); PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE to find playwright.
 // Screenshots use canvas.toDataURL (page.screenshot hangs on this WSL box).
-const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
+const path = require('path');
+const pw = process.env.PLAYWRIGHT_PATH || (process.env.PLAYWRIGHT_MODULE ? path.dirname(process.env.PLAYWRIGHT_MODULE) : 'playwright');
+const { chromium } = require(pw);
 const fs = require('fs');
 const BASE = process.env.BASE || 'http://localhost:5199/';
 const OUT = process.env.OUT || '/home/stone/dev/night-shift/review/e2e';
 fs.mkdirSync(OUT, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Bot idle poll interval. Polling this hard slows the game clock (to roughly 0.4x real time on
+// this box), which is harmless (everything runs on the game clock) but makes runs long.
+const POLL_MS = Number(process.env.POLL_MS || 8);
 (async () => {
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 375, height: 690 }, deviceScaleFactor: 2, hasTouch: false });
+  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  // DSF 1: with swiftshader at DSF 2 every mouse.move stalls the renderer here (~6 moves/s) and the
+  // game runs at about 0.16x real time; at DSF 1 it runs in real time. Override with DSF=2.
+  const page = await browser.newPage({ viewport: { width: 375, height: 690 }, deviceScaleFactor: Number(process.env.DSF || 1), hasTouch: false });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -66,35 +78,81 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     if (down) await page.mouse.up();
   }
 
-  async function abduct() {
-    await waitScene('abduct', 20000);
-    await sleep(500);
-    const route = await page.evaluate(() => window.__nightShift.active.debug.room.route);
+  /**
+   * Real-mouse side of the abduction driver. The pilot runs every frame inside the page
+   * (installDriver) and integrates its per-frame drag into a finger target, seeing the beam where
+   * the moves still in flight will put it; this moves the real mouse to that target, re-anchoring
+   * near the screen edges. Call step() while the scene is 'abduct', reset() when it changes.
+   */
+  function abductDriver() {
     const ANCHOR = [270, 520];
     let fx = ANCHOR[0], fy = ANCHOR[1];
-    const press = async () => { const [qx, qy] = map(fx, fy); await page.mouse.move(qx, qy); await page.mouse.down(); await sleep(50); };
-    await press();
+    let down = false;
+    const moveTo = async (lx, ly) => { const [px, py] = map(lx, ly); await page.mouse.move(px, py); };
+    return {
+      async reset() {
+        if (down) { await page.mouse.up(); down = false; await sleep(60); }
+        await page.evaluate(() => { if (window.__e2eDrv) window.__e2eDrv.on = false; });
+        fx = ANCHOR[0]; fy = ANCHOR[1];
+      },
+      async step(drv) {
+        if (!drv) { await installDriver(); return; }
+        if (!down) {
+          await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; d.on = true; }, ANCHOR);
+          fx = ANCHOR[0]; fy = ANCHOR[1];
+          await moveTo(fx, fy); await page.mouse.down(); down = true; await sleep(30); return;
+        }
+        const tx = drv.fx, ty = drv.fy;
+        if (tx < 30 || tx > 510 || ty < 170 || ty > 900) {
+          // lift, carry the not-yet-sent part of the drag over to the anchor, press again. The lift
+          // and the press must land in different game frames: a release and a press in the same
+          // frame reads as a release, and the drag ends.
+          await page.mouse.up(); down = false;
+          await sleep(60);
+          const nx = ANCHOR[0] + (tx - fx), ny = ANCHOR[1] + (ty - fy);
+          await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; }, [nx, ny]);
+          fx = ANCHOR[0]; fy = ANCHOR[1];
+          await moveTo(fx, fy); await page.mouse.down(); down = true; await sleep(20); return;
+        }
+        if (Math.abs(tx - fx) < 0.05 && Math.abs(ty - fy) < 0.05) { await sleep(POLL_MS); return; }
+        // no pause after a move: input latency here is latency for the pilot's laser timing
+        fx = tx; fy = ty;
+        await moveTo(fx, fy);
+      },
+    };
+  }
+
+  /** Tutorial abduction: the same in-page autopilot driver as the deep shifts. */
+  async function abduct() {
+    await waitScene('abduct', 20000);
+    await installDriver();
+    await sleep(500);
+    const drv = abductDriver();
+    await drv.reset();
+    // Budget in game seconds: swiftshader runs the game well under real time on this box.
     const t0 = Date.now();
-    for (const p of route) {
-      const tEnd = Date.now() + p.seconds * 1000;
-      const b0 = await page.evaluate(() => { const d = window.__nightShift.active.debug; return { x: d.body.beamX, y: d.body.beamY }; });
-      const tStart = Date.now();
-      while (true) {
-        const info = await page.evaluate(() => { const a = window.__nightShift.active; if (!a || !a.debug) return null; const d = a.debug; return { x: d.body.beamX, y: d.body.beamY, done: d.delivered }; });
-        if (!info || info.done) break;
-        const k = Math.min(1, (Date.now() - tStart) / (tEnd - tStart));
-        const tx = b0.x + (p.x - b0.x) * k, ty = b0.y + (p.y - b0.y) * k;
-        const ddx = tx - info.x, ddy = ty - info.y;
-        if (fx + ddx < 30 || fx + ddx > 510 || fy + ddy < 170 || fy + ddy > 880) { await page.mouse.up(); fx = ANCHOR[0]; fy = ANCHOR[1]; await press(); continue; }
-        fx += ddx; fy += ddy;
-        const [qx, qy] = map(fx, fy); await page.mouse.move(qx, qy);
-        if (k >= 1 && Math.hypot(p.x - info.x, p.y - info.y) < 4) break;
-        if (Date.now() - tEnd > 8000) break;
-        await sleep(16);
-      }
+    while (Date.now() - t0 < 900000) {
+      const info = await page.evaluate(() => {
+        const ns = window.__nightShift;
+        const a = ns.active;
+        const d = window.__e2eDrv;
+        return { scene: ns.scene, ready: !!(a && a.debug && typeof a.debug.autopilot === 'function'), elapsed: a && a.debug ? a.debug.elapsed : 0, drv: d ? { fx: d.fx, fy: d.fy } : null };
+      });
+      if (info.scene !== 'abduct' || info.elapsed > 120) break;
+      if (!info.ready) { await sleep(50); continue; }
+      await drv.step(info.drv);
     }
-    await page.mouse.up();
-    while (Date.now() - t0 < 120000 && (await st()) === 'abduct') await sleep(200);
+    const stuck = await page.evaluate(() => {
+      const ns = window.__nightShift;
+      const d = ns.active && ns.active.debug;
+      if (!d || ns.scene !== 'abduct') return null;
+      const pilot = d.pilot || {};
+      const route = (d.room && d.room.route) || [];
+      const tgt = route[pilot.index];
+      return { pilotIndex: pilot.index, of: route.length, target: tgt, beam: [d.body.beamX, d.body.beamY], pointer: [ns.pointer.x, ns.pointer.y, ns.pointer.down], drv: window.__e2eDrv && [window.__e2eDrv.fx, window.__e2eDrv.fy, window.__e2eDrv.on], elapsed: d.elapsed, delivered: d.delivered, failure: d.failure };
+    });
+    await drv.reset();
+    if ((await st()) === 'abduct') throw new Error('abduction did not finish in 120 game s: ' + JSON.stringify(stuck));
   }
 
   // ------------------------------------------------------------------ deep shifts (L3, L4)
@@ -141,11 +199,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     let down = false;
     let lastScene = '';
     let shots = 0;
-    let fx = 270, fy = 520; // abduction finger (logical)
-    const ANCHOR = [270, 520];
+    const abd = abductDriver();
     const up = async () => { if (down) { await page.mouse.up(); down = false; } };
     const moveTo = async (lx, ly) => { const [px, py] = map(lx, ly); await page.mouse.move(px, py); };
-    while (Date.now() - t0 < 600000) {
+    // a whole shift: up to 6 game minutes, which runs slower than real time under the bot
+    while (Date.now() - t0 < 1800000) {
       const info = await page.evaluate(() => {
         const ns = window.__nightShift;
         const a = ns.active;
@@ -159,10 +217,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       if (info.scene !== lastScene) {
         log.push({ at: ((Date.now() - t0) / 1000).toFixed(1), scene: info.scene, clock: info.clock, delivered: info.delivered, spotted: info.spotted, failed: info.failed });
         await up();
-        await page.evaluate(() => { if (window.__e2eDrv) window.__e2eDrv.on = false; });
+        await abd.reset();
         if (shots < 24 && (info.scene === 'abduct' || info.scene === 'flight' || info.scene === 'choice')) { await sleep(700); await shot(`${name}-${String(++shots).padStart(2, '0')}-${info.scene}`); }
         lastScene = info.scene;
-        fx = ANCHOR[0]; fy = ANCHOR[1];
         continue;
       }
       if (info.scene === 'report') { await sleep(3500); await shot(`${name}-zz-report`); break; }
@@ -173,37 +230,18 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
         if (!it.down) { await up(); await sleep(16); continue; }
         await moveTo(Math.max(2, Math.min(538, it.x)), Math.max(84, Math.min(958, it.y)));
         if (!down) { await page.mouse.down(); down = true; }
-        await sleep(8);
+        await sleep(POLL_MS);
         continue;
       }
       if (info.kind === 'abduct') {
-        // The abduction pilot runs every frame inside the page (installDriver); it integrates its
-        // per-frame drag into a finger target, seeing the beam where the moves still in flight will
-        // put it. Here we just move the real mouse to that target, re-anchoring near the edges.
-        if (!info.drv) { await installDriver(); continue; }
-        if (!down) {
-          await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; d.on = true; }, ANCHOR);
-          fx = ANCHOR[0]; fy = ANCHOR[1];
-          await moveTo(fx, fy); await page.mouse.down(); down = true; await sleep(30); continue;
-        }
-        const tx = info.drv.fx, ty = info.drv.fy;
-        if (tx < 30 || tx > 510 || ty < 170 || ty > 900) {
-          // lift, carry the not-yet-sent part of the drag over to the anchor, press again
-          await page.mouse.up(); down = false;
-          const nx = ANCHOR[0] + (tx - fx), ny = ANCHOR[1] + (ty - fy);
-          await page.evaluate(([x, y]) => { const d = window.__e2eDrv; d.fx = x; d.fy = y; }, [nx, ny]);
-          fx = ANCHOR[0]; fy = ANCHOR[1];
-          await moveTo(fx, fy); await page.mouse.down(); down = true; await sleep(20); continue;
-        }
-        if (Math.abs(tx - fx) < 0.05 && Math.abs(ty - fy) < 0.05) { await sleep(8); continue; }
-        fx = tx; fy = ty;
-        await moveTo(fx, fy);
+        await abd.step(info.drv);
         continue;
       }
       await up();
       await sleep(100);
     }
     await up();
+    await abd.reset();
     const end = await page.evaluate(() => ({ scene: window.__nightShift.scene, level: JSON.parse(JSON.stringify(window.__nightShift.save.levels)) }));
     return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), end, log };
   }
@@ -213,6 +251,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await sleep(2500);
   await shot('00-boot');
   const results = {};
+  if (ONLY === 'probe') {
+    // one tutorial abduction on its own: ROOM=farm_window|farm_chimney|laundry_skylight|laundry_loading
+    await page.goto(BASE + '?unlock=1&room=' + (process.env.ROOM || 'farm_chimney'));
+    try { await abduct(); results.probe = await st(); } catch (e) { results.probe = 'abduct error ' + e.message; }
+    console.log(JSON.stringify({ results, errors }, null, 1));
+    await browser.close();
+    return;
+  }
   if (ONLY === 'deep' || ONLY === 'L3' || ONLY === 'L4') {
     if (ONLY !== 'L4') results.L3 = await deepShift(3, 'L3');
     if (ONLY !== 'L3') results.L4 = await deepShift(4, 'L4');
@@ -220,6 +266,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await browser.close();
     return;
   }
+  const ONLY_RUNS = process.env.RUNS ? process.env.RUNS.split(',') : null;
   const runs = [
     { level: 1, ring: 1, via: [{ x: 150, y: 1500 }, { x: 150, y: 450 }], name: 'L1-chimney' },
     { level: 1, ring: 0, via: [{ x: 150, y: 1400 }, { x: 150, y: 590 }], name: 'L1-window' },
@@ -227,17 +274,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     { level: 2, ring: 1, via: [{ x: 540, y: 1500 }, { x: 540, y: 700 }, { x: 640, y: 330 }], name: 'L2-loading' },
   ];
   for (const r of runs) {
+    if (ONLY_RUNS && !ONLY_RUNS.includes(r.name)) continue;
     await page.goto(BASE + '?unlock=1'); await sleep(2000);
     await fly(r.level, r.ring, r.via);
     await shot(`${r.name}-a-flight-end`);
-    try { await abduct(); } catch (e) { results[r.name] = 'abduct error ' + e.message; await shot(`${r.name}-err`); continue; }
+    try { await abduct(); } catch (e) { results[r.name] = 'abduct error ' + e.message; console.error('RESULT', r.name, results[r.name]); await shot(`${r.name}-err`); continue; }
     await sleep(6000);
     await shot(`${r.name}-b-report`);
     results[r.name] = { scene: await st(), save: await page.evaluate(() => JSON.parse(JSON.stringify(window.__nightShift.save))) };
+    console.error('RESULT', r.name, results[r.name].scene);
   }
   if (ONLY !== 'tutorial') {
     results.L3 = await deepShift(3, 'L3');
+    console.error('RESULT L3', results.L3.end.scene, results.L3.wallSec);
     results.L4 = await deepShift(4, 'L4');
+    console.error('RESULT L4', results.L4.end.scene, results.L4.wallSec);
   }
   console.log(JSON.stringify({ results, errors }, null, 1));
   await browser.close();
