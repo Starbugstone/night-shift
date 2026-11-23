@@ -9,6 +9,7 @@ export const GATE_TRAVEL = 0.32;
 export const CAMERA_FUSE = 1;
 const CAMERA_GRACE = 0.25;
 const CAMERA_DECAY = 1.5;
+const CAMERA_PILOT_LAGS = [0.32, 0.48, 0.64] as const;
 const LASER_CLEARANCE = 0.11;
 const BREAK_SPEED = 72;
 const CREAK_SPEED = 96;
@@ -374,25 +375,28 @@ export class InteriorSimulation {
       return Math.abs(Math.cos(angle) * hy - Math.sin(angle) * hx) < Math.hypot(hx, hy) * 0.49;
     }
     if (spec.kind === 'camera') {
+      if (Math.hypot(this.x - from.x, this.y - from.y) > 22) return false;
       const duration = Math.hypot(target.x - from.x, target.y - from.y) / speed;
-      let seen = this.exposure;
-      let grace = this.cameraGrace;
       // The beam leads the body by a fraction of a second at crossing speed.
-      // Forecast the space occupied by its head, torso and trailing limbs.
-      for (let t = 0; t <= duration + 0.65; t += 0.08) {
-        const p = clamp((t - 0.32) / duration, 0, 1);
-        const x = from.x + (target.x - from.x) * p;
-        const y = from.y + (target.y - from.y) * p + 9;
-        const angle = spec.angle + Math.sin((time + t) * spec.speed + spec.phase) * spec.sweep;
-        const dx = Math.cos(angle);
-        const dy = Math.sin(angle);
-        if (nearCone(spec, dx, dy, x, y - 55) || nearCone(spec, dx, dy, x, y + 35) ||
-            nearCone(spec, dx, dy, x, y + 120)) {
-          seen += 0.08;
-          grace = CAMERA_GRACE;
-          if (seen >= 0.8) return false;
-        } else if (grace > 0) grace -= 0.08;
-        else seen = Math.max(0, seen - 0.08 * CAMERA_DECAY);
+      // Check both immediate input and a brief delay from delivery or re-gripping.
+      for (const lag of CAMERA_PILOT_LAGS) {
+        let seen = this.exposure;
+        let grace = this.cameraGrace;
+        for (let t = 0; t <= duration + lag + 0.33; t += 0.08) {
+          const p = clamp((t - lag) / duration, 0, 1);
+          const x = from.x + (target.x - from.x) * p;
+          const y = from.y + (target.y - from.y) * p + 9;
+          const angle = spec.angle + Math.sin((time + t) * spec.speed + spec.phase) * spec.sweep;
+          const dx = Math.cos(angle);
+          const dy = Math.sin(angle);
+          if (nearCone(spec, dx, dy, x, y - 55) || nearCone(spec, dx, dy, x, y + 35) ||
+              nearCone(spec, dx, dy, x, y + 120)) {
+            seen += 0.08;
+            grace = CAMERA_GRACE;
+            if (seen >= 0.8) return false;
+          } else if (grace > 0) grace -= 0.08;
+          else seen = Math.max(0, seen - 0.08 * CAMERA_DECAY);
+        }
       }
       return true;
     }

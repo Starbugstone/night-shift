@@ -82,20 +82,89 @@ it.each([...TRAINING, ...DEEP])('%s delivers asleep under hard rules with jitter
   process.stdout.write(`[abduction ${id}] ${runs.map(sim => `${sim.elapsed.toFixed(2)}s (${sim.wake.bonks} bonks)`).join(', ')}\n`);
 });
 
-it('a brisk straight-line beeline causes an actual failure on most deep routes', () => {
+function flyWithMouseLatency(id: RoomId, latency: number, startFrames = 30, cadenceHz = 240): AbductSimulation {
+  const { scene, ctx, onDone, frame, press, release } = sceneFor(id);
+  const sim = scene.debug;
+  const { pointer } = ctx;
+  const scale = 375 / 540;
+  const top = (690 - 960 * scale) / 2;
+  const mouse = (x: number, y: number) => ({
+    x: Math.round(x * scale) / scale,
+    y: (Math.round(y * scale + top) - top) / scale,
+  });
+  const anchor = { x: 270, y: 520 };
+  const quantizedAnchor = mouse(anchor.x, anchor.y);
+  let target = { ...anchor };
+  const pending = Array.from({ length: latency }, () => quantizedAnchor);
+  for (let t = 0; t < startFrames; t++) frame();
+  Object.assign(pointer, quantizedAnchor);
+  press();
+
+  for (let i = 0; sim.elapsed < 100 && !sim.complete; i++) {
+    const body = sim.body;
+    const { beamX, beamY } = body;
+    // The browser driver asks the pilot to account for moves still in flight.
+    body.beamX += target.x - pointer.x;
+    body.beamY += target.y - pointer.y;
+    const { dx, dy } = sim.autopilot();
+    body.beamX = beamX;
+    body.beamY = beamY;
+    target.x += dx;
+    target.y += dy;
+
+    if (target.x < 30 || target.x > 510 || target.y < 170 || target.y > 900) {
+      // Re-grip near the center and replan from the last applied beam position.
+      release();
+      for (let gap = 0; gap < 3; gap++) frame();
+      target = { ...anchor };
+      pending.fill(quantizedAnchor);
+      Object.assign(pointer, quantizedAnchor);
+      press();
+    } else {
+      pending.push(mouse(target.x, target.y));
+      Object.assign(pointer, pending.shift()!);
+      frame(CADENCE[(i + latency) % CADENCE.length]! / cadenceHz);
+    }
+  }
+  const result = sim.result();
+  expect(result, `${latency} frames of mouse latency, ${result.timeSec.toFixed(2)}s, ${result.failBy ?? 'no failure'}`)
+    .toMatchObject({ delivered: true, woke: false, aborted: false });
+  expect(result.failReason).toBeUndefined();
+  expect(onDone).toHaveBeenCalledExactlyOnceWith(result);
+  return sim;
+}
+
+it.each(DEEP)('%s delivers with whole CSS-pixel mouse input delayed by 1–3 frames', (id) => {
+  const times = [1, 2, 3].map(delay => flyWithMouseLatency(id, delay).elapsed.toFixed(2));
+  process.stdout.write(`[abduction mouse latency ${id}] ${times.join(', ')}s\n`);
+});
+
+it('mayor_elevator clears the camera with three frames of latency at a slower cadence', () => {
+  flyWithMouseLatency('mayor_elevator', 3, 85, 120);
+  flyWithMouseLatency('mayor_elevator', 3, 111, 180);
+});
+
+it('a brisk straight-line beeline never delivers a deep specimen', () => {
   const failures: RoomId[] = [];
+  const blocked: RoomId[] = [];
   for (const id of DEEP) {
     const sim = new AbductSimulation(ROOMS[id], new Set(), { sfx() {} }, () => 0.5, HARD);
-    while (sim.elapsed < 24 && !sim.complete) {
+    while (sim.elapsed < 90 && !sim.complete) {
       const x = sim.exitX - sim.body.beamX;
       const y = sim.exitY - sim.body.beamY;
       const scale = 1 / Math.max(1, Math.hypot(x, y) / 9);
       sim.moveBeam(sim.body.beamX + x * scale, sim.body.beamY + y * scale);
       sim.update(1 / 60);
     }
-    if (sim.result().failReason) failures.push(id);
+    const result = sim.result();
+    expect(result.delivered, id).toBe(false);
+    if (result.failReason) failures.push(id);
+    else {
+      expect(sim.body.touched.some(Boolean), id).toBe(true);
+      blocked.push(id);
+    }
   }
-  process.stdout.write(`[abduction beeline] ${failures.length}/${DEEP.length} failures · ${failures.join(', ')}\n`);
+  process.stdout.write(`[abduction beeline] failures: ${failures.join(', ')} · blocked: ${blocked.join(', ')}\n`);
   expect(failures.length).toBeGreaterThan(DEEP.length / 2);
 });
 

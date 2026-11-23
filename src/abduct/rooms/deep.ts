@@ -215,7 +215,8 @@ export const garySkylight = route(garyHome, 'gary', 'GARAGE SKYLIGHT', EXITS.gar
 export const garyGaragedoor = route(garyHome, 'gary', 'GARAGE DOOR', EXITS.garyGaragedoor,
   box(2080, 489, 106, 148), [
     ...garyGarage, point(771, 469), point(945, 440), point(1629, 448, "Gary's camera", 240),
-    point(1670, 354, undefined, 29), point(1796, 320, undefined, 29), point(1930, 414, undefined, 29), point(2144, 541, 'Garage door', 186),
+    // Wait for the door with Gary's trailing feet above the dog's patrol.
+    point(1670, 354, undefined, 29), point(1796, 320, undefined, 29), point(1930, 363, undefined, 29), point(2144, 541, 'Garage door', 186),
   ]);
 
 const nigelHome = building([
@@ -275,8 +276,10 @@ export const kevVent = route(kevHome, 'kev', 'ROOF VENT', EXITS.kevVent,
   ], true);
 export const kevFireescape = route(kevHome, 'kev', 'FIRE ESCAPE', EXITS.kevFireescape,
   box(2325, 527, 98, 122), [
-    ...kevDance, point(1010, 371), point(1266, 362), point(1455, 395), point(1650, 405),
-    point(1822, 292), point(2068, 281), point(2131, 397), point(2377, 541, 'Fire-escape sash', 187),
+    point(244, 331), point(526, 271), point(760, 271), point(1010, 270), point(1266, 270),
+    // Keep the feet above the stacks, dip through the doorway, then lift above the glass.
+    point(1445, 270), point(1545, 352), point(1630, 352), point(1710, 260),
+    point(1822, 242), point(2163, 242), point(2163, 397), point(2377, 541, 'Fire-escape sash', 187),
   ]);
 
 const mayorHall = [point(260, 311), point(664, 253), point(1288, 389, 'City hall camera', 237)] as const;
@@ -311,6 +314,7 @@ export const mayorClocktower = route(mayorHome, 'mayor', 'CLOCK TOWER', EXITS.ma
 export const mayorElevator = route(mayorHome, 'mayor', 'ELEVATOR ROOF', EXITS.mayorElevator,
   box(1784, -1296, 114, 61), [
     ...mayorHall, point(1339, 442), point(1745, 464, 'Elevator lobby camera', 203),
-    point(1735, 190), point(1730, -202), point(1730, -741, 'Shaft safety shutter', 225),
+    // Stage below the shutter, then keep climbing until the trailing feet clear it.
+    point(1735, 190), point(1730, -315), point(1730, -771, 'Shaft safety shutter', 225),
     point(1779, -1050), point(1840, -1273),
   ], true);
