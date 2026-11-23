@@ -1,14 +1,19 @@
-import type { AbductResult, FlightResult, RoomId } from '../contracts';
+import type { AbductResult, AbductRules, FlightResult, PointerState, RoomId } from '../contracts';
 import { createAbductScene, emitterPoint } from '../abduct';
 import { SynthAudio } from '../audio/sfx';
+import { DeepFlightScene } from '../flight/deep-scene';
 import { FlightScene } from '../flight/scene';
-import { LEVELS, isRoomId, levelIndexForRoom } from '../levels/levels';
-import { applyRun, isLevelUnlocked } from '../levels/progress';
+import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom } from '../levels/levels';
+import { applyDeepRun, applyRun, isLevelUnlocked } from '../levels/progress';
+import { DeepRun } from '../levels/run';
+import type { DeepLevelDef } from '../levels/types';
 import { clearSave, loadSave, writeSave, type KeyValueStore, type SaveData } from '../levels/save';
 import { AbortScene } from '../ui/abort';
+import { DeepAbductScene } from '../ui/deep-abduct';
+import { DeepChoiceScene } from '../ui/deep-choice';
 import { LoadingScene } from '../ui/loading';
 import { MemoScene } from '../ui/memo';
-import { ReportScene } from '../ui/report';
+import { ReportScene, deepReport, tutorialReport } from '../ui/report';
 import { TitleScene } from '../ui/title';
 import { UpgradesScene } from '../ui/upgrades';
 import { WorkOrdersScene } from '../ui/workorders';
@@ -29,10 +34,15 @@ export type SceneName =
   | 'flight'
   | 'abduct'
   | 'report'
-  | 'abort';
+  | 'abort'
+  | 'choice';
 
 export interface DebugHook {
   readonly scene: string;
+  /** The deep shift in progress, if any. */
+  readonly run: DeepRun | null;
+  /** Live pointer state in logical px (test scripts). */
+  readonly pointer: PointerState;
   readonly save: SaveData;
   /** The live scene object, for automated test scripts only. */
   readonly active: unknown;
@@ -43,6 +53,14 @@ declare global {
   interface Window {
     __nightShift?: DebugHook;
   }
+}
+
+const TUTORIAL_RULES: AbductRules = { wakeFails: false, hard: false };
+const DEEP_RULES: AbductRules = { wakeFails: true, hard: true };
+
+function firstRoom(li: number): RoomId {
+  const l = LEVELS[li]!;
+  return isDeep(l) ? l.map.targets[0].entries[0].roomId : l.map.entries[0].roomId;
 }
 
 function clampLevel(i: number): number {
@@ -58,7 +76,9 @@ export class Game implements Shell {
   private storage: KeyValueStore | null;
   private _save: SaveData;
   /** Live flight scene (for debug/tests). */
-  flight: FlightScene | null = null;
+  flight: FlightScene | DeepFlightScene | null = null;
+  /** The deep shift in progress (L3+), if any. */
+  run: DeepRun | null = null;
 
   constructor(private readonly host: CanvasHost) {
     this.input = new PointerInput(host.canvas, host.viewport);
@@ -129,7 +149,7 @@ export class Game implements Shell {
     const flight = params.get('flight');
     const level = params.get('level');
     if (room && isRoomId(room)) {
-      this.toAbduct(levelIndexForRoom(room), room, { roomId: room, timeSec: 0, spotted: 0 });
+      this.startRoom(room);
     } else if (flight && Number(flight) >= 1) {
       this.toFlight(clampLevel(Number(flight) - 1));
     } else if (level && Number(level) >= 1) {
@@ -171,6 +191,13 @@ export class Game implements Shell {
   toFlight(levelIndex: number, spotted = 0): void {
     const i = clampLevel(levelIndex);
     const level = LEVELS[i]!;
+    if (isDeep(level)) {
+      // a deep level always starts a fresh shift
+      this.run = new DeepRun(level, i);
+      this.toDeepFlight(this.run);
+      return;
+    }
+    this.run = null;
     this.scenes.go('flight', () => {
       this.ctx.tutorial = i === 0 && !this._save.levels.level1.delivered;
       let done = false;
@@ -200,13 +227,18 @@ export class Game implements Shell {
   toAbduct(levelIndex: number, room: RoomId, flight: FlightResult, transition?: Transition): void {
     const i = clampLevel(levelIndex);
     const level = LEVELS[i]!;
+    if (isDeep(level)) {
+      // abort screen's "Retry room" on a deep route, or a debug jump: run it as a deep shift
+      this.startRoom(room);
+      return;
+    }
     this.scenes.go(
       'abduct',
       () => {
         this.flight = null;
         this.ctx.tutorial = i === 0 && !this._save.levels.level1.delivered;
         let done = false;
-        return createAbductScene(this.ctx, { levelId: level.id, roomId: room }, (res) => {
+        return createAbductScene(this.ctx, { levelId: level.id, roomId: room, rules: TUTORIAL_RULES }, (res) => {
           if (done) return;
           done = true;
           if (res.aborted) this.toAbortChoice(i, room, flight);
@@ -223,11 +255,124 @@ export class Game implements Shell {
     const i = clampLevel(levelIndex);
     const outcome = applyRun(this._save, LEVELS[i]!.id, abduct, flight);
     if (persist) this.setSave(outcome.save);
-    this.scenes.go('report', () => new ReportScene(this, i, abduct, flight, outcome), false, transition);
+    this.scenes.go('report', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome), false, transition);
   }
 
   toAbortChoice(levelIndex: number, room: RoomId, flight: FlightResult): void {
     this.scenes.go('abort', () => new AbortScene(this, clampLevel(levelIndex), room, flight));
+  }
+
+  // ---------------------------------------------------------------- deep shifts (L3+)
+
+  /** Jump straight into a room (?room=, debug). Deep routes get a fresh shift around them. */
+  startRoom(room: RoomId): void {
+    const li = levelIndexForRoom(room);
+    const level = LEVELS[li]!;
+    if (!isDeep(level)) {
+      this.run = null;
+      this.toAbduct(li, room, { roomId: room, timeSec: 0, spotted: 0 });
+      return;
+    }
+    const slot = deepSlot(level, room)!;
+    const run = new DeepRun(level, li);
+    this.run = run;
+    run.startAbduct(slot.target, slot.entry);
+    this.toDeepAbduct(run);
+  }
+
+  toDeepFlight(run: DeepRun, transition?: Transition): void {
+    const level = run.level;
+    this.scenes.go(
+      'flight',
+      () => {
+        this.ctx.tutorial = false;
+        let done = false;
+        const scene = new DeepFlightScene({
+          ctx: this.ctx,
+          level,
+          run,
+          onLocked: (target, entry) => {
+            if (done) return;
+            done = true;
+            const room = run.startAbduct(target, entry);
+            const from = scene.screenFocus();
+            const to = emitterPoint(room);
+            this.toDeepAbduct(run, { style: 'iris', x: from.x, y: from.y, toX: to.x, toY: to.y });
+          },
+          onSunrise: () => {
+            if (done) return;
+            done = true;
+            this.toDeepReport(run);
+          },
+          onQuit: () => {
+            if (done) return;
+            done = true;
+            this.run = null;
+            this.toWorkOrders();
+          },
+        });
+        this.flight = scene;
+        return scene;
+      },
+      false,
+      transition,
+    );
+  }
+
+  toDeepAbduct(run: DeepRun, transition?: Transition): void {
+    const cur = run.current!;
+    const level: DeepLevelDef = run.level;
+    this.scenes.go(
+      'abduct',
+      () => {
+        this.flight = null;
+        this.ctx.tutorial = false;
+        let done = false;
+        const inner = createAbductScene(this.ctx, { levelId: level.id, roomId: cur.roomId, rules: DEEP_RULES }, (res) => {
+          if (done) return;
+          done = true;
+          const next = run.finishAbduct(res);
+          if (next === 'done') this.toDeepReport(run, { style: 'flash' });
+          else if (next === 'flight') {
+            this.audio.sfx('checkpoint');
+            this.toDeepFlight(run, { style: 'flash' });
+          } else if (next === 'choice') this.toDeepChoice(run);
+        });
+        return new DeepAbductScene(inner, run, this.assets, () => this.ctx.reducedMotion, () => {
+          if (done) return;
+          done = true;
+          this.toDeepReport(run);
+        });
+      },
+      false,
+      transition,
+    );
+  }
+
+  toDeepChoice(run: DeepRun): void {
+    this.scenes.go('choice', () =>
+      new DeepChoiceScene(this, run, {
+        retry: () => {
+          run.retry();
+          this.toDeepAbduct(run);
+        },
+        backToFlight: () => {
+          run.backToFlight();
+          this.toDeepFlight(run);
+        },
+        quit: () => {
+          this.run = null;
+          this.toWorkOrders();
+        },
+      }),
+    );
+  }
+
+  toDeepReport(run: DeepRun, transition?: Transition): void {
+    const outcome = applyDeepRun(this._save, run.level.id, run.summary());
+    this.setSave(outcome.save);
+    this.run = null;
+    this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome), false, transition);
   }
 
   // ---------------------------------------------------------------- debug
@@ -254,6 +399,12 @@ export class Game implements Shell {
       get active() {
         return game.scenes.active;
       },
+      get run() {
+        return game.run;
+      },
+      get pointer() {
+        return game.input.state;
+      },
       goto(name: string, arg?: unknown) {
         const n = typeof arg === 'number' ? arg : Number(arg);
         const lvl = Number.isFinite(n) && n >= 1 ? clampLevel(n - 1) : 0;
@@ -270,23 +421,23 @@ export class Game implements Shell {
             return game.toFlight(lvl);
           case 'abduct': {
             const room = typeof arg === 'string' && isRoomId(arg) ? arg : 'farm_window';
-            return game.toAbduct(levelIndexForRoom(room), room, { roomId: room, timeSec: 0, spotted: 0 });
+            return game.startRoom(room);
           }
           case 'report': {
             // arg: level number, or { level, abduct, flight, persist }
             if (arg && typeof arg === 'object') {
               const o = arg as { level?: number; abduct?: Partial<AbductResult>; flight?: Partial<FlightResult>; persist?: boolean };
               const li = clampLevel((o.level ?? 1) - 1);
-              const room = LEVELS[li]!.map.entries[0].roomId;
+              const room = firstRoom(li);
               const a = { ...demoAbduct(true), ...o.abduct };
               const f: FlightResult = { roomId: room, timeSec: 14.2, spotted: 1, ...o.flight };
               return game.toReport(li, a, f, o.persist ?? false);
             }
-            const room = LEVELS[lvl]!.map.entries[0].roomId;
+            const room = firstRoom(lvl);
             return game.toReport(lvl, demoAbduct(true), { roomId: room, timeSec: 14.2, spotted: 1 }, false);
           }
           case 'abort': {
-            const room = LEVELS[lvl]!.map.entries[0].roomId;
+            const room = firstRoom(lvl);
             return game.toAbortChoice(lvl, room, { roomId: room, timeSec: 10, spotted: 0 });
           }
           default:

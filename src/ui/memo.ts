@@ -2,7 +2,7 @@ import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
-import { STAR_LABELS } from '../levels/progress';
+import { DEEP_STAR_LABELS, STAR_LABELS } from '../levels/progress';
 import { drawPortrait, drawStar, easeOutBack, fmtTime, panel, text, wrap } from './draw';
 import { C, font } from './theme';
 import { Button, drawNightSky } from './widgets';
@@ -132,7 +132,14 @@ export class MemoScene implements Scene {
     // star goals
     const gy = py + ph - 160;
     text(g, 'PERFORMANCE GOALS', PX + 28, gy, 15, '#6a3fbf', 'left', 900);
-    const goals = [`${STAR_LABELS[0]} — specimen through the hatch`, `${STAR_LABELS[1]} — never wakes up`, `${STAR_LABELS[2]} — whole job under ${fmtTime(lv.parSec)}`];
+    const goals =
+      lv.kind === 'deep'
+        ? [
+            `${DEEP_STAR_LABELS[0]} — before sunrise (${fmtTime(lv.budgetSec)})`,
+            `${DEEP_STAR_LABELS[1]} — never spotted, no failed jobs`,
+            `${DEEP_STAR_LABELS[2]} — ${fmtTime(lv.parMarginSec)} of night to spare`,
+          ]
+        : [`${STAR_LABELS[0]} — specimen through the hatch`, `${STAR_LABELS[1]} — never wakes up`, `${STAR_LABELS[2]} — whole job under ${fmtTime(lv.parSec)}`];
     const best = this.shell.save.levels[lv.id].stars;
     for (let i = 0; i < 3; i++) {
       drawStar(g, assets, PX + 46, gy + 34 + i * 38, 30, best[i] === true);

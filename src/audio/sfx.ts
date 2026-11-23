@@ -127,9 +127,68 @@ export class SynthAudio implements Audio {
         this.noise(t, 0.12, 0.6 * v, 'lowpass', 320, 1);
         this.tone('sine', 110, 45, t, 0.18, 0.6 * v);
         break;
-      case 'alert':
-        this.tone('triangle', 740, 980, t, 0.08, 0.12 * v);
+      case 'alert': {
+        // the fuse tick: `volume` doubles as intensity, so it rises in pitch as the meter fills
+        const k = Math.min(1, Math.max(0, (volume - 0.4) / 0.8));
+        const f = 620 + k * 760;
+        this.tone('triangle', f, f * 1.3, t, 0.07, (0.1 + k * 0.08) * Math.min(1, v));
         break;
+      }
+      // ---- v2
+      case 'laser':
+        this.tone('sawtooth', 1800, 600, t, 0.12, 0.12 * v, 0, 0, false, 4000);
+        this.tone('square', 2400, 2200, t, 0.05, 0.05 * v);
+        break;
+      case 'alarm':
+        for (let i = 0; i < 4; i++) {
+          const s = t + i * 0.16;
+          this.tone('square', i % 2 === 0 ? 880 : 660, i % 2 === 0 ? 880 : 660, s, 0.14, 0.14 * v, 0, 0, false, 2600);
+        }
+        break;
+      case 'crash':
+        this.noise(t, 0.45, 0.6 * v, 'highpass', 1800, 0.7, 5000);
+        this.noise(t, 0.18, 0.4 * v, 'bandpass', 3200, 2);
+        for (let i = 0; i < 5; i++) {
+          const f = 2200 + Math.random() * 2400;
+          this.tone('triangle', f, f * 0.96, t + 0.03 + i * 0.05, 0.12, 0.06 * v);
+        }
+        break;
+      case 'creak':
+        this.tone('sawtooth', 140, 230, t, 0.32, 0.12 * v, 11, 18, true, 900);
+        this.noise(t, 0.3, 0.06 * v, 'bandpass', 600, 6);
+        break;
+      case 'scream':
+        this.tone('sawtooth', 620, 1350, t, 0.25, 0.22 * v, 7, 50, false, 3200);
+        this.tone('sawtooth', 1350, 1150, t + 0.25, 0.55, 0.2 * v, 9, 60, false, 3200);
+        this.tone('square', 310, 675, t, 0.8, 0.05 * v, 7, 30, false, 1500);
+        break;
+      case 'siren':
+        // two-tone "wee-woo"
+        this.tone('square', 700, 700, t, 0.3, 0.1 * v, 0, 0, false, 1800);
+        this.tone('square', 520, 520, t + 0.3, 0.3, 0.1 * v, 0, 0, false, 1800);
+        this.tone('sine', 700, 700, t, 0.3, 0.08 * v);
+        this.tone('sine', 520, 520, t + 0.3, 0.3, 0.08 * v);
+        break;
+      case 'dash':
+        this.noise(t, 0.3, 0.4 * v, 'bandpass', 600, 1.2, 3200);
+        this.tone('sine', 180, 520, t, 0.22, 0.2 * v);
+        break;
+      case 'lullaby': {
+        const notes = [784, 659, 698, 587, 659, 523];
+        notes.forEach((f, i) => this.tone('sine', f, f, t + i * 0.22, 0.4, 0.13 * v, 5, 4, true));
+        break;
+      }
+      case 'checkpoint': {
+        const notes = [523, 784, 1047];
+        notes.forEach((f, i) => this.tone('triangle', f, f, t + i * 0.08, i === 2 ? 0.3 : 0.1, 0.2 * v));
+        break;
+      }
+      case 'sunrise': {
+        // a slightly ominous rooster-ish fanfare: rising, then a sour last note
+        const notes = [392, 494, 587, 554];
+        notes.forEach((f, i) => this.tone('sawtooth', f, i === 3 ? f * 0.97 : f, t + i * 0.18, i === 3 ? 0.6 : 0.16, 0.12 * v, i === 3 ? 6 : 0, 10, false, 2200));
+        break;
+      }
     }
   }
 

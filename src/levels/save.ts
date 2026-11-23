@@ -4,18 +4,18 @@ import type { UpgradeId } from '../contracts';
 export const SAVE_KEY = 'night-shift-save-v1';
 export const SAVE_VERSION = 1;
 
-export const LEVEL_IDS = ['level1', 'level2'] as const;
+export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
 
-export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive'];
+export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive', 'afterburner', 'snooze_ray'];
 
-/** [Delivered, Still asleep, Night owl] */
+/** Tutorials: [Delivered, Still asleep, Night owl]. Deep levels: [Delivered all 3, Ghost, Night owl]. */
 export type Stars = [boolean, boolean, boolean];
 
 export interface LevelProgress {
   stars: Stars;
   delivered: boolean;
-  /** Best combined flight + abduction time of a delivered run. */
+  /** Best combined flight + abduction time of a delivered run (deep: whole-shift time). */
   bestTimeSec: number | null;
   attempts: number;
 }
@@ -46,7 +46,7 @@ export function defaultSave(): SaveData {
   return {
     version: SAVE_VERSION,
     glorbs: 0,
-    levels: { level1: defaultLevel(), level2: defaultLevel() },
+    levels: { level1: defaultLevel(), level2: defaultLevel(), level3: defaultLevel(), level4: defaultLevel() },
     upgrades: [],
     muted: false,
     allUnlocked: false,

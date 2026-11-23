@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { circleSegment, pointInCircle, pointInCone, wrapAngle } from '../src/flight/geometry';
-import { LOCK, LockOn, PathFollower, SAUCER, SUSPICION, SuspicionMeter, barkRadius, ringUnder, steerSaucer } from '../src/flight/sim';
-import { LEVELS } from '../src/levels/levels';
+import { DASH, FlickDetector, LOCK, LockOn, PathFollower, SAUCER, SUSPICION, SuspicionMeter, barkRadius, fireDash, newDash, ringUnder, steerSaucer, suspicionMultiplier, tickDash } from '../src/flight/sim';
+import { LEVELS, isTutorial } from '../src/levels/levels';
+
+const TUTORIALS = LEVELS.filter(isTutorial);
 
 const step = (n: number, fn: (dt: number) => void, dt = 1 / 60): void => {
   for (let i = 0; i < n; i++) fn(dt);
@@ -36,10 +38,43 @@ describe('geometry', () => {
 });
 
 describe('suspicion', () => {
+  it('is a 1-second fuse: full after exactly 1 s of exposure, never sooner', () => {
+    const m = new SuspicionMeter();
+    step(59, (dt) => m.update(dt, SUSPICION.rate));
+    expect(m.full).toBe(false);
+    step(1, (dt) => m.update(dt, SUSPICION.rate));
+    expect(m.value).toBeCloseTo(1, 5);
+    expect(m.full).toBe(true);
+  });
+
+  it('Hush Drive stretches the fuse to 1.25 s', () => {
+    const mult = suspicionMultiplier(new Set(['hush_drive']));
+    const m = new SuspicionMeter();
+    step(74, (dt) => m.update(dt, SUSPICION.rate, mult));
+    expect(m.full).toBe(false);
+    step(2, (dt) => m.update(dt, SUSPICION.rate, mult));
+    expect(m.full).toBe(true);
+    expect(suspicionMultiplier(new Set())).toBe(1);
+  });
+
+  it('after a 0.25 s grace it empties at 1.5 per second', () => {
+    const m = new SuspicionMeter();
+    step(30, (dt) => m.update(dt, SUSPICION.rate));
+    expect(m.value).toBeCloseTo(0.5, 5);
+    step(14, (dt) => m.update(dt, 0));
+    expect(m.value).toBeCloseTo(0.5, 5); // still inside the 0.25 s grace
+    step(1, (dt) => m.update(dt, 0));
+    const start = m.value;
+    step(10, (dt) => m.update(dt, 0));
+    expect(start - m.value).toBeCloseTo(1.5 * (10 / 60), 1);
+    step(30, (dt) => m.update(dt, 0));
+    expect(m.value).toBe(0);
+  });
+
   it('rises while exposed, waits out the grace period, then decays', () => {
     const m = new SuspicionMeter();
-    step(60, (dt) => m.update(dt, SUSPICION.coneRate));
-    expect(m.value).toBeCloseTo(SUSPICION.coneRate, 2);
+    step(30, (dt) => m.update(dt, SUSPICION.rate));
+    expect(m.value).toBeCloseTo(0.5, 2);
     const peak = m.value;
     step(Math.floor(SUSPICION.grace * 60) - 2, (dt) => m.update(dt, 0));
     expect(m.value).toBe(peak);
@@ -147,7 +182,7 @@ describe('vehicle paths', () => {
 
 describe('level layouts', () => {
   it('each level has two rings on its target building and sensible hazards', () => {
-    for (const lv of LEVELS) {
+    for (const lv of TUTORIALS) {
       const m = lv.map;
       expect(m.entries).toHaveLength(2);
       const t = m.target;
@@ -162,7 +197,41 @@ describe('level layouts', () => {
       expect(m.start.y).toBeGreaterThan(m.h * 0.75);
       expect(m.vehicles.length).toBeGreaterThan(0);
     }
-    expect(LEVELS[0]!.map.entries.map((e) => e.roomId)).toEqual(['farm_window', 'farm_chimney']);
-    expect(LEVELS[1]!.map.entries.map((e) => e.roomId)).toEqual(['laundry_skylight', 'laundry_loading']);
+    expect(TUTORIALS[0]!.map.entries.map((e) => e.roomId)).toEqual(['farm_window', 'farm_chimney']);
+    expect(TUTORIALS[1]!.map.entries.map((e) => e.roomId)).toEqual(['laundry_skylight', 'laundry_loading']);
+  });
+});
+
+describe('afterburner', () => {
+  it('a flick of >= 900 px/s is detected, a slow drag is not', () => {
+    const f = new FlickDetector();
+    let fast = 0;
+    for (let i = 0; i < 8; i++) fast = Math.max(fast, f.push(true, i === 0, 100 + i * 25, 500, i / 60)); // 1500 px/s
+    expect(fast).toBeGreaterThanOrEqual(DASH.flickSpeed);
+    expect(f.dx).toBeCloseTo(1);
+    f.reset();
+    let slow = 0;
+    for (let i = 0; i < 30; i++) slow = Math.max(slow, f.push(true, i === 0, 100 + i * 8, 500, i / 60)); // 480 px/s
+    expect(slow).toBeLessThan(DASH.flickSpeed);
+  });
+
+  it('dashes at 2.2x top speed for 0.35 s, then a 2.5 s cooldown', () => {
+    const d = newDash();
+    const s = { x: 0, y: 0, vx: 0, vy: 0, stun: 0 };
+    expect(fireDash(d, 0, -1)).toBe(true);
+    expect(fireDash(d, 0, -1)).toBe(false);
+    let travelled = 0;
+    for (let i = 0; i < 21; i++) {
+      const dashing = d.active > 0;
+      tickDash(d, s, 1 / 60);
+      steerSaucer(s, false, 0, 0, 1 / 60, 0, dashing);
+      travelled = -s.y;
+    }
+    expect(travelled).toBeGreaterThan(SAUCER.maxSpeed * DASH.mult * 0.3);
+    expect(d.active).toBe(0);
+    expect(d.cool).toBeGreaterThan(DASH.cooldown - 0.05);
+    for (let i = 0; i < 152; i++) tickDash(d, s, 1 / 60);
+    expect(d.cool).toBeLessThan(1e-9);
+    expect(fireDash(d, 1, 0)).toBe(true);
   });
 });

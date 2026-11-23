@@ -2,17 +2,19 @@ import type { FlightResult, GameContext, Scene, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { ART } from '../art-manifest';
 import { SPOTTED_CAPTIONS, SPOTTED_SHOUTS, ZIB_LINES, pick, type ZibEvent } from '../levels/humor';
-import { meterMultiplier } from '../levels/progress';
-import type { LevelDef, NeonDef, PropDef, PropKind, RoadDef, VehicleDef } from '../levels/types';
+import type { NeonDef, PropDef, PropKind, RoadDef, TutorialLevelDef, VehicleDef } from '../levels/types';
 import { clamp, drawPortrait, easeOutBack, fmtTime, outlinedText, panel, paragraph, roundRectPath, text, wrap } from '../ui/draw';
 import { GLOW, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles, drawEdgeTint, drawGlow, drawShadow, drawVignette, easeInCubic, radialSprite } from '../core/fx';
-import { HUD_ROW, hudButton, hudMeter, hudPanel, hudPrompt, hudTimer, type MeterState } from '../ui/hud';
+import { HUD_ROW, hudButton, hudFuse, hudPanel, hudPrompt, hudTimer, type FuseState } from '../ui/hud';
 import { C, font } from '../ui/theme';
 import { Button } from '../ui/widgets';
 import { circleSegment, pointInCircle, pointInCone, type SegHit } from './geometry';
-import { drawDog, drawProp, drawSaucerFallback, drawVehicle, propSize } from './props';
+import { drawDog, drawProp, drawVehicle, propSize } from './props';
+import { ConeSprites, drawEntryRing, drawSaucer as drawSaucerCommon, drawRoad as drawRoadCommon, drawJunctions as drawJunctionsCommon } from './draw-common';
 import {
+  DASH,
   FLIGHT_HUD,
+  FlickDetector,
   LockOn,
   POWER_LINE,
   PathFollower,
@@ -26,24 +28,20 @@ import {
   ringUnder,
   saucerSpeed,
   steerSaucer,
+  suspicionMultiplier,
+  fireDash,
+  newDash,
+  tickDash,
   type Saucer,
 } from './sim';
 
-const SAUCER_DRAW = FLIGHT_HUD.saucer;
 const LOCK_ANIM = 0.9;
-const ROAD_W = 120;
-/** Plain road surface, used to paint clean junctions (matches road_v/road_h asphalt). */
-const ROAD_BASE = { farm: '#6e5841', town: '#343756' } as const;
 /** How far each kind of prop throws its shadow (moon top-left → shadow down-right); 0 = flat. */
-const SHADOW_OFF: Record<PropKind, number> = {
+const SHADOW_OFF: Partial<Record<PropKind, number>> = {
   farmhouse: 14, barn: 14, laundromat: 14, diner: 13, house: 13, tree: 13, tractor: 7, haybale: 7, streetlight: 0, field: 0,
 };
 const BARK_DASH = [14, 12];
 const NO_DASH: number[] = [];
-/** Rim lights on saucer_top.svg: 10 pads on a circle of r 58.5 about (80, 76) in its 160 box. */
-const RIM_LIGHTS = 10;
-const RIM_R = (58.5 / 160) * SAUCER_DRAW;
-const RIM_CY = (-4 / 160) * SAUCER_DRAW;
 const CONE_R = 300;
 
 interface VehicleRT {
@@ -57,7 +55,7 @@ interface VehicleRT {
 
 export interface FlightOptions {
   ctx: GameContext;
-  level: LevelDef;
+  level: TutorialLevelDef;
   /** Times already spotted this level attempt (carried across restarts). */
   spotted: number;
   onLocked(result: FlightResult): void;
@@ -68,7 +66,7 @@ export class FlightScene implements Scene {
   /** For debug hooks / tests. */
   state: 'fly' | 'spotted' | 'locking' = 'fly';
   private readonly ctx: GameContext;
-  private readonly level: LevelDef;
+  private readonly level: TutorialLevelDef;
   private spotted: number;
   private readonly saucer: Saucer = { x: 0, y: 0, vx: 0, vy: 0, stun: 0 };
   private readonly sus = new SuspicionMeter();
@@ -80,14 +78,14 @@ export class FlightScene implements Scene {
   private readonly quit = new Button(14, HUD_ROW.y, 64, HUD_ROW.h, '', 'ghost', 30);
   /** Lock-on burst and bump sparks (world space). */
   private readonly fx = new Particles(64);
-  private readonly meter: MeterState = {
-    label: 'SUSPICION', value: 0, warn: 0.4, danger: 0.7, icon: 'eye', t: 0, reduced: false, flash: 0, alarm: false,
-  };
+  private readonly fuse: FuseState = { value: 0, exposed: false, t: 0, reduced: false, seconds: 1 };
+  private readonly flick = new FlickDetector();
+  private readonly dash = newDash();
+  private readonly coneSprites = new ConeSprites();
+  private exposed = false;
   private meterFlash = 0;
   private clock = '0:00';
   private clockSec = -1;
-  /** Feathered headlight sprites, by cone half-angle. */
-  private readonly cones = new Map<number, HTMLCanvasElement | null>();
   /** Per-neon letter x offsets (measured once). */
   private readonly neonX: Float32Array[] = [];
   private readonly speckles: Float32Array;
@@ -170,6 +168,9 @@ export class FlightScene implements Scene {
     this.saucer.stun = 0;
     this.sus.reset();
     this.lock.reset();
+    this.dash.active = 0;
+    this.dash.cool = 0;
+    this.flick.reset();
     this.vehicles = m.vehicles.map((def, i) => ({
       def,
       path: new PathFollower(def.path, def.speed, def.dwell),
@@ -285,7 +286,16 @@ export class FlightScene implements Scene {
     const pointerFree = !this.quit.pressedDown;
     const down = p.down && pointerFree;
     const before = saucerSpeed(s);
-    steerSaucer(s, down, p.x - sx, p.y - sy, dt, rot);
+    if (this.ctx.upgrades.has('afterburner')) {
+      const fs = this.flick.push(down, p.pressed, p.x, p.y, this.time);
+      if (fs >= DASH.flickSpeed && s.stun <= 0 && fireDash(this.dash, this.flick.dx, this.flick.dy)) {
+        this.ctx.audio.sfx('dash');
+        if (!this.ctx.reducedMotion) this.fx.burst(P_SPARK, s.x, s.y, 10, 160, 320, 0.3, 4, PC.amber, 0, 3);
+      }
+    }
+    const dashing = this.dash.active > 0;
+    tickDash(this.dash, s, dt);
+    steerSaucer(s, down, p.x - sx, p.y - sy, dt, rot, dashing);
     if (down) this.dragDist += before * dt;
 
     // world bounds
@@ -325,21 +335,17 @@ export class FlightScene implements Scene {
 
     // hazards
     this.updateVehicles(dt);
-    let rate = 0;
+    // 1-second fuse: any detector fills the meter at the same rate; they don't stack
     let cone = false;
     for (const v of this.vehicles) {
-      if (pointInCone(s.x, s.y, v.ox, v.oy, v.coneAngle, v.def.coneHalf, v.def.coneRange)) {
-        cone = true;
-        rate += SUSPICION.coneRate;
-      }
+      if (pointInCone(s.x, s.y, v.ox, v.oy, v.coneAngle, v.def.coneHalf, v.def.coneRange)) cone = true;
     }
     let bark = false;
     for (const d of m.dogs) {
-      if (pointInCircle(s.x, s.y, d.x, d.y, barkRadius(this.hazT, d.rMin, d.rMax, d.period))) {
-        bark = true;
-        rate += SUSPICION.barkRate;
-      }
+      if (pointInCircle(s.x, s.y, d.x, d.y, barkRadius(this.hazT, d.rMin, d.rMax, d.period))) bark = true;
     }
+    const rate = cone || bark ? SUSPICION.rate : 0;
+    this.exposed = rate > 0;
     if (cone && !this.inCone) this.say('cone');
     this.barkT -= dt;
     if (bark && (!this.inBark || this.barkT <= 0)) {
@@ -351,10 +357,12 @@ export class FlightScene implements Scene {
     this.inBark = bark;
     this.alertT -= dt;
     if (rate > 0 && this.alertT <= 0) {
-      this.ctx.audio.sfx('alert', 0.5 + this.sus.value * 0.6);
-      this.alertT = 0.42 - this.sus.value * 0.2;
+      // rising tick: louder and higher-pitched as the fuse burns down
+      this.ctx.audio.sfx('alert', 0.4 + this.sus.value * 0.8);
+      this.alertT = 0.2 - this.sus.value * 0.1;
     }
-    this.sus.update(dt, rate, meterMultiplier(this.ctx.upgrades));
+    if (rate <= 0) this.alertT = 0;
+    this.sus.update(dt, rate, suspicionMultiplier(this.ctx.upgrades));
     const high = this.sus.value > 0.7;
     if (high && !this.wasHighSus) {
       this.say('highSus', true);
@@ -618,6 +626,10 @@ export class FlightScene implements Scene {
 
     g.restore();
     drawVignette(g, 0.9);
+    if (this.state === 'fly' && this.exposed) {
+      const pulse = rm ? 0.6 : 0.45 + 0.55 * Math.abs(Math.sin(t * (8 + this.sus.value * 14)));
+      drawEdgeTint(g, GLOW.red, (0.45 + this.sus.value * 0.6) * pulse);
+    } else if (this.state === 'fly' && this.sus.value > 0.05) drawEdgeTint(g, GLOW.red, this.sus.value * 0.35);
     if (locking) {
       drawEdgeTint(g, GLOW.mint, lockK * 0.8);
       if (this.st < 0.16) {
@@ -636,7 +648,7 @@ export class FlightScene implements Scene {
   }
 
   private propShadow(g: CanvasRenderingContext2D, p: PropDef): void {
-    const off = SHADOW_OFF[p.kind];
+    const off = SHADOW_OFF[p.kind] ?? 0;
     if (off === 0) return;
     const img = this.ctx.assets.get(p.key);
     if (!img) return;
@@ -648,42 +660,8 @@ export class FlightScene implements Scene {
     g.restore();
   }
 
-  /**
-   * Headlight cone sprite for one half-angle, pointing along +x from the left-middle of the
-   * canvas with radius CONE_R. Stacked sectors feather the sides: full strength inside ~80% of
-   * the real cone, fading out just past its edge, so what looks lit is what gets you spotted.
-   */
   private coneSprite(half: number): HTMLCanvasElement | null {
-    const key = Math.round(half * 1000);
-    const hit = this.cones.get(key);
-    if (hit !== undefined) return hit;
-    let c: HTMLCanvasElement | null = document.createElement('canvas');
-    const outer = Math.min(Math.PI / 2 - 0.02, half * 1.1);
-    const inner = half * 0.78;
-    c.width = CONE_R + 2;
-    c.height = Math.ceil(2 * CONE_R * Math.sin(outer)) + 4;
-    const v = c.getContext('2d');
-    if (v) {
-      v.translate(0, c.height / 2);
-      const grad = v.createRadialGradient(0, 0, 8, 0, 0, CONE_R);
-      grad.addColorStop(0, 'rgba(255,244,190,0.7)');
-      grad.addColorStop(0.7, 'rgba(255,230,150,0.27)');
-      grad.addColorStop(1, 'rgba(255,230,150,0)');
-      v.fillStyle = grad;
-      v.globalCompositeOperation = 'lighter';
-      const layers = 10;
-      v.globalAlpha = 1 / layers;
-      for (let i = 0; i < layers; i++) {
-        const a = outer + (inner - outer) * (i / (layers - 1));
-        v.beginPath();
-        v.moveTo(0, 0);
-        v.arc(0, 0, CONE_R, -a, a);
-        v.closePath();
-        v.fill();
-      }
-    } else c = null;
-    this.cones.set(key, c);
-    return c;
+    return this.coneSprites.get(half, '255,230,150');
   }
 
   /** Neon sign: glowing tube letters; one letter buzzes, and the whole sign drops out with the hazard. */
@@ -756,187 +734,30 @@ export class FlightScene implements Scene {
     }
   }
 
-  private roadRect(r: RoadDef): { x: number; y: number; w: number; h: number } {
-    return r.dir === 'h'
-      ? { x: r.from, y: r.at - ROAD_W / 2, w: r.to - r.from, h: ROAD_W }
-      : { x: r.at - ROAD_W / 2, y: r.from, w: ROAD_W, h: r.to - r.from };
-  }
-
   /**
    * Farm roads are dirt: `flight/dirt_road_h` / `flight/dirt_road_v` if an art pass provides them,
    * otherwise drawn here. Town roads use the asphalt sprites.
    */
   private drawRoad(g: CanvasRenderingContext2D, r: RoadDef): void {
-    const farm = this.level.map.theme === 'farm';
-    const W = ROAD_W;
-    const { x, y, w, h } = this.roadRect(r);
-    if (x > this.camX + VIEW_W || x + w < this.camX || y > this.camY + VIEW_H || y + h < this.camY) return;
-    const key = farm ? (r.dir === 'h' ? 'flight/dirt_road_h' : 'flight/dirt_road_v') : r.dir === 'h' ? 'flight/road_h' : 'flight/road_v';
-    const img = this.ctx.assets.get(key);
-    g.save();
-    g.beginPath();
-    g.rect(x, y, w, h);
-    g.clip();
-    if (img) {
-      if (r.dir === 'h') for (let xx = x; xx < x + w; xx += 540) g.drawImage(img, xx, y, 540.5, W);
-      else for (let yy = y; yy < y + h; yy += 540) g.drawImage(img, x, yy, W, 540.5);
-    } else if (farm) {
-      drawDirtRoad(g, r.dir, x, y, w, h);
-    } else {
-      g.fillStyle = ROAD_BASE.town;
-      g.fillRect(x, y, w, h);
-      g.fillStyle = '#e3c35a';
-      if (r.dir === 'h') for (let xx = x + 10; xx < x + w; xx += 70) g.fillRect(xx, y + W / 2 - 3, 36, 6);
-      else for (let yy = y + 10; yy < y + h; yy += 70) g.fillRect(x + W / 2 - 3, yy, 6, 36);
-    }
-    g.restore();
+    drawRoadCommon(g, this.ctx.assets, r, this.level.map.theme, this.camX, this.camY);
   }
 
-  /** Paint each road crossing / T-junction as plain surface so curbs and markings don't run through it. */
   private drawJunctions(g: CanvasRenderingContext2D): void {
-    const m = this.level.map;
-    g.fillStyle = m.theme === 'farm' ? ROAD_BASE.farm : ROAD_BASE.town;
-    for (const a of m.roads) {
-      if (a.dir !== 'h') continue;
-      for (const b of m.roads) {
-        if (b.dir !== 'v') continue;
-        const ra = this.roadRect(a);
-        const rb = this.roadRect(b);
-        const x0 = Math.max(ra.x, rb.x);
-        const y0 = Math.max(ra.y, rb.y);
-        const x1 = Math.min(ra.x + ra.w, rb.x + rb.w);
-        const y1 = Math.min(ra.y + ra.h, rb.y + rb.h);
-        if (x1 > x0 && y1 > y0) g.fillRect(x0, y0, x1 - x0, y1 - y0);
-      }
-    }
+    drawJunctionsCommon(g, this.level.map.roads, this.level.map.theme);
   }
 
   private drawRing(g: CanvasRenderingContext2D, i: number, t: number): void {
     const e = this.level.map.entries[i]!;
-    const active = this.lock.ring === i;
-    const locked = this.lockedRing === i;
-    const rm = this.ctx.reducedMotion;
-    // locked: the ring snaps tight around the saucer (overshoots, then holds) and spins up
-    const snap = locked ? (rm ? 1 : easeOutBack(this.st / 0.28)) : 0;
-    const pulse = (rm ? 1 : 1 + Math.sin(t * 3 + i) * 0.05) * (1 - 0.24 * snap);
-    g.save();
-    g.translate(e.x, e.y);
-    g.scale(pulse, pulse);
-    g.globalCompositeOperation = 'lighter';
-    g.beginPath();
-    g.arc(0, 0, RING_R, 0, Math.PI * 2);
-    g.fillStyle = locked ? 'rgba(124,255,203,0.42)' : active ? 'rgba(124,255,203,0.28)' : 'rgba(124,255,203,0.12)';
-    g.fill();
-    g.globalCompositeOperation = 'source-over';
-    g.rotate(rm ? 0 : t * 0.7 + (locked ? this.st * 5 : 0));
-    const img = this.ctx.assets.get('flight/entry_ring');
-    if (img) g.drawImage(img, -RING_R, -RING_R, RING_R * 2, RING_R * 2);
-    else {
-      g.setLineDash([16, 10]);
-      g.lineWidth = 6;
-      g.strokeStyle = C.mint;
-      g.beginPath();
-      g.arc(0, 0, RING_R - 4, 0, Math.PI * 2);
-      g.stroke();
-      g.setLineDash([]);
-      g.lineWidth = 2;
-      g.beginPath();
-      g.arc(0, 0, RING_R * 0.55, 0, Math.PI * 2);
-      g.stroke();
-    }
-    g.restore();
-    if (active && this.lock.fraction > 0 && !locked) {
-      // progress arc on a faint track, with a bright head
-      const f = this.lock.fraction;
-      g.lineWidth = 10;
-      g.beginPath();
-      g.arc(e.x, e.y, RING_R + 10, 0, Math.PI * 2);
-      g.strokeStyle = 'rgba(27,20,51,0.55)';
-      g.stroke();
-      g.beginPath();
-      g.arc(e.x, e.y, RING_R + 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * f);
-      g.lineCap = 'round';
-      g.strokeStyle = C.mint;
-      g.stroke();
-      g.lineCap = 'butt';
-      const ha = -Math.PI / 2 + Math.PI * 2 * f;
-      g.globalCompositeOperation = 'lighter';
-      drawGlow(g, GLOW.white, e.x + Math.cos(ha) * (RING_R + 10), e.y + Math.sin(ha) * (RING_R + 10), 16, 16, 0.9);
-      g.globalCompositeOperation = 'source-over';
-    }
-    // label pill
-    const a = `${e.route} — `;
-    g.font = font(19, 800);
-    const wa = g.measureText(a).width;
-    const wb = g.measureText(e.difficulty).width;
-    const w = wa + wb + 28;
-    const ly = e.labelSide === 'above' ? e.y - RING_R - 34 : e.y + RING_R + 34;
-    const x0 = clamp(e.x - w / 2, this.camX + 8, this.camX + VIEW_W - 8 - w);
-    panel(g, x0, ly - 20, w, 40, 'rgba(27,20,51,0.9)', 20, C.mint, 2, 0);
-    text(g, a, x0 + 14, ly + 1, 19, C.mint, 'left', 800);
-    const calm = e.difficulty.includes('easy') || e.difficulty.includes('safe');
-    text(g, e.difficulty, x0 + 14 + wa, ly + 1, 19, calm ? C.text : C.amberHi, 'left', 800);
+    drawEntryRing(g, this.ctx.assets, e, i, t, this.ctx.reducedMotion, { active: this.lock.ring === i, fraction: this.lock.fraction, locked: this.lockedRing === i, st: this.st }, this.camX);
   }
 
   private drawSaucer(g: CanvasRenderingContext2D, t: number): void {
-    const s = this.saucer;
-    const rm = this.ctx.reducedMotion;
-    const sp = saucerSpeed(s);
-    const k = Math.min(1, sp / SAUCER.maxSpeed);
-    // streaks
-    if (k > 0.4 && !rm) {
-      g.strokeStyle = `rgba(124,255,203,${((k - 0.4) * 0.8).toFixed(3)})`;
-      g.lineWidth = 4;
-      g.lineCap = 'round';
-      const ux = s.vx / (sp || 1);
-      const uy = s.vy / (sp || 1);
-      for (let i = -1; i <= 1; i++) {
-        const ox = -uy * i * 26;
-        const oy = ux * i * 26;
-        g.beginPath();
-        g.moveTo(s.x - ux * 50 + ox, s.y - uy * 50 + oy);
-        g.lineTo(s.x - ux * (90 + k * 60 - Math.abs(i) * 20) + ox, s.y - uy * (90 + k * 60 - Math.abs(i) * 20) + oy);
-        g.stroke();
-      }
-      g.lineCap = 'butt';
-    }
-    // beam while locking
-    if (this.state === 'locking') {
-      const a = Math.min(1, this.st / 0.3);
-      const flick = rm ? 0 : Math.sin(t * 20) * 5;
-      g.globalCompositeOperation = 'lighter';
-      drawGlow(g, GLOW.mint, s.x, s.y, 80 + a * 50 + flick, 80 + a * 50 + flick, 0.75 * a);
-      drawGlow(g, GLOW.white, s.x, s.y, 40 + a * 16, 40 + a * 16, 0.5 * a);
-      g.globalCompositeOperation = 'source-over';
-    }
-    // hovering: a gentle bob (scale + a few px of lift); it flattens out with speed
-    const hover = 1 - k;
-    const wave = rm ? 0 : Math.sin(t * 2.4);
-    const bob = 1 + wave * 0.028 * hover;
-    const lockShrink = this.state === 'locking' ? 1 - Math.min(0.15, this.st * 0.2) : 1;
-    g.save();
-    g.translate(s.x, s.y - (wave * 0.5 + 0.5) * 3 * hover);
-    if (this.steerWobble !== 0 && !rm) g.rotate(this.steerWobble * 0.3);
-    if (s.stun > 0 && !rm) g.rotate(Math.sin(t * 40) * 0.25);
-    const va = Math.atan2(s.vy, s.vx);
-    g.rotate(va);
-    g.scale((1 - 0.14 * k) * bob * lockShrink, (1 + 0.04 * k) * bob * lockShrink);
-    g.rotate(-va);
-    const img = this.ctx.assets.get('flight/saucer_top');
-    if (img) {
-      g.drawImage(img, -SAUCER_DRAW / 2, -SAUCER_DRAW / 2, SAUCER_DRAW, SAUCER_DRAW);
-      // light chase round the rim pads: a bright head with a short tail (faster while locking)
-      g.globalCompositeOperation = 'lighter';
-      const head = rm ? -1 : Math.floor(t * (this.state === 'locking' ? 26 : 9)) % RIM_LIGHTS;
-      for (let i = 0; i < RIM_LIGHTS; i++) {
-        const back = head < 0 ? 2 : (head - i + RIM_LIGHTS) % RIM_LIGHTS;
-        if (back > 2) continue;
-        const a = -Math.PI / 2 + (i / RIM_LIGHTS) * Math.PI * 2;
-        drawGlow(g, i % 2 === 0 ? GLOW.amber : GLOW.mint, Math.cos(a) * RIM_R, RIM_CY + Math.sin(a) * RIM_R, 11, 11, back === 0 ? 1 : back === 1 ? 0.55 : 0.25);
-      }
-      g.globalCompositeOperation = 'source-over';
-    } else drawSaucerFallback(g, SAUCER_DRAW, t);
-    g.restore();
+    drawSaucerCommon(g, this.ctx.assets, this.saucer, t, this.ctx.reducedMotion, {
+      locking: this.state === 'locking',
+      st: this.st,
+      wobble: this.steerWobble,
+      dash: this.ctx.upgrades.has('afterburner') ? this.dash : null,
+    });
   }
 
   // ================================================================ HUD
@@ -947,12 +768,13 @@ export class FlightScene implements Scene {
 
     // shared HUD row: quit · suspicion · time
     hudButton(g, this.quit, 'close', 'QUIT', this.quit.pressedDown);
-    const m = this.meter;
-    m.value = this.sus.value;
-    m.t = t;
-    m.reduced = rm;
-    m.flash = this.meterFlash;
-    hudMeter(g, 90, HUD_ROW.y, 330, HUD_ROW.h, m);
+    const f = this.fuse;
+    f.value = this.sus.value;
+    f.exposed = this.exposed && this.state === 'fly';
+    f.t = t;
+    f.reduced = rm;
+    f.seconds = 1 / (SUSPICION.rate * suspicionMultiplier(this.ctx.upgrades));
+    hudFuse(g, 90, HUD_ROW.y, 330, HUD_ROW.h, f, assets.get('ui/eye_closed'), assets.get('ui/eye_open'));
     const sec = Math.floor(this.time);
     if (sec !== this.clockSec) {
       this.clockSec = sec;
@@ -1065,34 +887,6 @@ export class FlightScene implements Scene {
 
 /** Centre y of the SPOTTED! retry pill (below the witness's shout bubble at rest). */
 export const SPOTTED_RETRY_Y = 884;
-
-function drawDirtRoad(g: CanvasRenderingContext2D, dir: 'h' | 'v', x: number, y: number, w: number, h: number): void {
-  const along = dir === 'h' ? w : h;
-  // (u, v) → along / across the road
-  const rect = (u: number, v: number, du: number, dv: number): void => {
-    if (dir === 'h') g.fillRect(x + u, y + v, du, dv);
-    else g.fillRect(x + v, y + u, dv, du);
-  };
-  g.fillStyle = ROAD_BASE.farm;
-  rect(0, 0, along, ROAD_W);
-  // grassy verges
-  g.fillStyle = '#4f5a3a';
-  rect(0, 0, along, 7);
-  rect(0, ROAD_W - 7, along, 7);
-  // packed wheel ruts
-  g.fillStyle = '#5a4634';
-  rect(0, 24, along, 14);
-  rect(0, ROAD_W - 38, along, 14);
-  // grass strip down the middle, patchy
-  g.fillStyle = '#56663e';
-  for (let u = 6; u < along; u += 46) rect(u, ROAD_W / 2 - 4, 28, 8);
-  // pebbles
-  g.fillStyle = '#8a7356';
-  for (let u = 17; u < along; u += 61) {
-    rect(u, 46, 4, 4);
-    rect(u + 29, 78, 5, 4);
-  }
-}
 
 /** A startled human in striped pyjamas and a nightcap, pointing up-left. */
 export function drawPyjamaHuman(g: CanvasRenderingContext2D, x: number, y: number, t: number, shout: string): void {

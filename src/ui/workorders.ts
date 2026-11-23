@@ -199,8 +199,17 @@ export class WorkOrdersScene implements Scene {
     roundRectPath(g, x + 4, y + 4, 12, CARD_H - 8, 6);
     g.fillStyle = unlocked ? C.mint : '#4a4470';
     g.fill();
-    this.mugshot(g, lv.map.theme === 'farm' ? 'human/doyle_head' : 'human/larry_head', x + CARD_W - 62, y + 58, unlocked, i);
+    this.mugshot(g, lv.mugshot, x + CARD_W - 62, y + 58, unlocked, i);
+    const training = lv.kind === 'tutorial';
     text(g, `WORK ORDER #000${lv.num}`, x + 34, y + 26, 14, unlocked ? C.mint : C.muted, 'left', 800);
+    g.font = font(14, 800);
+    const tagX = x + 44 + g.measureText(`WORK ORDER #000${lv.num}`).width;
+    const tag = training ? 'TRAINING' : 'DEEP SHIFT ×3';
+    const tw = g.measureText(tag).width + 16;
+    roundRectPath(g, tagX, y + 15, tw, 22, 11);
+    g.fillStyle = training ? 'rgba(124,255,203,0.14)' : 'rgba(255,93,115,0.2)';
+    g.fill();
+    text(g, tag, tagX + tw / 2, y + 27, 12, training ? C.mint : '#ff8a9a', 'center', 900);
     const titleLines = wrap(g, lv.title, CARD_W - 150, 24, 800);
     g.font = font(24, 800);
     g.fillStyle = unlocked ? C.text : C.muted;
@@ -210,7 +219,7 @@ export class WorkOrdersScene implements Scene {
     text(g, unlocked ? lv.location : 'LOCKED', x + 34, ty, 16, unlocked ? C.muted : C.amber, 'left', 700);
     if (unlocked) {
       for (let s = 0; s < 3; s++) drawStar(g, assets, x + 52 + s * 44, y + CARD_H - 32, 38, prog.stars[s] === true);
-      text(g, `Par ${fmtTime(lv.parSec)}`, x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
+      text(g, lv.kind === 'deep' ? `Sunrise in ${fmtTime(lv.budgetSec)}` : `Par ${fmtTime(lv.parSec)}`, x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
       text(g, prog.bestTimeSec !== null ? `Best ${fmtTime(prog.bestTimeSec)}` : 'Not yet attempted', x + CARD_W - 24, y + CARD_H - 22, 15, C.amberHi, 'right', 600);
       // "open" badge on the mugshot
       const pulse = this.shell.ctx.reducedMotion ? 0 : Math.sin(this.t * 4 + i) * 2;

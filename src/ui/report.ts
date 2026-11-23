@@ -1,10 +1,12 @@
 import type { AbductResult, FlightResult, Scene } from '../contracts';
+import { deepComment, sunriseMemo } from '../levels/humor';
+import type { DeepRun } from '../levels/run';
 import { VIEW_W } from '../contracts';
 import { P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles } from '../core/fx';
 import type { Shell } from '../core/shell';
 import { itemsPhrase, vrellComment } from '../levels/humor';
-import { LEVELS } from '../levels/levels';
-import { STAR_LABELS, countStars, type RunOutcome } from '../levels/progress';
+import { LEVELS, routeName } from '../levels/levels';
+import { DEEP_STAR_LABELS, STAR_LABELS, countStars, type RunOutcome } from '../levels/progress';
 import { drawGlorb, drawPortrait, drawStar, easeOutBack, easeOutCubic, fmtTime, panel, paragraph, roundRectPath, sprite, text } from './draw';
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
@@ -31,6 +33,68 @@ const STAMP_Y = CY + 420;
 const STAR_Y = CY + 546;
 const GLORB_Y = CY + 636;
 
+export interface ReportModel {
+  /** Small line under the title. */
+  subtitle: string;
+  rows: Array<[string, string]>;
+  stamp: 'delivered' | 'failed' | 'sunrise';
+  starLabels: readonly string[];
+  comment: string;
+  delivered: boolean;
+}
+
+/** L1 / L2: one flight, one room. */
+export function tutorialReport(levelIndex: number, abduct: AbductResult, flight: FlightResult, outcome: RunOutcome): ReportModel {
+  const lv = LEVELS[levelIndex]!;
+  const par = lv.kind === 'tutorial' ? lv.parSec : 0;
+  const total = flight.timeSec + abduct.timeSec;
+  return {
+    subtitle: `Form 27-B/6 · Subject: ${lv.human} · Via: ${routeName(flight.roomId)}`,
+    rows: [
+      ['Total time', `${fmtTime(total)}  (fly ${fmtTime(flight.timeSec)} · beam ${fmtTime(abduct.timeSec)})`],
+      ['Times bonked', String(abduct.bonks)],
+      ['Dignity remaining', `${Math.round(Math.max(0, Math.min(100, abduct.dignity)))}%`],
+      ['Snores recorded', String(abduct.snores)],
+      ['Items stolen from Earth', itemsPhrase(abduct.itemsStolen)],
+      ['Times spotted', String(flight.spotted)],
+    ],
+    stamp: abduct.delivered ? 'delivered' : 'failed',
+    starLabels: STAR_LABELS,
+    comment: vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports),
+    delivered: abduct.delivered,
+  };
+}
+
+/** L3+: the whole shift. */
+export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
+  const lv = run.level;
+  const sunrise = run.phase === 'sunrise';
+  const names = run.order.map((i) => lv.map.targets[i]!.short).join(', ');
+  const n = run.deliveredCount;
+  const left = Math.max(0, lv.budgetSec - run.elapsed);
+  return {
+    subtitle: `Form 27-B/6 (bulk) · ${lv.location}`,
+    rows: [
+      ['Shift time', sunrise ? `ran out: sun up at ${lv.hours[1]}:00 AM` : `${fmtTime(run.elapsed)} used · ${fmtTime(left)} to spare`],
+      ['Specimens delivered', `${n}/3${names ? `  (${names})` : ''}`],
+      ['Times spotted', String(run.spotted)],
+      ['Failed abductions', String(run.failedAbductions + run.aborts)],
+      ['Times bonked', String(run.totals.bonks)],
+      ['Avg. dignity remaining', n > 0 ? `${Math.round(run.totals.dignity / n)}%` : '—'],
+      ['Items stolen from Earth', itemsPhrase(run.totals.items)],
+    ],
+    stamp: sunrise ? 'sunrise' : 'delivered',
+    starLabels: DEEP_STAR_LABELS,
+    comment: sunrise
+      ? sunriseMemo(outcome.save.reports)
+      : deepComment(
+          { levelId: lv.id, stars: countStars(outcome.stars), spotted: run.spotted, failed: run.failedAbductions, bonks: run.totals.bonks, remaining: left, order: run.order },
+          outcome.save.reports,
+        ),
+    delivered: !sunrise && n >= 3,
+  };
+}
+
 export class ReportScene implements Scene {
   private t = 0;
   private played = { stamp: false, stars: [false, false, false], glorbs: false };
@@ -38,6 +102,7 @@ export class ReportScene implements Scene {
   private readonly next = new Button(272, 846, 244, 84, 'Next', 'primary', 30);
   private readonly comment: string;
   private readonly rows: Array<[string, string]>;
+  private readonly delivered: boolean;
   /** Star and Glorb bursts, drawn over the card. */
   private readonly fx = new Particles(64);
   /** Ink ring and paper dust from the stamp, drawn under it. */
@@ -50,26 +115,14 @@ export class ReportScene implements Scene {
   constructor(
     private readonly shell: Shell,
     private readonly levelIndex: number,
-    private readonly abduct: AbductResult,
-    private readonly flight: FlightResult,
+    private readonly model: ReportModel,
     private readonly outcome: RunOutcome,
   ) {
-    const lv = LEVELS[levelIndex]!;
-    this.comment = vrellComment(
-      { abduct, flight, parSec: lv.parSec, stars: countStars(outcome.stars) },
-      outcome.save.reports,
-    );
-    const total = flight.timeSec + abduct.timeSec;
-    this.rows = [
-      ['Total time', `${fmtTime(total)}  (fly ${fmtTime(flight.timeSec)} · beam ${fmtTime(abduct.timeSec)})`],
-      ['Times bonked', String(abduct.bonks)],
-      ['Dignity remaining', `${Math.round(Math.max(0, Math.min(100, abduct.dignity)))}%`],
-      ['Snores recorded', String(abduct.snores)],
-      ['Items stolen from Earth', itemsPhrase(abduct.itemsStolen)],
-      ['Times spotted', String(flight.spotted)],
-    ];
+    this.comment = model.comment;
+    this.rows = model.rows;
+    this.delivered = model.delivered;
     const hasNext = levelIndex + 1 < LEVELS.length;
-    this.next.label = abduct.delivered && hasNext ? 'Next' : 'Work orders';
+    this.next.label = model.delivered && hasNext ? 'Next' : 'Work orders';
     if (this.next.label.length > 6) this.next.size = 26;
   }
 
@@ -88,7 +141,7 @@ export class ReportScene implements Scene {
     if (this.retry.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
     if (this.next.update(p, dt, audio)) {
       const n = this.levelIndex + 1;
-      if (this.abduct.delivered && n < LEVELS.length) return this.shell.toMemo(n);
+      if (this.delivered && n < LEVELS.length) return this.shell.toMemo(n);
       return this.shell.toWorkOrders();
     }
     const skipped = p.pressed && !this.retry.contains(p.x, p.y) && !this.next.contains(p.x, p.y) && this.t < END;
@@ -97,11 +150,11 @@ export class ReportScene implements Scene {
     if (!this.played.stamp && this.t >= STAMP_AT) {
       this.played.stamp = true;
       audio.sfx('stamp');
-      if (!this.abduct.delivered) audio.sfx('fail', 0.8);
+      if (!this.delivered) audio.sfx('fail', 0.8);
       if (!skipped) {
         this.shake = 1;
         // ink ring and paper dust thrown out from under the stamp
-        const ink = this.abduct.delivered ? PC.inkGreen : PC.inkRed;
+        const ink = this.delivered ? PC.inkGreen : PC.inkRed;
         const dust = this.dust;
         dust.spawn(P_RING, VIEW_W / 2, STAMP_Y, 0, 0, 0.45, 210, ink);
         if (!rm) {
@@ -131,7 +184,7 @@ export class ReportScene implements Scene {
     }
     if (!this.played.glorbs && this.t >= GLORB_AT) {
       this.played.glorbs = true;
-      if (this.abduct.delivered) audio.sfx('success', 0.7);
+      if (this.delivered) audio.sfx('success', 0.7);
     }
     // Glorb counter ticks up (with a click per step, capped so big payouts don't machine-gun)
     if (this.t >= GLORB_AT) {
@@ -154,7 +207,6 @@ export class ReportScene implements Scene {
   render(g: CanvasRenderingContext2D): void {
     const { assets, ctx } = this.shell;
     const rm = ctx.reducedMotion;
-    const lv = LEVELS[this.levelIndex]!;
     const t = this.t;
     drawNightSky(g, t, rm);
     g.save();
@@ -171,8 +223,7 @@ export class ReportScene implements Scene {
       g.fill();
     }
     text(g, 'SPECIMEN REPORT', VIEW_W / 2, CY + 52, 31, C.paperInk, 'center', 900);
-    const route = lv.map.entries.find((e) => e.roomId === this.flight.roomId)?.route ?? '—';
-    text(g, `Form 27-B/6 · Subject: ${lv.human} · Via: ${route}`, VIEW_W / 2, CY + 83, 15, '#6f6597', 'center', 700);
+    text(g, this.model.subtitle, VIEW_W / 2, CY + 83, 15, '#6f6597', 'center', 700, false, CW - 40);
     g.fillStyle = '#6a3fbf';
     g.fillRect(CX + 26, CY + 100, CW - 52, 3);
 
@@ -183,7 +234,7 @@ export class ReportScene implements Scene {
       const a = Math.min(1, (t - at) / 0.16);
       const dx = rm ? 0 : (1 - easeOutCubic(a)) * -18;
       g.globalAlpha = a;
-      const ry = CY + 132 + i * 42;
+      const ry = CY + 128 + i * (this.rows.length > 6 ? 35 : 42);
       const [label, value] = this.rows[i]!;
       text(g, label, CX + 26 + dx, ry, 18, C.paperInk, 'left', 700);
       text(g, value, CX + CW - 26 + dx, ry, i === 0 ? 16 : 19, '#4b2fa0', 'right', 800);
@@ -204,9 +255,10 @@ export class ReportScene implements Scene {
       g.rotate(-0.16 + (rm ? 0 : (1 - fall) * 0.2));
       g.scale(s, s);
       g.globalAlpha = rm ? fall : 0.2 + 0.8 * fall * fall;
-      const key = this.abduct.delivered ? 'ui/stamp_delivered' : 'ui/stamp_failed';
+      const stamp = this.model.stamp;
+      const key = stamp === 'delivered' ? 'ui/stamp_delivered' : stamp === 'sunrise' ? 'ui/stamp_sunrise' : 'ui/stamp_failed';
       if (!sprite(g, assets, key, 0, 0, 240, 120)) {
-        const col = this.abduct.delivered ? '#1f9a6c' : '#d33a52';
+        const col = stamp === 'delivered' ? '#1f9a6c' : stamp === 'sunrise' ? '#d9782a' : '#d33a52';
         roundRectPath(g, -120, -46, 240, 92, 14);
         g.lineWidth = 8;
         g.strokeStyle = col;
@@ -214,7 +266,7 @@ export class ReportScene implements Scene {
         roundRectPath(g, -108, -35, 216, 70, 8);
         g.lineWidth = 3;
         g.stroke();
-        text(g, this.abduct.delivered ? 'DELIVERED' : 'REJECTED', 0, 2, 40, col, 'center', 900);
+        text(g, stamp === 'delivered' ? 'DELIVERED' : stamp === 'sunrise' ? 'SUNRISE' : 'REJECTED', 0, 2, 40, col, 'center', 900);
       }
       g.restore();
     }
@@ -250,7 +302,7 @@ export class ReportScene implements Scene {
         text(g, '—', sx, STAR_Y - 44 - age * 30, 18, '#9a92bf', 'center', 900);
         g.globalAlpha = 1;
       }
-      text(g, STAR_LABELS[i]!, sx, STAR_Y + 46, 16, earned && k > 0 ? C.paperInk : '#9a92bf', 'center', 800);
+      text(g, this.model.starLabels[i]!, sx, STAR_Y + 46, 16, earned && k > 0 ? C.paperInk : '#9a92bf', 'center', 800);
     }
 
     // glorbs: the payout sits in its own pill and counts up

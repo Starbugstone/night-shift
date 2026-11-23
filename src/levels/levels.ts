@@ -1,10 +1,13 @@
 import type { RoomId } from '../contracts';
-import type { LevelDef, LockedCard } from './types';
+import { LEVEL3, LEVEL4 } from './deep-levels';
+import type { DeepLevelDef, LevelDef, LockedCard, TutorialLevelDef } from './types';
 
 const PI = Math.PI;
 
 export const LEVELS: readonly LevelDef[] = [
   {
+    kind: 'tutorial',
+    mugshot: 'human/doyle_head',
     id: 'level1',
     num: 1,
     title: 'Farmer Doyle Sleeps Like a Log',
@@ -90,6 +93,8 @@ export const LEVELS: readonly LevelDef[] = [
     },
   },
   {
+    kind: 'tutorial',
+    mugshot: 'human/larry_head',
     id: 'level2',
     num: 2,
     title: 'Laundromat Larry, Night Attendant',
@@ -180,6 +185,8 @@ export const LEVELS: readonly LevelDef[] = [
       ],
     },
   },
+  LEVEL3,
+  LEVEL4,
 ];
 
 export const LOCKED_CARDS: readonly LockedCard[] = [
@@ -200,12 +207,60 @@ export const LOCKED_CARDS: readonly LockedCard[] = [
   },
 ];
 
-export function levelIndexForRoom(room: RoomId): number {
-  return room.startsWith('farm') ? 0 : 1;
+export function isDeep(l: LevelDef): l is DeepLevelDef {
+  return l.kind === 'deep';
 }
 
-export const ROOM_IDS: readonly RoomId[] = ['farm_window', 'farm_chimney', 'laundry_skylight', 'laundry_loading'];
+export function isTutorial(l: LevelDef): l is TutorialLevelDef {
+  return l.kind === 'tutorial';
+}
+
+export const ROOM_IDS: readonly RoomId[] = [
+  'farm_window',
+  'farm_chimney',
+  'laundry_skylight',
+  'laundry_loading',
+  'dave_roof',
+  'dave_patio',
+  'barb_chimney',
+  'barb_backdoor',
+  'gary_skylight',
+  'gary_garagedoor',
+  'nigel_skylight',
+  'nigel_loading',
+  'kev_vent',
+  'kev_fireescape',
+  'mayor_clocktower',
+  'mayor_elevator',
+];
 
 export function isRoomId(s: string): s is RoomId {
   return (ROOM_IDS as readonly string[]).includes(s);
+}
+
+/** Every route of a level: tutorial = its two entries, deep = 2 per target. */
+export function levelRooms(l: LevelDef): RoomId[] {
+  return isDeep(l) ? l.map.targets.flatMap((t) => t.entries.map((e) => e.roomId)) : l.map.entries.map((e) => e.roomId);
+}
+
+export function levelIndexForRoom(room: RoomId): number {
+  const i = LEVELS.findIndex((l) => levelRooms(l).includes(room));
+  return i < 0 ? 0 : i;
+}
+
+/** Deep levels: which target (0..2) and entry (0..1) a route belongs to. */
+export function deepSlot(l: DeepLevelDef, room: RoomId): { target: number; entry: number } | null {
+  for (let t = 0; t < 3; t++)
+    for (let e = 0; e < 2; e++) if (l.map.targets[t]!.entries[e]!.roomId === room) return { target: t, entry: e };
+  return null;
+}
+
+/** Route label ("Window", "Roof hatch"...) for a room in any level. */
+export function routeName(room: RoomId): string {
+  for (const l of LEVELS) {
+    const entries = isDeep(l) ? l.map.targets.flatMap((t) => t.entries) : l.map.entries;
+    const e = entries.find((x) => x.roomId === room);
+    if (e) return e.route;
+  }
+  return '—';
 }

@@ -30,8 +30,15 @@ export const SAUCER = {
  * Accelerate toward (dx,dy) — the finger's offset from the saucer — or brake.
  * `steerRot` rotates the thrust (neon scramble).
  */
-export function steerSaucer(s: Saucer, down: boolean, dx: number, dy: number, dt: number, steerRot = 0): void {
+export function steerSaucer(s: Saucer, down: boolean, dx: number, dy: number, dt: number, steerRot = 0, dashing = false): void {
   const d = Math.hypot(dx, dy);
+  if (dashing) {
+    // committed: no steering, no drag, no cap
+    if (s.stun > 0) s.stun = Math.max(0, s.stun - dt);
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    return;
+  }
   if (down && s.stun <= 0 && d > SAUCER.deadzone) {
     const k = Math.min(1, (d - SAUCER.deadzone) / SAUCER.fullAt);
     let ux = dx / d;
@@ -55,8 +62,10 @@ export function steerSaucer(s: Saucer, down: boolean, dx: number, dy: number, dt
   }
   const sp = Math.hypot(s.vx, s.vy);
   if (sp > SAUCER.maxSpeed) {
-    s.vx *= SAUCER.maxSpeed / sp;
-    s.vy *= SAUCER.maxSpeed / sp;
+    // after a dash the excess bleeds off quickly instead of snapping
+    const cap = Math.max(SAUCER.maxSpeed, sp * Math.exp(-6 * dt));
+    s.vx *= cap / sp;
+    s.vy *= cap / sp;
   }
   if (s.stun > 0) s.stun = Math.max(0, s.stun - dt);
   s.x += s.vx * dt;
@@ -104,20 +113,22 @@ export function saucerSpeed(s: Saucer): number {
   return Math.hypot(s.vx, s.vy);
 }
 
+/**
+ * v2 detection: the meter is a 1-second fuse. Any detector (cone, bark, searchlight, porch
+ * light...) fills it at `rate` (1.0 s from empty to SPOTTED; 1.25 s with Hush Drive). Overlapping
+ * detectors do not stack. After `grace` seconds out of every detector it drains at `decay`/s.
+ */
 export const SUSPICION = {
-  /** Per second while lit by headlights. */
-  coneRate: 0.55,
-  /** Per second inside a bark radius. */
-  barkRate: 0.7,
-  decay: 0.28,
+  rate: 1,
+  decay: 1.5,
   /** Seconds after leaving a hazard before decay starts. */
-  grace: 0.6,
+  grace: 0.25,
 };
 
 /** 0..1 meter: rises while exposed, decays after a short grace period. */
 export class SuspicionMeter {
   value = 0;
-  private cool = 0;
+  cool = 0;
 
   /** `rate` = rise per second this frame (0 when not exposed); `mult` = upgrade multiplier. */
   update(dt: number, rate: number, mult = 1): void {
@@ -139,6 +150,108 @@ export class SuspicionMeter {
   reset(): void {
     this.value = 0;
     this.cool = 0;
+  }
+}
+
+/** Hush Drive stretches the detection fuse from 1.0 s to 1.25 s. */
+export function suspicionMultiplier(upgrades: { has(id: string): boolean }): number {
+  return upgrades.has('hush_drive') ? 0.8 : 1;
+}
+
+/**
+ * Afterburner: a fast finger flick (>= flickSpeed px/s measured over `window` s) fires a dash at
+ * `mult` x top speed for `dur` s, then a `cooldown` s recharge (drawn as a ring on the saucer).
+ */
+export const DASH = {
+  flickSpeed: 900,
+  window: 0.1,
+  mult: 2.2,
+  dur: 0.35,
+  cooldown: 2.5,
+};
+
+const FLICK_N = 12;
+
+/** Measures finger speed from the last ~0.1 s of samples. Allocation-free. */
+export class FlickDetector {
+  private readonly xs = new Float64Array(FLICK_N);
+  private readonly ys = new Float64Array(FLICK_N);
+  private readonly ts = new Float64Array(FLICK_N);
+  private n = 0;
+  private head = 0;
+  /** Unit direction of the last measured flick. */
+  dx = 0;
+  dy = 0;
+
+  reset(): void {
+    this.n = 0;
+    this.head = 0;
+  }
+
+  /** Feed one frame. Returns the finger speed (px/s) over the window, 0 when not enough history. */
+  push(down: boolean, pressed: boolean, x: number, y: number, t: number): number {
+    if (!down || pressed) {
+      this.reset();
+      if (!down) return 0;
+    }
+    this.xs[this.head] = x;
+    this.ys[this.head] = y;
+    this.ts[this.head] = t;
+    this.head = (this.head + 1) % FLICK_N;
+    if (this.n < FLICK_N) this.n++;
+    // oldest sample still inside the window
+    let best = -1;
+    for (let k = 1; k < this.n; k++) {
+      const i = (this.head - 1 - k + FLICK_N * 2) % FLICK_N;
+      if (t - this.ts[i]! > DASH.window + 1e-6) break;
+      best = i;
+    }
+    if (best < 0) return 0;
+    const span = t - this.ts[best]!;
+    if (span < DASH.window * 0.5) return 0;
+    const ddx = x - this.xs[best]!;
+    const ddy = y - this.ys[best]!;
+    const d = Math.hypot(ddx, ddy);
+    if (d > 1e-6) {
+      this.dx = ddx / d;
+      this.dy = ddy / d;
+    }
+    return d / span;
+  }
+}
+
+/** Dash state: `active` > 0 while dashing, `cool` > 0 while recharging. */
+export interface DashState {
+  active: number;
+  cool: number;
+  dx: number;
+  dy: number;
+}
+
+export function newDash(): DashState {
+  return { active: 0, cool: 0, dx: 0, dy: 0 };
+}
+
+/** Try to fire a dash along (dx,dy). Returns true when it fired. */
+export function fireDash(d: DashState, dx: number, dy: number): boolean {
+  if (d.active > 0 || d.cool > 0) return false;
+  const l = Math.hypot(dx, dy);
+  if (l < 1e-6) return false;
+  d.dx = dx / l;
+  d.dy = dy / l;
+  d.active = DASH.dur;
+  d.cool = DASH.dur + DASH.cooldown;
+  return true;
+}
+
+/** Apply the dash to the saucer's velocity and tick its timers (call before steerSaucer). */
+export function tickDash(d: DashState, s: Saucer, dt: number): void {
+  if (d.cool > 0) d.cool = d.cool - dt > 1e-9 ? d.cool - dt : 0;
+  if (d.active > 0) {
+    const v = SAUCER.maxSpeed * DASH.mult;
+    s.vx = d.dx * v;
+    s.vy = d.dy * v;
+    d.active = d.active - dt > 1e-9 ? d.active - dt : 0;
   }
 }
 

@@ -57,9 +57,13 @@ describe('glorbs and ranks', () => {
     expect(rankFor(2).title).toBe('Intern');
     expect(rankFor(3).title).toBe('Probationary Abductor');
     expect(rankFor(5).title).toBe('Abductor');
-    expect(rankFor(6).title).toBe('Senior Abductor');
+    expect(rankFor(7).title).toBe('Abductor');
+    expect(rankFor(8).title).toBe('Senior Abductor');
+    expect(rankFor(11).title).toBe('Abduction Lead');
+    expect(rankFor(12).title).toBe('Abduction Lead');
     expect(nextRank(3)?.title).toBe('Abductor');
-    expect(nextRank(6)).toBeNull();
+    expect(nextRank(8)?.title).toBe('Abduction Lead');
+    expect(nextRank(11)).toBeNull();
   });
 
   it('applyRun merges best stars, pays, and never mutates the input', () => {

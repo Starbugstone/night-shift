@@ -6,7 +6,9 @@ import { ART } from '../src/art-manifest';
 import { ROOMS } from '../src/abduct/rooms';
 import { circleSegment } from '../src/flight/geometry';
 import { FLIGHT_HUD, LOCK, POWER_LINE, RING_R, SAUCER, maxWireOffset } from '../src/flight/sim';
-import { LEVELS } from '../src/levels/levels';
+import { LEVELS, isTutorial } from '../src/levels/levels';
+
+const TUTORIALS = LEVELS.filter(isTutorial);
 import type { FlightMap, PowerLineDef } from '../src/levels/types';
 
 const LOCK_R = RING_R * LOCK.insideFrac;
@@ -64,7 +66,7 @@ function reachable(m: FlightMap, to: { x: number; y: number }, extraWalls: Power
 
 describe('entry rings', () => {
   it('sit on their target building footprint', () => {
-    for (const lv of LEVELS) {
+    for (const lv of TUTORIALS) {
       const t = lv.map.target;
       const { w, h } = ART[t.key]!;
       for (const e of lv.map.entries) {
@@ -77,13 +79,13 @@ describe('entry rings', () => {
   });
 
   it("keep the whole lock-on circle outside every dog's biggest bark", () => {
-    for (const lv of LEVELS)
+    for (const lv of TUTORIALS)
       for (const e of lv.map.entries)
         for (const d of lv.map.dogs) expect(Math.hypot(e.x - d.x, e.y - d.y), e.roomId).toBeGreaterThanOrEqual(d.rMax + LOCK_R);
   });
 
   it('are at least 120 px from every power line (capsule never reaches the lock circle)', () => {
-    for (const lv of LEVELS)
+    for (const lv of TUTORIALS)
       for (const e of lv.map.entries)
         for (const l of lv.map.powerLines) {
           const d = segDist(e.x, e.y, l);
@@ -93,17 +95,17 @@ describe('entry rings', () => {
   });
 
   it('are not inside a neon scramble zone', () => {
-    for (const lv of LEVELS)
+    for (const lv of TUTORIALS)
       for (const e of lv.map.entries) for (const n of lv.map.neons) expect(Math.hypot(e.x - n.x, e.y - n.y)).toBeGreaterThan(n.r + LOCK_R);
   });
 
   it('are reachable from the spawn', () => {
-    for (const lv of LEVELS) for (const e of lv.map.entries) expect(reachable(lv.map, e), e.roomId).toBe(true);
+    for (const lv of TUTORIALS) for (const e of lv.map.entries) expect(reachable(lv.map, e), e.roomId).toBe(true);
   });
 });
 
 describe('level 2 power lines', () => {
-  const m = LEVELS[1]!.map;
+  const m = TUTORIALS[1]!.map;
   const [skylight, loading] = m.entries;
 
   it('draw within a few px of their collision segment, with poles fully on the map', () => {
@@ -143,7 +145,7 @@ describe('level 2 power lines', () => {
 
 describe('spawn framing', () => {
   it('saucer starts clear of the tutorial pill and Zib’s bubble', () => {
-    for (const lv of LEVELS) {
+    for (const lv of TUTORIALS) {
       const m = lv.map;
       const camY = Math.max(0, Math.min(m.h - VIEW_H, m.start.y - VIEW_H * FLIGHT_HUD.camFrac));
       const sy = m.start.y - camY;
@@ -159,7 +161,7 @@ describe('spawn framing', () => {
 
 describe('par times', () => {
   it('need a clean, decisive run but are achievable', () => {
-    for (const lv of LEVELS) {
+    for (const lv of TUTORIALS) {
       const m = lv.map;
       const fastestFlight = Math.min(...m.entries.map((e) => Math.hypot(e.x - m.start.x, e.y - m.start.y) / SAUCER.maxSpeed)) + LOCK.time;
       const fastestRoom = Math.min(...m.entries.map((e) => ROOMS[e.roomId].route.reduce((s, w) => s + w.seconds, 0)));
@@ -169,6 +171,6 @@ describe('par times', () => {
       // …but not so generous that dawdling earns Night owl
       expect(lv.parSec, lv.id).toBeLessThanOrEqual(floor + 26);
     }
-    expect(LEVELS.map((l) => l.parSec)).toEqual([42, 48]);
+    expect(TUTORIALS.map((l) => l.parSec)).toEqual([42, 48]);
   });
 });

@@ -6,9 +6,10 @@ import { drawGlorb, outlinedText, panel, panelHighlight, paragraph, sprite, text
 import { C } from './theme';
 import { Button, drawNightSky } from './widgets';
 
-const CARD_Y = 210;
-const CARD_H = 300;
-const GAP = 24;
+const CARD_Y = 192;
+const CARD_H = 172;
+const GAP = 12;
+const BUY_W = 168;
 
 export class UpgradesScene implements Scene {
   private t = 0;
@@ -19,7 +20,7 @@ export class UpgradesScene implements Scene {
 
   constructor(private readonly shell: Shell) {
     for (let i = 0; i < UPGRADES.length; i++) {
-      this.buys.push(new Button(VIEW_W - 24 - 22 - 200, CARD_Y + i * (CARD_H + GAP) + CARD_H - 84, 200, 64, 'Buy', 'primary', 24));
+      this.buys.push(new Button(VIEW_W - 24 - 16 - BUY_W, CARD_Y + i * (CARD_H + GAP) + CARD_H - 64, BUY_W, 52, 'Buy', 'primary', 21));
     }
   }
 
@@ -64,28 +65,25 @@ export class UpgradesScene implements Scene {
       const y = CARD_Y + i * (CARD_H + GAP);
       const owned = save.upgrades.includes(u.id);
       const pop = this.bought === i && this.boughtT > 0 && !ctx.reducedMotion ? Math.sin((1.2 - this.boughtT) * 12) * 4 * this.boughtT : 0;
-      panel(g, 24 - pop, y - pop, VIEW_W - 48 + pop * 2, CARD_H + pop * 2, owned ? '#22404a' : C.panel, 22, owned ? C.mint : C.ink, 4, 6);
-      panelHighlight(g, 24 - pop, y - pop, VIEW_W - 48 + pop * 2, 22);
+      panel(g, 24 - pop, y - pop, VIEW_W - 48 + pop * 2, CARD_H + pop * 2, owned ? '#22404a' : C.panel, 20, owned ? C.mint : C.ink, 4, 5);
+      panelHighlight(g, 24 - pop, y - pop, VIEW_W - 48 + pop * 2, 20);
       // icon
-      panel(g, 46, y + 24, 104, 104, C.night2, 20, C.ink, 3, 0);
-      if (!sprite(g, assets, u.icon, 98, y + 76, 96, 96)) this.fallbackIcon(g, u.id, 98, y + 76);
-      text(g, u.name, 172, y + 50, 28, C.text, 'left', 900);
-      text(g, u.effect, 172, y + 84, 17, C.mint, 'left', 800);
-      paragraph(g, u.desc, 46, y + 144, VIEW_W - 140, 18, C.muted, 24, 'left', 500, true);
+      panel(g, 42, y + 16, 80, 80, C.night2, 16, C.ink, 3, 0);
+      if (!sprite(g, assets, u.icon, 82, y + 56, 76, 76)) this.fallbackIcon(g, u.id, 82, y + 56);
+      text(g, u.name, 140, y + 36, 25, C.text, 'left', 900);
+      text(g, u.effect, 140, y + 66, 16, C.mint, 'left', 800, false, VIEW_W - 190);
+      paragraph(g, u.desc, 42, y + 108, VIEW_W - 84 - BUY_W - 12, 14, C.muted, 19, 'left', 500, true);
       if (owned) {
         g.save();
-        g.translate(VIEW_W - 150, y + CARD_H - 54);
+        g.translate(VIEW_W - 40 - BUY_W / 2, y + CARD_H - 38);
         g.rotate(-0.12);
-        panel(g, -90, -28, 180, 56, 'rgba(0,0,0,0)', 10, C.mint, 5, 0);
-        text(g, 'INSTALLED', 0, 2, 26, C.mint, 'center', 900);
+        panel(g, -78, -22, 156, 44, 'rgba(0,0,0,0)', 10, C.mint, 4, 0);
+        text(g, 'INSTALLED', 0, 2, 21, C.mint, 'center', 900);
         g.restore();
-      } else {
-        drawGlorb(g, assets, 62, y + CARD_H - 52, 32);
-        text(g, `${u.price}`, 84, y + CARD_H - 51, 24, C.amberHi, 'left', 900);
       }
       this.buys[i]!.render(g);
     }
-    text(g, 'All sales final. Refunds are a human concept.', VIEW_W / 2, 900, 16, 'rgba(169,162,214,0.7)', 'center', 600, true);
+    text(g, 'All sales final. Refunds are a human concept.', VIEW_W / 2, 940, 15, 'rgba(169,162,214,0.7)', 'center', 600, true);
   }
 
   private fallbackIcon(g: CanvasRenderingContext2D, id: string, cx: number, cy: number): void {
@@ -106,6 +104,29 @@ export class UpgradesScene implements Scene {
         g.moveTo(cx - 20, yy);
         g.quadraticCurveTo(cx, yy + 6, cx + 20, yy);
       }
+      g.stroke();
+    } else if (id === 'afterburner') {
+      g.fillStyle = '#9fb3d6';
+      g.beginPath();
+      g.ellipse(cx + 8, cy, 30, 12, 0, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+      g.strokeStyle = C.amber;
+      g.lineWidth = 5;
+      g.lineCap = 'round';
+      for (let k = -1; k <= 1; k++) {
+        g.beginPath();
+        g.moveTo(cx - 26, cy + k * 9);
+        g.lineTo(cx - 40 - Math.abs(k) * -6, cy + k * 9);
+        g.stroke();
+      }
+      g.lineCap = 'butt';
+    } else if (id === 'snooze_ray') {
+      text(g, 'Zz', cx, cy - 4, 30, C.mint, 'center', 900, true);
+      g.strokeStyle = C.mint;
+      g.lineWidth = 3;
+      g.beginPath();
+      g.arc(cx, cy + 4, 26, 0.2, Math.PI - 0.2);
       g.stroke();
     } else {
       g.fillStyle = '#9fb3d6';

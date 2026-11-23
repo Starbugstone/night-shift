@@ -1,0 +1,181 @@
+// The deep-level runner (L3+): one shift, three specimens, one sunrise clock.
+// DOM-free; src/core/game.ts drives the scenes from it.
+//
+//   flight ──lock on ring──▶ abduct ──delivered──▶ flight (respawn at that ring = checkpoint)
+//     ▲  │                     │ └─delivered #3──▶ done
+//     │  └─spotted: freeze,    └─failed/aborted──▶ choice ──retry──▶ abduct (same route)
+//     │    respawn at checkpoint                        └─back──▶ flight (at that ring)
+//     └─────────────────────────────────────────────────────────────┘
+//   any phase with the clock running ──elapsed ≥ budget──▶ sunrise (level failed)
+import type { AbductFailReason, AbductResult, RoomId, Vec2 } from '../contracts';
+import type { DeepSummary } from './progress';
+import type { DeepLevelDef } from './types';
+
+export type RunPhase = 'flight' | 'abduct' | 'choice' | 'done' | 'sunrise';
+
+/** The sky starts warming this many seconds before sunrise. */
+export const SUNRISE_WARN = 30;
+
+export interface RunFail {
+  target: number;
+  entry: number;
+  roomId: RoomId;
+  /** undefined = the player gave up (aborted). */
+  reason?: AbductFailReason;
+  by?: string;
+}
+
+export interface RunTotals {
+  bonks: number;
+  snores: number;
+  items: string[];
+  /** Sum of dignity over delivered specimens. */
+  dignity: number;
+  beamSec: number;
+}
+
+export class DeepRun {
+  phase: RunPhase = 'flight';
+  /** Shift seconds used (flight + abduction). */
+  elapsed = 0;
+  readonly delivered: boolean[] = [false, false, false];
+  /** Order specimens were delivered in. */
+  readonly order: number[] = [];
+  /** Where a spotted saucer respawns: last successful ring, or the start. */
+  checkpoint: Vec2;
+  /** Where the next flight leg starts. */
+  spawn: Vec2;
+  spotted = 0;
+  failedAbductions = 0;
+  aborts = 0;
+  /** Abduction in progress or just failed. */
+  current: { target: number; entry: number; roomId: RoomId } | null = null;
+  lastFail: RunFail | null = null;
+  readonly totals: RunTotals = { bonks: 0, snores: 0, items: [], dignity: 0, beamSec: 0 };
+  /** Flight legs started (for Zib's lines). */
+  legs = 0;
+
+  constructor(
+    readonly level: DeepLevelDef,
+    readonly levelIndex: number,
+  ) {
+    this.checkpoint = { ...level.map.start };
+    this.spawn = { ...level.map.start };
+  }
+
+  get budget(): number {
+    return this.level.budgetSec;
+  }
+
+  get remaining(): number {
+    return Math.max(0, this.level.budgetSec - this.elapsed);
+  }
+
+  get deliveredCount(): number {
+    return this.delivered.filter(Boolean).length;
+  }
+
+  /** 0 = night, 1 = sunrise; ramps over the last SUNRISE_WARN seconds. */
+  get dawn(): number {
+    const r = this.remaining;
+    return r >= SUNRISE_WARN ? 0 : 1 - r / SUNRISE_WARN;
+  }
+
+  /** Clock face time, e.g. { h: 3, m: 17 } on a 2:00 → 6:00 shift. */
+  clock(): { h: number; m: number } {
+    const [h0, h1] = this.level.hours;
+    const k = Math.min(1, this.elapsed / this.level.budgetSec);
+    const mins = Math.floor((h0 + (h1 - h0) * k) * 60);
+    return { h: Math.floor(mins / 60), m: mins % 60 };
+  }
+
+  clockText(): string {
+    const { h, m } = this.clock();
+    return `${h}:${m < 10 ? '0' : ''}${m}`;
+  }
+
+  /** Advance the sunrise clock (flight and abduction). Returns true when the sun comes up. */
+  tick(dt: number): boolean {
+    if (this.phase !== 'flight' && this.phase !== 'abduct') return false;
+    this.elapsed += dt;
+    if (this.elapsed >= this.level.budgetSec) {
+      this.elapsed = this.level.budgetSec;
+      this.phase = 'sunrise';
+      return true;
+    }
+    return false;
+  }
+
+  /** Spotted in flight: respawn at the checkpoint. */
+  onSpotted(): Vec2 {
+    this.spotted++;
+    this.spawn = { ...this.checkpoint };
+    return this.spawn;
+  }
+
+  startAbduct(target: number, entry: number): RoomId {
+    const roomId = this.level.map.targets[target]!.entries[entry]!.roomId;
+    this.current = { target, entry, roomId };
+    this.phase = 'abduct';
+    return roomId;
+  }
+
+  ringPos(target: number, entry: number): Vec2 {
+    const e = this.level.map.targets[target]!.entries[entry]!;
+    return { x: e.x, y: e.y };
+  }
+
+  /** The abduction ended. Returns the next phase. */
+  finishAbduct(res: AbductResult): RunPhase {
+    if (this.phase === 'sunrise') return this.phase;
+    const cur = this.current;
+    if (!cur) return this.phase;
+    this.totals.bonks += res.bonks;
+    this.totals.snores += res.snores;
+    this.totals.beamSec += res.timeSec;
+    if (res.delivered && !res.aborted) {
+      this.delivered[cur.target] = true;
+      this.order.push(cur.target);
+      this.totals.dignity += res.dignity;
+      this.totals.items.push(...res.itemsStolen);
+      this.checkpoint = this.ringPos(cur.target, cur.entry);
+      this.spawn = { ...this.checkpoint };
+      this.lastFail = null;
+      this.current = null;
+      this.phase = this.deliveredCount >= 3 ? 'done' : 'flight';
+      if (this.phase === 'flight') this.legs++;
+      return this.phase;
+    }
+    if (res.aborted) this.aborts++;
+    else this.failedAbductions++;
+    this.lastFail = { target: cur.target, entry: cur.entry, roomId: cur.roomId, reason: res.aborted ? undefined : res.failReason ?? 'woke', by: res.failBy };
+    this.phase = 'choice';
+    return this.phase;
+  }
+
+  /** Choice: retry the same route. */
+  retry(): RoomId {
+    const f = this.lastFail!;
+    return this.startAbduct(f.target, f.entry);
+  }
+
+  /** Choice: back to flight, hovering over the building you just failed. */
+  backToFlight(): Vec2 {
+    const f = this.lastFail;
+    this.spawn = f ? this.ringPos(f.target, f.entry) : { ...this.checkpoint };
+    this.current = null;
+    this.phase = 'flight';
+    this.legs++;
+    return this.spawn;
+  }
+
+  summary(): DeepSummary {
+    return {
+      delivered: this.deliveredCount,
+      elapsedSec: this.elapsed,
+      spotted: this.spotted,
+      failedAbductions: this.failedAbductions,
+      sunrise: this.phase === 'sunrise',
+    };
+  }
+}

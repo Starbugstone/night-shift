@@ -1,9 +1,18 @@
 // Stars, Glorbs, ranks, unlocks and upgrades. Pure functions over SaveData.
 import type { AbductResult, FlightResult, UpgradeId } from '../contracts';
-import { LEVELS } from './levels';
+import { LEVELS, isDeep } from './levels';
 import { cloneSave, type LevelId, type SaveData, type Stars } from './save';
+import type { LevelDef } from './types';
 
 export const STAR_LABELS = ['Delivered', 'Still asleep', 'Night owl'] as const;
+export const DEEP_STAR_LABELS = ['Delivered all 3', 'Ghost', 'Night owl'] as const;
+
+export function starLabels(l: LevelDef): readonly string[] {
+  return isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
+}
+
+/** Deep levels pay this many times the tutorial rates. */
+export const DEEP_PAY_MULT = 2;
 
 /** Glorbs paid for a delivered run, before stars. */
 export const DELIVERY_PAY = 5;
@@ -39,7 +48,8 @@ export const RANKS: readonly Rank[] = [
   { title: 'Intern', minStars: 0, flavour: 'Unpaid. Mostly.' },
   { title: 'Probationary Abductor', minStars: 3, flavour: 'Promising, if bonky.' },
   { title: 'Abductor', minStars: 5, flavour: 'Lanyard privileges unlocked.' },
-  { title: 'Senior Abductor', minStars: 6, flavour: 'Has own parking ring.' },
+  { title: 'Senior Abductor', minStars: 8, flavour: 'Has own parking ring.' },
+  { title: 'Abduction Lead', minStars: 11, flavour: 'Signs other people\'s forms. Rarely reads them.' },
 ];
 
 export function rankFor(stars: number): Rank {
@@ -53,19 +63,35 @@ export function nextRank(stars: number): Rank | null {
   return null;
 }
 
-export function runReward(prev: Stars, earned: Stars): { glorbs: number; newStars: number } {
+export function runReward(prev: Stars, earned: Stars, mult = 1): { glorbs: number; newStars: number } {
   if (!earned[0]) return { glorbs: 0, newStars: 0 };
-  let glorbs = DELIVERY_PAY;
+  let glorbs = DELIVERY_PAY * mult;
   let newStars = 0;
   for (let i = 0; i < 3; i++) {
     if (!earned[i]) continue;
-    if (prev[i]) glorbs += REPEAT_STAR_PAY;
+    if (prev[i]) glorbs += REPEAT_STAR_PAY * mult;
     else {
-      glorbs += NEW_STAR_PAY;
+      glorbs += NEW_STAR_PAY * mult;
       newStars++;
     }
   }
   return { glorbs, newStars };
+}
+
+/** What a finished deep shift looked like (from the runner). */
+export interface DeepSummary {
+  /** Specimens delivered (0..3). */
+  delivered: number;
+  /** Seconds of shift used (= sunrise budget when the sun came up). */
+  elapsedSec: number;
+  spotted: number;
+  failedAbductions: number;
+  sunrise: boolean;
+}
+
+export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary): Stars {
+  const all = r.delivered >= 3 && !r.sunrise;
+  return [all, all && r.spotted === 0 && r.failedAbductions === 0, all && budgetSec - r.elapsedSec >= parMarginSec];
 }
 
 export function isLevelUnlocked(save: SaveData, index: number): boolean {
@@ -88,23 +114,34 @@ export interface RunOutcome {
   unlockedNext: boolean;
 }
 
-/** Apply a finished (non-aborted) attempt to a copy of the save. */
+/** Apply a finished (non-aborted) tutorial attempt to a copy of the save. */
 export function applyRun(save: SaveData, levelId: LevelId, abduct: AbductResult, flight: FlightResult): RunOutcome {
+  const level = LEVELS.find((l) => l.id === levelId)!;
+  const par = isDeep(level) ? level.budgetSec : level.parSec;
+  return applyStars(save, levelId, computeStars(par, abduct, flight), flight.timeSec + abduct.timeSec, 1);
+}
+
+/** Apply a finished deep shift (delivered all, or sunrise) to a copy of the save. */
+export function applyDeepRun(save: SaveData, levelId: LevelId, r: DeepSummary): RunOutcome {
+  const level = LEVELS.find((l) => l.id === levelId)!;
+  const budget = isDeep(level) ? level.budgetSec : 300;
+  const margin = isDeep(level) ? level.parMarginSec : 0;
+  return applyStars(save, levelId, computeDeepStars(budget, margin, r), r.elapsedSec, DEEP_PAY_MULT);
+}
+
+function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: number, payMult: number): RunOutcome {
   const idx = LEVELS.findIndex((l) => l.id === levelId);
-  const level = LEVELS[idx]!;
   const next = cloneSave(save);
   const lv = next.levels[levelId];
   const prev: Stars = [...lv.stars];
-  const stars = computeStars(level.parSec, abduct, flight);
   const before = rankFor(totalStars(save));
   const nextWasUnlocked = isLevelUnlocked(save, idx + 1);
-  const reward = runReward(prev, stars);
+  const reward = runReward(prev, stars, payMult);
   lv.stars = [prev[0] || stars[0], prev[1] || stars[1], prev[2] || stars[2]];
   lv.attempts += 1;
   if (stars[0]) {
     lv.delivered = true;
-    const t = flight.timeSec + abduct.timeSec;
-    lv.bestTimeSec = lv.bestTimeSec === null ? t : Math.min(lv.bestTimeSec, t);
+    lv.bestTimeSec = lv.bestTimeSec === null ? timeSec : Math.min(lv.bestTimeSec, timeSec);
   }
   next.glorbs += reward.glorbs;
   next.reports += 1;
@@ -140,10 +177,26 @@ export const UPGRADES: readonly UpgradeDef[] = [
   {
     id: 'hush_drive',
     name: 'Hush Drive',
-    effect: 'Suspicion & Wake fill 25% slower',
+    effect: 'Spotting fuse 1.25 s · Wake fills slower',
     desc: 'A tiny muffler for your anti-gravity. Dogs now hear only a faint, polite hum.',
     price: 35,
     icon: 'ui/upgrade_hush',
+  },
+  {
+    id: 'afterburner',
+    name: 'Afterburner',
+    effect: 'Flick to dash · 2.5 s recharge',
+    desc: 'Flick your thumb and the saucer lunges at 2.2× speed for a moment. Ideal for cones. Not for parking.',
+    price: 60,
+    icon: 'ui/upgrade_afterburner',
+  },
+  {
+    id: 'snooze_ray',
+    name: 'Snooze Ray',
+    effect: 'Double-tap: calm every sleeper',
+    desc: 'Once per building, a double-tap hums a lullaby that knocks 40 off every wake meter. Side effects: yawning.',
+    price: 80,
+    icon: 'ui/upgrade_snooze',
   },
 ];
 
@@ -161,7 +214,7 @@ export function buyUpgrade(save: SaveData, id: UpgradeId): SaveData | null {
   return next;
 }
 
-/** Hush Drive: meters fill this much slower. */
+/** Hush Drive: wake meters fill this much slower (flight suspicion: see suspicionMultiplier). */
 export function meterMultiplier(upgrades: ReadonlySet<UpgradeId>): number {
   return upgrades.has('hush_drive') ? 0.75 : 1;
 }

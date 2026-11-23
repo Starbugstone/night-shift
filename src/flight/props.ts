@@ -26,7 +26,7 @@ export function drawProp(g: CanvasRenderingContext2D, assets: Assets, p: PropDef
   g.translate(p.x, p.y);
   if (p.rot) g.rotate(p.rot);
   if (img) g.drawImage(img, -w / 2, -h / 2, w, h);
-  else drawFallback(g, p.kind, w, h);
+  else drawFallback(g, p.kind, w, h, p.tint);
   g.restore();
 }
 
@@ -40,10 +40,68 @@ function box(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: nu
 }
 
 /** Draws centred on the origin into a w×h box. */
-export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: number, h: number): void {
+export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: number, h: number, tint?: string): void {
   const x = -w / 2;
   const y = -h / 2;
   switch (kind) {
+    case 'suburb_house': {
+      box(g, x + 6, y + h * 0.74, w - 12, h * 0.24, 4, '#c7b49a');
+      box(g, x + 4, y + 4, w - 8, h * 0.74, 8, tint ?? '#5a6aa0');
+      g.fillStyle = 'rgba(0,0,0,0.18)';
+      g.fillRect(x + 8, y + h * 0.37 - 3, w - 16, 6);
+      g.fillStyle = '#ffcf7a';
+      g.fillRect(x + w * 0.3, y + h * 0.82, 20, 12);
+      break;
+    }
+    case 'highrise':
+    case 'civic': {
+      box(g, x + 4, y + 4, w - 8, h - 8, kind === 'civic' ? 14 : 6, tint ?? '#3d4466');
+      g.strokeStyle = 'rgba(255,255,255,0.08)';
+      g.lineWidth = 2;
+      g.strokeRect(x + 18, y + 18, w - 36, h - 36);
+      g.fillStyle = 'rgba(0,0,0,0.22)';
+      for (let k = 0; k < 3; k++) g.fillRect(x + 30 + k * 48, y + 30, 30, 22); // roof units
+      break;
+    }
+    case 'pool': {
+      box(g, x + 4, y + 4, w - 8, h - 8, 18, '#5fc3e4');
+      g.strokeStyle = 'rgba(255,255,255,0.45)';
+      g.lineWidth = 2;
+      g.beginPath();
+      g.moveTo(x + 20, y + h / 2);
+      g.quadraticCurveTo(0, y + h / 2 - 10, w / 2 - 20, y + h / 2);
+      g.stroke();
+      break;
+    }
+    case 'trampoline': {
+      g.beginPath();
+      g.arc(0, 0, w * 0.45, 0, Math.PI * 2);
+      g.fillStyle = '#1b1d2e';
+      g.fill();
+      g.lineWidth = 5;
+      g.strokeStyle = '#3a7ad9';
+      g.stroke();
+      break;
+    }
+    case 'hedge':
+      box(g, x + 2, y + 2, w - 4, h - 4, h / 2, '#2f5a3e');
+      break;
+    case 'park': {
+      box(g, x + 4, y + 4, w - 8, h - 8, 20, '#355a3e');
+      g.strokeStyle = '#a89878';
+      g.lineWidth = 14;
+      g.beginPath();
+      g.moveTo(x + 10, 0);
+      g.lineTo(x + w - 10, 0);
+      g.moveTo(0, y + 10);
+      g.lineTo(0, y + h - 10);
+      g.stroke();
+      g.beginPath();
+      g.arc(0, 0, 36, 0, Math.PI * 2);
+      g.fillStyle = '#5fc3e4';
+      g.fill();
+      break;
+    }
     case 'farmhouse': {
       box(g, x + 4, y + h * 0.72, w - 8, h * 0.26, 6, '#a7876a'); // south wall
       box(g, x + 4, y + 4, w - 8, h * 0.74, 10, '#8a4a3c');

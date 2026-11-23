@@ -261,3 +261,169 @@ export function hudPrompt(
   g.fillStyle = glyph === 'release' ? 'rgba(27,20,51,0.35)' : C.ink;
   g.fill();
 }
+
+export interface FuseState {
+  /** 0..1: 1 = SPOTTED. */
+  value: number;
+  /** A detector covers the saucer this frame. */
+  exposed: boolean;
+  t: number;
+  reduced: boolean;
+  /** Seconds the full fuse lasts (1.0, or 1.25 with Hush Drive), shown as a caption. */
+  seconds: number;
+}
+
+/**
+ * Suspicion as a 1-second fuse: an eye that opens as the meter fills and a fuse cord that burns
+ * down from the right, spark at the burning end. `assets` may supply ui/eye_closed / ui/eye_open.
+ */
+export function hudFuse(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, f: FuseState, eyeClosed?: HTMLImageElement, eyeOpen?: HTMLImageElement): void {
+  const v = f.value < 0 ? 0 : f.value > 1 ? 1 : f.value;
+  const hot = v > 0.6 || (f.exposed && v > 0.25);
+  const jitter = hot && !f.reduced ? Math.sin(f.t * 55) * 2 * v : 0;
+  const px = x + jitter;
+  const blink = f.reduced || Math.floor(f.t * 10) % 2 === 0;
+  hudPanel(g, px, y, w, h, f.exposed && blink ? C.red : hot ? C.amber : C.ink);
+
+  // the eye: opens with the meter
+  const ex = px + 38;
+  const ey = y + h / 2;
+  const open = v < 0.02 ? 0 : 0.25 + 0.75 * v;
+  g.beginPath();
+  g.ellipse(ex, ey, 27, 20, 0, 0, Math.PI * 2);
+  g.fillStyle = TRACK;
+  g.fill();
+  const img = v > 0.55 ? eyeOpen : eyeClosed;
+  if (img && (v <= 0.02 || v > 0.55)) {
+    g.drawImage(img, ex - 25, ey - 16, 50, 32);
+  } else {
+    const lid = 2 + 13 * open;
+    const tone = v > 0.6 ? C.red : v > 0.02 ? C.amber : C.mint;
+    g.lineWidth = 3;
+    g.lineJoin = 'round';
+    g.strokeStyle = tone;
+    g.beginPath();
+    g.moveTo(ex - 20, ey);
+    g.quadraticCurveTo(ex, ey - lid * 1.4, ex + 20, ey);
+    g.quadraticCurveTo(ex, ey + lid * 1.4, ex - 20, ey);
+    g.closePath();
+    if (open > 0) {
+      g.fillStyle = '#f4efe2';
+      g.fill();
+    }
+    g.stroke();
+    if (open > 0.15) {
+      g.save();
+      g.beginPath();
+      g.moveTo(ex - 20, ey);
+      g.quadraticCurveTo(ex, ey - lid * 1.4, ex + 20, ey);
+      g.quadraticCurveTo(ex, ey + lid * 1.4, ex - 20, ey);
+      g.clip();
+      g.beginPath();
+      g.arc(ex, ey, 4 + 4 * open, 0, Math.PI * 2);
+      g.fillStyle = v > 0.6 ? C.red : '#3a2a6a';
+      g.fill();
+      g.beginPath();
+      g.arc(ex, ey, 2.2 + 1.6 * open, 0, Math.PI * 2);
+      g.fillStyle = C.ink;
+      g.fill();
+      g.restore();
+    } else {
+      // asleep: lashes
+      g.lineWidth = 2;
+      g.beginPath();
+      for (let k = -1; k <= 1; k++) {
+        g.moveTo(ex + k * 9, ey + 3);
+        g.lineTo(ex + k * 11, ey + 8);
+      }
+      g.stroke();
+    }
+  }
+
+  text(g, f.exposed ? 'SEEN!' : 'SUSPICION', px + 74, y + 18, 14, f.exposed ? C.red : C.muted, 'left', 900);
+  text(g, `${f.seconds.toFixed(f.seconds % 1 === 0 ? 1 : 2)} s fuse`, px + w - 14, y + 18, 12, 'rgba(169,162,214,0.8)', 'right', 700);
+
+  // fuse cord: full length = time left; burns from the right towards the bomb (the eye)
+  const bx = px + 74;
+  const by = y + 40;
+  const bw = w - 90;
+  const left = 1 - v;
+  g.lineCap = 'round';
+  g.lineWidth = 6;
+  g.strokeStyle = 'rgba(18,13,43,0.9)';
+  g.beginPath();
+  g.moveTo(bx, by);
+  g.lineTo(bx + bw, by);
+  g.stroke();
+  const endX = bx + bw * left;
+  if (left > 0.002) {
+    g.lineWidth = 6;
+    g.strokeStyle = '#c9a574';
+    g.beginPath();
+    g.moveTo(bx, by);
+    g.lineTo(endX, by);
+    g.stroke();
+    // twist marks
+    g.lineWidth = 2;
+    g.strokeStyle = '#8a6a44';
+    g.beginPath();
+    for (let k = bx + 6; k < endX - 4; k += 10) {
+      g.moveTo(k, by - 3);
+      g.lineTo(k + 4, by + 3);
+    }
+    g.stroke();
+  }
+  g.lineCap = 'butt';
+  // the spark: only while it is burning (exposed or not yet cooled)
+  if (v > 0.005) {
+    const fl = f.reduced ? 1 : 0.75 + 0.25 * Math.sin(f.t * 47) + (f.exposed ? 0.3 : 0);
+    g.globalCompositeOperation = 'lighter';
+    g.beginPath();
+    g.arc(endX, by, 9 * fl, 0, Math.PI * 2);
+    g.fillStyle = f.exposed ? 'rgba(255,120,80,0.75)' : 'rgba(255,190,110,0.5)';
+    g.fill();
+    g.beginPath();
+    g.arc(endX, by, 4, 0, Math.PI * 2);
+    g.fillStyle = '#fff6c9';
+    g.fill();
+    g.globalCompositeOperation = 'source-over';
+  }
+}
+
+/** Sunrise clock chip: a little clock face and the time; warms up near sunrise. */
+export function hudSunClock(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: string, k: number, dawn: number, t: number, reduced: boolean, face?: HTMLImageElement): void {
+  const hot = dawn > 0;
+  const blink = reduced || Math.floor(t * 3) % 2 === 0;
+  hudPanel(g, x, y, w, h, hot && blink ? C.amber : C.ink);
+  const cx = x + 30;
+  const cy = y + h / 2;
+  const r = 20;
+  if (face) g.drawImage(face, cx - r - 2, cy - r - 2, (r + 2) * 2, (r + 2) * 2);
+  else {
+    g.beginPath();
+    g.arc(cx, cy, r, 0, Math.PI * 2);
+    g.fillStyle = hot ? '#5a3a40' : TRACK;
+    g.fill();
+    g.lineWidth = 2;
+    g.strokeStyle = C.muted;
+    g.stroke();
+  }
+  // the night used so far, as a wedge
+  g.beginPath();
+  g.moveTo(cx, cy);
+  g.arc(cx, cy, r - 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k);
+  g.closePath();
+  g.fillStyle = hot ? 'rgba(255,170,90,0.55)' : 'rgba(124,255,203,0.28)';
+  g.fill();
+  const a = -Math.PI / 2 + Math.PI * 2 * k;
+  g.lineWidth = 3;
+  g.lineCap = 'round';
+  g.strokeStyle = C.text;
+  g.beginPath();
+  g.moveTo(cx, cy);
+  g.lineTo(cx + Math.cos(a) * (r - 5), cy + Math.sin(a) * (r - 5));
+  g.stroke();
+  g.lineCap = 'butt';
+  text(g, hot ? 'SUNRISE!' : 'SHIFT', x + 58, y + 19, 12, hot ? C.amberHi : C.muted, 'left', 900);
+  text(g, time, x + 58, y + 42, 22, hot ? C.amberHi : C.text, 'left', 800);
+}

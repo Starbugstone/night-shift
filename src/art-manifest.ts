@@ -296,6 +296,7 @@ export const ART: Record<string, ArtSpec> = {
   // ---- APPEND: abduction code (Sol) — extra keys you need, with a one-line art note each
 
   // ---- APPEND: shell/flight/UI code (Opus) — extra keys you need, with a one-line art note each
+  'flight/garden_gnome_top': { w: 30, h: 30 }, // L3 joke: Gary's tripwire posts; a garden gnome seen from above (red hat), drawn at both ends of a red laser line
 };
 
 export type ArtKey = keyof typeof ART;

@@ -1,4 +1,5 @@
 import type { RoomId, Vec2 } from '../contracts';
+import type { HazardDef } from '../flight/hazards';
 import type { LevelId } from './save';
 
 /** What to draw when a sprite is missing. */
@@ -12,7 +13,15 @@ export type PropKind =
   | 'laundromat'
   | 'diner'
   | 'house'
-  | 'streetlight';
+  | 'streetlight'
+  // v2
+  | 'suburb_house'
+  | 'highrise'
+  | 'civic'
+  | 'pool'
+  | 'trampoline'
+  | 'hedge'
+  | 'park';
 
 /** A sprite placed by its centre. Size defaults to the manifest size. */
 export interface PropDef {
@@ -24,6 +33,8 @@ export interface PropDef {
   h?: number;
   /** Radians, clockwise. */
   rot?: number;
+  /** Fallback roof colour (v2 primitives). */
+  tint?: string;
 }
 
 /** Horizontal road: centre line y = at, from x = from..to. Vertical: x = at, y = from..to. */
@@ -110,7 +121,7 @@ export interface LockedCard {
   blurb: string;
 }
 
-export interface LevelDef {
+interface LevelBase {
   id: LevelId;
   num: number;
   title: string;
@@ -118,7 +129,53 @@ export interface LevelDef {
   /** Card blurb on Work Orders. */
   blurb: string;
   human: string;
-  parSec: number;
+  /** Head sprite for the Work Orders mugshot. */
+  mugshot: string;
   memo: { re: string; body: string; joke: string };
+}
+
+/** L1, L2: one target, one flight, one room. */
+export interface TutorialLevelDef extends LevelBase {
+  kind: 'tutorial';
+  parSec: number;
   map: FlightMap;
 }
+
+/** One specimen's building in a deep level. */
+export interface DeepTarget {
+  /** Full name for the HUD list, e.g. "Dentist Dave". */
+  human: string;
+  /** Short name, e.g. "Dave". */
+  short: string;
+  building: PropDef;
+  /** Both rings lead into the same interior. */
+  entries: [EntryDef, EntryDef];
+}
+
+export interface DeepMap {
+  theme: 'suburb' | 'city';
+  w: number;
+  h: number;
+  start: Vec2;
+  roads: RoadDef[];
+  groundProps: PropDef[];
+  props: PropDef[];
+  targets: [DeepTarget, DeepTarget, DeepTarget];
+  hazards: HazardDef[];
+  /** Warm light pools (decor). */
+  lamps: Vec2[];
+}
+
+/** L3+: three specimens, one big map, a sunrise clock. */
+export interface DeepLevelDef extends LevelBase {
+  kind: 'deep';
+  /** Real seconds from the start of the shift to sunrise. */
+  budgetSec: number;
+  /** Night owl star: finish with at least this many seconds left. */
+  parMarginSec: number;
+  /** Clock face hours: shift start .. sunrise, e.g. [2, 6]. */
+  hours: [number, number];
+  map: DeepMap;
+}
+
+export type LevelDef = TutorialLevelDef | DeepLevelDef;
