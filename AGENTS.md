@@ -38,11 +38,18 @@ the index or other agents' files — the coordinator commits. Do not run
   twinkles), `drawGlow` / `lightSprite` / `radialSprite` (cached light blobs; never fill a big
   radial gradient per frame), `drawShadow` (soft sprite silhouette), `CachedLayer` (static
   full-screen art painted once), `drawVignette` / `drawEdgeTint`, easing.
+- `src/core/fx.ts` also has `drawSprite` / `bitmapOf` (an SVG sprite rasterised once per draw size at the
+  backing store's own scale, then blitted; use it for anything drawn every frame on a big map),
+  `drawWash` (a cached screen-wide directional tint, e.g. dawn) and `rgbOf`.
 - `src/ui/hud.ts` — the one in-game HUD kit (`hudPanel`, `hudMeter`, `hudTimer`, `hudButton`,
   `hudPrompt`) on the shared `HUD_ROW`. Both phases use it; don't hand-draw HUD boxes.
 - `SceneManager.go(name, make, instant, transition)` — `fade` (default), `iris`, `flash`.
 - Every animated effect checks `ctx.reducedMotion`. Gameplay tells (cone edge, bark ring, neon
   on/off) must stay honest: decorate them, don't move them.
+- Tell language (v2): **mint** = you and your goals, **amber** = about to happen (ghost cones, arming
+  arcs, charging lasers), **red** = it has you right now (the fuse ring round the saucer or the
+  specimen, the edge of the detector that sees you). A detector always has a hard edge; decor
+  (`src/flight/ambient.ts`, room light pools) never draws an edged pool of light.
 
 ## Art
 
@@ -64,3 +71,6 @@ Proof of solvability: every abduction route and every deep-level flight map must
 have a headless vitest autopilot run that completes it without failing. Each scene
 also exposes `debug.autopilot()` (see contracts) so that `scripts/e2e-playthrough.cjs`
 can play the game through real pointer input.
+
+Use [.claude/skills/verify-night-shift/SKILL.md](.claude/skills/verify-night-shift/SKILL.md)
+for browser verification recipes, the feature map, and evidence capture.
