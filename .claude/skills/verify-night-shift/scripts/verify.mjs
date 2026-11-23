@@ -236,6 +236,8 @@ async function flyRing(game, roomId) {
 
 async function pilotRoom(game, roomId, { keepReport = false } = {}) {
   const before = await game.save();
+  const storedBefore = await game.stored();
+  const tallyBefore = await game.observe(() => window.__nightShift.run?.delivered.filter(Boolean).length ?? 0);
   const initial = await game.page.evaluate(async (id) => {
     const { ROOMS } = await import('/src/abduct/rooms/index.ts');
     const sim = window.__nightShift.active?.debug;
@@ -270,7 +272,19 @@ async function pilotRoom(game, roomId, { keepReport = false } = {}) {
   await game.up();
   game.record('room-end', { result });
   await game.capture(roomId + '-room-end');
-  if (result?.delivered || result?.failReason) {
+  if (initial.deep && (result?.delivered || result?.failReason)) {
+    // A deep route belongs to a three-specimen shift: delivery returns to flight at that ring's
+    // checkpoint, a failure opens the choice screen, and nothing is saved until the shift ends.
+    await game.expectScene(result.delivered ? 'flight' : 'choice', 210);
+    await game.capture(roomId + (result.delivered ? '-back-to-flight' : '-choice'));
+    const run = await game.observe(() => {
+      const r = window.__nightShift.run;
+      return { level: r.level.id, delivered: [...r.delivered], checkpoint: { ...r.checkpoint } };
+    });
+    assert.equal(run.delivered.filter(Boolean).length, tallyBefore + (result.delivered ? 1 : 0), 'Shift tally after one route');
+    assert.deepEqual(await game.stored(), storedBefore, 'A deep route alone writes no save');
+    game.record('deep-route-end', { run });
+  } else if (result?.delivered || result?.failReason) {
     await game.expectScene('report', 210);
     await game.capture(roomId + '-report');
     const stored = await game.stored();

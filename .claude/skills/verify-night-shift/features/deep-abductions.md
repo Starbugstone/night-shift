@@ -1,39 +1,42 @@
 # Deep abduction interiors
 
-Deep interiors move the camera with the specimen across interconnected rooms. Each specimen has two routes with distinct exits. Moving furniture, timed doors, secondary sleepers, lasers and security cameras make the route and timing matter.
+Deep interiors move the camera with the specimen across connected rooms. Each L3/L4 specimen has two routes with distinct exits. Swinging props, fans, gears, timed gates and doors, patrols, fragile props, creaky stairs, speakers, drafts, lasers and sweeping cameras make the route and timing matter. Rules are hard: the specimen waking, a second sleeper waking (Brenda, Biscuit, Tiny), touching an active laser or one second in a camera cone fails the attempt. Each house has one pop-culture prop whose sleep-talk line plays once after the lift.
 
 ## Sub-features
 
-- `deep-suburb` covers Dave's roof and patio, Barb's chimney and back door, and Gary's skylight and garage door.
-- `deep-downtown` covers Nigel's skylight and loading bay, Kev's vent and fire escape, and the Mayor's clock tower and elevator.
-- `deep-hazards` covers timed crossings, camera and laser alarms and secondary sleeper wakes.
+- `deep-suburb` covers Dave's roof and patio, Barb's chimney and back door, and Gary's skylight and garage door (L3).
+- `deep-downtown` covers Nigel's skylight and loading bay, Kev's vent and fire escape, and the Mayor's clock tower and elevator (L4).
+- `deep-hazards` covers timed crossings, camera and laser alarms (`alarm`), specimen wakes (`woke`) and second-sleeper wakes (`sleeper`).
+- `deep-outcome` delivery returns to flight at the ring's checkpoint; a failure or RESTART opens the choice screen (Retry / Back to flight / Abandon shift).
+- `deep-props` the prop cue (poster, potato butte, pennant, 42 towel, tripod single, pilot bobblehead) and the souvenir pop.
 
 ## How to get to it (user POV)
 
-The standalone game has no player entry to the deep rooms at `c50157a`. The proposed isolated browser entry is `?room=<id>`. The implemented route catalog is below.
+- In a deep shift ([deep shifts](deep-shifts.md)), hover a target's ring to lock on; the iris dives into that house.
+- For isolated checks, `?room=<id>` (or `goto('abduct', id)`) starts that route as the first leg of its level's shift, with the deep rules.
 
-| Specimen | Route IDs |
-| --- | --- |
-| Dentist Dave | `dave_roof`, `dave_patio` |
-| Coach Barb | `barb_chimney`, `barb_backdoor` |
-| Gary | `gary_skylight`, `gary_garagedoor` |
-| Night Guard Nigel | `nigel_skylight`, `nigel_loading` |
-| DJ Kev | `kev_vent`, `kev_fireescape` |
-| Mayor Whitlock | `mayor_clocktower`, `mayor_elevator` |
+| Specimen | Level | Route IDs |
+| --- | --- | --- |
+| Dentist Dave | L3 | `dave_roof`, `dave_patio` |
+| Coach Barb | L3 | `barb_chimney`, `barb_backdoor` |
+| Gary | L3 | `gary_skylight`, `gary_garagedoor` |
+| Night Guard Nigel | L4 | `nigel_skylight`, `nigel_loading` |
+| DJ Kev | L4 | `kev_vent`, `kev_fireescape` |
+| Mayor Whitlock | L4 | `mayor_clocktower`, `mayor_elevator` |
 
 ## Driving it with Playwright
 
-Preconditions:
+Preconditions: an empty context per route.
 
-- A Vite instance with the requested deep room wired into its `?room=` entry. For wake-failure and report cases, the game must also start the deep rules and file the run to the appropriate level. The baseline checkout lacks these prerequisites.
-
-- **Check entry.** Run `.claude/skills/verify-night-shift/scripts/verify.mjs 5297 dave-roof-01 dave_roof`. The command expects scene `abduct` and the requested room with a scrolling interior. At `c50157a` it reaches `title`, returns failure, and captures `unexpected-entry.png` plus the trace. Repeat using a fresh run ID for each room when checking a routing change.
-- **Verify traversal once entry works.** The same command drives the room through mouse drags, recenters the finger as needed, and requires the sleeper to reach the requested exit asleep. Capture entry, the camera moving into the next room, the exit, and the stored result. Check `active.debug.interior`, camera movement and the delivered result while the scene is live.
-- **Check a failure once entry works.** Use a custom journey and open `await game.open('/?room=gary_skylight', 'abduct')`. Drag into an active laser and capture the alarm and resulting failure. For a separate sleeper case, use `dave_roof` and agitate the beam close to Brenda. Check the named cause through `active.debug.result()` before the scene changes and compare it with the visible warning. Log unmet prerequisites if entry or the expected hazard rules are unavailable.
-- **Check the existing headless coverage.** Run `npm test -- tests/abduct-deep.test.ts` to exercise all twelve deep paths, the hard rules, and hazard failure assertions in Vitest.
+- **Deliver a route.** Run `.claude/skills/verify-night-shift/scripts/verify.mjs 5297 dave-roof-01 dave_roof`. The helper checks the room identity and `deep`, records `rules` (`{wakeFails:true, hard:true}`), pilots the route with `autopilotFinger`, requires delivery asleep, then expects `flight` with `run.delivered` tallying one and the save unchanged. Captures: room start, mid-route, the exit, back to flight. Proven at `7d2bd29` (57 s, `delivered: [true,false,false]`, checkpoint at the roof ring).
+- **Fail on a laser.** Custom journey: `await game.open('/?room=gary_skylight', 'abduct')`, pilot with `autopilotFinger`, and when the chest passes x 340 with `interior.hazards.find(h => h.spec.name === "Gary's laser").level === 1`, point 190 px right of the beam. Expect `result().failReason === 'alarm'` and `failBy === "Gary's laser"`, then `expectScene('choice', 90)` titled **ALARM!**. Tap **Back to flight** at `(270,714)` and expect `flight`. Proven at `7d2bd29`.
+- **Camera failure.** `?room=gary_garagedoor`, point the beam right into the cone near world x 1226: `failBy === "Gary's camera"` after one second of exposure.
+- **Prop cue.** Lift the specimen in any route and step ~1.5 s while still in the start room: `active.debug.mumble` equals the prop's line (e.g. Gary: "The truth is out there. Lock the back door."; in French « La vérité est ailleurs. Pense à fermer à clé. »).
+- **Headless coverage.** `npm test -- tests/abduct-deep.test.ts` (all twelve routes plus training rooms under hard rules), `abduct-touch.test.ts`, `abduct-precision.test.ts`, `abduct-prop-cues.test.ts`, and `npm run difficulty` (L3 band for human-model players).
 
 ## Gotchas
 
-- The 16 IDs in `src/contracts.ts` describe the catalog. `isRoomId` in `src/levels/levels.ts` accepts only the four tutorial IDs at this revision. The fallback is the title. The same guard also applies to the room argument of `window.__nightShift.goto`.
-- The standalone abduction dev mount and headless tests exercise the room code. Track their results independently of the game's browser routing, report and save.
-- Keep the browser-entry check failing until routing exists. Once it lands, verify the level assignment and hard rules as well as the room identity.
+- A deep room opened by `?room=` is one leg of a shift: no report and no save until three deliveries or sunrise. Use [deep shifts](deep-shifts.md) for reports, stars and persistence.
+- Keep pointer targets out of RESTART (top right) and the bottom-corner TURN buttons (y 881–943); the helper clamps y to 90–870.
+- RESTART in a deep room opens the choice screen, not the tutorial abort screen.
+- The sunrise clock keeps running inside the room (slot at (202,86)); a sunrise mid-room ends the shift on the report.
