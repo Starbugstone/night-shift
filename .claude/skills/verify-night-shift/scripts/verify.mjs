@@ -125,6 +125,8 @@ function controls(page) {
       await step(4);
       const actual = await scene();
       if (actual && actual !== 'loading') {
+        // wait out the transition (and any cover hold while the new view uploads), then settle
+        for (let n = 0; n < 240 && await observe(() => window.__nightShift.transitioning); n++) await step(1);
         await step(30);
         record('opened', { path, scene: await scene() });
         if (await scene() !== expected) await capture('unexpected-entry');

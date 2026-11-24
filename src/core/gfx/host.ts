@@ -6,6 +6,7 @@ import { autoDetectRenderer, Container, Graphics, type Renderer } from 'pixi.js'
 import 'pixi.js/prepare';
 import { VIEW_H, VIEW_W } from '../../contracts';
 import { LETTERBOX_COLOR, bitmapScaleOf, type Viewport } from '../viewport';
+import { applyPixiFixes } from './pixi-fixes';
 import { setTextureScale } from './textures';
 
 export interface RenderHost {
@@ -40,6 +41,7 @@ export async function createRenderHost(canvas: HTMLCanvasElement, viewport: View
     eventMode: 'none',
     eventFeatures: { move: false, globalMove: false, click: false, wheel: false },
   });
+  applyPixiFixes(renderer);
   // our own PointerInput owns the canvas events
   (renderer as { events?: { setTargetElement(el: HTMLElement | null): void } }).events?.setTargetElement(null);
   canvas.style.width = '100%';
