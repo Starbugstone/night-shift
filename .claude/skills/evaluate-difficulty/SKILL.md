@@ -36,7 +36,7 @@ a human "hand".
 ## Run it
 
 ```bash
-npm run difficulty                                    # L3, 6 seeds, checks the band
+npm run difficulty                                    # all deep levels, 6 seeds each
 DIFFICULTY_SEEDS=20 npm run difficulty                # steadier numbers (~1 min)
 DIFFICULTY_LEVELS=level3,level4 DIFFICULTY_OUT=review/difficulty npm run difficulty
 ```
@@ -44,8 +44,8 @@ DIFFICULTY_LEVELS=level3,level4 DIFFICULTY_OUT=review/difficulty npm run difficu
 It prints one table per level: delivery rate, median time, peak wake and peak second-sleeper wake per
 route and profile, with fail causes; then flight sightings by cause, naive-beeline catches, a
 "tension" score and a whole-shift time estimate. `DIFFICULTY_OUT` also writes `<level>.md` and `.json`
-(`review/` is ignored by Git). The same file is part of `npm test` at 6 seeds, so leaving L3's band
-fails CI.
+(`review/` is ignored by Git). `npm test` enforces every deep level's band at 6 seeds. Seed counts
+must be positive integers. Unknown level IDs and levels without a band fail the check.
 
 ## Bands (`tests/difficulty/evaluate.ts`, `BANDS`)
 
@@ -53,7 +53,8 @@ L3 ("firm but fair", the first deep level): skilled delivers ≥ 80% and casual 
 the easier route of each building delivers ≥ 80% for casual. Median flight sightings: skilled ≤ 1,
 casual ≤ 2. At least 80% of flights finish. The casual shift estimate fits in 80% of the sunrise
 budget. **Not trivial:** a naive beeline is caught at ≥ 2 of 4 start times, and casual peak wake
-averages ≥ 20. L4 has no band yet, so it is reported only. Add one under its level id when it is tuned.
+averages ≥ 20. L4 allows ≥ 75% skilled delivery on each route and uses the same remaining targets
+as L3.
 
 ## Find the cause
 

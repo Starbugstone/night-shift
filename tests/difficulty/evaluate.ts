@@ -27,10 +27,21 @@ export interface Band {
   tension: number;
 }
 
-/** L3 is the first deep level: firm but fair. L4 is not tuned yet, so it is reported, not enforced. */
+/** Difficulty targets for the deep levels. */
 export const BANDS: Record<string, Band | undefined> = {
   level3: {
     skilledRoute: 0.8,
+    casualRoute: 0.5,
+    casualBuilding: 0.8,
+    skilledSpots: 1,
+    casualSpots: 2,
+    flightDone: 0.8,
+    casualBudgetShare: 0.8,
+    beelineCaught: 2,
+    tension: 20,
+  },
+  level4: {
+    skilledRoute: 0.75,
     casualRoute: 0.5,
     casualBuilding: 0.8,
     skilledSpots: 1,
@@ -148,6 +159,9 @@ function routeReport(roomId: RoomId, building: string, route: string, profile: H
 }
 
 export function evaluateLevel(level: DeepLevelDef, seeds = 6, profiles: HumanProfile[] = [PROFILES.skilled, PROFILES.casual]): LevelReport {
+  if (!Number.isSafeInteger(seeds) || seeds <= 0) throw new Error('DIFFICULTY_SEEDS must be a positive integer');
+  const band = BANDS[level.id];
+  if (!band) throw new Error(`Missing difficulty band for ${level.id}`);
   const routes: RouteReport[] = [];
   for (const target of level.map.targets)
     for (const e of target.entries)
@@ -197,13 +211,12 @@ export function evaluateLevel(level: DeepLevelDef, seeds = 6, profiles: HumanPro
     tension: Math.round(tension),
     violations: [],
   };
-  report.violations = check(report, BANDS[level.id]);
+  report.violations = check(report, band);
   return report;
 }
 
-/** Every way the report misses its band, as readable sentences. Empty = in band (or no band). */
-export function check(r: LevelReport, band: Band | undefined): string[] {
-  if (!band) return [];
+/** Every way the report misses its band, as readable sentences. */
+export function check(r: LevelReport, band: Band): string[] {
   const v: string[] = [];
   for (const x of r.routes) {
     const want = x.profile === 'skilled' ? band.skilledRoute : x.profile === 'casual' ? band.casualRoute : 0;
@@ -246,6 +259,6 @@ export function formatReport(r: LevelReport): string {
   lines.push(`Naive beeline caught: ${r.beelineCaught}/4 start times. Tension (casual mean peak wake): ${r.tension}.`);
   lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')} · sunrise ${r.budgetSec} s · Night owl by ${r.parSec} s.`);
   lines.push('');
-  lines.push(r.violations.length ? `**Out of band:**\n${r.violations.map((v) => `- ${v}`).join('\n')}` : BANDS[r.levelId] ? '**In band.**' : '_No band set for this level: report only._');
+  lines.push(r.violations.length ? `**Out of band:**\n${r.violations.map((v) => `- ${v}`).join('\n')}` : '**In band.**');
   return lines.join('\n');
 }

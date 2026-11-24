@@ -1,9 +1,10 @@
 // Souvenirs: the loose Earth item in each room (a slipper, a mug) sticks to the specimen when the
 // body swings past it. Both views pop a "+1 slipper" label and a sound when it is grabbed; the
 // training rooms (levels 1 and 2) also point it out with a hint after the first lift.
-import { drawGlow, GLOW } from '../core/fx';
+import { Container, Graphics } from 'pixi.js';
+import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
+import { Label } from '../core/gfx/text';
 import { C } from '../ui/theme';
-import { outlinedText } from '../ui/draw';
 import { plural, tr } from '../i18n';
 
 /** How long the "+1 slipper" label floats. */
@@ -17,58 +18,53 @@ export function souvenirLabel(itemId: string): string {
   return '+' + (forms ? plural(1, forms) : `1 ${itemId}`);
 }
 
-/** The label rising from where the item was grabbed (world coords); `age` in seconds. */
-export function drawSouvenirPop(g: CanvasRenderingContext2D, x: number, y: number, age: number, label: string, reduced: boolean): void {
-  if (age <= 0 || age >= POP_SECONDS) return;
-  const k = age / POP_SECONDS;
-  const pop = reduced ? 1 : Math.min(1, age / 0.12) * (1 + 0.25 * Math.max(0, 1 - age / 0.25));
-  g.save();
-  g.globalAlpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
-  g.translate(x, y - 40 - (reduced ? 0 : k * 46));
-  g.scale(pop, pop);
-  outlinedText(g, label, 0, 0, 24, C.mint, C.ink, 900, 'center', 300);
-  g.restore();
+/** The label rises from where the item was grabbed, in world coordinates. */
+export class SouvenirPop {
+  readonly root = new Container();
+  private readonly caption = new Label({ size: 24, color: C.mint, outline: C.ink, weight: 900 });
+
+  constructor() {
+    this.root.addChild(this.caption);
+  }
+
+  sync(x: number, y: number, age: number, label: string, reduced: boolean): void {
+    this.root.visible = age > 0 && age < POP_SECONDS;
+    if (!this.root.visible) return;
+    const k = age / POP_SECONDS;
+    const pop = reduced ? 1 : Math.min(1, age / 0.12) * (1 + 0.25 * Math.max(0, 1 - age / 0.25));
+    this.caption.set(label, 0, 0, 300);
+    this.root.position.set(x, y - 40 - (reduced ? 0 : k * 46));
+    this.root.alpha = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
+    this.root.scale.set(pop);
+  }
 }
 
-/**
- * While the hint is up: the item glints (a soft mint halo and a turning four-point twinkle) and a
- * bobbing mint chevron points down at it. `cy` is the item's centre, `top` its top edge.
- */
-export function drawSouvenirMarker(g: CanvasRenderingContext2D, x: number, cy: number, top: number, time: number, reduced: boolean): void {
-  const pulse = reduced ? 0.7 : 0.55 + 0.35 * Math.sin(time * 5);
-  g.save();
-  g.globalCompositeOperation = 'lighter';
-  drawGlow(g, GLOW.mint, x, cy, 46, 46, pulse);
-  g.globalCompositeOperation = 'source-over';
-  // the glint: a four-point star at the item's shoulder
-  const s = 9 + (reduced ? 0 : 3 * Math.sin(time * 7));
-  g.translate(x + 14, cy - 8);
-  if (!reduced) g.rotate(time * 1.5);
-  g.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const r = i % 2 ? s * 0.28 : s;
-    const a = (i * Math.PI) / 4;
-    g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-  }
-  g.closePath();
-  g.fillStyle = '#ffffff';
-  g.fill();
-  g.restore();
+export class SouvenirMarker {
+  readonly root = new Container();
+  private readonly glow = new Glow(glowTexture(GLOW.mint), true);
+  private readonly glint = new Graphics();
+  private readonly chevron = new Graphics()
+    .moveTo(-18, -16).lineTo(0, 0).lineTo(18, -16).stroke({ color: C.ink, width: 12, join: 'round', cap: 'round' })
+    .moveTo(-18, -16).lineTo(0, 0).lineTo(18, -16).stroke({ color: C.mint, width: 6, join: 'round', cap: 'round' });
 
-  const bob = reduced ? 0 : Math.sin(time * 6) * 6;
-  const y = top - 16 + bob;
-  g.save();
-  g.lineJoin = 'round';
-  g.lineCap = 'round';
-  g.beginPath();
-  g.moveTo(x - 18, y - 16);
-  g.lineTo(x, y);
-  g.lineTo(x + 18, y - 16);
-  g.lineWidth = 12;
-  g.strokeStyle = C.ink;
-  g.stroke();
-  g.lineWidth = 6;
-  g.strokeStyle = C.mint;
-  g.stroke();
-  g.restore();
+  constructor() {
+    this.glint.moveTo(1, 0);
+    for (let i = 1; i < 8; i++) {
+      const r = i % 2 ? 0.28 : 1;
+      const a = i * Math.PI / 4;
+      this.glint.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    this.glint.closePath().fill(0xffffff);
+    this.root.addChild(this.glow, this.glint, this.chevron);
+  }
+
+  sync(on: boolean, x: number, cy: number, top: number, time: number, reduced: boolean): void {
+    this.root.visible = on;
+    if (!on) return;
+    this.glow.place(x, cy, 46, 46, reduced ? 0.7 : 0.55 + 0.35 * Math.sin(time * 5));
+    this.glint.position.set(x + 14, cy - 8);
+    this.glint.rotation = reduced ? 0 : time * 1.5;
+    this.glint.scale.set(9 + (reduced ? 0 : 3 * Math.sin(time * 7)));
+    this.chevron.position.set(x, top - 16 + (reduced ? 0 : Math.sin(time * 6) * 6));
+  }
 }

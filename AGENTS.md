@@ -5,8 +5,9 @@ Read `docs/GDD.md` (what to build), `src/contracts.ts` (shared types) and
 
 ## Stack
 
-Vite + TypeScript (strict), plain Canvas 2D, no game framework, no runtime
-dependencies. Custom verlet ragdoll physics. Vitest for logic tests
+Vite + TypeScript (strict), rendered with PixiJS 8 (`pixi.js`, pinned; WebGL) driven by our own
+loop, input and scene manager; no other runtime dependencies. How rendering works and the rules
+for views: `docs/PIXI-MIGRATION.md`. Custom verlet ragdoll physics. Vitest for logic tests
 (`tests/**/*.test.ts`, node environment — keep physics/logic free of DOM so it
 is testable). Commands: `npm run dev`, `npm test`, `npm run typecheck`,
 `npm run build`.
@@ -34,15 +35,24 @@ the index or other agents' files — the coordinator commits. Do not run
 
 ## Shared rendering helpers (use these before drawing your own)
 
+Read `docs/PIXI-MIGRATION.md` first: a scene keeps its logic and draws through a view class built
+lazily with `ViewSlot`; views build display objects once and `sync()` only properties.
+Rebuilding Pixi geometry every frame is several times dearer than Canvas 2D was.
+
+- `src/core/gfx/` — the kit: `textures.ts` (`artTexture`, `paintedTexture` for static drawing painted
+  once with Canvas 2D, `ownedTexture` for big per-scene bitmaps you free yourself, `silhouetteTexture`),
+  `glow.ts` (`Glow`, `ScreenTint.vignette/edge/wash`, light textures), `text.ts` (`Label`, `Paragraph`,
+  `wrapLines`, `measure`), `shapes.ts` (`Shape` + `keyOf`: geometry rebuilt only when its key
+  changes; `roundRect`, `panelPath`, `ellipseArc`), `particles.ts` (`ParticleView` for a `Particles` pool),
+  `scene.ts` (`ViewSlot`, `SceneView`), `host.ts` (renderer, letterbox, `captureFrame`).
 - `src/core/fx.ts` — `Particles` (one fixed-size pool per scene: stars, puffs, sparks, rings,
-  twinkles), `drawGlow` / `lightSprite` / `radialSprite` (cached light blobs; never fill a big
-  radial gradient per frame), `drawShadow` (soft sprite silhouette), `CachedLayer` (static
-  full-screen art painted once), `drawVignette` / `drawEdgeTint`, easing.
-- `src/core/fx.ts` also has `drawSprite` / `bitmapOf` (an SVG sprite rasterised once per draw size at the
-  backing store's own scale, then blitted; use it for anything drawn every frame on a big map),
-  `drawWash` (a cached screen-wide directional tint, e.g. dawn) and `rgbOf`.
-- `src/ui/hud.ts` — the one in-game HUD kit (`hudPanel`, `hudMeter`, `hudTimer`, `hudButton`,
-  `hudPrompt`) on the shared `HUD_ROW`. Both phases use it; don't hand-draw HUD boxes.
+  twinkles; simulation only), `GLOW` colours, `rgbOf`, easing.
+- `src/ui/views/` — `artSprite` / `artTex` / `artShadow` (manifest art, null when missing),
+  `ButtonView`, `NightSky`, `Skyline`, icons, portraits, and the one in-game HUD kit in `hud.ts`
+  (`HudPanel`, `HudMeter`, `HudTimer`, `HudButton`, `HudPrompt`, `HudFuse`, `HudSunClock`) on the
+  shared `HUD_ROW` from `src/ui/hud.ts`. Both phases use it; don't hand-draw HUD boxes.
+- Canvas 2D only runs inside texture painters; `tests/shell-pixi-only.test.ts` enforces that no code
+  makes its own canvas or draws on one per frame.
 - `SceneManager.go(name, make, instant, transition)` — `fade` (default), `iris`, `flash`.
 - Every animated effect checks `ctx.reducedMotion`. Gameplay tells (cone edge, bark ring, neon
   on/off) must stay honest: decorate them, don't move them.
@@ -56,7 +66,8 @@ the index or other agents' files — the coordinator commits. Do not run
 Load art by manifest key through `ctx.assets.get(key)`; files are at
 `public/art/<key>.svg`, served from `import.meta.env.BASE_URL + 'art/'`.
 Every draw must have a primitive fallback (art may be missing or still
-being made). Draw sprites into a rect of the manifest size.
+being made): `artSprite` returns null for missing art, so build the fallback then. Draw sprites
+into a rect of the manifest size.
 
 ## v2 "Deeper Shift" (2026-11-23)
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import type { Viewport } from '../src/core/canvas';
+import type { Viewport } from '../src/core/viewport';
 import { PointerInput } from '../src/core/input';
 
 type Listener = (e: unknown) => void;

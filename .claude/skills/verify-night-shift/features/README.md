@@ -16,7 +16,7 @@ Read the [skill](../SKILL.md) for launch, doctor, pointer coordinates, and evide
 
 ## Proof and skip reporting
 
-- Keep a canvas PNG of the action and the result, plus the input and observed state in the run's trace. Confirm save changes after a same-context reload.
+- Keep a PNG (`game.capture`) of the action and the result, plus the input and observed state in the run's trace. Confirm save changes after a same-context reload.
 - When a URL or an unlock blocks a path, record the exact entry and observed scene. A headless test covers its own assertion and leaves browser entry unverified.
 - Mark which routes and cases were driven. Run each affected entry point when verifying a change shared among them.
 

@@ -1,6 +1,7 @@
 import { VIEW_H, VIEW_W, type AbductResult, type AbductStart, type GameContext, type RoomId, type Scene, type Vec2 } from '../contracts';
+import { ViewSlot } from '../core/gfx/scene';
 import { tr } from '../i18n';
-import { DeepAbductView, drawFailure, drawSnooze } from './deep-view';
+import { DeepAbductView } from './deep-view';
 import { AbductView, RESTART } from './draw';
 import { ROOMS } from './rooms';
 import { FOLLOW } from './ragdoll';
@@ -8,6 +9,7 @@ import { CEILING } from './rooms/layout';
 import { AbductSimulation } from './simulation';
 import { pointStep } from './point';
 import { SOUVENIR_HINT } from './souvenir';
+import type { AbductViewInput } from './views/effects';
 
 export { POINT, pointReach, pointSpeed } from './point';
 import { TURN_BUTTONS_DEEP, TURN_BUTTONS_ROOM, TurnControl } from './turn';
@@ -33,7 +35,6 @@ export function emitterPoint(roomId: RoomId): Vec2 {
 
 export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: (result: AbductResult) => void): AbductScene {
   const simulation = new AbductSimulation(ROOMS[start.roomId], ctx.upgrades, ctx.audio, Math.random, start.rules);
-  const view = simulation.interior ? new DeepAbductView(simulation, ctx) : new AbductView(simulation, ctx);
   let tutorial = ctx.tutorial;
   let dragging = false;
   let lastX = 0;
@@ -46,6 +47,8 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
   let clock = 0;
   let finished = false;
   const turn = new TurnControl(simulation.interior ? TURN_BUTTONS_DEEP : TURN_BUTTONS_ROOM);
+  const input: AbductViewInput = { dragging: false, tutorial: ctx.tutorial, turn };
+  const look = new ViewSlot(() => simulation.interior ? new DeepAbductView(simulation, ctx, input) : new AbductView(simulation, ctx, input));
   let twisted = false;
   let turnHintUntil = -1;
   // Training rooms show the souvenir hint first; the turn hint gets its full time after it.
@@ -60,6 +63,9 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
   }
 
   return {
+    get view() {
+      return look.get().root;
+    },
     update(dt) {
       if (finished) return;
       clock += dt;
@@ -151,20 +157,21 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
         onDone(simulation.result());
       }
     },
-    render(g) {
+    render() {
+      const view = look.peek();
+      if (!view) return;
       const playable = !simulation.delivered && !simulation.failure;
-      const hint = playable && !turn.used && !simulation.body.gripActive && clock < turnHintUntil
+      input.hint = playable && !turn.used && !simulation.body.gripActive && clock < turnHintUntil
         ? (ctx.pointer.kind === 'mouse' || ctx.pointer.kind === 'pen' ? tr().abduct.turnHintMouse : tr().abduct.turnHintTouch)
         : undefined;
-      view.render(g, tutorial && !simulation.delivered, dragging, turn, hint);
-      if (!simulation.interior) {
-        drawSnooze(g, simulation, ctx.reducedMotion);
-        drawFailure(g, simulation, ctx.reducedMotion);
-      }
+      input.tutorial = tutorial && !simulation.delivered;
+      input.dragging = dragging;
+      view.sync();
     },
     dispose() {
       endDrag();
       turn.reset();
+      look.destroy();
     },
     debug: simulation,
   };

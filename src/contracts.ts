@@ -1,6 +1,7 @@
 // Shared contracts between the shell/flight code (src/core, src/flight, src/ui,
 // src/levels) and the abduction code (src/abduct). Changes here must be
 // additive and announced in your hand-off report.
+import type { Container } from 'pixi.js';
 
 /** Logical canvas size. Everything draws in these units; the shell scales. */
 export const VIEW_W = 540;
@@ -21,7 +22,7 @@ export interface PointerState {
   pressed: boolean;
   released: boolean;
   // ---- v2.1 (abduction precision + rotation). All optional: scenes that ignore them keep working.
-  /** Device behind the primary pointer (set on press, and by mouse hover). Missing = treat as touch. */
+  /** Device set on press or mouse hover. Abduction fixtures without a kind use relative drag. */
   kind?: PointerKind;
   /** A second finger while the primary is down (touch). Same once-per-frame semantics. */
   second?: SecondPointer;
@@ -103,10 +104,16 @@ export interface GameContext {
   reducedMotion: boolean;
 }
 
+/**
+ * A screen of the game. The scene keeps the logic; `view` is its Pixi display tree, built lazily
+ * on first access (headless tests only call `update`, so they never build it), and `render()`
+ * syncs that tree to the scene state once per frame. See docs/PIXI-MIGRATION.md.
+ */
 export interface Scene {
   update(dt: number): void;
-  render(g: CanvasRenderingContext2D): void;
-  /** Called once when the scene is removed. */
+  readonly view: Container;
+  render(): void;
+  /** Called once when the scene is removed: destroy the view here. */
   dispose?(): void;
 }
 
@@ -231,9 +238,9 @@ export interface FlightAutopilotIntent {
 }
 
 /**
- * Test-only. Abduction scenes expose `debug.autopilot()`: the beam drag a competent player
- * would make this frame, as a finger delta in logical px (the beam follows relative drag).
- * `{dx:0, dy:0}` = hold still (e.g. waiting for a laser to switch off).
+ * Test-only. `debug.autopilot()` returns a beam displacement in logical pixels for headless
+ * simulations. `{dx:0, dy:0}` holds still. Pointer-driven tests use `debug.autopilotFinger()`
+ * for the screen position to hold this frame.
  */
 export interface AbductAutopilotIntent {
   dx: number;

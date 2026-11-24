@@ -1,13 +1,24 @@
-import type { Scene } from '../contracts';
+import { Container, Graphics, Sprite } from 'pixi.js';
+import type { Assets, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
 import { MAX_STARS, RANKS, isLevelUnlocked, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
-import { fmt, langVersion, tr } from '../i18n';
-import { GLOW, drawGlow, easeOutCubic } from '../core/fx';
-import { clamp, drawGlorb, drawStar, fmtTime, headKey, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text, wrap } from './draw';
-import { C, font } from './theme';
-import { Button, drawNightSky } from './widgets';
+import { fmt, tr } from '../i18n';
+import { easeOutCubic } from '../core/fx';
+import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
+import { ViewSlot, type SceneView } from '../core/gfx/scene';
+import { Shape, panelPath, roundRect } from '../core/gfx/shapes';
+import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
+import { paintedTexture } from '../core/gfx/textures';
+import { clamp, fmtTime, headKey } from './draw';
+import { C } from './theme';
+import { Button } from './widgets';
+import { artSprite } from './views/art';
+import { NightSky } from './views/backdrop';
+import { ButtonView } from './views/button';
+import { glorbTexture, iconSprite, starTexture } from './views/icons';
+import { highlightedPanel, SunIcon } from './views/menu-decor';
 
 const LIST_TOP = 262;
 const CARD_X = 24;
@@ -27,22 +38,22 @@ interface Card {
 }
 
 export class WorkOrdersScene implements Scene {
-  private t = 0;
-  private scroll = 0;
+  t = 0;
+  scroll = 0;
   private vel = 0;
   private dragging = false;
   private pressY = 0;
   private pressScroll = 0;
   private lastY = 0;
-  private tracking = false;
-  private toast = '';
-  private toastT = 0;
-  private readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
-  private readonly upgrades = new Button(336, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
-  private readonly cards: Card[] = [];
-  private headerGrad: CanvasGradient | null = null;
+  tracking = false;
+  toast = '';
+  toastT = 0;
+  readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
+  readonly upgrades = new Button(336, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
+  readonly cards: Card[] = [];
+  private readonly look = new ViewSlot(() => new WorkOrdersView(this));
 
-  constructor(private readonly shell: Shell) {
+  constructor(readonly shell: Shell) {
     for (let i = 0; i < LEVELS.length; i++) this.cards.push({ kind: 'level', index: i, shake: 0 });
     for (let i = 0; i < tr().missionConcepts.length; i++) this.cards.push({ kind: 'concept', index: i, shake: 0 });
   }
@@ -97,7 +108,7 @@ export class WorkOrdersScene implements Scene {
     this.toastT = Math.max(0, this.toastT - dt);
   }
 
-  private tap(x: number, contentY: number): void {
+  tap(x: number, contentY: number): void {
     if (x < CARD_X || x > CARD_X + CARD_W) return;
     const i = Math.floor(contentY / (CARD_H + GAP));
     const within = contentY - i * (CARD_H + GAP);
@@ -117,284 +128,283 @@ export class WorkOrdersScene implements Scene {
     this.toastT = 2.4;
   }
 
-  render(g: CanvasRenderingContext2D): void {
-    const { save, assets } = this.shell;
-    const rm = this.shell.ctx.reducedMotion;
-    drawNightSky(g, this.t, rm);
+  get view(): Container {
+    return this.look.get().root;
+  }
 
-    // ---- list (clipped below header)
-    g.save();
-    g.beginPath();
-    g.rect(0, LIST_TOP - 8, VIEW_W, VIEW_H - LIST_TOP + 8);
-    g.clip();
-    for (let i = 0; i < this.cards.length; i++) {
-      const y = LIST_TOP + i * (CARD_H + GAP) - this.scroll;
-      if (y > VIEW_H || y + CARD_H < LIST_TOP - 20) continue;
-      const c = this.cards[i]!;
-      const sx = c.shake > 0 && !rm ? Math.sin(c.shake * 40) * 10 * c.shake : 0;
-      // cards deal in from below, one after another
-      const deal = rm ? 1 : easeOutCubic((this.t - 0.05 - i * 0.07) / 0.32);
-      if (deal <= 0) continue;
-      g.globalAlpha = deal;
-      const dy = (1 - deal) * 46;
-      if (c.kind === 'level') this.levelCard(g, c.index, CARD_X + sx, y + dy);
-      else this.conceptCard(g, c.index, CARD_X, y + dy);
-      g.globalAlpha = 1;
-    }
-    g.restore();
+  render(): void {
+    this.look.peek()?.sync();
+  }
 
-    // ---- header
-    if (!this.headerGrad) {
-      this.headerGrad = g.createLinearGradient(0, 0, 0, LIST_TOP);
-      this.headerGrad.addColorStop(0, '#0d0924');
-      this.headerGrad.addColorStop(1, '#171038');
-    }
-    g.fillStyle = this.headerGrad;
-    g.fillRect(0, 0, VIEW_W, LIST_TOP - 6);
-    g.fillStyle = 'rgba(124,255,203,0.25)';
-    g.fillRect(0, LIST_TOP - 8, VIEW_W, 2);
-    this.back.render(g);
-    const w = tr().workOrders;
-    // clear of the back button on the left
-    outlinedText(g, w.title, VIEW_W / 2 + 20, 48, 38, C.mint, C.ink, 900, 'center', VIEW_W - 150);
-    text(g, w.subtitle, VIEW_W / 2 + 20, 80, 17, C.muted, 'center', 600, false, VIEW_W - 150);
+  dispose(): void {
+    this.look.destroy();
+  }
+}
+
+const TOAST = { size: 20, color: C.amberHi, weight: 700, lineHeight: 26 } as const;
+
+class WorkOrdersView implements SceneView {
+  readonly root = new Container();
+  private readonly sky = new NightSky();
+  private readonly list = new Container();
+  private readonly cards: (LevelCard | ConceptCard)[];
+  private readonly back: ButtonView;
+  private readonly upgrades: ButtonView;
+  private readonly toast = new Container();
+  private readonly toastPanel = new Shape();
+  private readonly toastText = new Paragraph(TOAST);
+  private toastFor = '';
+
+  constructor(private readonly s: WorkOrdersScene) {
+    const { assets, save } = s.shell;
+    const { workOrders: strings } = tr();
+    const mask = new Graphics().rect(0, LIST_TOP - 8, VIEW_W, VIEW_H - LIST_TOP + 8).fill('#ffffff');
+    this.list.mask = mask;
+    this.cards = s.cards.map((c) => c.kind === 'level' ? new LevelCard(s.shell, c.index) : new ConceptCard(c.index));
+    for (const card of this.cards) this.list.addChild(card.root);
+
+    const header = new Sprite(paintedTexture('workorders|header', 2, LIST_TOP - 6, (g, w, h) => {
+      const grad = g.createLinearGradient(0, 0, 0, LIST_TOP);
+      grad.addColorStop(0, '#0d0924');
+      grad.addColorStop(1, '#171038');
+      g.fillStyle = grad;
+      g.fillRect(0, 0, w, h);
+    }, 1));
+    header.width = VIEW_W;
+    const rule = new Graphics().rect(0, LIST_TOP - 8, VIEW_W, 2).fill('rgba(124,255,203,0.25)');
+    this.back = new ButtonView(s.back);
+    this.upgrades = new ButtonView(s.upgrades);
 
     const stars = totalStars(save);
     const rank = rankText(rankFor(stars));
-    panel(g, 24, 100, VIEW_W - 48, 76, C.panel, 18, C.ink, 3, 4);
-    panelHighlight(g, 24, 100, VIEW_W - 48, 18);
-    text(g, w.rank, 44, 120, 14, C.muted, 'left', 800);
-    text(g, rank.title, 44, 146, rank.title.length > 16 ? 22 : 26, C.text, 'left', 800, false, 384 - 44 - 12);
-    // glorb purse, set into the rank panel
-    roundRectPath(g, 384, 114, 118, 48, 24);
-    g.fillStyle = 'rgba(18,13,43,0.55)';
-    g.fill();
-    drawGlorb(g, assets, 410, 138, 38);
-    text(g, String(save.glorbs), 434, 139, 26, C.mint, 'left', 800, false, 62);
     const nr = nextRank(stars);
-    // Left column under the rank panel stops short of the Upgrades button.
-    const colW = this.upgrades.x - 44 - 12;
-    text(g, fmt(w.stars, { n: stars, max: MAX_STARS }), 44, 198, 22, C.amberHi, 'left', 800);
-    if (nr) {
-      text(g, fmt(w.nextRank, { n: nr.minStars }), 44, 224, 15, C.muted, 'left', 700, false, colW);
-      text(g, rank.flavour, 44, 244, 14, 'rgba(169,162,214,0.8)', 'left', 600, true, colW);
-    } else text(g, rank.flavour, 44, 232, 15, C.muted, 'left', 600, true, colW);
-    this.upgrades.render(g);
-
-    if (this.toastT > 0) {
-      const a = Math.min(1, this.toastT * 3);
-      g.globalAlpha = a;
-      const lines = wrap(g, this.toast, VIEW_W - 100, 20, 700);
-      const h = 30 + lines.length * 26;
-      panel(g, 30, VIEW_H - 40 - h, VIEW_W - 60, h, C.ink, 18, C.amber, 3, 0);
-      paragraph(g, this.toast, 50, VIEW_H - 40 - h + 15, VIEW_W - 100, 20, C.amberHi, 26, 'center', 700);
-      g.globalAlpha = 1;
-    }
+    const colW = s.upgrades.x - 44 - 12;
+    const purse = roundRect(new Graphics(), 384, 114, 118, 48, 24).fill('rgba(18,13,43,0.55)');
+    const coin = iconSprite(glorbTexture(assets, 38), 38);
+    coin.position.set(410, 138);
+    this.toast.addChild(this.toastPanel, this.toastText);
+    this.root.addChild(
+      this.sky, mask, this.list, header, rule, this.back,
+      new Label({ size: 38, color: C.mint, weight: 900, outline: C.ink }).set(strings.title, VIEW_W / 2 + 20, 48, VIEW_W - 150),
+      new Label({ size: 17, color: C.muted, weight: 600 }).set(strings.subtitle, VIEW_W / 2 + 20, 80, VIEW_W - 150),
+      highlightedPanel(new Graphics(), 24, 100, VIEW_W - 48, 76, { fill: C.panel, r: 18, lineW: 3, shadow: 4 }),
+      new Label({ size: 14, color: C.muted, align: 'left', weight: 800 }).set(strings.rank, 44, 120),
+      new Label({ size: rank.title.length > 16 ? 22 : 26, color: C.text, align: 'left', weight: 800 }).set(rank.title, 44, 146, 328),
+      purse, coin,
+      new Label({ size: 26, color: C.mint, align: 'left', weight: 800 }).set(String(save.glorbs), 434, 139, 62),
+      new Label({ size: 22, color: C.amberHi, align: 'left', weight: 800 }).set(fmt(strings.stars, { n: stars, max: MAX_STARS }), 44, 198),
+    );
+    if (nr) this.root.addChild(new Label({ size: 15, color: C.muted, align: 'left', weight: 700 }).set(fmt(strings.nextRank, { n: nr.minStars }), 44, 224, colW));
+    const flavour = new Label({ size: nr ? 14 : 15, color: nr ? 'rgba(169,162,214,0.8)' : C.muted, align: 'left', italic: true });
+    this.root.addChild(flavour.set(rank.flavour, 44, nr ? 244 : 232, colW), this.upgrades, this.toast);
   }
 
-  private levelCard(g: CanvasRenderingContext2D, i: number, x: number, y: number): void {
-    const { save, assets } = this.shell;
-    const lv = LEVELS[i]!;
-    const unlocked = isLevelUnlocked(save, i);
-    const prog = save.levels[lv.id];
-    const w = tr().workOrders;
-    const lt = tr().levels[lv.id];
-    panel(g, x, y, CARD_W, CARD_H, unlocked ? C.panel : '#211a4a', 22, C.ink, 4, 6);
-    panelHighlight(g, x, y, CARD_W, 22, unlocked ? 0.14 : 0.07);
+  sync(): void {
+    const { shell, t, scroll, cards, toast, toastT } = this.s;
+    const reduced = shell.ctx.reducedMotion;
+    this.sky.sync(t, reduced);
+    this.back.sync();
+    this.upgrades.sync();
+    this.list.y = LIST_TOP - scroll;
+    for (let i = 0; i < this.cards.length; i++) {
+      const card = this.cards[i]!;
+      const top = i * (CARD_H + GAP);
+      const y = top + this.list.y;
+      const deal = reduced ? 1 : easeOutCubic((t - 0.05 - i * 0.07) / 0.32);
+      card.root.visible = y <= VIEW_H && y + CARD_H >= LIST_TOP - 20 && deal > 0;
+      if (!card.root.visible) continue;
+      const shake = cards[i]!.shake;
+      card.root.position.set(CARD_X + (shake > 0 && !reduced ? Math.sin(shake * 40) * 10 * shake : 0), top + (1 - deal) * 46);
+      card.root.alpha = deal;
+      if (card instanceof LevelCard) card.sync(t, reduced);
+    }
+
+    this.toast.visible = toastT > 0;
+    if (toastT > 0) {
+      if (toast !== this.toastFor) {
+        this.toastFor = toast;
+        const h = 30 + wrapLines(toast, VIEW_W - 100, TOAST.size, TOAST.weight).length * TOAST.lineHeight;
+        const y = VIEW_H - 40 - h;
+        this.toastPanel.draw(h, (g) => panelPath(g, 30, y, VIEW_W - 60, h, { fill: C.ink, r: 18, stroke: C.amber, lineW: 3, shadow: 0 }));
+        this.toastText.setBlock(toast, 50, y + 15, VIEW_W - 100);
+      }
+      this.toast.alpha = Math.min(1, toastT * 3);
+    }
+  }
+}
+
+class LevelCard {
+  readonly root = new Container();
+  private readonly photos: Mugshot[] = [];
+  private readonly arrow: Graphics | null;
+  private readonly sun: SunIcon | null;
+
+  constructor(shell: Shell, private readonly index: number) {
+    const { assets, save } = shell;
+    const lv = LEVELS[index]!;
+    const unlocked = isLevelUnlocked(save, index);
     const training = lv.kind === 'tutorial';
-    // spine: mint for training, hot for the real shifts
-    roundRectPath(g, x + 4, y + 4, 12, CARD_H - 8, 6);
-    g.fillStyle = !unlocked ? '#4a4470' : training ? C.mint : C.amber;
-    g.fill();
-    if (unlocked && !training) {
-      roundRectPath(g, x + 4, y + 4 + (CARD_H - 8) * 0.5, 12, (CARD_H - 8) * 0.5, 6);
-      g.fillStyle = C.red;
-      g.fill();
-    }
+    const prog = save.levels[lv.id];
+    const { workOrders: strings, levels } = tr();
+    const lt = levels[lv.id];
+
+    const card = highlightedPanel(new Graphics(), 0, 0, CARD_W, CARD_H, { fill: unlocked ? C.panel : '#211a4a' }, unlocked ? 0.14 : 0.07);
+    roundRect(card, 4, 4, 12, CARD_H - 8, 6).fill(!unlocked ? '#4a4470' : training ? C.mint : C.amber);
+    if (unlocked && !training) roundRect(card, 4, CARD_H / 2, 12, (CARD_H - 8) / 2, 6).fill(C.red);
+    this.root.addChild(card);
     if (lv.kind === 'deep') {
-      // three specimens on this order: three mugshots
-      const cx = x + CARD_W - 66;
-      const cy = y + 60;
-      const tg = lv.map.targets;
-      this.mugshot(g, headKey(tg[0].short), cx - 26, cy - 14, unlocked, i, 25);
-      this.mugshot(g, headKey(tg[1].short), cx + 24, cy - 16, unlocked, i + 1, 25);
-      this.mugshot(g, headKey(tg[2].short), cx - 2, cy + 24, unlocked, i + 2, 25);
-    } else this.mugshot(g, lv.mugshot, x + CARD_W - 62, y + 58, unlocked, i, 38);
-    const orderNo = fmt(w.orderNo, { num: lv.num });
-    text(g, orderNo, x + 34, y + 26, 14, unlocked ? C.mint : C.muted, 'left', 800);
-    g.font = font(14, 800);
-    const tagX = x + 44 + g.measureText(orderNo).width;
-    const tag = training ? w.training : w.deepShift;
-    g.font = font(13, 900);
-    const tw = g.measureText(tag).width + (training ? 40 : 18);
-    roundRectPath(g, tagX, y + 14, tw, 24, 12);
-    g.fillStyle = training ? 'rgba(124,255,203,0.16)' : 'rgba(255,93,115,0.24)';
-    g.fill();
-    g.lineWidth = 1.5;
-    g.strokeStyle = training ? 'rgba(124,255,203,0.6)' : 'rgba(255,138,154,0.75)';
-    g.stroke();
-    if (training) {
-      // a learner plate
-      roundRectPath(g, tagX + 6, y + 18, 17, 16, 3);
-      g.fillStyle = '#f4efe2';
-      g.fill();
-      text(g, w.learner, tagX + 14.5, y + 27, 13, '#d33a52', 'center', 900);
+      const cx = CARD_W - 66;
+      const [a, b, c] = lv.map.targets;
+      this.photos.push(
+        new Mugshot(assets, headKey(a.short), cx - 26, 46, unlocked, index, 25),
+        new Mugshot(assets, headKey(b.short), cx + 24, 44, unlocked, index + 1, 25),
+        new Mugshot(assets, headKey(c.short), cx - 2, 84, unlocked, index + 2, 25),
+      );
+    } else this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 62, 58, unlocked, index, 38));
+    for (const photo of this.photos) this.root.addChild(photo.root);
+
+    const order = fmt(strings.orderNo, { num: lv.num });
+    const tagX = 44 + measure(order, 14, 800);
+    const tag = training ? strings.training : strings.deepShift;
+    const tw = measure(tag, 13, 900) + (training ? 40 : 18);
+    const badge = roundRect(new Graphics(), tagX, 14, tw, 24, 12)
+      .fill(training ? 'rgba(124,255,203,0.16)' : 'rgba(255,93,115,0.24)')
+      .stroke({ color: training ? 'rgba(124,255,203,0.6)' : 'rgba(255,138,154,0.75)', width: 1.5 });
+    if (training) roundRect(badge, tagX + 6, 18, 17, 16, 3).fill('#f4efe2');
+    this.root.addChild(
+      new Label({ size: 14, color: unlocked ? C.mint : C.muted, align: 'left', weight: 800 }).set(order, 34, 26),
+      badge,
+      new Label({ size: 13, color: training ? C.mint : '#ffa3b0', align: 'left', weight: 900 }).set(tag, tagX + (training ? 28 : 9), 27),
+    );
+    if (training) this.root.addChild(new Label({ size: 13, color: '#d33a52', weight: 900 }).set(strings.learner, tagX + 14.5, 27));
+    const title = wrapLines(lt.title, CARD_W - 150, 24, 800);
+    const titleLook = { size: 24, color: unlocked ? C.text : C.muted, align: 'left', weight: 800 } as const;
+    const lines = Math.min(2, title.length);
+    for (let i = 0; i < lines; i++) this.root.addChild(new Label(titleLook).set(title[i]!, 34, 56 + i * 28));
+    this.root.addChild(new Label({ size: 16, color: unlocked ? C.muted : C.amber, align: 'left', weight: 700 })
+      .set(unlocked ? lt.location : strings.locked, 34, 56 + lines * 28, CARD_W - 150));
+
+    this.sun = unlocked && lv.kind === 'deep' ? new SunIcon(5.5, 8, 11.5) : null;
+    this.arrow = unlocked ? this.openBadge(training) : null;
+    if (!unlocked) {
+      const prev = LEVELS[index - 1];
+      this.root.addChild(
+        padlock(CARD_W - 34, 84),
+        new Label({ size: 17, color: C.amberHi, align: 'left', weight: 700 })
+          .set(fmt(strings.deliverToUnlock, { name: prev ? levels[prev.id].human : '…' }), 34, CARD_H - 30, CARD_W - 110),
+      );
+      return;
     }
-    text(g, tag, tagX + (training ? 28 : 9), y + 27, 13, training ? C.mint : '#ffa3b0', 'left', 900);
-    const titleLines = wrap(g, lt.title, CARD_W - 150, 24, 800);
-    g.font = font(24, 800);
-    g.fillStyle = unlocked ? C.text : C.muted;
-    g.textAlign = 'left';
-    for (let k = 0; k < Math.min(2, titleLines.length); k++) g.fillText(titleLines[k]!, x + 34, y + 56 + k * 28);
-    const ty = y + 56 + Math.min(2, titleLines.length) * 28;
-    text(g, unlocked ? lt.location : w.locked, x + 34, ty, 16, unlocked ? C.muted : C.amber, 'left', 700, false, CARD_W - 150);
-    if (unlocked) {
-      for (let s = 0; s < 3; s++) drawStar(g, assets, x + 52 + s * 44, y + CARD_H - 32, 38, prog.stars[s] === true);
-      if (lv.kind === 'deep') {
-        const label = this.sunriseLabel(lv.budgetSec);
-        text(g, label, x + CARD_W - 24, y + CARD_H - 44, 16, C.amberHi, 'right', 800);
-        // a small sun coming up beside it
-        const sx = x + CARD_W - 42 - g.measureText(label).width;
-        const sy = y + CARD_H - 43;
-        g.strokeStyle = C.amberHi;
-        g.lineWidth = 2;
-        g.lineCap = 'round';
-        g.beginPath();
-        const turn = this.shell.ctx.reducedMotion ? 0 : this.t * 0.6;
-        for (let k = 0; k < 8; k++) {
-          const a = turn + (k * Math.PI) / 4;
-          g.moveTo(sx + Math.cos(a) * 8, sy + Math.sin(a) * 8);
-          g.lineTo(sx + Math.cos(a) * 11.5, sy + Math.sin(a) * 11.5);
-        }
-        g.stroke();
-        g.lineCap = 'butt';
-        g.beginPath();
-        g.arc(sx, sy, 5.5, 0, Math.PI * 2);
-        g.fillStyle = C.amberHi;
-        g.fill();
-      } else text(g, fmt(w.par, { time: fmtTime(lv.parSec) }), x + CARD_W - 24, y + CARD_H - 44, 16, C.muted, 'right', 700);
-      text(g, prog.bestTimeSec !== null ? fmt(w.best, { time: fmtTime(prog.bestTimeSec) }) : w.notAttempted, x + CARD_W - 24, y + CARD_H - 22, 15, C.amberHi, 'right', 600);
-      // "open" badge on the mugshot
-      const pulse = this.shell.ctx.reducedMotion ? 0 : Math.sin(this.t * 4 + i) * 2;
-      const bx = x + CARD_W - 34;
-      const by = lv.kind === 'deep' ? y + 96 : y + 88;
-      g.beginPath();
-      g.arc(bx, by + 3, 18, 0, Math.PI * 2);
-      g.fillStyle = 'rgba(5,3,20,0.45)';
-      g.fill();
-      g.beginPath();
-      g.arc(bx, by, 18, 0, Math.PI * 2);
-      g.fillStyle = C.mint;
-      g.fill();
-      g.lineWidth = 3;
-      g.strokeStyle = C.ink;
-      g.stroke();
-      g.lineWidth = 4;
-      g.lineCap = 'round';
-      g.lineJoin = 'round';
-      g.beginPath();
-      g.moveTo(bx - 4 + pulse, by - 7);
-      g.lineTo(bx + 4 + pulse, by);
-      g.lineTo(bx - 4 + pulse, by + 7);
-      g.stroke();
-      g.lineCap = 'butt';
-    } else {
-      this.padlock(g, x + CARD_W - 34, y + 84);
-      const prev = LEVELS[i - 1];
-      text(g, fmt(w.deliverToUnlock, { name: prev ? tr().levels[prev.id].human : '…' }), x + 34, y + CARD_H - 30, 17, C.amberHi, 'left', 700, false, CARD_W - 110);
+
+    const empty = starTexture(assets, 38, false);
+    const full = starTexture(assets, 38, true);
+    for (let i = 0; i < 3; i++) {
+      const star = iconSprite(prog.stars[i] ? full : empty, 38);
+      star.position.set(52 + i * 44, CARD_H - 32);
+      this.root.addChild(star);
     }
+    if (lv.kind === 'deep' && this.sun) {
+      const label = fmt(strings.sunriseIn, { time: fmtTime(lv.budgetSec) });
+      this.sun.root.position.set(CARD_W - 42 - measure(label, 16, 800), CARD_H - 43);
+      this.root.addChild(
+        new Label({ size: 16, color: C.amberHi, align: 'right', weight: 800 }).set(label, CARD_W - 24, CARD_H - 44),
+        this.sun.root,
+      );
+    } else if (lv.kind === 'tutorial') {
+      this.root.addChild(new Label({ size: 16, color: C.muted, align: 'right', weight: 700 })
+        .set(fmt(strings.par, { time: fmtTime(lv.parSec) }), CARD_W - 24, CARD_H - 44));
+    }
+    this.root.addChild(new Label({ size: 15, color: C.amberHi, align: 'right', weight: 600 })
+      .set(prog.bestTimeSec === null ? strings.notAttempted : fmt(strings.best, { time: fmtTime(prog.bestTimeSec) }), CARD_W - 24, CARD_H - 22));
   }
 
-  private conceptCard(g: CanvasRenderingContext2D, i: number, x: number, y: number): void {
+  private openBadge(training: boolean): Graphics {
+    const badge = new Container();
+    badge.position.set(CARD_W - 34, training ? 88 : 96);
+    const backing = new Graphics().circle(0, 3, 18).fill('rgba(5,3,20,0.45)')
+      .circle(0, 0, 18).fill(C.mint).stroke({ color: C.ink, width: 3 });
+    const chevron = new Graphics().moveTo(-4, -7).lineTo(4, 0).lineTo(-4, 7)
+      .stroke({ color: C.ink, width: 4, cap: 'round', join: 'round' });
+    badge.addChild(backing, chevron);
+    this.root.addChild(badge);
+    return chevron;
+  }
+
+  sync(t: number, reduced: boolean): void {
+    if (this.arrow) this.arrow.x = reduced ? 0 : Math.sin(t * 4 + this.index) * 2;
+    this.sun?.sync(reduced ? 0 : t * 0.6);
+    for (const photo of this.photos) photo.sync(t, reduced);
+  }
+}
+
+class ConceptCard {
+  readonly root = new Container();
+
+  constructor(i: number) {
     const { missionConcepts, workOrders } = tr();
     const c = missionConcepts[i]!;
-    panel(g, x, y, CARD_W, CARD_H, '#1a1440', 22, C.ink, 4, 6);
-    g.save();
-    roundRectPath(g, x, y, CARD_W, CARD_H, 22);
-    g.clip();
-    g.strokeStyle = 'rgba(124,255,203,0.05)';
-    g.lineWidth = 14;
-    for (let k = -4; k < 12; k++) {
+    const stripes = new Sprite(paintedTexture('workorders|concept-stripes', CARD_W, CARD_H, (g, w, h) => {
       g.beginPath();
-      g.moveTo(x + k * 60, y);
-      g.lineTo(x + k * 60 + CARD_H, y + CARD_H);
+      g.roundRect(0, 0, w, h, 22);
+      g.clip();
+      g.strokeStyle = 'rgba(124,255,203,0.05)';
+      g.lineWidth = 14;
+      g.beginPath();
+      for (let k = -4; k < 12; k++) {
+        g.moveTo(k * 60, 0);
+        g.lineTo(k * 60 + h, h);
+      }
       g.stroke();
-    }
-    g.restore();
-    text(g, workOrders.missionConcept, x + 34, y + 32, 14, C.amberHi, 'left', 900);
-    text(g, c.title, x + 34, y + 68, 24, C.muted, 'left', 800, false, CARD_W - 68);
-    paragraph(g, c.blurb, x + 34, y + 92, CARD_W - 68, 16, 'rgba(169,162,214,0.85)', 22, 'left', 500, true);
+    }));
+    const blurb = new Paragraph({ size: 16, weight: 500, color: 'rgba(169,162,214,0.85)', align: 'left', italic: true, lineHeight: 22 });
+    blurb.setBlock(c.blurb, 34, 92, CARD_W - 68);
+    this.root.addChild(
+      panelPath(new Graphics(), 0, 0, CARD_W, CARD_H, { fill: '#1a1440' }),
+      stripes,
+      new Label({ size: 14, weight: 900, color: C.amberHi, align: 'left' }).set(workOrders.missionConcept, 34, 32),
+      new Label({ size: 24, weight: 800, color: C.muted, align: 'left' }).set(c.title, 34, 68, CARD_W - 68),
+      blurb,
+    );
+  }
+}
+
+/** Asleep specimen, redacted on locked orders. */
+class Mugshot {
+  readonly root = new Container();
+  private readonly head = new Container();
+  private readonly z: Label;
+
+  constructor(assets: Assets, key: string, x: number, y: number, private readonly unlocked: boolean, private readonly index: number, private readonly radius: number) {
+    this.root.position.set(x, y);
+    const r = radius;
+    if (unlocked) this.root.addChild(new Glow(glowTexture(GLOW.mint), true).place(0, 0, r + 22, r + 22, 0.22));
+    const rim = new Graphics().circle(0, 0, r).stroke({ color: unlocked ? C.mint : '#4a4470', width: 4 })
+      .circle(0, 0, r + 3).stroke({ color: C.ink, width: 2 });
+    const mask = new Graphics().circle(0, 0, r).fill('#ffffff');
+    const art = artSprite(assets, key, 70 * r / 38, 80 * r / 38) ?? new Graphics().circle(0, -4 * r / 38, 26 * r / 38).fill('#d5a182');
+    this.head.addChild(art);
+    this.head.y = r * 0.21;
+    this.head.alpha = unlocked ? 1 : 0.28;
+    this.head.mask = mask;
+    this.z = new Label({ size: 15, color: C.mint, weight: 900 }, 'z');
+    this.root.addChild(new Graphics().circle(0, 0, r).fill(unlocked ? '#1b2f55' : '#171233'), mask, this.head, rim, this.z);
   }
 
-  /** Round mugshot of the specimen, asleep. Locked orders show a redacted silhouette. */
-  private mugshot(g: CanvasRenderingContext2D, key: string, cx: number, cy: number, unlocked: boolean, i: number, r: number): void {
-    const { assets, ctx } = this.shell;
-    if (unlocked) {
-      g.globalCompositeOperation = 'lighter';
-      drawGlow(g, GLOW.mint, cx, cy, r + 22, r + 22, 0.22);
-      g.globalCompositeOperation = 'source-over';
-    }
-    g.beginPath();
-    g.arc(cx, cy, r, 0, Math.PI * 2);
-    g.fillStyle = unlocked ? '#1b2f55' : '#171233';
-    g.fill();
-    g.save();
-    g.clip();
-    // snoring: the head rocks a little
-    const rock = ctx.reducedMotion || !unlocked ? 0 : Math.sin(this.t * 1.8 + i * 2) * 0.06;
-    g.translate(cx, cy + r * 0.21);
-    g.rotate(-0.12 + rock);
-    g.scale(r / 38, r / 38);
-    if (!unlocked) g.globalAlpha *= 0.28;
-    if (!sprite(g, assets, key, 0, 0, 70, 80)) {
-      g.beginPath();
-      g.arc(0, -4, 26, 0, Math.PI * 2);
-      g.fillStyle = '#d5a182';
-      g.fill();
-    }
-    g.restore();
-    g.beginPath();
-    g.arc(cx, cy, r, 0, Math.PI * 2);
-    g.lineWidth = 4;
-    g.strokeStyle = unlocked ? C.mint : '#4a4470';
-    g.stroke();
-    g.lineWidth = 2;
-    g.strokeStyle = C.ink;
-    g.beginPath();
-    g.arc(cx, cy, r + 3, 0, Math.PI * 2);
-    g.stroke();
-    if (unlocked && !ctx.reducedMotion) {
-      // a little z drifting off the mugshot
-      const k = (this.t * 0.5 + i * 0.4) % 1;
-      const alpha = g.globalAlpha;
-      g.globalAlpha = alpha * Math.sin(Math.PI * k);
-      text(g, 'z', cx - r + 2 - k * 6, cy - r + 8 - k * 14, 15 + k * 6, C.mint, 'center', 900);
-      g.globalAlpha = alpha;
+  sync(t: number, reduced: boolean): void {
+    const animate = this.unlocked && !reduced;
+    this.head.rotation = -0.12 + (animate ? Math.sin(t * 1.8 + this.index * 2) * 0.06 : 0);
+    this.z.visible = animate;
+    if (animate) {
+      const k = (t * 0.5 + this.index * 0.4) % 1;
+      this.z.position.set(-this.radius + 2 - k * 6, -this.radius + 8 - k * 14);
+      this.z.alpha = Math.sin(Math.PI * k);
+      this.z.scale.set(1 + k * 0.4);
     }
   }
+}
 
-  private readonly sunriseLabels = new Map<string, string>();
-  private sunriseLabel(sec: number): string {
-    const key = `${langVersion()}|${sec}`;
-    let s = this.sunriseLabels.get(key);
-    if (!s) {
-      s = fmt(tr().workOrders.sunriseIn, { time: fmtTime(sec) });
-      this.sunriseLabels.set(key, s);
-    }
-    return s;
-  }
-
-  private padlock(g: CanvasRenderingContext2D, cx: number, cy: number): void {
-    g.strokeStyle = C.muted;
-    g.lineWidth = 6;
-    g.beginPath();
-    g.arc(cx, cy - 6, 14, Math.PI, 0);
-    g.stroke();
-    panel(g, cx - 22, cy - 6, 44, 36, '#6b63a3', 8, C.ink, 3, 0);
-    g.fillStyle = C.ink;
-    g.beginPath();
-    g.arc(cx, cy + 8, 5, 0, Math.PI * 2);
-    g.fill();
-    g.fillRect(cx - 2, cy + 8, 4, 12);
-  }
+function padlock(x: number, y: number): Graphics {
+  const g = new Graphics().arc(x, y - 6, 14, Math.PI, 0).stroke({ color: C.muted, width: 6 });
+  panelPath(g, x - 22, y - 6, 44, 36, { fill: '#6b63a3', r: 8, lineW: 3, shadow: 0 });
+  return g.circle(x, y + 8, 5).rect(x - 2, y + 8, 4, 12).fill(C.ink);
 }

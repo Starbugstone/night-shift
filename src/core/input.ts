@@ -1,5 +1,5 @@
 import type { PointerKind, PointerState, SecondPointer } from '../contracts';
-import type { Viewport } from './canvas';
+import type { Viewport } from './viewport';
 
 /** Q / A turn anticlockwise, E / D clockwise (KeyboardEvent.code, so it follows the key position). */
 const TURN_LEFT_KEYS = new Set(['KeyQ', 'KeyA']);

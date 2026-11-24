@@ -1,11 +1,11 @@
 ---
 name: verify-night-shift
-description: Drive the Night Shift mobile Canvas game with real browser pointer input and verify Work Orders, flight, abduction, reports, saves, and purchases. Use to prove gameplay and progression changes in a local checkout.
+description: Drive the Night Shift mobile web game (PixiJS / WebGL canvas) with real browser pointer input and verify Work Orders, flight, abduction, reports, saves, and purchases. Use to prove gameplay and progression changes in a local checkout.
 ---
 
 # Verify Night Shift
 
-Read the [feature map](features/README.md) before choosing a journey. This build is a Vite + TypeScript game with one browser surface, `canvas#game`. It needs no account, backend, or seed data. Each run creates a fresh Chromium context for its origin and starts a Vite instance on its own loopback port.
+Read the [feature map](features/README.md) before choosing a journey. This build is a Vite + TypeScript game rendered with PixiJS 8 (WebGL) on one browser surface, `canvas#game`. It needs no account, backend, or seed data. Each run creates a fresh Chromium context for its origin and starts a Vite instance on its own loopback port.
 
 ## Launch
 
@@ -52,13 +52,24 @@ For other features, save an ES module with a default `async (game) => { … }` e
 
 ## Evidence
 
-Artifacts go to `review/night-shift-verify/<run-id>/`, ignored by Git. Use `await game.capture('step-name')` for a PNG from `canvas#game.toDataURL()`. Playwright's compositor screenshot hangs on this WSL host. The PNG includes the visible game canvas and letterbox. Capture the entry, the meaningful in-progress action and the end state. For mutations, pair the visible result with the stored value and a fresh view after reload in the same context.
+Artifacts go to `review/night-shift-verify/<run-id>/`, ignored by Git. Use `await game.capture('step-name')` for a PNG from `window.__nightShift.capture()`, which renders the frame and reads the WebGL canvas in one step. Never read `canvas#game` with `toDataURL` or `drawImage` on its own: a WebGL canvas is blank outside the frame that drew it. If you must read it directly, call `window.__nightShift.redraw()` first in the same `evaluate`. Playwright's compositor screenshot hangs on this WSL host. The PNG includes the visible game canvas and letterbox. Capture the entry, the meaningful in-progress action and the end state. For mutations, pair the visible result with the stored value and a fresh view after reload in the same context.
 
 The helper keeps the checkout revision, URL entry point, virtual-time pointer actions, selected state and browser errors in `trace.json`. Use `game.record('observation', { … })` to add a feature-specific assertion payload. Expected navigation that lands on a different scene automatically produces `unexpected-entry.png` and fails. Report the entry point used and each unmet precondition. For a room opened directly, report that flight has zero simulated time and zero sightings.
 
 ## Cleanup
 
 The runner closes its own browser and Vite instance, deletes its temporary profile and Vite cache, and writes the trace even if a check fails. It leaves the run's PNGs and trace in the evidence directory. After exit, check that `ss -ltnp "sport = :5297"` shows no listener for the chosen port and that `review/night-shift-verify/<run-id>/trace.json` and the captures still exist. If a process was forcibly terminated, remove only the matching runtime directory once its process is gone. Keep the evidence directory.
+
+## Rendering checks
+
+Use these when a change touches how something looks or how fast it draws. Rendering rules are in `docs/PIXI-MIGRATION.md`. Software GL (SwiftShader) is fine for the journeys above because the runner drives a virtual clock. For looks and frame times, use the real GPU on this WSL host: `GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib:$LD_LIBRARY_PATH GPUARGS='--use-angle=gl --ignore-gpu-blocklist --enable-gpu'`. The GL line printed by the bench shows which one you got.
+
+Build the optimized test version with `npm run build -- --mode e2e --outDir review/e2e-build`. Serve it with `npm run preview -- --outDir review/e2e-build --port 5311 --strictPort`. Use that URL for the frame-time bench and full playthrough. The verification runner starts a dev server and already has access to fixtures.
+
+- **Before/after looks.** Serve the base commit and the change on two ports, then run `node scripts/pixi/shots.mjs <url> <out-dir> name=/?room=dave_roof@1500 ...` against each. Open both PNGs. `/?room=<id>`, `/?unlock=1&flight=<n>` and `/?level=<n>` reach most screens; `__nightShift.goto(...)` reaches the rest.
+- **Frame time.** `THROTTLE=1,6 PAGES=flight=3,room=dave_roof node scripts/pixi/bench-frames.mjs <url>` reports fps and `workP95`, the main-thread milliseconds per frame from the game's own `__nightShift.frameMs` ring. Run it on a quiet machine: parallel browsers and test runs share the GPU and skew both numbers. At throttle 6, expect about 60 fps with `workP95` well under 16 ms.
+- **Full playthrough.** `BASE=<url> node scripts/e2e-playthrough.cjs` (set `ONLY=` for a subset). It plays in real time, so give it the real GPU through `GPUARGS`. On software GL it is slow enough to miss the sunrise.
+- **Guard.** `tests/shell-pixi-only.test.ts` fails if code makes its own canvas or draws on one per frame.
 
 ## Helpers
 

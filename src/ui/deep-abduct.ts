@@ -1,33 +1,41 @@
-// Wraps an abduction scene during a deep shift: the sunrise clock keeps running, shown in the chip
-// slot the abduction view leaves free on its second HUD row, and the room warms up in the last 30 s.
+// Wrap an abduction during a deep shift, with the sunrise clock and warning over the room.
+import { Container } from 'pixi.js';
 import { tr } from '../i18n';
 import type { Assets, Scene } from '../contracts';
 import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT, deepShift } from '../abduct/deep-view';
-import { GLOW, drawEdgeTint } from '../core/fx';
+import { GLOW, ScreenTint } from '../core/gfx/glow';
+import { ViewSlot, type SceneView } from '../core/gfx/scene';
+import { Label } from '../core/gfx/text';
 import type { DeepRun } from '../levels/run';
-import { hudPanel, hudSunClock } from './hud';
-import { text } from './draw';
+import { artTex } from './views/art';
+import { HudPanel, HudSunClock } from './views/hud';
 import { C } from './theme';
 
 export interface InnerScene extends Scene {
+  readonly view: Container;
+  render(): void;
   debug?: unknown;
 }
 
 export class DeepAbductScene implements Scene {
   private done = false;
-  private clock = '';
-  private clockKey = -1;
   private t = 0;
+  private readonly look: ViewSlot<DeepShiftView>;
 
   constructor(
     readonly inner: InnerScene,
     private readonly run: DeepRun,
-    private readonly assets: Assets,
-    private readonly reduced: () => boolean,
+    assets: Assets,
+    reduced: () => boolean,
     private readonly onSunrise: () => void,
-  ) {}
+  ) {
+    this.look = new ViewSlot(() => new DeepShiftView(inner.view, assets, run, reduced, () => this.t));
+  }
 
-  /** The abduction's own debug object (its autopilot lives there). */
+  get view(): Container {
+    return this.look.get().root;
+  }
+
   get debug(): unknown {
     return this.inner.debug;
   }
@@ -43,35 +51,68 @@ export class DeepAbductScene implements Scene {
     this.inner.update(dt);
   }
 
-  render(g: CanvasRenderingContext2D): void {
-    const dawn = this.run.dawn;
-    // the room view warms its windows and counts the specimens already aboard
-    deepShift.dawn = dawn;
+  render(): void {
+    deepShift.dawn = this.run.dawn;
     deepShift.delivered = this.run.deliveredCount;
-    this.inner.render(g);
-    if (dawn > 0) drawEdgeTint(g, GLOW.warm, dawn * 0.8);
-    const key = Math.floor(this.run.elapsed * 4);
-    if (key !== this.clockKey) {
-      this.clockKey = key;
-      this.clock = this.run.clockText();
-    }
-    const sun = DEEP_HUD_SUNRISE_SLOT;
-    g.globalAlpha = 0.92;
-    hudSunClock(g, sun.x, sun.y, sun.w, sun.h, this.clock, this.run.elapsed / this.run.budget, dawn, this.t, this.reduced(), this.assets.get('ui/sunrise_clock'));
-    g.globalAlpha = 1;
-    if (dawn > 0.5) {
-      // The last 15 s: a steady pill (reduced motion) or a blinking one, in the slot beside the
-      // Snooze Ray chip, clear of the room/exit bar below.
-      const warn = DEEP_HUD_WARNING_SLOT;
-      const on = this.reduced() || Math.floor(this.t * 2) % 2 === 0;
-      hudPanel(g, warn.x, warn.y, warn.w, warn.h, on ? C.amber : C.ink);
-      text(g, tr().hud.sunComing, warn.x + warn.w / 2, warn.y + warn.h / 2, 16, on ? C.amberHi : C.muted, 'center', 900, false, warn.w - 20);
-    }
+    this.inner.render();
+    this.look.peek()?.sync();
   }
 
   dispose(): void {
     deepShift.dawn = 0;
     deepShift.delivered = -1;
+    this.look.destroy();
     this.inner.dispose?.();
+  }
+}
+
+class DeepShiftView implements SceneView {
+  readonly root = new Container();
+  private readonly tint = ScreenTint.edge(GLOW.warm);
+  private readonly sun: HudSunClock;
+  private readonly warning = new Container();
+  private readonly panel = new HudPanel();
+  private readonly caption = new Label({ size: 16, weight: 900, color: '#ffffff' });
+  private clock = '';
+  private clockKey = -1;
+
+  constructor(
+    private readonly inner: Container,
+    assets: Assets,
+    private readonly run: DeepRun,
+    private readonly reduced: () => boolean,
+    private readonly time: () => number,
+  ) {
+    this.sun = new HudSunClock(artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h));
+    this.sun.alpha = 0.92;
+    this.warning.position.set(DEEP_HUD_WARNING_SLOT.x, DEEP_HUD_WARNING_SLOT.y);
+    this.warning.addChild(this.panel, this.caption);
+    this.root.addChild(inner, this.tint, this.sun, this.warning);
+  }
+
+  sync(): void {
+    const { dawn, elapsed, budget } = this.run;
+    const t = this.time();
+    const rm = this.reduced();
+    this.tint.strength = dawn * 0.8;
+    const key = Math.floor(elapsed * 4);
+    if (key !== this.clockKey) {
+      this.clockKey = key;
+      this.clock = this.run.clockText();
+    }
+    const { x, y, w, h } = DEEP_HUD_SUNRISE_SLOT;
+    this.sun.sync(x, y, w, h, this.clock, elapsed / budget, dawn, t, rm);
+    this.warning.visible = dawn > 0.5;
+    if (this.warning.visible) {
+      const warn = DEEP_HUD_WARNING_SLOT;
+      const on = rm || Math.floor(t * 2) % 2 === 0;
+      this.panel.set(warn.w, warn.h, on ? C.amber : C.ink);
+      this.caption.tint = on ? C.amberHi : C.muted;
+      this.caption.set(tr().hud.sunComing, warn.w / 2, warn.h / 2, warn.w - 20);
+    }
+  }
+
+  dispose(): void {
+    this.root.removeChild(this.inner);
   }
 }

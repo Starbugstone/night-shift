@@ -1,11 +1,20 @@
+import { Container, Graphics } from 'pixi.js';
 import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
 import { fmt, tr } from '../i18n';
-import { drawPortrait, drawStar, easeOutBack, fmtTime, panel, text, wrap } from './draw';
-import { C, font } from './theme';
-import { Button, drawNightSky } from './widgets';
+import { easeOutBack } from '../core/fx';
+import { ViewSlot, type SceneView } from '../core/gfx/scene';
+import { panelPath } from '../core/gfx/shapes';
+import { Label, wrapLines, type LabelStyle } from '../core/gfx/text';
+import { fmtTime } from './draw';
+import { C } from './theme';
+import { Button } from './widgets';
+import { NightSky } from './views/backdrop';
+import { ButtonView } from './views/button';
+import { iconSprite, starTexture } from './views/icons';
+import { VrellPortrait } from './views/portrait';
 
 const PX = 24;
 const PW = VIEW_W - 48;
@@ -16,22 +25,22 @@ const JOKE_LH = 24;
 const CPS = 70;
 
 export class MemoScene implements Scene {
-  private t = 0;
-  private chars = 0;
-  private readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
-  private readonly start = new Button(90, 852, VIEW_W - 180, 84, tr().memo.startShift, 'primary', 32);
-  private bodyLines: string[] | null = null;
-  private jokeLines: string[] | null = null;
-  private totalChars = 0;
-  private bodySize = BODY_SIZE;
-  private bodyLH = BODY_LH;
+  t = 0;
+  chars = 0;
+  readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
+  readonly start = new Button(90, 852, VIEW_W - 180, 84, tr().memo.startShift, 'primary', 32);
+  readonly totalChars: number;
+  private readonly look = new ViewSlot(() => new MemoView(this));
 
   constructor(
-    private readonly shell: Shell,
+    readonly shell: Shell,
     private readonly levelIndex: number,
-  ) {}
+  ) {
+    const level = tr().levels[this.level.id];
+    this.totalChars = level.body.length + level.joke.length;
+  }
 
-  private get level() {
+  get level() {
     return LEVELS[this.levelIndex]!;
   }
 
@@ -47,117 +56,151 @@ export class MemoScene implements Scene {
     if (p.pressed && !this.start.contains(p.x, p.y) && !this.back.contains(p.x, p.y)) this.chars = 1e6; // tap: finish typing
   }
 
-  render(g: CanvasRenderingContext2D): void {
-    const { assets, ctx } = this.shell;
-    drawNightSky(g, this.t, ctx.reducedMotion);
-    const lv = this.level;
+  get view(): Container {
+    return this.look.get().root;
+  }
+
+  render(): void {
+    this.look.peek()?.sync();
+  }
+
+  dispose(): void {
+    this.look.destroy();
+  }
+}
+
+const PAPER_Y = 92;
+const PAPER_H = 736;
+const BODY_Y = PAPER_Y + 228;
+const JOKE = { size: JOKE_SIZE, color: '#5a4a1a', align: 'left', weight: 600, italic: true } as const;
+
+interface TypedLine {
+  full: string;
+  label: Label;
+  count: number;
+}
+
+function typedLines(parent: Container, lines: readonly string[], look: LabelStyle, x: number, y: number, lh: number): TypedLine[] {
+  return lines.map((full, i) => {
+    const label = new Label(look).set('', x, y + i * lh);
+    parent.addChild(label);
+    return { full, label, count: 0 };
+  });
+}
+
+function syncTyped(lines: TypedLine[], budget: number): number {
+  for (const line of lines) {
+    const count = Math.max(0, Math.min(budget, line.full.length));
+    if (line.count !== count) {
+      line.count = count;
+      line.label.text = count === line.full.length ? line.full : line.full.slice(0, count);
+    }
+    line.label.visible = count > 0;
+    budget -= line.full.length + 1;
+  }
+  return budget;
+}
+
+class MemoView implements SceneView {
+  readonly root = new Container();
+  private readonly sky = new NightSky();
+  private readonly dot = new Graphics().circle(VIEW_W / 2 - 108, 47, 5).fill(C.red);
+  private readonly paper = new Container();
+  private readonly portrait: VrellPortrait;
+  private readonly body: TypedLine[];
+  private readonly joke: TypedLine[];
+  private readonly jokeBox = new Container();
+  private readonly cursor = new Graphics().rect(PX + PW - 44, PAPER_Y + PAPER_H - 40, 12, 3).fill(C.paperInk);
+  private readonly back: ButtonView;
+  private readonly start: ButtonView;
+  private readonly skip = new Label({ size: 14, color: C.muted, weight: 600 }).set(tr().common.tapToSkip, VIEW_W / 2, 838);
+  private typedCount = -1;
+
+  constructor(private readonly s: MemoScene) {
+    const { assets, save } = s.shell;
+    const lv = s.level;
     const m = tr().memo;
     const lt = tr().levels[lv.id];
-    this.back.render(g);
-    text(g, m.incoming, VIEW_W / 2 + 20, 48, 22, C.mint, 'center', 900, false, 230);
-    // "new mail" dot
-    g.beginPath();
-    g.arc(VIEW_W / 2 - 108, 47, 5, 0, Math.PI * 2);
-    g.fillStyle = C.red;
-    g.globalAlpha = ctx.reducedMotion ? 1 : 0.55 + 0.45 * Math.sin(this.t * 5);
-    g.fill();
-    g.globalAlpha = 1;
-
-    // paper: slaps down onto the desk, a touch crooked, then straightens
-    const py = 92;
-    const ph = 736;
-    const land = ctx.reducedMotion ? 1 : easeOutBack(this.t / 0.42, 1.1);
-    g.save();
-    g.translate(VIEW_W / 2, py + ph / 2 + (1 - land) * 620);
-    g.rotate((1 - land) * 0.09);
-    g.translate(-VIEW_W / 2, -(py + ph / 2));
-    panel(g, PX, py, PW, ph, C.paper, 20, C.ink, 4, 8);
-    // clip at top
-    panel(g, VIEW_W / 2 - 70, py - 14, 140, 30, '#b9a58a', 10, C.ink, 3, 0);
-    g.strokeStyle = C.paperLine;
-    g.lineWidth = 2;
-    for (let y = py + 240; y < py + ph - 20; y += 27) {
-      g.beginPath();
-      g.moveTo(PX + 20, y);
-      g.lineTo(PX + PW - 20, y);
-      g.stroke();
+    this.back = new ButtonView(s.back);
+    this.start = new ButtonView(s.start);
+    const page = panelPath(new Graphics(), PX, PAPER_Y, PW, PAPER_H, { fill: C.paper, r: 20, shadow: 8 });
+    panelPath(page, VIEW_W / 2 - 70, PAPER_Y - 14, 140, 30, { fill: '#b9a58a', r: 10, lineW: 3, shadow: 0 });
+    for (let y = PAPER_Y + 240; y < PAPER_Y + PAPER_H - 20; y += 27) {
+      page.moveTo(PX + 20, y).lineTo(PX + PW - 20, y).stroke({ color: C.paperLine, width: 2 });
+    }
+    page.rect(PX + 28, PAPER_Y + 198, PW - 56, 3).fill('#6a3fbf');
+    this.portrait = new VrellPortrait(assets, PX + 76, PAPER_Y + 86, 112);
+    const address = { size: 17, color: C.paperInk, align: 'left', weight: 700 } as const;
+    const subject = { size: 17, color: '#6a3fbf', align: 'left', weight: 800 } as const;
+    const reLines = wrapLines(fmt(m.re, { re: lt.re }), PW - 168, 17, 800);
+    this.paper.pivot.set(VIEW_W / 2, PAPER_Y + PAPER_H / 2);
+    this.paper.addChild(
+      page, this.portrait.root,
+      new Label(address).set(m.to, PX + 148, PAPER_Y + 46, PW - 168),
+      new Label(address).set(m.from, PX + 148, PAPER_Y + 72, PW - 168),
+      new Label({ size: 21, color: C.paperInk, align: 'left', weight: 900 }).set(lt.title, PX + 28, PAPER_Y + 182, PW - 56),
+    );
+    for (let i = 0; i < Math.min(2, reLines.length); i++) {
+      this.paper.addChild(new Label(subject).set(reLines[i]!, PX + 148, PAPER_Y + 98 + i * 22));
     }
 
-    drawPortrait(g, assets, 'vrell', PX + 76, py + 86, 112, this.t);
-    text(g, m.to, PX + 148, py + 46, 17, C.paperInk, 'left', 700, false, PW - 168);
-    text(g, m.from, PX + 148, py + 72, 17, C.paperInk, 'left', 700, false, PW - 168);
-    const reLines = wrap(g, fmt(m.re, { re: lt.re }), PW - 168, 17, 800);
-    g.font = font(17, 800);
-    g.fillStyle = '#6a3fbf';
-    g.textAlign = 'left';
-    for (let i = 0; i < Math.min(2, reLines.length); i++) g.fillText(reLines[i]!, PX + 148, py + 98 + i * 22);
-    text(g, lt.title, PX + 28, py + 182, 21, C.paperInk, 'left', 900, false, PW - 56);
-    g.fillStyle = '#6a3fbf';
-    g.fillRect(PX + 28, py + 198, PW - 56, 3);
+    // Step down the body size when the copy would reach the goals block.
+    const joke = wrapLines(lt.joke, PW - 84, JOKE_SIZE, 600, true);
+    let bodySize = BODY_SIZE;
+    let bodyLH = BODY_LH;
+    let body = wrapLines(lt.body, PW - 56, bodySize, 500);
+    while (bodySize > 16 && 228 + body.length * bodyLH + 12 + joke.length * JOKE_LH > PAPER_H - 160 - 22) {
+      bodySize--;
+      bodyLH = Math.round(bodySize * 1.35);
+      body = wrapLines(lt.body, PW - 56, bodySize, 500);
+    }
+    this.body = typedLines(this.paper, body, { size: bodySize, color: C.paperInk, align: 'left', weight: 500 }, PX + 28, BODY_Y, bodyLH);
+    const jokeTop = BODY_Y + body.length * bodyLH + 6;
+    this.jokeBox.addChild(panelPath(new Graphics(), PX + 18, jokeTop - 14, PW - 36, joke.length * JOKE_LH + 20, { fill: '#fff6c9', r: 12, stroke: '#d8c48a', lineW: 2, shadow: 0 }));
+    this.joke = typedLines(this.jokeBox, joke, JOKE, PX + 32, jokeTop + 8, JOKE_LH);
+    this.paper.addChild(this.jokeBox, this.cursor);
 
-    // typewriter body + joke
-    if (!this.bodyLines) {
-      // French runs longer: step the body down a size if body + joke would reach the goals block
-      this.bodySize = BODY_SIZE;
-      this.bodyLH = BODY_LH;
-      for (;;) {
-        this.bodyLines = wrap(g, lt.body, PW - 56, this.bodySize, 500);
-        this.jokeLines = wrap(g, lt.joke, PW - 84, JOKE_SIZE, 600, true);
-        const bottom = 228 + this.bodyLines.length * this.bodyLH + 6 - 14 + this.jokeLines.length * JOKE_LH + 20;
-        if (bottom <= 736 - 160 - 22 || this.bodySize <= 16) break;
-        this.bodySize -= 1;
-        this.bodyLH = Math.round(this.bodySize * 1.35);
-      }
-      this.totalChars = lt.body.length + lt.joke.length;
-    }
-    let budget = Math.floor(this.chars);
-    let y = py + 228;
-    g.font = font(this.bodySize, 500);
-    g.fillStyle = C.paperInk;
-    g.textAlign = 'left';
-    g.textBaseline = 'middle';
-    for (const line of this.bodyLines) {
-      if (budget <= 0) break;
-      g.fillText(budget >= line.length ? line : line.slice(0, budget), PX + 28, y);
-      budget -= line.length + 1;
-      y += this.bodyLH;
-    }
-    const jokeTop = py + 228 + this.bodyLines.length * this.bodyLH + 6;
-    if (budget > 0 && this.jokeLines) {
-      const jh = this.jokeLines.length * JOKE_LH + 20;
-      panel(g, PX + 18, jokeTop - 14, PW - 36, jh, '#fff6c9', 12, '#d8c48a', 2, 0);
-      g.font = font(JOKE_SIZE, 600, true);
-      g.fillStyle = '#5a4a1a';
-      let jy = jokeTop + 8;
-      for (const line of this.jokeLines) {
-        if (budget <= 0) break;
-        g.fillText(budget >= line.length ? line : line.slice(0, budget), PX + 32, jy);
-        budget -= line.length + 1;
-        jy += JOKE_LH;
-      }
-    }
-    const typing = this.chars < this.totalChars;
-    if (typing && Math.floor(this.t * 3) % 2 === 0) {
-      g.fillStyle = C.paperInk;
-      g.fillRect(PX + PW - 44, py + ph - 40, 12, 3);
-    }
-
-    // star goals
-    const gy = py + ph - 160;
-    text(g, m.goals, PX + 28, gy, 15, '#6a3fbf', 'left', 900);
+    const gy = PAPER_Y + PAPER_H - 160;
+    this.paper.addChild(new Label({ size: 15, color: '#6a3fbf', align: 'left', weight: 900 }).set(m.goals, PX + 28, gy));
     const labels = lv.kind === 'deep' ? tr().starLabels.deep : tr().starLabels.tutorial;
     const lines = lv.kind === 'deep' ? m.deepGoals : m.tutorialGoals;
     const times = lv.kind === 'deep' ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec)] : ['', '', fmtTime(lv.parSec)];
-    const goals = [0, 1, 2].map((k) => fmt(lines[k]!, { star: labels[k]!, time: times[k]! }));
-    const best = this.shell.save.levels[lv.id].stars;
+    const best = save.levels[lv.id].stars;
+    const goalLook = { size: 17, color: C.paperInk, align: 'left', weight: 700 } as const;
     for (let i = 0; i < 3; i++) {
-      drawStar(g, assets, PX + 46, gy + 34 + i * 38, 30, best[i] === true);
-      text(g, goals[i]!, PX + 72, gy + 34 + i * 38, 17, C.paperInk, 'left', 700, false, PW - 72 - 20);
+      const star = iconSprite(starTexture(assets, 30, best[i] === true), 30);
+      const y = gy + 34 + i * 38;
+      star.position.set(PX + 46, y);
+      this.paper.addChild(star, new Label(goalLook).set(fmt(lines[i]!, { star: labels[i]!, time: times[i]! }), PX + 72, y, PW - 72 - 20));
     }
-    text(g, m.signoff, PX + PW - 24, py + ph - 22, 14, '#7a70a0', 'right', 600, true, PW - 48);
-    g.restore();
+    this.paper.addChild(new Label({ size: 14, color: '#7a70a0', align: 'right', weight: 600, italic: true }).set(m.signoff, PX + PW - 24, PAPER_Y + PAPER_H - 22, PW - 48));
+    this.root.addChild(
+      this.sky, this.back,
+      new Label({ size: 22, color: C.mint, weight: 900 }).set(m.incoming, VIEW_W / 2 + 20, 48, 230),
+      this.dot, this.paper, this.start, this.skip,
+    );
+  }
 
-    this.start.render(g);
-    if (typing) text(g, tr().common.tapToSkip, VIEW_W / 2, 838, 14, C.muted, 'center', 600);
+  sync(): void {
+    const { t, chars, shell, totalChars } = this.s;
+    const reduced = shell.ctx.reducedMotion;
+    const typing = chars < totalChars;
+    this.sky.sync(t, reduced);
+    this.back.sync();
+    this.start.sync();
+    this.portrait.sync(t, reduced);
+    this.dot.alpha = reduced ? 1 : 0.55 + 0.45 * Math.sin(t * 5);
+    const land = reduced ? 1 : easeOutBack(t / 0.42, 1.1);
+    this.paper.position.set(VIEW_W / 2, PAPER_Y + PAPER_H / 2 + (1 - land) * 620);
+    this.paper.rotation = (1 - land) * 0.09;
+    const count = Math.min(totalChars + this.body.length + this.joke.length, Math.floor(chars));
+    if (count !== this.typedCount) {
+      this.typedCount = count;
+      const rest = syncTyped(this.body, count);
+      this.jokeBox.visible = rest > 0;
+      syncTyped(this.joke, rest);
+    }
+    this.cursor.visible = typing && (reduced || Math.floor(t * 3) % 2 === 0);
+    this.skip.visible = typing;
   }
 }

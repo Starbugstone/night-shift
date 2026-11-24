@@ -24,6 +24,7 @@ const DECIDE_EVERY = 0.1;
 const ROLL_DT = 1 / 60;
 /** Never commit to a plan whose predicted fuse peaks above this. */
 const SAFE_PEAK = 0.45;
+const REPLAN_AFTER = 20;
 const FULL = 190;
 /** Finger offset slew (px/s): a steady thumb, not a jerk. */
 const SLEW = 650;
@@ -571,7 +572,7 @@ export class FlightAutopilot {
     const next = this.nextStop();
     const last = this.path.length - 1;
     const waited = sim.t - this.holdSince;
-    const limit = waited > 25 ? 0.9 : SAFE_PEAK;
+    const limit = waited > REPLAN_AFTER / 2 ? 0.9 : SAFE_PEAK;
     const horizon = 5;
     const L = this.last;
     L.hold = -1;
@@ -667,7 +668,7 @@ export class FlightAutopilot {
     if (sim.t >= this.decideAt) {
       this.decideAt = sim.t + DECIDE_EVERY;
       // stuck behind something for a long time: try another ring / target
-      if (this.mode !== 'go' && sim.t - this.holdSince > 20) {
+      if (this.mode !== 'go' && sim.t - this.holdSince > REPLAN_AFTER) {
         this.avoid[this.ring] = this.avoid[this.ring]! + 1500;
         this.replan();
       }
