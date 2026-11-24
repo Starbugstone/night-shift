@@ -1,11 +1,12 @@
 name: Test and publish game
 # One Pages site, two builds:
-#   /          production, from main
-#   /pixi/     preprod, from the pixi-migration branch (the PixiJS renderer), while that branch exists
+#   /           production, from main
+#   /preprod/   preprod, from the preprod branch, to try changes before they reach main
+#   /pixi/      redirects to /preprod/ (the old preprod address)
 # A push to either branch tests that branch, then rebuilds and republishes both.
 on:
   push:
-    branches: [main, pixi-migration]
+    branches: [main, preprod]
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,7 +30,7 @@ jobs:
       # the pushed branch must pass its own tests before anything is published
       - run: npm ci
       - run: npm test
-      - name: Build production (main) and preprod (pixi-migration)
+      - name: Build production (main) and preprod
         env:
           REPO: https://github.com/${{ github.repository }}.git
         run: |
@@ -41,10 +42,15 @@ jobs:
           build main
           mkdir -p site
           cp -r "$RUNNER_TEMP/main/dist/." site/
-          if git ls-remote --exit-code --heads "$REPO" pixi-migration > /dev/null; then
-            build pixi-migration
-            cp -r "$RUNNER_TEMP/pixi-migration/dist" site/pixi
+          if git ls-remote --exit-code --heads "$REPO" preprod > /dev/null; then
+            build preprod
+            cp -r "$RUNNER_TEMP/preprod/dist" site/preprod
           fi
+          mkdir -p site/pixi
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Night Shift preprod</title>' \
+            '<meta http-equiv="refresh" content="0; url=../preprod/">' \
+            '<script>location.replace("../preprod/" + location.search + location.hash)</script>' \
+            > site/pixi/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v5
         with:
