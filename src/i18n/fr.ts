@@ -251,11 +251,6 @@ export const fr: Strings = {
         effect: 'Mèche de repérage 1,25 s · Réveil plus lent',
         desc: "Un minuscule silencieux pour votre antigravité. Les chiens n'entendent plus qu'un léger bourdonnement poli.",
       },
-      afterburner: {
-        name: 'Postcombustion',
-        effect: 'Balayez pour foncer · recharge 2,5 s',
-        desc: 'Un coup de pouce sec et la soucoupe bondit à 2,2× sa vitesse. Idéal pour les cônes. Pas pour les créneaux.',
-      },
       snooze_ray: {
         name: 'Rayon Dodo',
         effect: 'Double tap : calme tous les dormeurs',
@@ -566,7 +561,6 @@ export const fr: Strings = {
       sprinkler: ["C'est un arroseur. Juste un arroseur. Je le savais.", "L'arroseur se fiche de moi. Je respecte l'arroseur."],
       cropcircle: ["Hé, c'est pas moi ! C'est l'écriture de l'équipe du mardi.", 'Un cercle dans le blé ! Vrell dit que ça vaut une signature pour la sonde.'],
       tripwire: ["Un piège laser de Gary. Relié à une sonnette chez lui. Il dort toujours dessus.", "Encore un piège de Gary. Il n'attrape que Gary. La menace, c'est Gary."],
-      dash: ['Zioum !', "Postcombustion ! Maman dirait de ralentir. Maman n'est pas là.", "Ma serviette est dans mon AUTRE soucoupe."],
       checkpoint: ["Un dans la soute ! Personne n'a rien vu. J'espère.", 'Spécimen embarqué. On remonte, Zib. L’air de rien.'],
       dawn: ["Le ciel devient orange ! C'est la mauvaise couleur !", "L'aube dans trente secondes ! Les humains vont être RÉVEILLÉS. Exprès."],
       nearRing: ["Surplace… surplace… n'éternue pas…", "C'est celui-là. On ne bouge plus…"],

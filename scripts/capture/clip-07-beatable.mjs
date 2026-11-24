@@ -23,7 +23,7 @@ const C = {
   title: 'Bots that prove every level can be beaten',
   bullets: [
     'The flight autopilot samples 90 s of hazard time on a 40 px grid to see how often each cell is watched, then runs A* across that map.',
-    'Every 0.1 s it simulates the real physics ahead for "go", "dash" and "wait here", and commits only to a plan whose fuse stays under 0.45.',
+    'Every 0.1 s it simulates the real physics ahead for "go" and "wait here", and commits only to a plan whose fuse stays under 0.45.',
     'A beeline to the nearest ring gets spotted, whatever time it starts. The tests try starts at 0, 2.5, 5 and 8 s.',
     'The abduction pilot follows hand-placed checkpoints. At a laser it waits until the crossing can finish 0.62 s before the next firing. Here its finger lands 3 frames late.',
     'Vitest runs all 12 deep routes from 4 start delays with jittered input, then again with mouse input 1 to 3 frames late. A straight beeline never delivers.',
@@ -217,7 +217,7 @@ await cap.release();
 
 // ---- E. the numbers from the headless proofs
 const lines = [
-  pick(/\[autopilot level3 no-dash\]/).replace(/ · legs.*· spotted/, ' · spotted').replace(/ · bumps.*/, '').replace('[autopilot level3 no-dash]', 'L3 flight autopilot:'),
+  pick(/\[autopilot level3\]/).replace(/ · legs.*· spotted/, ' · spotted').replace(/ · bumps.*/, '').replace('[autopilot level3]', 'L3 flight autopilot:'),
   pick(/\[beeline level3 \+0s\]/).replace(/.*first spot:/, 'L3 beeline: first spot:'),
   pick(/\[abduction gary_skylight\]/).replace('[abduction gary_skylight]', 'gary_skylight x4:').replace(/ \(\d+ bonks\)/g, ''),
   pick(/\[abduction mouse latency gary_skylight\]/).replace('[abduction mouse latency gary_skylight]', '1–3 frames late:'),

@@ -1,4 +1,4 @@
-// Deep-level flight simulation (L3+): saucer, hazards, suspicion fuse, afterburner, lock-on on
+// Deep-level flight simulation (L3+): saucer, hazards, suspicion fuse, lock-on on
 // several targets, camera. DOM-free; the scene renders it and the autopilot / tests drive it.
 import type { PointerState, UpgradeId, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
@@ -7,22 +7,16 @@ import type { SegHit } from './geometry';
 import { BUMP_STUN, HazardField } from './hazards';
 import { newPhotoState } from './photographer'; // L7 cruise code
 import {
-  DASH,
   FLIGHT_HUD,
-  FlickDetector,
   LOCK,
   LockOn,
   RING_R,
   SAUCER,
   SUSPICION,
-  fireDash,
-  newDash,
   ringUnder,
   saucerSpeed,
   steerSaucer,
   suspicionMultiplier,
-  tickDash,
-  type DashState,
   type Saucer,
 } from './sim';
 
@@ -34,7 +28,6 @@ const OFF_MAP = -1e6;
 export interface FlightState {
   t: number;
   s: Saucer;
-  dash: DashState;
   sus: number;
   cool: number;
   porchArm: Float64Array;
@@ -53,14 +46,12 @@ export interface FlightState {
   bump: number;
   /** Porch light that clicked on this step, or -1. */
   click: number;
-  dashed: boolean;
 }
 
 export function newFlightState(porches: number, ambulances = 0, photographers = 0): FlightState {
   return {
     t: 0,
     s: { x: 0, y: 0, vx: 0, vy: 0, stun: 0 },
-    dash: newDash(),
     sus: 0,
     cool: 0,
     porchArm: new Float64Array(porches),
@@ -72,7 +63,6 @@ export function newFlightState(porches: number, ambulances = 0, photographers = 
     cause: -1,
     bump: -1,
     click: -1,
-    dashed: false,
   };
 }
 
@@ -83,10 +73,6 @@ export function copyFlightState(dst: FlightState, src: FlightState): void {
   dst.s.vx = src.s.vx;
   dst.s.vy = src.s.vy;
   dst.s.stun = src.s.stun;
-  dst.dash.active = src.dash.active;
-  dst.dash.cool = src.dash.cool;
-  dst.dash.dx = src.dash.dx;
-  dst.dash.dy = src.dash.dy;
   dst.sus = src.sus;
   dst.cool = src.cool;
   dst.porchArm.set(src.porchArm);
@@ -98,15 +84,13 @@ export function copyFlightState(dst: FlightState, src: FlightState): void {
   dst.cause = src.cause;
   dst.bump = src.bump;
   dst.click = src.click;
-  dst.dashed = src.dashed;
 }
 
 const scratchHit: SegHit = { nx: 0, ny: 0, depth: 0 };
 
 /**
- * One physics step. `fdx, fdy` = finger offset from the saucer (world px). `flick` = a flick
- * was detected this frame along (kx, ky). Shared by the live sim and the autopilot's rollouts,
- * so predictions match play exactly.
+ * One physics step. `fdx, fdy` = finger offset from the saucer (world px). Shared by the live sim
+ * and the autopilot's rollouts, so predictions match play exactly.
  */
 export function stepFlight(
   field: HazardField,
@@ -115,23 +99,15 @@ export function stepFlight(
   down: boolean,
   fdx: number,
   fdy: number,
-  flick: boolean,
-  kx: number,
-  ky: number,
   dt: number,
   mult: number,
-  afterburner: boolean,
 ): void {
   st.t += dt;
   field.ambT = st.ambT;
   field.photo = st.photo;
   field.sample(st.t);
   const s = st.s;
-  st.dashed = false;
-  if (flick && afterburner && s.stun <= 0 && fireDash(st.dash, kx, ky)) st.dashed = true;
-  const dashing = st.dash.active > 0;
-  tickDash(st.dash, s, dt);
-  steerSaucer(s, down, fdx, fdy, dt, field.scramble(s.x, s.y), dashing);
+  steerSaucer(s, down, fdx, fdy, dt, field.scramble(s.x, s.y));
 
   const R = SAUCER.radius;
   if (s.x < R) ((s.x = R), (s.vx = Math.abs(s.vx) * 0.3));
@@ -146,7 +122,6 @@ export function stepFlight(
     st.bump = hit;
     st.bumpCd = 0.4;
     s.stun = field.defs[hit]!.type === 'wire' ? 0.4 : BUMP_STUN;
-    st.dash.active = 0;
   }
 
   st.click = field.stepPorches(s.x, s.y, dt, st.porchArm, st.porchLit);
@@ -181,9 +156,7 @@ export class DeepFlightSim {
   readonly rings: Vec2[] = [];
   readonly ringRef: RingRef[] = [];
   readonly delivered: boolean[] = [false, false, false];
-  readonly flick = new FlickDetector();
   readonly mult: number;
-  readonly afterburner: boolean;
   phase: DeepFlightPhase = 'fly';
   camX = 0;
   camY = 0;
@@ -206,7 +179,6 @@ export class DeepFlightSim {
     this.field.ambT = this.st.ambT;
     this.field.photo = this.st.photo;
     this.mult = suspicionMultiplier(upgrades) / (map.fuseSec ?? 1);
-    this.afterburner = upgrades.has('afterburner');
     map.targets.forEach((tg, ti) =>
       tg.entries.forEach((e, ei) => {
         this.rings.push({ x: e.x, y: e.y });
@@ -240,13 +212,11 @@ export class DeepFlightSim {
     this.st.sus = 0;
     this.st.cool = 0;
     this.st.safe = safe;
-    this.st.dash.active = 0;
     this.st.porchArm.fill(0);
     this.lock.reset();
     this.phase = 'fly';
     this.lockedRing = -1;
     this.spottedBy = -1;
-    this.flick.reset();
     this.snapCamera();
   }
 
@@ -303,11 +273,9 @@ export class DeepFlightSim {
     }
     const s = this.st.s;
     const down = pointer.down && pointerFree;
-    const speed = this.flick.push(down, pointer.pressed, pointer.x, pointer.y, this.st.t);
-    const flick = speed >= DASH.flickSpeed;
     const sx = s.x - this.camX;
     const sy = s.y - this.camY;
-    stepFlight(this.field, this.map, this.st, down, pointer.x - sx, pointer.y - sy, flick, this.flick.dx, this.flick.dy, dt, this.mult, this.afterburner);
+    stepFlight(this.field, this.map, this.st, down, pointer.x - sx, pointer.y - sy, dt, this.mult);
     if (this.st.sus >= 1) {
       this.phase = 'spotted';
       this.spottedBy = this.st.cause;

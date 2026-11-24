@@ -73,7 +73,6 @@ export type SfxName =
   | 'creak'
   | 'scream'
   | 'siren'
-  | 'dash'
   | 'lullaby'
   /** A souvenir (slipper, mug) gets sucked into the beam. */
   | 'pickup'
@@ -87,8 +86,6 @@ export interface Audio {
 export type UpgradeId =
   | 'beam_dampener'
   | 'hush_drive'
-  /** v2, flight: flick to dash (owned by flight code). */
-  | 'afterburner'
   /** v2, abduction: double-tap once per building to calm every wake meter (owned by abduct code). */
   | 'snooze_ray';
 

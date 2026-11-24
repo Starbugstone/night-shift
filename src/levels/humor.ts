@@ -119,7 +119,6 @@ export type DeepZibEvent =
   | 'sprinkler'
   | 'tripwire'
   | 'cropcircle'
-  | 'dash'
   | 'checkpoint'
   | 'dawn'
   | 'nearRing'

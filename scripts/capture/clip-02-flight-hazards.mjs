@@ -2,11 +2,11 @@
 // drawn over the game (sampled from the live HazardField, so drawn = hit).
 // To keep each hazard on screen, the saucer is placed next to it (a labelled debug jump) and,
 // where we only want to watch, given a long safe window ("ghost": detection off). Porch arming,
-// flock and crane bumps and the dash are real interactions through the real mouse.
+// flock and crane bumps are real interactions through the real mouse.
 import { Capture, OUT } from './lib.mjs';
 
 const NAME = '02-flight-hazards';
-const SAVE = { glorbs: 999, allUnlocked: true, upgrades: ['afterburner'], levels: {} };
+const SAVE = { glorbs: 999, allUnlocked: true, upgrades: [], levels: {} };
 const cap = await Capture.open('?flight=3', { out: process.env.DRY ? null : OUT + NAME + '.mp4', save: SAVE });
 await cap.waitScene('flight');
 
@@ -18,7 +18,6 @@ const C = {
     'Every hazard is a pure function of the clock (porch lights excepted), so the renderer, the hit test and the autopilot\'s look-ahead all sample the same shapes.',
     'L4, downtown: a helicopter spotlight circling its loop, rooftop cameras, office windows that flicker for 0.6 s before they light.',
     'Solid hazards shove and stun you for 0.35 s: the crane boom (counterweight included) and the pigeons.',
-    'The Afterburner upgrade: flick at 900 px/s or more and you dash at 2.2× top speed for 0.35 s, then it recharges for 2.5 s.',
   ],
   note: 'Mrs. Pruitt has never missed a night. Her binoculars glint 0.45 s before every snap.',
 };
@@ -105,11 +104,6 @@ await cap.define('ro', {
       }
       case 'crane': lines.push('boom 430 px + counterweight tail, 0.6 rad/s', 'hit capsule: half width 13 + 0.8 × saucer r', `${F.bump >= 0 || s.stun > 0 ? '!' : ''}stun ${s.stun.toFixed(2)} s`); break;
       case 'flock': lines.push('pigeons: circle r 50 + 0.7 × saucer r', 'solid: pushes you out, +160 px/s shove', `${s.stun > 0 ? '!' : ''}stun ${s.stun.toFixed(2)} s`); break;
-      case 'dash': {
-        const D = F.dash;
-        lines.push(`${D.active > 0 ? '!' : ''}dash ${D.active > 0 ? 'ACTIVE ' + D.active.toFixed(2) + ' s' : 'ready'}`, `${D.cool > 0 ? '~' : ''}recharge ${Math.max(0, D.cool - D.active).toFixed(2)} s`, `speed ${Math.hypot(s.vx, s.vy).toFixed(0)} px/s (cap 430, dash 946)`);
-        break;
-      }
     }
     const sus = F.sus;
     lines.push(`${F.cause >= 0 ? '!' : sus > 0 ? '~' : ''}fuse ${S.bar(sus, 16)} ${sus.toFixed(2)}${F.safe > 50 ? '   (ghost: detection off)' : ''}`);
@@ -189,16 +183,5 @@ await rec(270, 3, { seg: 'crane', jump: true }, null, (i) => i === 110);
 // pigeons: wait on their loop 1.4 s ahead of the flock
 await cap.eval(() => { const d = window.__nightShift.active.debug; const f = d.sim.field; const i = f.defs.findIndex((h) => h.type === 'flock'); const h = f.defs[i]; const out = { x: 0, y: 0 }; f.routes[i].at(h.phase + h.speed * (f.t + 1.4), out); d.sim.place(out.x, out.y, 999); });
 await rec(200, 3, { seg: 'flock', jump: true }, null);
-// afterburner: hold, then flick left fast (6 frames x 32 px = 1920 px/s)
-await place(1080, 3560, true);
-fx = 400; fy = 600;
-await rec(300, 4, { seg: 'dash', jump: true }, async (i) => {
-  if (i === 40) { fx = 380; fy = 560; return cap.press(fx, fy); }
-  if (i > 40 && i <= 46) { fx -= 32; return cap.move(fx, fy); }
-  if (i === 60) return cap.release();
-  if (i === 230) { fx = 160; fy = 560; return cap.press(fx, fy); }
-  if (i > 230 && i <= 236) { fx += 34; return cap.move(fx, fy); }
-  if (i === 250) return cap.release();
-}, (i) => i === 49);
 await cap.close();
 console.log(JSON.stringify({ frames: cap.frames, stills }));

@@ -21,7 +21,7 @@ function hover(sim: DeepFlightSim, x: number, y: number, sec: number): number[] 
     s.x = x;
     s.y = y;
     s.vx = s.vy = 0;
-    stepFlight(sim.field, sim.map, sim.st, false, 0, 0, false, 0, 0, 1 / 60, sim.mult, false);
+    stepFlight(sim.field, sim.map, sim.st, false, 0, 0, 1 / 60, sim.mult);
     seen.push(sim.st.cause);
   }
   return seen;

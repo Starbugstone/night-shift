@@ -28,7 +28,6 @@ export interface HeadlessResult {
   legs: LegRecord[];
   spots: SpotRecord[];
   bumps: number;
-  dashes: number;
   trail: Vec2[];
 }
 
@@ -39,7 +38,7 @@ export function runHeadless(map: DeepMap, upgrades: UpgradeId[], make: (sim: Dee
   const ctl = make(sim);
   const p: PointerState = { down: false, x: 0, y: 0, pressed: false, released: false };
   const dt = 1 / 60;
-  const res: HeadlessResult = { done: false, totalSec: 0, legs: [], spots: [], bumps: 0, dashes: 0, trail: [] };
+  const res: HeadlessResult = { done: false, totalSec: 0, legs: [], spots: [], bumps: 0, trail: [] };
   let legStart = 0;
   let lockT = -1;
   let spotT = -1;
@@ -60,7 +59,6 @@ export function runHeadless(map: DeepMap, upgrades: UpgradeId[], make: (sim: Dee
     }
     sim.update(dt, p);
     if (sim.st.bump >= 0) res.bumps++;
-    if (sim.st.dashed) res.dashes++;
     if (f % 15 === 0) res.trail.push({ x: sim.saucer.x, y: sim.saucer.y });
     if (sim.phase === 'spotted' && spotT < 0) {
       spotT = t;
@@ -93,9 +91,9 @@ export function runHeadless(map: DeepMap, upgrades: UpgradeId[], make: (sim: Dee
   return res;
 }
 
-export function autopilotController(dash: boolean, order?: number[]): (sim: DeepFlightSim) => Controller {
+export function autopilotController(order?: number[]): (sim: DeepFlightSim) => Controller {
   return (sim) => {
-    const ap = new FlightAutopilot(sim, order, dash);
+    const ap = new FlightAutopilot(sim, order);
     const c: Controller = () => ap.intent();
     c.note = () => JSON.stringify(ap.last);
     return c;

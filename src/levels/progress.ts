@@ -177,12 +177,6 @@ export const UPGRADES: readonly UpgradeDef[] = [
     icon: 'ui/upgrade_hush',
   },
   {
-    id: 'afterburner',
-    ...en.shop.upgrades.afterburner,
-    price: 60,
-    icon: 'ui/upgrade_afterburner',
-  },
-  {
     id: 'snooze_ray',
     ...en.shop.upgrades.snooze_ray,
     price: 80,

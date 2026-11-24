@@ -7,7 +7,7 @@ import { clamp, drawPortrait, panel, paragraph, text, wrap } from '../ui/draw';
 import { C, font } from '../ui/theme';
 import type { EntryDef, RoadDef } from '../levels/types';
 import { drawSaucerFallback } from './props';
-import { DASH, FLIGHT_HUD, RING_R, SAUCER, saucerSpeed, type DashState, type Saucer } from './sim';
+import { FLIGHT_HUD, RING_R, SAUCER, saucerSpeed, type Saucer } from './sim';
 
 export const ROAD_W = 120;
 export type GroundTheme = 'farm' | 'town' | 'suburb' | 'city' | 'pier' | 'clinic' | 'ship';
@@ -212,8 +212,6 @@ export interface SaucerLook {
   /** Seconds since lock-on started (locking only). */
   st: number;
   wobble: number;
-  /** Afterburner state for the cooldown ring (optional). */
-  dash?: DashState | null;
   /** Seconds left of the post-respawn safe window: the saucer sits in a shield bubble. */
   ghost?: number;
   /** Full length of that window, for the bubble's countdown arc. */
@@ -223,17 +221,16 @@ export interface SaucerLook {
 export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Saucer, t: number, rm: boolean, look: SaucerLook): void {
   const sp = saucerSpeed(s);
   const k = Math.min(1, sp / SAUCER.maxSpeed);
-  const dashing = !!look.dash && look.dash.active > 0;
   // streaks
   if (k > 0.4 && !rm) {
     const kk = Math.min(1, k);
-    g.strokeStyle = dashing ? '#ffd27a' : C.mint;
-    g.globalAlpha = dashing ? 0.85 : (kk - 0.4) * 0.8;
-    g.lineWidth = dashing ? 6 : 4;
+    g.strokeStyle = C.mint;
+    g.globalAlpha = (kk - 0.4) * 0.8;
+    g.lineWidth = 4;
     g.lineCap = 'round';
     const ux = s.vx / (sp || 1);
     const uy = s.vy / (sp || 1);
-    const len = dashing ? 170 : 90 + kk * 60;
+    const len = 90 + kk * 60;
     for (let i = -1; i <= 1; i++) {
       const ox = -uy * i * 26;
       const oy = ux * i * 26;
@@ -306,31 +303,6 @@ export function drawSaucer(g: CanvasRenderingContext2D, assets: Assets, s: Sauce
     g.lineCap = 'round';
     g.stroke();
     g.lineCap = 'butt';
-  }
-  // afterburner cooldown ring: fills back up round the saucer, flashes when ready
-  const d = look.dash;
-  if (d) {
-    const r = SAUCER_DRAW / 2 + 8;
-    if (d.cool > 0 && d.active <= 0) {
-      const f = 1 - d.cool / DASH.cooldown;
-      g.lineWidth = 5;
-      g.strokeStyle = 'rgba(27,20,51,0.5)';
-      g.beginPath();
-      g.arc(s.x, s.y, r, 0, Math.PI * 2);
-      g.stroke();
-      g.strokeStyle = C.amber;
-      g.lineCap = 'round';
-      g.beginPath();
-      g.arc(s.x, s.y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, f));
-      g.stroke();
-      g.lineCap = 'butt';
-    } else if (d.active <= 0) {
-      g.lineWidth = 2;
-      g.strokeStyle = 'rgba(255,210,122,0.45)';
-      g.beginPath();
-      g.arc(s.x, s.y, r, 0, Math.PI * 2);
-      g.stroke();
-    }
   }
 }
 

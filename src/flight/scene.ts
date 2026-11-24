@@ -13,9 +13,7 @@ import { circleSegment, pointInCircle, pointInCone, type SegHit } from './geomet
 import { drawDog, drawProp, drawVehicle, propSize } from './props';
 import { ConeSprites, drawEntryRing, drawSaucer as drawSaucerCommon, drawRoad as drawRoadCommon, drawJunctions as drawJunctionsCommon } from './draw-common';
 import {
-  DASH,
   FLIGHT_HUD,
-  FlickDetector,
   LockOn,
   POWER_LINE,
   PathFollower,
@@ -30,9 +28,6 @@ import {
   saucerSpeed,
   steerSaucer,
   suspicionMultiplier,
-  fireDash,
-  newDash,
-  tickDash,
   type Saucer,
 } from './sim';
 
@@ -80,8 +75,6 @@ export class FlightScene implements Scene {
   /** Lock-on burst and bump sparks (world space). */
   private readonly fx = new Particles(64);
   private readonly fuse: FuseState = { value: 0, exposed: false, t: 0, reduced: false, seconds: 1 };
-  private readonly flick = new FlickDetector();
-  private readonly dash = newDash();
   private readonly coneSprites = new ConeSprites();
   private exposed = false;
   private meterFlash = 0;
@@ -169,9 +162,6 @@ export class FlightScene implements Scene {
     this.saucer.stun = 0;
     this.sus.reset();
     this.lock.reset();
-    this.dash.active = 0;
-    this.dash.cool = 0;
-    this.flick.reset();
     this.vehicles = m.vehicles.map((def, i) => ({
       def,
       path: new PathFollower(def.path, def.speed, def.dwell),
@@ -287,16 +277,7 @@ export class FlightScene implements Scene {
     const pointerFree = !this.quit.pressedDown;
     const down = p.down && pointerFree;
     const before = saucerSpeed(s);
-    if (this.ctx.upgrades.has('afterburner')) {
-      const fs = this.flick.push(down, p.pressed, p.x, p.y, this.time);
-      if (fs >= DASH.flickSpeed && s.stun <= 0 && fireDash(this.dash, this.flick.dx, this.flick.dy)) {
-        this.ctx.audio.sfx('dash');
-        if (!this.ctx.reducedMotion) this.fx.burst(P_SPARK, s.x, s.y, 10, 160, 320, 0.3, 4, PC.amber, 0, 3);
-      }
-    }
-    const dashing = this.dash.active > 0;
-    tickDash(this.dash, s, dt);
-    steerSaucer(s, down, p.x - sx, p.y - sy, dt, rot, dashing);
+    steerSaucer(s, down, p.x - sx, p.y - sy, dt, rot);
     if (down) this.dragDist += before * dt;
 
     // world bounds
@@ -759,7 +740,6 @@ export class FlightScene implements Scene {
       locking: this.state === 'locking',
       st: this.st,
       wobble: this.steerWobble,
-      dash: this.ctx.upgrades.has('afterburner') ? this.dash : null,
     });
   }
 

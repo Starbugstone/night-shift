@@ -285,7 +285,6 @@ export const ART: Record<string, ArtSpec> = {
   'ui/target_marker': { w: 48, h: 48 }, // off-screen arrow pointing up (rotated by code)
   'ui/eye_closed': { w: 64, h: 40 }, // suspicion "eye" fuse: closed
   'ui/eye_open': { w: 64, h: 40 }, // fully open, alarmed
-  'ui/upgrade_afterburner': { w: 96, h: 96 },
   'ui/upgrade_snooze': { w: 96, h: 96 },
   'ui/vrell_furious': { w: 200, h: 200 },
   'ui/vrell_pleased': { w: 200, h: 200 }, // as pleased as Vrell gets

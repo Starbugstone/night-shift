@@ -9,7 +9,7 @@ second sleepers, autopilot proofs and difficulty bands). Merged from a three-age
 ## Shared rules for L5–L7
 
 - **Plain drag is enough.** Every flight and every route must be completable without any upgrade.
-  The Afterburner helps; it is never required. Size open crossings and shadow hops for ordinary drag.
+  (The Afterburner upgrade has since been withdrawn.) Size open crossings and shadow hops for ordinary drag.
 - **Tell language stays honest** (AGENTS.md): mint = you and your goals, amber = about to happen,
   red = it has you right now. Water is dark Pine with Mist/Ice surface lines and lit tanks glow UV
   lilac, never cyan next to the mint beam. A "not done yet" exit shows an amber/empty checkbox,

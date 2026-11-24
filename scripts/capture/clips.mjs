@@ -7,7 +7,7 @@ export const CLIPS = [
   },
   {
     file: '02-flight-hazards', title: 'Flight hazards on L3 and L4',
-    caption: 'The cruiser, a porch light arming, clicking on and catching us (Exhibit A: doorbell camera), Mrs. Pruitt\'s ghost cone and snap, the helicopter spotlight, a rooftop camera beside a flickering office window, the crane boom, pigeons and the Afterburner dash, each outlined with its real hit shape from the hazard code.',
+    caption: 'The cruiser, a porch light arming, clicking on and catching us (Exhibit A: doorbell camera), Mrs. Pruitt\'s ghost cone and snap, the helicopter spotlight, a rooftop camera beside a flickering office window, the crane boom and pigeons, each outlined with its real hit shape from the hazard code.',
   },
   {
     file: '03-deep-shift', title: 'The structure of a deep shift',

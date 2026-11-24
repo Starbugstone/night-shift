@@ -180,9 +180,9 @@ Specimens:
   Abduction Lead 11 (of 12 stars).
 - Deep-level pay is about 2× per star.
 - New upgrades:
-  - **Afterburner** (flight): a quick flick, a fast swipe ≥ ~900 px/s, triggers
-    a short dash at 2.2× top speed for 0.35 s, with a 2.5 s cooldown shown as a
-    ring on the saucer. It is the reflex tool for crossing a sweeping cone.
+  - ~~**Afterburner**~~ (flight): withdrawn on 2026-11-23. Its flick-to-dash fired on
+    ordinary steering swipes and made flight unplayable. Saves that bought it get
+    its 60 Glorbs back on load.
   - **Snooze Ray** (abduction): once per building, double-tap to knock 40 off
     every wake meter, with a soothing lullaby sting.
   - Beam Dampener and Hush Drive stay.

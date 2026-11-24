@@ -62,7 +62,7 @@ being made). Draw sprites into a rect of the manifest size.
 
 Design: `docs/GDD-2-deeper.md` (it overrides `docs/GDD.md` where they differ).
 New shared types in `src/contracts.ts`: the extended `RoomId`, `AbductRules`,
-`AbductFailReason`, the v2 `SfxName`s, the `afterburner` and `snooze_ray` upgrades, and
+`AbductFailReason`, the v2 `SfxName`s, the `snooze_ray` upgrade (the `afterburner` was withdrawn), and
 the autopilot intents. The art keys for v2 are in `src/art-manifest.ts` under the
 v2 banner. Code owners may append keys in their own marked APPEND section and must
 always draw a primitive fallback.

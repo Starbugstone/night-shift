@@ -72,8 +72,15 @@ describe('progression', () => {
     expect(totalStars(sun.save)).toBe(0);
   });
 
-  it('sells the afterburner and the snooze ray', () => {
-    expect(UPGRADES.map((u) => u.id)).toEqual(['beam_dampener', 'hush_drive', 'afterburner', 'snooze_ray']);
+  it('sells the snooze ray (the afterburner was withdrawn)', () => {
+    expect(UPGRADES.map((u) => u.id)).toEqual(['beam_dampener', 'hush_drive', 'snooze_ray']);
+  });
+
+  it('refunds a withdrawn afterburner once, on load', () => {
+    const s = validateSave({ glorbs: 10, upgrades: ['afterburner', 'snooze_ray', 'afterburner'] });
+    expect(s.upgrades).toEqual(['snooze_ray']);
+    expect(s.glorbs).toBe(70);
+    expect(validateSave(JSON.parse(JSON.stringify(s))).glorbs).toBe(70);
   });
 
   it('migrates a v1 save (two levels, old upgrades) without losing anything', () => {
@@ -93,7 +100,7 @@ describe('progression', () => {
     expect(s.levels.level3).toEqual({ stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 });
     expect(s.levels.level4.delivered).toBe(false);
     expect(s.upgrades).toEqual(['hush_drive']);
-    expect(validateSave({ upgrades: ['afterburner', 'snooze_ray'] }).upgrades).toEqual(['afterburner', 'snooze_ray']);
+    expect(validateSave({ upgrades: ['hush_drive', 'snooze_ray'] }).upgrades).toEqual(['hush_drive', 'snooze_ray']);
   });
 });
 

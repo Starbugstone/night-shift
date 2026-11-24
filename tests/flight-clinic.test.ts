@@ -98,8 +98,8 @@ describe('ambulance scramble', () => {
     copyFlightState(sa, sim.st);
     copyFlightState(sb, sim.st);
     for (let k = 0; k < 180; k++) {
-      stepFlight(a, LEVEL6.map, sa, true, 0, -120, false, 0, 0, DT, 1, false);
-      stepFlight(b, LEVEL6.map, sb, true, 0, -120, false, 0, 0, DT, 1, false);
+      stepFlight(a, LEVEL6.map, sa, true, 0, -120, DT, 1);
+      stepFlight(b, LEVEL6.map, sb, true, 0, -120, DT, 1);
     }
     expect(Array.from(sa.ambT)).toEqual(Array.from(sb.ambT));
     expect(sa.sus).toBe(sb.sus);

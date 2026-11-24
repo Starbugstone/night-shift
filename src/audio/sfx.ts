@@ -169,10 +169,6 @@ export class SynthAudio implements Audio {
         this.tone('sine', 700, 700, t, 0.3, 0.08 * v);
         this.tone('sine', 520, 520, t + 0.3, 0.3, 0.08 * v);
         break;
-      case 'dash':
-        this.noise(t, 0.3, 0.4 * v, 'bandpass', 600, 1.2, 3200);
-        this.tone('sine', 180, 520, t, 0.22, 0.2 * v);
-        break;
       case 'pickup':
         // a quick rising slurp and a bright blip: something small just joined the trip
         this.tone('sine', 360, 1300, t, 0.14, 0.26 * v);

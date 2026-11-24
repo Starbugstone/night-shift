@@ -20,7 +20,7 @@ const log = (s: string): void => {
 };
 
 const fmt = (r: HeadlessResult): string =>
-  `${r.done ? 'done' : 'NOT DONE'} in ${r.totalSec.toFixed(1)} s · legs ${r.legs.map((l) => `T${l.target}/E${l.entry} ${l.sec.toFixed(1)}s`).join(', ')} · spotted ${r.spots.length} · bumps ${r.bumps} · dashes ${r.dashes}`;
+  `${r.done ? 'done' : 'NOT DONE'} in ${r.totalSec.toFixed(1)} s · legs ${r.legs.map((l) => `T${l.target}/E${l.entry} ${l.sec.toFixed(1)}s`).join(', ')} · spotted ${r.spots.length} · bumps ${r.bumps}`;
 
 function overview(_level: DeepLevelDef, _name: string, _r: HeadlessResult): void {
   // map + exposure + trail SVG dump lives in a scratch tool; no-op here
@@ -28,21 +28,13 @@ function overview(_level: DeepLevelDef, _name: string, _r: HeadlessResult): void
 
 for (const level of [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7]) {
   describe(`${level.id} ${level.title}: flight legs`, () => {
-    it('the autopilot (no afterburner) visits all three targets without being spotted', () => {
-      const r = runHeadless(level.map, [], autopilotController(false), 400);
-      log(`[autopilot ${level.id} no-dash] ${fmt(r)}`);
-      overview(level, `${level.id}-nodash`, r);
+    it('the autopilot visits all three targets without being spotted', () => {
+      const r = runHeadless(level.map, [], autopilotController(), 400);
+      log(`[autopilot ${level.id}] ${fmt(r)}`);
+      overview(level, level.id, r);
       expect(r.spots, JSON.stringify(r.spots, null, 1)).toEqual([]);
       expect(r.done).toBe(true);
       expect(new Set(r.legs.map((l) => l.target)).size).toBe(3);
-    });
-
-    it('the autopilot with the afterburner does too, and dashes', () => {
-      const r = runHeadless(level.map, ['afterburner'], autopilotController(true), 400);
-      log(`[autopilot ${level.id} dash] ${fmt(r)}`);
-      overview(level, `${level.id}-dash`, r);
-      expect(r.spots, JSON.stringify(r.spots)).toEqual([]);
-      expect(r.done).toBe(true);
     });
 
     // L3 was softened after playtesting (2026-11-23): a lucky beeline may slip through, but not

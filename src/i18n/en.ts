@@ -58,11 +58,7 @@ const upgrades = {
     effect: 'Spotting fuse 1.25 s · Wake fills slower',
     desc: 'A tiny muffler for your anti-gravity. Dogs now hear only a faint, polite hum.',
   },
-  afterburner: {
-    name: 'Afterburner',
-    effect: 'Flick to dash · 2.5 s recharge',
-    desc: 'Flick your thumb and the saucer lunges at 2.2× speed for a moment. Ideal for cones. Not for parking.',
-  },
+
   snooze_ray: {
     name: 'Snooze Ray',
     effect: 'Double-tap: calm every sleeper',
@@ -141,7 +137,6 @@ const deepZib = {
   sprinkler: ["It's a sprinkler. Just a sprinkler. I knew that.", 'The sprinkler is unbothered by me. I respect the sprinkler.'],
   cropcircle: ["Hey, I didn't make that one! That's the Tuesday crew's handwriting.", 'Crop circle! Vrell says that counts as one signature on a probe form.'],
   tripwire: ["Gary's tripwire. Rings a bell by his bed. He's slept through it every time.", 'Another Gary tripwire. It only catches Gary. Gary is the threat.'],
-  dash: ['Zoom!', "Afterburner! Mom would say slow down. Mom isn't here.", "My towel is in my OTHER saucer."],
   checkpoint: ['One in the hold! Nobody saw a thing. Hopefully.', 'Specimen secured. Back to the sky, Zib. Act natural.'],
   dawn: ["The sky's going orange! That's the bad colour!", 'Sunrise in thirty seconds! The humans will be AWAKE. On PURPOSE.'],
   nearRing: ["Hover… hover… don't sneeze…", "That's the one. Hold still…"],

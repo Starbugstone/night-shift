@@ -8,7 +8,13 @@ export const SAVE_VERSION = 1;
 export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
 
-export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive', 'afterburner', 'snooze_ray'];
+export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive', 'snooze_ray'];
+
+/**
+ * Upgrades that were sold and then withdrawn, with what they cost. A save that owns one gets the
+ * Glorbs back on load (the Afterburner's flick-to-dash fired on ordinary steering swipes).
+ */
+const RETIRED_UPGRADES: Readonly<Record<string, number>> = { afterburner: 60 };
 
 /** Tutorials: [Delivered, Still asleep, Night owl]. Deep levels: [Delivered all 3, Ghost, Night owl]. */
 export type Stars = [boolean, boolean, boolean];
@@ -96,7 +102,14 @@ export function validateSave(raw: unknown): SaveData {
   for (const id of LEVEL_IDS) out.levels[id] = readLevel(levels[id]);
   if (Array.isArray(raw.upgrades)) {
     const set = new Set<UpgradeId>();
-    for (const u of raw.upgrades) if (UPGRADE_IDS.includes(u as UpgradeId)) set.add(u as UpgradeId);
+    const refunded = new Set<string>();
+    for (const u of raw.upgrades) {
+      if (UPGRADE_IDS.includes(u as UpgradeId)) set.add(u as UpgradeId);
+      else if (typeof u === 'string' && u in RETIRED_UPGRADES && !refunded.has(u)) {
+        refunded.add(u);
+        out.glorbs = Math.min(999999, out.glorbs + RETIRED_UPGRADES[u]!);
+      }
+    }
     out.upgrades = [...set];
   }
   out.muted = raw.muted === true;

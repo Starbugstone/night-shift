@@ -162,7 +162,7 @@ describe('hazards', () => {
     const st = newFlightState(0);
     st.s.x = 520;
     st.s.y = 500;
-    stepFlight(field, map, st, false, 0, 0, false, 0, 0, 1 / 60, 1, false);
+    stepFlight(field, map, st, false, 0, 0, 1 / 60, 1);
     expect(st.bump).toBe(0);
     expect(st.s.stun).toBeGreaterThan(0);
     expect(st.s.x).toBeGreaterThan(540);
@@ -179,7 +179,7 @@ describe('deep flight sim', () => {
     for (let i = 0; i < 120; i++) {
       const fdx = p.x - (sim.saucer.x - sim.camX);
       const fdy = p.y - (sim.saucer.y - sim.camY);
-      stepFlight(field2, LEVEL4.map, copy, true, fdx, fdy, false, 0, 0, 1 / 60, 1, false);
+      stepFlight(field2, LEVEL4.map, copy, true, fdx, fdy, 1 / 60, 1);
       sim.update(1 / 60, p);
       p.pressed = false;
     }

@@ -6,7 +6,7 @@
 // 2. A* over that grid to the cheapest remaining ring gives a dense path. Cells that are never
 //    exposed (with a one-cell margin) right before an exposed stretch become hold points.
 // 3. Every 0.1 s the autopilot rolls the real physics forward (copied state, a second hazard
-//    field) for "go to the next hold point", "go with a dash" and "wait here", and picks the
+//    field) for "go to the next hold point" and "wait here", and picks the
 //    first one that keeps the suspicion fuse well short of full.
 import type { FlightAutopilotIntent, Vec2 } from '../contracts';
 import type { DeepMap } from '../levels/types';
@@ -25,7 +25,7 @@ const ROLL_DT = 1 / 60;
 /** Never commit to a plan whose predicted fuse peaks above this. */
 const SAFE_PEAK = 0.45;
 const FULL = 190;
-/** Finger offset slew (px/s): keeps ordinary steering well under the 900 px/s flick speed. */
+/** Finger offset slew (px/s): a steady thumb, not a jerk. */
 const SLEW = 650;
 
 interface Finger {
@@ -352,7 +352,6 @@ type Mode = 'go' | 'hold' | 'back';
 export interface AutopilotStats {
   decisions: number;
   holds: number;
-  dashes: number;
   replans: number;
   /** Target order visited. */
   order: number[];
@@ -374,21 +373,17 @@ export class FlightAutopilot {
   private mode: Mode = 'hold';
   private decideAt = -1;
   private holdSince = 0;
-  private flickAt = -1;
-  private flickDir = { x: 0, y: 0 };
   private anchor: Vec2 = { x: 0, y: 0 };
   private lastPos: Vec2 = { x: 0, y: 0 };
   /** Last decision (debug): mode chosen and the predicted fuse peaks. */
-  readonly last = { go: 0, dash: -1, hold: 0, back: 0, mode: 'hold' as string, stop: 0, forced: false };
-  readonly stats: AutopilotStats = { decisions: 0, holds: 0, dashes: 0, replans: 0, order: [] };
+  readonly last = { go: 0, hold: 0, back: 0, mode: 'hold' as string, stop: 0, forced: false };
+  readonly stats: AutopilotStats = { decisions: 0, holds: 0, replans: 0, order: [] };
   private readonly out: FlightAutopilotIntent = { down: false, x: 0, y: 0 };
 
   constructor(
     private readonly sim: DeepFlightSim,
     /** Fixed visiting order (target indices); default = cheapest next. */
     private readonly order?: readonly number[],
-    /** Use the afterburner when owned. */
-    private readonly useDash = true,
   ) {
     this.grid = exposureGrid(sim.map);
     this.rf = new HazardField(sim.map.hazards);
@@ -523,7 +518,7 @@ export class FlightAutopilot {
   private stop = 0;
 
   /** Roll the physics forward; returns the peak suspicion (1 = spotted). */
-  private rollout(mode: Mode, stop: number, anchor: Vec2, horizon: number, settle: number, dash: Vec2 | null): number {
+  private rollout(mode: Mode, stop: number, anchor: Vec2, horizon: number, settle: number): number {
     const sim = this.sim;
     const rs = this.rs;
     copyFlightState(rs, sim.st);
@@ -539,8 +534,7 @@ export class FlightAutopilot {
     for (let k = 0; k * ROLL_DT < horizon; k++) {
       this.control(rs, this.rpi, stop, mode, anchor, this.ro);
       slew(f, this.ro, ROLL_DT);
-      const flick = k === 0 && dash !== null;
-      stepFlight(this.rf, sim.map, rs, f.down, f.dx, f.dy, flick, dash?.x ?? 0, dash?.y ?? 0, ROLL_DT, sim.mult, sim.afterburner);
+      stepFlight(this.rf, sim.map, rs, f.down, f.dx, f.dy, ROLL_DT, sim.mult);
       if (rs.sus > peak) peak = rs.sus;
       if (peak >= 1) return 1;
       const s = rs.s;
@@ -580,7 +574,6 @@ export class FlightAutopilot {
     const limit = waited > 25 ? 0.9 : SAFE_PEAK;
     const horizon = 5;
     const L = this.last;
-    L.dash = -1;
     L.hold = -1;
     L.back = -1;
     L.forced = false;
@@ -594,7 +587,7 @@ export class FlightAutopilot {
     let bestPeak = 2;
     for (let c = 0; c < cands.length && c < 6; c++) {
       const stop = cands[c]!;
-      const peak = this.rollout('go', stop, this.anchor, horizon, stop === last ? 1.5 : 0.9, null);
+      const peak = this.rollout('go', stop, this.anchor, horizon, stop === last ? 1.5 : 0.9);
       if (c === 0) L.go = peak;
       if (peak < limit) {
         best = stop;
@@ -609,39 +602,17 @@ export class FlightAutopilot {
       this.setMode('go');
       return;
     }
-    if (this.useDash && sim.afterburner && sim.st.dash.cool <= 0 && sim.st.dash.active <= 0) {
-      // dash along the first stretch of the path
-      const k = Math.min(last, this.pi + 3);
-      const q = this.path[k]!;
-      const dx = q.x - s.x;
-      const dy = q.y - s.y;
-      const d = Math.hypot(dx, dy);
-      if (d > 30) {
-        const dir = { x: dx / d, y: dy / d };
-        const dashed = this.rollout('go', next, this.anchor, horizon, next === last ? 1.5 : 0.9, dir);
-        L.dash = dashed;
-        if (dashed < limit) {
-          this.stop = next;
-          L.stop = next;
-          this.setMode('go');
-          this.flickAt = sim.t;
-          this.flickDir = dir;
-          this.stats.dashes++;
-          return;
-        }
-      }
-    }
     // not safe to go: wait where we are if that's a safe spot, else pick the least bad option
     const here = { x: s.x, y: s.y };
     const atAnchor = Math.hypot(this.anchor.x - s.x, this.anchor.y - s.y) < 40;
-    const holdHere = this.rollout('hold', next, atAnchor ? this.anchor : here, 1.2, 99, null);
+    const holdHere = this.rollout('hold', next, atAnchor ? this.anchor : here, 1.2, 99);
     L.hold = holdHere;
     if (holdHere < limit) {
       if (!atAnchor) this.anchor = here;
       this.setMode('hold');
       return;
     }
-    const back = atAnchor ? 1 : this.rollout('back', next, this.anchor, 3, 99, null);
+    const back = atAnchor ? 1 : this.rollout('back', next, this.anchor, 3, 99);
     L.back = back;
     L.forced = true;
     const go = L.go;
@@ -707,17 +678,10 @@ export class FlightAutopilot {
     this.pi = rpi.pi;
     const sx = s.x - sim.camX;
     const sy = s.y - sim.camY;
-    // a flick in progress: sweep the finger fast through the saucer along the dash direction
     const dt = this.lastCall < 0 ? 1 / 60 : Math.max(0, Math.min(0.1, sim.t - this.lastCall));
     this.lastCall = sim.t;
-    const ft = sim.t - this.flickAt;
     const f = this.finger;
-    if (this.flickAt >= 0 && ft < 0.14) {
-      const off = -70 + ft * 1700;
-      f.down = true;
-      f.dx = this.flickDir.x * off;
-      f.dy = this.flickDir.y * off;
-    } else slew(f, this.ro, dt);
+    slew(f, this.ro, dt);
     o.down = f.down;
     o.x = sx + f.dx;
     o.y = sy + f.dy;

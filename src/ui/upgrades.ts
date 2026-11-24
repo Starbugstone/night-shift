@@ -17,7 +17,6 @@ const BUY_W = 168;
 const WHERE: Record<UpgradeId, { label: 'whereRoom' | 'whereBoth' | 'whereFlight'; color: string }> = {
   beam_dampener: { label: 'whereRoom', color: '#c8a4ff' },
   hush_drive: { label: 'whereBoth', color: C.mint },
-  afterburner: { label: 'whereFlight', color: C.amberHi },
   snooze_ray: { label: 'whereRoom', color: '#c8a4ff' },
 };
 
@@ -165,22 +164,6 @@ export class UpgradesScene implements Scene {
         g.quadraticCurveTo(cx, yy + 6, cx + 20, yy);
       }
       g.stroke();
-    } else if (id === 'afterburner') {
-      g.fillStyle = '#9fb3d6';
-      g.beginPath();
-      g.ellipse(cx + 8, cy, 30, 12, 0, 0, Math.PI * 2);
-      g.fill();
-      g.stroke();
-      g.strokeStyle = C.amber;
-      g.lineWidth = 5;
-      g.lineCap = 'round';
-      for (let k = -1; k <= 1; k++) {
-        g.beginPath();
-        g.moveTo(cx - 26, cy + k * 9);
-        g.lineTo(cx - 40 - Math.abs(k) * -6, cy + k * 9);
-        g.stroke();
-      }
-      g.lineCap = 'butt';
     } else if (id === 'snooze_ray') {
       text(g, tr().shop.snoozeIcon, cx, cy - 4, 30, C.mint, 'center', 900, true);
       g.strokeStyle = C.mint;

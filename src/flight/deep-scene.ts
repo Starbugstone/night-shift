@@ -272,14 +272,6 @@ export class DeepFlightScene implements Scene {
     const field = sim.field;
     const rm = this.ctx.reducedMotion;
     // ---- events
-    if (st.dashed) {
-      audio.sfx('dash');
-      if (!this.seen.has('dash')) {
-        this.seen.add('dash');
-        this.say('dash', true);
-      }
-      if (!rm) this.fx.burst(P_SPARK, s.x, s.y, 10, 160, 320, 0.3, 4, PC.amber, 0, 3);
-    }
     if (st.click >= 0) {
       audio.sfx('click', 0.9);
       if (!this.seen.has('porch')) {
@@ -530,7 +522,7 @@ export class DeepFlightScene implements Scene {
     }
 
     if (this.cpT >= 0) this.drawBeamIn(g, t);
-    drawSaucer(g, assets, s, t, rm, { locking, st: this.st, wobble: sim.field.scramble(s.x, s.y), dash: sim.afterburner ? sim.st.dash : null, ghost: sim.st.safe, ghostMax: SAFE_WINDOW });
+    drawSaucer(g, assets, s, t, rm, { locking, st: this.st, wobble: sim.field.scramble(s.x, s.y), ghost: sim.st.safe, ghostMax: SAFE_WINDOW });
     this.drawFuseRing(g, t);
     this.fx.draw(g);
     g.restore();

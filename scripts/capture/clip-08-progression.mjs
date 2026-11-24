@@ -18,7 +18,7 @@ const C = {
   bullets: [
     'Work Orders: the two tutorial shifts are tagged TRAINING. A deep shift is one card with three mugshots and its sunrise time.',
     'Your rank comes from total stars, from Intern up to Abduction Lead (12 stars in all). Deep shifts pay twice per star.',
-    'The Beam Shop sells four upgrades. Afterburner (60 Glorbs) adds the flick dash. Snooze Ray (80) calms every sleeper once per building.',
+    'The Beam Shop sells three upgrades. Snooze Ray (80 Glorbs) calms every sleeper once per building.',
     'Every shift starts with a memo from Supervisor Vrell.',
     'Every abduction ends with a Specimen Report: stars, Glorbs, the run\'s stats and a verdict from Vrell.',
   ],

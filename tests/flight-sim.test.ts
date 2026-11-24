@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { circleSegment, pointInCircle, pointInCone, wrapAngle } from '../src/flight/geometry';
-import { DASH, FlickDetector, LOCK, LockOn, PathFollower, SAUCER, SUSPICION, SuspicionMeter, barkRadius, fireDash, newDash, ringUnder, steerSaucer, suspicionMultiplier, tickDash } from '../src/flight/sim';
+import { LOCK, LockOn, PathFollower, SAUCER, SUSPICION, SuspicionMeter, barkRadius,  ringUnder, steerSaucer, suspicionMultiplier } from '../src/flight/sim';
 import { LEVELS, isTutorial } from '../src/levels/levels';
 
 const TUTORIALS = LEVELS.filter(isTutorial);
@@ -202,36 +202,3 @@ describe('level layouts', () => {
   });
 });
 
-describe('afterburner', () => {
-  it('a flick of >= 900 px/s is detected, a slow drag is not', () => {
-    const f = new FlickDetector();
-    let fast = 0;
-    for (let i = 0; i < 8; i++) fast = Math.max(fast, f.push(true, i === 0, 100 + i * 25, 500, i / 60)); // 1500 px/s
-    expect(fast).toBeGreaterThanOrEqual(DASH.flickSpeed);
-    expect(f.dx).toBeCloseTo(1);
-    f.reset();
-    let slow = 0;
-    for (let i = 0; i < 30; i++) slow = Math.max(slow, f.push(true, i === 0, 100 + i * 8, 500, i / 60)); // 480 px/s
-    expect(slow).toBeLessThan(DASH.flickSpeed);
-  });
-
-  it('dashes at 2.2x top speed for 0.35 s, then a 2.5 s cooldown', () => {
-    const d = newDash();
-    const s = { x: 0, y: 0, vx: 0, vy: 0, stun: 0 };
-    expect(fireDash(d, 0, -1)).toBe(true);
-    expect(fireDash(d, 0, -1)).toBe(false);
-    let travelled = 0;
-    for (let i = 0; i < 21; i++) {
-      const dashing = d.active > 0;
-      tickDash(d, s, 1 / 60);
-      steerSaucer(s, false, 0, 0, 1 / 60, 0, dashing);
-      travelled = -s.y;
-    }
-    expect(travelled).toBeGreaterThan(SAUCER.maxSpeed * DASH.mult * 0.3);
-    expect(d.active).toBe(0);
-    expect(d.cool).toBeGreaterThan(DASH.cooldown - 0.05);
-    for (let i = 0; i < 152; i++) tickDash(d, s, 1 / 60);
-    expect(d.cool).toBeLessThan(1e-9);
-    expect(fireDash(d, 1, 0)).toBe(true);
-  });
-});

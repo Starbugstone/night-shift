@@ -191,12 +191,12 @@ const MOTOR_LAG = 0.08;
 
 /**
  * The flight autopilot's plan, with a person's reaction: when the right move changes (wait →
- * go, go → wait, dash), the thumb keeps doing what it was doing for `reaction` seconds before it
+ * go, go → wait), the thumb keeps doing what it was doing for `reaction` seconds before it
  * follows. Steering itself runs a short motor lag behind, with tremor and drift on top.
  */
-export function humanFlightController(profile: HumanProfile, seed: number, dash = false): (sim: DeepFlightSim) => Controller {
+export function humanFlightController(profile: HumanProfile, seed: number): (sim: DeepFlightSim) => Controller {
   return (sim) => {
-    const ap = new FlightAutopilot(sim, undefined, dash);
+    const ap = new FlightAutopilot(sim);
     const random = rng(seed * 104729 + 3);
     const shake = tremor(random, profile.jitter * 2.5);
     const wander = tremor(random, profile.drift * 2.5, 0.18);
@@ -237,6 +237,6 @@ export interface FlightRun extends HeadlessResult {
 
 export function playFlight(map: DeepMap, profile: HumanProfile, seed: number, upgrades: UpgradeId[] = [], limitSec = 420): FlightRun {
   const start = rng(seed)() * 9;
-  const r = runHeadless(map, upgrades, humanFlightController(profile, seed, upgrades.includes('afterburner')), limitSec, false, start);
+  const r = runHeadless(map, upgrades, humanFlightController(profile, seed), limitSec, false, start);
   return { ...r, seed };
 }

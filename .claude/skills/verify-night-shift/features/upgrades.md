@@ -29,4 +29,4 @@ Preconditions:
 ## Gotchas
 
 - `?unlock=1` raises currency to at least 999 every time that URL loads. Navigate to `/` for the persistence check.
-- This shop lists Beam Dampener and Hush Drive. Afterburner and Snooze Ray exist in shared contracts but cannot be bought in this build.
+- The shop sells Beam Dampener, Hush Drive and Snooze Ray. The Afterburner was withdrawn (2026-11-23); a save that owns it is refunded 60 Glorbs on load.
