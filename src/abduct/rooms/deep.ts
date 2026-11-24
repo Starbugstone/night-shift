@@ -222,11 +222,12 @@ export const garyGaragedoor = route(garyHome, 'gary', 'GARAGE DOOR', EXITS.garyG
     point(1670, 354, undefined, 29), point(1796, 320, undefined, 29), point(1930, 363, undefined, 29), point(2144, 541, 'Garage door', 186),
   ]);
 
+const nigelSkull = art('dino_skull', 938, 345);
 const nigelHome = building([
   room('Security office', 'office', box(0, 0, 760, 700),
     [art('towel_42', 221, 230)], [], [officeChair(93), nigelDesk]),
   room('Dinosaur hall', 'museum', box(760, 0, 940, 700),
-    [], [art('dino_skull', 938, 270), art('dino_ribs', 1138, 486), art('dino_legs', 1398, 426)], [], [art('dino_skull', 938, 270)]),
+    [], [nigelSkull, art('dino_ribs', 1138, 486), fit('dino_legs', 1398, 471, 160, 215)], [], [nigelSkull]),
   room('Laser vault', 'vault', box(1700, 0, 930, 700),
     [EXITS.nigelSkylight], [art('display_case', 1827, 526), art('display_case', 2235, 526)]),
   room('Gift shop', 'museum', box(0, 700, 760, 700),
@@ -243,7 +244,9 @@ const nigelHome = building([
 export const nigelSkylight = route(nigelHome, 'nigel', 'MUSEUM SKYLIGHT', EXITS.nigelSkylight,
   box(2407, 47, 134, 85), [
     point(263, 308), point(560, 260), point(830, 275), point(891, 196), point(1100, 180),
-    point(1270, 272), point(1472, 299), point(1750, 311), point(1930, 328), point(2227, 328, 'Vault grid', 197),
+    // Keep Nigel's feet above the skeleton, then descend through the vault doorway.
+    point(1270, 220), point(1510, 248), point(1625, 263), point(1750, 303), point(1930, 303),
+    point(2227, 303, 'Vault grid', 197),
     point(2467, 301), point(2474, 78, 'Skylight grid', 220),
   ], true);
 export const nigelLoading = route(nigelHome, 'nigel', 'LOADING BAY', EXITS.nigelLoading,
@@ -252,7 +255,7 @@ export const nigelLoading = route(nigelHome, 'nigel', 'LOADING BAY', EXITS.nigel
     point(1100, 1020), point(1186, 899), point(1395, 994), point(1666, 1090, 'Cargo shutter', 188), point(1674, 1224),
   ]);
 
-const kevDance = [point(244, 331), point(526, 309), point(760, 311)] as const;
+const kevDance = [point(244, 331), point(526, 271), point(760, 271)] as const;
 const kevHome = building([
   room('DJ booth', 'club', box(0, 0, 660, 700),
     [art('tripod_single', 212, 232)], [art('speaker_stack', 480, 466)], [officeChair(106), kevDesk]),
@@ -279,7 +282,7 @@ export const kevVent = route(kevHome, 'kev', 'ROOF VENT', EXITS.kevVent,
   ], true);
 export const kevFireescape = route(kevHome, 'kev', 'FIRE ESCAPE', EXITS.kevFireescape,
   box(2325, 527, 98, 122), [
-    point(244, 331), point(526, 271), point(760, 271), point(1010, 270), point(1266, 270),
+    ...kevDance, point(1010, 270), point(1266, 270),
     // Keep the feet above the stacks, dip through the doorway, then lift above the glass.
     point(1445, 270), point(1545, 352), point(1630, 352), point(1710, 260),
     point(1822, 242), point(2163, 242), point(2163, 397), point(2377, 541, 'Fire-escape sash', 187),

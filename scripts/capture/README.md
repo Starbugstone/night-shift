@@ -21,7 +21,8 @@ Scripts that film the 60 fps explainer clips and stills in `public/media/`, show
 ## Run
 
 ```sh
-npx vite build --outDir /tmp/ns-dist && npx vite preview --outDir /tmp/ns-dist --port 5311 --strictPort --host 127.0.0.1 &
+npm run build -- --mode e2e --outDir review/e2e-build
+npm run preview -- --outDir review/e2e-build --port 5311 --strictPort --host 127.0.0.1 &
 source ~/.local/share/claude-media-tools/env.sh       # $FFMPEG, $PLAYWRIGHT_MODULE
 BASE=http://127.0.0.1:5311/ node scripts/capture/clip-01-flight-detection.mjs
 VITEST_LOG=vitest.log BASE=... node scripts/capture/clip-07-beatable.mjs   # quotes a vitest run
@@ -29,7 +30,7 @@ node scripts/capture/make-page.mjs                    # FFPROBE=/path/to/ffprobe
 # stills were then recompressed losslessly: ffmpeg -i x.png -c:v png -pred mixed -compression_level 9 y.png
 ```
 
-Use a preview build, not the dev server: Vite's HMR reloads kill long runs. `DRY=1` runs a
+Use an `e2e` preview build to enable the capture hook and avoid reloads during long runs. `DRY=1` runs a
 clip without writing video. Each clip is a separate process, so several can run in parallel.
 
 | Script | Clip |

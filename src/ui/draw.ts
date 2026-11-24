@@ -2,6 +2,9 @@ import type { Assets } from '../contracts';
 import { ART } from '../art-manifest';
 import { C, font } from './theme';
 
+// Canvas 2D helpers for texture painters (`paintedTexture`: Canvas 2D code that runs once to make a
+// texture), plus small shared utilities. Screens draw with Pixi; see docs/PIXI-MIGRATION.md.
+
 export function roundRectPath(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
   const rr = Math.max(0, Math.min(r, w / 2, h / 2));
   g.beginPath();
@@ -11,48 +14,6 @@ export function roundRectPath(g: CanvasRenderingContext2D, x: number, y: number,
   g.arcTo(x, y + h, x, y, rr);
   g.arcTo(x, y, x + w, y, rr);
   g.closePath();
-}
-
-export function panel(
-  g: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  fill: string,
-  r = 22,
-  stroke: string | null = C.ink,
-  lineW = 4,
-  shadow = 6,
-): void {
-  if (shadow > 0) {
-    roundRectPath(g, x, y + shadow, w, h, r);
-    g.fillStyle = 'rgba(5,3,20,0.45)';
-    g.fill();
-  }
-  roundRectPath(g, x, y, w, h, r);
-  g.fillStyle = fill;
-  g.fill();
-  if (stroke) {
-    g.lineWidth = lineW;
-    g.strokeStyle = stroke;
-    g.stroke();
-  }
-}
-
-/** Thin inner highlight along the top edge of a panel drawn at (x, y, w) with corner radius r. */
-export function panelHighlight(g: CanvasRenderingContext2D, x: number, y: number, w: number, r = 22, alpha = 0.14): void {
-  g.beginPath();
-  g.moveTo(x + r, y + 5);
-  g.lineTo(x + w - r, y + 5);
-  g.lineWidth = 2;
-  g.lineCap = 'round';
-  g.strokeStyle = '#ffffff';
-  const a = g.globalAlpha;
-  g.globalAlpha = a * alpha;
-  g.stroke();
-  g.globalAlpha = a;
-  g.lineCap = 'butt';
 }
 
 export function text(
@@ -76,87 +37,7 @@ export function text(
   else g.fillText(s, x, y);
 }
 
-/** Text with a thick outline (titles, captions). */
-export function outlinedText(
-  g: CanvasRenderingContext2D,
-  s: string,
-  x: number,
-  y: number,
-  size: number,
-  color: string,
-  outline: string = C.ink,
-  weight = 900,
-  align: CanvasTextAlign = 'center',
-  /** Squeeze to fit this width (only if it would overflow). */
-  maxW?: number,
-): void {
-  g.font = font(size, weight);
-  g.textAlign = align;
-  g.textBaseline = 'middle';
-  g.lineJoin = 'round';
-  g.lineWidth = Math.max(4, size * 0.18);
-  g.strokeStyle = outline;
-  if (maxW !== undefined) {
-    g.strokeText(s, x, y, maxW);
-    g.fillStyle = color;
-    g.fillText(s, x, y, maxW);
-    return;
-  }
-  g.strokeText(s, x, y);
-  g.fillStyle = color;
-  g.fillText(s, x, y);
-}
-
-const wrapCache = new Map<string, string[]>();
-
-/** Word-wrap with a cache (keyed by text, font and width). */
-export function wrap(g: CanvasRenderingContext2D, s: string, maxW: number, size: number, weight = 600, italic = false): string[] {
-  const key = `${size}|${weight}|${italic ? 1 : 0}|${maxW}|${s}`;
-  const hit = wrapCache.get(key);
-  if (hit) return hit;
-  g.font = font(size, weight, italic);
-  const lines: string[] = [];
-  for (const para of s.split('\n')) {
-    const words = para.split(' ');
-    let line = '';
-    for (const w of words) {
-      const test = line ? `${line} ${w}` : w;
-      if (g.measureText(test).width > maxW && line) {
-        lines.push(line);
-        line = w;
-      } else line = test;
-    }
-    lines.push(line);
-  }
-  if (wrapCache.size > 400) wrapCache.clear();
-  wrapCache.set(key, lines);
-  return lines;
-}
-
-export function paragraph(
-  g: CanvasRenderingContext2D,
-  s: string,
-  x: number,
-  y: number,
-  maxW: number,
-  size: number,
-  color: string,
-  lineH = size * 1.3,
-  align: CanvasTextAlign = 'left',
-  weight = 500,
-  italic = false,
-): number {
-  const lines = wrap(g, s, maxW, size, weight, italic);
-  g.font = font(size, weight, italic);
-  g.textAlign = align;
-  g.textBaseline = 'middle';
-  g.fillStyle = color;
-  const ax = align === 'center' ? x + maxW / 2 : align === 'right' ? x + maxW : x;
-  for (let i = 0; i < lines.length; i++) g.fillText(lines[i]!, ax, y + lineH * (i + 0.5));
-  return lines.length * lineH;
-}
-
-/** Draw a sprite into a rect (default: manifest size) centred on (cx,cy). Returns false if missing. */
+/** Draw art `key` into a rect (default: manifest size) centred on (cx, cy). Returns false if missing. */
 export function sprite(
   g: CanvasRenderingContext2D,
   assets: Assets,
@@ -185,55 +66,6 @@ export function headKey(short: string): string {
   return key;
 }
 const headKeys = new Map<string, string>();
-
-export function starPath(g: CanvasRenderingContext2D, cx: number, cy: number, r: number): void {
-  g.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const a = -Math.PI / 2 + (i * Math.PI) / 5;
-    const rr = i % 2 === 0 ? r : r * 0.45;
-    const x = cx + Math.cos(a) * rr;
-    const y = cy + Math.sin(a) * rr;
-    if (i === 0) g.moveTo(x, y);
-    else g.lineTo(x, y);
-  }
-  g.closePath();
-}
-
-export function drawStar(g: CanvasRenderingContext2D, assets: Assets, cx: number, cy: number, size: number, full: boolean): void {
-  if (sprite(g, assets, full ? 'ui/star_full' : 'ui/star_empty', cx, cy, size, size)) return;
-  starPath(g, cx, cy, size * 0.48);
-  g.fillStyle = full ? C.amberHi : 'rgba(255,255,255,0.08)';
-  g.fill();
-  g.lineJoin = 'round';
-  g.lineWidth = Math.max(2, size * 0.07);
-  g.strokeStyle = full ? C.ink : C.muted;
-  g.stroke();
-  if (full) {
-    starPath(g, cx - size * 0.06, cy - size * 0.08, size * 0.2);
-    g.fillStyle = 'rgba(255,255,255,0.55)';
-    g.fill();
-  }
-}
-
-export function drawGlorb(g: CanvasRenderingContext2D, assets: Assets, cx: number, cy: number, size: number): void {
-  if (sprite(g, assets, 'ui/glorb', cx, cy, size, size)) return;
-  const r = size * 0.42;
-  g.beginPath();
-  g.ellipse(cx, cy + r * 0.08, r, r * 0.9, 0, 0, Math.PI * 2);
-  g.fillStyle = C.mint;
-  g.fill();
-  g.lineWidth = Math.max(2, size * 0.08);
-  g.strokeStyle = C.ink;
-  g.stroke();
-  g.beginPath();
-  g.arc(cx - r * 0.35, cy - r * 0.3, r * 0.22, 0, Math.PI * 2);
-  g.fillStyle = 'rgba(255,255,255,0.7)';
-  g.fill();
-  g.beginPath();
-  g.arc(cx + r * 0.1, cy + r * 0.1, r * 0.12, 0, Math.PI * 2);
-  g.fillStyle = C.ink;
-  g.fill();
-}
 
 // Eye shapes lifted from the portrait SVGs (200×200 box, inside each file's own group transform),
 // so a blink can be painted over the sprite without a second image.

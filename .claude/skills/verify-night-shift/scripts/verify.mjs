@@ -84,7 +84,8 @@ function controls(page) {
   const save = () => observe(() => window.__nightShift.save);
   const capture = async (name) => {
     assert.match(name, /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
-    const data = await observe(() => document.querySelector('#game').toDataURL('image/png'));
+    // the game canvas is WebGL: capture() renders and reads it in one go
+    const data = await observe(() => window.__nightShift.capture());
     assert.match(data, /^data:image\/png;base64,/);
     await writeFile(resolve(evidence, name + '.png'), Buffer.from(data.split(',')[1], 'base64'));
     record('capture', { name, scene: await scene() });
@@ -92,6 +93,9 @@ function controls(page) {
   const expectScene = async (expected, settleFrames = 30) => {
     for (let attempt = 0; attempt < 100; attempt++) {
       if (await scene() === expected) {
+        // a transition swallows taps until it ends, and entering a scene can hold the cover closed
+        // while its view uploads to the GPU, so wait for the transition itself, then settle
+        for (let n = 0; n < 240 && await observe(() => window.__nightShift.transitioning); n++) await step(1);
         await step(settleFrames);
         assert.equal(await scene(), expected);
         return;
@@ -121,6 +125,8 @@ function controls(page) {
       await step(4);
       const actual = await scene();
       if (actual && actual !== 'loading') {
+        // wait out the transition (and any cover hold while the new view uploads), then settle
+        for (let n = 0; n < 240 && await observe(() => window.__nightShift.transitioning); n++) await step(1);
         await step(30);
         record('opened', { path, scene: await scene() });
         if (await scene() !== expected) await capture('unexpected-entry');
@@ -302,8 +308,10 @@ try {
   await server.listen();
   assert.deepEqual(server.httpServer.address(), { address: '127.0.0.1', family: 'IPv4', port });
   if (interrupted) throw new Error('Interrupted by ' + interrupted);
+  // The game renders with WebGL (Pixi). Software GL is the default (it works anywhere, and the
+  // virtual clock makes the run deterministic); GPUARGS switches to a real GPU.
   browser = await chromium.launch({
-    args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-accelerated-2d-canvas'],
+    args: (process.env.GPUARGS || '--use-angle=swiftshader --enable-unsafe-swiftshader').split(' ').filter(Boolean),
     handleSIGINT: false,
     handleSIGTERM: false,
   });

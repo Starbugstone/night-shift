@@ -3,7 +3,6 @@
 // twinkles, sand a desaturated Ochre, boardwalks Wood. Amber lives only on the lighthouse lamp and
 // the chip kiosk. Every draw has a primitive fallback; nothing allocates per frame.
 import type { Assets } from '../contracts';
-import { VIEW_H, VIEW_W } from '../contracts';
 import { drawSprite } from '../core/fx';
 import type { WireHazard } from './hazards';
 
@@ -37,11 +36,11 @@ function tile(key: GroundKey): { w: number; h: number } {
   return key === 'flight/boardwalk_v' ? { w: 90, h: 540 } : key === 'flight/boardwalk_h' ? { w: 540, h: 90 } : { w: 540, h: 540 };
 }
 
-function patch(g: CanvasRenderingContext2D, assets: Assets, p: GroundPatch, cx: number, cy: number, t: number, rm: boolean, speckles: Float32Array): void {
+function patch(g: CanvasRenderingContext2D, assets: Assets, p: GroundPatch, cx: number, cy: number, viewW: number, viewH: number, speckles: Float32Array): void {
   const x0 = Math.max(p.x, cx - 2);
   const y0 = Math.max(p.y, cy - 2);
-  const x1 = Math.min(p.x + p.w, cx + VIEW_W + 2);
-  const y1 = Math.min(p.y + p.h, cy + VIEW_H + 2);
+  const x1 = Math.min(p.x + p.w, cx + viewW + 2);
+  const y1 = Math.min(p.y + p.h, cy + viewH + 2);
   if (x1 <= x0 || y1 <= y0) return;
   const img = assets.get(p.key);
   g.save();
@@ -52,7 +51,7 @@ function patch(g: CanvasRenderingContext2D, assets: Assets, p: GroundPatch, cx: 
     const { w, h } = tile(p.key);
     const tx = p.x + Math.floor((x0 - p.x) / w) * w;
     const ty = p.y + Math.floor((y0 - p.y) / h) * h;
-    for (let y = ty; y < y1; y += h) for (let x = tx; x < x1; x += w) drawSprite(g, img, x, y, w + 0.5, h + 0.5, true);
+    for (let y = ty; y < y1; y += h) for (let x = tx; x < x1; x += w) drawSprite(g, img, x, y, w + 0.5, h + 0.5);
     g.restore();
     return;
   }
@@ -66,13 +65,11 @@ function patch(g: CanvasRenderingContext2D, assets: Assets, p: GroundPatch, cx: 
       const y = speckles[i + 1]!;
       if (x < x0 - 30 || x > x1 || y < y0 || y > y1) continue;
       const r = speckles[i + 2]!;
-      const drift = rm ? 0 : Math.sin(t * 0.8 + x * 0.01) * 4;
       if (r > 6.3) {
-        const tw = rm ? 0.6 : 0.4 + 0.6 * Math.abs(Math.sin(t * 2.1 + y));
-        g.globalAlpha = tw;
-        g.fillRect(x + drift, y, 2, 2);
+        g.globalAlpha = 0.6;
+        g.fillRect(x, y, 2, 2);
         g.globalAlpha = 1;
-      } else g.fillRect(x + drift, y, r * 4, 1.5);
+      } else g.fillRect(x, y, r * 4, 1.5);
     }
   } else if (p.key === 'flight/ground_sand') {
     g.fillStyle = SAND_DOT;
@@ -102,18 +99,18 @@ function patch(g: CanvasRenderingContext2D, assets: Assets, p: GroundPatch, cx: 
 /** Sea everywhere, then the sand and boardwalk patches in order. */
 export function drawPierGround(
   g: CanvasRenderingContext2D, assets: Assets, patches: readonly GroundPatch[], cx: number, cy: number,
-  t: number, rm: boolean, speckles: Float32Array,
+  viewW: number, viewH: number, speckles: Float32Array,
 ): void {
   const sea = assets.get('flight/ground_sea');
   if (sea) {
     const T = 540;
     const x0 = Math.floor(cx / T) * T;
     const y0 = Math.floor(cy / T) * T;
-    for (let y = y0; y < cy + VIEW_H; y += T) for (let x = x0; x < cx + VIEW_W; x += T) drawSprite(g, sea, x, y, T + 0.5, T + 0.5, true);
+    for (let y = y0; y < cy + viewH; y += T) for (let x = x0; x < cx + viewW; x += T) drawSprite(g, sea, x, y, T + 0.5, T + 0.5);
   } else {
-    patch(g, assets, { key: 'flight/ground_sea', x: cx - 20, y: cy - 20, w: VIEW_W + 40, h: VIEW_H + 40 }, cx, cy, t, rm, speckles);
+    patch(g, assets, { key: 'flight/ground_sea', x: cx - 20, y: cy - 20, w: viewW + 40, h: viewH + 40 }, cx, cy, viewW, viewH, speckles);
   }
-  for (const p of patches) patch(g, assets, p, cx, cy, t, rm, speckles);
+  for (const p of patches) patch(g, assets, p, cx, cy, viewW, viewH, speckles);
 }
 
 function blob(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string): void {

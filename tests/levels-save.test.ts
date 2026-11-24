@@ -78,4 +78,16 @@ describe('save', () => {
     expect(v.levels.level1.bestTimeSec).toBe(40);
     expect(v.version).toBe(1);
   });
+
+  it('refunds retired upgrades once and ignores inherited names', () => {
+    const storage = memStore({ [SAVE_KEY]: JSON.stringify({
+      glorbs: 25,
+      upgrades: ['afterburner', 'constructor', '__proto__', 'toString', 'afterburner', 'hush_drive'],
+    }) });
+    const save = loadSave(storage);
+    expect(save.glorbs).toBe(85);
+    expect(save.upgrades).toEqual(['hush_drive']);
+    expect(writeSave(storage, save)).toBe(true);
+    expect(loadSave(storage)).toEqual(save);
+  });
 });

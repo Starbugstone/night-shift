@@ -1,278 +1,396 @@
-// The SPOTTED moment on a deep shift: "Exhibit A", a flash photo of the saucer taken through
-// whatever saw it (a dashcam, Mrs. Pruitt's binoculars, a doorbell, a dog...), and the witness.
-// One canvas is allocated the first time you are spotted and reused after that.
-import { fmt, tr } from '../i18n';
+// The flash photo captures the world layer at the detection frame, then adds the witness's lens.
+import { ColorMatrixFilter, Container, Graphics, Rectangle, Sprite, Texture } from 'pixi.js';
+import type { Assets } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
-import { GLOW, drawGlow, easeOutBack } from '../core/fx';
-import { panel, roundRectPath, text } from '../ui/draw';
+import { easeOutBack } from '../core/fx';
+import { GLOW, glowTexture, Glow } from '../core/gfx/glow';
+import { renderHost } from '../core/gfx/host';
+import { Shape, ellipseArc, keyOf, panelPath } from '../core/gfx/shapes';
+import { Label, Paragraph } from '../core/gfx/text';
+import { fmt, getLang, localArt, tr, type Strings } from '../i18n';
+import { clamp, roundRectPath, text } from '../ui/draw';
 import { C } from '../ui/theme';
+import { artSprite } from '../ui/views/art';
 import type { SpotCause } from './hazards';
+import { paintedSprite, plate, TAU } from './views/world';
 
-const TAU = Math.PI * 2;
 const INK = '#1b1433';
 const SKIN = '#f2c29b';
-/** Photo size on screen, logical px. */
 const PW = 360;
 const PH = 240;
-/** The photo shows this much of the view, blown up: a 1.25x zoom on the saucer. */
 const SRC_W = 288;
 const SRC_H = 192;
 
-/** The caption over the photo, in the current language. */
+const CAUSES: readonly SpotCause[] = ['police', 'patrol', 'traffic', 'porch', 'watcher', 'dog', 'heli',
+  'camera', 'window', 'lighthouse', 'ambulance', 'photographer', 'steward'];
+const PHOTO_LABEL = { size: 19, color: C.paperInk, weight: 800, italic: true } as const;
+const CLOCK = { size: 13, color: 'rgba(255,255,255,0.9)', align: 'right', weight: 800 } as const;
+const QUESTION = { size: 34, color: '#e0304e', weight: 900, italic: true } as const;
+const SHOUT = { size: 26, color: C.red, weight: 900 } as const;
+const STAMP = { size: 80, color: C.amberHi, outline: C.ink, weight: 900 } as const;
+const CAPTION = { size: 18, color: C.paperInk, weight: 700, italic: true, align: 'center', lineHeight: 24 } as const;
+const EXCUSE = { size: 16, color: C.mint, weight: 700, align: 'left', lineHeight: 21 } as const;
+const BACK = { size: 13, color: C.muted, weight: 700 } as const;
+
 function photoLabel(cause: SpotCause): string {
   return (tr().flight.photo.labels as Record<string, string>)[cause] ?? '';
 }
 
 export class SpottedPhoto {
-  private canvas: HTMLCanvasElement | null = null;
-  private ok = false;
-  /** Where the saucer is in the photo, photo px (0..PW, 0..PH). */
+  readonly root = new Container();
+  private readonly image = new Sprite(Texture.EMPTY);
+  private readonly grade = new ColorMatrixFilter();
+  private readonly flash = new Glow(glowTexture(GLOW.white), true);
+  private readonly mark = new Shape();
+  private readonly arrow = new Graphics();
+  private readonly question = new Label(QUESTION, '?!');
+  private readonly lens = new Map<SpotCause, Sprite>();
+  private readonly lensClock = new Label(CLOCK);
+  private readonly rec = new Graphics().circle(0, 0, 6).fill('#ff3355');
+  private readonly reticle = new Graphics().moveTo(-110, 0).lineTo(-30, 0).moveTo(30, 0).lineTo(110, 0)
+    .moveTo(0, -96).lineTo(0, -30).moveTo(0, 30).lineTo(0, 96).stroke({ color: '#d9e6ff', width: 2 });
+  private readonly hearts: Graphics[] = [];
+  private readonly caption = new Label(PHOTO_LABEL);
+  private texture: Texture | null = null;
   private px = PW / 2;
   private py = PH / 2;
+  private lastCause: SpotCause | null = null;
+  private lastClock = '';
 
-  /**
-   * Copy the frame that is on the canvas right now (the world, before the HUD is drawn) around
-   * the saucer at logical screen position (sx, sy), then give it the look of a flash photo.
-   */
-  grab(g: CanvasRenderingContext2D, sx: number, sy: number): void {
-    this.ok = false;
-    try {
-      const c = (this.canvas ??= document.createElement('canvas'));
-      if (c.width !== PW * 2) {
-        c.width = PW * 2;
-        c.height = PH * 2;
-      }
-      const v = c.getContext('2d');
-      if (!v) return;
-      const m = g.getTransform();
-      const x0 = Math.max(0, Math.min(VIEW_W - SRC_W, sx - SRC_W / 2));
-      const y0 = Math.max(0, Math.min(VIEW_H - SRC_H, sy - SRC_H / 2));
-      v.globalCompositeOperation = 'source-over';
-      v.globalAlpha = 1;
-      v.drawImage(g.canvas, m.e + x0 * m.a, m.f + y0 * m.d, SRC_W * m.a, SRC_H * m.d, 0, 0, c.width, c.height);
-      this.px = ((sx - x0) / SRC_W) * PW;
-      this.py = ((sy - y0) / SRC_H) * PH;
-      // washed-out colour, a burnt-out middle and dark corners: a flash at night
-      v.globalCompositeOperation = 'saturation';
-      v.globalAlpha = 0.5;
-      v.fillStyle = '#808080';
-      v.fillRect(0, 0, c.width, c.height);
-      v.globalCompositeOperation = 'lighter';
-      v.globalAlpha = 1;
-      drawGlow(v, GLOW.white, this.px * 2, this.py * 2, 330, 330, 0.4);
-      v.globalCompositeOperation = 'source-over';
-      for (let i = 0; i < 4; i++) drawGlow(v, GLOW.dark, i % 2 === 0 ? 0 : c.width, i < 2 ? 0 : c.height, 330, 330, 0.75);
-      this.ok = true;
-    } catch {
-      this.ok = false;
+  constructor() {
+    this.grade.desaturate();
+    this.grade.alpha = 0.5;
+    this.image.filters = [this.grade];
+    const imagePlane = new Container();
+    imagePlane.position.set(-PW / 2, -PH / 2);
+    const clip = new Graphics().rect(0, 0, PW, PH).fill(0xffffff);
+    imagePlane.mask = clip;
+    const card = new Graphics().rect(-PW / 2 - 12, -PH / 2 - 8, PW + 36, PH + 96)
+      .fill('rgba(5,3,20,0.5)').rect(-PW / 2 - 18, -PH / 2 - 18, PW + 36, PH + 92).fill('#f4efe2')
+      .rect(-PW / 2, -PH / 2, PW, PH).fill('#17132b');
+    imagePlane.addChild(clip, this.image, this.flash);
+    for (let i = 0; i < 4; i++) {
+      imagePlane.addChild(new Glow(glowTexture(GLOW.dark)).place(i % 2 === 0 ? 0 : PW, i < 2 ? 0 : PH, 165, 165, 0.75));
     }
+    const lang = getLang();
+    const lensText = tr().flight.photo;
+    for (const cause of CAUSES) {
+      const layer = paintedSprite(`camera-lens|${cause}|${lang}`, PW, PH, (g) => {
+        g.translate(-PW / 2, -PH / 2);
+        paintLens(g, cause, lensText);
+      });
+      layer.position.set(PW / 2, PH / 2);
+      this.lens.set(cause, layer);
+      imagePlane.addChild(layer);
+    }
+    for (let i = 0; i < 3; i++) {
+      const r = 7 + i;
+      const h = new Graphics().circle(-r * 0.5, 0, r * 0.55).circle(r * 0.5, 0, r * 0.55)
+        .poly([-r, r * 0.2, 0, r * 1.3, r, r * 0.2]).fill('#ff5d73');
+      this.hearts.push(h);
+      imagePlane.addChild(h);
+    }
+    imagePlane.addChild(this.reticle, this.rec, this.lensClock);
+    this.root.position.set(VIEW_W / 2, 420);
+    this.root.addChild(card, imagePlane, this.mark, this.arrow, this.question, this.caption);
   }
 
-  /** The polaroid, dropped on the screen at (cx, cy). `st` = seconds since you were spotted. */
-  draw(g: CanvasRenderingContext2D, cx: number, cy: number, cause: SpotCause, st: number, t: number, rm: boolean, clock: string): void {
+  /** Capture without the HUD or screen tints, using the world-only container in logical screen space. */
+  grab(world: Container, sx: number, sy: number): void {
+    this.texture?.destroy(true);
+    this.texture = null;
+    this.image.texture = Texture.EMPTY;
+    const host = renderHost();
+    const x = clamp(sx - SRC_W / 2, 0, VIEW_W - SRC_W);
+    const y = clamp(sy - SRC_H / 2, 0, VIEW_H - SRC_H);
+    this.px = (sx - x) / SRC_W * PW;
+    this.py = (sy - y) / SRC_H * PH;
+    this.image.visible = false;
+    if (host) {
+      this.texture = host.renderer.generateTexture({
+        target: world,
+        frame: new Rectangle(x, y, SRC_W, SRC_H),
+        resolution: 2,
+        clearColor: '#17132b',
+      });
+      this.image.texture = this.texture;
+      this.image.width = PW;
+      this.image.height = PH;
+      this.image.visible = true;
+    }
+    this.flash.place(this.px, this.py, 165, 165, 0.4);
+    this.reticle.position.set(this.px, this.py);
+    this.mark.position.set(this.px - PW / 2, this.py - PH / 2);
+    this.mark.invalidate();
+    const x0 = this.mark.x;
+    const y0 = this.mark.y;
+    const sign = x0 > 0 ? -1 : 1;
+    const ax = x0 + sign * 112;
+    const ay = Math.max(-PH / 2 + 34, y0 - 62);
+    const hx = x0 + sign * 62;
+    this.arrow.clear().moveTo(ax, ay + 10).lineTo(hx, y0 - 26)
+      .lineTo(x0 + sign * 80, y0 - 24).moveTo(hx, y0 - 26).lineTo(x0 + sign * 70, y0 - 42)
+      .stroke({ color: '#e0304e', width: 5, cap: 'round' });
+    this.question.position.set(ax, ay - 8);
+  }
+
+  sync(cause: SpotCause, st: number, t: number, rm: boolean, clock: string): void {
     const land = rm ? 1 : easeOutBack((st - 0.06) / 0.32, 1.2);
-    if (land <= 0) return;
-    const tilt = (cause === 'dog' ? -0.13 : -0.045) + (rm ? 0 : (1 - Math.min(1, st / 0.4)) * 0.2);
-    g.save();
-    g.translate(cx, cy);
-    g.rotate(tilt);
-    const s = rm ? 1 : 1.5 - 0.5 * land;
-    g.scale(s, s);
-    g.globalAlpha = Math.min(1, st / 0.12);
-    // card
-    g.fillStyle = 'rgba(5,3,20,0.5)';
-    g.fillRect(-PW / 2 - 12, -PH / 2 - 8, PW + 36, PH + 96);
-    g.fillStyle = '#f4efe2';
-    g.fillRect(-PW / 2 - 18, -PH / 2 - 18, PW + 36, PH + 92);
-    g.fillStyle = '#17132b';
-    g.fillRect(-PW / 2, -PH / 2, PW, PH);
-    g.save();
-    g.beginPath();
-    g.rect(-PW / 2, -PH / 2, PW, PH);
-    g.clip();
-    g.translate(-PW / 2, -PH / 2);
-    if (this.ok && this.canvas) g.drawImage(this.canvas, 0, 0, PW, PH);
-    this.overlay(g, cause, st, t, rm, clock);
-    g.restore();
-    // the damning red marker, drawn on as you watch
-    const k = rm ? 1 : Math.max(0, Math.min(1, (st - 0.42) / 0.3));
-    if (k > 0) {
-      const mx = this.px - PW / 2;
-      const my = this.py - PH / 2;
-      g.strokeStyle = '#e0304e';
-      g.lineWidth = 5;
-      g.lineCap = 'round';
+    this.root.visible = land > 0;
+    if (!this.root.visible) return;
+    this.root.rotation = (cause === 'dog' ? -0.13 : -0.045) + (rm ? 0 : (1 - Math.min(1, st / 0.4)) * 0.2);
+    this.root.scale.set(rm ? 1 : 1.5 - 0.5 * land);
+    this.root.alpha = Math.min(1, st / 0.12);
+    const changed = this.lastCause !== cause;
+    if (changed) {
+      this.lastCause = cause;
+      for (const [key, lens] of this.lens) lens.visible = key === cause;
+      this.caption.set(photoLabel(cause), 0, PH / 2 + 38, PW);
+      this.rec.position.set(cause === 'camera' ? 28 : 18, cause === 'camera' ? 28 : 18);
+      this.reticle.visible = cause === 'heli';
+    }
+    if (changed || clock !== this.lastClock) {
+      this.lastClock = clock;
+      this.lensClock.set(fmt(tr().flight.photo.clock, { clock }), PW - (cause === 'window' ? 108 : 12), 20);
+    }
+    this.rec.visible = (rm || Math.floor(t * 2) % 2 === 0) &&
+      (cause === 'camera' || cause === 'police' || cause === 'patrol' || cause === 'traffic');
+    for (let i = 0; i < this.hearts.length; i++) {
+      const h = this.hearts[i]!;
+      h.visible = cause === 'window';
+      if (!h.visible) continue;
+      const k = rm ? 0.3 + i * 0.2 : (st * 0.7 + i * 0.33) % 1;
+      h.position.set(PW - 116 + Math.sin(k * 6 + i) * 6, PH - 20 - k * 120);
+      h.alpha = 1 - k;
+    }
+    const k = rm ? 1 : clamp((st - 0.42) / 0.3, 0, 1);
+    this.mark.visible = k > 0;
+    this.arrow.visible = this.question.visible = k >= 1;
+    if (this.mark.visible) {
+      this.mark.rotation = -0.2;
+      this.mark.draw(keyOf(k * 360), (g) => ellipseArc(g, 0, 0, 66, 58, -0.4, -0.4 + TAU * 1.08 * k)
+        .stroke({ color: '#e0304e', width: 5, cap: 'round' }));
+    }
+  }
+
+  dispose(): void {
+    this.grade.destroy();
+    this.texture?.destroy(true);
+  }
+}
+
+class WitnessView {
+  readonly root = new Container();
+  private readonly person = new Container();
+  private readonly bubble = new Container();
+  private readonly shout = new Label(SHOUT);
+  private readonly people = new Map<SpotCause, Sprite>();
+  private cause: SpotCause | null = null;
+
+  constructor() {
+    for (const cause of CAUSES) {
+      const sprite = paintedSprite(`witness|${cause}`, 240, 260, (g) => {
+        g.translate(0, -28);
+        g.lineJoin = 'round';
+        g.lineCap = 'round';
+        g.lineWidth = 4;
+        g.strokeStyle = INK;
+        if (cause === 'camera') cctv(g, 0, true);
+        else if (cause === 'dog') dogHead(g, 0, true);
+        else person(g, cause, 0, true);
+      });
+      sprite.y = 28;
+      this.people.set(cause, sprite);
+      this.person.addChild(sprite);
+    }
+    const balloon = panelPath(new Graphics(), -262, -34, 248, 62, { fill: '#ffffff', r: 26, lineW: 4, shadow: 4 })
+      .poly([-18, -8, 14, 4, -18, 12]).fill('#ffffff');
+    this.shout.position.set(-138, -2);
+    this.bubble.position.set(-62, -6);
+    this.bubble.addChild(balloon, this.shout);
+    this.root.position.set(440, 690);
+    this.root.addChild(this.person, this.bubble);
+  }
+
+  sync(cause: SpotCause, k: number, t: number, rm: boolean, words: string): void {
+    if (this.cause !== cause) {
+      if (this.cause) this.people.get(this.cause)!.visible = false;
+      this.cause = cause;
+      for (const [key, sprite] of this.people) sprite.visible = key === cause;
+    }
+    this.root.visible = k > 0;
+    if (!this.root.visible) return;
+    this.person.position.set(rm ? 0 : Math.sin(t * 18) * 1.6, (1 - k) * 150);
+    this.bubble.visible = k >= 0.6;
+    if (!this.bubble.visible) return;
+    const a = Math.min(1, (k - 0.6) / 0.3);
+    this.bubble.scale.set(rm ? 1 : easeOutBack(a));
+    this.bubble.alpha = Math.min(1, a * 1.5);
+    this.shout.set(words, -138, -2, 224);
+  }
+}
+
+export class DeepSpottedView {
+  readonly root = new Container();
+  readonly photo = new SpottedPhoto();
+  private readonly stamp = new Container();
+  private readonly witness = new WitnessView();
+  private readonly caption = new Container();
+  private readonly captionText = new Paragraph(CAPTION);
+  private readonly excuse = new Container();
+  private readonly excuseText = new Paragraph(EXCUSE);
+  private readonly meter = new Graphics().rect(58, 921, VIEW_W - 116, 3).fill(C.mint);
+  private readonly flash = plate('#ffffff');
+  private oldCaption = '';
+  private oldExcuse = '';
+
+  constructor(assets: Assets) {
+    const shade = plate('#0c061e');
+    shade.alpha = 0.62;
+    this.stamp.position.set(VIEW_W / 2, 166);
+    this.stamp.rotation = -0.08;
+    this.stamp.addChild(artSprite(assets, localArt('ui/stamp_spotted'), 300, 150) ??
+      new Label(STAMP).set(tr().flight.spotted, 0, 0, 440));
+    this.caption.addChild(panelPath(new Graphics(), 40, 750, VIEW_W - 80, 94,
+      { fill: C.paper, r: 18, lineW: 3, shadow: 4 }), this.captionText);
+    this.meter.pivot.x = 58;
+    this.meter.x = 58;
+    this.excuse.addChild(panelPath(new Graphics(), 40, 856, VIEW_W - 80, 74,
+      { fill: C.ink, r: 18, stroke: C.mint, lineW: 2, shadow: 0 }), this.excuseText,
+      new Graphics().rect(58, 921, VIEW_W - 116, 3).fill({ color: C.mint, alpha: 0.25 }), this.meter);
+    this.root.addChild(shade, this.photo.root, this.stamp, this.witness.root, this.caption, this.excuse,
+      new Label(BACK).set(tr().flight.backToCheckpoint, VIEW_W / 2, 944), this.flash);
+  }
+
+  sync(st: number, t: number, rm: boolean, cause: SpotCause, shout: string, caption: string, excuse: string, clock: string, hold: number): void {
+    this.photo.sync(cause, st, t, rm, clock);
+    const scale = rm ? 1 : easeOutBack((st - 0.04) / 0.3);
+    this.stamp.scale.set(scale);
+    this.stamp.visible = scale > 0;
+    const wk = rm ? 1 : clamp((st - 0.22) / 0.3, 0, 1);
+    this.witness.sync(cause, rm ? 1 : easeOutBack(wk, 1.1), t, rm, shout);
+    this.caption.visible = st > 0.2;
+    this.excuse.visible = st > 0.35;
+    if (this.oldCaption !== caption) {
+      this.oldCaption = caption;
+      this.captionText.setBlock(caption, 60, 762, VIEW_W - 120);
+    }
+    if (this.oldExcuse !== excuse) {
+      this.oldExcuse = excuse;
+      this.excuseText.setBlock(excuse, 58, 866, VIEW_W - 116);
+    }
+    this.meter.scale.x = clamp(st / hold, 0, 1);
+    this.flash.strength = (1 - st / 0.22) * (rm ? 0.25 : 1);
+  }
+}
+
+/** Static frame of the witness's lens, in photo coordinates. */
+function paintLens(g: CanvasRenderingContext2D, cause: SpotCause, words: Strings['flight']['photo']): void {
+  switch (cause) {
+    case 'police':
+    case 'patrol':
+    case 'traffic': {
+      // dashboard, wheel and whatever hangs off the mirror
+      g.fillStyle = '#0c0a18';
       g.beginPath();
-      g.ellipse(mx, my, 66, 58, -0.2, -0.4, -0.4 + TAU * 1.08 * k);
+      g.moveTo(0, PH);
+      g.lineTo(0, PH - 26);
+      g.quadraticCurveTo(PW / 2, PH - 52, PW, PH - 26);
+      g.lineTo(PW, PH);
+      g.fill();
+      g.lineWidth = 12;
+      g.strokeStyle = '#1e1a30';
+      g.beginPath();
+      g.arc(96, PH + 34, 70, Math.PI, TAU);
       g.stroke();
-      if (k >= 1) {
-        const left = mx > 0;
-        const ax = mx + (left ? -112 : 112);
-        const ay = Math.max(-PH / 2 + 34, my - 62);
-        g.beginPath();
-        g.moveTo(ax, ay + 10);
-        g.lineTo(mx + (left ? -62 : 62), my - 26);
-        g.moveTo(mx + (left ? -62 : 62), my - 26);
-        g.lineTo(mx + (left ? -80 : 80), my - 24);
-        g.moveTo(mx + (left ? -62 : 62), my - 26);
-        g.lineTo(mx + (left ? -70 : 70), my - 42);
-        g.stroke();
-        text(g, '?!', ax, ay - 8, 34, '#e0304e', 'center', 900, true);
-      }
-      g.lineCap = 'butt';
-    }
-    text(g, photoLabel(cause), 0, PH / 2 + 38, 19, C.paperInk, 'center', 800, true, PW);
-    g.restore();
-  }
-
-  /** What the witness's lens adds, in photo px. */
-  private overlay(g: CanvasRenderingContext2D, cause: SpotCause, st: number, t: number, rm: boolean, clock: string): void {
-    const rec = rm || Math.floor(t * 2) % 2 === 0;
-    switch (cause) {
-      case 'police':
-      case 'patrol':
-      case 'traffic': {
-        // dashboard, wheel and whatever hangs off the mirror
-        g.fillStyle = '#0c0a18';
-        g.beginPath();
-        g.moveTo(0, PH);
-        g.lineTo(0, PH - 26);
-        g.quadraticCurveTo(PW / 2, PH - 52, PW, PH - 26);
-        g.lineTo(PW, PH);
-        g.fill();
-        g.lineWidth = 12;
-        g.strokeStyle = '#1e1a30';
-        g.beginPath();
-        g.arc(96, PH + 34, 70, Math.PI, TAU);
-        g.stroke();
-        if (cause === 'traffic') {
-          g.strokeStyle = '#0c0a18';
-          g.lineWidth = 2;
-          const sw = rm ? 0 : Math.sin(t * 3) * 8;
-          g.beginPath();
-          g.moveTo(PW / 2, 0);
-          g.lineTo(PW / 2 + sw, 40);
-          g.stroke();
-          g.fillStyle = '#3f9a4a';
-          g.beginPath();
-          g.moveTo(PW / 2 + sw, 34);
-          g.lineTo(PW / 2 + sw - 13, 66);
-          g.lineTo(PW / 2 + sw + 13, 66);
-          g.fill();
-          text(g, tr().flight.photo.fare, PW - 12, PH - 12, 13, '#ffcf4a', 'right', 900);
-        } else text(g, cause === 'police' ? tr().flight.photo.unit4 : tr().flight.photo.patrol2, PW - 12, PH - 12, 13, '#cfd6ff', 'right', 900);
-        if (rec) dot(g, 18, 18);
-        text(g, tr().flight.photo.rec, 30, 19, 13, '#ffffff', 'left', 900);
-        break;
-      }
-      case 'watcher':
-        // two overlapping circles: binoculars
-        mask(g, 112, PH / 2, 112, PW - 112, PH / 2, 112);
-        break;
-      case 'porch':
-        mask(g, PW / 2, PH / 2, 140, PW / 2, PH / 2, 140);
-        g.fillStyle = 'rgba(224,48,78,0.9)';
-        roundRectPath(g, PW / 2 - 92, 10, 184, 24, 12);
-        g.fill();
-        text(g, tr().flight.photo.motion, PW / 2, 23, 13, '#ffffff', 'center', 900);
-        break;
-      case 'camera': {
-        g.fillStyle = 'rgba(80,255,170,0.1)';
-        g.fillRect(0, 0, PW, PH);
-        g.fillStyle = 'rgba(0,0,0,0.16)';
-        for (let y = (rm ? 0 : Math.floor(t * 30) % 6) - 6; y < PH; y += 6) g.fillRect(0, y, PW, 2);
-        g.strokeStyle = '#d9fff0';
-        g.lineWidth = 3;
-        g.beginPath();
-        for (let i = 0; i < 4; i++) {
-          const x = i % 2 === 0 ? 12 : PW - 12;
-          const y = i < 2 ? 12 : PH - 12;
-          const dx = i % 2 === 0 ? 22 : -22;
-          const dy = i < 2 ? 22 : -22;
-          g.moveTo(x + dx, y);
-          g.lineTo(x, y);
-          g.lineTo(x, y + dy);
-        }
-        g.stroke();
-        if (rec) dot(g, 28, 28);
-        text(g, tr().flight.photo.cam, 40, 29, 13, '#d9fff0', 'left', 900);
-        break;
-      }
-      case 'heli': {
-        g.fillStyle = 'rgba(120,170,255,0.12)';
-        g.fillRect(0, 0, PW, PH);
-        g.strokeStyle = '#d9e6ff';
+      if (cause === 'traffic') {
+        g.strokeStyle = '#0c0a18';
         g.lineWidth = 2;
+        const sw = 0;
         g.beginPath();
-        g.moveTo(this.px - 110, this.py);
-        g.lineTo(this.px - 30, this.py);
-        g.moveTo(this.px + 30, this.py);
-        g.lineTo(this.px + 110, this.py);
-        g.moveTo(this.px, this.py - 96);
-        g.lineTo(this.px, this.py - 30);
-        g.moveTo(this.px, this.py + 30);
-        g.lineTo(this.px, this.py + 96);
+        g.moveTo(PW / 2, 0);
+        g.lineTo(PW / 2 + sw, 40);
         g.stroke();
-        text(g, tr().flight.photo.air, 12, 20, 13, '#d9e6ff', 'left', 900);
-        text(g, tr().flight.photo.alt, 12, PH - 14, 13, '#d9e6ff', 'left', 900);
-        break;
-      }
-      case 'dog': {
-        // too close to the lens: a nose
-        const wob = rm ? 0 : Math.sin(t * 9) * 3;
-        g.fillStyle = '#bb9161';
+        g.fillStyle = '#3f9a4a';
         g.beginPath();
-        g.ellipse(PW / 2 + wob, PH + 8, 150, 62, 0, 0, TAU);
+        g.moveTo(PW / 2 + sw, 34);
+        g.lineTo(PW / 2 + sw - 13, 66);
+        g.lineTo(PW / 2 + sw + 13, 66);
         g.fill();
-        g.fillStyle = INK;
-        g.beginPath();
-        g.ellipse(PW / 2 + wob, PH - 20, 56, 38, 0, 0, TAU);
-        g.fill();
-        g.fillStyle = 'rgba(255,255,255,0.35)';
-        g.beginPath();
-        g.ellipse(PW / 2 - 18 + wob, PH - 36, 16, 7, -0.3, 0, TAU);
-        g.fill();
-        break;
-      }
-      case 'window': {
-        // filmed upright on a phone
-        g.fillStyle = 'rgba(8,6,20,0.9)';
-        g.fillRect(0, 0, 96, PH);
-        g.fillRect(PW - 96, 0, 96, PH);
-        g.fillStyle = '#e0304e';
-        roundRectPath(g, 106, 10, 54, 22, 6);
-        g.fill();
-        text(g, tr().flight.photo.live, 133, 22, 13, '#ffffff', 'center', 900);
-        text(g, tr().flight.photo.watching, 168, 22, 12, '#ffffff', 'left', 700);
-        for (let i = 0; i < 3; i++) {
-          const k = rm ? 0.3 + i * 0.2 : (st * 0.7 + i * 0.33) % 1;
-          g.globalAlpha = 1 - k;
-          heart(g, PW - 116 + Math.sin(k * 6 + i) * 6, PH - 20 - k * 120, 7 + i);
-        }
-        g.globalAlpha = 1;
-        break;
-      }
+        text(g, words.fare, PW - 12, PH - 12, 13, '#ffcf4a', 'right', 900);
+      } else text(g, cause === 'police' ? words.unit4 : words.patrol2, PW - 12, PH - 12, 13, '#cfd6ff', 'right', 900);
+      text(g, words.rec, 30, 19, 13, '#ffffff', 'left', 900);
+      break;
     }
-    text(g, fmt(tr().flight.photo.clock, { clock }), PW - (cause === 'window' ? 108 : 12), 20, 13, 'rgba(255,255,255,0.9)', 'right', 800);
+    case 'watcher':
+      // two overlapping circles: binoculars
+      mask(g, 112, PH / 2, 112, PW - 112, PH / 2, 112);
+      break;
+    case 'porch':
+      mask(g, PW / 2, PH / 2, 140, PW / 2, PH / 2, 140);
+      g.fillStyle = 'rgba(224,48,78,0.9)';
+      roundRectPath(g, PW / 2 - 92, 10, 184, 24, 12);
+      g.fill();
+      text(g, words.motion, PW / 2, 23, 13, '#ffffff', 'center', 900);
+      break;
+    case 'camera': {
+      g.fillStyle = 'rgba(80,255,170,0.1)';
+      g.fillRect(0, 0, PW, PH);
+      g.fillStyle = 'rgba(0,0,0,0.16)';
+      for (let y = -6; y < PH; y += 6) g.fillRect(0, y, PW, 2);
+      g.strokeStyle = '#d9fff0';
+      g.lineWidth = 3;
+      g.beginPath();
+      for (let i = 0; i < 4; i++) {
+        const x = i % 2 === 0 ? 12 : PW - 12;
+        const y = i < 2 ? 12 : PH - 12;
+        const dx = i % 2 === 0 ? 22 : -22;
+        const dy = i < 2 ? 22 : -22;
+        g.moveTo(x + dx, y);
+        g.lineTo(x, y);
+        g.lineTo(x, y + dy);
+      }
+      g.stroke();
+      text(g, words.cam, 40, 29, 13, '#d9fff0', 'left', 900);
+      break;
+    }
+    case 'heli': {
+      g.fillStyle = 'rgba(120,170,255,0.12)';
+      g.fillRect(0, 0, PW, PH);
+      text(g, words.air, 12, 20, 13, '#d9e6ff', 'left', 900);
+      text(g, words.alt, 12, PH - 14, 13, '#d9e6ff', 'left', 900);
+      break;
+    }
+    case 'dog': {
+      // too close to the lens: a nose
+      const wob = 0;
+      g.fillStyle = '#bb9161';
+      g.beginPath();
+      g.ellipse(PW / 2 + wob, PH + 8, 150, 62, 0, 0, TAU);
+      g.fill();
+      g.fillStyle = INK;
+      g.beginPath();
+      g.ellipse(PW / 2 + wob, PH - 20, 56, 38, 0, 0, TAU);
+      g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.35)';
+      g.beginPath();
+      g.ellipse(PW / 2 - 18 + wob, PH - 36, 16, 7, -0.3, 0, TAU);
+      g.fill();
+      break;
+    }
+    case 'window': {
+      // filmed upright on a phone
+      g.fillStyle = 'rgba(8,6,20,0.9)';
+      g.fillRect(0, 0, 96, PH);
+      g.fillRect(PW - 96, 0, 96, PH);
+      g.fillStyle = '#e0304e';
+      roundRectPath(g, 106, 10, 54, 22, 6);
+      g.fill();
+      text(g, words.live, 133, 22, 13, '#ffffff', 'center', 900);
+      text(g, words.watching, 168, 22, 12, '#ffffff', 'left', 700);
+      break;
+    }
   }
-}
-
-function dot(g: CanvasRenderingContext2D, x: number, y: number): void {
-  g.beginPath();
-  g.arc(x, y, 6, 0, TAU);
-  g.fillStyle = '#ff3355';
-  g.fill();
-}
-
-function heart(g: CanvasRenderingContext2D, x: number, y: number, r: number): void {
-  g.fillStyle = '#ff5d73';
-  g.beginPath();
-  g.arc(x - r * 0.5, y, r * 0.55, 0, TAU);
-  g.arc(x + r * 0.5, y, r * 0.55, 0, TAU);
-  g.moveTo(x - r, y + r * 0.2);
-  g.lineTo(x, y + r * 1.3);
-  g.lineTo(x + r, y + r * 0.2);
-  g.fill();
 }
 
 /** Black out everything except one or two circles (even-odd fill). */
@@ -307,49 +425,6 @@ function mask(g: CanvasRenderingContext2D, ax: number, ay: number, ar: number, b
   }
   g.fillStyle = '#07051a';
   g.fill('evenodd');
-}
-
-/**
- * Whoever saw you, head and shoulders, popping up with a shout. (x, y) is the centre of the head;
- * `k` 0..1 is how far they have popped up.
- */
-export function drawWitness(g: CanvasRenderingContext2D, cause: SpotCause, x: number, y: number, t: number, rm: boolean, k: number, shout: string): void {
-  const rise = (1 - k) * 150;
-  const wob = rm ? 0 : Math.sin(t * 18) * 1.6;
-  g.save();
-  g.translate(x + wob, y + rise);
-  g.lineJoin = 'round';
-  g.lineCap = 'round';
-  g.lineWidth = 4;
-  g.strokeStyle = INK;
-  if (cause === 'camera') cctv(g, t, rm);
-  else if (cause === 'dog') dogHead(g, t, rm);
-  else person(g, cause, t, rm);
-  g.restore();
-  g.lineCap = 'butt';
-  if (k < 0.6) return;
-  // shout bubble to the left, tail to the mouth
-  const a = Math.min(1, (k - 0.6) / 0.3);
-  const pop = rm ? 1 : easeOutBack(a);
-  g.save();
-  g.translate(x - 62, y - 6);
-  g.scale(pop, pop);
-  g.globalAlpha = Math.min(1, a * 1.5);
-  g.beginPath();
-  g.moveTo(-18, -8);
-  g.lineTo(14, 4);
-  g.lineTo(-18, 12);
-  g.fillStyle = '#ffffff';
-  g.fill();
-  panel(g, -262, -34, 248, 62, '#ffffff', 26, INK, 4, 4);
-  g.beginPath();
-  g.moveTo(-17, -6);
-  g.lineTo(10, 4);
-  g.lineTo(-17, 10);
-  g.fillStyle = '#ffffff';
-  g.fill();
-  text(g, shout, -138, -2, 26, C.red, 'center', 900, false, 224);
-  g.restore();
 }
 
 function shoulders(g: CanvasRenderingContext2D, fill: string): void {

@@ -1,13 +1,23 @@
 // After a failed (or abandoned) abduction in a deep shift: one big "Retry" and a way out.
+import { Container, Graphics } from 'pixi.js';
 import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { abductFailLine } from '../levels/humor';
 import type { DeepRun } from '../levels/run';
-import { GLOW, drawEdgeTint } from '../core/fx';
-import { drawPortrait, easeOutBack, headKey, outlinedText, panel, panelHighlight, paragraph, roundRectPath, sprite, text } from './draw';
+import { easeOutBack } from '../core/fx';
+import { GLOW, ScreenTint } from '../core/gfx/glow';
+import { ViewSlot, type SceneView } from '../core/gfx/scene';
+import { roundRect } from '../core/gfx/shapes';
+import { Label, Paragraph } from '../core/gfx/text';
+import { headKey } from './draw';
+import { artSprite } from './views/art';
+import { NightSky } from './views/backdrop';
+import { ButtonView } from './views/button';
+import { highlightedPanel, SunIcon } from './views/menu-decor';
+import { VrellPortrait } from './views/portrait';
 import { C } from './theme';
-import { Button, drawNightSky } from './widgets';
+import { Button } from './widgets';
 
 import { fmt, gt, tr } from '../i18n';
 
@@ -20,18 +30,20 @@ export interface DeepChoiceActions {
 }
 
 export class DeepChoiceScene implements Scene {
-  private t = 0;
-  private readonly line: string;
-  private readonly title: string;
-  private readonly building: string;
-  private readonly status: string;
-  private readonly retry: Button;
-  private readonly back = new Button(70, 676, VIEW_W - 140, 76, tr().common.backToFlight, 'secondary', 26);
-  private readonly quit = new Button(70, 772, VIEW_W - 140, 60, tr().deepChoice.abandon, 'ghost', 22);
+  t = 0;
+  readonly line: string;
+  readonly title: string;
+  readonly building: string;
+  readonly status: string;
+  readonly retry: Button;
+  readonly back = new Button(70, 676, VIEW_W - 140, 76, tr().common.backToFlight, 'secondary', 26);
+  readonly quit = new Button(70, 772, VIEW_W - 140, 60, tr().deepChoice.abandon, 'ghost', 22);
+
+  private readonly look = new ViewSlot(() => new DeepChoiceView(this));
 
   constructor(
-    private readonly shell: Shell,
-    private readonly run: DeepRun,
+    readonly shell: Shell,
+    readonly run: DeepRun,
     private readonly actions: DeepChoiceActions,
   ) {
     const f = run.lastFail!;
@@ -63,100 +75,98 @@ export class DeepChoiceScene implements Scene {
     if (this.quit.update(p, dt, a)) return this.actions.quit();
   }
 
-  /** Where the shift stands: the three specimens, and the night as a bar running out towards the sun. */
-  private shiftStrip(g: CanvasRenderingContext2D, x: number, y: number, w: number): void {
-    const { assets, ctx } = this.shell;
-    const run = this.run;
-    const tg = run.level.map.targets;
-    for (let i = 0; i < 3; i++) {
-      const cx = x + 22 + i * 50;
-      const done = run.delivered[i]!;
-      const failed = run.lastFail?.target === i;
-      g.beginPath();
-      g.arc(cx, y + 20, 20, 0, Math.PI * 2);
-      g.fillStyle = done ? '#1d5a4a' : '#16102e';
-      g.fill();
-      g.save();
-      g.clip();
-      g.globalAlpha = done ? 0.6 : 1;
-      const wob = failed && !ctx.reducedMotion ? Math.sin(this.t * 9) * 2 : 0;
-      sprite(g, assets, headKey(tg[i]!.short), cx + wob, y + 24, 42, 48);
-      g.restore();
-      g.beginPath();
-      g.arc(cx, y + 20, 20, 0, Math.PI * 2);
-      g.lineWidth = 3;
-      g.strokeStyle = done ? C.mint : failed ? C.red : '#6b63a3';
-      g.stroke();
-      if (done) {
-        g.lineWidth = 4;
-        g.lineCap = 'round';
-        g.lineJoin = 'round';
-        g.strokeStyle = C.mint;
-        g.beginPath();
-        g.moveTo(cx + 6, y + 30);
-        g.lineTo(cx + 11, y + 35);
-        g.lineTo(cx + 20, y + 24);
-        g.stroke();
-        g.lineCap = 'butt';
-      }
-    }
-    // the night: used so far in indigo, what is left in mint, the sun waiting at the end
-    const bx = x + 168;
-    const bw = w - 168 - 26;
-    const k = Math.min(1, run.elapsed / run.budget);
-    const hot = run.dawn > 0;
-    text(g, this.status, bx, y + 6, 15, hot ? C.amberHi : C.muted, 'left', 800, false, bw);
-    roundRectPath(g, bx, y + 22, bw, 14, 7);
-    g.fillStyle = '#16102e';
-    g.fill();
-    roundRectPath(g, bx + bw * k, y + 22, bw * (1 - k), 14, 7);
-    g.fillStyle = hot ? C.amber : C.mint;
-    g.fill();
-    g.beginPath();
-    g.arc(bx + bw + 12, y + 29, 9, 0, Math.PI * 2);
-    g.fillStyle = C.amberHi;
-    g.fill();
-    g.strokeStyle = C.amberHi;
-    g.lineWidth = 2;
-    g.lineCap = 'round';
-    g.beginPath();
-    const turn = ctx.reducedMotion ? 0 : this.t * 0.8;
-    for (let i = 0; i < 8; i++) {
-      const a = turn + (i * Math.PI) / 4;
-      g.moveTo(bx + bw + 12 + Math.cos(a) * 12, y + 29 + Math.sin(a) * 12);
-      g.lineTo(bx + bw + 12 + Math.cos(a) * 16, y + 29 + Math.sin(a) * 16);
-    }
-    g.stroke();
-    g.lineCap = 'butt';
+  get view(): Container {
+    return this.look.get().root;
   }
 
-  render(g: CanvasRenderingContext2D): void {
-    const { assets, ctx } = this.shell;
-    const rm = ctx.reducedMotion;
-    drawNightSky(g, this.t, rm);
-    const pop = rm ? 1 : easeOutBack(this.t / 0.3);
-    g.save();
-    g.translate(VIEW_W / 2, 120);
-    g.rotate(-0.05);
-    g.scale(pop, pop);
-    outlinedText(g, this.title, 0, 0, this.title.length > 13 ? 42 : 50, C.red, C.ink, 900, 'center', VIEW_W - 60);
-    g.restore();
-    text(g, this.building, VIEW_W / 2, 178, 18, C.muted, 'center', 800, false, VIEW_W - 60);
-    panel(g, 40, 210, VIEW_W - 80, 290, C.panel, 22, C.ink, 4, 6);
-    panelHighlight(g, 40, 210, VIEW_W - 80, 22);
-    g.save();
-    g.beginPath();
-    g.arc(116, 290, 56, 0, Math.PI * 2);
-    g.clip();
-    const furious = sprite(g, assets, 'ui/vrell_furious', 116, 290, 112, 112);
-    g.restore();
-    if (!furious) drawPortrait(g, assets, 'vrell', 116, 290, 112, this.t);
-    paragraph(g, this.line, 190, 236, VIEW_W - 250, 19, C.text, 25, 'left', 600, true);
-    this.shiftStrip(g, 60, 404, VIEW_W - 120);
-    // the alarm is still ringing in everyone's ears
-    if (this.t < 0.6) drawEdgeTint(g, GLOW.red, (1 - this.t / 0.6) * 0.8);
-    this.retry.render(g);
-    this.back.render(g);
-    this.quit.render(g);
+  render(): void {
+    this.look.peek()?.sync();
+  }
+
+  dispose(): void {
+    this.look.destroy();
+  }
+}
+
+class DeepChoiceView implements SceneView {
+  readonly root = new Container();
+  private readonly sky = new NightSky();
+  private readonly title: Label;
+  private readonly portrait: VrellPortrait;
+  private readonly sun = new SunIcon(9, 12, 16);
+  private readonly alarm = ScreenTint.edge(GLOW.red);
+  private readonly buttons: ButtonView[];
+  private readonly failedFace: Container | Graphics | null;
+
+  constructor(private readonly s: DeepChoiceScene) {
+    this.title = new Label({ size: s.title.length > 13 ? 42 : 50, color: C.red, weight: 900, outline: C.ink });
+    this.title.set(s.title, VIEW_W / 2, 120, VIEW_W - 60);
+    this.title.rotation = -0.05;
+    this.titleSqueeze = this.title.scale.x;
+    this.portrait = new VrellPortrait(s.shell.assets, 116, 290, 112, true);
+    const line = new Paragraph({ size: 19, color: C.text, weight: 600, lineHeight: 25, align: 'left', italic: true });
+    line.setBlock(s.line, 190, 236, VIEW_W - 250);
+    this.buttons = [s.retry, s.back, s.quit].map((button) => new ButtonView(button));
+    this.root.addChild(
+      this.sky, this.title,
+      new Label({ size: 18, color: C.muted, weight: 800 }).set(s.building, VIEW_W / 2, 178, VIEW_W - 60),
+      highlightedPanel(new Graphics(), 40, 210, VIEW_W - 80, 290, { fill: C.panel }),
+      this.portrait.root, line,
+    );
+    this.failedFace = this.buildShiftStrip();
+    this.root.addChild(this.alarm, ...this.buttons);
+  }
+
+  private readonly titleSqueeze: number;
+
+  /** The shift clock and the three specimens at the moment the attempt ended. */
+  private buildShiftStrip(): Container | Graphics | null {
+    const { shell, run, status } = this.s;
+    let failedFace: Container | Graphics | null = null;
+    for (const [i, target] of run.level.map.targets.entries()) {
+      const x = 82 + i * 50;
+      const done = run.delivered[i]!;
+      const failed = run.lastFail?.target === i;
+      const face = artSprite(shell.assets, headKey(target.short), 42, 48) ?? new Graphics().circle(0, -2, 16).fill('#d5a182');
+      face.y = 4;
+      face.alpha = done ? 0.6 : 1;
+      if (failed) failedFace = face;
+      const photo = new Container();
+      const mask = new Graphics().circle(0, 0, 20).fill('#ffffff');
+      photo.addChild(face);
+      photo.mask = mask;
+      const badge = new Container();
+      badge.position.set(x, 424);
+      badge.addChild(
+        new Graphics().circle(0, 0, 20).fill(done ? '#1d5a4a' : '#16102e'),
+        mask, photo,
+        new Graphics().circle(0, 0, 20).stroke({ color: done ? C.mint : failed ? C.red : '#6b63a3', width: 3 }),
+      );
+      if (done) badge.addChild(new Graphics().moveTo(6, 10).lineTo(11, 15).lineTo(20, 4).stroke({ color: C.mint, width: 4, cap: 'round', join: 'round' }));
+      this.root.addChild(badge);
+    }
+
+    const x = 228;
+    const w = VIEW_W - 120 - 168 - 26;
+    const used = w * Math.min(1, run.elapsed / run.budget);
+    const hot = run.dawn > 0;
+    const bar = roundRect(new Graphics(), x, 426, w, 14, 7).fill('#16102e');
+    if (used < w) roundRect(bar, x + used, 426, w - used, 14, 7).fill(hot ? C.amber : C.mint);
+    this.sun.root.position.set(x + w + 12, 433);
+    this.root.addChild(new Label({ size: 15, color: hot ? C.amberHi : C.muted, weight: 800, align: 'left' }).set(status, x, 410, w), bar, this.sun.root);
+    return failedFace;
+  }
+
+  sync(): void {
+    const { t, shell } = this.s;
+    const reduced = shell.ctx.reducedMotion;
+    const pop = reduced ? 1 : easeOutBack(t / 0.3);
+    this.sky.sync(t, reduced);
+    this.title.scale.set(pop * this.titleSqueeze, pop);
+    this.portrait.sync(t, reduced);
+    if (this.failedFace) this.failedFace.x = reduced ? 0 : Math.sin(t * 9) * 2;
+    this.sun.sync(reduced ? 0 : t * 0.8);
+    this.alarm.strength = t < 0.6 ? (1 - t / 0.6) * 0.8 : 0;
+    for (const button of this.buttons) button.sync();
   }
 }

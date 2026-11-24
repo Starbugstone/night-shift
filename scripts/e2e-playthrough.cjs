@@ -6,24 +6,31 @@
 // Deep flights use the flight `debug.autopilot()` (an absolute finger position, logical px);
 // tutorial flights steer through fixed waypoints.
 // Run it against a preview build, not the dev server (HMR reloads kill long runs):
-//   npm run build && npx vite preview --port <free port> &
+//   npm run build -- --mode e2e --outDir review/e2e-build
+//   npm run preview -- --outDir review/e2e-build --port <free port> --strictPort
 //   source ~/.local/share/claude-media-tools/env.sh
-//   BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs
+//   BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs   (add GPUARGS=... for the real GPU, below)
 // Env: ONLY=tutorial|deep|L3|L4|probe to run a subset (RUNS=L1-window,... picks tutorial routes, ROOM= the probe room); PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE to find playwright.
-// Screenshots use canvas.toDataURL (page.screenshot hangs on this WSL box).
+// Screenshots use window.__nightShift.capture() (page.screenshot hangs on this WSL box, and the
+// WebGL canvas is blank to toDataURL outside the frame that drew it).
 const path = require('path');
-const pw = process.env.PLAYWRIGHT_PATH || (process.env.PLAYWRIGHT_MODULE ? path.dirname(process.env.PLAYWRIGHT_MODULE) : 'playwright');
-const { chromium } = require(pw);
 const fs = require('fs');
 const BASE = process.env.BASE || 'http://localhost:5199/';
-const OUT = process.env.OUT || '/home/stone/dev/night-shift/review/e2e';
+const OUT = process.env.OUT || path.resolve(__dirname, '../review/e2e');
 fs.mkdirSync(OUT, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Bot idle poll interval. Polling this hard slows the game clock (to roughly 0.4x real time on
 // this box), which is harmless (everything runs on the game clock) but makes runs long.
 const POLL_MS = Number(process.env.POLL_MS || 8);
 (async () => {
-  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  const { chromium } = process.env.PLAYWRIGHT_PATH
+    ? require(process.env.PLAYWRIGHT_PATH)
+    : await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
+  // GPUARGS picks the GL backend. The game renders with WebGL (Pixi): on software GL (SwiftShader,
+  // the default here) it is far slower than on a GPU. The real GPU on WSL:
+  //   GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib:$LD_LIBRARY_PATH GPUARGS='--use-angle=gl --ignore-gpu-blocklist --enable-gpu'
+  const args = (process.env.GPUARGS || '--use-angle=swiftshader --enable-unsafe-swiftshader').split(' ').filter(Boolean);
+  const browser = await chromium.launch({ args });
   // DSF 1: with swiftshader at DSF 2 every mouse.move stalls the renderer here (~6 moves/s) and the
   // game runs at about 0.16x real time; at DSF 1 it runs in real time. Override with DSF=2.
   const page = await browser.newPage({ viewport: { width: 375, height: 690 }, deviceScaleFactor: Number(process.env.DSF || 1), hasTouch: false });
@@ -31,7 +38,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   page.on('pageerror', (e) => errors.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   const shot = async (name) => {
-    const data = await page.evaluate(() => document.getElementById('game').toDataURL('image/png'));
+    // the game canvas is WebGL: capture() renders and reads it in one go
+    const data = await page.evaluate(() => window.__nightShift.capture());
     fs.writeFileSync(`${OUT}/${name}.png`, Buffer.from(data.split(',')[1], 'base64'));
   };
   const map = await (async () => {
@@ -41,12 +49,21 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       return [ox + lx * s, oy + ly * s];
     };
   })();
-  const st = () => page.evaluate(() => window.__nightShift.scene);
+  const st = () => page.evaluate(() => window.__nightShift?.scene);
   const waitScene = async (name, ms = 15000) => {
     const t0 = Date.now();
     while (Date.now() - t0 < ms) { if ((await st()) === name) return true; await sleep(100); }
     throw new Error(`timeout waiting for ${name}, at ${await st()}`);
   };
+
+  async function openFixture(query) {
+    await page.goto(BASE + query);
+    try {
+      await page.waitForFunction(() => window.__nightShift && window.__nightShift.scene !== 'loading');
+    } catch (error) {
+      throw new Error('Game fixtures did not become ready. Serve a build made with --mode e2e.', { cause: error });
+    }
+  }
 
   async function fly(level, ringIndex, via) {
     await page.evaluate((l) => window.__nightShift.goto('flight', l), level);
@@ -113,6 +130,9 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         if (!drv) { await installDriver(); return; }
         if (!down) {
           await waitForPointer(false);
+          // The scene manager swallows presses until the transition into the room ends (and the
+          // first frame of a new scene can be long while it builds its view), so wait it out.
+          await page.waitForFunction(() => !window.__nightShift.transitioning);
           // Press where the pilot wants the pointer, so the grab itself does not yank the body.
           const at = await page.evaluate(() => {
             const d = window.__e2eDrv;
@@ -193,8 +213,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   }
 
   async function deepShift(level, name) {
-    await page.goto(BASE + '?unlock=1');
-    await sleep(2000);
+    await openFixture('?unlock=1');
     await page.evaluate((l) => window.__nightShift.goto('flight', l), level);
     await waitScene('flight');
     await installDriver();
@@ -212,7 +231,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         const ns = window.__nightShift;
         const a = ns.active;
         const run = ns.run;
-        const base = { scene: ns.scene, clock: run ? run.clockText() : null, elapsed: run ? run.elapsed : null, delivered: run ? run.delivered.slice() : null, spotted: run ? run.spotted : null, failed: run ? run.failedAbductions : null };
+        const base = { scene: ns.scene, busy: ns.transitioning, clock: run ? run.clockText() : null, elapsed: run ? run.elapsed : null, delivered: run ? run.delivered.slice() : null, spotted: run ? run.spotted : null, failed: run ? run.failedAbductions : null };
         if (!a || !a.debug || typeof a.debug.autopilot !== 'function') return base;
         if (ns.scene === 'flight') { const f = window.__e2eDrv && window.__e2eDrv.flight; return { ...base, kind: 'flight', it: f ? { down: f.down, x: f.x, y: f.y } : null, state: a.state }; }
         if (ns.scene === 'abduct') return { ...base, kind: 'abduct', drv: window.__e2eDrv ? { fx: window.__e2eDrv.fx, fy: window.__e2eDrv.fy } : null };
@@ -228,6 +247,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       }
       if (info.scene === 'report') { await sleep(3500); await shot(`${name}-zz-report`); break; }
       if (info.scene === 'choice') { await up(); await moveTo(270, 598); await page.mouse.down(); await sleep(60); await page.mouse.up(); await sleep(600); continue; }
+      // presses are swallowed while a transition runs: don't start a gesture until it ends
+      if (info.busy && !down) { await sleep(16); continue; }
       if (info.kind === 'flight') {
         if (!info.it) { await installDriver(); await sleep(30); continue; }
         const it = info.it;
@@ -251,13 +272,13 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   }
 
   const ONLY = process.env.ONLY || '';
-  await page.goto(BASE + '?reset=1');
-  await sleep(2500);
+  await openFixture('?reset=1');
+  await sleep(350);
   await shot('00-boot');
   const results = {};
   if (ONLY === 'probe') {
     // one tutorial abduction on its own: ROOM=farm_window|farm_chimney|laundry_skylight|laundry_loading
-    await page.goto(BASE + '?unlock=1&room=' + (process.env.ROOM || 'farm_chimney'));
+    await openFixture('?unlock=1&room=' + encodeURIComponent(process.env.ROOM || 'farm_chimney'));
     try { await abduct(); results.probe = await st(); } catch (e) { results.probe = 'abduct error ' + e.message; }
     console.log(JSON.stringify({ results, errors }, null, 1));
     await browser.close();
@@ -279,7 +300,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   ];
   for (const r of runs) {
     if (ONLY_RUNS && !ONLY_RUNS.includes(r.name)) continue;
-    await page.goto(BASE + '?unlock=1'); await sleep(2000);
+    await openFixture('?unlock=1');
     await fly(r.level, r.ring, r.via);
     await shot(`${r.name}-a-flight-end`);
     try { await abduct(); } catch (e) { results[r.name] = 'abduct error ' + e.message; console.error('RESULT', r.name, results[r.name]); await shot(`${r.name}-err`); continue; }

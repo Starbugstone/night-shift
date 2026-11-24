@@ -1,11 +1,8 @@
 // Top-down sprites with primitive fallbacks.
-import type { Assets } from '../contracts';
 import { ART } from '../art-manifest';
 import type { PropDef, PropKind } from '../levels/types';
-import { drawSprite } from '../core/fx';
 import { roundRectPath } from '../ui/draw';
 import { tr } from '../i18n';
-import { drawPierProp } from './pier-ground'; // L5 pier code
 
 const INK = '#1b1433';
 
@@ -20,18 +17,6 @@ export function propSize(p: PropDef): { w: number; h: number } {
     sizes.set(p, size);
   }
   return size;
-}
-
-export function drawProp(g: CanvasRenderingContext2D, assets: Assets, p: PropDef): void {
-  const { w, h } = propSize(p);
-  const img = assets.get(p.key);
-  g.save();
-  g.translate(p.x, p.y);
-  if (p.rot) g.rotate(p.rot);
-  if (img) drawSprite(g, img, -w / 2, -h / 2, w, h);
-  else if (p.kind === 'pier') drawPierProp(g, p.key, w, h); // L5 pier code
-  else drawFallback(g, p.kind, w, h, p.tint);
-  g.restore();
 }
 
 function box(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string): void {
@@ -279,15 +264,7 @@ export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: num
 }
 
 /** Vehicle centred on origin, nose pointing up (north). */
-export function drawVehicle(g: CanvasRenderingContext2D, assets: Assets, key: string, kind: 'pickup' | 'van'): void {
-  const spec = ART[key]!;
-  const img = assets.get(key);
-  const w = spec.w;
-  const h = spec.h;
-  if (img) {
-    g.drawImage(img, -w / 2, -h / 2, w, h);
-    return;
-  }
+export function drawVehicleFallback(g: CanvasRenderingContext2D, kind: 'pickup' | 'van', w: number, h: number): void {
   const x = -w / 2;
   const y = -h / 2;
   if (kind === 'pickup') {
@@ -305,38 +282,7 @@ export function drawVehicle(g: CanvasRenderingContext2D, assets: Assets, key: st
   g.fillRect(x + w - 22, y + 2, 14, 7);
 }
 
-/** dog_top.svg's ear, in its 70×70 box (redrawn on top of the sprite to twitch it). */
-const EAR = 'M19 33Q21 26 28 28L31 41Q29 52 23 47Z';
-let earPath: Path2D | null = null;
-
-/** Sleeping dog: slow breathing, an ear that twitches now and then (and flaps while it barks). */
-export function drawDog(g: CanvasRenderingContext2D, assets: Assets, x: number, y: number, t: number, barking = false, reduced = false): void {
-  const img = assets.get('flight/dog_top');
-  const breath = reduced ? 0 : Math.sin(t * 2.2);
-  g.save();
-  g.translate(x, y);
-  if (img) {
-    g.scale(1 + breath * 0.035, 1 + breath * 0.022);
-    drawSprite(g, img, -35, -35, 70, 70);
-    const cycle = (t + x * 0.013) % 3.4;
-    const twitch = reduced ? 0 : barking ? Math.sin(t * 24) * 0.32 : cycle < 0.4 ? Math.sin((cycle / 0.4) * Math.PI * 3) * 0.45 : 0;
-    if (twitch !== 0) {
-      earPath ??= new Path2D(EAR);
-      g.translate(-35 + 25, -35 + 29);
-      g.rotate(twitch);
-      g.translate(-25, -29);
-      g.fillStyle = '#895e55';
-      g.fill(earPath);
-      g.lineWidth = 2.5;
-      g.lineJoin = 'round';
-      g.strokeStyle = INK;
-      g.stroke(earPath);
-    }
-    g.restore();
-    return;
-  }
-  const b = 1 + breath * 0.04;
-  g.scale(b, b);
+export function drawDogFallback(g: CanvasRenderingContext2D): void {
   g.fillStyle = '#a8703c';
   g.beginPath();
   g.arc(0, 0, 26, 0, Math.PI * 2);
@@ -352,40 +298,5 @@ export function drawDog(g: CanvasRenderingContext2D, assets: Assets, x: number, 
   g.fillStyle = INK;
   g.beginPath();
   g.arc(-6, -6, 3, 0, Math.PI * 2);
-  g.fill();
-  g.restore();
-}
-
-export function drawSaucerFallback(g: CanvasRenderingContext2D, size: number, t: number): void {
-  const r = size / 2;
-  g.fillStyle = '#7d8fb3';
-  g.beginPath();
-  g.arc(0, 0, r * 0.95, 0, Math.PI * 2);
-  g.fill();
-  g.lineWidth = 4;
-  g.strokeStyle = INK;
-  g.stroke();
-  g.fillStyle = '#a9b9d8';
-  g.beginPath();
-  g.arc(0, 0, r * 0.75, 0, Math.PI * 2);
-  g.fill();
-  for (let i = 0; i < 10; i++) {
-    const a = (i / 10) * Math.PI * 2 + t * 1.5;
-    const on = Math.floor(t * 8 + i) % 3 === 0;
-    g.fillStyle = on ? '#FFD27A' : '#4d5d86';
-    g.beginPath();
-    g.arc(Math.cos(a) * r * 0.85, Math.sin(a) * r * 0.85, r * 0.07, 0, Math.PI * 2);
-    g.fill();
-  }
-  g.fillStyle = '#7CFFCB';
-  g.beginPath();
-  g.arc(0, 0, r * 0.42, 0, Math.PI * 2);
-  g.fill();
-  g.lineWidth = 3;
-  g.strokeStyle = INK;
-  g.stroke();
-  g.fillStyle = 'rgba(255,255,255,0.6)';
-  g.beginPath();
-  g.arc(-r * 0.14, -r * 0.16, r * 0.12, 0, Math.PI * 2);
   g.fill();
 }

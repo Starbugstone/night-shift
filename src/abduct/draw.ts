@@ -1,47 +1,29 @@
+import { Container, FillGradient, Graphics, Sprite } from 'pixi.js';
 import { ART, type ArtSpec } from '../art-manifest';
-import { VIEW_H, VIEW_W, type GameContext } from '../contracts';
-import {
-  CachedLayer, GLOW, P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles,
-  bump, clamp01, drawEdgeTint, drawGlow, drawVignette, easeOutBack, lightSprite,
-} from '../core/fx';
-import { HUD_ROW, hudButton, hudMeter, hudPrompt, hudTimer, type MeterState } from '../ui/hud';
+import { VIEW_H, VIEW_W, type Assets, type GameContext } from '../contracts';
+import { GLOW, PC, P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, Particles, clamp01, easeOutBack } from '../core/fx';
+import { Glow, ScreenTint, glowTexture, lightTexture } from '../core/gfx/glow';
+import { ParticleView } from '../core/gfx/particles';
+import type { SceneView } from '../core/gfx/scene';
+import { Shape, ellipseArc, keyOf } from '../core/gfx/shapes';
+import { HudButton, HudMeter, HudPrompt, HudTimer, HUD_ROW, type MeterState } from '../ui/views/hud';
+import { artSprite } from '../ui/views/art';
+import { getLang, tr } from '../i18n';
 import { clamp, Joint, type Ragdoll } from './ragdoll';
 import type { AbductSimulation } from './simulation';
-import type { TurnControl } from './turn';
-import { drawTurnButtons, drawTurnTell } from './turn-draw';
-import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Human, type Sprite } from './rooms/layout';
-import { getLang, gt, tr } from '../i18n';
-import { drawSouvenirMarker, drawSouvenirPop, POP_SECONDS, SOUVENIR_HINT, souvenirLabel } from './souvenir';
+import { TurnButtonsView, TurnTell } from './turn-draw';
+import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Human, type Room, type Sprite as RoomSprite } from './rooms/layout';
+import { POP_SECONDS, SOUVENIR_HINT, SouvenirMarker, SouvenirPop, souvenirLabel } from './souvenir';
+import { DeliveryView, ExitChevrons, Reticle, SnoozeView, SnoreView, SpeechBubble, WakeBurst, roundedZone, type AbductViewInput } from './views/effects';
+import { FailureView } from './views/failure';
+import { INK, MINT, Segment, bitmap, box } from './views/pieces';
 
-/** Art with English words painted in: other languages draw the primitive fallback instead. */
-const ENGLISH_LETTERED: ReadonlySet<string> = new Set(['room/sign_no_sleeping']);
-
-/** Restart button (top-right of the shared HUD row). */
 export const RESTART = { x: 422, y: HUD_ROW.y, w: 104, h: HUD_ROW.h };
-const METER = { x: 14, y: HUD_ROW.y, w: 296, h: HUD_ROW.h };
-const TIMER = { x: 318, y: HUD_ROW.y, w: 96, h: HUD_ROW.h };
-const INK = '#1d1631';
-const MINT = '#7CFFCB';
-const EXIT_DASHES = [2, 8];
-const SOLID_LINE: number[] = [];
 const DREAMS = ['ui/dream_sheep', 'ui/dream_sandwich', 'ui/dream_taxform'] as const;
 const PARTICLE_COUNT = 32;
-const MUMBLE_FONT = '600 16px system-ui';
 const BUBBLE = '#e9ddd2';
-const BUBBLE_EDGE = '#6c5277';
-const MUMBLE_SECONDS = 1.6;
-/** Night sky seen over the roof, above the room's ceiling line. */
 const SKY_STARS = [22, 14, 71, 96, 118, 30, 163, 104, 214, 12, 262, 88, 301, 22, 352, 110, 398, 8, 431, 92, 476, 34, 520, 100, 96, 60, 338, 58] as const;
 const HULL_LIGHTS = 7;
-
-/** A light source in a room: warm (lamp, embers) or cool (moonlight through the exit). */
-interface Light {
-  x: number;
-  y: number;
-  r: number;
-  warm: boolean;
-  flicker: boolean;
-}
 
 interface Part extends ArtSpec {
   key: string;
@@ -74,7 +56,7 @@ function ellipse(g: CanvasRenderingContext2D, x: number, y: number, rx: number, 
   }
 }
 
-function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number): void {
+function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number, labels: ReturnType<typeof tr>['abduct']): void {
   g.save();
   g.translate(x, y);
   g.lineWidth = 3;
@@ -206,8 +188,8 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
       g.fillStyle = INK;
       g.font = 'bold 17px system-ui';
       g.textAlign = 'center';
-      g.fillText(tr().abduct.noSleeping, w / 2, 30, w - 16);
-      g.fillText(tr().abduct.onDuty, w / 2, 52, w - 16);
+      g.fillText(labels.noSleeping, w / 2, 30, w - 16);
+      g.fillText(labels.onDuty, w / 2, 52, w - 16);
       break;
     case 'room/coffee_mug':
       ellipse(g, 24, 14, 5, 7, '#d6c0a5', INK);
@@ -221,7 +203,7 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
     case 'ui/zzz':
       g.fillStyle = MINT;
       g.font = 'bold 24px system-ui';
-      g.fillText(tr().abduct.zzz, 1, 27);
+      g.fillText(labels.zzz, 1, 27);
       break;
     case 'ui/dream_sheep':
       ellipse(g, 27, 27, 21, 14, '#e8e2db', INK);
@@ -266,253 +248,636 @@ const PANTS: Record<Human, string> = {
   hank: '#7f8aa8', osei: '#3f7773', pemberton: '#c9cfe0',
 };
 
-export class HumanArt {
-  private readonly head: Part;
-  private readonly awakeHead: Part;
-  private readonly torso: Part;
-  private readonly upperArm: Part;
-  private readonly lowerArm: Part;
-  private readonly upperLeg: Part;
-  private readonly lowerLeg: Part;
-  private breath = 0;
+export interface SpecimenArt {
+  readonly root: Container;
+  sync(body: Ragdoll, awake: boolean, breath: number): void;
+}
 
-  constructor(human: Human, private readonly ctx: GameContext) {
+function boneArt(ctx: GameContext, p: Part, head: boolean, awake: boolean): Sprite {
+  const image = artSprite(ctx.assets, p.key, p.w, p.h);
+  if (image) {
+    image.anchor.set(0.5, head ? 1 : 5 / p.h);
+    return image;
+  }
+  const top = head ? -p.h : -5;
+  return bitmap(p.key, -p.w / 2, top, p.w, p.h, (g) => {
+    g.translate(p.w / 2, -top);
+    g.lineWidth = 3;
+    roundBox(g, -p.w / 2 + 2, top + 2, p.w - 4, p.h - 4, head ? 26 : 12, p.color, INK);
+    if (head) {
+      ellipse(g, -12, -47, 4, awake ? 6 : 1.2, INK);
+      ellipse(g, 12, -47, 4, awake ? 6 : 1.2, INK);
+      ellipse(g, 6, -27, 6, awake ? 8 : 4, '#76434c');
+    }
+  });
+}
+
+export class HumanArt implements SpecimenArt {
+  readonly root = new Container();
+  private readonly bones: { joint: Joint; end: Joint; arm: boolean; torso: boolean; sprite: Container }[] = [];
+  private readonly sleeping: Sprite;
+  private readonly awake: Sprite;
+
+  constructor(human: Human, ctx: GameContext) {
     const key = 'human/' + human;
-    const shirt = SHIRTS[human];
-    const pants = PANTS[human];
-    this.head = part(key + '_head', '#d5a182');
-    this.awakeHead = part(key + '_head_awake', '#d5a182');
-    this.torso = part(key + '_torso', shirt);
-    this.upperArm = part(key + '_upper_arm', shirt);
-    this.lowerArm = part(key + '_lower_arm', '#c18b77');
-    this.upperLeg = part(key + '_upper_leg', pants);
-    this.lowerLeg = part(key + '_lower_leg', pants);
-  }
-
-  /** `breath` (0..1) swells the chest; the torso sprite is scaled across its width. */
-  draw(g: CanvasRenderingContext2D, body: Ragdoll, awake: boolean, breath = 0): void {
-    this.breath = breath;
-    g.save();
-    g.globalAlpha *= 0.73;
-    this.bone(g, body, this.upperArm, Joint.Neck, Joint.FarElbow);
-    this.bone(g, body, this.lowerArm, Joint.FarElbow, Joint.FarHand);
-    this.bone(g, body, this.upperLeg, Joint.Pelvis, Joint.FarKnee);
-    this.bone(g, body, this.lowerLeg, Joint.FarKnee, Joint.FarFoot);
-    g.restore();
-
-    this.bone(g, body, this.upperLeg, Joint.Pelvis, Joint.NearKnee);
-    this.bone(g, body, this.lowerLeg, Joint.NearKnee, Joint.NearFoot);
-    this.bone(g, body, this.torso, Joint.Neck, Joint.Pelvis);
-    this.bone(g, body, this.upperArm, Joint.Neck, Joint.NearElbow);
-    this.bone(g, body, this.lowerArm, Joint.NearElbow, Joint.NearHand);
-    this.bone(g, body, awake ? this.awakeHead : this.head, Joint.Neck, Joint.Head, true, awake);
-  }
-
-  private bone(
-    g: CanvasRenderingContext2D, body: Ragdoll, part: Part,
-    a: Joint, b: Joint, head = false, awake = false,
-  ): void {
-    let x = body.x[a]!;
-    let y = body.y[a]!;
-    if (part === this.upperArm) {
-      x += (body.x[Joint.Pelvis]! - x) * 0.15;
-      y += (body.y[Joint.Pelvis]! - y) * 0.15;
+    const head = part(key + '_head', '#d5a182');
+    const awakeHead = part(key + '_head_awake', '#d5a182');
+    const torso = part(key + '_torso', SHIRTS[human]);
+    const upperArm = part(key + '_upper_arm', SHIRTS[human]);
+    const lowerArm = part(key + '_lower_arm', '#c18b77');
+    const upperLeg = part(key + '_upper_leg', PANTS[human]);
+    const lowerLeg = part(key + '_lower_leg', PANTS[human]);
+    const parts = [
+      [upperArm, Joint.Neck, Joint.FarElbow], [lowerArm, Joint.FarElbow, Joint.FarHand],
+      [upperLeg, Joint.Pelvis, Joint.FarKnee], [lowerLeg, Joint.FarKnee, Joint.FarFoot],
+      [upperLeg, Joint.Pelvis, Joint.NearKnee], [lowerLeg, Joint.NearKnee, Joint.NearFoot],
+      [torso, Joint.Neck, Joint.Pelvis], [upperArm, Joint.Neck, Joint.NearElbow],
+      [lowerArm, Joint.NearElbow, Joint.NearHand],
+    ] as const;
+    for (const [p, joint, end] of parts) {
+      const sprite = new Container();
+      sprite.addChild(boneArt(ctx, p, false, false));
+      if (this.bones.length < 4) sprite.alpha = 0.73;
+      this.bones.push({ joint, end, arm: p === upperArm, torso: p === torso, sprite });
+      this.root.addChild(sprite);
     }
-    g.save();
-    g.translate(x, y);
-    g.rotate(Math.atan2(body.y[b]! - y, body.x[b]! - x) + (head ? Math.PI / 2 : -Math.PI / 2));
-    if (part === this.torso && this.breath !== 0) g.scale(1 + this.breath * 0.07, 1 - this.breath * 0.012);
-    const image = this.ctx.assets.get(part.key);
-    const left = -part.w * 0.5;
-    const top = head ? -part.h : -5;
-    if (image) {
-      g.drawImage(image, left, top, part.w, part.h);
-    } else {
-      g.lineWidth = 3;
-      roundBox(g, left + 2, top + 2, part.w - 4, part.h - 4, head ? 26 : 12, part.color, INK);
-      if (head) {
-        ellipse(g, -12, -47, 4, awake ? 6 : 1.2, INK);
-        ellipse(g, 12, -47, 4, awake ? 6 : 1.2, INK);
-        ellipse(g, 6, -27, 6, awake ? 8 : 4, '#76434c');
+    this.sleeping = boneArt(ctx, head, true, false);
+    this.awake = boneArt(ctx, awakeHead, true, true);
+    const neck = new Container();
+    neck.addChild(this.sleeping, this.awake);
+    this.bones.push({ joint: Joint.Neck, end: Joint.Head, arm: false, torso: false, sprite: neck });
+    this.root.addChild(neck);
+  }
+
+  sync(body: Ragdoll, awake: boolean, breath: number): void {
+    this.awake.visible = awake;
+    this.sleeping.visible = !awake;
+    for (const { joint, end, arm, torso, sprite } of this.bones) {
+      let x = body.x[joint]!;
+      let y = body.y[joint]!;
+      if (arm) {
+        x += (body.x[Joint.Pelvis]! - x) * 0.15;
+        y += (body.y[Joint.Pelvis]! - y) * 0.15;
       }
+      sprite.position.set(x, y);
+      sprite.rotation = Math.atan2(body.y[end]! - y, body.x[end]! - x) + (end === Joint.Head ? Math.PI / 2 : -Math.PI / 2);
+      if (torso) sprite.scale.set(1 + breath * 0.07, 1 - breath * 0.012);
     }
-    g.restore();
   }
 }
 
-export class AbductView {
+function art(ctx: GameContext, key: string, x: number, y: number, w: number, h: number): Container {
+  const lang = getLang();
+  const sprite = lang !== 'en' && key === 'room/sign_no_sleeping' ? null : artSprite(ctx.assets, key, w, h);
+  if (sprite) {
+    sprite.anchor.set(0);
+    sprite.position.set(x, y);
+    return sprite;
+  }
+  const labels = tr().abduct;
+  return bitmap(key + '|' + lang + '|' + w + '|' + h, x, y, w, h, g => fallback(g, key, 0, 0, w, h, labels));
+}
+
+function prop(ctx: GameContext, s: RoomSprite): Container {
+  return art(ctx, s.key, s.x, s.y, s.w, s.h);
+}
+
+class TutorialBeam {
+  readonly root = new Container();
+  private readonly passes = [new Shape(), new Shape()];
+  private readonly dust: Sprite[] = [];
+  private readonly landing = new Glow(lightTexture('124,255,203', 0.4), true);
+  private readonly mouth = new Glow(lightTexture('124,255,203', 0.4), true);
+  private readonly gradient = new FillGradient({
+    start: { x: 0, y: CEILING },
+    end: { x: 0, y: FLOOR },
+    textureSpace: 'global',
+    colorStops: [
+      { offset: 0, color: 'rgba(124,255,203,0.42)' },
+      { offset: 0.5, color: 'rgba(124,255,203,0.2)' },
+      { offset: 1, color: 'rgba(124,255,203,0.1)' },
+    ],
+  });
+  private x = 0;
+  private y = 0;
+  private pull = 0;
+  private readonly wide = (g: Graphics): void => this.cone(g, 1);
+  private readonly narrow = (g: Graphics): void => this.cone(g, 0.42);
+
+  constructor(private readonly emitter: number) {
+    for (const pass of this.passes) {
+      pass.blendMode = 'add';
+      this.root.addChild(pass);
+    }
+    this.root.addChild(this.landing, this.mouth);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const size = i % 4 === 0 ? 3 : 2;
+      const mote = box(0, 0, size, size, i % 4 === 0 ? '#edffe7' : MINT);
+      mote.blendMode = 'add';
+      this.dust.push(mote);
+      this.root.addChild(mote);
+    }
+  }
+
+  private cone(g: Graphics, k: number): void {
+    const x = this.x;
+    const y = this.y;
+    const e = this.emitter;
+    const spread = 59 * this.pull * k;
+    g.moveTo(e - 23 * k, CEILING).lineTo(e + 23 * k, CEILING)
+      .lineTo(x + spread, y + 28 * this.pull).quadraticCurveTo(x, y + 46 * this.pull, x - spread, y + 28 * this.pull)
+      .closePath().fill(this.gradient);
+  }
+
+  sync(sim: AbductSimulation, dragging: boolean, rm: boolean): void {
+    const { body, elapsed, slurp, exitX, exitY } = sim;
+    const p = slurp * slurp;
+    this.pull = 1 - p;
+    this.x = body.chestX + (exitX - body.chestX) * p;
+    this.y = body.chestY + (exitY - body.chestY) * p;
+    const key = keyOf(this.x, this.y, this.pull * 236);
+    const power = this.pull * (dragging ? 1 : 0.72);
+    this.passes[0]!.draw(key, this.wide).alpha = power;
+    this.passes[1]!.draw(key, this.narrow).alpha = power * 0.55;
+    this.landing.place(this.x, this.y + 8, 95, 62, power);
+    this.mouth.place(this.emitter, CEILING, 60, 30, power);
+    const phase = rm ? 0 : elapsed;
+    for (let i = 0; i < this.dust.length; i++) {
+      const mote = this.dust[i]!;
+      mote.visible = !rm || i < 12;
+      if (!mote.visible) continue;
+      const k = ((i * 0.61803398875) % 1 + phase * (0.22 + (i % 3) * 0.025)) % 1;
+      const offset = ((i * 0.38196601125 + i * i * 0.013) % 1 - 0.5) * (43 + (118 * this.pull - 43) * k);
+      mote.position.set(this.emitter + (this.x - this.emitter) * k + offset, CEILING + (this.y - CEILING) * k);
+      mote.alpha = (0.3 + (1 - k) * 0.5) * this.pull;
+    }
+  }
+
+  dispose(): void {
+    this.gradient.destroy();
+  }
+}
+
+class RoomSaucer {
+  readonly root = new Container();
+  private readonly hull = new Container();
+  private readonly nozzle = new Container();
+  private readonly beam = new Glow(glowTexture(GLOW.mint), true);
+  private readonly glows: Glow[] = [];
+  private readonly lamps: Graphics[] = [];
+
+  constructor(x: number) {
+    this.root.position.set(x, CEILING);
+    this.nozzle.addChild(new Graphics().poly([-15, -25, 15, -25, 25, -3, -25, -3])
+      .fill('#56648c').stroke({ color: INK, width: 3, join: 'round' }));
+    this.root.addChild(this.nozzle, new Graphics().ellipse(0, -4, 23, 5).fill(MINT).stroke({ color: INK, width: 3 }), this.hull, this.beam);
+    const ship = new Graphics().ellipse(0, 0, 84, 15).fill('#9fb3d6').stroke({ color: INK, width: 3 });
+    ellipseArc(ship, 0, 3, 76, 10, 0, Math.PI).closePath().fill('#7b8db3');
+    ship.ellipse(0, -5, 58, 5).fill('rgba(255,255,255,0.28)');
+    this.hull.addChild(ship);
+    for (let i = 0; i < HULL_LIGHTS; i++) {
+      const lx = (i - 3) * 22;
+      const ly = 5 - Math.abs(i - 3) * 1.4;
+      const lamp = new Graphics().circle(lx, ly, 4.2).fill(0xffffff);
+      const light = new Glow(glowTexture(GLOW.amber), true).place(lx, ly, 13, 13, 0.7);
+      this.lamps.push(lamp);
+      this.glows.push(light);
+      this.hull.addChild(lamp, light);
+    }
+  }
+
+  sync(t: number, dragging: boolean, rm: boolean): void {
+    const bob = rm ? 0 : Math.sin(t * 2.1) * 1.8;
+    this.nozzle.pivot.y = -3;
+    this.nozzle.y = -3;
+    this.nozzle.scale.y = 1 - bob / 22;
+    this.hull.y = -31 + bob;
+    const head = Math.floor(t * 7) % HULL_LIGHTS;
+    for (let i = 0; i < HULL_LIGHTS; i++) {
+      const on = rm ? i % 2 === 0 : i === head || (dragging && (i + 1) % HULL_LIGHTS === head);
+      this.lamps[i]!.tint = on ? '#ffd27a' : '#4a4470';
+      this.glows[i]!.visible = on;
+    }
+    this.beam.place(0, -2, 46, 16, dragging ? 0.9 : 0.6);
+  }
+}
+
+class TutorialExit {
+  readonly root = new Container();
+  private readonly glow = new Glow(glowTexture(GLOW.mint), true);
+  private readonly fill: Graphics;
+  private readonly rings: Sprite[] = [];
+  private readonly arrows = new ExitChevrons();
+
+  constructor(private readonly sim: AbductSimulation) {
+    const { x, y, w, h } = sim.room.exitZone;
+    this.fill = roundedZone(sim.room.exitZone, 12);
+    this.root.addChild(this.glow, this.fill);
+    for (let i = 0; i < 4; i++) {
+      const stroke = bitmap(`tutorial-exit|${w}|${h}|${i}`, x - 3, y - 3, w + 6, h + 6, (g) => {
+        g.setLineDash([2, 8]);
+        g.lineWidth = 2.5 + i / 3;
+        g.strokeStyle = MINT;
+        g.beginPath();
+        g.roundRect(3, 3, w, h, 12);
+        g.stroke();
+      });
+      this.rings.push(stroke);
+      this.root.addChild(stroke);
+    }
+    this.root.addChild(this.arrows.root);
+  }
+
+  sync(rm: boolean): void {
+    const { sim } = this;
+    const { exitX: x, exitY: y, body } = sim;
+    const { w, h } = sim.room.exitZone;
+    const pulse = rm ? 0.5 : 0.5 + 0.5 * Math.sin(sim.elapsed * 3.2);
+    const near = 1 - clamp01((Math.hypot(body.chestX - x, body.chestY - y) - 60) / 300);
+    this.glow.place(x, y, w * 0.75, h * 0.75, (0.1 + pulse * 0.08) * (1 + near * 2.2));
+    this.fill.alpha = 0.1 + pulse * 0.1 + near * 0.1;
+    const stroke = Math.round(near * 3);
+    for (let i = 0; i < this.rings.length; i++) {
+      this.rings[i]!.visible = i === stroke;
+      this.rings[i]!.alpha = 0.7 + pulse * 0.3;
+    }
+    this.arrows.root.position.set(x, y - pulse * (5 + near * 4));
+  }
+}
+
+function paintBackdrop(g: CanvasRenderingContext2D, room: Room, assets: Assets): void {
+  const image = assets.get(room.backdrop);
+  if (image) g.drawImage(image, 0, 0, VIEW_W, VIEW_H);
+  else {
+    g.fillStyle = room.human === 'doyle' ? '#2c233f' : '#232c45';
+    g.fillRect(0, 0, VIEW_W, VIEW_H);
+    g.fillStyle = room.human === 'doyle' ? '#362943' : '#28344c';
+    for (let x = 25; x < VIEW_W; x += 44) g.fillRect(x, CEILING, 2, FLOOR - CEILING);
+  }
+  const sky = g.createLinearGradient(0, 0, 0, CEILING);
+  sky.addColorStop(0, '#0b0820');
+  sky.addColorStop(1, '#221a52');
+  g.fillStyle = sky;
+  g.fillRect(0, 0, VIEW_W, CEILING - 14);
+  g.fillStyle = '#ffffff';
+  g.globalAlpha = 0.6;
+  for (let i = 0; i < SKY_STARS.length; i += 2) g.fillRect(SKY_STARS[i]!, SKY_STARS[i + 1]!, 2, 2);
+  g.globalAlpha = 1;
+  g.fillStyle = '#2b2242';
+  g.fillRect(0, CEILING - 16, VIEW_W, 16);
+  g.fillStyle = '#4a3d68';
+  g.fillRect(0, CEILING - 16, VIEW_W, 3);
+
+  g.fillStyle = 'rgba(17,15,34,0.48)';
+  g.fillRect(0, CEILING, LEFT_WALL, FLOOR - CEILING);
+  g.fillRect(RIGHT_WALL, CEILING, VIEW_W - RIGHT_WALL, FLOOR - CEILING);
+  g.fillRect(0, FLOOR, VIEW_W, VIEW_H - FLOOR);
+  g.fillStyle = '#514362';
+  g.fillRect(LEFT_WALL - 4, CEILING, 4, FLOOR - CEILING);
+  g.fillRect(RIGHT_WALL, CEILING, 4, FLOOR - CEILING);
+  g.fillStyle = 'rgba(172,142,173,0.22)';
+  g.fillRect(LEFT_WALL, CEILING - 3, RIGHT_WALL - LEFT_WALL, 3);
+}
+
+function suspension(g: CanvasRenderingContext2D, sprite: RoomSprite): void {
+  g.strokeStyle = '#9f8c9e';
+  g.lineWidth = 2;
+  if (sprite.key === 'room/hanging_plant') {
+    const x = sprite.x + sprite.w / 2;
+    g.beginPath();
+    g.moveTo(x, CEILING);
+    g.lineTo(x, sprite.y + 5);
+    g.stroke();
+  } else if (sprite.key === 'room/pot_rack') {
+    g.beginPath();
+    for (let y = CEILING + 3; y < sprite.y + 7; y += 6) {
+      g.moveTo(sprite.x + 31, y);
+      g.ellipse(sprite.x + 29, y, 2, 4, 0, 0, Math.PI * 2);
+      g.moveTo(sprite.x + 192, y);
+      g.ellipse(sprite.x + 190, y, 2, 4, 0, 0, Math.PI * 2);
+    }
+    g.stroke();
+  }
+}
+
+function masonry(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
+  g.lineWidth = 3;
+  roundBox(g, x, y, w, h, 3, '#5b4357', '#372942');
+  g.fillStyle = '#79596a';
+  for (let dy = 15; dy < h - 3; dy += 23) g.fillRect(x + 2, y + dy, w - 4, 2);
+}
+
+
+export class AbductView implements SceneView {
+  readonly root = new Container();
+  private readonly world = new Container();
   private readonly human: HumanArt;
-  private readonly particles = new Float64Array(PARTICLE_COUNT * 2);
-  /** Bonk stars, wake sparks, delivery sparkles: one fixed pool for the whole room. */
+  private readonly subject = new Container();
+  private readonly slurpMask = new Graphics().rect(0, 0, 1, 1).fill(0xffffff);
+  private readonly floorShadow = new Glow(glowTexture(GLOW.dark));
+  private readonly lights: { glow: Glow; flicker: boolean }[] = [];
+  private readonly catSleep: Container | undefined;
+  private readonly catAwake: Container | undefined;
+  private readonly cart: Container | undefined;
+  private readonly blades: Container[] = [];
+  private readonly sign: Container | undefined;
+  private readonly chains: Segment[] = [];
+  private readonly exit: TutorialExit;
+  private readonly beam: TutorialBeam;
+  private readonly saucer: RoomSaucer;
+  private readonly item: Container;
+  private readonly leftItem: Container;
+  private readonly speech = new SpeechBubble(false);
+  private readonly bang = new WakeBurst(false);
+  private readonly snore: SnoreView;
+  private readonly dream = new Container();
+  private readonly dreams: Container[] = [];
+  private readonly trail: Graphics[] = [];
+  private readonly reticle = new Reticle(false);
+  private readonly turnTell = new TurnTell(19);
+  private readonly delivery = new DeliveryView();
+  private readonly souvenir = new SouvenirMarker();
+  private readonly pop = new SouvenirPop();
+  private readonly snooze = new SnoozeView();
+  private readonly failure: FailureView;
+  private readonly alarmTint = ScreenTint.edge(GLOW.red);
   private readonly fx = new Particles(96);
-  private lastSecond = -1;
-  private clock = '0:00';
-  private measuredMumble = '';
-  private mumbleWidth = 0;
-  /** The mumble in the current language (the sim keeps the English line as its id). */
-  private shownMumble = '';
-  private readonly lights: Light[] = [];
-  private warmGlow: HTMLCanvasElement | null = null;
-  private coolGlow: HTMLCanvasElement | null = null;
-  private mintGlow: HTMLCanvasElement | null = null;
-  private beamGrad: CanvasGradient | null = null;
-  private skyGrad: CanvasGradient | null = null;
-  /** Backdrop art + walls + sky band: static, so painted once and blitted. */
-  private readonly backdrop = new CachedLayer();
-  private readonly paintBackdrop = (g: CanvasRenderingContext2D): void => {
-    const image = this.ctx.assets.get(this.sim.room.backdrop);
-    if (image) g.drawImage(image, 0, 0, VIEW_W, VIEW_H);
-    this.structure(g);
-  };
-  private readonly meter: MeterState = {
+  private readonly particles = new ParticleView(this.fx);
+  private readonly meter = new HudMeter();
+  private readonly meterState: MeterState = {
     label: 'WAKE', value: 0, warn: 0.45, danger: 0.73, icon: 'sleep', t: 0, reduced: false, flash: 0, alarm: false,
   };
-
+  private readonly timer = new HudTimer();
+  private readonly restart = new HudButton('restart');
+  private readonly turns = new TurnButtonsView();
+  private readonly prompt = new HudPrompt();
+  private lastSecond = -1;
   private lastTime = -1;
   private seenBonk = 0;
   private seenWake = 0;
   private seenCat = 0;
   private seenItem = 0;
-  /** Seconds since the souvenir was grabbed (0 = no label up). */
   private popAge = 0;
   private popX = 0;
   private popY = 0;
   private popLabel = '';
-  /** Sim time of the first lift, for the training-room souvenir hint. */
   private firstMoveAt = -1;
   private seenDelivered = false;
-  /** 0..1 after a bonk, decays fast: tiny squash on the specimen. */
   private squash = 0;
   private meterFlash = 0;
-  /** Seconds since the specimen woke (0 = asleep). */
   private wakeAge = 0;
-  /** Eased 0..1 red alarm while awake. */
   private alarm = 0;
   private sweat = 0;
   private lastDream = 0;
   private dreamPop = 1;
 
-  constructor(private readonly sim: AbductSimulation, private readonly ctx: GameContext) {
-    this.human = new HumanArt(sim.room.human, ctx);
-    for (const { sprite } of sim.room.furniture) {
-      if (sprite.key === 'room/lamp') this.lights.push({ x: sprite.x + sprite.w / 2, y: sprite.y + 26, r: 190, warm: true, flicker: false });
-      if (sprite.key === 'room/fireplace') this.lights.push({ x: sprite.x + sprite.w / 2, y: sprite.y + sprite.h - 50, r: 170, warm: true, flicker: true });
+  constructor(private readonly sim: AbductSimulation, private readonly ctx: GameContext, private readonly input: AbductViewInput) {
+    const { room } = sim;
+    this.human = new HumanArt(room.human, ctx);
+    this.exit = new TutorialExit(sim);
+    this.beam = new TutorialBeam(sim.emitterX);
+    this.saucer = new RoomSaucer(sim.emitterX);
+    this.snore = new SnoreView(ctx, false);
+    this.failure = new FailureView(sim);
+    const { assets } = ctx;
+    const backdrop = bitmap(room.backdrop, 0, 0, VIEW_W, VIEW_H, g => paintBackdrop(g, room, assets));
+    const loose = this.world;
+    this.root.addChild(backdrop, loose);
+    loose.addChild(this.floorShadow);
+    if (room.flue) {
+      const { x, y, w, h } = room.flue;
+      loose.addChild(box(x, y, w, h, '#211c32'));
     }
-    const { exit } = sim.room;
-    this.lights.push({ x: exit.x + exit.w / 2, y: exit.y + exit.h / 2, r: 230, warm: false, flicker: false });
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      this.particles[i * 2] = (i * 0.61803398875) % 1;
-      this.particles[i * 2 + 1] = (i * 0.38196601125 + i * i * 0.013) % 1 - 0.5;
+    for (const { x, y, w, h } of room.masonry ?? []) {
+      loose.addChild(bitmap(`masonry|${w}|${h}`, x - 2, y - 2, w + 4, h + 4, g => masonry(g, 2, 2, w, h)));
     }
+    loose.addChild(prop(ctx, room.exit), this.exit.root);
+    for (const { sprite: s } of room.furniture) {
+      if (s.key === 'room/hanging_plant' || s.key === 'room/pot_rack') {
+        loose.addChild(bitmap(`suspension|${s.key}|${s.y}`, s.x, CEILING, s.w, s.y + 10 - CEILING, g => {
+          g.translate(-s.x, -CEILING);
+          suspension(g, s);
+        }));
+      }
+      loose.addChild(prop(ctx, s));
+      if (s.key === 'room/lamp') this.light(s.x + s.w / 2, s.y + 26, 190, true, false);
+      if (s.key === 'room/fireplace') this.light(s.x + s.w / 2, s.y + s.h - 50, 170, true, true);
+    }
+    this.light(room.exit.x + room.exit.w / 2, room.exit.y + room.exit.h / 2, 230, false, false);
+    if (room.cart) {
+      this.cart = prop(ctx, room.cart.sprite);
+      loose.addChild(this.cart);
+    }
+    if (room.cat) {
+      const cat = room.cat;
+      const awake = ART['room/cat_awake']!;
+      this.catSleep = prop(ctx, cat);
+      this.catAwake = art(ctx, 'room/cat_awake', cat.x, cat.y + cat.h - awake.h, awake.w, awake.h);
+      loose.addChild(this.catSleep, this.catAwake);
+    }
+    if (room.fan) {
+      const { x, y } = room.fan;
+      loose.addChild(box(x - 3, CEILING, 6, y - CEILING, '#495374'));
+      for (const b of sim.fanBlades) {
+        const blade = new Container();
+        blade.addChild(art(ctx, 'room/fan_blade', 0, -b.r, b.to + b.r, b.r * 2));
+        this.blades.push(blade);
+        loose.addChild(blade);
+      }
+      loose.addChild(art(ctx, 'room/fan_hub', x - 25, y - 25, 50, 50));
+    }
+    if (room.sign) {
+      for (let i = 0; i < 2; i++) {
+        const chain = new Segment(box(0, -1, 1, 2, '#9f8c9e'));
+        this.chains.push(chain);
+        loose.addChild(chain.root);
+      }
+      this.sign = new Container();
+      this.sign.addChild(art(ctx, room.sign.key, -room.sign.w / 2, 0, room.sign.w, room.sign.h));
+      loose.addChild(this.sign);
+    }
+    for (const { glow } of this.lights) loose.addChild(glow);
+    const s = room.item.sprite;
+    this.item = art(ctx, s.key, 0, 0, s.w, s.h);
+    this.leftItem = art(ctx, s.key, 0, 0, s.w, s.h);
+    this.subject.addChild(this.item, this.human.root);
+    this.slurpMask.renderable = false;
+    loose.addChild(this.beam.root, this.saucer.root, this.slurpMask, this.subject, this.leftItem, this.delivery.world);
+    for (let i = 0; i < 3; i++) {
+      const dot = new Graphics().ellipse(0, 0, 3 + i * 2.2, 2.6 + i * 1.9).fill(BUBBLE).stroke({ color: '#8b7597', width: 2 });
+      dot.alpha = 0.93;
+      this.trail.push(dot);
+      loose.addChild(dot);
+    }
+    this.dream.alpha = 0.93;
+    this.dream.addChild(new Graphics().ellipse(0, 0, 36, 29).fill(BUBBLE).stroke({ color: '#8b7597', width: 2.5 }));
+    for (const key of DREAMS) {
+      const icon = art(ctx, key, -30, -25, 60, 50);
+      this.dreams.push(icon);
+      this.dream.addChild(icon);
+    }
+    loose.addChild(this.dream, this.snore.root, this.speech.root, this.bang.root, this.turnTell.root, this.reticle.root, this.particles, this.souvenir.root, this.pop.root);
+    this.restart.sync(RESTART, tr().common.restart, false);
+    this.root.addChild(ScreenTint.vignette(), this.alarmTint, this.delivery.flash, this.meter, this.timer, this.restart, this.turns.root, this.prompt, this.snooze.root, this.failure.root);
   }
 
-  render(g: CanvasRenderingContext2D, tutorial: boolean, dragging: boolean, turn?: TurnControl, turnHint?: string): void {
-    const { sim, ctx } = this;
-    const { room, body } = sim;
+  sync(): void {
+    const { sim, ctx, input } = this;
+    const { room, body, elapsed, delivered, slurp } = sim;
+    const rm = ctx.reducedMotion;
     const dt = this.lastTime < 0 ? 0 : clamp(ctx.time - this.lastTime, 0, 0.05);
     this.lastTime = ctx.time;
     this.moments(dt);
+    const shake = rm ? 0 : sim.shake;
+    this.world.position.set(Math.sin(elapsed * 94) * shake * 5, Math.cos(elapsed * 116) * shake * 3);
+    const height = clamp((FLOOR - body.chestY) / 560, 0, 1);
+    this.floorShadow.place(body.chestX, FLOOR - 3, 96 - height * 40, 13 - height * 5, delivered ? 0 : 0.62 * (1 - height * 0.7));
+    this.exit.sync(rm);
+    this.hazards();
+    for (const { glow, flicker } of this.lights) {
+      glow.alpha = flicker && !rm ? 0.82 + 0.18 * Math.sin(elapsed * 9) * Math.sin(elapsed * 5.3) : 1;
+    }
+    this.beam.sync(sim, input.dragging, rm);
+    this.saucer.sync(ctx.time, input.dragging, rm);
 
-    g.save();
-    if (!this.beamGrad) {
-      this.warmGlow = lightSprite('255,189,104', 0.34);
-      this.coolGlow = lightSprite('150,170,255', 0.2);
-      this.mintGlow = lightSprite('124,255,203', 0.4);
-      this.beamGrad = g.createLinearGradient(0, CEILING, 0, FLOOR);
-      this.beamGrad.addColorStop(0, 'rgba(124,255,203,0.42)');
-      this.beamGrad.addColorStop(0.5, 'rgba(124,255,203,0.2)');
-      this.beamGrad.addColorStop(1, 'rgba(124,255,203,0.1)');
-      this.skyGrad = g.createLinearGradient(0, 0, 0, CEILING);
-      this.skyGrad.addColorStop(0, '#0b0820');
-      this.skyGrad.addColorStop(1, '#221a52');
-    }
-    if (ctx.assets.get(room.backdrop)) {
-      this.backdrop.draw(g, this.paintBackdrop);
-    } else {
-      // art still loading (or missing): plain wallpaper, not cached
-      g.fillStyle = room.human === 'doyle' ? '#2c233f' : '#232c45';
-      g.fillRect(0, 0, VIEW_W, VIEW_H);
-      g.fillStyle = room.human === 'doyle' ? '#362943' : '#28344c';
-      for (let x = 25; x < VIEW_W; x += 44) g.fillRect(x, CEILING, 2, FLOOR - CEILING);
-      this.structure(g);
-    }
-
-    // everything loose in the room rattles with a hard bonk; the walls stay put
-    g.save();
-    if (!ctx.reducedMotion && sim.shake > 0) {
-      g.translate(Math.sin(sim.elapsed * 94) * sim.shake * 5, Math.cos(sim.elapsed * 116) * sim.shake * 3);
-    }
-    if (!sim.delivered) this.floorShadow(g);
-    if (room.flue) {
-      const { x, y, w, h } = room.flue;
-      g.fillStyle = '#211c32';
-      g.fillRect(x, y, w, h);
-    }
-    for (const box of room.masonry ?? []) this.masonry(g, box.x, box.y, box.w, box.h);
-    this.drawSprite(g, room.exit);
-    this.exitMarker(g);
-    for (const { sprite } of room.furniture) {
-      this.suspension(g, sprite);
-      this.drawSprite(g, sprite);
-    }
-    if (sim.cart && room.cart) this.drawSprite(g, room.cart.sprite, sim.cart.x - 5, room.cart.sprite.y);
-    if (room.cat) this.cat(g, room.cat);
-    this.hazards(g);
-    this.lighting(g);
-    this.beam(g, dragging);
-    this.saucer(g, dragging);
-
-    const p = sim.slurp * sim.slurp;
-    g.save();
-    if (sim.delivered) {
+    const p = slurp * slurp;
+    const q = this.squash * 0.11;
+    const { chestX, chestY } = body;
+    this.subject.alpha = 1 - p;
+    this.subject.pivot.set(chestX, chestY);
+    this.subject.position.set(chestX + (sim.exitX - chestX) * p, chestY + (sim.exitY - chestY) * p);
+    this.subject.scale.set(delivered ? 1 - p * 0.83 : 1 + q, delivered ? 1 - p * 0.83 : 1 - q);
+    if (delivered) {
       const { x, y, w, h } = room.exit;
-      const margin = Math.max(VIEW_W, VIEW_H) * (1 - p);
-      g.beginPath();
-      g.rect(x - margin, y - margin, w + margin * 2, h + margin * 2);
-      g.clip();
-      g.translate(body.chestX + (sim.exitX - body.chestX) * p, body.chestY + (sim.exitY - body.chestY) * p);
-      g.scale(1 - p * 0.83, 1 - p * 0.83);
-      g.translate(-body.chestX, -body.chestY);
-      g.globalAlpha = 1 - p;
-    } else if (this.squash > 0) {
-      const q = this.squash * 0.11;
-      g.translate(body.chestX, body.chestY);
-      g.scale(1 + q, 1 - q);
-      g.translate(-body.chestX, -body.chestY);
+      const margin = VIEW_H * (1 - p);
+      this.slurpMask.position.set(x - margin, y - margin);
+      this.slurpMask.scale.set(w + 2 * margin, h + 2 * margin);
+      if (!this.subject.mask) this.subject.mask = this.slurpMask;
     }
     const item = room.item.sprite;
-    if (!sim.delivered || sim.item.stolen) this.drawSprite(g, item, sim.item.x - item.w * 0.5, sim.item.y - item.h * 0.5);
-    this.human.draw(g, body, sim.wake.awake > 0, this.breath());
-    g.restore();
+    this.leftItem.visible = delivered && !sim.item.stolen;
+    this.item.visible = !this.leftItem.visible;
+    const itemView = this.leftItem.visible ? this.leftItem : this.item;
+    itemView.position.set(sim.item.x - item.w / 2, sim.item.y - item.h / 2);
+    this.human.sync(body, sim.wake.awake > 0, this.breath());
+    this.delivery.sync(sim, rm);
+    this.sleepEffects();
+    this.reticle.root.visible = !delivered;
+    if (delivered) this.turnTell.root.visible = false;
+    else {
+      const { beamX: x, beamY: y } = body;
+      this.turnTell.sync(x, y, input.dragging, input.turn, body.tilt, rm);
+      this.reticle.sync(x, y, x, y, input.dragging, false, rm ? 0 : elapsed * 1.4);
+    }
+    this.particles.visible = this.fx.active > 0;
+    if (this.particles.visible) this.particles.sync();
+    this.souvenir.sync(this.souvenirHint(), sim.item.x, sim.item.y, sim.item.y - item.h / 2, ctx.time, rm);
+    this.pop.sync(this.popX, this.popY, this.popAge, this.popLabel, rm);
+    this.alarmTint.strength = this.alarm * (rm ? 0.5 : 0.5 + 0.25 * Math.sin(ctx.time * 9));
+    this.hud();
+    this.snooze.sync(sim, rm);
+    this.failure.sync(sim, rm);
+  }
 
-    if (sim.delivered && !sim.item.stolen) this.drawSprite(g, item, sim.item.x - item.w * 0.5, sim.item.y - item.h * 0.5);
-    if (sim.delivered) {
-      // the exit swallows the specimen in a bloom of beam light
-      g.globalCompositeOperation = 'lighter';
-      drawGlow(g, GLOW.mint, sim.exitX, sim.exitY, 60 + 170 * p, 60 + 170 * p, 0.25 + 0.75 * bump(sim.slurp));
-      drawGlow(g, GLOW.white, sim.exitX, sim.exitY, 30 + 60 * p, 30 + 60 * p, bump(sim.slurp));
-      g.globalCompositeOperation = 'source-over';
-    } else {
-      this.sleepEffects(g);
-      this.reticle(g, dragging, turn);
+  dispose(): void {
+    this.beam.dispose();
+  }
+
+  private light(x: number, y: number, r: number, warm: boolean, flicker: boolean): void {
+    this.lights.push({ glow: new Glow(lightTexture(warm ? '255,189,104' : '150,170,255', warm ? 0.34 : 0.2), true).place(x, y, r), flicker });
+  }
+
+  private hazards(): void {
+    const { sim } = this;
+    const { elapsed, room } = sim;
+    if (this.cart && sim.cart) this.cart.x = sim.cart.x - 5;
+    if (this.catSleep && this.catAwake) {
+      const awake = sim.catAwake > 0;
+      this.catAwake.visible = awake;
+      this.catSleep.visible = !awake;
+      const cat = room.cat!;
+      const rise = awake || this.ctx.reducedMotion ? 0 : (0.5 + 0.5 * Math.sin(elapsed * 1.9)) * 2.5;
+      this.catSleep.y = cat.y - rise;
+      this.catSleep.scale.y = 1 + rise / cat.h;
     }
-    this.fx.draw(g);
-    if (this.souvenirHint()) {
-      const item = room.item.sprite;
-      drawSouvenirMarker(g, sim.item.x, sim.item.y, sim.item.y - item.h * 0.5, ctx.time, ctx.reducedMotion);
+    for (let i = 0; i < this.blades.length; i++) {
+      const sprite = this.blades[i]!;
+      const blade = sim.fanBlades[i]!;
+      sprite.position.set(blade.x, blade.y);
+      sprite.rotation = blade.angle;
     }
-    drawSouvenirPop(g, this.popX, this.popY, this.popAge, this.popLabel, ctx.reducedMotion);
-    g.restore();
-    drawVignette(g);
-    drawEdgeTint(g, GLOW.red, this.alarm * (ctx.reducedMotion ? 0.5 : 0.5 + 0.25 * Math.sin(ctx.time * 9)));
-    if (sim.delivered) {
-      g.globalAlpha = p * p * (ctx.reducedMotion ? 0.25 : 0.6);
-      g.fillStyle = '#d9fff0';
-      g.fillRect(0, 0, VIEW_W, VIEW_H);
-      g.globalAlpha = 1;
+    if (this.sign && sim.sign && room.sign) {
+      const { x, y, angle } = sim.sign;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const anchor = room.sign.w / 2 - 15;
+      this.chains[0]!.sync(x - anchor, CEILING, x - anchor * cos - 16 * sin, y - anchor * sin + 16 * cos);
+      this.chains[1]!.sync(x + anchor, CEILING, x + anchor * cos - 16 * sin, y + anchor * sin + 16 * cos);
+      this.sign.position.set(x, y);
+      this.sign.rotation = angle;
     }
-    this.hud(g, tutorial, turn, turnHint);
-    g.restore();
+  }
+
+  private sleepEffects(): void {
+    const { body, snoreFx, mumbleFx, wake, elapsed, delivered } = this.sim;
+    const rm = this.ctx.reducedMotion;
+    const x = body.x[Joint.Head]!;
+    const y = body.y[Joint.Head]!;
+    const dreaming = !delivered && wake.awake <= 0 && mumbleFx <= 0;
+    this.bang.sync(!delivered && wake.awake > 0, x, y, this.wakeAge, rm);
+    this.speech.sync(this.sim.mumble, !delivered && wake.awake <= 0 ? mumbleFx : 0, x, y, 0, 0, rm);
+    this.snore.sync(dreaming ? snoreFx : 0, x, y, rm);
+    this.dream.visible = dreaming;
+    for (const dot of this.trail) dot.visible = false;
+    if (!dreaming) return;
+    const dream = wake.bonks % DREAMS.length;
+    if (dream !== this.lastDream) {
+      this.lastDream = dream;
+      this.dreamPop = 0;
+    }
+    for (let i = 0; i < this.dreams.length; i++) this.dreams[i]!.visible = i === dream;
+    const beside = y < 258;
+    const direction = x < VIEW_W / 2 ? 1 : -1;
+    const dreamX = clamp(x + (beside ? direction * 92 : 10), 56, VIEW_W - 56);
+    const dreamY = clamp(y - (beside ? 22 : 98), CEILING + 31, FLOOR - 65) + (rm ? 0 : Math.sin(elapsed * 1.6) * 2.5);
+    this.dream.position.set(dreamX, dreamY);
+    this.dream.scale.set(rm ? 1 : easeOutBack(this.dreamPop));
+    const dx = dreamX - x;
+    const dy = dreamY - y;
+    const distance = Math.hypot(dx, dy) || 1;
+    const to = distance - 31;
+    if (to < 43) return;
+    for (let i = 0; i < this.trail.length; i++) {
+      const dot = this.trail[i]!;
+      const k = (39 + (to - 39) * ((i + 0.6) / 3.2)) / distance;
+      dot.visible = true;
+      dot.position.set(x + dx * k, y + dy * k);
+    }
+  }
+
+  private hud(): void {
+    const { wake, elapsed, body, delivered } = this.sim;
+    const { input, ctx } = this;
+    const second = Math.floor(elapsed);
+    if (second !== this.lastSecond) {
+      this.lastSecond = second;
+      const clock = Math.floor(second / 60) + ':' + String(second % 60).padStart(2, '0');
+      this.timer.sync(318, HUD_ROW.y, 96, HUD_ROW.h, clock);
+    }
+    const m = this.meterState;
+    const ab = tr().abduct;
+    m.label = body.gripActive ? ab.holdingOn : wake.awake > 0 ? ab.awake : ab.wake;
+    m.value = wake.value / 100;
+    m.alarm = wake.awake > 0;
+    m.flash = this.meterFlash;
+    m.t = ctx.time;
+    m.reduced = ctx.reducedMotion;
+    this.meter.sync(14, HUD_ROW.y, 296, HUD_ROW.h, m);
+    this.turns.sync(input.turn, !delivered);
+    const tip = body.gripActive ? ab.shakeGrip : input.tutorial ? ab.pointBeam : this.souvenirHint() ? ab.souvenirHint : input.hint;
+    this.prompt.visible = !!tip;
+    if (tip) this.prompt.sync(VIEW_W / 2, 909, 54, tip, body.gripActive || tip === ab.souvenirHint ? 20 : 21,
+      body.gripActive ? 'shake' : 'drag', ctx.time, ctx.reducedMotion, 480);
   }
 
   /**
@@ -615,465 +980,4 @@ export class AbductView {
     return sim.snoreFx > 0 ? Math.sin(Math.PI * clamp01((1.1 - sim.snoreFx) / 1.1)) : 0;
   }
 
-  private sprite(g: CanvasRenderingContext2D, key: string, x: number, y: number, w: number, h: number): void {
-    // art lettered in English gives way to the drawn fallback in other languages
-    const image = getLang() !== 'en' && ENGLISH_LETTERED.has(key) ? undefined : this.ctx.assets.get(key);
-    if (image) g.drawImage(image, x, y, w, h);
-    else fallback(g, key, x, y, w, h);
-  }
-
-  private drawSprite(g: CanvasRenderingContext2D, sprite: Sprite, x = sprite.x, y = sprite.y): void {
-    this.sprite(g, sprite.key, x, y, sprite.w, sprite.h);
-  }
-
-  private structure(g: CanvasRenderingContext2D): void {
-    // the night over the roof (the HUD floats on it) and the roof slab the beam comes through
-    g.fillStyle = this.skyGrad!;
-    g.fillRect(0, 0, VIEW_W, CEILING - 14);
-    g.fillStyle = '#ffffff';
-    g.globalAlpha = 0.6;
-    for (let i = 0; i < SKY_STARS.length; i += 2) g.fillRect(SKY_STARS[i]!, SKY_STARS[i + 1]!, 2, 2);
-    g.globalAlpha = 1;
-    g.fillStyle = '#2b2242';
-    g.fillRect(0, CEILING - 16, VIEW_W, 16);
-    g.fillStyle = '#4a3d68';
-    g.fillRect(0, CEILING - 16, VIEW_W, 3);
-
-    g.fillStyle = 'rgba(17,15,34,0.48)';
-    g.fillRect(0, CEILING, LEFT_WALL, FLOOR - CEILING);
-    g.fillRect(RIGHT_WALL, CEILING, VIEW_W - RIGHT_WALL, FLOOR - CEILING);
-    g.fillRect(0, FLOOR, VIEW_W, VIEW_H - FLOOR);
-    g.fillStyle = '#514362';
-    g.fillRect(LEFT_WALL - 4, CEILING, 4, FLOOR - CEILING);
-    g.fillRect(RIGHT_WALL, CEILING, 4, FLOOR - CEILING);
-    g.fillStyle = 'rgba(172,142,173,0.22)';
-    g.fillRect(LEFT_WALL, CEILING - 3, RIGHT_WALL - LEFT_WALL, 3);
-  }
-
-  /** Soft contact shadow on the floor under the specimen; fades as they rise. */
-  private floorShadow(g: CanvasRenderingContext2D): void {
-    const { chestX, chestY } = this.sim.body;
-    const height = clamp((FLOOR - chestY) / 560, 0, 1);
-    drawGlow(g, GLOW.dark, chestX, FLOOR - 3, 96 - height * 40, 13 - height * 5, 0.62 * (1 - height * 0.7));
-  }
-
-  /** Additive pools of lamp light, ember glow and moonlight from the exit. */
-  private lighting(g: CanvasRenderingContext2D): void {
-    const t = this.sim.elapsed;
-    g.save();
-    g.globalCompositeOperation = 'lighter';
-    for (const light of this.lights) {
-      const pool = light.warm ? this.warmGlow : this.coolGlow;
-      if (!pool) continue;
-      g.globalAlpha = light.flicker && !this.ctx.reducedMotion ? 0.82 + 0.18 * Math.sin(t * 9) * Math.sin(t * 5.3) : 1;
-      g.drawImage(pool, light.x - light.r, light.y - light.r, light.r * 2, light.r * 2);
-    }
-    g.restore();
-  }
-
-  private suspension(g: CanvasRenderingContext2D, sprite: Sprite): void {
-    g.strokeStyle = '#9f8c9e';
-    g.lineWidth = 2;
-    if (sprite.key === 'room/hanging_plant') {
-      const x = sprite.x + sprite.w / 2;
-      g.beginPath();
-      g.moveTo(x, CEILING);
-      g.lineTo(x, sprite.y + 5);
-      g.stroke();
-    } else if (sprite.key === 'room/pot_rack') {
-      g.beginPath();
-      for (let y = CEILING + 3; y < sprite.y + 7; y += 6) {
-        g.moveTo(sprite.x + 31, y);
-        g.ellipse(sprite.x + 29, y, 2, 4, 0, 0, Math.PI * 2);
-        g.moveTo(sprite.x + 192, y);
-        g.ellipse(sprite.x + 190, y, 2, 4, 0, 0, Math.PI * 2);
-      }
-      g.stroke();
-    }
-  }
-
-  private masonry(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
-    g.lineWidth = 3;
-    roundBox(g, x, y, w, h, 3, '#5b4357', '#372942');
-    g.fillStyle = '#79596a';
-    for (let dy = 15; dy < h - 3; dy += 23) g.fillRect(x + 2, y + dy, w - 4, 2);
-  }
-
-  /** The cat breathes in its sleep (art only; its collider is unchanged). */
-  private cat(g: CanvasRenderingContext2D, cat: Sprite): void {
-    const awake = this.sim.catAwake > 0;
-    const key = awake ? 'room/cat_awake' : cat.key;
-    const { w, h } = ART[key]!;
-    const rise = awake || this.ctx.reducedMotion ? 0 : (0.5 + 0.5 * Math.sin(this.sim.elapsed * 1.9)) * 2.5;
-    this.sprite(g, key, cat.x, cat.y + cat.h - h - rise, w, h + rise);
-  }
-
-  private exitMarker(g: CanvasRenderingContext2D): void {
-    const { sim } = this;
-    const zone = sim.room.exitZone;
-    const pulse = this.ctx.reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(sim.elapsed * 3.2);
-    // the closer the specimen, the louder the exit
-    const near = 1 - clamp01((Math.hypot(sim.body.chestX - sim.exitX, sim.body.chestY - sim.exitY) - 60) / 300);
-    g.save();
-    g.globalCompositeOperation = 'lighter';
-    drawGlow(g, GLOW.mint, sim.exitX, sim.exitY, zone.w * 0.75, zone.h * 0.75, (0.1 + pulse * 0.08) * (1 + near * 2.2));
-    g.globalCompositeOperation = 'source-over';
-    g.globalAlpha = 0.1 + pulse * 0.1 + near * 0.1;
-    g.fillStyle = MINT;
-    g.beginPath();
-    g.roundRect(zone.x, zone.y, zone.w, zone.h, 12);
-    g.fill();
-    g.globalAlpha = 0.7 + pulse * 0.3;
-    g.strokeStyle = MINT;
-    g.lineWidth = 2.5 + near;
-    g.setLineDash(EXIT_DASHES);
-    g.beginPath();
-    g.roundRect(zone.x, zone.y, zone.w, zone.h, 12);
-    g.stroke();
-    g.setLineDash(SOLID_LINE);
-    const { exitX: x } = sim;
-    g.lineWidth = 3.5;
-    g.lineCap = 'round';
-    g.lineJoin = 'round';
-    g.beginPath();
-    // two chevrons climbing into the exit
-    for (let i = 0; i < 2; i++) {
-      const y = sim.exitY + 4 + i * 11 - pulse * (5 + near * 4);
-      g.moveTo(x - 10, y + 3);
-      g.lineTo(x, y - 7);
-      g.lineTo(x + 10, y + 3);
-    }
-    g.stroke();
-    g.restore();
-  }
-
-  private hazards(g: CanvasRenderingContext2D): void {
-    const { fan, sign: sprite } = this.sim.room;
-    if (fan) {
-      g.fillStyle = '#495374';
-      g.fillRect(fan.x - 3, CEILING, 6, fan.y - CEILING);
-      for (const blade of this.sim.fanBlades) {
-        g.save();
-        g.translate(blade.x, blade.y);
-        g.rotate(blade.angle);
-        this.sprite(g, 'room/fan_blade', 0, -blade.r, blade.to + blade.r, blade.r * 2);
-        g.restore();
-      }
-      this.sprite(g, 'room/fan_hub', fan.x - 25, fan.y - 25, 50, 50);
-    }
-
-    const { sign } = this.sim;
-    if (sign && sprite) {
-      const cos = Math.cos(sign.angle);
-      const sin = Math.sin(sign.angle);
-      const anchor = sprite.w / 2 - 15;
-      const mountY = 16;
-      g.strokeStyle = '#9f8c9e';
-      g.lineWidth = 2;
-      g.beginPath();
-      g.moveTo(sign.x - anchor, CEILING);
-      g.lineTo(sign.x - anchor * cos - mountY * sin, sign.y - anchor * sin + mountY * cos);
-      g.moveTo(sign.x + anchor, CEILING);
-      g.lineTo(sign.x + anchor * cos - mountY * sin, sign.y + anchor * sin + mountY * cos);
-      g.stroke();
-      g.save();
-      g.translate(sign.x, sign.y);
-      g.rotate(sign.angle);
-      this.drawSprite(g, sprite, -sprite.w / 2, 0);
-      g.restore();
-    }
-  }
-
-  private beam(g: CanvasRenderingContext2D, dragging: boolean): void {
-    const { body, elapsed, slurp, emitterX, exitX, exitY } = this.sim;
-    const p = slurp * slurp;
-    const x = body.chestX + (exitX - body.chestX) * p;
-    const y = body.chestY + (exitY - body.chestY) * p;
-    const spread = 59 * (1 - p);
-    const power = (1 - p) * (dragging ? 1 : 0.72);
-    g.save();
-    g.globalCompositeOperation = 'lighter';
-    // wide soft cone, then a brighter core
-    for (let pass = 0; pass < 2; pass++) {
-      const k = pass === 0 ? 1 : 0.42;
-      g.beginPath();
-      g.moveTo(emitterX - 23 * k, CEILING);
-      g.lineTo(emitterX + 23 * k, CEILING);
-      g.lineTo(x + spread * k, y + 28 * (1 - p));
-      g.quadraticCurveTo(x, y + 46 * (1 - p), x - spread * k, y + 28 * (1 - p));
-      g.closePath();
-      g.globalAlpha = power * (pass === 0 ? 1 : 0.55);
-      g.fillStyle = this.beamGrad!;
-      g.fill();
-    }
-    // glow where the beam lands and at the emitter
-    g.globalAlpha = power;
-    if (this.mintGlow) {
-      g.drawImage(this.mintGlow, x - 95, y + 8 - 62, 190, 124);
-      g.drawImage(this.mintGlow, emitterX - 60, CEILING - 30, 120, 60);
-    }
-
-    const phase = this.ctx.reducedMotion ? 0 : elapsed;
-    const count = this.ctx.reducedMotion ? 12 : PARTICLE_COUNT;
-    for (let i = 0; i < count; i++) {
-      const t = (this.particles[i * 2]! + phase * (0.22 + (i % 3) * 0.025)) % 1;
-      const offset = this.particles[i * 2 + 1]! * (43 + (spread * 2 - 43) * t);
-      g.globalAlpha = (0.3 + (1 - t) * 0.5) * (1 - p);
-      const size = i % 4 === 0 ? 3 : 2;
-      g.fillStyle = i % 4 === 0 ? '#edffe7' : MINT;
-      g.fillRect(emitterX + (x - emitterX) * t + offset, CEILING + (y - CEILING) * t, size, size);
-    }
-    g.restore();
-  }
-
-  /** The saucer parked over the roof: hull, chasing rim lights and the beam nozzle. */
-  private saucer(g: CanvasRenderingContext2D, dragging: boolean): void {
-    const { emitterX: x } = this.sim;
-    const rm = this.ctx.reducedMotion;
-    const t = this.ctx.time;
-    const y = CEILING - 31 + (rm ? 0 : Math.sin(t * 2.1) * 1.8);
-    g.save();
-    g.lineWidth = 3;
-    g.lineJoin = 'round';
-    // nozzle through the roof
-    g.beginPath();
-    g.moveTo(x - 15, y + 6);
-    g.lineTo(x + 15, y + 6);
-    g.lineTo(x + 25, CEILING - 3);
-    g.lineTo(x - 25, CEILING - 3);
-    g.closePath();
-    g.fillStyle = '#56648c';
-    g.fill();
-    g.strokeStyle = INK;
-    g.stroke();
-    ellipse(g, x, CEILING - 4, 23, 5, MINT, INK);
-    // hull
-    ellipse(g, x, y, 84, 15, '#9fb3d6', INK);
-    g.beginPath();
-    g.ellipse(x, y + 3, 76, 10, 0, 0, Math.PI);
-    g.fillStyle = '#7b8db3';
-    g.fill();
-    g.beginPath();
-    g.ellipse(x, y - 5, 58, 5, 0, 0, Math.PI * 2);
-    g.fillStyle = 'rgba(255,255,255,0.28)';
-    g.fill();
-    const head = Math.floor(t * 7) % HULL_LIGHTS;
-    for (let i = 0; i < HULL_LIGHTS; i++) {
-      const lx = x + (i - 3) * 22;
-      const ly = y + 5 - Math.abs(i - 3) * 1.4;
-      const on = rm ? i % 2 === 0 : i === head || (dragging && (i + 1) % HULL_LIGHTS === head);
-      g.beginPath();
-      g.arc(lx, ly, 4.2, 0, Math.PI * 2);
-      g.fillStyle = on ? '#FFD27A' : '#4a4470';
-      g.fill();
-      if (on) {
-        g.globalCompositeOperation = 'lighter';
-        drawGlow(g, GLOW.amber, lx, ly, 13, 13, 0.7);
-        g.globalCompositeOperation = 'source-over';
-      }
-    }
-    g.globalCompositeOperation = 'lighter';
-    drawGlow(g, GLOW.mint, x, CEILING - 2, 46, 16, dragging ? 0.9 : 0.6);
-    g.restore();
-  }
-
-  private reticle(g: CanvasRenderingContext2D, dragging: boolean, turn: TurnControl | undefined): void {
-    const { beamX, beamY } = this.sim.body;
-    const radius = dragging ? 24 : 19;
-    if (turn) drawTurnTell(g, beamX, beamY, radius, turn, this.sim.body.tilt, this.ctx.reducedMotion);
-    const spin = this.ctx.reducedMotion ? 0 : this.sim.elapsed * 1.4;
-    g.save();
-    g.translate(beamX, beamY);
-    g.lineCap = 'round';
-    for (let pass = 0; pass < 2; pass++) {
-      g.lineWidth = pass === 0 ? 6 : 2.6;
-      g.strokeStyle = pass === 0 ? INK : MINT;
-      g.beginPath();
-      g.arc(0, 0, radius, 0, Math.PI * 2);
-      for (let i = 0; i < 4; i++) {
-        const a = spin + i * Math.PI / 2;
-        g.moveTo(Math.cos(a) * (radius + 4), Math.sin(a) * (radius + 4));
-        g.lineTo(Math.cos(a) * (radius + 11), Math.sin(a) * (radius + 11));
-      }
-      g.stroke();
-    }
-    g.fillStyle = dragging ? '#7CFFCB40' : '#7CFFCB22';
-    g.beginPath();
-    g.arc(0, 0, radius, 0, Math.PI * 2);
-    g.fill();
-    ellipse(g, 0, 0, 3.5, 3.5, MINT);
-    g.restore();
-  }
-
-  private sleepEffects(g: CanvasRenderingContext2D): void {
-    const { body, snoreFx, mumbleFx, wake, elapsed } = this.sim;
-    const rm = this.ctx.reducedMotion;
-    const x = body.x[Joint.Head]!;
-    const y = body.y[Joint.Head]!;
-    if (wake.awake > 0) {
-      this.bang(g, x, y);
-      return;
-    }
-    if (mumbleFx > 0) {
-      this.speech(g, x, y);
-      return;
-    }
-
-    // dream bubble: a thought trail leads from the head to the cloud
-    const dream = wake.bonks % DREAMS.length;
-    if (dream !== this.lastDream) {
-      this.lastDream = dream;
-      this.dreamPop = 0;
-    }
-    const beside = y < 258;
-    const direction = x < VIEW_W / 2 ? 1 : -1;
-    const dreamX = clamp(x + (beside ? direction * 92 : 10), 56, VIEW_W - 56);
-    const dreamY = clamp(y - (beside ? 22 : 98), CEILING + 31, FLOOR - 65) + (rm ? 0 : Math.sin(elapsed * 1.6) * 2.5);
-    const dx = dreamX - x;
-    const dy = dreamY - y;
-    const d = Math.hypot(dx, dy) || 1;
-    const from = 39;
-    const to = d - 31;
-    g.lineWidth = 2;
-    g.globalAlpha = 0.93;
-    if (to > from + 4) {
-      for (let i = 0; i < 3; i++) {
-        const s = from + (to - from) * ((i + 0.6) / 3.2);
-        ellipse(g, x + (dx / d) * s, y + (dy / d) * s, 3 + i * 2.2, 2.6 + i * 1.9, BUBBLE, '#8b7597');
-      }
-    }
-    const pop = rm ? 1 : easeOutBack(this.dreamPop);
-    g.save();
-    g.translate(dreamX, dreamY);
-    g.scale(pop, pop);
-    g.lineWidth = 2.5;
-    ellipse(g, 0, 0, 36, 29, BUBBLE, '#8b7597');
-    this.sprite(g, DREAMS[dream]!, -30, -25, 60, 50);
-    g.restore();
-    g.globalAlpha = 1;
-
-    if (snoreFx > 0) {
-      // Zzz drifts up and swells as the snore goes on
-      const k = clamp01((1.1 - snoreFx) / 1.1);
-      const drift = rm ? 0 : k * 34;
-      const size = 40 * (rm ? 1 : 0.7 + 0.5 * k);
-      g.globalAlpha = Math.min(1, snoreFx * 2.6);
-      const snoreX = y < 250 && x < VIEW_W / 2 ? x - 78 : x + 36;
-      this.sprite(g, 'ui/zzz', clamp(snoreX, 25, VIEW_W - 65), clamp(y - 62 - drift, CEILING + 3, FLOOR - 39) - (size - 40), size, size);
-      g.globalAlpha = 1;
-    }
-  }
-
-  /** Sleep-talk bubble with a tail pointing at the speaker's head. */
-  private speech(g: CanvasRenderingContext2D, x: number, y: number): void {
-    const { mumble, mumbleFx } = this.sim;
-    const pad = 18;
-    const h = 42;
-    g.font = MUMBLE_FONT;
-    if (mumble !== this.measuredMumble) {
-      this.measuredMumble = mumble;
-      this.shownMumble = gt(mumble);
-      this.mumbleWidth = Math.min(VIEW_W - 44, Math.ceil(g.measureText(this.shownMumble).width) + pad * 2);
-    }
-    const w = this.mumbleWidth;
-    const left = clamp(x - w / 2, 22, VIEW_W - 22 - w);
-    const top = clamp(y < 226 ? y + 58 : y - 116, CEILING + 6, FLOOR - 49);
-    const below = top > y;
-    const baseX = clamp(x, left + 26, left + w - 26);
-    const baseY = below ? top + 2 : top + h - 2;
-    const dx = x - baseX;
-    const dy = y - baseY;
-    const d = Math.hypot(dx, dy) || 1;
-    const reach = Math.min(d - 34, 40);
-    const pop = this.ctx.reducedMotion ? 1 : easeOutBack((MUMBLE_SECONDS - mumbleFx) / 0.22);
-    g.save();
-    g.globalAlpha = clamp01(mumbleFx / 0.18);
-    g.translate(baseX, baseY);
-    g.scale(pop, pop);
-    g.translate(-baseX, -baseY);
-    g.lineJoin = 'round';
-    g.lineWidth = 5;
-    g.strokeStyle = BUBBLE_EDGE;
-    g.fillStyle = BUBBLE;
-    // outline both shapes first, then fill both, so no line shows where the tail joins
-    g.beginPath();
-    g.roundRect(left, top, w, h, 15);
-    g.stroke();
-    if (reach > 5) {
-      g.beginPath();
-      g.moveTo(baseX - 11, baseY);
-      g.lineTo(baseX + (dx / d) * reach, baseY + (dy / d) * reach);
-      g.lineTo(baseX + 11, baseY);
-      g.closePath();
-      g.stroke();
-      g.fill();
-    }
-    g.beginPath();
-    g.roundRect(left, top, w, h, 15);
-    g.fill();
-    g.fillStyle = INK;
-    g.textAlign = 'center';
-    g.textBaseline = 'alphabetic';
-    g.fillText(this.shownMumble, left + w / 2, top + 27, w - pad * 2);
-    g.restore();
-  }
-
-  /** Wide-awake "!" burst over the head. */
-  private bang(g: CanvasRenderingContext2D, x: number, y: number): void {
-    const rm = this.ctx.reducedMotion;
-    const age = this.wakeAge;
-    const pop = rm ? 1 : easeOutBack(age / 0.24, 3.2);
-    const wobble = rm ? 0 : Math.sin(age * 34) * 0.14 * Math.max(0, 1 - age * 1.4) + Math.sin(age * 9) * 0.04;
-    g.save();
-    g.translate(clamp(x + 34, 50, VIEW_W - 50), clamp(y - 74, CEILING + 40, FLOOR - 60));
-    g.rotate(0.2 + wobble);
-    g.scale(pop, pop);
-    g.beginPath();
-    for (let i = 0; i < 18; i++) {
-      const a = (i / 18) * Math.PI * 2;
-      const r = i % 2 === 0 ? 34 : 23;
-      if (i === 0) g.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-      else g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-    }
-    g.closePath();
-    g.lineJoin = 'round';
-    g.lineWidth = 4;
-    g.fillStyle = '#FF5D73';
-    g.fill();
-    g.strokeStyle = INK;
-    g.stroke();
-    g.fillStyle = '#ffffff';
-    g.beginPath();
-    g.roundRect(-4.5, -19, 9, 22, 3.5);
-    g.arc(0, 12, 5, 0, Math.PI * 2);
-    g.fill();
-    g.restore();
-  }
-
-  private hud(g: CanvasRenderingContext2D, tutorial: boolean, turn: TurnControl | undefined, turnHint: string | undefined): void {
-    const { wake, elapsed, body } = this.sim;
-    const { ctx } = this;
-    const second = Math.floor(elapsed);
-    if (second !== this.lastSecond) {
-      this.lastSecond = second;
-      this.clock = Math.floor(second / 60) + ':' + String(second % 60).padStart(2, '0');
-    }
-    const m = this.meter;
-    const ab = tr().abduct;
-    m.label = body.gripActive ? ab.holdingOn : wake.awake > 0 ? ab.awake : ab.wake;
-    m.value = wake.value / 100;
-    m.alarm = wake.awake > 0;
-    m.flash = this.meterFlash;
-    m.t = ctx.time;
-    m.reduced = ctx.reducedMotion;
-    hudMeter(g, METER.x, METER.y, METER.w, METER.h, m);
-    hudTimer(g, TIMER.x, TIMER.y, TIMER.w, TIMER.h, this.clock);
-    hudButton(g, RESTART, 'restart', tr().common.restart, false);
-    if (turn && !this.sim.delivered) drawTurnButtons(g, turn);
-
-    if (body.gripActive) hudPrompt(g, VIEW_W / 2, 909, 54, ab.shakeGrip, 20, 'shake', ctx.time, ctx.reducedMotion, 480);
-    else if (tutorial) hudPrompt(g, VIEW_W / 2, 909, 54, ab.pointBeam, 21, 'drag', ctx.time, ctx.reducedMotion, 480);
-    else if (this.souvenirHint()) hudPrompt(g, VIEW_W / 2, 909, 54, ab.souvenirHint, 20, 'drag', ctx.time, ctx.reducedMotion, 480);
-    else if (turnHint) hudPrompt(g, VIEW_W / 2, 909, 54, turnHint, 21, 'drag', ctx.time, ctx.reducedMotion, 480);
-  }
 }

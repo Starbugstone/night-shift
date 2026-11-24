@@ -1,3 +1,4 @@
+import { Container } from 'pixi.js';
 import type { AbductResult, AbductRules, FlightResult, PointerState, RoomId } from '../contracts';
 import { createAbductScene, emitterPoint } from '../abduct';
 import { SynthAudio } from '../audio/sfx';
@@ -19,7 +20,8 @@ import { TitleScene } from '../ui/title';
 import { UpgradesScene } from '../ui/upgrades';
 import { WorkOrdersScene } from '../ui/workorders';
 import { AssetLoader } from './assets';
-import type { CanvasHost } from './canvas';
+import { captureFrame, type RenderHost } from './gfx/host';
+import type { Viewport } from './viewport';
 import { PointerInput } from './input';
 import { startLoop } from './loop';
 import { SceneManager, type Transition } from './scenes';
@@ -40,6 +42,8 @@ export type SceneName =
 
 export interface DebugHook {
   readonly scene: string;
+  /** A scene transition is running: taps are swallowed until it ends (bots must wait for false). */
+  readonly transitioning: boolean;
   /** The deep shift in progress, if any. */
   readonly run: DeepRun | null;
   /** Live pointer state in logical px (test scripts). */
@@ -50,6 +54,20 @@ export interface DebugHook {
   /** Display language in use ('en' | 'fr'). */
   readonly lang: Lang;
   goto(name: string, arg?: unknown): void;
+  /** PNG data URL of the frame on screen (renders it first, so the WebGL buffer is fresh). */
+  capture(): string;
+  /**
+   * Render the current frame again without advancing the game. The WebGL canvas keeps its pixels
+   * only until the browser composites, so a script that reads `canvas#game` (drawImage,
+   * toDataURL) must call this first, in the same task.
+   */
+  redraw(): void;
+  /** False skips the scene sync and the Pixi render each frame (video time-lapse fast path); the game still updates. */
+  drawing: boolean;
+  /** Milliseconds of main-thread work (update + sync + Pixi render) for the last 240 frames, a ring. */
+  readonly frameMs: Float32Array;
+  /** Next write index into `frameMs`. */
+  readonly frameAt: number;
 }
 
 declare global {
@@ -60,6 +78,7 @@ declare global {
 
 const TUTORIAL_RULES: AbductRules = { wakeFails: false, hard: false };
 const DEEP_RULES: AbductRules = { wakeFails: true, hard: true };
+const TEST_FIXTURES = import.meta.env.DEV || import.meta.env.MODE === 'e2e';
 
 function firstRoom(li: number): RoomId {
   const l = LEVELS[li]!;
@@ -83,8 +102,15 @@ export class Game implements Shell {
   /** The deep shift in progress (L3+), if any. */
   run: DeepRun | null = null;
 
-  constructor(private readonly host: CanvasHost) {
-    this.input = new PointerInput(host.canvas, host.viewport);
+  /**
+   * @param gfx The Pixi renderer (its canvas also takes the pointer input).
+   * @param viewport The shared letterbox mapping, kept current by `watchViewport`.
+   */
+  constructor(
+    private readonly gfx: RenderHost,
+    viewport: Viewport,
+  ) {
+    this.input = new PointerInput(gfx.canvas, viewport);
     this.storage = browserStorage();
     this._save = loadSave(this.storage);
     this.audio.setMuted(this._save.muted);
@@ -97,7 +123,10 @@ export class Game implements Shell {
       time: 0,
       reducedMotion: watchReducedMotion((r) => (this.ctx.reducedMotion = r)),
     };
-    this.scenes = new SceneManager(this.input.state, () => this.ctx.reducedMotion);
+    const layer = new Container();
+    const cover = new Container();
+    gfx.root.addChild(layer, cover);
+    this.scenes = new SceneManager(this.input.state, () => this.ctx.reducedMotion, layer, cover, gfx.renderer.prepare ? (view) => gfx.renderer.prepare.upload(view) : null);
     this.input.onAnyDown(() => this.audio.unlock());
   }
 
@@ -137,20 +166,24 @@ export class Game implements Shell {
 
   boot(): void {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('reset') === '1') {
-      clearSave(this.storage);
-      this._save = loadSave(this.storage);
-      this.setSave(this._save);
-    }
-    if (params.get('unlock') === '1') {
-      this.setSave({ ...this._save, allUnlocked: true, glorbs: Math.max(this._save.glorbs, 999) });
+    if (TEST_FIXTURES) {
+      if (params.get('reset') === '1') {
+        clearSave(this.storage);
+        this.setSave(loadSave(this.storage));
+      }
+      if (params.get('unlock') === '1') {
+        this.setSave({ ...this._save, allUnlocked: true, glorbs: Math.max(this._save.glorbs, 999) });
+      }
+      this.installDebugHook();
     }
     this.langOverride = params.get('lang');
     this.applyLanguage();
-    this.installDebugHook();
     this.scenes.go(
       'loading',
-      () => new LoadingScene(this.assets, () => this.routeFromParams(params), () => this.ctx.reducedMotion),
+      () => new LoadingScene(this.assets, () => {
+        if (TEST_FIXTURES) this.routeFromParams(params);
+        else this.toTitle();
+      }, () => this.ctx.reducedMotion),
       true,
     );
     startLoop(
@@ -178,14 +211,26 @@ export class Game implements Shell {
     } else this.toTitle();
   }
 
+  /** Debug hook switch: false skips drawing (scripts/capture fast-forward). */
+  private drawing = true;
+
+  /** Main-thread cost of the last 240 frames (debug hook / scripts/pixi/bench-frames.mjs). */
+  private readonly frameMs = new Float32Array(240);
+  private frameAt = 0;
+
   private frame(dt: number): void {
+    const t0 = TEST_FIXTURES ? performance.now() : 0;
     this.input.beginFrame();
     this.ctx.time += dt;
     this.scenes.update(dt);
-    const g = this.host.g;
-    this.host.begin();
-    this.scenes.render(g);
-    this.host.end();
+    if (this.drawing) {
+      this.scenes.render();
+      this.gfx.render();
+    }
+    if (TEST_FIXTURES) {
+      this.frameMs[this.frameAt] = performance.now() - t0;
+      this.frameAt = (this.frameAt + 1) % this.frameMs.length;
+    }
   }
 
   // ---------------------------------------------------------------- navigation
@@ -415,6 +460,9 @@ export class Game implements Shell {
       get scene() {
         return game.scenes.name;
       },
+      get transitioning() {
+        return game.scenes.transitioning;
+      },
       get save() {
         return game._save;
       },
@@ -429,6 +477,25 @@ export class Game implements Shell {
       },
       get pointer() {
         return game.input.state;
+      },
+      capture() {
+        return captureFrame() ?? '';
+      },
+      redraw() {
+        game.scenes.render();
+        game.gfx.render();
+      },
+      get drawing() {
+        return game.drawing;
+      },
+      set drawing(on: boolean) {
+        game.drawing = on;
+      },
+      get frameMs() {
+        return game.frameMs;
+      },
+      get frameAt() {
+        return game.frameAt;
       },
       goto(name: string, arg?: unknown) {
         const n = typeof arg === 'number' ? arg : Number(arg);

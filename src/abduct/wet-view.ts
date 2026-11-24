@@ -1,132 +1,142 @@
-// L5: drawing for water zones, refill points and drips (src/abduct/moisture.ts). Water is dark
-// Pine with a wavy Ice surface line; refills carry a small mint droplet chevron (a goal), a
-// sprinkler between sprays shows the droplet dim. Allocation-free per frame.
+// Water bodies, refill markers, sprays and drips read the moisture simulation.
+import { Container, Graphics, type Sprite } from 'pixi.js';
 import { VIEW_H, VIEW_W } from '../contracts';
+import { Shape, keyOf } from '../core/gfx/shapes';
 import { DRIPS, sprinklerOn, type MoistureSim } from './moisture';
 import type { Area } from './rooms/layout';
+import { INK, MINT, Segment, box, intersects } from './views/pieces';
 
 const PINE = '#1f3d3a';
 const ICE = '#d4ecf5';
 const WATER = '#8fc3e0';
-const MINT = '#7cffcb';
 const DIM = '#6f7d96';
-const INK = '#1a162b';
 const RING_SECONDS = 2.4;
 
-function onScreen(a: Area, cx: number, cy: number): boolean {
-  return a.x + a.w >= cx - 20 && a.x <= cx + VIEW_W + 20 && a.y + a.h >= cy - 20 && a.y <= cy + VIEW_H + 20;
+function droplet(): Graphics {
+  return new Graphics()
+    .moveTo(0, -15).quadraticCurveTo(11, -1, 9, 4).arc(0, 3, 9, 0.1, Math.PI - 0.1)
+    .quadraticCurveTo(-11, -1, 0, -15).closePath().fill(0xffffff)
+    .moveTo(-9, 19).lineTo(0, 27).lineTo(9, 19).stroke({ color: 0xffffff, width: 3.5, cap: 'round', join: 'round' });
 }
 
-/** Wavy surface line along the top of a water area. */
-function surface(g: CanvasRenderingContext2D, a: Area, t: number, rm: boolean, cx: number): void {
-  const left = Math.max(a.x, cx - 20);
-  const right = Math.min(a.x + a.w, cx + VIEW_W + 20);
-  g.beginPath();
-  for (let x = left; x <= right; x += 12) {
-    const y = a.y + (rm ? 0 : Math.sin(x * 0.045 + t * 2.2) * 3 + Math.sin(x * 0.11 - t * 1.4) * 1.5);
-    if (x === left) g.moveTo(x, y);
-    else g.lineTo(x, y);
+class WaterZone {
+  readonly back: Sprite;
+  readonly front = new Container();
+  private readonly surface = new Shape();
+  private left = 0;
+  private count = 0;
+  private readonly heights = new Float32Array(Math.ceil((VIEW_W + 40) / 12) + 1);
+  private readonly wave = (g: Graphics): void => {
+    g.moveTo(this.left, this.heights[0]!);
+    for (let i = 1; i < this.count; i++) g.lineTo(this.left + i * 12, this.heights[i]!);
+    g.stroke({ color: ICE, width: 3, alpha: 0.85 });
+  };
+
+  constructor(private readonly area: Area) {
+    const { x, y, w, h } = area;
+    this.back = box(x, y, w, h, PINE, 0.5);
+    this.front.addChild(box(x, y, w, h, PINE, 0.3), this.surface);
   }
-  g.lineWidth = 3;
-  g.strokeStyle = ICE;
-  g.globalAlpha = 0.85;
-  g.stroke();
-  g.globalAlpha = 1;
+
+  sync(cx: number, cy: number, t: number, rm: boolean): void {
+    this.front.visible = this.back.visible = inView(this.area, cx, cy);
+    if (!this.front.visible) return;
+    const { x, y, w } = this.area;
+    const left = this.left = Math.max(x, cx - 20);
+    const right = Math.min(x + w, cx + VIEW_W + 20);
+    this.count = Math.floor((right - left) / 12) + 1;
+    let key = keyOf(left, this.count);
+    for (let i = 0; i < this.count; i++) {
+      const px = left + i * 12;
+      const height = y + (rm ? 0 : Math.sin(px * 0.045 + t * 2.2) * 3 + Math.sin(px * 0.11 - t * 1.4) * 1.5);
+      this.heights[i] = height;
+      key = keyOf(key, height);
+    }
+    this.surface.draw(key, this.wave);
+  }
 }
 
-/** Mint droplet with a chevron under it pointing at the refill. */
-export function droplet(g: CanvasRenderingContext2D, x: number, y: number, live: boolean, bob: number): void {
-  const color = live ? MINT : DIM;
-  y += bob;
-  g.beginPath();
-  g.moveTo(x, y - 15);
-  g.quadraticCurveTo(x + 11, y - 1, x + 9, y + 4);
-  g.arc(x, y + 3, 9, 0.1, Math.PI - 0.1);
-  g.quadraticCurveTo(x - 11, y - 1, x, y - 15);
-  g.closePath();
-  g.lineWidth = 3;
-  g.strokeStyle = INK;
-  g.stroke();
-  g.fillStyle = color;
-  g.globalAlpha = live ? 1 : 0.6;
-  g.fill();
-  g.globalAlpha = 1;
-  g.beginPath();
-  g.moveTo(x - 9, y + 19);
-  g.lineTo(x, y + 27);
-  g.lineTo(x + 9, y + 19);
-  g.lineWidth = 3.5;
-  g.lineCap = 'round';
-  g.lineJoin = 'round';
-  g.strokeStyle = color;
-  g.stroke();
-  g.lineCap = 'butt';
+function inView(a: Area, cx: number, cy: number): boolean {
+  return intersects(a, cx - 20, cy - 20, VIEW_W + 40, VIEW_H + 40);
+}
+
+class RefillView {
+  readonly root = new Container();
+  private readonly marker = new Container();
+  private readonly drop = droplet();
+  private readonly spray: Segment[] = [];
+
+  constructor(private readonly point: MoistureSim['spec']['refills'][number]) {
+    const { area, kind } = point;
+    const edge = new Graphics().moveTo(0, -15).quadraticCurveTo(11, -1, 9, 4).arc(0, 3, 9, 0.1, Math.PI - 0.1)
+      .quadraticCurveTo(-11, -1, 0, -15).closePath().stroke({ color: INK, width: 3 });
+    this.root.position.set(area.x + area.w / 2, area.y);
+    if (kind === 'sprinkler') {
+      for (let i = 0; i < 7; i++) {
+        const bit = new Segment(box(0, -1, 1, 2, WATER, 0.55));
+        this.spray.push(bit);
+        this.root.addChild(bit.root);
+      }
+    }
+    this.marker.addChild(edge, this.drop);
+    this.root.addChild(this.marker);
+  }
+
+  sync(cx: number, cy: number, t: number, rm: boolean, using: boolean, index: number): void {
+    const { point } = this;
+    this.root.visible = inView(point.area, cx, cy);
+    if (!this.root.visible) return;
+    const live = point.kind !== 'sprinkler' || sprinklerOn(point.cycle, t);
+    for (let k = 0; k < this.spray.length; k++) {
+      const bit = this.spray[k]!;
+      bit.root.visible = live;
+      if (!live) continue;
+      const i = k - 3;
+      const off = rm ? 0 : (t * 260 + i * 37) % 60;
+      bit.sync(i * 3, off * 0.2, i * point.area.w / 7, point.area.h * 0.6 + off);
+    }
+    this.marker.y = -30 + (using ? -4 : rm ? 0 : Math.sin(t * 3 + index) * 3);
+    this.drop.tint = live ? MINT : DIM;
+    this.drop.alpha = live ? 1 : 0.6;
+  }
 }
 
 export class WetView {
-  constructor(private readonly wet: MoistureSim) {}
+  readonly back = new Container();
+  readonly front = new Container();
+  private readonly zones: WaterZone[];
+  private readonly refills: RefillView[];
+  private readonly drips: Graphics[] = [];
 
-  /** Behind the specimen: the water body, drip rings on the floor, refill markers and spray. */
-  drawBack(g: CanvasRenderingContext2D, cx: number, cy: number, time: number, rm: boolean): void {
-    const { spec } = this.wet;
-    for (const zone of spec.water) {
-      if (!onScreen(zone.area, cx, cy)) continue;
-      g.globalAlpha = 0.5;
-      g.fillStyle = PINE;
-      g.fillRect(zone.area.x, zone.area.y, zone.area.w, zone.area.h);
-      g.globalAlpha = 1;
+  constructor(private readonly wet: MoistureSim) {
+    this.zones = wet.spec.water.map(({ area }) => new WaterZone(area));
+    this.refills = wet.spec.refills.map(point => new RefillView(point));
+    for (const view of this.zones) {
+      this.back.addChild(view.back);
+      this.front.addChild(view.front);
     }
-    const wet = this.wet;
-    for (let k = 0; k < DRIPS; k++) {
-      const age = time - wet.dripAt[k]!;
-      if (age < 0 || age > RING_SECONDS) continue;
-      const x = wet.dripX[k]!;
-      const y = wet.dripY[k]!;
-      if (x < cx - 40 || x > cx + VIEW_W + 40 || y < cy - 40 || y > cy + VIEW_H + 40) continue;
-      const p = age / RING_SECONDS;
-      g.globalAlpha = (1 - p) * 0.7;
-      g.strokeStyle = WATER;
-      g.lineWidth = 2;
-      g.beginPath();
-      g.ellipse(x, y, 6 + p * 22, 2 + p * 5, 0, 0, Math.PI * 2);
-      g.stroke();
+    for (let i = 0; i < DRIPS; i++) {
+      const drip = new Graphics().ellipse(0, 0, 12, 3.5).stroke({ color: WATER, width: 2 });
+      this.drips.push(drip);
+      this.back.addChild(drip);
     }
-    g.globalAlpha = 1;
-    for (let r = 0; r < spec.refills.length; r++) {
-      const point = spec.refills[r]!;
-      const a = point.area;
-      if (!onScreen(a, cx, cy)) continue;
-      const live = point.kind !== 'sprinkler' || sprinklerOn(point.cycle, time);
-      if (point.kind === 'sprinkler' && live) {
-        // spray fanning down from the head
-        g.strokeStyle = WATER;
-        g.lineWidth = 2;
-        g.globalAlpha = 0.55;
-        g.beginPath();
-        const mid = a.x + a.w / 2;
-        for (let i = -3; i <= 3; i++) {
-          const off = rm ? 0 : ((time * 260 + i * 37) % 60);
-          g.moveTo(mid + i * 3, a.y + off * 0.2);
-          g.lineTo(mid + i * (a.w / 7), a.y + a.h * 0.6 + off);
-        }
-        g.stroke();
-        g.globalAlpha = 1;
-      }
-      const using = wet.refilling === r;
-      const bob = rm ? 0 : Math.sin(time * 3 + r) * 3;
-      droplet(g, a.x + a.w / 2, a.y - 30, live, using ? -4 : bob);
-    }
+    for (const point of this.refills) this.back.addChild(point.root);
   }
 
-  /** In front of the specimen: the water's tint over whatever is in it, and the surface line. */
-  drawFront(g: CanvasRenderingContext2D, cx: number, cy: number, time: number, rm: boolean): void {
-    for (const zone of this.wet.spec.water) {
-      if (!onScreen(zone.area, cx, cy)) continue;
-      g.globalAlpha = 0.3;
-      g.fillStyle = PINE;
-      g.fillRect(zone.area.x, zone.area.y, zone.area.w, zone.area.h);
-      g.globalAlpha = 1;
-      surface(g, zone.area, time, rm, cx);
+  sync(cx: number, cy: number, t: number, rm: boolean): void {
+    for (const zone of this.zones) zone.sync(cx, cy, t, rm);
+    for (let i = 0; i < this.drips.length; i++) {
+      const drip = this.drips[i]!;
+      const age = t - this.wet.dripAt[i]!;
+      const x = this.wet.dripX[i]!;
+      const y = this.wet.dripY[i]!;
+      drip.visible = age >= 0 && age <= RING_SECONDS && x >= cx - 40 && x <= cx + VIEW_W + 40 && y >= cy - 40 && y <= cy + VIEW_H + 40;
+      if (!drip.visible) continue;
+      const p = age / RING_SECONDS;
+      drip.position.set(x, y);
+      drip.scale.set((6 + p * 22) / 12, (2 + p * 5) / 3.5);
+      drip.alpha = (1 - p) * 0.7;
     }
+    for (let i = 0; i < this.refills.length; i++) this.refills[i]!.sync(cx, cy, t, rm, this.wet.refilling === i, i);
   }
 }

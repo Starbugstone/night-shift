@@ -1,61 +1,65 @@
+import { Container, Graphics } from 'pixi.js';
 import { tr } from '../i18n';
-import { hudButton } from '../ui/hud';
+import { HudButton } from '../ui/views/hud';
 import type { TurnControl } from './turn';
+import { INK, MINT } from './views/pieces';
 
-const INK = '#1d1631';
-const MINT = '#7CFFCB';
-const TELL_HALF = 0.95;
+export class TurnButtonsView {
+  readonly root = new Container();
+  private readonly left = new HudButton('turn_left');
+  private readonly right = new HudButton('turn_right');
+  private lastHeld = NaN;
 
-/** Both rotate buttons from the HUD kit; a held one draws pushed in. */
-export function drawTurnButtons(g: CanvasRenderingContext2D, turn: TurnControl): void {
-  const held = turn.primaryHold + turn.secondHold;
-  const label = tr().abduct.turn;
-  hudButton(g, turn.buttons.left, 'turn_left', label, held < 0);
-  hudButton(g, turn.buttons.right, 'turn_right', label, held > 0);
+  constructor() {
+    this.root.addChild(this.left, this.right);
+  }
+
+  sync(turn: TurnControl, playable: boolean): void {
+    this.root.visible = playable;
+    if (!playable) return;
+    const held = Math.sign(turn.primaryHold + turn.secondHold);
+    if (held === this.lastHeld) return;
+    this.lastHeld = held;
+    const label = tr().abduct.turn;
+    this.left.sync(turn.buttons.left, label, held < 0);
+    this.right.sync(turn.buttons.right, label, held > 0);
+  }
 }
 
-/**
- * The mint turn tell: an arrowed arc outside the reticle ring, pointing the way the body turns.
- * It sits over the specimen's head (`tilt`), so it turns with the body; with reduced motion it
- * stays fixed at the top. Fades out ~0.4 s after turning stops.
- */
-export function drawTurnTell(
-  g: CanvasRenderingContext2D, x: number, y: number, ringRadius: number,
-  turn: TurnControl, tilt: number, reduced: boolean,
-): void {
-  if (turn.tell <= 0.01 || turn.dir === 0) return;
-  const r = ringRadius + 17;
-  const mid = (reduced ? 0 : tilt) - Math.PI / 2;
-  const a0 = mid - TELL_HALF;
-  const a1 = mid + TELL_HALF;
-  const end = turn.dir > 0 ? a1 : a0;
-  const cos = Math.cos(end);
-  const sin = Math.sin(end);
-  // tangent in the turning direction, and the outward normal
-  const tx = -sin * turn.dir;
-  const ty = cos * turn.dir;
-  const hx = x + cos * r;
-  const hy = y + sin * r;
-  g.save();
-  g.globalAlpha = Math.min(1, turn.tell * 1.4);
-  g.lineCap = 'round';
-  for (let pass = 0; pass < 2; pass++) {
-    g.lineWidth = pass === 0 ? 7 : 3;
-    g.strokeStyle = pass === 0 ? INK : MINT;
-    g.beginPath();
-    g.arc(x, y, r, a0, a1);
-    g.stroke();
+/** The arrow follows the specimen's tilt, or stays on top with reduced motion. */
+export class TurnTell {
+  readonly root = new Container();
+  private readonly variants: Graphics[] = [];
+
+  constructor(baseRadius: number) {
+    const half = 0.95;
+    for (let i = 0; i < 4; i++) {
+      const r = baseRadius + 17 + (i >= 2 ? 5 : 0);
+      const dir = i % 2 ? 1 : -1;
+      const angle = dir * half;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const tx = -sin * dir;
+      const ty = cos * dir;
+      const x = cos * r;
+      const y = sin * r;
+      const g = new Graphics()
+        .arc(0, 0, r, -half, half).stroke({ color: INK, width: 7, cap: 'round' })
+        .arc(0, 0, r, -half, half).stroke({ color: MINT, width: 3, cap: 'round' })
+        .poly([x + tx * 10, y + ty * 10, x - tx * 3 + cos * 7.5, y - ty * 3 + sin * 7.5, x - tx * 3 - cos * 7.5, y - ty * 3 - sin * 7.5])
+        .fill(MINT).stroke({ color: INK, width: 2, join: 'round' });
+      this.variants.push(g);
+      this.root.addChild(g);
+    }
   }
-  g.beginPath();
-  g.moveTo(hx + tx * 10, hy + ty * 10);
-  g.lineTo(hx - tx * 3 + cos * 7.5, hy - ty * 3 + sin * 7.5);
-  g.lineTo(hx - tx * 3 - cos * 7.5, hy - ty * 3 - sin * 7.5);
-  g.closePath();
-  g.fillStyle = MINT;
-  g.lineWidth = 2;
-  g.strokeStyle = INK;
-  g.lineJoin = 'round';
-  g.stroke();
-  g.fill();
-  g.restore();
+
+  sync(x: number, y: number, dragging: boolean, turn: TurnControl, tilt: number, reduced: boolean): void {
+    this.root.visible = turn.tell > 0.01 && turn.dir !== 0;
+    if (!this.root.visible) return;
+    const variant = (dragging ? 2 : 0) + (turn.dir > 0 ? 1 : 0);
+    for (let i = 0; i < this.variants.length; i++) this.variants[i]!.visible = i === variant;
+    this.root.position.set(x, y);
+    this.root.rotation = (reduced ? 0 : tilt) - Math.PI / 2;
+    this.root.alpha = Math.min(1, turn.tell * 1.4);
+  }
 }

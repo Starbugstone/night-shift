@@ -16,7 +16,8 @@ import { RANKS } from '../src/levels/progress';
 import { coverStory, tabloidHeadline } from '../src/ui/report-extras';
 import { BAND_BOTTOM, BAND_TOP, CW, CX, CY, STAR_Y, layoutReport, type Box, type Measure } from '../src/ui/report-layout';
 import { fitPhoto, WINDOW } from '../src/ui/report-photo';
-import { deepReport, ReportScene, tutorialReport } from '../src/ui/report';
+import { reportContent } from '../src/ui/report-content';
+import { deepReport, tutorialReport } from '../src/ui/report';
 import type { DeepLevelDef } from '../src/levels/types';
 
 const LANGS: Lang[] = ['en', 'fr'];
@@ -211,49 +212,13 @@ describe('report layout', () => {
   }
 });
 
-/** Canvas stand-in: every method a no-op, measureText from the estimate, fillText recorded. */
-function fakeCanvas(): { g: CanvasRenderingContext2D; texts: string[] } {
-  const texts: string[] = [];
-  let size = 16;
-  const target: Record<string, unknown> = {
-    measureText: (s: string) => ({ width: measure(s, size, 600, false) }),
-    fillText: (s: string) => void texts.push(s),
-    createLinearGradient: () => ({ addColorStop() {} }),
-    createRadialGradient: () => ({ addColorStop() {} }),
-  };
-  const g = new Proxy(target, {
-    get: (o, k: string) => (k in o ? o[k] : () => undefined),
-    set: (o, k: string, v) => {
-      if (k === 'font') size = Number(/(\d+(?:\.\d+)?)px/.exec(String(v))?.[1] ?? 16);
-      o[k] = v;
-      return true;
-    },
-  }) as unknown as CanvasRenderingContext2D;
-  return { g, texts };
-}
-
 function outcome(): RunOutcome {
   return { save: defaultSave(), stars: [true, false, true], newStarFlags: [true, false, false], glorbs: 40, rankBefore: RANKS[0]!, rankAfter: RANKS[0]!, unlockedNext: false };
 }
 
-function renderAll(model: ReturnType<typeof tutorialReport>, levelIndex: number): string[] {
-  const { g, texts } = fakeCanvas();
-  const shell = {
-    ctx: { pointer: { x: 0, y: 0, down: false, pressed: false, released: false }, reducedMotion: false },
-    assets: { get: () => undefined },
-    audio: { sfx: vi.fn() },
-  };
-  const scene = new ReportScene(shell as never, levelIndex, model, outcome());
-  for (let i = 0; i < 300; i++) {
-    scene.update(1 / 60);
-    scene.render(g);
-  }
-  return texts;
-}
-
 describe('report scene', () => {
   const photo = { human: 'doyle', x: [0, 0, 0, 10, 20, -10, -20, 5, 5, -5, -5].map((v, i) => v + i), y: [-80, -40, 60, -20, 0, -20, 0, 110, 170, 110, 170] };
-  const abduct: AbductResult = { delivered: true, woke: false, timeSec: 20, bonks: 2, dignity: 80, snores: 3, itemsStolen: ['slipper'], aborted: false, photo, probeReadings: ['Temperature: lukewarm ✓'] };
+  const abduct: AbductResult = { delivered: true, woke: false, timeSec: 20, bonks: 2, dignity: 80, snores: 3, itemsStolen: ['slipper'], aborted: false, photo, probeReadings: ['Temperature: lukewarm'] };
   const flight: FlightResult = { timeSec: 30, spotted: 2, roomId: 'farm_window' } as FlightResult;
 
   for (const lang of LANGS) {
@@ -262,11 +227,12 @@ describe('report scene', () => {
       const model = tutorialReport(0, abduct, flight, outcome());
       expect(model.photo).toBe(photo);
       expect(model.headline).toBeTruthy();
-      const texts = renderAll(model, 0);
-      expect(texts.some((t) => t.length > 3 && model.headline!.startsWith(t))).toBe(true);
-      expect(texts.some((t) => model.cover.startsWith(t))).toBe(true);
-      expect(texts).toContain(tr().reportExtras.readings);
-      expect(texts).toContain(tr().reportExtras.approved);
+      const content = reportContent(model, outcome(), measure);
+      expect(content.layout.tabloid?.lines.some((t) => t.length > 3 && model.headline!.startsWith(t))).toBe(true);
+      expect(content.layout.cover.lines.some((t) => model.cover.startsWith(t))).toBe(true);
+      expect(content.readingsHeading).toBe(tr().reportExtras.readings);
+      expect(content.layout.readings?.cells).toEqual([lang === 'fr' ? 'Température\u00a0: tiède' : 'Temperature: lukewarm']);
+      expect(content.approved).toBe(tr().reportExtras.approved);
     });
   }
 
@@ -285,8 +251,8 @@ describe('report scene', () => {
       expect(model.readings.length).toBe(3);
       expect(model.headline).toBeTruthy();
       expect(model.cover).toMatch(/3/);
-      const texts = renderAll(model, li);
-      expect(texts.some((t) => model.cover.startsWith(t)), lv.id).toBe(true);
+      const { layout } = reportContent(model, outcome(), measure);
+      expect(layout.cover.lines.some((t) => model.cover.startsWith(t)), lv.id).toBe(true);
     }
   });
 
@@ -294,8 +260,9 @@ describe('report scene', () => {
     const model = tutorialReport(1, { ...abduct, photo: undefined, delivered: false } as AbductResult, { ...flight, spotted: 1 }, outcome());
     expect(model.headline).toBeNull();
     expect(model.photo).toBeUndefined();
-    const texts = renderAll(model, 1);
-    expect(texts).not.toContain(tr().reportExtras.approved);
+    const content = reportContent(model, outcome(), measure);
+    expect(content.approved).toBeNull();
+    expect(content.layout.tabloid).toBeNull();
     expect(VIEW_W).toBe(540);
     expect(VIEW_H).toBe(960);
   });

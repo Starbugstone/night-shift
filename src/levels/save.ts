@@ -105,7 +105,7 @@ export function validateSave(raw: unknown): SaveData {
     const refunded = new Set<string>();
     for (const u of raw.upgrades) {
       if (UPGRADE_IDS.includes(u as UpgradeId)) set.add(u as UpgradeId);
-      else if (typeof u === 'string' && u in RETIRED_UPGRADES && !refunded.has(u)) {
+      else if (typeof u === 'string' && Object.hasOwn(RETIRED_UPGRADES, u) && !refunded.has(u)) {
         refunded.add(u);
         out.glorbs = Math.min(999999, out.glorbs + RETIRED_UPGRADES[u]!);
       }

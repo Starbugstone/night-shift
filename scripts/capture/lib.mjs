@@ -175,7 +175,9 @@ const COMPOSER = `(() => {
     return y;
   }
   window.__compose = (cap, type, quality) => {
-    const c = document.querySelector('canvas');
+    const c = document.querySelector('canvas#game');
+    // the game canvas is WebGL: redraw it in this task so drawImage sees the frame
+    window.__nightShift?.redraw?.();
     g.drawImage(bg, 0, 0);
     g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
     g.drawImage(c, GX, GY, GW, GH);
@@ -358,19 +360,15 @@ export class Capture {
   }
 
   /**
-   * Advance n frames that will not be recorded, skipping the active scene's render (the
-   * simulation still runs every frame). Used for time-lapse frames.
+   * Advance n frames that will not be recorded, without drawing them (the simulation still runs
+   * every frame). Used for time-lapse frames.
    */
   async fastStep(n = 1) {
     await this.page.evaluate((k) => {
-      for (let i = 0; i < k; i++) {
-        const a = window.__nightShift && window.__nightShift.active;
-        if (!a) { window.__vt.step(1); continue; }
-        const own = Object.prototype.hasOwnProperty.call(a, 'render');
-        const r = a.render;
-        a.render = () => {};
-        try { window.__vt.step(1); } finally { if (own) a.render = r; else delete a.render; }
-      }
+      const h = window.__nightShift;
+      // skip the scene sync and the WebGL submit; the simulation still runs every frame
+      if (h) h.drawing = false;
+      try { window.__vt.step(k); } finally { if (h) h.drawing = true; }
     }, n);
   }
 
