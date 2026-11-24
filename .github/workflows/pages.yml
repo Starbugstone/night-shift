@@ -1,7 +1,11 @@
 name: Test and publish game
+# One Pages site, two builds:
+#   /          production, from main
+#   /pixi/     preprod, from the pixi-migration branch (the PixiJS renderer), while that branch exists
+# A push to either branch tests that branch, then rebuilds and republishes both.
 on:
   push:
-    branches: [main]
+    branches: [main, pixi-migration]
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,12 +26,28 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # the pushed branch must pass its own tests before anything is published
       - run: npm ci
       - run: npm test
-      - run: npm run build
+      - name: Build production (main) and preprod (pixi-migration)
+        env:
+          REPO: https://github.com/${{ github.repository }}.git
+        run: |
+          set -euo pipefail
+          build() {
+            git clone --quiet --depth 1 --branch "$1" "$REPO" "$RUNNER_TEMP/$1"
+            (cd "$RUNNER_TEMP/$1" && npm ci --no-audit --no-fund && npm run build)
+          }
+          build main
+          mkdir -p site
+          cp -r "$RUNNER_TEMP/main/dist/." site/
+          if git ls-remote --exit-code --heads "$REPO" pixi-migration > /dev/null; then
+            build pixi-migration
+            cp -r "$RUNNER_TEMP/pixi-migration/dist" site/pixi
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
+          path: site
       - id: publish
         uses: actions/deploy-pages@v5
