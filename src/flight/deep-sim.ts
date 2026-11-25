@@ -296,15 +296,20 @@ export class DeepFlightSim {
     return { x: e.x, y: e.y };
   }
 
+  private get cameraAnchorX(): number {
+    // Keep the parked time car and its countdown fully in the opening portrait frame.
+    return this.map.theme === 'storm55' ? VIEW_W * 0.56 : VIEW_W / 2;
+  }
+
   snapCamera(): void {
     const s = this.st.s;
-    this.camX = clampN(s.x - VIEW_W / 2, 0, this.map.w - VIEW_W);
+    this.camX = clampN(s.x - this.cameraAnchorX, 0, this.map.w - VIEW_W);
     this.camY = clampN(s.y - VIEW_H * FLIGHT_HUD.camFrac, 0, this.map.h - VIEW_H);
   }
 
   private followCamera(dt: number): void {
     const s = this.st.s;
-    const tx = clampN(s.x - VIEW_W / 2 + s.vx * 0.3, 0, this.map.w - VIEW_W);
+    const tx = clampN(s.x - this.cameraAnchorX + s.vx * 0.3, 0, this.map.w - VIEW_W);
     const ty = clampN(s.y - VIEW_H * FLIGHT_HUD.camFrac + s.vy * 0.3, 0, this.map.h - VIEW_H);
     const k = 1 - Math.exp(-5 * dt);
     this.camX += (tx - this.camX) * k;

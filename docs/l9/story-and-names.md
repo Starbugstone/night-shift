@@ -41,7 +41,7 @@ All strings in Sections 3–5 use the **In-game nod** column. Switching any entr
 - **Direct continuation of L8 (`Prior Contact`):** At the end of L8 (`storyFirstClear.level8`), Vrell promotes Zib to paid staff and ends with one warning: *"Don't touch the time dial."*
 - **The Basement B-4 & Krix hook:** Per `docs/GDD-6-story.md`, **Temporal Dispatch (Basement B-4)** runs on **Form 88-MPH** and was mothballed in **1985** after an *"expense-report paradox."* While Legal audits Krix after L8's Patent Valley debacle, Accounting unearths why Basement B-4 was really shut down in 1985 — and why Krix's OBELISK™ shell file had a second target bookmarked: **November 12, 1955, 10:04 PM**.
 - **Why Temporal Dispatch pulls off Grimsby to Crest Valley:** Normally Basement B-4 locks onto Grimsby (`GDD-7-eras.md`), which is why 1953 Mob Docks stays in Grimsby. This night, an **unlicensed 1.21-gigawatt power spike** rips the dial straight off Grimsby's coordinates and drags Zib's saucer to **Crest Valley, November 12, 1955, 10:00 PM**: a wild-haired human inventor has built a working time machine without filing Form 88-MPH, and Krix's lawyers are salivating to patent *human time travel* as prior art the second lightning hits the courthouse clock.
-- **Why the Bureau sends Zib:** Head Office cannot know Vrell broke the padlock on Basement B-4 *again*. Vrell dispatches newly-salaried Zib before dawn to quietly pull three sleeping/unconscious 1955 witnesses for a standard Temporal Audit & memory-dusting:
+- **Why the Bureau sends Zib:** Head Office cannot know Vrell broke the padlock on Basement B-4 *again*. Vrell dispatches newly-salaried Zib from **10:03:40 PM to 10:10:00 PM** (before the storm passes and the Temporal Dispatch pass expires) to quietly pull three sleeping/unconscious 1955 witnesses for a standard Temporal Audit & memory-dusting:
   1. **Doc** — nodded off on the clock-tower ledge waiting for the storm after tying off his high-voltage cable.
   2. **Buff Tanner** — knocked out cold by a single shockingly tidy punch in a booth at Lyle's Coffee Shop (with manure still drying on his boots).
   3. **Marvin Cherry** — locked unconscious in a car trunk behind Crest Valley High's *Enchantment Beneath the Waves* dance after Buff's cronies jumped him.
@@ -73,10 +73,10 @@ Written so it stays true whether the player caught **or** missed the time car on
 - **`collect`:** `Doc, Buff & Marvin`
 - **`re`:** `Work Order #0009 — Nov 12, 1955 (10:04)` *(39 chars)*
 - **`body`:** *(244 chars)*
-  > `Basement B-4 tripped a 1.21-gigawatt alarm in 1955—someone built a time machine without Form 88-MPH. Before dawn, grab Doc off the clock tower, knocked-out bully Buff from Lyle's Coffee Shop, and bandleader Marvin Cherry behind the school dance.`
-- **`joke`:** *(154 chars — contains `gull-wing time car`)*
-  > `A gull-wing time car is due at the clock tower at 10:04 sharp. Impound it before the lightning hits, or it vanishes in flames and leaves us the grid bill.`
-- **`signoff`:** `— Vrell. I told you not to touch the dial.` *(42 chars)*
+  > `Basement B-4 tripped a 1.21-gigawatt alarm in 1955. Someone built a time machine without Form 88-MPH. Grab Doc off the clock tower, Buff from Lyle's Coffee Shop and Marvin Cherry behind the school dance. Be out by 10:10, when the storm passes.`
+- **`joke`:** *(153 chars — contains `gull-wing time car`)*
+  > `A gull-wing time car is due at the clock tower at 10:04 sharp. Wait at the west turnout, then match its speed to impound it before the lightning hits.`
+- **`signoff`:** `— Vrell. I told you to leave the dial alone.` *(44 chars)*
 
 ### Français (`src/i18n/fr.ts` → `levels.level9`)
 - **`title`:** `Fin de quart à 22 h 04` *(22 chars)*
@@ -85,24 +85,24 @@ Written so it stays true whether the player caught **or** missed the time car on
 - **`human`:** `Doc, Buff et Marvin`
 - **`collect`:** `Doc, Buff et Marvin`
 - **`re`:** `Ordre n°0009 — 12 nov. 1955 (22 h 04)` *(37 chars)*
-- **`body`:** *(231 chars)*
-  > `Le sous-sol B-4 a bipé sur un pic de 2,21 gigowatts en 1955 : un humain voyage dans le temps sans Cerfa 88-MPH. Embarquez Doc sur l'horloge, la brute Buff K.O. au Café Lyle, et le musicien Marvin Cherry derrière le bal du lycée.`
-- **`joke`:** *(158 chars — contains `voiture temporelle`)*
-  > `Une voiture temporelle fonce vers l'horloge à 22 h 04 pile. Saisissez-la avant la foudre, sinon elle disparaît en flammes et la compta nous facture le réseau.`
+- **`body`:** *(237 chars)*
+  > `Le sous-sol B-4 a bipé sur un pic de 2,21 gigowatts en 1955 : un humain voyage dans le temps sans Cerfa 88-MPH. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, quand l'orage passe.`
+- **`joke`:** *(142 chars — contains `voiture temporelle`)*
+  > `Une voiture temporelle file vers l'horloge à 22 h 04 pile. Guettez-la à la sortie ouest, puis suivez son allure pour la saisir avant la foudre.`
 - **`signoff`:** `— Vrell. J'avais dit : pas touche au cadran.` *(44 chars)*
 
-### Performance Goals (`memo.deepGoals` + `memo.pickupGoal`)
-L9 reuses the standard 3 deep-shift star goals plus the town-pickup bonus row:
+### Performance Goals (`crestValley` + `memo.deepGoals[1]`)
+L9 replaces all sunrise/dawn wording with the 10:10 storm deadline and 10:04 time-car window:
 - **EN:**
-  - `Delivered all 3 — before sunrise ({time})`
+  - `Delivered all 3 — by 10:10`
   - `Ghost — never spotted, no failed jobs`
-  - `Night owl — {time} of night to spare`
-  - `Time car — bonus, grab it before 10:04` *(or standard `{star} — bonus, grab it on the way`)*
+  - `Night owl — {time} to spare`
+  - `Time car — bonus, before 10:04`
 - **FR:**
-  - `Les 3 livrés — avant l'aube ({time})`
+  - `Les 3 livrés — avant 22 h 10`
   - `Fantôme — jamais repéré, aucun échec`
   - `Oiseau de nuit — {time} de marge`
-  - `Voiture temporelle — bonus avant 22 h 04` *(ou standard `{star} — bonus en chemin`)*
+  - `Voiture temporelle — bonus avant 22 h 04`
 
 ### Bonus Loading Tip (optional `loading.tierTips.afterL8`)
 - **EN:** `'Tip: if a stainless car hits 88 mph in a thunderstorm, step aside. Our hull insurance stops at 85.'`
@@ -117,12 +117,13 @@ All lines ≤ 85 chars for crisp 1–2 line wrapping in the 340 px `ZibBubble`:
 
 | Trigger | English (`en.ts`) | Français (`fr.ts`) |
 | --- | --- | --- |
-| **`start9`** *(shift opener)* | 1. `"1955! Everything's chrome, hairspray, and giant thunderstorms. Don't step on a butterfly."`<br>2. `"November 12, 1955. Grab three witnesses—and watch out for that time car at 10:04!"` | 1. `"1955 ! Tout est chromé, laqué et sous l'orage. Surtout, n'écrase aucun papillon."`<br>2. `"12 novembre 1955. Trois témoins à prendre — et guette la voiture temporelle à 22 h 04 !"` |
-| **`timeCarWarn`** *(engine revving / staging before the run)* | 1. `"Hear that engine?! The time car's lining up on Main Street! Hurry!"`<br>2. `"Headlights at the end of the avenue—that's the gull-wing! Move, Zib!"` | 1. `"Ce bruit de moteur ?! La voiture temporelle s'aligne dans la rue ! Vite !"`<br>2. `"Des phares au bout de l'avenue : c'est la voiture papillon ! Fonce, Zib !"` |
-| **`timeCarLaunch`** *(accelerating toward 88 mph)* | 1. `"It's flooring it toward the power cable! Grab it before 88 mph!"`<br>2. `"Sparks off the wheels! Catch that thing before the clock hits 10:04!"` | 1. `"Elle fonce vers le câble électrique ! Chope-la avant les 88 miles à l'heure !"`<br>2. `"Des étincelles aux pneus ! Attrape-la avant que l'horloge passe à 22 h 04 !"` |
-| **`lightning`** *(10:04 lightning bolt hits the clock tower)* | 1. `"WHOA! 1.21 gigawatts right into the clock! My antennae are standing straight up!"`<br>2. `"10:04! Lightning nailed the tower—glad I'm made of rubber! Wait, AM I?"` | 1. `"OUAH ! 2,21 gigowatts en plein sur l'horloge ! J'ai les antennes au garde-à-vous !"`<br>2. `"22 h 04 ! La foudre sur le clocher — heureusement que je suis isolant ! Enfin, je crois."` |
-| **`timeCarMissed`** *(car connects and vanishes in twin fire trails)* | 1. `"IT VANISHED IN FIRE! Two burning skid marks and zero licence plate!"`<br>2. `"Gone! Straight into 1985! Vrell is going to make me file Form 88-MPH by hand!"` | 1. `"ELLE A DISPARU EN FLAMMES ! Deux traînées de feu et zéro plaque !"`<br>2. `"Volatilisée ! Direct en 1985 ! Vrell va me faire remplir le Cerfa 88-MPH à la main !"` |
-| **`timeCarCaught`** *(Zib beams up the car in time)* | 1. `"GOT IT! One stainless time car in the hold! Does this void its warranty?"`<br>2. `"Impounded at 87 mph! Ha! Take THAT, space-time continuum!"` | 1. `"CHOPÉE ! Une voiture temporelle en soute ! Ça annule la garantie ?"`<br>2. `"Saisie à 87 miles à l'heure ! Prends ÇA, le continuum espace-temps !"` |
+| **`start9`** *(shift opener)* | 1. `"1955! Where we're flying, we don't need roads—just the west turnout!"`<br>2. `"Nov 12, 1955! Three witnesses—and intercept that time car from the west turnout!"` | 1. `"Nom de Zeus, 1955 ! Là où on vole, pas besoin de route. File à l'ouest, Zib !"`<br>2. `"12 nov. 1955 ! Trois témoins — et coupe la route à la voiture par l'ouest !"` |
+| **`timeCarWarn`** *(engine revving / staging before the run)* | 1. `"Hear that engine? Take the west turnout and meet it up the road!"`<br>2. `"Headlights revving! Cut through the west turnout to intercept it!"` | 1. `"Tu entends ce moteur ? Coupe-lui la route par la sortie à l'ouest !"`<br>2. `"Les phares s'allument ! File par l'ouest pour lui couper la route !"` |
+| **`timeCarLaunch`** *(accelerating toward 88 mph)* | 1. `"It's flooring it! Match its speed before 10:04!"`<br>2. `"Sparks off the wheels! Match its pace before it hits 88!"` | 1. `"Elle fonce ! Cale-toi sur sa vitesse avant 22 h 04 !"`<br>2. `"Des étincelles ! Suis son allure avant les 88 miles à l'heure !"` |
+| **`lightning`** *(10:04 lightning bolt hits the clock tower)* | 1. `"1.21 gigawatts into the clock! My antennae are standing straight up!"`<br>2. `"10:04! Lightning nailed the tower—glad I'm rubber! Wait, AM I?"` | 1. `"2,21 gigowatts en plein sur l'horloge ! Antennes au garde-à-vous !"`<br>2. `"22 h 04 ! En plein clocher — heureusement que je suis isolant ! Enfin…"` |
+| **`timeCarMissed`** *(car connects and vanishes in twin fire trails)* | 1. `"Gone in twin flames! See you in 1985, I guess."`<br>2. `"88 mph and poof! Vrell's making me file Form 88-MPH by hand."` | 1. `"Volatilisée en flammes ! Rendez-vous en 1985, j'imagine."`<br>2. `"88 miles à l'heure et pouf ! Vrell va me coller le Cerfa 88-MPH."` |
+| **`timeCarCaught`** *(Zib beams up the car in time)* | 1. `"Impounded at 87 mph! Does this void its warranty?"`<br>2. `"Got it! One stainless time car in the hold—take THAT, continuum!"` | 1. `"Saisie à 87 miles à l'heure ! Ça annule la garantie ?"`<br>2. `"Chopée ! Une voiture temporelle en soute — prends ÇA, le continuum !"` |
+| **`stormClosing`** *(30 s before 10:10)* | `"Thirty seconds until the storm passes. After that, our pass expires!"` | `"Encore trente secondes d'orage. Après ça, notre laissez-passer expire !"` |
 
 ### 4.2 Specimen missed bubbles (`flight.missed`) & wake captions (`data`)
 
@@ -136,31 +137,31 @@ All lines ≤ 85 chars for crisp 1–2 line wrapping in the 340 px `ZibBubble`:
 
 | Slot | English (`en.ts`) | Français (`fr.ts`) |
 | --- | --- | --- |
-| **Time car collected** (`mapCollectibles.items.time_car.comment`) | `"You impounded a speeding time car mid-thunderstorm. Propulsion is stripping it for parts; Legal is pretending we never owned 1955."` | `"Vous avez saisi une voiture temporelle lancée en plein orage. La Propulsion la démonte déjà ; le juridique jure qu'on n'a jamais mis un pied en 1955."` |
-| **Time car missed** (`mapCollectibles.items.time_car.missedComment`) | `"You let a sports car outrun a saucer into 1985. Explains why it's parked behind Spin City with scorched tyres—and why I have a migraine."` | `"Une voiture de sport a semé une soucoupe jusqu'en 1985. Voilà pourquoi elle traîne derrière Spin City, pneus brûlés — et pourquoi j'ai une migraine."` |
-| **Shift clear — standard** (`deepComments.clocktower`) | 1. `"Doc, Buff, and Marvin logged before dawn, with {remaining} s left. The clock stopped at 10:04 right on time. History survives another week."`<br>2. `"Three 1955 specimens delivered. Buff blamed the saucer on a manure truck; Doc tried to patent our tractor beam in his sleep."` | 1. `"Doc, Buff et Marvin enregistrés avec {remaining} s de marge. L'horloge s'est figée à 22 h 04 pile. L'Histoire survit une semaine de plus."`<br>2. `"Trois spécimens de 1955 livrés. Buff accuse le camion de fumier ; Doc a tenté de breveter notre rayon tracteur en dormant."` |
-| **Shift clear — spotted** (`deepComments.clocktowerSpotted`) | `"Delivered, and spotted {spotted} times in 1955. Every teen at that dance now thinks aliens invented rock and roll. Well done."` | `"Livrés, et repéré {spotted} fois en 1955. Tout le bal du lycée croit désormais que les extraterrestres ont inventé le rock'n'roll. Bravo."` |
-| **Sunrise / time-up fail** (`sunriseMemos` addition or L9 fail) | 1. `"November 13th, sunrise. The clock's still stuck at 10:04, the diner's serving pancakes, and your Temporal Dispatch pass just expired."`<br>2. `"Dawn in 1955. Half the town is staring at flaming skid marks, and we don't even get a 1955 breakfast out of it."` | 1. `"13 novembre, lever du jour. L'horloge est figée sur 22 h 04, le café sert les pancakes et votre laissez-passer temporel vient d'expirer."`<br>2. `"L'aube en 1955. Toute la ville fixe des traces brûlées sur le bitume, et on n'a même pas droit au petit-déj d'époque."` |
+| **Time car collected** (`mapCollectibles.items.time_car.comment`) | `"You impounded a speeding time car mid-thunderstorm. Propulsion is stripping it for parts. Legal is pretending we never owned 1955."` | `"Vous avez saisi une voiture temporelle lancée en plein orage. La Propulsion la démonte déjà. Le juridique jure qu'on n'a jamais mis un pied en 1955."` |
+| **Time car missed** (`mapCollectibles.items.time_car.missedComment`) | `"You let a sports car outrun a saucer into 1985. That explains the scorched tyres behind Spin City. And my migraine."` | `"Une voiture de sport a semé une soucoupe jusqu'en 1985. Voilà d'où viennent les pneus brûlés derrière Spin City. Et ma migraine."` |
+| **Shift clear — standard** (`deepComments.clocktower`) | 1. `"Doc, Buff and Marvin logged with {remaining} s to spare. The clock stopped at 10:04 right on time."`<br>2. `"Buff blamed the saucer on a manure truck. Doc tried to patent our tractor beam in his sleep."` | 1. `"Doc, Buff et Marvin enregistrés avec {remaining} s de marge. L'horloge s'est figée à 22 h 04 pile."`<br>2. `"Buff accuse le camion de fumier. Doc a tenté de breveter notre rayon tracteur en dormant."` |
+| **Shift clear — spotted** (`deepComments.clocktowerSpotted`) | `"Delivered, and spotted {spotted} times in 1955. The whole dance thinks aliens invented rock and roll."` | `"Livrés, et repéré {spotted} fois en 1955. Tout le bal croit désormais que les extraterrestres ont inventé le rock'n'roll."` |
+| **Storm passes / 10:10 fail** (`deepComments.clocktowerExpired`) | 1. `"10:10. The storm passed, the town clock is stuck, and the Temporal Dispatch pass just expired."`<br>2. `"Storm's over. Your pass expired at 10:10. Zib, please return the saucer to the century you found it in."` | 1. `"22 h 10. L'orage est passé, l'horloge est bloquée et le laissez-passer temporel vient d'expirer."`<br>2. `"L'orage est fini. Votre laissez-passer a expiré à 22 h 10. Zib, ramenez la soucoupe à son siècle d'origine."` |
 | **First clear** (`storyFirstClear.level9`) | `"Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Put the dial back, Zib."` | `"Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Remettez le cadran à zéro, Zib."` |
 
 ### 4.4 Sleep-talk mumbles (`data`, ≤ 40 chars each)
 
 | Sleeper | English (`en.ts`) | Français (`fr.ts`) |
 | --- | --- | --- |
-| **Doc** *(clock-tower ledge)* | 1. `'One point two one… snoozewatts…'`<br>2. `"Where we're napping, no pillows…"`<br>3. `'Great… somebody check the clock…'` | 1. `'Deux virgule vingt-et-un… gigasiestes…'`<br>2. `'Là où on dort, pas besoin de route…'`<br>3. `"Nom de… vérifiez l'horloge…"` |
-| **Buff Tanner** *(Lyle's booth)* | 1. `'Knock, knock… anybody dreaming?'`<br>2. `'Make like a pillow and… fold…'`<br>3. `'Ugh… not the manure truck again…'` | 1. `'Allô ? Y a quelqu’un dans ce rêve ?'`<br>2. `'Fais comme un oreiller et… plie-toi…'`<br>3. `'Pouah… pas encore le camion de fumier…'` |
+| **Doc** *(clock-tower ledge)* | 1. `'One point two one… snoozewatts…'`<br>2. `"Where we're napping, no pillows…"`<br>3. `'Great… somebody check the clock…'` | 1. `'Deux virgule vingt-et-un… gigasiestes…'`<br>2. `"Là où on dort, pas besoin d'oreiller…"`<br>3. `"Nom de… vérifiez l'horloge…"` |
+| **Buff Tanner** *(Lyle's booth)* | 1. `'Knock, knock… anybody dreaming?'`<br>2. `'Make like a pillow and… fold…'`<br>3. `'Ugh… not the manure truck again…'` | 1. `"Allô ? Y a quelqu'un au bout du rêve ?"`<br>2. `'Fais comme un oreiller et… plie-toi…'`<br>3. `'Pouah… pas encore le camion de fumier…'` |
 | **Marvin Cherry** *(car trunk behind dance)* | 1. `'Chuck? Listen to this… snore…'`<br>2. `"They're not ready for this nap yet…"`<br>3. `'Play it in B-flat, boys… zzz…'` | 1. `'Chuck ? Écoute ce… ronflement…'`<br>2. `'Ils sont pas prêts pour cette sieste…'`<br>3. `'En si bémol, les gars… zzz…'` |
 
-### 4.5 Entry Route Names & Tags (6 routes — `routes`)
+### 4.5 Entry Route Names & Tags (6 routes — `routes`, reconciled with GDD-10)
 
-| `RoomId` | Specimen & building | English (`{ route, difficulty }`) | Français (`{ route, difficulty }`) | Interior flavour (for rooms designer) |
+| `RoomId` | Specimen & building | English (`{ route, difficulty }`) | Français (`{ route, difficulty }`) | Souvenir (`items` key) |
 | --- | --- | --- | --- | --- |
-| **`doc_clockface`** | Doc · Courthouse Clock Tower | `{ route: 'Clock face', difficulty: 'gears & cable' }` | `{ route: 'Cadran', difficulty: 'engrenages et câble' }` | Fast, dramatic: past the giant 10:04 clock gears, swinging pendulum, and humming storm cable. |
-| **`doc_belfry`** | Doc · Courthouse Clock Tower | `{ route: 'Belfry stairs', difficulty: 'bell & draft' }` | `{ route: 'Escalier du beffroi', difficulty: "cloche et courant d'air" }` | Longer climb through timber rafters, clockwork weights, and a gusty belfry shutter. |
-| **`buff_skylight`** | Buff · Lyle's Coffee Shop | `{ route: 'Diner skylight', difficulty: 'jukebox & fans' }` | `{ route: 'Verrière du café', difficulty: 'jukebox et ventilos' }` | Short drop above the chrome counter, spinning ceiling fans, and bass-rattling jukebox. |
-| **`buff_alley`** | Buff · Lyle's Coffee Shop | `{ route: 'Alley door', difficulty: 'manure & crates' }` | `{ route: "Porte de l'allée", difficulty: 'fumier et caisses' }` | Longer back-kitchen exit past swinging kitchen doors, malt trolley, and manure-truck alley. |
-| **`marvin_stage`** | Marvin · Crest Valley High Dance | `{ route: 'Gym roof vent', difficulty: 'band & balloons' }` | `{ route: 'Aération du gymnase', difficulty: 'orchestre et ballons' }` | Over the *Enchantment Beneath the Waves* stage, crepe streamers, and speaker amps to the trunk. |
-| **`marvin_lot`** | Marvin · Crest Valley High Dance | `{ route: 'Back-lot garage', difficulty: 'headlights & trunks' }` | `{ route: 'Garage arrière', difficulty: 'phares et coffres' }` | Longer route through the rear lot shed past blinking car headlights and a snoozing chaperone. |
+| **`inventor_balcony`** | Doc · Courthouse Clock Tower | `{ route: 'Clock balcony', difficulty: 'gears & cable' }` | `{ route: "Balcon de l'horloge", difficulty: 'engrenages et câble' }` | `spare flex capacitor` |
+| **`inventor_service`** | Doc · Courthouse Clock Tower | `{ route: 'Service door', difficulty: 'bell & draft' }` | `{ route: 'Porte de service', difficulty: "cloche et courant d'air" }` | `yellow hazmat suit` |
+| **`bully_transom`** | Buff · Lyle's Coffee Shop | `{ route: 'Awning transom', difficulty: 'jukebox & fans' }` | `{ route: "Imposte de l'auvent", difficulty: 'jukebox et ventilos' }` | `retro skateboard` |
+| **`bully_kitchen`** | Buff · Lyle's Coffee Shop | `{ route: 'Kitchen door', difficulty: 'manure & crates' }` | `{ route: 'Porte de la cuisine', difficulty: 'fumier et caisses' }` | `clock-tower flyer` |
+| **`band_hatch`** | Marvin · Crest Valley High Dance | `{ route: 'Bandstand hatch', difficulty: 'band & balloons' }` | `{ route: "Trappe de l'estrade", difficulty: 'orchestre et ballons' }` | `cherry electric guitar` |
+| **`band_canopy`** | Marvin · Crest Valley High Dance | `{ route: 'Loading canopy', difficulty: 'headlights & trunks' }` | `{ route: 'Auvent de livraison', difficulty: 'phares et coffres' }` | `red puffy vest` |
 
 ### 4.6 Cover Story Causes & 1955 Tabloid Headlines (`reportExtras`)
 
@@ -169,14 +170,14 @@ All lines ≤ 85 chars for crisp 1–2 line wrapping in the 340 px `ZibBubble`:
   - **FR:** `['la foudre en boule sur le tribunal', 'un reflet sur un pare-chocs chromé', 'un abus de milk-shakes au chocolat']`
 
 - **1955 Tabloid headlines (`reportExtras.headlines.level9`):**
-  - *(Optional period masthead override if report supports per-level masthead: **`THE CREST VALLEY TELEGRAPH`** / **`LE TÉLÉGRAPHE DE CREST VALLEY`** — otherwise works cleanly under `THE GRIMSBY GAZETTE` / `LA GAZETTE DE GRIMSBY` as a "Historical Archive Clipping"!)*
+  - *(Shown under `THE GRIMSBY GAZETTE` / `LA GAZETTE DE GRIMSBY` with the `1955 ARCHIVE` / `ARCHIVES DE 1955` treatment per GDD-10.)*
   - **EN:**
     1. `'LIGHTNING STOPS COURTHOUSE CLOCK AT 10:04 — FLYING HUBCAP BLAMED'`
-    2. `'FLAMING TYRE TRACKS ON MAIN ST; LOCAL BULLY STILL OUT COLD IN BOOTH'`
-    3. `"PROM BANDLEADER VANISHES MID-RIFF — TEENS CALL SOUND 'OUT OF THIS WORLD'"`
+    2. `'CHROME HUBCAP OVER MAIN ST — LOCAL BULLY STILL OUT COLD IN BOOTH'`
+    3. `"PROM BANDLEADER VANISHES MID-RIFF — SOUND CALLED 'OUT OF THIS WORLD'"`
   - **FR:**
     1. `"LA FOUDRE FIGE L'HORLOGE À 22 H 04 — UN ENJOLIVEUR VOLANT ACCUSÉ"`
-    2. `'TRACES ENFLAMMÉES GRANDE RUE ; LA BRUTE LOCALE TOUJOURS K.O. AU CAFÉ'`
+    2. `'ENJOLIVEUR CHROMÉ GRANDE RUE — LA BRUTE LOCALE TOUJOURS K.O. AU CAFÉ'`
     3. `"CHEF D'ORCHESTRE ENLEVÉ EN PLEIN SOLO — UN SON « VENU D'AILLEURS »"`
 
 ---
@@ -192,12 +193,12 @@ All lines ≤ 85 chars for crisp 1–2 line wrapping in the 340 px `ZibBubble`:
 
 | Route (`RoomId`) | Souvenir ID (`items` key) | Art key | Exact-name swap (if chosen) |
 | --- | --- | --- | --- |
-| `doc_clockface` | `spare flex capacitor` | `room/flex_capacitor` | `spare flux capacitor` |
-| `doc_belfry` | `yellow hazmat suit` | `room/hazmat_suit` | *(unchanged)* |
-| `buff_skylight` | `red puffy vest` | `room/puffy_vest` | *(unchanged)* |
-| `buff_alley` | `retro skateboard` *(purple-and-yellow)* | `room/retro_skateboard` | *(unchanged)* |
-| `marvin_stage` | `cherry electric guitar` | `room/cherry_guitar` | *(unchanged)* |
-| `marvin_lot` | `clock-tower flyer` | `room/clock_flyer` | *(unchanged)* |
+| `inventor_balcony` | `spare flex capacitor` | `room/flex_capacitor` | `spare flux capacitor` |
+| `inventor_service` | `yellow hazmat suit` | `room/hazmat_suit` | *(unchanged)* |
+| `bully_transom` | `retro skateboard` *(purple-and-yellow)* | `room/retro_skateboard` | *(unchanged)* |
+| `bully_kitchen` | `clock-tower flyer` | `room/clock_flyer` | *(unchanged)* |
+| `band_hatch` | `cherry electric guitar` | `room/cherry_guitar` | *(unchanged)* |
+| `band_canopy` | `red puffy vest` | `room/puffy_vest` | *(unchanged)* |
 
 *(Backup swap option if a route needs a pure clockwork prop instead of one of the above: **`lightning-struck clock hand`** / `room/clock_hand` — EN plural `{ one: '{n} scorched clock hand', other: '{n} scorched clock hands' }`, FR `{ one: '{n} aiguille foudroyée', other: '{n} aiguilles foudroyées' }`.)*
 
@@ -248,20 +249,20 @@ All lines ≤ 85 chars for crisp 1–2 line wrapping in the 340 px `ZibBubble`:
   1. `"Vous avez laissé la combinaison jaune dans l'escalier. Un fermier de 1955 va encore croire que nous sommes des bananes géantes."`
   2. `"Pas de combinaison. Dommage, elle était plus propre que nos uniformes officiels."`
 
-#### 3. `red puffy vest` *(Buff · Diner skylight)*
+#### 3. `red puffy vest` *(Marvin · Loading canopy)*
 - **EN `got`:**
-  1. `"A red quilted vest from Lyle's coat hook. Everyone in 1955 kept asking why the kid jumped ship in a life preserver. Honestly, fair question."`
+  1. `"A red quilted vest from a crate at the dance. Everyone in 1955 kept asking why the kid jumped ship in a life preserver. Honestly, fair question."`
   2. `"Red puffy vest, logged under 'buoyancy aids, suspiciously heavy'. Zib is wearing it over three sweaters and sweating."`
   3. `"One 1985 puffy vest, stranded in 1955. Temporal fashion crime—and we don't even have a form for that."`
 - **EN `missed`:**
-  1. `"You left the red puffy vest at the diner. Lyle will hang it by the door in case the Coast Guard stops by for a malt."`
+  1. `"You left the red puffy vest behind the gym. The chaperone will keep it handy in case the Coast Guard crashes the prom."`
   2. `"No puffy vest. Fine. Zib already has enough questionable jackets in the hold."`
 - **FR `got`:**
-  1. `"Une doudoune rouge sans manches prise chez Lyle. En 1955, tout le monde demande pourquoi le gamin porte un gilet de sauvetage. Bonne question."`
-  2. `"Doudoune rouge classée en « bouée terrestre, pas le pied à ranger ». Zib la porte par-dessus trois pulls et fond sur place."`
+  1. `"Une doudoune rouge sans manches prise derrière le gymnase. En 1955, tout le monde demande pourquoi le gamin porte un gilet de sauvetage. Bonne question."`
+  2. `"Doudoune rouge classée en « bouée suspecte, encombrante ». Zib la porte sur trois pulls et fond sur place."`
   3. `"Une doudoune de 1985 égarée en 1955. Crime de mode temporel — et on n'a même pas de Cerfa pour ça."`
 - **FR `missed`:**
-  1. `"Vous avez laissé la doudoune rouge au café. Lyle l'accrochera à l'entrée au cas où les garde-côtes passent prendre un milk-shake."`
+  1. `"Vous avez laissé la doudoune rouge derrière le gymnase. Le chaperon la garde au cas où les garde-côtes débarquent au bal."`
   2. `"Pas de doudoune rouge. Tant mieux : Zib a déjà bien assez de vestes douteuses en soute."`
 
 #### 4. `retro skateboard` *(Buff · Alley door — purple-and-yellow art)*
@@ -352,8 +353,8 @@ Distinct from Vrell's shift-report quips; dry Bureau catalogue voice, sized for 
 | **`mapCollectibles.items.time_car.name`** | `'Time car'` | `'Voiture temporelle'` |
 | **`mapCollectibles.items.time_car.memoHint`** | `'gull-wing time car'` | `'voiture temporelle'` |
 | **`trophies.town.statuses.time_car`** *(Bureau status line)* | `'Impounded · Capped at 87 mph'` | `'En fourrière · Bridée à 87 mph'` |
-| **`trophies.town.descriptions.time_car`** *(Town-room catalogue note)* | `'Brushed stainless coupe with gull-wing doors, scorched tyres, and zero Bureau permits. Propulsion refuses to let Zib test what happens at 88.'` | `'Coupé en inox brossé à portes papillon, pneus roussis et zéro permis du Bureau. La Propulsion interdit à Zib de tester ce qui arrive à 88.'` |
-| **`trophies.town.hints.time_car`** *(Unfound vague hint)* | `'Check the shift memo: an unlicensed gull-wing coupe is racing the clock tower before 10:04.'` | `'Relisez la note : une voiture sans permis fait la course avec l’horloge avant 22 h 04.'` |
+| **`trophies.town.descriptions.time_car`** *(Town-room catalogue note)* | `'Brushed stainless coupe with gull-wing doors, scorched tyres and zero permits. Propulsion refuses to let Zib test what happens at 88.'` | `'Coupé en inox brossé à portes papillon, pneus roussis et zéro permis du Bureau. La Propulsion interdit à Zib de tester ce qui arrive à 88.'` |
+| **`trophies.town.hints.time_car`** *(Unfound vague hint)* | `'Check the shift memo for an unlicensed gull-wing coupe racing the clock tower before 10:04.'` | `"Relisez la note : un coupé papillon non déclaré fait la course avec l'horloge avant 22 h 04."` |
 
 ---
 

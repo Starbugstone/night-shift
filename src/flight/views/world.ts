@@ -60,21 +60,32 @@ export class CameraView {
   x = 0;
   y = 0;
 
-  sync(x: number, y: number, sx: number, sy: number, shake: number, lock: number, t: number, rm: boolean): void {
+  sync(x: number, y: number, sx: number, sy: number, shake: number, lock: number, t: number, rm: boolean, revealScale = 1): void {
     const px = textureScale();
     this.x = Math.round(x * px) / px;
     this.y = Math.round(y * px) / px;
     const shx = rm ? 0 : Math.sin(t * 80) * 7 * shake;
     const shy = rm ? 0 : Math.cos(t * 67) * 5 * shake;
-    const z = rm ? 1 : 1 + 0.24 * easeInCubic(lock);
+    // The reveal scales around the saucer, leaving its screen position and steering origin fixed.
+    const z = rm ? 1 : revealScale * (1 + 0.24 * easeInCubic(lock));
     this.world.scale.set(z);
     this.world.position.set(sx - this.x - z * (sx - shx), sy - this.y - z * (sy - shy));
   }
 
   sees(x: number, y: number, margin: number): boolean {
+    const scale = this.world.scale.x;
+    if (scale < 1) {
+      const left = -this.world.x / scale;
+      const top = -this.world.y / scale;
+      return x > left - margin && x < left + VIEW_W / scale + margin &&
+        y > top - margin && y < top + VIEW_H / scale + margin;
+    }
     return x > this.x - margin && x < this.x + VIEW_W + margin &&
       y > this.y - margin && y < this.y + VIEW_H + margin;
   }
+
+  screenX(x: number): number { return this.world.x + x * this.world.scale.x; }
+  screenY(y: number): number { return this.world.y + y * this.world.scale.y; }
 }
 
 const CHUNK = 540;

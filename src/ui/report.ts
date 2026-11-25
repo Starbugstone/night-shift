@@ -662,7 +662,8 @@ function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<
     new Graphics().rect(mx - 100, my - 16, 200, 32).fill('#c8323f'),
     new Label({ size: 17, color: '#ffffff', weight: 900 }).set(tr().reportExtras.masthead, mx, my, 186),
   );
-  if (archive) root.addChild(new Label({ size: 10, weight: 900, color: '#63462f' }).set(tr().crestValley.archive, mx, clip.y + clip.h - 9, 144));
+  // the 1955 stamp sits right of the masthead, clear of the two headline lines below it
+  if (archive) root.addChild(new Label({ size: 11, weight: 900, color: '#63462f' }).set(tr().crestValley.archive, (mx + 100 + clip.x + clip.w) / 2, my, clip.x + clip.w - mx - 112));
   root.addChild(fittedBlock(headline, '#1d1631', 900, false, 'center'));
   return root;
 }

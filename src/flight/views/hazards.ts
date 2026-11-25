@@ -274,9 +274,15 @@ export class HazardViews {
       }
       case 'camera': {
         const body = d.skin ? new Container() : cameraHead(assets, d.x, d.y, d.mount);
+        let turn = d.mount === 'radar' ? 0 : Math.PI / 2;
         if (d.skin) {
           body.position.set(d.x, d.y);
-          const fixture = artSprite(assets, 'flight/' + d.skin) ?? new Graphics()
+          const art = artSprite(assets, 'flight/' + d.skin);
+          if (art && d.skin === 'marshal55_torch') {
+            art.anchor.x = 27 / 32;
+            turn = 0;
+          }
+          const fixture = art ?? new Graphics()
             .circle(0, 3, 15).fill('#625163').stroke({ color: C.ink, width: 3 })
             .roundRect(-13, -15, 26, 18, 4).fill('#8e7772').stroke({ color: C.ink, width: 3 })
             .roundRect(-11, -17, 22, 7, 3).fill('#ffe5ac');
@@ -289,7 +295,7 @@ export class HazardViews {
         return (cam, t, rm, hot) => {
           const a = f.a[i]!;
           body.visible = cam.sees(d.x, d.y, 60);
-          head.rotation = a + (d.mount === 'radar' ? 0 : Math.PI / 2);
+          head.rotation = a + turn;
           camera.root.visible = cam.sees(d.x, d.y, d.range + 20);
           if (camera.root.visible) camera.sync(a, hot, this.lead[i]!, t, i, rm);
         };

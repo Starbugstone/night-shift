@@ -249,10 +249,12 @@ export class DeepFlightScene implements Scene {
       audio.sfx('sunrise', 0.6);
     }
     this.wasDawn = warning;
-    if (car && this.state === 'fly') {
+    if (car) {
       if (beforeCarTime < TIME_CAR.strike && car.elapsed >= TIME_CAR.strike) {
-        this.say(car.phase === 'missed' ? 'timeCarMissed' : 'lightning', true, true);
-      } else if (car.visible) {
+        audio.sfx('stamp', 1.1);
+        audio.sfx('crash', 0.36);
+        if (this.state === 'fly') this.say(car.phase === 'missed' ? 'timeCarMissed' : 'lightning', true, true);
+      } else if (car.visible && this.state === 'fly') {
         if (beforeCarTime < TIME_CAR.launch && car.phase === 'rolling') this.say('timeCarLaunch', true);
         else if (beforeCarTime < 9 && car.elapsed >= 9 && this.zibT <= 0) this.say('timeCarWarn', true);
       }

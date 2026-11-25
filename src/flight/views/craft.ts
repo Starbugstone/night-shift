@@ -397,6 +397,10 @@ export class EntryRingView {
     this.pill.position.set(x + camX - this.entry.x, y + 20 + camY - this.entry.y);
   }
 
+  showPill(visible: boolean): void {
+    this.pill.visible = visible;
+  }
+
 
 }
 

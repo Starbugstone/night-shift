@@ -56,6 +56,8 @@ export class SpottedPhoto {
   private py = PH / 2;
   private lastCause: SpotCause | null = null;
   private lastClock = '';
+  /** v4 L9 1955: the shift is in the evening, so the stamp reads PM. */
+  pm = false;
 
   constructor() {
     this.grade.desaturate();
@@ -151,7 +153,7 @@ export class SpottedPhoto {
     }
     if (changed || clock !== this.lastClock) {
       this.lastClock = clock;
-      this.lensClock.set(fmt(tr().flight.photo.clock, { clock }), PW - (cause === 'window' ? 108 : 12), 20);
+      this.lensClock.set(fmt(this.pm ? tr().flight.photo.clockPm : tr().flight.photo.clock, { clock }), PW - (cause === 'window' ? 108 : 12), 20);
     }
     this.rec.visible = (rm || Math.floor(t * 2) % 2 === 0) &&
       (cause === 'camera' || cause === 'police' || cause === 'patrol' || cause === 'traffic');

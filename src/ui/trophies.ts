@@ -19,6 +19,7 @@ import { NightSky } from './views/backdrop';
 import { ButtonView } from './views/button';
 import { highlightedPanel } from './views/menu-decor';
 import {
+  clockFlyerDetailTexture,
   createTownPickupFigure,
   fieldFindBadgeTexture,
   fitArtSize,
@@ -1018,10 +1019,12 @@ class DetailModalView {
     this.locLabel.set(`#0${slot.levelNum} · ${lvText.location}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
 
     // Exhibit art (reusing cached Texture — zero display-object allocations)
-    const fit = fitArtSize(slot.artW, slot.artH, 168, 94, 3.0);
-    const tex = found
-      ? trophyArtTexture(this.assets, slot.artKey, fit.w, fit.h)
-      : trophySilhouetteTexture(this.assets, slot.artKey, fit.w, fit.h);
+    const clockFlyer = found && slot.artKey === 'room/clock_flyer';
+    const fit = fitArtSize(slot.artW, slot.artH, 168, clockFlyer ? 122 : 94, 3.0);
+    const tex = !found
+      ? trophySilhouetteTexture(this.assets, slot.artKey, fit.w, fit.h)
+      : clockFlyer ? clockFlyerDetailTexture(this.assets, fit.w, fit.h)
+        : trophyArtTexture(this.assets, slot.artKey, fit.w, fit.h);
     this.artSprite.texture = tex;
     this.artSprite.width = fit.w;
     this.artSprite.height = fit.h;
@@ -1118,7 +1121,7 @@ class DetailModalView {
     this.row1Key.set(townStr.foundIn, leftX, 448, 120);
     this.row1Val.restyle(PROV_VAL).set(`#0${slot.levelNum} · ${lvText.location}`, rightX, 448, 286);
     this.row2Key.set(strings.statusLabel, leftX, 488, 120);
-    this.row2Val.restyle(PROV_VAL_WARN).set(found ? townStatus(slot.id) : townStr.stillInTown, rightX, 488, 286);
+    this.row2Val.restyle(PROV_VAL_WARN).set(found ? townStatus(slot.id) : slot.id === 'time_car' ? townStr.stillRacing : townStr.stillInTown, rightX, 488, 286);
     this.row3Key.visible = false;
     this.row3Val.visible = false;
   }

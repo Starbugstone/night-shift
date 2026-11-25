@@ -108,8 +108,9 @@ export function placePill(obs: readonly Box[], n: number, a: PillAsk, out: { x: 
  * is on screen below the top bar and misses `obs[0..n)` and the pills kept before them stay there; the rest then go where
  * `placePill` finds room round all of those and each other. `obs` needs `count` spare boxes after
  * `n` (they are overwritten). Writes each pill's top-left corner into `outs[i]`; allocates nothing.
+ * With `hideBlocked`, a fallback that still overlaps is flagged by `moved[i] === 2`.
  */
-export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array): void {
+export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array, hideBlocked = false): void {
   for (let i = 0; i < count; i++) {
     const a = asks[i]!;
     const o = outs[i]!;
@@ -123,6 +124,10 @@ export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], coun
     const a = asks[i]!;
     const o = outs[i]!;
     placePill(obs, n, a, o);
+    if (hideBlocked && (o.y < a.top || o.y + a.h > VIEW_H - MARGIN || !fits(obs, n, o.x, o.y, a.w, a.h))) {
+      moved[i] = 2;
+      continue;
+    }
     n = keep(obs, n, o.x, o.y, a);
   }
 }

@@ -374,6 +374,7 @@ export class DeepFlightView implements SceneView {
     world.addChild(this.groundProps.root, this.ambient.ground, this.eggs.ground, this.shadows.root, this.props.root); // v4 easter eggs: streaks
     for (const target of this.targets) world.addChild(target.root);
     if (this.crestValley) {
+      this.camera.root.addChildAt(this.crestValley.strike.sky, 0);
       world.addChildAt(this.crestValley.ground, 2);
       world.addChild(this.crestValley.scenery);
     }
@@ -383,7 +384,7 @@ export class DeepFlightView implements SceneView {
     this.upperWorld.addChild(this.ambient.lights, this.saucer.groundGlow, this.ambient.critters, this.hazards.detectors, this.hazards.sky);
     for (const ring of this.rings) this.upperWorld.addChild(ring.root);
     if (this.collectible) this.upperWorld.addChild(this.collectible.root);
-    if (this.crestValley) this.upperWorld.addChild(this.crestValley.car.root);
+    if (this.crestValley) this.upperWorld.addChild(this.crestValley.car.root, this.crestValley.strike.world);
     // speech bubbles above every map object (houses, dogs, critters, rings), under the saucer
     const bubbles = new Container();
     bubbles.label = FLIGHT_BUBBLES;
@@ -391,7 +392,7 @@ export class DeepFlightView implements SceneView {
     bubbles.addChild(this.hazards.bubbles);
     if (this.collectible) bubbles.addChild(this.collectible.bubbles);
     this.upperWorld.addChild(bubbles);
-    this.clear = Array.from({ length: this.rings.length * 2 + 6 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
+    this.clear = Array.from({ length: this.rings.length * 2 + 7 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
     this.moved = new Uint8Array(this.rings.length);
     this.pillOf = new Uint8Array(this.rings.length);
     this.asks = this.rings.map(() => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
@@ -401,6 +402,7 @@ export class DeepFlightView implements SceneView {
     this.tints.dawnDecor.addChild(this.dawn.root);
     this.hud = new DeepFlightHud(s);
     this.spotted = new DeepSpottedView(assets);
+    this.spotted.photo.pm = s.level.id === 'level9';
     this.root.addChild(this.camera.root, this.tints.root);
     if (this.crestValley) this.root.addChild(this.crestValley.weather);
     this.root.addChild(this.hud.root);
@@ -421,7 +423,11 @@ export class DeepFlightView implements SceneView {
     // A pickup holds its lifted pose (static under reduced motion) for the whole gameplay lock: the
     // ape is only collected at LOCK_ANIM, so ending the visual earlier left the saucer looking stuck.
     const lock = locking ? Math.min(1, s.st / (rm ? 0.5 : LOCK_ANIM)) : 0;
-    cam.sync(sim.camX, sim.camY, saucer.x, saucer.y, s.shake, lock, t, rm);
+    const strike = this.crestValley?.strike;
+    const reveal = strike && !rm && s.state === 'fly' && sim.lock.fraction === 0
+      ? strike.revealScale(sim.camX, sim.camY, saucer.x, saucer.y) : 1;
+    if (strike) strike.sky.visible = reveal < 1;
+    cam.sync(sim.camX, sim.camY, saucer.x, saucer.y, s.shake, lock, t, rm, reveal);
     this.tints.placeWorldWash(cam.world);
     this.ground.sync(cam);
     this.ship?.sync(cam, t, rm);
@@ -430,7 +436,7 @@ export class DeepFlightView implements SceneView {
     this.props.sync(cam);
     this.eggs.sync(cam, t, rm); // v4 easter eggs
     this.collectible?.sync(cam, t, rm, saucer.x, saucer.y);
-    this.crestValley?.sync(cam, rm, s.collectibleToastT);
+    this.crestValley?.sync(cam, t, rm, s.collectibleToastT);
     this.pickupToast?.sync(s.collectibleToastT, rm);
     this.shadows.sync(cam, dawn);
     for (let i = 0; i < this.targets.length; i++) this.targets[i]!.sync(cam, sim.delivered[i]!, i, t, rm);
@@ -441,6 +447,8 @@ export class DeepFlightView implements SceneView {
     }
     this.hazards.sync(cam, t, rm);
     // v4 council: route pills keep clear of the HUD boxes and of every entry ring on screen
+    const quietPills = !!strike && strike.age < 1.12;
+    const striking = !!strike && strike.age >= -0.12 && strike.age < 0.75;
     const avoid = this.hud.avoid;
     let n = avoid.length;
     for (let i = 0; i < n; i++) {
@@ -458,6 +466,12 @@ export class DeepFlightView implements SceneView {
       b.y = this.crestValley.car.root.y - cam.y - 88;
       b.w = 162;
       b.h = 209;
+    }
+    if (quietPills) {
+      const b = this.clear[n++]!;
+      b.x = saucer.x - cam.x - FUSE_R - 8;
+      b.y = saucer.y - cam.y - FUSE_R - 8;
+      b.w = b.h = (FUSE_R + 8) * 2;
     }
     if (this.pickupToast && s.collectibleToastT > 0) {
       const b = this.clear[n++]!;
@@ -486,13 +500,21 @@ export class DeepFlightView implements SceneView {
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       if (ring.root.visible && ring instanceof EntryRingView) {
+        const p = sim.rings[i]!;
+        const nearby = sim.lock.ring === i || sim.lockedRing === i ||
+          (!striking && Math.hypot(p.x - saucer.x, p.y - saucer.y) < 176);
+        if (quietPills && (!nearby || reveal < 1)) {
+          ring.showPill(false);
+          continue;
+        }
         ring.ask(cam.x, cam.y, this.asks[count]!);
         this.pillOf[count++] = i;
       }
     }
-    placePills(this.clear, n, this.asks, count, this.spots, this.moved);
+    placePills(this.clear, n, this.asks, count, this.spots, this.moved, quietPills);
     for (let k = 0; k < count; k++) {
       const ring = this.rings[this.pillOf[k]!] as EntryRingView;
+      ring.showPill(this.moved[k] !== 2);
       ring.putPill(this.spots[k]!.x, this.spots[k]!.y, cam.x, cam.y);
     }
     this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0); // v4 UFO pilot

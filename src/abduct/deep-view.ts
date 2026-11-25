@@ -21,6 +21,7 @@ import { TurnButtonsView, TurnTell } from './turn-draw';
 import { WetView } from './wet-view';
 import { ItemSparkle } from './views/item-sparkle'; // v4 items
 import { BuildingView, DeepNight, prop } from './views/building';
+import { CrestValleyRoomDecor } from './views/crest-valley';
 import { DeliveryView, ExitChevrons, FuseRing, Reticle, SnoozeView, SnoreView, SpeechBubble, WakeBurst, type AbductViewInput } from './views/effects';
 import { ALERT_RGB, FailureView } from './views/failure';
 import { hazardView } from './views/hazards';
@@ -37,7 +38,7 @@ export const DEEP_HUD_WARNING_SLOT = { x: 230, y: 831, w: 296, h: 45 } as const;
  * (src/ui/deep-abduct.ts): how close sunrise is (0..1) and how many specimens are already
  * aboard (-1 = not on a shift, no counter).
  */
-export const deepShift = { dawn: 0, delivered: -1 };
+export const deepShift = { dawn: 0, delivered: -1, elapsed: undefined as number | undefined };
 
 function meets(opening: Opening, room: InteriorRoom): boolean {
   if (opening.axis === 'vertical') {
@@ -352,6 +353,7 @@ export class DeepAbductView implements SceneView {
   private readonly paperwork?: ProbePaperwork;
   private readonly night: DeepNight;
   private readonly building: BuildingView;
+  private readonly crestValley?: CrestValleyRoomDecor;
   private readonly exit: DeepExit;
   private readonly swell: SwellView;
   private readonly hazards: NonNullable<ReturnType<typeof hazardView>>[] = [];
@@ -404,6 +406,7 @@ export class DeepAbductView implements SceneView {
     if (probes) this.paperwork = new ProbePaperwork(probes, assets, sim.room.exitZone);
     this.night = new DeepNight(building.bounds.y + building.bounds.h - 14);
     this.building = new BuildingView(building, hazards, sim.room.exit, assets);
+    if (sim.room.human === 'doc' || sim.room.human === 'marvin') this.crestValley = new CrestValleyRoomDecor(assets, sim.room);
     this.exit = new DeepExit(sim, ctx, this.paperwork);
     this.swell = new SwellView(building, assets);
     this.snore = new SnoreView(ctx, true);
@@ -415,6 +418,7 @@ export class DeepAbductView implements SceneView {
 
     const world = this.world;
     world.addChild(this.building.root, this.exit.root);
+    if (this.crestValley) world.addChild(this.crestValley.back);
     for (let i = 0; i < hazards.length; i++) {
       const view = hazardView(building, hazards[i]!, assets, i);
       if (view) {
@@ -426,7 +430,9 @@ export class DeepAbductView implements SceneView {
     for (const view of this.sleepers) world.addChild(view.root);
     world.addChild(this.beam.root);
     if (this.wet) world.addChild(this.wet.back);
-    world.addChild(this.sparkle.root, this.item, this.subject, this.snore.root, this.twitch, this.speech.root, this.bang.root);
+    world.addChild(this.sparkle.root, this.item, this.subject);
+    if (this.crestValley) world.addChild(this.crestValley.front);
+    world.addChild(this.snore.root, this.twitch, this.speech.root, this.bang.root);
     if (this.paperwork) world.addChild(this.paperwork.world);
     if (this.wet) world.addChild(this.wet.front);
     world.addChild(this.turn.root, this.reticle.root, this.exposure.root, this.delivery.world, this.particles, this.popup.root, this.snooze.root);
@@ -456,6 +462,7 @@ export class DeepAbductView implements SceneView {
     this.world.position.set(-cx + Math.sin(t * 94) * shake * 4, -cy + Math.cos(t * 116) * shake * 2.5);
     this.night.sync(cx, cy, deepShift.dawn);
     this.building.sync(cx, cy, t, rm, deepShift.dawn);
+    this.crestValley?.sync(deepShift.elapsed ?? t, rm);
     this.exit.sync(cx, cy, rm);
     for (const view of this.hazards) view.sync(t, rm, cx, cy, body);
     this.swell.sync(t, rm, cx, cy, VIEW_W, VIEW_H);

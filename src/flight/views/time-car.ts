@@ -1,13 +1,16 @@
 import { Container, Graphics, TilingSprite } from 'pixi.js';
 import { VIEW_H, VIEW_W, type Assets } from '../../contracts';
-import { GLOW, Glow, ScreenTint, glowTexture } from '../../core/gfx/glow';
+import { GLOW, Glow, glowTexture } from '../../core/gfx/glow';
 import { Label } from '../../core/gfx/text';
 import { paintedTexture } from '../../core/gfx/textures';
 import { fmt, tr } from '../../i18n';
 import { C } from '../../ui/theme';
 import { artSprite, artTex } from '../../ui/views/art';
+import { CrestValleyClockHands } from '../../ui/views/crest-valley-clock';
 import { HudPanel } from '../../ui/views/hud';
-import { TIME_CAR, crestValleyClock, type TimeCar } from '../time-car';
+import { TIME_CAR, type TimeCar } from '../time-car';
+import { CrestValleyPerson } from './crest-valley-person';
+import { CrestValleyStrike, TOWER_CLOCK } from './crest-valley-strike';
 import { arc } from './tells';
 import type { CameraView } from './world';
 
@@ -17,8 +20,7 @@ const GLASS = '#416176';
 const LIGHT = '#ffedc9';
 const SECTIONS = 12;
 const CHIP = { size: 14, weight: 900, color: C.amberHi } as const;
-const TITLE = { size: 13, weight: 900, color: INK } as const;
-const AXLE_OFFSET = 18;
+const TITLE = { size: 16, weight: 900, color: INK } as const;
 const CAR_KEY = 'flight/pickup_time_car';
 
 export function timeCarWedge(raised = false): Graphics {
@@ -84,14 +86,16 @@ class TimeCarView {
     const { elapsed, position, phase, progress, speed, matchPrompt } = this.car;
     const pulling = phase === 'caught' && toast > 1.95;
     const amount = pulling ? Math.min(1, (2.4 - toast) / 0.45) : 0;
-    this.root.visible = (this.car.visible || pulling) && cam.sees(position.x, position.y, 142);
+    const missAge = elapsed - TIME_CAR.strike;
+    const dissolving = phase === 'missed' && missAge < 0.16;
+    this.root.visible = (this.car.visible || pulling || dissolving) && cam.sees(position.x, position.y, 142);
     if (!this.root.visible) return;
     this.root.position.set(position.x, position.y);
     this.lift.scale.set(rm ? 1 : 1 - amount * 0.56);
     this.lift.y = rm ? 0 : -75 * amount;
-    this.lift.alpha = pulling ? 1 - amount : 1;
+    this.lift.alpha = dissolving ? 1 - Math.max(0, (missAge - 0.035) / 0.125) : pulling ? 1 - amount : 1;
     this.beam.alpha = pulling ? 0.85 : 0;
-    this.coils.alpha = speed === 0 ? 0 : 0.22 + Math.min(0.72, speed / 360);
+    this.coils.alpha = speed === 0 ? Math.min(0.35, Math.max(0, (elapsed - 9) * 0.1)) : 0.22 + Math.min(0.72, speed / 360);
     this.chip.visible = this.car.visible;
     this.ring.visible = phase === 'open';
     if (this.chip.visible) {
@@ -112,21 +116,19 @@ export class CrestValleyView {
   readonly scenery = new Container();
   readonly weather = new Container();
   readonly car: TimeCarView;
-  private readonly tracks = new Container();
-  private readonly hour = new Graphics().moveTo(0, 4).lineTo(0, -22).stroke({ color: INK, width: 5, cap: 'round' });
-  private readonly minute = new Graphics().moveTo(0, 6).lineTo(0, -32).stroke({ color: INK, width: 3, cap: 'round' });
-  private readonly bolt: Container;
+  readonly strike: CrestValleyStrike;
+  private readonly clockHands = new CrestValleyClockHands(0, 0);
   private readonly warning = new Glow(glowTexture(GLOW.lamp)).place(826, 178, 95, 110, 0);
-  private readonly wash = ScreenTint.wash('198,222,255', 0, 0, 0, VIEW_H);
+  private readonly contact = new Glow(glowTexture(GLOW.lamp)).place(965, 540, 66, 60, 0);
   private readonly rain: TilingSprite;
-  private readonly wasBeforeStrike: boolean;
+  private readonly people: CrestValleyPerson[];
 
   constructor(assets: Assets, private readonly timeCar: TimeCar) {
-    this.wasBeforeStrike = timeCar.elapsed < TIME_CAR.strike;
     this.car = new TimeCarView(assets, timeCar);
+    this.strike = new CrestValleyStrike(assets, timeCar);
     const clock = new Container();
-    clock.position.set(824, 272);
-    if (!assets.get('flight/courthouse55_top')) {
+    clock.position.set(TOWER_CLOCK.x, TOWER_CLOCK.y);
+    if (!artTex(assets, 'flight/courthouse55_top')) {
       const face = new Graphics().circle(0, 0, 41).fill(LIGHT).stroke({ color: INK, width: 4 });
       for (let i = 0; i < 12; i++) {
         const a = i * Math.PI / 6;
@@ -134,32 +136,35 @@ export class CrestValleyView {
       }
       clock.addChild(face);
     }
-    clock.addChild(this.hour, this.minute, new Graphics().circle(0, 0, 4).fill(INK));
-    const line = new Graphics().moveTo(826, 178).quadraticCurveTo(760, 392, 820, 540).lineTo(965, 540)
-      .stroke({ color: INK, width: 3 });
-    const banner = artSprite(assets, 'flight/dance_banner55') ?? new Graphics()
-      .roundRect(-112, -24, 224, 48, 6).fill('#cfb69d').stroke({ color: INK, width: 2 });
-    banner.position.set(1380, 1386);
-    this.scenery.addChild(line, clock, banner, new Label(TITLE).set(tr().crestValley.dance, 1380, 1386, 188));
-    this.bolt = artSprite(assets, 'flight/tower_bolt55') ?? new Graphics()
-      .moveTo(-22, -112).lineTo(4, -45).lineTo(-14, -1).lineTo(19, 7).lineTo(0, 112)
-      .stroke({ color: '#dff1ff', width: 5, join: 'round' });
-    this.bolt.position.set(826, 66);
-    this.scenery.addChild(this.warning, this.bolt);
-
-    for (const x of [TIME_CAR.bay.x - AXLE_OFFSET, TIME_CAR.bay.x + AXLE_OFFSET]) {
-      for (let y = 604; y < 988; y += 96) {
-        const tile = artSprite(assets, 'flight/tyre_fire55') ?? new Graphics()
-          .roundRect(-5, -48, 10, 96, 3).fill('#372632')
-          .poly([-4, -44, 4, -35, 7, -16, 1, -22, 6, -3, -3, 8, -2, -10]).fill('#e17b3f')
-          .poly([-4, 12, 3, 19, 6, 40, 1, 35, -4, 47]).fill('#e59748');
-        tile.position.set(x, y + 48);
-        this.tracks.addChild(tile);
-      }
+    clock.addChild(this.strike.dial, this.clockHands);
+    const line = new Graphics().moveTo(826, 178).quadraticCurveTo(858, 204, 872, 232)
+      .quadraticCurveTo(930, 326, 965, 540).stroke({ color: INK, width: 3 });
+    const words = tr().crestValley;
+    const marquee = new Container();
+    marquee.position.set(1370, 956);
+    if (!artTex(assets, 'flight/picture_house55_top')) {
+      marquee.addChild(new Graphics().roundRect(-74, -16, 148, 32, 4).fill(LIGHT).stroke({ color: INK, width: 2 }));
     }
+    marquee.addChild(new Label(TITLE).set(words.marquee, 0, 0, 138));
+    // Hang from the eave, above the door and the side wall.
+    const banner = new Container();
+    banner.addChild(artSprite(assets, 'flight/dance_banner55') ?? new Graphics()
+      .roundRect(-112, -24, 224, 48, 6).fill('#cfb69d').stroke({ color: INK, width: 2 }));
+    banner.position.set(1380, 1353);
+    banner.addChild(new Label(TITLE).set(words.dance, 0, 0, 183));
+    this.people = [
+      new CrestValleyPerson(assets, false, 1060, 1973),
+      new CrestValleyPerson(assets, false, 1263, 1017),
+      new CrestValleyPerson(assets, false, 555, 1128),
+      new CrestValleyPerson(assets, true, 1323, 1469),
+      new CrestValleyPerson(assets, true, 1474, 1479, true),
+    ];
+    this.scenery.addChild(line, clock, marquee, banner);
+    for (const person of this.people) this.scenery.addChild(person.root);
+    this.scenery.addChild(this.warning, this.contact);
     const turnout = new Graphics().moveTo(650, 1575).lineTo(650, 1538).lineTo(747, 1538).lineTo(747, 1514)
       .moveTo(734, 1527).lineTo(747, 1514).lineTo(760, 1527).stroke({ color: '#d9bea0', width: 5, cap: 'round', alpha: 0.58 });
-    this.ground.addChild(turnout, this.tracks);
+    this.ground.addChild(turnout, this.strike.ground);
     const rainArt = artTex(assets, 'flight/rain_stitch55') ?? paintedTexture('crest-valley|rain', 144, 144, g => {
       g.strokeStyle = '#90acc4';
       g.lineWidth = 1.5;
@@ -172,25 +177,21 @@ export class CrestValleyView {
     });
     this.rain = new TilingSprite({ texture: rainArt, width: VIEW_W, height: VIEW_H });
     const cloud = artSprite(assets, 'flight/storm_cloud55') ?? new Glow(glowTexture(GLOW.cold)).place(0, 0, 290, 90, 0.28);
-    cloud.position.set(VIEW_W / 2, 0);
+    cloud.position.set(VIEW_W / 2, 80);
     cloud.alpha = 0.19;
-    this.weather.addChild(cloud, this.rain, this.wash);
+    this.weather.addChild(cloud, this.rain, this.strike.screen);
   }
 
-  sync(cam: CameraView, rm: boolean, toast: number): void {
+  sync(cam: CameraView, time: number, rm: boolean, toast: number): void {
     const elapsed = this.timeCar.elapsed;
-    const clock = crestValleyClock(Math.min(elapsed, TIME_CAR.strike));
-    this.hour.rotation = (clock % 43200) * Math.PI / 21600;
-    this.minute.rotation = (clock % 3600) * Math.PI / 1800;
-    const since = elapsed - TIME_CAR.strike;
-    const flash = this.wasBeforeStrike && since >= 0 && since < 0.3;
-    this.bolt.visible = flash || rm && since >= 0;
-    this.bolt.alpha = rm ? 0.24 : Math.min(1, (0.3 - since) * 6);
-    this.wash.strength = flash && !rm ? 0.17 * Math.max(0, Math.min(since / 0.08, (0.3 - since) / 0.22)) : 0;
-    this.warning.alpha = since >= -2 && since < 0 ? (rm ? 0.48 : 0.42 + 0.18 * Math.sin(elapsed * 12)) : 0;
-    this.tracks.visible = this.timeCar.phase === 'missed';
-    this.tracks.alpha = since < 1 && !rm ? 1 : 0.82;
-    this.rain.alpha = Math.max(0, Math.min(0.24, (elapsed - 8) * 0.16));
+    this.clockHands.sync(elapsed);
+    for (const person of this.people) person.sync(cam, time, rm);
+    const age = this.strike.age;
+    this.warning.visible = this.contact.visible = age >= -2 && age < 0;
+    this.warning.alpha = rm ? 0.48 : 0.42 + 0.18 * Math.sin(elapsed * 12);
+    this.contact.alpha = this.warning.alpha;
+    this.strike.sync(cam, rm);
+    this.rain.alpha = Math.min(0.35, 0.1 + Math.max(0, elapsed - 8) * 0.04);
     this.rain.tilePosition.set(rm ? 0 : -elapsed * 36, rm ? 0 : elapsed * 195);
     this.car.sync(cam, rm, toast);
   }

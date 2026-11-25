@@ -204,7 +204,7 @@ export const LEVEL6: DeepLevelDef = {
     body:
       "Pete's lighthouse log reached Head Office, and Compliance noticed zero probes logged all quarter. Worse: humans queue voluntarily to be probed here and leave four-star reviews. Collect Hank, Dr. Osei and Mr. Pemberton with Form 7-B ticked en route.",
     joke:
-      "Our probe has been a brass thermometer and a clipboard since 1953. Frankly, we're insulted by their other theories. (A stray defibrillator marked FOR THE MACHINE is parked off the drop-off lane—grab it only if you've time.)",
+      "Our probe has been a brass thermometer and a clipboard since 1953. Frankly, we're insulted by their other theories. (A stray defibrillator marked IT'S ALIVE! is parked off the drop-off lane—grab it only if you've time.)",
   },
   map: {
     theme: 'clinic',

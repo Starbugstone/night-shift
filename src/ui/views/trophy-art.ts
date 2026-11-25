@@ -12,6 +12,7 @@ import { PICKUP_SIZE, pickupKey } from '../../flight/pickup-rig';
 import { PickupFigure } from '../../flight/views/collectible';
 import { paintTimeCarDisplay } from '../../flight/views/time-car';
 import { ART } from '../../art-manifest';
+import { getLang, tr } from '../../i18n';
 import { artTex } from './art';
 import { C } from '../theme';
 
@@ -149,6 +150,28 @@ export function trophyArtTexture(assets: Assets, key: string, w: number, h: numb
   if (svgTex) return svgTex;
   return paintedTexture(`trophy|art|${key}|${w}x${h}`, w, h, (g, ww, hh) => {
     paintTrophyFallback(g, key, ww, hh);
+  });
+}
+
+export function clockFlyerDetailTexture(assets: Assets, w: number, h: number): Texture {
+  const key = 'room/clock_flyer';
+  const img = assets.get(key);
+  const ready = !!img && img.complete && img.naturalWidth > 0;
+  const [first, second] = tr().crestValley.flyerHeadline;
+  return paintedTexture(`trophy|clock-flyer|${ready}|${getLang()}|${w}x${h}`, w, h, g => {
+    if (ready) g.drawImage(img, 0, 0, w, h);
+    else paintTrophyFallback(g, key, w, h);
+    g.save();
+    g.scale(w / 40, h / 44);
+    g.fillStyle = '#ffedc9';
+    g.fillRect(7, 5, 24, 9);
+    g.fillStyle = '#613b45';
+    g.font = '900 4.6px sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(first!, 19, 7.7, 24);
+    g.fillText(second!, 19, 12, 24);
+    g.restore();
   });
 }
 

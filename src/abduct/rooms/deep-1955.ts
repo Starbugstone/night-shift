@@ -46,10 +46,14 @@ function route(
   };
 }
 
+export const CLOCK_FACE_55 = fit('clock_face_back', 221, 306, 194, 194);
+export const TRUNK_55 = fit('trunk_body55', 45, 546, 336, 158);
+export const GYM_DOORS_55 = art('gym_doors55', 530, 498);
+
 const clockBay = section('Clock ledge', 'tower', box(0, 0, 740, 700), [
   floor('tower_ledge55', 36, 580, 322),
-  prop(fit('clock_face_back', 350, 394, 194, 192)),
-], [fit('tower_cable55', 85, 175, 426, 56)]);
+  prop(fit('gear_big', 350, 394, 194, 192)),
+], [fit('tower_cable55', 85, 175, 438, 56)]);
 
 // The two approaches share their ledge, then branch into the riser or winch gallery.
 const balcony = art('exit_roof_hatch', 520, -604);
@@ -73,7 +77,7 @@ const towerSide = building([
 ]);
 
 const boothBay = section("Lyle's booth", 'cafe', box(0, 0, 740, 700), [
-  prop(art('booth55', 42, 430), [box(60, 590, 150, 34)]),
+  prop(art('booth55', 42, 502), [box(60, 590, 150, 34)]),
   prop(fit('counter55', 355, 403, 192, 194)),
 ], [art('stool55', 573, 607)]);
 
@@ -99,9 +103,9 @@ const cafeSide = building([
 ], [sleeper('Lyle', 1235, 452, 155)]);
 
 const trunkBay = section('Trunk bay', 'dance_lot', box(0, 0, 740, 700), [
-  prop(art('trunk_body55', 45, 507), [box(62, 590, 248, 44), box(310, 535, 52, 105)]),
+  prop(TRUNK_55, [box(64, 590, 267, 44), box(331, 563, 39, 77)]),
   prop(fit('amp_case55', 427, 457, 140, 159)),
-], [art('trunk_lid55', 33, 418), art('gym_doors55', 530, 498)]);
+], [art('trunk_lid55', 33, 432), GYM_DOORS_55]);
 
 const bandstand = fit('exit_roof_hatch', 492, -502, 198, 70);
 const danceUpper = building([

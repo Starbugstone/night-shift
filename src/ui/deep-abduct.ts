@@ -54,6 +54,7 @@ export class DeepAbductScene implements Scene {
   render(): void {
     deepShift.dawn = this.run.dawn;
     deepShift.delivered = this.run.deliveredCount;
+    deepShift.elapsed = this.run.elapsed;
     this.inner.render();
     this.look.peek()?.sync();
   }
@@ -61,6 +62,7 @@ export class DeepAbductScene implements Scene {
   dispose(): void {
     deepShift.dawn = 0;
     deepShift.delivered = -1;
+    deepShift.elapsed = undefined;
     this.look.destroy();
     this.inner.dispose?.();
   }
