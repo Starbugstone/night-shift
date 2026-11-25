@@ -566,6 +566,7 @@ export const ART: Record<string, ArtSpec> = {
   // view, resting on their bottom edge; code draws a primitive fallback (src/abduct/souvenir-art.ts).
   'room/prize_marrow': { w: 56, h: 24 }, // L1 farm: a fat striped green marrow with a red-and-gold prize rosette
   'room/heart_boxers': { w: 40, h: 30 }, // L2 laundry: white boxer shorts with red hearts, blue waistband, laid flat
+  'room/hospital_sock': { w: 40, h: 20 }, // L6 clinic: yellow non-slip hospital sock with grip dots, lying on its side (was drawn with the slipper)
   'room/odd_sock': { w: 36, h: 24 }, // L2 laundry: one lonely cream sock with coloured stripes, lying on its side
   'room/demo_dentures': { w: 40, h: 26 }, // L3 Dave: a dentist's demo denture set, pink gums, slightly open in a grin
   'room/coach_whistle': { w: 40, h: 22 }, // L3 Barb: chrome coach's whistle on a red lanyard

@@ -252,7 +252,7 @@ const pembertonHome = building([
 
 export const pembertonWindow = route(pembertonHome, 'pemberton', PEMBERTON_POSE,
   // v4 items: on the bed under his raised knees (on the floor at the bed's foot it was out of reach)
-  { sprite: art('slipper', 280, 564), name: 'hospital sock' },
+  { sprite: art('hospital_sock', 280, 564), name: 'hospital sock' },
   'RECOVERY WINDOW', PEMBERTON_EXITS.window, box(2370, 230, 100, 140), [
     point(200, 400), point(330, 320),
     probeAt(400, 320, 0),
@@ -268,7 +268,7 @@ export const pembertonWindow = route(pembertonHome, 'pemberton', PEMBERTON_POSE,
 
 export const pembertonChute = route(pembertonHome, 'pemberton', PEMBERTON_POSE,
   // v4 items: in the laundry cart on the way to the chute (under the bed's head it was out of reach)
-  { sprite: art('slipper', -244, 556), name: 'hospital sock' },
+  { sprite: art('hospital_sock', -244, 556), name: 'hospital sock' },
   'LAUNDRY CHUTE', PEMBERTON_EXITS.chute, box(-650, 1320, 120, 110), [
     point(180, 400), point(140, 330),
     probeAt(120, 330, 0),
