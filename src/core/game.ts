@@ -4,7 +4,8 @@ import { createAbductScene, emitterPoint } from '../abduct';
 import { SynthAudio } from '../audio/sfx';
 import { DeepFlightScene } from '../flight/deep-scene';
 import { FlightScene } from '../flight/scene';
-import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom } from '../levels/levels';
+import { FIELD_CHECK, FIELD_CHECK_INDEX, FIELD_CHECK_ROOM, FIELD_CHECK_RULES } from '../levels/field-check';
+import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom, levelRooms } from '../levels/levels';
 import { applyDeepRun, applyRun, isLevelUnlocked } from '../levels/progress';
 import { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
@@ -13,6 +14,7 @@ import { getLang, resolveLang, setLang, tr, type Lang } from '../i18n';
 import { AbortScene } from '../ui/abort';
 import { DeepAbductScene } from '../ui/deep-abduct';
 import { DeepChoiceScene } from '../ui/deep-choice';
+import { FieldCheckAbduction, FieldCheckCard } from '../ui/field-check';
 import { LoadingScene } from '../ui/loading';
 import { MemoScene } from '../ui/memo';
 import { ReportScene, deepReport, tutorialReport } from '../ui/report';
@@ -27,6 +29,7 @@ import { startLoop } from './loop';
 import { SceneManager, type Transition } from './scenes';
 import type { MutableContext, Shell } from './shell';
 import { browserStorage, watchReducedMotion } from './storage';
+import { viewUploader } from './gfx/prepare';
 
 export type SceneName =
   | 'loading'
@@ -34,6 +37,7 @@ export type SceneName =
   | 'workorders'
   | 'upgrades'
   | 'memo'
+  | 'field-check'
   | 'flight'
   | 'abduct'
   | 'report'
@@ -68,6 +72,10 @@ export interface DebugHook {
   readonly frameMs: Float32Array;
   /** Next write index into `frameMs`. */
   readonly frameAt: number;
+  /** Frames so far whose Pixi render rebuilt the whole display list (see `RenderHost.rebuilds`). */
+  readonly rebuilds: number;
+  /** The Pixi stage (draw-call and batching diagnostics, `scripts/pixi/batches.mjs`). */
+  readonly stage: unknown;
 }
 
 declare global {
@@ -82,7 +90,7 @@ const TEST_FIXTURES = import.meta.env.DEV || import.meta.env.MODE === 'e2e';
 
 function firstRoom(li: number): RoomId {
   const l = LEVELS[li]!;
-  return isDeep(l) ? l.map.targets[0].entries[0].roomId : l.map.entries[0].roomId;
+  return levelRooms(l)[0]!;
 }
 
 function clampLevel(i: number): number {
@@ -126,7 +134,7 @@ export class Game implements Shell {
     const layer = new Container();
     const cover = new Container();
     gfx.root.addChild(layer, cover);
-    this.scenes = new SceneManager(this.input.state, () => this.ctx.reducedMotion, layer, cover, gfx.renderer.prepare ? (view) => gfx.renderer.prepare.upload(view) : null);
+    this.scenes = new SceneManager(this.input.state, () => this.ctx.reducedMotion, layer, cover, gfx.renderer.prepare ? viewUploader(gfx.renderer.prepare) : null);
     this.input.onAnyDown(() => this.audio.unlock());
   }
 
@@ -183,7 +191,7 @@ export class Game implements Shell {
       () => new LoadingScene(this.assets, () => {
         if (TEST_FIXTURES) this.routeFromParams(params);
         else this.toTitle();
-      }, () => this.ctx.reducedMotion),
+      }, () => this.ctx.reducedMotion, this._save), // v4 story
       true,
     );
     startLoop(
@@ -251,7 +259,60 @@ export class Game implements Shell {
 
   toMemo(levelIndex: number): void {
     const i = clampLevel(levelIndex);
-    this.scenes.go('memo', () => new MemoScene(this, i));
+    this.scenes.go('memo', () => new MemoScene(this, i, i === FIELD_CHECK_INDEX ? () => this.toFieldCheck() : undefined));
+  }
+
+  private toFieldCheck(): void {
+    this.flight = null;
+    this.run = null;
+    this.scenes.go('field-check', () => new FieldCheckCard(this.ctx, 'memo', () => this.startFieldCheck(), () => this.leaveFieldCheck()));
+  }
+
+  private startFieldCheck(): void {
+    const practice = new DeepRun(FIELD_CHECK, FIELD_CHECK_INDEX);
+    this.scenes.go('flight', () => {
+      this.ctx.tutorial = false;
+      this.flight = new DeepFlightScene({
+        ctx: this.ctx, level: FIELD_CHECK, run: practice, practice: true,
+        onLocked: (target, entry) => {
+          practice.startAbduct(target, entry);
+          this.fieldCheckRoom(practice);
+        },
+        onSunrise: () => this.leaveFieldCheck(),
+        onQuit: () => this.leaveFieldCheck(),
+      });
+      return this.flight;
+    });
+  }
+
+  private fieldCheckRoom(practice: DeepRun): void {
+    const { roomId } = practice.current!;
+    this.scenes.go('abduct', () => {
+      this.flight = null;
+      const inner = createAbductScene(this.ctx, { levelId: 'level3', roomId, rules: FIELD_CHECK_RULES }, (result) => {
+        if (practice.finishAbduct(result) === 'done') {
+          this.markFieldCheckSeen();
+          this.audio.sfx('checkpoint');
+          this.scenes.go('field-check', () => new FieldCheckCard(this.ctx, 'done', () => this.leaveFieldCheck(), () => this.leaveFieldCheck()), false, { style: 'flash' });
+        } else {
+          this.scenes.go('field-check', () => new FieldCheckCard(this.ctx, 'retry', () => {
+            practice.retry();
+            this.fieldCheckRoom(practice);
+          }, () => this.leaveFieldCheck()));
+        }
+      }, FIELD_CHECK_ROOM);
+      return new FieldCheckAbduction(inner, this.ctx);
+    });
+  }
+
+  private leaveFieldCheck(): void {
+    this.flight = null;
+    this.markFieldCheckSeen();
+    this.toMemo(FIELD_CHECK_INDEX);
+  }
+
+  private markFieldCheckSeen(): void {
+    if (!this.save.fieldCheckSeen) this.setSave({ ...this.save, fieldCheckSeen: true });
   }
 
   toFlight(levelIndex: number, spotted = 0): void {
@@ -321,7 +382,9 @@ export class Game implements Shell {
     const i = clampLevel(levelIndex);
     const outcome = applyRun(this._save, LEVELS[i]!.id, abduct, flight);
     if (persist) this.setSave(outcome.save);
-    this.scenes.go('report', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome), false, transition);
+    const practiceNext = persist && i === FIELD_CHECK_INDEX - 1 && outcome.stars[0] && !outcome.save.fieldCheckSeen;
+    this.scenes.go('report', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome,
+      practiceNext ? () => this.toFieldCheck() : undefined), false, transition);
   }
 
   toAbortChoice(levelIndex: number, room: RoomId, flight: FlightResult): void {
@@ -364,6 +427,11 @@ export class Game implements Shell {
             const from = scene.screenFocus();
             const to = emitterPoint(room);
             this.toDeepAbduct(run, { style: 'iris', x: from.x, y: from.y, toX: to.x, toY: to.y });
+          },
+          onQuotaMet: () => {
+            if (done) return;
+            done = true;
+            this.toDeepReport(run, { style: 'flash' });
           },
           onSunrise: () => {
             if (done) return;
@@ -496,6 +564,12 @@ export class Game implements Shell {
       },
       get frameAt() {
         return game.frameAt;
+      },
+      get rebuilds() {
+        return game.gfx.rebuilds;
+      },
+      get stage() {
+        return game.gfx.stage;
       },
       goto(name: string, arg?: unknown) {
         const n = typeof arg === 'number' ? arg : Number(arg);

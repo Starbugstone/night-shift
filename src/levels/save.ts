@@ -2,10 +2,17 @@
 import type { UpgradeId } from '../contracts';
 import { isLangPref, type LangPref } from '../i18n';
 
-export const SAVE_KEY = 'night-shift-save-v1';
-export const SAVE_VERSION = 1;
+/**
+ * Where this build keeps its save. The production build (/night-shift/) and preprod
+ * (/night-shift/preprod/) share one origin, so each save format needs its own key: production still
+ * reads and rewrites the v1 key in the v1 format, which drops L8, its stars and the Field Check.
+ */
+export const SAVE_KEY = 'night-shift-save-v2';
+/** The v1 save: imported once when there is no v2 save yet, never written or removed. */
+export const LEGACY_SAVE_KEY = 'night-shift-save-v1';
+export const SAVE_VERSION = 2;
 
-export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7'] as const;
+export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
 
 export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive', 'snooze_ray'];
@@ -28,13 +35,17 @@ export interface LevelProgress {
 }
 
 export interface SaveData {
-  version: 1;
+  version: typeof SAVE_VERSION;
   glorbs: number;
   levels: Record<LevelId, LevelProgress>;
   upgrades: UpgradeId[];
   muted: boolean;
   /** Debug/cheat flag: every level playable. */
   allUnlocked: boolean;
+  /** Preserve the old open access to L3–L7 once a player had started playing. */
+  legacyDispatch: boolean;
+  /** The player finished or skipped the Field Check offer. */
+  fieldCheckSeen: boolean;
   /** Reports filed so far; rotates Vrell's comments. */
   reports: number;
   /** Display language; `auto` follows the browser. Older saves have none: auto. */
@@ -57,11 +68,13 @@ export function defaultSave(): SaveData {
     glorbs: 0,
     levels: {
       level1: defaultLevel(), level2: defaultLevel(), level3: defaultLevel(), level4: defaultLevel(),
-      level5: defaultLevel(), level6: defaultLevel(), level7: defaultLevel(),
+      level5: defaultLevel(), level6: defaultLevel(), level7: defaultLevel(), level8: defaultLevel(),
     },
     upgrades: [],
     muted: false,
     allUnlocked: false,
+    legacyDispatch: false,
+    fieldCheckSeen: false,
     reports: 0,
     lang: 'auto',
   };
@@ -115,6 +128,13 @@ export function validateSave(raw: unknown): SaveData {
   out.muted = raw.muted === true;
   out.allUnlocked = raw.allUnlocked === true;
   out.reports = Math.floor(finiteNonNeg(raw.reports, 0));
+  const oldDispatch = raw.version === undefined || raw.version === 1;
+  const played = out.reports > 0 || LEVEL_IDS.some((id) => {
+    const level = out.levels[id];
+    return level.delivered || level.attempts > 0 || level.bestTimeSec !== null || level.stars.some(Boolean);
+  });
+  out.legacyDispatch = raw.legacyDispatch === true || (oldDispatch && played);
+  out.fieldCheckSeen = raw.fieldCheckSeen === true || (oldDispatch && out.levels.level2.delivered);
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
   return out;
 }
@@ -122,9 +142,17 @@ export function validateSave(raw: unknown): SaveData {
 export function loadSave(storage: KeyValueStore | null): SaveData {
   if (!storage) return defaultSave();
   try {
-    const txt = storage.getItem(SAVE_KEY);
-    if (!txt) return defaultSave();
-    return validateSave(JSON.parse(txt));
+    const own = storage.getItem(SAVE_KEY);
+    if (own) return validateSave(JSON.parse(own));
+    // no v2 save yet: start from the v1 one (validateSave migrates it, keeping unlocks and stars)
+    const legacy = storage.getItem(LEGACY_SAVE_KEY);
+    if (!legacy) return defaultSave();
+    const imported = validateSave(JSON.parse(legacy));
+    // Write the import straight away: the v1 build shares this origin and rewrites the v1 key in
+    // its own format (no L8, no Field Check) the next time it saves, so waiting for a setting
+    // change to write v2 would let it drop what the v1 key held now.
+    writeSave(storage, imported);
+    return imported;
   } catch {
     return defaultSave();
   }
@@ -140,13 +168,9 @@ export function writeSave(storage: KeyValueStore | null, data: SaveData): boolea
   }
 }
 
+/** Reset progress. Stores an empty v2 save rather than removing it, so the v1 save is not imported again. */
 export function clearSave(storage: KeyValueStore | null): void {
-  if (!storage) return;
-  try {
-    storage.removeItem(SAVE_KEY);
-  } catch {
-    /* ignore */
-  }
+  writeSave(storage, defaultSave());
 }
 
 export function cloneSave(s: SaveData): SaveData {

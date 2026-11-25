@@ -1,6 +1,7 @@
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { PointerState, Scene } from '../contracts';
+import type { ViewUploader } from './gfx/prepare';
 
 const FADE = 0.16;
 const IRIS_OUT = 0.34;
@@ -70,14 +71,15 @@ export class SceneManager {
    * @param coverLayer Pixi container above it for the transition cover.
    * @param prepare Uploads a freshly built view to the GPU over the next few frames. Without it,
    *   the first frame that shows a new scene uploads every texture at once (a hitch of a few hundred
-   *   ms on entering a room); with it, the reveal waits, cover closed, until the upload is done.
+   *   ms on entering a room); with it, the reveal waits, cover closed, until the upload is done. A
+   *   replaced scene's pending items are cancelled before it is disposed.
    */
   constructor(
     private readonly pointer: PointerState,
     private readonly reducedMotion: () => boolean = () => false,
     private readonly layer: Container | null = null,
     coverLayer: Container | null = null,
-    private readonly prepare: ((view: Container) => Promise<void>) | null = null,
+    private readonly prepare: ViewUploader | null = null,
   ) {
     this.cover = coverLayer ? new TransitionCover(coverLayer) : null;
   }
@@ -114,7 +116,11 @@ export class SceneManager {
 
   private swap(p: Pending): void {
     const old = this.current;
-    if (old && this.layer) this.layer.removeChildren();
+    if (old && this.layer) {
+      this.layer.removeChildren();
+      // its upload may still be queued: destroyed items in the queue would crash the next upload
+      this.prepare?.cancel(old.view);
+    }
     old?.dispose?.();
     this.current = null;
     this.name = p.name;
@@ -133,7 +139,7 @@ export class SceneManager {
     const done = (): void => {
       if (token === this.prepareToken) this.ready = true;
     };
-    this.prepare(next.view).then(done, done);
+    this.prepare.upload(next.view).then(done, done);
   }
 
   update(dt: number): void {

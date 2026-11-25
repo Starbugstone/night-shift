@@ -83,6 +83,14 @@ have a headless vitest autopilot run that completes it without failing. Each sce
 also exposes `debug.autopilot()` (see contracts) so that `scripts/e2e-playthrough.cjs`
 can play the game through real pointer input.
 
+**Hard rule: no straight-line win.** On every level, a naive beeline must be caught or fail at
+every start time the difficulty evaluator tests. The challenge sits on the obvious path. Ghost may
+be hard but must stay reachable for the casual (average human) model, more generously in early
+levels. `npm run difficulty` enforces both.
+
+**Hard rule: no bump on start.** Every room spawn must sit 10 s without input with zero bonks and
+zero wake (`tests/abduct-spawn.test.ts`); fix the spawn pose or position, never the wake rules.
+
 Solvable is not the same as fair: the autopilot plays perfectly. Every deep level also has a
 difficulty band for human-model players (reaction delay, wobble, human drag speed), checked by
 `npm run difficulty` (part of `npm test`). Use
@@ -115,3 +123,35 @@ Shared engine files (`src/abduct/interior.ts`, `src/abduct/rooms/interior.ts`, `
 mechanics in your own module and add only small hook lines here. Re-read a shared file right before
 each edit, keep edits small, never reformat it, never undo another agent's lines. Registries carry
 `// L5 pier code` style anchor comments: add your lines directly under your own anchor.
+
+## v4 "Deeper Jokes" (2026-11-24)
+
+Work now lands on the `preprod` branch first (published at /night-shift/preprod/), then merges into
+`main`. The tone goes up to **PG-13, leaning 16**: innuendo, butt and probe jokes, mild swearing,
+pop-culture and sci-fi references. Nothing sexually explicit, no slurs, nobody real mocked.
+References must be internationally known (any film or genre, not only sci-fi): English is the
+main audience and French a small part. French text may adapt a pun or use the French dub's wording
+of the same international reference, but levels, characters and jokes aren't built on French-only
+references.
+
+Ownership while the v4 agents run (one checkout, several agents):
+
+| Area | Owner |
+| --- | --- |
+| `src/abduct/souvenir.ts`, `src/levels/humor.ts`, `src/ui/report*.ts`, new souvenir items in the existing rooms (small hook lines), `tests/*-souvenir*.test.ts`, `tests/ui-report*.test.ts` | items & recap humour |
+| existing lines of `src/i18n/en.ts` + `fr.ts` (wording, references, French readability) | translation review (Neon) |
+| L8 primates & monolith: `src/levels/deep-monolith.ts`, `src/abduct/rooms/deep-monolith.ts`, new L8 modules, `docs/GDD-4-monolith.md`, `tests/*-monolith*.test.ts` | L8 level (Astra; art Fable; spatial review Neon) |
+| the saucer and its pilot: `src/flight/views/craft.ts`, new `src/flight/pilot*.ts`, saucer/pilot art keys, `tests/flight-pilot*.test.ts` | UFO pilot |
+| `docs/research/**` | sci-fi research (Sol) |
+| `.claude/skills/evaluate-difficulty/**`, `tests/difficulty/**`, star tuning values and placements in `src/levels/deep-*.ts` + `src/flight/*` (listed in its report) | star difficulty (Sol) |
+| `docs/GDD-5-progression.md`, `tests/difficulty/progression*` (design pass; no level edits) | difficulty progression (Sol) |
+| L8 time-trial rework: the L8 files above plus new `src/flight/roam*.ts` (roaming targets) | L8 time trial (Astra) |
+| `docs/GDD-6-story.md` tiers 1–2: level memo/headline/tagline strings, memo sign-offs (`src/ui/memo.ts`), Zib shift openers, Vrell first-clear lines, loading tips (small hooks in `src/ui/report.ts`, `src/levels/humor.ts`, `src/ui/loading.ts`, `src/flight/deep-scene.ts`) | story build (Neon) |
+| `docs/GDD-5-progression.md` build, plus Ghost softening on L4/L5: level tuning and first encounters in `src/levels/*.ts`, `src/abduct/rooms/*.ts` (not L8), unlocks and save migration in `src/levels/save.ts` / `progress.ts`, `src/ui/workorders.ts` | progression build (Sol) |
+| `docs/GDD-7-eras.md`, `docs/research/film-references.md` | eras and film references (Sol) |
+| alien voices: `src/audio/voice.ts` (WebAudio engine), `src/audio/voice-plan.ts` (text → syllables, `VOICES`), `tests/audio-voice*.test.ts`; `speak`/`hush` hooks marked `// v4 voices` in `src/audio/sfx.ts`, `src/contracts.ts` (`VoiceId`, `SpeakOptions`), the memo, report, abort, deep-choice and both flight scenes | alien voices |
+
+New strings: add them to both `en.ts` and `fr.ts` under a `// v4 <area>` anchor comment; the
+translation review only rewrites existing lines and will do a second pass on the new ones. The v3
+rules for shared files still apply: re-read right before each edit, keep edits small, never reformat,
+never undo another agent's lines. Don't commit; the coordinator commits to `preprod`.

@@ -1,21 +1,22 @@
-// Difficulty gate: each deep level must stay inside its target band for human-model players, not only be
-// solvable by the perfect autopilot. See .claude/skills/evaluate-difficulty/SKILL.md.
+// Difficulty gate: star bands for every level and route/flight bands for the deep levels.
+// See .claude/skills/evaluate-difficulty/SKILL.md.
 //   DIFFICULTY_SEEDS=20   more seeds per cell (slower, steadier numbers)
-//   DIFFICULTY_LEVELS=level3,level4   which levels to evaluate (default: all deep levels)
+//   DIFFICULTY_LEVELS=level3,level4   which levels to evaluate (default: all levels)
 //   DIFFICULTY_OUT=review/difficulty   also write <level>.md and <level>.json there
 import { describe, expect, it } from 'vitest';
-import { isDeep, LEVELS } from '../src/levels/levels';
+import { LEVELS } from '../src/levels/levels';
 import { evaluateLevel, formatReport } from './difficulty/evaluate';
 
 declare const process: { stdout: { write(s: string): void }; env: Record<string, string | undefined> };
 
 const seeds = Number(process.env.DIFFICULTY_SEEDS ?? 6);
-const levels = LEVELS.filter(isDeep);
+const levels = LEVELS;
 const wanted = process.env.DIFFICULTY_LEVELS?.split(',').map((id) => id.trim());
 for (const id of wanted ?? []) {
-  if (!levels.some((level) => level.id === id)) throw new Error(`Unknown deep level in DIFFICULTY_LEVELS: ${id}`);
+  if (!levels.some((level) => level.id === id)) throw new Error(`Unknown level in DIFFICULTY_LEVELS: ${id}`);
 }
 const out = process.env.DIFFICULTY_OUT;
+const timeoutMs = Number.isSafeInteger(seeds) && seeds > 6 ? seeds * 40_000 : 240_000;
 
 describe('difficulty bands (human-model players)', () => {
   for (const level of levels) {
@@ -36,6 +37,6 @@ describe('difficulty bands (human-model players)', () => {
         fs.writeFileSync(`${out}/${level.id}.json`, `${JSON.stringify(report, null, 2)}\n`);
       }
       expect(report.violations, text).toEqual([]);
-    }, 240_000);
+    }, timeoutMs);
   }
 });

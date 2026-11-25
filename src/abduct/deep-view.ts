@@ -7,7 +7,7 @@ import { ParticleView } from '../core/gfx/particles';
 import type { SceneView } from '../core/gfx/scene';
 import { Label, measure } from '../core/gfx/text';
 import { gt, tr } from '../i18n';
-import { HudButton, HudMeter, HudPanel, HudTimer, HUD_ROW, type MeterState } from '../ui/views/hud';
+import { HudButton, HudMeter, HudPanel, HudPrompt, HudTimer, HUD_ROW, type MeterState } from '../ui/views/hud';
 import { HumanArt, RESTART, type SpecimenArt } from './draw';
 import { DolphinArt } from './dolphin-art';
 import { inside } from './interior';
@@ -105,6 +105,8 @@ class DeepHud {
   private readonly divider = box(284, 898, 2, 32, '#695b92');
   private readonly snooze = new Container();
   private readonly snoozeLabel = new Label({ size: 13, weight: 750, color: '#ffffff' });
+  private readonly lesson = new HudPrompt();
+  private lessonActive = false;
   private second = -1;
 
   constructor(private readonly sim: AbductSimulation, private readonly ctx: GameContext, paperwork: ProbePaperwork | undefined) {
@@ -133,13 +135,26 @@ class DeepHud {
     }
     this.snooze.position.set(14, 831);
     this.snooze.addChild(new HudPanel().set(204, 45, '#c8a4ff'), this.snoozeLabel);
-    this.root.addChild(this.snooze);
+    this.root.addChild(this.snooze, this.lesson);
   }
 
   sync(room: InteriorRoom, input: AbductViewInput, flash: number, sleepers: readonly SleeperView[]): void {
     const { sim, ctx } = this;
     const { elapsed, wet } = sim;
     const rm = ctx.reducedMotion;
+    const { chestX, chestY } = sim.body;
+    const tips = tr().lessons;
+    // Keep the current hint while the suspended chest sways across its entry edge.
+    const pad = this.lessonActive ? 12 : 0;
+    let tip = '';
+    if (sim.room.wrapperLessons) tip = '';
+    else if (wet?.sheathed && wet.level < 0.9 && wet.refilling === -1) tip = tips.refill;
+    else if (sim.room.human === 'gary' && chestX > 270 - pad && chestX < 505 + pad && chestY > 175 - pad) tip = tips.laser;
+    else if (sim.room.human === 'dave' && chestX > 280 - pad && chestX < 480 + pad && chestY < 490 + pad) tip = tips.settle;
+    else if ((sim.room.human === 'sterling' || sim.room.human === 'marco' || sim.room.human === 'greg') && chestX < 390 + pad && chestY > -pad && chestY < 680 + pad && elapsed < 10) tip = tips.roll;
+    this.lessonActive = tip.length > 0;
+    this.lesson.visible = this.lessonActive && !sim.delivered && !sim.failure;
+    if (this.lesson.visible) this.lesson.sync(VIEW_W / 2, 756, 49, tip, 20, 'release', elapsed, rm);
     const { watching, exposure, sleepers: states } = sim.interior!;
     const second = Math.floor(elapsed);
     if (second !== this.second) {
@@ -313,15 +328,15 @@ class ExposureView {
     const { chestX: x, chestY: y } = sim.body;
     this.fuse.sync(x, y, 1 - v, !!i.watching);
     const spec = i.watching?.spec;
-    this.line.root.visible = false;
-    if (spec?.kind !== 'camera') return;
-    const dx = spec.x - x;
-    const dy = spec.y - y;
+    const camera = spec?.kind === 'camera' ? spec : null;
+    const dx = camera ? camera.x - x : 0;
+    const dy = camera ? camera.y - y : 0;
     const d = Math.hypot(dx, dy);
-    if (d < 100) return;
-    this.line.root.visible = true;
+    // set once to its final value: a visible flip rebuilds the render group
+    this.line.root.visible = camera !== null && d >= 100;
+    if (!camera || d < 100) return;
     this.line.root.alpha = 0.5 + 0.5 * v;
-    this.line.sync(x + dx / d * 79, y + dy / d * 79, spec.x - dx / d * 14, spec.y - dy / d * 14, RED, rm ? 0 : sim.elapsed * 70);
+    this.line.sync(x + dx / d * 79, y + dy / d * 79, camera.x - dx / d * 14, camera.y - dy / d * 14, RED, rm ? 0 : sim.elapsed * 70);
   }
 }
 
@@ -392,6 +407,7 @@ export class DeepAbductView implements SceneView {
     this.snore = new SnoreView(ctx, true);
     this.failure = new FailureView(sim, assets);
     this.hud = new DeepHud(sim, ctx, this.paperwork);
+    this.hud.root.label = 'hud'; // v4 council: the Field Check clipboard goes just under it
     this.vignette.strength = 0.85;
     this.sleepers = sleepers.map((s, i) => new SleeperView(s, assets, i));
 

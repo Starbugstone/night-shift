@@ -8,9 +8,10 @@ export const laundrySkylight: Room = {
     chair(25),
     prop(sprite('room/washer', 228, 716)),
     prop(sprite('room/washer', 390, 716)),
+    prop({ ...sprite('room/shelf', 205, 348), w: 125 }),
   ],
   exit: sprite('room/exit_skylight', 264, CEILING),
-  exitZone: { x: 305, y: 148, w: 118, h: 55 },
+  exitZone: { x: 305, y: 148, w: 118, h: 65 },
   roofExit: true,
   exitMouthY: 172,
   fan: { x: 272, y: 417, angle: -0.52, speed: 0.52, bladeLength: 150 },
@@ -19,7 +20,7 @@ export const laundrySkylight: Room = {
   route: [
     { x: 105, y: 581, seconds: 3.8 },
     { x: 72, y: 407, seconds: 3.8 },
-    { x: 81, y: 219, seconds: 4.8 },
-    { x: 370, y: 154, seconds: 8 },
+    { x: 81, y: 186, seconds: 4.8 },
+    { x: 392, y: 147, seconds: 8 },
   ],
 };

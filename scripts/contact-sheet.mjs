@@ -1,8 +1,8 @@
 import { existsSync, writeFileSync } from 'node:fs';
-import { ART } from '../src/art-manifest.ts';
+import { ART, RETIRED_ART } from '../src/art-manifest.ts';
 
 const directory = new URL('../public/art/', import.meta.url);
-const specs = new Map(Object.entries(ART).map(([key, { w, h }]) => [key, { width: w, height: h }]));
+const specs = new Map(Object.entries({ ...ART, ...RETIRED_ART }).map(([key, { w, h }]) => [key, { width: w, height: h }]));
 
 const styles = `
 * { box-sizing:border-box }

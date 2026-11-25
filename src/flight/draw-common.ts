@@ -4,10 +4,10 @@ import { drawSprite } from '../core/fx';
 import type { RoadDef } from '../levels/types';
 
 export const ROAD_W = 120;
-export type GroundTheme = 'farm' | 'town' | 'suburb' | 'city' | 'pier' | 'clinic' | 'ship';
+export type GroundTheme = 'farm' | 'town' | 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands';
 /** Plain road surface, used to paint clean junctions (matches road_v/road_h asphalt). */
 export const ROAD_BASE: Record<GroundTheme, string> = {
-  farm: '#6e5841', town: '#343756', suburb: '#343756', city: '#2f3150',
+  badlands: '#513c42', farm: '#6e5841', town: '#343756', suburb: '#343756', city: '#2f3150',
   // v3 starting values; each level's code owner tunes its own
   pier: '#4a3f3a', clinic: '#343a52', ship: '#3a3550',
 };

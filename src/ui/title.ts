@@ -363,20 +363,22 @@ class SideSaucer extends Container {
       const glow = new Glow(glowTexture(GLOW.amber), true).place(lx, ly, 14, 14, 0.6);
       this.lights.push(dot);
       this.glows.push(glow);
-      this.addChild(dot, glow);
     }
+    // all dots, then all glows: interleaved, each additive glow split the batch twice (14 draw calls)
+    this.addChild(...this.lights, ...this.glows);
   }
 
   sync(x: number, y: number, t: number, rm: boolean): void {
     this.position.set(x, y);
     const shut = !rm && t % 3.3 < 0.12;
-    this.eyesOpen.visible = !shut;
-    this.eyesShut.visible = shut;
+    this.eyesOpen.alpha = shut ? 0 : 1;
+    this.eyesShut.alpha = shut ? 1 : 0;
     // rim lights chase round
     for (let i = 0; i < RIM; i++) {
       const on = rm ? i % 2 === 0 : Math.floor(t * 6 + i) % 3 === 0;
       this.lights[i]!.tint = on ? 0xffd27a : 0x4a4470;
-      this.glows[i]!.visible = on;
+      // chase with alpha: a visible flip rebuilds the render group
+      this.glows[i]!.alpha = on ? 0.6 : 0;
     }
   }
 }

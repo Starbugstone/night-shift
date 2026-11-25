@@ -10,6 +10,7 @@ export const STAR_LABELS: readonly string[] = en.starLabels.tutorial;
 export const DEEP_STAR_LABELS: readonly string[] = en.starLabels.deep;
 
 export function starLabels(l: LevelDef): readonly string[] {
+  if (l.id === 'level8') return en.timeTrial.stars;
   return isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
 }
 
@@ -78,7 +79,7 @@ export function runReward(prev: Stars, earned: Stars, mult = 1): { glorbs: numbe
 
 /** What a finished deep shift looked like (from the runner). */
 export interface DeepSummary {
-  /** Specimens delivered (0..3). */
+  /** Completed targets. A time-trial troop counts when it reaches its quota. */
   delivered: number;
   /** Seconds of shift used (= sunrise budget when the sun came up). */
   elapsedSec: number;
@@ -87,17 +88,22 @@ export interface DeepSummary {
   sunrise: boolean;
 }
 
-export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary): Stars {
+export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary, levelId?: LevelId): Stars {
   const all = r.delivered >= 3 && !r.sunrise;
-  return [all, all && r.spotted === 0 && r.failedAbductions === 0, all && budgetSec - r.elapsedSec >= parMarginSec];
+  return [all, all && r.spotted === 0 && (levelId === 'level8' || r.failedAbductions === 0), all && budgetSec - r.elapsedSec >= parMarginSec];
 }
 
 export function isLevelUnlocked(save: SaveData, index: number): boolean {
   const level = LEVELS[index];
   if (!level) return false;
-  if (index === 0 || isDeep(level) || save.allUnlocked) return true;
+  if (index === 0 || save.allUnlocked || save.levels[level.id].delivered) return true;
+  if (save.legacyDispatch && isDeep(level) && level.id !== 'level8') return true;
   const prev = LEVELS[index - 1]!;
   return save.levels[prev.id].delivered;
+}
+
+export function nextDispatchIndex(save: SaveData): number {
+  return LEVELS.findIndex((level, i) => !save.levels[level.id].delivered && isLevelUnlocked(save, i));
 }
 
 export interface RunOutcome {
@@ -124,7 +130,7 @@ export function applyDeepRun(save: SaveData, levelId: LevelId, r: DeepSummary): 
   const level = LEVELS.find((l) => l.id === levelId)!;
   const budget = isDeep(level) ? level.budgetSec : 300;
   const margin = isDeep(level) ? level.parMarginSec : 0;
-  return applyStars(save, levelId, computeDeepStars(budget, margin, r), r.elapsedSec, DEEP_PAY_MULT);
+  return applyStars(save, levelId, computeDeepStars(budget, margin, r, levelId), r.elapsedSec, DEEP_PAY_MULT);
 }
 
 function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: number, payMult: number): RunOutcome {

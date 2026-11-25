@@ -1,5 +1,5 @@
 // End-to-end bot: plays all four tutorial routes (L1 window/chimney, L2 skylight/loading door), then
-// full deep shifts of L3 and L4, all through real pointer input.
+// full deep shifts from L3 through L8, all through real pointer input.
 // Every abduction (tutorial and deep) is driven by the scene's own per-frame autopilot through
 // `debug.autopilotFinger()`: the screen point to hold the mouse button at (the beam heads for it).
 // The mouse stays down for the whole room.
@@ -10,7 +10,7 @@
 //   npm run preview -- --outDir review/e2e-build --port <free port> --strictPort
 //   source ~/.local/share/claude-media-tools/env.sh
 //   BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs   (add GPUARGS=... for the real GPU, below)
-// Env: ONLY=tutorial|deep|L3|L4|probe to run a subset (RUNS=L1-window,... picks tutorial routes, ROOM= the probe room); PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE to find playwright.
+// Env: ONLY=tutorial|deep|L3…L8|probe to run a subset (RUNS=L1-window,... picks tutorial routes, ROOM= the probe room); PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE to find playwright.
 // Screenshots use window.__nightShift.capture() (page.screenshot hangs on this WSL box, and the
 // WebGL canvas is blank to toDataURL outside the frame that drew it).
 const path = require('path');
@@ -222,6 +222,14 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     let down = false;
     let lastScene = '';
     let shots = 0;
+    let lastWitnesses = 0;
+    let lifted = false;
+    let caveShot = false;
+    const renderer = await page.evaluate(() => {
+      const gl = document.querySelector('canvas#game')?.getContext('webgl2');
+      const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+      return gl && ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
+    });
     const abd = abductDriver();
     const up = async () => { if (down) { await page.mouse.up(); down = false; } };
     const moveTo = async (lx, ly) => { const [px, py] = map(lx, ly); await page.mouse.move(px, py); };
@@ -232,11 +240,31 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         const a = ns.active;
         const run = ns.run;
         const base = { scene: ns.scene, busy: ns.transitioning, clock: run ? run.clockText() : null, elapsed: run ? run.elapsed : null, delivered: run ? run.delivered.slice() : null, spotted: run ? run.spotted : null, failed: run ? run.failedAbductions : null };
+        if (run?.level.id === 'level8') {
+          base.witnesses = run.specimenCount;
+          base.troops = run.troops.map(t => t?.caught.size ?? null);
+          base.room = run.current?.roomId;
+          base.inCave = ns.scene === 'abduct' && !ns.transitioning && a?.debug?.elapsed > 4;
+          base.lifting = ns.scene === 'flight' && a?.state === 'locking' && a.st > 0.22 && !!a.sim.ringRef[a.sim.lockedRing]?.ape;
+        }
         if (!a || !a.debug || typeof a.debug.autopilot !== 'function') return base;
         if (ns.scene === 'flight') { const f = window.__e2eDrv && window.__e2eDrv.flight; return { ...base, kind: 'flight', it: f ? { down: f.down, x: f.x, y: f.y } : null, state: a.state }; }
         if (ns.scene === 'abduct') return { ...base, kind: 'abduct', drv: window.__e2eDrv ? { fx: window.__e2eDrv.fx, fy: window.__e2eDrv.fy } : null };
         return base;
       });
+      if (info.witnesses > lastWitnesses) {
+        lastWitnesses = info.witnesses;
+        log.push({ clock: info.clock, witnesses: info.witnesses, troops: info.troops });
+      }
+      if (info.lifting && !lifted) {
+        lifted = true;
+        await shot(name + '-beam');
+      }
+      if (info.inCave && !caveShot) {
+        caveShot = true;
+        await shot(name + '-cave');
+      }
+      if (info.room && info.scene !== lastScene) log.push({ room: info.room });
       if (info.scene !== lastScene) {
         log.push({ at: ((Date.now() - t0) / 1000).toFixed(1), scene: info.scene, clock: info.clock, delivered: info.delivered, spotted: info.spotted, failed: info.failed });
         await up();
@@ -268,7 +296,16 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     await up();
     await abd.reset();
     const end = await page.evaluate(() => ({ scene: window.__nightShift.scene, level: JSON.parse(JSON.stringify(window.__nightShift.save.levels)) }));
-    return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), end, log };
+    if (level === 8) {
+      if (!lifted || !caveShot || end.scene !== 'report' || !end.level.level8.delivered) {
+        throw new Error('Time trial did not deliver its witnesses: ' + JSON.stringify({ end, log }));
+      }
+      await openFixture('');
+      const reloaded = await page.evaluate(() => window.__nightShift.save.levels.level8);
+      if (JSON.stringify(reloaded) !== JSON.stringify(end.level.level8)) throw new Error('Time-trial save changed on reload');
+      log.push({ reloaded });
+    }
+    return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), renderer, end, log };
   }
 
   const ONLY = process.env.ONLY || '';
@@ -284,8 +321,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     await browser.close();
     return;
   }
-  const DEEP_LEVELS = [3, 4, 5, 6, 7];
-  if (ONLY === 'deep' || /^L[3-7]$/.test(ONLY ?? '')) {
+  const DEEP_LEVELS = [3, 4, 5, 6, 7, 8];
+  if (ONLY === 'deep' || /^L[3-8]$/.test(ONLY ?? '')) {
     for (const n of DEEP_LEVELS) if (ONLY === 'deep' || ONLY === `L${n}`) results[`L${n}`] = await deepShift(n, `L${n}`);
     console.log(JSON.stringify({ results, errors }, null, 1));
     await browser.close();

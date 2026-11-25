@@ -30,11 +30,15 @@ export const fr: Strings = {
     bureau: 'BUREAU GALACTIQUE DU RECENSEMENT',
     taglines: [
       'Un pouce. Zéro témoin.',
-      'On recrute : stagiaires au pouce sûr.',
+      'On recrute : stagiaires, pouce ferme exigé.',
       'Enlèvements responsables depuis 1947.',
       'Votre spécimen est notre priorité.',
       'Ici, on ne dort pas. Enfin, eux si.',
       'Cinq notes. Zéro témoin.',
+      // v4 story
+      'Secteur Grimsby. Stage non rémunéré.',
+      'Thermomètres en laiton depuis 1953.',
+      'Zéro note. Zéro redevance.',
     ],
     build: 'v0.1 · version de nuit',
     language: 'Langue',
@@ -44,23 +48,75 @@ export const fr: Strings = {
     clockingIn: 'Pointage…',
     calibrating: 'Calibrage du rayon tracteur · {pct} %',
     tips: [
-      "Astuce : un humain, c'est 60 % d'eau et 40 % de râleries.",
+      "Astuce : un humain, c'est 60 % d'eau et 40 % de mauvaise foi.",
       "Astuce : un humain endormi pèse autant qu'un humain réveillé, mais il râle moins.",
       'Astuce : les chiens sentent la peur. Et les soucoupes.',
-      'Astuce : les phares ne sont que des lampes de poche en colère.',
-      "Astuce : si l'humain se réveille, l'air de rien. Sifflotez.",
-      'Astuce : les lignes électriques ne sont pas décoratives. Demandez au stagiaire précédent.',
+      'Astuce : les phares, ce sont juste des lampes torches énervées.',
+      "Astuce : si l'humain se réveille, faites comme si de rien n'était. Sifflotez.",
+      "Astuce : les lignes électriques ne sont pas décoratives. Demandez à l'ancien stagiaire.",
       "Astuce : les chats ne sont pas des spécimens. Les chats, c'est la direction.",
       'Astuce : la dignité ne se rembourse pas.',
       "Astuce : les Glorbs ne se mangent pas. Arrêtez d'essayer.",
       'Astuce : « doucement » est un réglage du rayon, pas une suggestion.',
-      "Astuce : toute demande de sonde exige deux signatures. Un cercle dans le blé compte pour une.",
+      "Astuce : toute demande de sonde exige deux signatures. Un crop circle compte pour une.",
       'Astuce : si un humain sculpte sa purée en montagne, vous avez volé trop bas.',
       "Astuce : pas de panique. La panique annule l'assurance au tiers de la soucoupe.",
     ],
+    // v4 story: progress-gated loading tips (unlocked by delivered milestones)
+    tierTips: {
+      afterL2: [
+        "Astuce : chaque chaussette orpheline de Spin City depuis 1998 dort dans l'entrepôt 4.",
+        "Astuce : si Mme Pruitt vous fait coucou, ce n'est pas amical. Elle calibre ses jumelles.",
+      ],
+      afterL4: [
+        'Astuce : La Gazette de Grimsby paie 20 € la photo floue de soucoupe. Ne les financez pas.',
+        "Astuce : le maire Whitlock n'a toujours pas remarqué que sa moumoute est en orbite.",
+      ],
+      afterL5: [
+        'Astuce : Bubulle le dauphin a son anneau de parking au Bureau. Le sien a une piscine.',
+        'Astuce : le Cerfa 7-B est strictement médical. Cessez de glousser en endoscopie.',
+      ],
+      afterL7: [
+        "Astuce : OBELISK™ facture à la note. Notre rayon n'en joue aucune et ne coûte rien.",
+        'Astuce : le Dispatch Temporel tourne au Cerfa 88-MPH. Déclarez vos frais avant hier.',
+      ],
+    },
   },
 
+  // v4 progression
+  routeAdvice: {
+    farm_window: 'montée dégagée',
+    farm_chimney: 'conduit étroit',
+    laundry_skylight: 'ventilateur lent',
+    laundry_loading: 'plus long, chariot mobile',
+  },
+  // v4 progression
+  lessons: {
+    farmVerge: 'Traversez la route derrière le pick-up',
+    wireGap: 'Passez entre les deux lampadaires',
+    porch: 'Attendez hors du capteur et observez la lampe',
+    coolOff: "Gagnez l'ombre et laissez retomber l'alerte",
+    traffic: 'Traversez une voie à la fois',
+    lighthouse: "Attendez dans l'ombre et passez après le faisceau",
+    ambulance: "Quittez la voie quand les flèches passent à l'orange",
+    shutter: 'Quand le cadre apparaît, sortez-en sur le côté',
+    hum: "Attendez hors de l'anneau ou gagnez son centre calme",
+    settle: "Relâchez pour stabiliser avant l'ouverture",
+    laser: 'Attendez ici. Un laser actif se déclenche au contact.',
+    refill: "Replongez-la pour l'hydrater",
+    roll: 'Observez le roulis, puis accompagnez-le',
+    probe: 'Maintenez {joint} dans le cercle {seconds} s',
+    // v4 council: {joint} in the probe prompt, with its article
+    probeJoint: { thermo: 'la tête', hammer: 'le genou', feather: 'le pied' },
+  },
+  // v4 progression
+  fieldCheckControls: {
+    short: 'Test terrain',
+    checkpoint: 'Premier point de reprise validé',
+  },
   workOrders: {
+    // v4 progression
+    nextDispatch: 'PROCHAINE MISSION',
     title: 'ORDRES DE MISSION',
     subtitle: 'Spécimens de la nuit · touchez pour ouvrir',
     rank: 'GRADE',
@@ -83,13 +139,15 @@ export const fr: Strings = {
   },
 
   memo: {
+    // v4 progression
+    recommended: 'Conseil : {route} · {tip}',
     incoming: 'NOTE DE SERVICE',
     to: 'À : Stagiaire Zib',
     from: 'DE : Superviseur Vrell',
     re: 'OBJET : {re}',
     goals: 'OBJECTIFS DE PERFORMANCE',
-    deepGoals: ["{star} — avant l'aube ({time})", '{star} — jamais repéré, aucun échec', '{star} — {time} de nuit en réserve'],
-    tutorialGoals: ['{star} — spécimen passé par la trappe', '{star} — ne se réveille jamais', '{star} — mission en moins de {time}'],
+    deepGoals: ["{star} — avant l'aube ({time})", '{star} — jamais repéré, aucun échec', '{star} — {time} de marge'],
+    tutorialGoals: ['{star} — spécimen passé par la trappe', '{star} — sans le réveiller', '{star} — mission en moins de {time}'],
     signoff: '— Vrell. Envoyé depuis mon porte-bloc.',
     startShift: 'Au boulot !',
   },
@@ -98,22 +156,24 @@ export const fr: Strings = {
     level1: {
       title: 'Le fermier Doyle dort comme un loir',
       location: 'Ferme Doyle · D9',
-      blurb: 'Grand gaillard. Ronflement encore plus grand. Chien au sommeil léger.',
+      blurb: 'Gros gaillard. Ronflement XXL. Chien au sommeil léger.',
       human: 'le fermier Doyle',
       collect: 'le fermier Doyle',
-      re: 'Ordre n°0001 — Le fermier Doyle',
-      body: "Bienvenue dans l'équipe de nuit, Zib. Premier spécimen : le fermier Doyle, 58 ans. Dort comme un loir, ronfle comme un tracteur. Évitez les phares du pick-up et le chien près du perron. Le chien a le sommeil léger et la langue bien pendue.",
-      joke: "Rappel : les spécimens doivent arriver intacts, sans bleus et, idéalement, sans se douter de rien. Le stagiaire du trimestre dernier a ramené un homme qui tenait encore son grille-pain.",
+      re: 'Ordre n°0001 — Le fermier Doyle (Essai)',
+      body: "Bienvenue dans l'équipe de nuit, Zib. Premier spécimen : le fermier Doyle, 58 ans — dort comme une souche, ronfle comme une tronçonneuse. Évitez les phares du pick-up et le chien. Passez la période d'essai et on vous donnera peut-être un tour de cou.",
+      joke: "Rappel : les spécimens doivent arriver intacts, sans bleus et idéalement sans rien savoir. Le stagiaire du trimestre dernier a ramené un homme cramponné à son grille-pain. On ne prononce plus son nom.",
+      signoff: '— Vrell. Envoyé depuis mon porte-bloc.', // v4 story
     },
     level2: {
       title: 'Larry, veilleur de nuit à la laverie',
       location: 'Laverie Spin City · Grande Rue',
-      blurb: 'Endormi sur une chaise à roulettes. Café en main.',
+      blurb: 'Endormi sur une chaise à roulettes. Caleçon au sèche-linge.',
       human: 'Larry',
       collect: 'Larry de la laverie',
       re: 'Ordre n°0002 — Larry de la laverie',
-      body: "Larry est le veilleur de nuit de la laverie Spin City. Il dort à son poste depuis six ans ; nous saluons cet engagement. Évitez la camionnette de livraison. Le néon du snack brouille la direction. Les lignes électriques sont solides. Je ne le répéterai jamais assez.",
-      joke: "Si la tasse de Larry vous suit, enregistrez-la comme « artefact terrien ». Ne la buvez pas. Nous ne savons toujours pas ce qu'est un déca.",
+      body: "Le pick-up de Doyle est entré en ville, et son avis de chausson perdu est déjà affiché à la laverie Spin City. Embarquez Larry, le veilleur de nuit : six ans qu'il dort à son poste, un modèle pour le Bureau. Gare à la camionnette, au néon et aux câbles.",
+      joke: "Les lignes électriques sont solides. L'ancien stagiaire l'a appris juste avant l'incident du grille-pain. Si quelque chose sort du sèche-linge avec lui — un caleçon, une chaussette orpheline —, prenez des pincettes.",
+      signoff: '— Vrell. Je garde un œil sur vous.', // v4 story
     },
     level3: {
       title: "Coup de filet dans l'impasse",
@@ -122,8 +182,9 @@ export const fr: Strings = {
       human: 'Dave, Barb et Gary',
       collect: 'Dave, Barb et Gary',
       re: 'Ordre n°0003 — Allée des Érables (commande groupée)',
-      body: "La formation est terminée. L'allée des Érables compte trois spécimens : Dave le dentiste, Coach Barb et Gary, qui dirige les Voisins vigilants depuis son garage. Récupérez-les tous avant l'aube. Une voiture de police tourne autour du pâté de maisons. Mme Pruitt surveille la rue aux jumelles. Elle n'a pas fermé l'œil depuis 1994.",
-      joke: "Gary a truffé son garage de pièges laser contre les rôdeurs. En onze ans, ils ont attrapé Gary onze fois. Merci de ne pas être la douzième prise.",
+      body: "Fini la formation. L'allée des Érables compte trois cibles avant l'aube : Dave le dentiste, Coach Barb et Gary des Voisins vigilants. Évitez la patrouille et les jumelles de Mme Pruitt — elle n'a pas fermé l'œil depuis 1994 et note tout dans un classeur.",
+      joke: "Gary a truffé son garage de pièges laser contre les rôdeurs. En onze ans, ils ont attrapé Gary onze fois. Ne devenez pas la ligne douze.",
+      signoff: '— Vrell. Contresigné avec réserves.', // v4 story
     },
     level4: {
       title: 'Nuit blanche en centre-ville',
@@ -131,9 +192,10 @@ export const fr: Strings = {
       blurb: 'Un musée, une boîte de nuit, la mairie. Un hélicoptère.',
       human: 'Nigel, Kévin et le maire',
       collect: 'Nigel, Kévin et le maire',
-      re: 'Ordre n°0004 — Grimsby centre-ville',
-      body: "Le siège veut un échantillon représentatif de la vie civique : Nigel, gardien de nuit du musée, DJ Kévin du Bass-Fond, et le maire Whitlock, qui « travaille tard » à la mairie. L'hélicoptère de la police a un projecteur et aucun loisir. Caméras sur les toits, circulation, une grue. Les panneaux publicitaires brouillent la direction.",
-      joke: "Le maire est techniquement un élu : ceci compte donc comme une visite de circonscription. Merci de remplir le Cerfa 9-V (Vote, Extraterrestre). Nous n'avions jamais eu besoin du Cerfa 9-V.",
+      re: 'Ordre n°0004 — Grimsby Centre (confinement)',
+      body: "À cause de la plainte de Gary et de la photo de Mme Pruitt à la mairie, le siège exige un audit civique : Nigel au musée, DJ Kévin au Bass-Fond et le maire Whitlock. Attention à l'hélico de la police, à la circulation et aux néons.",
+      joke: "Le maire est un élu : remplissez le Cerfa 9-V (Vote, Extraterrestre). Vérifiez aussi le registre de Nigel : quelqu'un a expédié une pierre noire hors inventaire du musée la semaine dernière.",
+      signoff: '— Vrell. Ma paupière tremble.', // v4 story
     },
     level5: {
       title: 'Dauphin de quart',
@@ -142,8 +204,9 @@ export const fr: Strings = {
       human: 'Bubulle, Pete et Sal',
       collect: 'Bubulle, Pete et Sal',
       re: "Ordre n°0005 — Barnacle Bay (révision d'espèce)",
-      body: "Le siège soupçonne les humains de n'être que la deuxième espèce la plus maligne de ce caillou. Embarquez Bubulle au parc marin, le capitaine de port Pete dans son phare et Sal à la criée. Le faisceau du phare balaie toute la baie : cachez-vous dans l'ombre de tout ce qui dépasse. Gardez le mammifère humide.",
-      joke: "Le siège a déjà essayé avec des baleines. Le dossier fait quatre tomes. Si Bubulle tente de renégocier votre contrat, ne répondez pas : vous n'êtes pas autorisé à perdre un débat contre un poisson. (Oui, un mammifère. Remplissez le Cerfa 4-M.)",
+      body: "Le bureau du maire signale une caisse non déclarée à Barnacle Bay — et le siège doute que les humains soient même la deuxième espèce la plus maligne ici. Embarquez Bubulle le dauphin, Pete au phare et Sal. Cachez-vous du phare derrière tout ce qui dépasse. Gardez le mammifère humide.",
+      joke: "On a essayé les baleines une fois : quatre tomes de paperasse. Si Bubulle vous donne des conseils juridiques, ignorez-la : vous n'êtes pas autorisé à perdre un débat contre un mammifère mieux gradé que vous.",
+      signoff: '— Vrell. Ça sent la marée ici.', // v4 story
     },
     level6: {
       title: 'Contrôle technique',
@@ -151,26 +214,40 @@ export const fr: Strings = {
       blurb: 'Cerfa 7-B. Deux relevés chacun. Personne ne se réveille.',
       human: 'Hank, le Dr Osei et M. Pemberton',
       collect: 'Hank, le Dr Osei et M. Pemberton',
-      re: 'Ordre n°0006 — Audit obligatoire du Cerfa 7-B',
-      body: "La conformité note zéro sondage ce trimestre. Pire : les humains font la queue pour se faire sonder. De leur plein gré. Ils prennent rendez-vous, jeûnent la veille et laissent quatre étoiles. Ce soir, validez le Cerfa 7-B en chemin : température, réflexes, chatouilles. Les ambulances démarrent sans prévenir. Enfin, en prévenant un peu.",
-      joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. On ignore totalement d'où viennent les rumeurs terriennes. Franchement, c'est vexant.",
+      re: 'Ordre n°0006 — Audit obligatoire Cerfa 7-B',
+      body: "Le registre du phare de Pete est arrivé au siège, et la Conformité a noté zéro sondage ce trimestre. Pire : ici, les humains font la queue volontairement et laissent quatre étoiles. Embarquez Hank, le Dr Osei et M. Pemberton avec le Cerfa 7-B coché en chemin.",
+      joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. On ignore totalement d'où viennent les autres théories humaines. Franchement, c'est vexant.",
+      signoff: '— Vrell. Signé en triple exemplaire (au secours).', // v4 story
+    },
+    // v4 L8
+    level8: {
+      title: 'Premier contact, deuxième passage',
+      location: "Vallée des brevets · avant l'aube",
+      blurb: "Quatre témoins et une greffière à ramener avant l'aube.",
+      human: 'Silex, Roseau et Écho',
+      collect: 'Quatre témoins et Écho',
+      re: 'Ordre n°0008 — Antériorité (Urgent)',
+      body: "Le Dispatch Temporel a retrouvé Krix — l'ex-stagiaire au grille-pain — trois millions d'années en amont. Sa dalle OBELISK™ fait breveter notre rayon par des singes. Survolez deux singes de Silex et deux de Roseau, puis sortez Écho des archives avant l'aube. Le centre des dalles est sourd.",
+      joke: "J'ai forcé la porte du Dispatch Temporel pour ça, Zib. Si un os vole dans la grotte d'Écho, baissez la tête : pour le juridique, l'attraper vaut signature.",
+      signoff: '— Vrell. Pas un mot au siège. Bonne chance, gamin.', // v4 story
     },
     level7: {
       title: 'Vogue la soucoupe !',
       location: 'Le SS Buffet Royal · en mer',
       blurb: 'Le commandant, le chef et Greg. Le navire roule.',
-      human: 'Le commandant Sterling, le chef Marco et Greg',
+      human: 'le commandant Sterling, le chef Marco et Greg',
       collect: 'le commandant Sterling, le chef Marco et Greg',
-      re: 'Ordre n°0007 — SS Buffet Royal (haute mer)',
-      body: "Budget validé par personne : nous facturons en « recherche maritime ». Embarquez le commandant Sterling sur la passerelle, le chef Marco en cuisine et Greg, formule tout compris. Le photographe du bord cadre quiconque s'attarde. Sous le pont, tout le navire roule : penchez-vous avec.",
-      joke: "Aller là où aucun buffet n'est jamais allé. Ne téléportez pas la tour de crevettes. La comptabilité se souvient encore du grille-pain.",
+      re: 'Ordre n°0007 — SS Buffet Royal (hors budget)',
+      body: "Le Cerfa 7-B signale un passager monté à bord au port de Pete — sur le paquebot même qui transporte la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg en tout compris. Le commandant fait la sieste avec le manifeste dans sa veste : on videra ses poches au débriefing. Esquivez le photographe et tenez bon dans la houle.",
+      joke: "Budget validé par personne : on facture en recherche maritime. Doris, la sœur de Mme Pruitt, est sur le pont avec le même classeur. Ne téléportez pas la tour de crevettes.",
+      signoff: '— Vrell. Détruisez cette note après lecture.', // v4 story
     },
   },
 
   missionConcepts: [
-    { title: 'Le Pro de la Muscu', blurb: 'Développé-couché : 140 kg. Composé surtout de shaker protéiné.' },
+    { title: 'Le Go Muscu', blurb: 'Pousse 140 kg au développé-couché. Composé à 80 % de whey.' },
     { title: 'Le Loto des Mamies', blurb: "Quarante mamies. L'une d'elles est armée d'un marqueur fluo." },
-    { title: 'La Boutique de la Zone 51', blurb: "Ils vendent des Vrell en peluche. Vrell n'a rien signé." },
+    { title: 'La Boutique de la Zone 51', blurb: "Ils vendent des Vrell en peluche. Vrell n'a pas cédé son droit à l'image." },
   ],
 
   routes: {
@@ -187,7 +264,7 @@ export const fr: Strings = {
     nigel_skylight: { route: 'Verrière', difficulty: 'dinos et lasers' },
     nigel_loading: { route: 'Quai de livraison', difficulty: 'boutique souvenirs' },
     kev_vent: { route: "Bouche d'aération", difficulty: 'basses et ventilos' },
-    kev_fireescape: { route: 'Escalier de secours', difficulty: 'passer Minus' },
+    kev_fireescape: { route: 'Escalier de secours', difficulty: 'éviter Minus' },
     mayor_clocktower: { route: "Tour de l'horloge", difficulty: 'engrenages' },
     mayor_elevator: { route: "Cage d'ascenseur", difficulty: 'cabine mobile' },
     // L5 pier code
@@ -199,10 +276,10 @@ export const fr: Strings = {
     sal_dock: { route: 'Chambre froide', difficulty: 'Kipper et cageots' },
     // L6 clinic code
     hank_front: { route: "Portes d'entrée", difficulty: 'porte tambour' },
-    hank_rear: { route: "Entrée par l'arrière", difficulty: 'chariot à linge' },
+    hank_rear: { route: 'Entrée arrière', difficulty: 'chariot à linge' },
     osei_helipad: { route: 'Héliport du toit', difficulty: "cage d'ascenseur" },
     osei_pharmacy: { route: 'Guichet pharmacie', difficulty: 'étagères à pilules' },
-    pemberton_window: { route: 'Fenêtre du réveil', difficulty: 'passer Roland' },
+    pemberton_window: { route: 'Fenêtre du réveil', difficulty: 'éviter Roland' },
     pemberton_chute: { route: 'Vide-linge', difficulty: "courant d'air" },
     // L7 cruise code
     captain_mast: { route: 'Trappe du mât', difficulty: 'cartes, trappe minutée' },
@@ -210,18 +287,33 @@ export const fr: Strings = {
     marco_skylight: { route: 'Verrière cuisine', difficulty: 'ventilos de hotte' },
     marco_promenade: { route: 'Pont promenade', difficulty: 'chariot à desserts' },
     greg_awning: { route: 'Store du pont soleil', difficulty: 'pile de transats' },
+    // v4 L8
+    echo_appeal: { route: 'Trappe des recours', difficulty: 'puits, cloche' },
     greg_cabin: { route: 'Hublot', difficulty: 'cabines, caméra' },
   },
 
   ranks: [
-    { title: 'Stagiaire', flavour: 'Non rémunéré. Enfin, presque.' },
-    { title: "Ravisseur à l'essai", flavour: 'Prometteur, quoique cogneur.' },
-    { title: 'Ravisseur', flavour: 'Droit au cordon de badge.' },
-    { title: 'Ravisseur confirmé', flavour: 'A son propre anneau de parking.' },
-    { title: 'Chef ravisseur', flavour: 'Signe les formulaires des autres. Les lit rarement.' },
-    { title: 'Chef des Affaires internes', flavour: 'Garde le bon thermomètre.' },
-    { title: 'Grand amiral de la sieste', flavour: 'Commande tous les capitaines. De tous les navires.' },
+    { title: 'Stagiaire', flavour: 'Non payé. Zéro anneau de parking.' },
+    { title: "Ravisseur à l'essai", flavour: 'Prometteur, sans grille-pain.' },
+    { title: 'Ravisseur', flavour: 'Droit au tour de cou débloqué.' },
+    { title: 'Ravisseur confirmé', flavour: 'Anneau de parking. Derrière Bubulle.' },
+    { title: 'Chef ravisseur', flavour: 'Signe les Cerfa des autres. Les lit rarement.' },
+    { title: 'Chef des Affaires internes', flavour: 'Autorisé au thermomètre en laiton de 1953.' },
+    { title: 'Grand amiral de la sieste', flavour: "Salaire à l'étude. Vrell « s'en occupe »." },
   ],
+
+  // v4 L8 time trial
+  timeTrial: {
+    // v4 council
+    left: "RESTE",
+    banner: "Deux par troupe + Écho",
+    hover: "Survolez un singe une seconde pour le hisser",
+    ghost: "{star} — jamais repéré",
+    count: "{n}/5 singes",
+    stars: ["Quota atteint", "Fantôme", "Oiseau de nuit"],
+    ranOut: "épuisée : temps écoulé",
+    badge: "CHRONO ×5",
+  },
 
   starLabels: {
     tutorial: ['Livré', 'Pas réveillé', 'Oiseau de nuit'],
@@ -244,11 +336,11 @@ export const fr: Strings = {
       beam_dampener: {
         name: 'Amortisseur de rayon',
         effect: 'Moins de ballant',
-        desc: 'Spécimens 30 % moins mous de la nouille. Garantie annulée sur les vraies nouilles.',
+        desc: 'Spécimens 30 % moins nouilles. Garantie annulée sur les vraies nouilles.',
       },
       hush_drive: {
         name: 'Moteur Feutré',
-        effect: 'Mèche de repérage 1,25 s · Réveil plus lent',
+        effect: 'Délai de repérage 1,25 s · Réveil plus lent',
         desc: "Un minuscule silencieux pour votre antigravité. Les chiens n'entendent plus qu'un léger bourdonnement poli.",
       },
       snooze_ray: {
@@ -321,22 +413,26 @@ export const fr: Strings = {
     },
     causes: {
       level1: ['des gaz des marais', 'une très grande chouette effraie', 'une moissonneuse-batteuse ambitieuse'],
-      level2: ['un sèche-linge en plein essorage', "des reflets de l'enseigne du snack", "l'électricité statique d'une chaussette perdue"],
+      level2: ['un lave-linge en plein essorage', "des reflets de l'enseigne du snack", "l'électricité statique d'une chaussette perdue"],
       level3: ['un ballon-sonde', 'le drone des Voisins vigilants de Gary', 'Vénus, encore'],
       level4: ["un spectacle de drones que personne n'a commandé", 'le nouvel éclairage public du maire', 'un dirigeable égaré'],
       level5: ['une méduse fluorescente', 'un coup de chaud du phare', 'une brume de mer suspecte'],
       level6: ['un hélicoptère du SAMU', 'un exercice incendie de routine', 'le distributeur de café'],
+      // v4 L8
+      level8: ["un os en orbite basse", "un solo de timbales"],
       level7: ["un feu d'artifice", 'le projecteur karaoké du commandant', 'une mouette de taille réglementaire'],
       generic: ['des gaz des marais', 'un ballon-sonde', 'Vénus'],
     },
     headlines: {
       level1: ["UN FERMIER S'ENVOLE EN PYJAMA, LE CHIEN « N'A RIEN VU »", 'LES VACHES NIENT TOUT EN BLOC'],
       level2: ['LE GARDIEN DE LA LAVERIE DISPARAÎT EN PLEIN ESSORAGE, SON CAFÉ ENCORE CHAUD', 'PÉNURIE DE CHAUSSETTES : LES EXTRATERRESTRES ENFIN ACCUSÉS'],
-      level3: ['IMPASSE « TROP CALME », SELON UNE DAME AUX JUMELLES', 'GARY AVAIT RAISON, AFFIRME GARY'],
-      level4: ['LE MAIRE ENLEVÉ, LA MAIRIE TOURNE NORMALEMENT', 'UN HÉLICO POURSUIT « UN ENJOLIVEUR À PHARES » PENDANT DEUX HEURES'],
-      level5: ['UN ENJOLIVEUR VOLANT ENLÈVE UN DAUPHIN, LAISSE UN MOT POLI', "GARDIEN DU PHARE : « CE N'ÉTAIT PAS UN BATEAU »"],
-      level6: ["SONDÉ À LA PLUME D'OIE, UN PATIENT NOTE L'EXPÉRIENCE 4/5", "LES TEMPS D'ATTENTE BAISSENT : LES PATIENTS DISPARAISSENT"],
-      level7: ['DES CROISIÉRISTES SIGNALENT UN OVNI, ET DES CREVETTES GRATUITES', 'COMMANDANT DISPARU : LE NAVIRE CONTINUE, PERSONNE NE REMARQUE'],
+      level3: ["L'ENJOLIVEUR PASSE DE LA FERME À LA BANLIEUE — GARY RÉCLAME DES LASERS", 'IMPASSE « TROP CALME », SELON UNE DAME AUX JUMELLES', 'GARY AVAIT RAISON, AFFIRME GARY'],
+      level4: ['LA PHOTO DE PRUITT À LA MAIRIE : LE MAIRE DISPARAÎT EN PLEINE SIESTE', 'LE MAIRE ENLEVÉ, LA MAIRIE TOURNE NORMALEMENT', 'UN HÉLICO POURSUIT « UN ENJOLIVEUR À PHARES » PENDANT DEUX HEURES'],
+      level5: ['UN ENJOLIVEUR VOLANT ENLÈVE UN DAUPHIN, LAISSE UN MOT POLI', 'ENJOLIVEUR SUR LA JETÉE — LE DAUPHIN LAISSE UN MOT ET DÉMISSIONNE', "GARDIEN DU PHARE : « CE N'ÉTAIT PAS UN BATEAU »"],
+      level6: ["SONDÉ À LA PLUME D'OIE, UN PATIENT NOTE L'EXPÉRIENCE 4/5", 'SONDÉS À LA PLUME À SAINTE-MILDRED : « ATTENTE PLUS COURTE »', "LES TEMPS D'ATTENTE BAISSENT : LES PATIENTS DISPARAISSENT"],
+      // v4 L8
+      level8: ['UN SINGE BREVÈTE LE CIEL — DÉLAI RATÉ À QUELQUES SECONDES PRÈS', 'UN SINGE LANCE UN OS, SES AVOCATS RÉCLAMENT LE CIEL', 'LA DALLE INVOQUE SON DROIT AU SILENCE, FREDONNE QUAND MÊME'],
+      level7: ['OVNI EN CROISIÈRE — LA SŒUR DE MME PRUITT RÉCLAME 14,99 €', 'DES CROISIÉRISTES SIGNALENT UN OVNI, ET DES CREVETTES GRATUITES', 'COMMANDANT DISPARU : LE PAQUEBOT CONTINUE, PERSONNE NE TILTE'],
       generic: ['ENCORE UNE SOUCOUPE : LA MAIRIE « SE PENCHE SUR LE DOSSIER »', 'EXTRATERRESTRES APERÇUS : « ILS ONT FAIT COUCOU »', 'LE CIEL CONTIENT « UN TRUC », CONFIRMENT LES EXPERTS'],
     },
   },
@@ -347,7 +443,7 @@ export const fr: Strings = {
     cooling: 'ÇA RETOMBE…',
     suspicion: 'SOUPÇON',
     seconds: 's',
-    fuse: 'mèche {s} s',
+    fuse: 'délai {s} s',
     sunrise: 'AUBE !',
     shift: 'SERVICE',
     sunComing: 'LE SOLEIL SE LÈVE !',
@@ -380,18 +476,22 @@ export const fr: Strings = {
       Barb: ['Coach ? …Coach ?', 'Biscuit, elle est passée où ?'],
       Gary: ['QG, répondez. QG ?', 'Registre de veille : Gary a quitté sa chaise.'],
       Nigel: ['Nigel ? Le bureau est vide.', 'Les dinosaures sont sans surveillance.'],
-      Kev: ['Pas de DJ. Pas de remboursement.', 'Qui passe ce silence ?'],
+      Kev: ['Pas de DJ. Pas de remboursement.', 'Qui mixe ce silence ?'],
       Mayor: ['Monsieur le Maire ? Monsieur ?', 'Son thé est encore chaud.'],
       // L5 pier code
       Bubbles: ['Bubulle ? Qui a laissé un mot mouillé ?', "C'est l'otarie qui assure le spectacle."],
       Pete: ['Pete ? Qui surveille la lanterne ?', 'La bouilloire siffle, il est où Pete ?'],
-      Sal: ['Sal ? Le registre dit : une manquante.', 'Kipper, elle est passée où ?'],
+      Sal: ['Sal ? Le bilan affiche une manquante.', 'Kipper, elle est passée où ?'],
       // L6 clinic code
-      Hank: ['Numéro… 347 ? Personne ?', 'Hank a oublié son bidon.'],
+      Hank: ['Numéro… 347 ? Personne ?', 'Hank a oublié son bidon de purge.'],
       Osei: ['On bippe le Dr Osei. Toujours rien.', 'Son bipeur sonne tout seul.'],
       Pemberton: ['Box 3 vide. Il a laissé quatre étoiles.', 'M. Pemberton ? Il a pris son envol ?'],
       // L7 cruise code
-      Captain: ['Passerelle au commandant ? Allô ?', "Le navire se pilote seul. L'air de rien."],
+      // v4 L8
+      Flint: ["Qui a pris le pouce témoin ?"],
+      Reed: ["La doublure exige un solo."],
+      Echo: ['Il manque la greffière.'],
+      Captain: ['Passerelle au commandant ? Allô ?', 'Le navire se pilote seul. Restons calmes.'],
       Marco: ['Chef ? Le soufflé vous réclame.', 'Le chariot à desserts est sans surveillance.'],
       Greg: ["Quelqu'un a vu Greg ? Ses serviettes sont là.", 'Le transat 14 est libre ! Greg a disparu !'],
     },
@@ -411,6 +511,8 @@ export const fr: Strings = {
         // L6 clinic code
         ambulance: "Scellé A · dashcam d'ambulance, unité 7",
         // L7 cruise code
+        // v4 L8
+        hum: "Scellé A · vibration fossilisée",
         photographer: 'Scellé A · photo officielle de croisière, 14,99 €',
         steward: 'Scellé A · téléphone du steward, pont 9',
       },
@@ -423,7 +525,7 @@ export const fr: Strings = {
       air: 'AIR-1 · CIBLE : FLOUE',
       alt: 'ALT 90 M',
       live: 'DIRECT',
-      watching: '2 vues',
+      watching: '2 en ligne',
       clock: '{clock}',
     },
   },
@@ -432,13 +534,13 @@ export const fr: Strings = {
     wake: 'RÉVEIL',
     awake: 'RÉVEILLÉ !',
     holdingOn: "ÇA S'ACCROCHE !",
-    cameraFuse: 'MÈCHE CAMÉRA',
+    cameraFuse: 'DÉLAI CAMÉRA',
     onCamera: 'FILMÉ !',
     shakeGrip: 'Secouez le rayon pour lui faire lâcher prise !',
-    pointBeam: 'Restez appuyé là où le rayon doit aller, en douceur !',
+    pointBeam: 'Guidez le rayon du doigt — en douceur !',
     souvenirHint: 'Souvenir ! Frôlez l’objet qui brille.',
     turn: 'TOURNER',
-    turnHintMouse: 'Molette ou Q / E pour faire pivoter',
+    turnHintMouse: 'Molette ou A / E pour faire pivoter',
     turnHintTouch: 'Tournez deux doigts pour faire pivoter',
     snoozeHint: 'Double tap · Rayon Dodo',
     alarmTripped: 'ALARME DÉCLENCHÉE',
@@ -456,6 +558,7 @@ export const fr: Strings = {
       Gladys: "L'infirmière Gladys vous renvoie en bout de file.",
       Roland: 'Roland a tamponné votre enlèvement NON CONFORME.',
       // L7 cruise code
+      // v4 L8
       Anchovy: 'Anchois a pris le commandement de la passerelle.',
     },
     sleeperShouts: {
@@ -467,8 +570,9 @@ export const fr: Strings = {
       Kipper: 'MIAOU ?!',
       // L6 clinic code
       Gladys: 'PRENEZ UN TICKET !',
-      Roland: 'HORS NORME !',
+      Roland: 'NON CONFORME !',
       // L7 cruise code
+      // v4 L8
       Anchovy: 'MIAOU ! AUX POSTES !',
     },
     noSleeping: 'INTERDIT DE DORMIR',
@@ -483,49 +587,49 @@ export const fr: Strings = {
     spottedCaptions: [
       'Un témoin décrit « un gros frisbee malpoli ».',
       "Un habitant appelle sa mère. Elle non plus ne le croit pas.",
-      "L'humain en pyjama a désormais un podcast sur le sujet.",
-      "Photo floue publiée. 3 j'aime. Dont sa mère.",
+      'Le type en pyjama a déjà lancé un podcast là-dessus.',
+      'Photo floue postée. 3 likes. Dont sa mère.',
       'Observation signalée aux Voisins vigilants (un seul type).',
       "Le témoin hurle « GINETTE ». Il n'y a pas de Ginette.",
       'Une du journal local : « Des lumières. Encore. Sûrement Gary. »',
-      "Le témoin exige votre permis de sonde. Vrell n'avait pas parlé de permis.",
+      "Le témoin exige votre permis de sonder. Vrell n'avait pas parlé de permis.",
     ],
     spottedShouts: ['GINETTE !', "C'EST EUX !", 'JE LE SAVAIS !', 'Encore ?…', "CHÉRIE, L'APPAREIL !"],
     zib: {
       start: ['OK. OK OK OK. Du calme, Zib.', 'On respire. On ne vomit pas. Pas cette fois.'],
-      cone: ['Des phares ! L’air de rien !', 'Ressemble à un nuage. RESSEMBLE À UN NUAGE.'],
+      cone: ['Des phares ! L’air de rien !', 'Fais le nuage. FAIS LE NUAGE.'],
       bark: ['Gentil toutou… toutou dodo…', "Chut ! Chuuut ! Qui c'est le chien sage ?"],
-      neon: ['La lumière qui grésille me brouille le cerveau !', 'Oh, joli. Aïe, la direction.'],
-      powerline: ['AÏE. Qui met de la ficelle dans le CIEL ?', 'Ligne électrique ! La Terre est vraiment mal conçue.'],
-      highSus: ['Ils regardent ! ILS REGARDENT !', 'Pense à des trucs innocents !'],
+      neon: ['La lumière qui grésille me brouille le cerveau !', 'Oh, joli. Aïe, les commandes.'],
+      powerline: ['AÏE. Qui met de la ficelle dans le CIEL ?', 'Ligne électrique ! Elle est vraiment mal foutue, cette planète.'],
+      highSus: ['Ils me regardent ! ILS ME REGARDENT !', 'Pense à des trucs innocents !'],
       nearRing: ["Surplace… surplace… n'éternue pas…", "C'est celui-là. On ne bouge plus…"],
-      locked: ['Verrouillé ! Maman serait si fière.', 'À toi, le rayon. Doucement, Zib. Doucement.'],
-      respawn: ["Personne n'a rien vu. Personne n'a RIEN vu.", 'Deuxième prise. Tout va bien. Totalement.'],
+      locked: ['Verrouillé ! Maman serait si fière.', 'Allez, le rayon. Doucement, Zib. Doucement.'],
+      respawn: ["Personne n'a rien vu. Personne n'a RIEN vu.", 'Prise deux. Tout va bien. Tout va très bien.'],
     },
     vrell: {
       rejected: [
         "Spécimen non livré. J'ai classé ceci dans « expériences formatrices ».",
-        'Pas de spécimen. Juste du ressenti. Le ressenti ne compte pas dans le quota.',
+        'Pas de spécimen. Juste de bonnes ondes. Les bonnes ondes ne remplissent pas le quota.',
         "La trappe était juste là. C'est une très grande trappe.",
       ],
       woke: [
         "Le spécimen s'est réveillé et a vu votre visage. Les RH ont des questions.",
-        "Il est réveillé et le raconte à tout le monde. La prochaine fois : plus doux. Comme un soupir.",
+        "Il est réveillé et le raconte à tout le monde. La prochaine fois : plus en douceur. Comme un soupir.",
         '« Rayon en douceur » ne veut pas dire « rayon en hurlant ».',
       ],
       perfect: [
-        "Impeccable. Je m'en attribuerai le mérite à la revue trimestrielle.",
+        "Impeccable. Je m'en attribuerai le mérite au bilan trimestriel.",
         'Trois étoiles. Que ça ne vous monte pas aux antennes.',
         "Un cas d'école. Vous serez dans le manuel. En note de bas de page.",
       ],
       spotted: [
         'Repéré {spotted} fois. La ville a créé un groupe WhatsApp à votre sujet.',
-        "Vous êtes une légende locale. C'est exactement le contraire du poste.",
+        "Vous êtes une légende locale. C'est exactement le contraire de votre fiche de poste.",
       ],
       bonks: [
         "{bonks} gnons. Le spécimen est désormais plus bleu qu'humain.",
         "J'ai demandé un spécimen, pas une piñata.",
-        'Chaque gnon est un formulaire. Vous me devez {bonks} formulaires.',
+        'Chaque gnon vaut un Cerfa. Vous me devez {bonks} Cerfa.',
       ],
       stole: [
         "Vous avez aussi rapporté : {item}. La comptabilité est ravie. La comptabilité n'est jamais ravie.",
@@ -536,20 +640,30 @@ export const fr: Strings = {
       clean: ['Zéro gnon. Vous faites exprès de rendre ma journée ennuyeuse ?', "Zéro gnon. J'avais déjà pré-rempli les fiches d'hématome. Merci bien."],
       default: [
         'Correct. Mon mot préféré. Il me dispense de parler à qui que ce soit.',
-        'Spécimen reçu. Merci de nettoyer le rayon.',
+        'Spécimen reçu. Merci de désinfecter le rayon.',
       ],
     },
     itemsNone: 'aucun',
     deepZib: {
-      start3: ["Trois spécimens avant l'aube. C'est un de plus que tout ce que j'ai fait. Au total.", 'Le quartier pavillonnaire. Ici, tout le monde a une sonnette connectée et une rancune.'],
-      start4: ["Une ville entière. Maman dit que les villes, c'est là où les soucoupes finissent à la fourrière.", 'OK. Le centre-ville. Du calme. Sois un pigeon.'],
+      start3: ["Trois maisons avant l'aube. La banlieue : sonnettes vidéo, chiens et rancunes.", "Trois spécimens avant le jour. C'est un de plus que mon total à vie."],
+      start4: ['Grimsby centre-ville. Maman dit que les villes mettent les soucoupes en fourrière.', 'OK. Le centre-ville. Du calme. Fais le pigeon.'],
+      // v4 story
+      start5: ["Barnacle Bay ! Attends — j'enlève un DAUPHIN ? Je prends une serviette ?", 'Service en bord de mer. Cache-toi du phare. Garde le mammifère humide.'],
+      start6: ['Sainte-Mildred. Les humains paient pour se faire sonder ? Quelle planète bizarre.', 'Audit Cerfa 7-B. Thermomètre en laiton prêt. Que personne ne se réveille.'],
+      start7: ['Un paquebot entier, hors budget. Vrell va finir par nous faire virer tous les deux.', 'SS Buffet Royal. Chope le commandant, évite le flash, oublie les crevettes.'],
+      start8: ["Trois millions d'années plus tôt et c'est ENCORE Grimsby. Vite, avant Écho !", 'Des singes en liberté, des dalles noires et un chrono. Il est où, Krix ?!'],
+      twoOfThree: [
+        "Deux en soute ! Plus qu'un et je suis presque un vrai employé.",
+        "Deux de faits, plus qu'un. N'éternue pas sur le rayon, Zib.",
+        "Presque fini ! Vrell va peut-être même dire que c'est « correct » !",
+      ],
       police: ['Voiture de police ! Fais le ballon-sonde !', "C'est un FLIC. J'ai mon permis ? Les soucoupes ont un PERMIS ?"],
       patrol: ['Patrouille ! Fais le lampadaire. Un grand lampadaire qui tangue.', "Encore une voiture de police. Cette ville a plus de flics que de délits. Jusqu'à ce soir."],
-      traffic: ['De la circulation ! Qui conduit à 3 h du matin ? RENTREZ CHEZ VOUS.', "Des phares de taxi ! Il en a vu d'autres. Sûrement."],
-      porch: ["La lampe du perron a cliqué ! Détecteur de mouvement ! Je BOUGE, c'est tout mon truc !", "Lampe du perron ! On ne bouge plus ! Non, bouge, c'est pire !"],
+      traffic: ['Des bagnoles ! Qui roule à 3 h du matin ? RENTREZ CHEZ VOUS.', "Des phares de taxi ! Il en a vu d'autres. Sûrement."],
+      porch: ["La lampe du perron s'allume ! Détecteur de mouvement ! Mais je BOUGE, c'est tout le principe !", "Lampe du perron ! On ne bouge plus ! Non, bouge, c'est pire !"],
       watcher: ['Mme Pruitt a des JUMELLES. Qui a des jumelles à 3 h du matin ?!', "La dame à la fenêtre. Elle note quelque chose. C'est moi ?"],
       dog: ["Chien de garde ! Bon chien. Chien dodo. Chien qui n'a rien vu.", "Le chien est réveillé ! Fais l'écureuil. Un gros écureuil rond et lumineux."],
-      heli: ["C'est un hélico de la POLICE. Maman a dit que si je me fais arrêter, je rentre à pied.", 'Projecteur ! Reste hors du cercle ! Tout ce qui est mal est dans le cercle !'],
+      heli: ["C'est un hélico de la POLICE. Maman a dit que si je me fais arrêter, je rentre à pied.", 'Projecteur ! Reste hors du cercle ! Tout ce qui craint est dans le cercle !'],
       camera: ["Caméra sur le toit ! Souris ! Non ! Ne souris pas ! On n'est pas fichés !", 'Caméra de toit ! Ne bouge plus ! Une soucoupe, ça a un bon profil ?'],
       window: ["Quelqu'un fait des heures sup ! Qui fait des heures sup ? Ah. Oui. Moi.", "Lumière de bureau ! Attends qu'elle clignote et s'éteigne !"],
       neon: ['Panneau pub ! Ma direction est pleine de BURGERS.', "Le néon est encore dans ma tête. La gauche, c'est la droite. La droite, c'est le goûter."],
@@ -558,32 +672,34 @@ export const fr: Strings = {
       bat: ['DES CHAUVES-SOURIS ! Partout ! Pardon ! Pardon, les chauves-souris !', "Une chauve-souris m'a percuté. Ou l'inverse. Dans tous les cas, c'est ma faute, apparemment."],
       pigeon: ['Des pigeons ! Ils ne bougent pas ! Pourquoi ils ne BOUGENT pas ?', 'Impact de pigeon ! Maman dit que ce sont des rats avec un brevet de pilote.'],
       crane: ["La grue ! C'est un bras de métal géant et il me DÉTESTE.", 'La flèche de la grue ! Baisse-toi ! Une soucoupe, ça se baisse ?'],
-      sprinkler: ["C'est un arroseur. Juste un arroseur. Je le savais.", "L'arroseur se fiche de moi. Je respecte l'arroseur."],
-      cropcircle: ["Hé, c'est pas moi ! C'est l'écriture de l'équipe du mardi.", 'Un cercle dans le blé ! Vrell dit que ça vaut une signature pour la sonde.'],
-      tripwire: ["Un piège laser de Gary. Relié à une sonnette chez lui. Il dort toujours dessus.", "Encore un piège de Gary. Il n'attrape que Gary. La menace, c'est Gary."],
+      sprinkler: ["C'est un arroseur. Juste un arroseur. Je le savais.", "L'arroseur me calcule même pas. Je respecte l'arroseur."],
+      cropcircle: ["Hé, c'est pas moi ! C'est l'écriture de l'équipe du mardi.", 'Un crop circle ! Vrell dit que ça vaut une signature pour la sonde.'],
+      tripwire: ["Un piège laser de Gary. Ça sonne près de son lit. Il dort à poings fermés à chaque fois.", "Encore un piège de Gary. Il n'attrape que Gary. La menace, c'est Gary."],
       checkpoint: ["Un dans la soute ! Personne n'a rien vu. J'espère.", 'Spécimen embarqué. On remonte, Zib. L’air de rien.'],
       dawn: ["Le ciel devient orange ! C'est la mauvaise couleur !", "L'aube dans trente secondes ! Les humains vont être RÉVEILLÉS. Exprès."],
       nearRing: ["Surplace… surplace… n'éternue pas…", "C'est celui-là. On ne bouge plus…"],
-      locked: ['Verrouillé ! À toi, le rayon. Doucement.', "J'y vais. On enlève ses chaussures. J'ai des chaussures ?"],
-      respawn: ["Personne n'a rien vu. Personne n'a RIEN vu.", 'Deuxième prise. Tout va bien. Totalement.', 'OK. On recommence. Depuis le dernier spécimen. Comme un pro.'],
+      locked: ['Verrouillé ! Allez, le rayon. Doucement.', "J'y vais. On enlève ses chaussures. J'ai des chaussures ?"],
+      respawn: ["Personne n'a rien vu. Personne n'a RIEN vu.", 'Prise deux. Tout va bien. Tout va très bien.', 'OK. On recommence. Depuis le dernier spécimen. Comme un pro.'],
       // L5 pier code
       lighthouse: ["Le phare ! Je ne suis pas un bateau ! Je suis un tout petit nuage très coupable !", "Le faisceau du phare ! Cache-toi derrière un truc haut ! Maman m'a toujours dit que j'étais trop petit !"],
       gull: ["Des MOUETTES ! Elles veulent mes frites ! J'ai même pas de frites !", 'Une mouette a percuté la soucoupe. La mouette va bien. La mouette va toujours bien.'],
       // L6 clinic code
       ambulance: ["L'ambulance me voit ! J'ai l'air d'une urgence ? Ne réponds pas.", 'Des phares ET un gyrophare ! Ça fait deux façons de me regarder !'],
-      scramble: ["La porte du garage se lève ! Ils déploient une ambulance ! Pour MOI ?", "Flèches orange ! L'ambulance va SORTIR ! Hors de la voie !"],
+      scramble: ["La porte du garage se lève ! Ils font sortir une ambulance ! Pour MOI ?", "Flèches clignotantes ! L'ambulance va SORTIR ! Dégage de la voie !"],
       // L7 cruise code
-      photographer: ["Le photographe du bord ! Maman a dit de ne jamais finir sur un mug souvenir !", "Déclencheur ! Dans le cadre, c'est mal ! Dehors, c'est là où je devrais être !"],
-      framed: ["Il cadre ! Bouge avant que l'objectif se ferme !", 'Cadre orange ! Souriez ! Non ! Ne souris pas ! FILE !'],
+      // v4 L8
+      hum: ["La pierre me met en attente. Sors de l'anneau !"],
+      photographer: ["Le photographe du bord ! Maman a dit de ne jamais finir sur un mug souvenir !", "Clic ! Dans le cadre, ça craint ! Hors champ, Zib, hors champ !"],
+      framed: ["Il cadre ! Bouge avant que le diaphragme se ferme !", 'Cadre orange ! Ouistiti ! Non ! Dis pas ouistiti ! FILE !'],
       steward: ['Un steward avec une lampe ! Fais la mouette. Une grosse mouette ronde.', 'Lampe torche ! Les stewards vérifient tout. Même le ciel, visiblement.'],
     },
     spotCaptions: {
-      police: ["L'agent Dobbs signale par radio « un gros enjoliveur, en vol ». Le central lui demande s'il a mangé.", 'La dashcam de la voiture a tout filmé. La vidéo passera au pot du commissariat. Deux fois.'],
-      patrol: ['La patrouille note « lumières inhabituelles ». Le rapport sera classé à « jeudi ».', 'Un agent renverse son café sur ses genoux. Il accusera le maire.'],
-      traffic: ['Un chauffeur de taxi vous voit, hausse les épaules et ajoute 20 % de supplément observation.', 'Une camionnette de livraison vous filme au feu rouge. Cinq étoiles. À revoir.'],
-      porch: ['La lampe du perron vous a eu. Puis la sonnette connectée a eu la lampe du perron.', 'Lampe à détecteur, sonnette connectée, appli du quartier. 41 commentaires avant le petit-déj.'],
+      police: ["L'agent Dobbs signale par radio « un gros enjoliveur, en vol ». Le central lui demande ce qu'il a bu.", 'La dashcam de la voiture a tout filmé. La vidéo passera au pot du commissariat. Deux fois.'],
+      patrol: ['La patrouille note « lumières inhabituelles ». Le rapport sera classé dans le dossier « jeudi ».', 'Un agent renverse son café sur ses genoux. Il accusera le maire.'],
+      traffic: ['Un chauffeur de taxi vous voit, hausse les épaules et ajoute 20 % de supplément OVNI.', 'Une camionnette de livraison vous filme au feu rouge. Cinq étoiles. Je recommande.'],
+      porch: ['La lampe du perron vous a grillé. Puis la sonnette vidéo a filmé la lampe du perron.', 'Lampe à détecteur, sonnette connectée, appli du quartier. 41 commentaires avant le petit-déj.'],
       watcher: ['Mme Pruitt vous inscrit dans son registre, entre « chat louche » et « les poubelles des Henderson ».', 'Mme Pruitt appelle la mairie. La mairie reconnaît sa voix. La mairie raccroche. Vous êtes quand même repéré.'],
-      dog: ["Le chien aboie. Une lumière s'allume. Un homme en robe de chambre dit « c'est QUOI, ça ».", 'Le chien de garde a enfin aboyé sur quelque chose de réel. Il est si fier.'],
+      dog: ["Le chien aboie. Une lumière s'allume. Un homme en robe de chambre lâche un « c'est QUOI ce truc ? ».", 'Le chien de garde a enfin aboyé sur quelque chose de réel. Il est si fier.'],
       heli: ['« Aéronef non identifié, donnez votre indicatif. » « Zib » n’était pas la bonne réponse.', "Le projecteur de l'hélico vous trouve. Le pilote demande une photo. Puis des renforts."],
       camera: ['La caméra du toit garde un extrait. La sécurité le regardera mardi, en accéléré ×4.', "Images envoyées dans le cloud. Vous avez brièvement été un nuage. Ça n'a pas pris."],
       window: ["Un comptable en heures sup vous voit. Il ne le dit à personne. Il n'a personne à qui le dire.", 'Un employé de nuit vous voit, vous fait coucou et retourne à son tableur. Ça compte quand même.'],
@@ -592,6 +708,8 @@ export const fr: Strings = {
       // L6 clinic code
       ambulance: ["Les ambulanciers notent « une soucoupe, consciente, respire ». Quatre heures d'attente aux urgences.", 'Un équipage vous photographie pour le journal interne. Légende : « Nuit plutôt calme ».'],
       // L7 cruise code
+      // v4 L8
+      hum: ["Le monolithe a gravé votre passage dans le marbre."],
       photographer: ['Le photographe du bord tient son cliché. En vente à la boutique dès le petit-déj, 14,99 € encadré.', 'Pose longue, mise au point parfaite. La compagnie vous met dans sa prochaine brochure.'],
       steward: ["Un steward note « un feu de pont non autorisé ». Le troisième cette semaine. Personne n'explique les deux autres.", "La lampe vous trouve. Le steward demande votre carte d'embarquement."],
     },
@@ -606,13 +724,15 @@ export const fr: Strings = {
       // L6 clinic code
       ambulance: ['DÉGAGEZ LA VOIE !', 'CODE… SOUCOUPE ?!'],
       // L7 cruise code
+      // v4 L8
+      hum: ["JE VOUS ÉCOUTE."],
       photographer: ['OUISTITI !', 'ON NE BOUGE PLUS !'],
       steward: ["CARTE D'EMBARQUEMENT !", 'MONSIEUR ! MONSIEUR !'],
     },
     spotZib: {
       police: ["Le flic m'a vu. Retour au dernier spécimen. Fais comme si c'était une autre soucoupe.", "Encore l'unité 4 ! À ce stade, on devrait s'envoyer des cartes de vœux."],
       patrol: ["La patrouille m'a eu. Retour à l'étape. Autre soucoupe, autre soucoupe."],
-      traffic: ["Un TAXI m'a vu. De tout ce qui existe, un TAXI."],
+      traffic: ["Un TAXI m'a vu. Fallait vraiment que ce soit un TAXI."],
       porch: ["Détecteur de mouvement. Je bougeais. C'est ma faute.", 'Encore le détecteur. Si je passe TRÈS lentement ? Non. Déjà testé.'],
       watcher: ['Mme Pruitt. Évidemment. Elle voit tout. Elle avait vu venir le premier pas sur la Lune.', "Mme Pruitt m'a verrouillé plus vite que mon rayon. Respect, franchement."],
       dog: ["Le chien m'a balancé. Les chiens balancent toujours."],
@@ -620,7 +740,9 @@ export const fr: Strings = {
       camera: ['Caméra. Je suis sur Internet maintenant. Maman va voir ça.', 'Pris en vidéosurveillance. Heureusement, la qualité est atroce.'],
       window: ["La lumière du bureau. J'aurais dû attendre qu'elle clignote."],
       // L7 cruise code
-      photographer: ["Photographié. J'ai cligné des yeux. J'ai forcément cligné.", "Le cadre m'a eu. Sors AVANT que l'objectif se ferme, Zib."],
+      // v4 L8
+      hum: ["La prochaine fois, vise le centre. Le caillou y est sourd."],
+      photographer: ["Photographié. J'ai cligné des yeux. J'ai forcément cligné.", "Le cadre m'a eu. Sors AVANT que le diaphragme se ferme, Zib."],
       steward: ["Le steward m'a vu. Je suis maintenant un « incident de pont ».", "Repéré par un steward. Je n'ai PAS de carte d'embarquement !"],
       // L5 pier code
       lighthouse: ["Le phare m'a eu. Cache-toi derrière les trucs HAUTS, Zib.", "Éclairé comme une bouée. Reste dans l'ombre des mâts."],
@@ -631,11 +753,11 @@ export const fr: Strings = {
       woke: [
         "{by} a tout vu en se réveillant. {by} « digère l'expérience » sur un forum.",
         "{by} a ouvert un œil. Puis l'autre. Puis la bouche. Ensuite, ça s'est gâté.",
-        "{by} est debout. Un spécimen, ça dort. C'est dans le contrat. Bon, ça n'y est pas, mais ça devrait.",
+        "{by} ne dort plus. Un spécimen, ça dort. C'est dans le contrat. Bon, ça n'y est pas, mais ça devrait.",
       ],
       sleeper: [
         "{by} a ouvert les yeux. Personne n'avait dit à {by} que c'était un boulot à deux.",
-        '{by} est debout et a un avis. Bruyant. Réessayez, en silence.',
+        '{by} ne dort plus et a un avis. Bruyant. Réessayez, en silence.',
         "Vous avez réveillé {by}. {by} n'était pas sur l'ordre de mission. {by} est maintenant sur un autre ordre de mission.",
       ],
       alarm: [
@@ -658,31 +780,31 @@ export const fr: Strings = {
       'Vous êtes à court de nuit. Merci de rapporter la nuit à la réserve et de remplir le formulaire de restitution de nuit.',
       "Le jour. Je vous ai reprogrammé pour demain soir. Je me suis reprogrammé pour une sieste.",
       "C'est le matin. Les spécimens beurrent leurs tartines. On ne peut pas enlever quelqu'un qui beurre une tartine. C'est dans le traité.",
-      "L'aube. Toujours mieux que la division Trépieds : un rhume terrien et les trois pilotes en arrêt maladie.",
+      "L'aube. Toujours mieux que la division Trépieds : un petit rhume terrien et toute la flotte en arrêt maladie.",
     ],
     deepComments: {
       perfect: [
-        "Trois spécimens, aucune observation, rentré avant l'aube. Je n'ai rien à redire et je vous en veux.",
+        "Trois spécimens, zéro témoin, rentré avant l'aube. Je n'ai rien à redire et je vous en veux.",
         "Service impeccable. J'ai transmis votre rapport au siège avec mon nom dessus. Procédure standard.",
         "Impeccable. Votre mère a appelé le siège pour savoir si vous mangiez assez. Dites-lui d'arrêter.",
       ],
-      ghost: ["Personne ne vous a vu. Personne ne s'est réveillé. Vous êtes la rumeur que les stagiaires se racontent.", "Un insomniaque a bien appelé la radio. Ils ont cru à un feuilleton martien et ont raccroché."],
+      ghost: ["Personne ne vous a vu. Personne ne s'est réveillé. Vous êtes la rumeur que les stagiaires se racontent.", "Un témoin a bien appelé la radio. Ils ont cru à une rediffusion d'Orson Welles et ont raccroché."],
       spotted: [
         'Les trois livrés, et repéré {spotted} fois. Le journal local a sorti une édition spéciale. Vous faites la une.',
-        'Livré. Aussi : {spotted} observations. Cessez de devenir du folklore sur le temps de travail.',
+        'Livrés. Et aussi : {spotted} signalements. Cessez de devenir une légende urbaine sur vos heures de travail.',
       ],
       failed: [
         "{failed} tentatives ratées. Les spécimens n'ont rien remarqué. Leurs voisins, si.",
         "Les trois, finalement. Après {failed} essais. La persévérance est une vertu. L'efficacité en est une plus grande.",
       ],
-      close: ["Livré avec {remaining} secondes de nuit en réserve. J'ai surveillé l'horloge. Je n'ai pas de cœur, mais si j'en avais un."],
-      default: ['Trois spécimens. Correct. Mon mot préféré, vous le savez.', 'Service terminé. Merci de nettoyer le rayon. Trois fois.'],
-      gary: ["Les propres caméras de Gary ont filmé tout l'enlèvement. Il visionnera la bande demain matin et accusera les Henderson.", "Gary a déjà posté une alerte de quartier pour « courant d'air louche »."],
+      close: ["Livrés à {remaining} secondes de l'aube. J'avais l'œil sur l'horloge. Je n'ai pas de cœur, mais si j'en avais un…"],
+      default: ['Trois spécimens. Correct. Mon mot préféré, vous le savez.', 'Service terminé. Merci de désinfecter le rayon. Trois fois.'],
+      gary: ["Les propres caméras de Gary ont filmé tout l'enlèvement. Il visionnera la bande demain matin et accusera les Henderson.", "Gary a déjà posté une alerte de quartier pour « courant d'air anormalement poli »."],
       mayor: ["Vous avez enlevé un élu. Un soir de semaine. Le siège tient à préciser que nous n'avons pas voté pour lui.", "Le maire a dormi tout du long. Franchement, c'est plus actif qu'en conseil municipal."],
       // L5 pier code
       pier: [
-        'Le dauphin a laissé un mot humide nous remerciant pour le poisson. Nous ne lui avons donné aucun poisson. La comptabilité ouvre un dossier.',
-        "Zib soutient que c'est un poisson. C'est un mammifère, stagiaire, et elle vous est supérieure.",
+        "Le dauphin a laissé un mot trempé, d'une écriture impeccable. Quelqu'un lui donne des cours. La compta ouvre un dossier.",
+        "Vous avez soutenu que c'était un poisson. C'est un mammifère, stagiaire, et elle est au-dessus de vous dans l'organigramme.",
       ],
       // L6 clinic code
       clinic: [
@@ -690,7 +812,28 @@ export const fr: Strings = {
         "Roland a noté l'ergonomie de notre porte-bloc 8,5 sur 10 en dormant. Encadrez ça.",
       ],
       // L7 cruise code
-      cruise: ["La compagnie croira qu'ils sont au yoga de l'aube. Personne ne vérifie le yoga de l'aube.", 'Commandant, chef et Greg, téléportés. Le navire est désormais piloté par le chat. En avant.'],
+      cruise: ["La compagnie croira qu'ils sont au yoga du matin. Personne ne vérifie le yoga du matin.", 'Commandant, chef et Greg téléportés. Le chat tient la barre. En avant.'],
+      // v4 council: L8 time trial (four apes and Echo, against the clock)
+      monolith: [
+        "Quatre témoins, une greffière, {remaining} s d'avance. OBELISK™ a porté plainte. En retard.",
+        'Antériorité saisie. Les singes sont reclassés « consultants ». Silex réclame un anneau de parking. Silex attendra.',
+        "Écho est dans la soute et remplit encore des formulaires. J'ai tout tamponné « NUL ». Quel bonheur.",
+      ],
+      monolithSpotted: [
+        'Mission bouclée, mais les singes vous ont vu {spotted} fois. Ils le peignent déjà sur la paroi de la grotte.',
+        "{spotted} observations, il y a trois millions d'années. Les historiens parleront du premier OVNI. Merci, Zib.",
+      ],
+    },
+    // v4 story: Vrell's scripted arc lines on a level's first delivery
+    storyFirstClear: {
+      level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la D9 vers la ville : le veilleur de Spin City vous attend.',
+      level2: "Larry est enregistré, et la compta a relié quarante chaussettes à votre soucoupe. Fini l'essai, cap sur l'allée des Érables.",
+      level3: 'Banlieue bouclée, mais Gary a porté plainte et Mme Pruitt a envoyé votre photo à la mairie. Direction le centre-ville.',
+      level4: "Maire livré, presque intact. Le registre de Nigel note une pierre noire vendue à un « acheteur maritime », et le bureau du maire a suivi sa caisse jusqu'à Barnacle Bay. Suivez la côte.",
+      level5: "Bubulle a laissé un mot poli — qui apprend à écrire à un dauphin ? — et le registre de Pete a déclenché un audit. Sortez le thermomètre en laiton.",
+      level6: 'Cerfa 7-B validé, dignité quasi intacte. Attendez : un dossier nomme le paquebot qui transporte la pierre noire. On embarque.',
+      level7: "Le manifeste était dans la veste du commandant. L'acheteur : OBELISK™ — signé Krix, l'ex-stagiaire au grille-pain. Sous-sol B-4, prenez un pied-de-biche.",
+      level8: 'Dépôt devancé, brevets annulés et Krix se fait auditer. Vous êtes embauché, Zib. Vrai salaire. Ne touchez pas au cadran.',
     },
   },
 
@@ -726,16 +869,505 @@ export const fr: Strings = {
     'harbourmaster mug': { one: '{n} mug de capitaine de port', other: '{n} mugs de capitaine de port' },
     'accounts mug': { one: '{n} mug de la compta', other: '{n} mugs de la compta' },
     // L6 clinic code
-    'jug of prep drink': { one: '{n} bidon de préparation', other: '{n} bidons de préparation' },
+    'jug of prep drink': { one: '{n} bidon de purge', other: '{n} bidons de purge' },
     'on-call coffee': { one: '{n} café de garde', other: '{n} cafés de garde' },
     'hospital sock': { one: "{n} chaussette d'hôpital", other: "{n} chaussettes d'hôpital" },
     // L7 cruise code
     "captain's mug": { one: '{n} mug du commandant', other: '{n} mugs du commandant' },
     'chocolate éclair': { one: '{n} éclair au chocolat', other: '{n} éclairs au chocolat' },
+    // v4 L8
+    'first-edition bone': { one: "{n} os de première édition", other: "{n} os de première édition" },
     'complimentary towel swan': { one: '{n} cygne en serviette offert', other: '{n} cygnes en serviette offerts' },
+    // v4 items & recap humour
+    'prize marrow': { one: '{n} courgette de concours', other: '{n} courgettes de concours' },
+    'heart-print boxers': { one: '{n} caleçon à cœurs', other: '{n} caleçons à cœurs' },
+    'odd sock': { one: '{n} chaussette orpheline', other: '{n} chaussettes orphelines' },
+    'demo dentures': { one: '{n} dentier de démonstration', other: '{n} dentiers de démonstration' },
+    "coach's whistle": { one: '{n} sifflet de coach', other: '{n} sifflets de coach' },
+    'tinfoil hat': { one: '{n} chapeau en papier alu', other: '{n} chapeaux en papier alu' },
+    'UFO snow globe': { one: '{n} boule à neige OVNI', other: '{n} boules à neige OVNI' },
+    '12-inch remix': { one: '{n} maxi vinyle', other: '{n} maxis vinyles' },
+    'mayoral toupee': { one: '{n} moumoute du maire', other: '{n} moumoutes du maire' },
+    'rubber duck': { one: '{n} canard en plastique', other: '{n} canards en plastique' },
+    'ship in a bottle': { one: '{n} bateau en bouteille', other: '{n} bateaux en bouteille' },
+    'petty cash tin': { one: '{n} caisse noire', other: '{n} caisses noires' },
+    'silver butt plug': { one: '{n} plug anal en argent', other: '{n} plugs anaux en argent' },
+    'inflated rubber glove': { one: '{n} gant en latex gonflé', other: '{n} gants en latex gonflés' },
+    bedpan: { one: '{n} bassin hygiénique', other: '{n} bassins hygiéniques' },
+    "captain's log": { one: '{n} bûche de bord', other: '{n} bûches de bord' },
+    'giant pepper mill': { one: '{n} moulin à poivre géant', other: '{n} moulins à poivre géants' },
+    'lime mankini': { one: '{n} mankini vert fluo', other: '{n} mankinis vert fluo' },
+    // v4 easter eggs
+    'blue heart pendant': { one: '{n} pendentif cœur bleu', other: '{n} pendentifs cœur bleu' },
+  },
+
+  // v4 items & recap humour
+  souvenirs: {
+    items: {
+      // v4 L8
+      'first-edition bone': {
+        got: ["Un os à lancer, première édition. Gardez le reçu. Silex touche des droits chaque fois qu'on le fait tomber.",
+          "J'ai demandé au monolithe à quoi servait cet os. Trois notes, puis il m'a passé le service commercial.",
+          // v4 easter eggs
+          "Un os première édition, saisi avant le dépôt. OBELISK™ le voulait comme antériorité. C'est NOTRE antériorité, maintenant.",
+          "Os récupéré à quelques secondes près. Krix l'avait déjà tamponné « BREVET DÉPOSÉ ». Dépôt refusé."],
+        missed: ["L'os est resté sur Terre. Dans trois millions d'années, il sera en orbite. On le ramassera en passant.",
+          "Zib a laissé l'os à l'avocat de Silex. Pour lui faire lâcher quoi que ce soit, bon courage.",
+          // v4 easter eggs
+          "L'os est resté dans la grotte. Écho le dépose à l'aube : un brevet, trois millions d'années de droits. Pour OBELISK™."],
+      },
+      // v4 easter eggs : le souvenir du mât du commandant (L7)
+      'blue heart pendant': {
+        got: [
+          "Un pendentif cœur bleu, pris au mât. Zib jure de ne jamais, jamais le lâcher. Lâchez-le, Zib. C'est une pièce à conviction.",
+          "Un cœur bleu océan, version boutique : PASS PONT PREMIUM. Surtout de l'émail. La facture, elle, est bien réelle.",
+          "Zib veut que je le dessine allongé sur le sofa, vêtu du seul pendentif, façon vieux tableau de maître. Refusé.",
+          "Pendentif enregistré. Le commandant s'en remettra. Son cœur continuera. Encore et encore. Arrêtez de fredonner, Zib.",
+        ],
+        missed: [
+          "Vous avez laissé le pendentif au mât. Un jour, un vieux marin le jettera à la mer, et personne ne comprendra pourquoi.",
+          "Pas de pendentif. Le commandant garde son cœur bleu océan. Et une peur bleue du ciel.",
+          "Le pendentif est resté à bord. Tant mieux : Zib s'y serait accroché comme à une planche, et il n'y a de place que pour un.",
+        ],
+      },
+      // L1 fermier Doyle
+      slipper: {
+        got: [
+          "Un chausson. Le fermier Doyle possède désormais un seul chausson et une profonde méfiance envers le ciel.",
+          "Un chausson, pied gauche. Le siège réclame le droit d'ici vendredi.",
+          "Cendrillon à l'envers : on garde le chausson ET le bonhomme.",
+        ],
+        missed: [
+          "Le chausson est resté sur le tapis. Quelque part, un chausson se demande où est passé son humain.",
+          "Pas de chausson ? Doyle arrive en chaussettes et en état de choc. La compta voulait la tenue complète.",
+        ],
+      },
+      'prize marrow': {
+        got: [
+          "La courgette de concours du fermier Doyle. Cinq kilos. Il sera inconsolable. Zib, arrêtez de glousser.",
+          "Une courgette primée. Nos scientifiques la trouvent « impressionnante ». Nos scientifiques devraient sortir plus.",
+          "Il mesurait cette courgette tous les soirs. Fièrement. À voix haute. Classé sous « agriculture ».",
+        ],
+        missed: [
+          "La courgette est restée près de l'âtre. Doyle sera soulagé : il dort avec. On a vu.",
+          "Pas de courgette. Dommage, le siège voulait savoir pourquoi tout le village en parle à voix basse.",
+        ],
+      },
+      // L2 Larry
+      'heart-print boxers': {
+        got: [
+          "Un caleçon à cœurs, tout juste sorti du sèche-linge. Encore tiède. Posez ça, Zib.",
+          "Le caleçon porte-bonheur de Larry. Vu Larry, il n'a jamais marché.",
+          "Caleçon enregistré comme « drapeau terrien, petit, romantique ». Lavez-vous les tentacules.",
+        ],
+        missed: [
+          "Le caleçon est resté dans le sèche-linge. Larry le retrouvera tiède et moelleux. Un point pour Larry.",
+          "Pas de caleçon. Le sèche-linge l'a gardé. Le sèche-linge garde toujours quelque chose.",
+        ],
+      },
+      'odd sock': {
+        got: [
+          "Une chaussette orpheline. Voilà donc où elles disparaissent. C'est nous. Ça a toujours été nous.",
+          "Une chaussette seule. Sa jumelle a disparu en 1998. On l'a aussi. Retrouvailles jeudi.",
+          "La chaussette perdue. Toutes les laveries de la Terre dormiront mieux ce soir. Sauf celle-ci.",
+        ],
+        missed: [
+          "La chaussette orpheline est restée. Larry accusera la machine. La machine est innocente. Pas nous.",
+          "Pas de chaussette. La collection du Bureau reste à une chaussette de la paire. Comme toujours.",
+        ],
+      },
+      // L3 banlieue
+      'orthodontic slipper': {
+        got: [
+          "Un chausson orthodontique. Il porte un appareil. Évidemment qu'il porte un appareil.",
+          "Le chausson orthodontique de Dave. Il va nous facturer la pose.",
+          "Enregistré : un chausson, redressé. Dave lui passe le fil dentaire. On a vérifié.",
+        ],
+        missed: [
+          "Le chausson orthodontique est resté. Dave arrive pieds nus mais avec des dents parfaites. C'est déjà ça.",
+          "Pas de chausson. Brenda le trouvera et pensera qu'il s'est enfin enfui. Elle avait l'air d'accord.",
+        ],
+      },
+      'demo dentures': {
+        got: [
+          "Le dentier de démo de Dave. Il claque quand on le secoue. Zib l'a appelé Gary.",
+          "Un dentier de démonstration. Il a souri pendant toute la montée. Glaçant.",
+          "Dentier enregistré. Le siège demande si les humains enlèvent souvent leurs dents. Seulement les malins.",
+        ],
+        missed: [
+          "Le dentier est resté sur la tablette, tout sourire. Il a tout vu. Il ne dira rien.",
+          "Pas de dentier. Dommage, la division Sondes voulait étudier la morsure de près.",
+        ],
+      },
+      'team-issued slipper': {
+        got: [
+          "Un chausson du club. Coach Barb fera courir toute l'équipe jusqu'à ce qu'il réapparaisse.",
+          "Chausson du club, numéro 9. Le vaisseau mère a enfin un maillot domicile.",
+        ],
+        missed: [
+          "Le chausson du club est resté. Barb compte son matériel chaque matin. Elle accusera la mascotte.",
+          "Pas de chausson. L'équipe vous remercie : une chose de moins que Barb peut lancer.",
+        ],
+      },
+      "coach's whistle": {
+        got: [
+          "Le sifflet de Barb. Elle va devoir crier. Elle criait déjà.",
+          "Un sifflet. Zib a soufflé dedans dans le couloir. Trois services font des pompes.",
+          "Sifflet confisqué. Faute sur le spécimen. Carton jaune pour le stagiaire.",
+        ],
+        missed: [
+          "Le sifflet est resté. Demain, Barb sifflera le ciel. Indéfiniment.",
+          "Pas de sifflet. Tant mieux : on aurait sifflé Zib toute la journée.",
+        ],
+      },
+      'neighbourhood watch mug': {
+        got: [
+          "Le mug Voisins vigilants de Gary : « J'AI VU QUELQUE CHOSE ». Eh bien. Maintenant, oui.",
+          "Le mug Voisins vigilants. Le seul témoin fiable de Gary est désormais dans notre placard.",
+        ],
+        missed: [
+          "Le mug est resté. Demain, il le jugera depuis son bureau. Il l'a toujours jugé.",
+          "Pas de mug. Gary garde la preuve qu'il a un loisir. Fâcheux.",
+        ],
+      },
+      'tinfoil hat': {
+        got: [
+          "Le chapeau en papier alu de Gary. Il marche, d'ailleurs. Contre tout le monde sauf nous.",
+          "Un chapeau en alu, fait main. Il capte trois radios et un de nos pilotes.",
+          "Chapeau en alu enregistré. Zib le porte. Zib dit qu'il entend les Henderson.",
+        ],
+        missed: [
+          "Le chapeau en alu est resté. Gary le remettra au réveil, persuadé d'avoir eu raison sur toute la ligne.",
+          "Pas de chapeau. Le siège en voulait un pour le musée : « Humains qui avaient presque compris ».",
+        ],
+      },
+      // L4 centre-ville
+      'fossilized coffee': {
+        got: [
+          "Le café fossilisé de Nigel. Datation au carbone : mardi dernier. Toujours plus éveillé que Nigel.",
+          "Un café assez vieux pour avoir sa propre vitrine. Le musée risque de le réclamer.",
+        ],
+        missed: [
+          "Le café fossilisé est resté. Tant mieux : c'était le seul du musée encore en service.",
+          "Pas de café. La tasse de Nigel reste là et devient lentement une pièce de collection.",
+        ],
+      },
+      'UFO snow globe': {
+        got: [
+          "Une boule à neige avec soucoupe. Grotesquement fausse : la nôtre a des porte-gobelets.",
+          "Une boule à neige OVNI. Zib l'a secouée et a versé une larme. Le mal du pays.",
+          "Le musée vend des boules à neige à notre effigie. On n'a jamais touché un centime. Le juridique s'en occupe.",
+        ],
+        missed: [
+          "La boule à neige est restée. Une petite soucoupe en plastique reste sur Terre et fait mieux le travail que vous.",
+          "Pas de boule à neige. Dommage, c'était la seule pièce exacte du musée.",
+        ],
+      },
+      'limited-edition DJ mug': {
+        got: [
+          "Le mug collector de Kévin. Tirage unique. Sur Terre, tirage zéro désormais.",
+          "Le mug du DJ dit « LÂCHE LES BASSES ». On a lâché le DJ à la place.",
+        ],
+        missed: [
+          "Le mug est resté. Kévin garde l'ambiance. L'ambiance, c'est du thé tiède.",
+          "Pas de mug. Ses fans se l'arracheront aux enchères. Tous les deux.",
+        ],
+      },
+      '12-inch remix': {
+        got: [
+          "Le maxi de Kévin. Il dit que c'est un remix. Ils disent toujours que c'est un remix.",
+          "Un maxi vinyle. Zib l'a passé à l'envers. Ça dit « va te coucher, Kévin ».",
+          "Un maxi, enregistré. Le siège demande s'il est vraiment si maxi. La pochette le dit. Les pochettes mentent.",
+        ],
+        missed: [
+          "Le maxi est resté sur les platines. Kévin jurera qu'il a été enlevé. Non : c'est lui.",
+          "Pas de maxi. Kévin arrive les mains vides. Comme à ses sets, en somme.",
+        ],
+      },
+      'municipal mug': {
+        got: [
+          "Le mug municipal. Payé par le contribuable. Techniquement, on doit un mug à votre ville.",
+          "Un mug municipal : « MAIRE À PEU PRÈS CORRECT ». Exact.",
+        ],
+        missed: [
+          "Le mug municipal est resté. Il survivra à son mandat. Comme presque tout.",
+          "Pas de mug. Le conseil votera pour savoir s'il lui manque. La motion devrait être rejetée.",
+        ],
+      },
+      'mayoral toupee': {
+        got: [
+          "La moumoute du maire. Il dira à la presse que c'était une OPA hostile.",
+          "Une moumoute municipale. Zib l'a prise pour un animal et l'a nourrie. C'est notre animal, maintenant.",
+          "Moumoute enregistrée. Pour une fois, le maire joue la transparence. Sur le dessus.",
+        ],
+        missed: [
+          "La moumoute est restée sur le bureau. Le maire arrive chauve et furieux. Surtout chauve.",
+          "Pas de moumoute. Tant pis : elle avait plus de charisme que lui, et on n'avait qu'une place.",
+        ],
+      },
+      // L5 Barnacle Bay
+      'sardine tin': {
+        got: [
+          "Une boîte de sardines vide, repêchée au fond du bassin. Salut, et encore merci pour la boîte.",
+          "Une boîte de sardines. Bubulle les a mangées en 1997. Elle en parle encore.",
+        ],
+        missed: [
+          "La boîte de sardines est restée au fond. Bubulle le remarquera. Une moitié d'elle, du moins.",
+          "Pas de boîte. Il fallait plonger. Zib ne sait pas nager. Zib sait à peine voler.",
+        ],
+      },
+      'rubber duck': {
+        got: [
+          "Un canard en plastique. Le canard de soutien émotionnel de Bubulle. Elle est furieuse. Des deux hémisphères.",
+          "Un canard en plastique. Zib l'a fait couiner tout le trajet. Les pilotes ont porté plainte.",
+          "Un canard en plastique a surgi derrière le spécimen. Zib a hurlé : « Il nous faudrait une plus grosse soucoupe. »",
+        ],
+        missed: [
+          "Le canard est resté à flotter dans le bassin. Il a tout vu. Les canards voient toujours tout.",
+          "Pas de canard. Bubulle est soulagée : elle le laisse gagner aux courses.",
+        ],
+      },
+      'harbourmaster mug': {
+        got: [
+          "Le mug du capitaine de port. Encore à moitié plein de thé. Le thé est à moitié plein de mouette.",
+          "Le mug de Pete. Une tasse par nuit, très lentement, en fixant la mer. On comprend, maintenant.",
+        ],
+        missed: [
+          "Le mug de Pete est resté. Le thé tient compagnie à la bouilloire. Pete aurait voulu ça.",
+          "Pas de mug. Les mouettes finiront son thé. Elles le font toujours.",
+        ],
+      },
+      'ship in a bottle': {
+        got: [
+          "Le bateau en bouteille de Pete. Neuf ans de travail. On ne saura jamais comment il l'a fait entrer. Lui non plus.",
+          "Un bateau en bouteille. Zib a demandé comment on les fait entrer. J'ai dit : comme les spécimens, doucement, la nuit.",
+          "Bateau en bouteille enregistré. Zib l'a brandi à la proue, bras en croix, en se proclamant maître de la soute.",
+        ],
+        missed: [
+          "Le bateau en bouteille est resté. Tant mieux : Pete aurait coulé avec.",
+          "Pas de bouteille. Dommage, c'était le seul navire de la baie à ne jamais s'échouer.",
+        ],
+      },
+      'accounts mug': {
+        got: [
+          "Le mug de la compta de Sal, inscrit à l'actif. Sal serait fière. Puis Sal nous enverrait une facture.",
+          "Le mug de la compta : « J'AIME LES TABLEURS ». Personne ne l'a jamais pensé aussi fort.",
+        ],
+        missed: [
+          "Le mug de la compta est resté. Un impayé. Sal régularisera demain matin.",
+          "Pas de mug. Le grand livre reste propre. La seule chose propre de Barnacle Bay.",
+        ],
+      },
+      'petty cash tin': {
+        got: [
+          "La caisse noire de Sal. Quatorze euros et un bouton. Nous voilà le service le plus solvable du Bureau.",
+          "Caisse noire enregistrée. Le grand livre de Sal indique désormais « deux impayés ».",
+          "La caisse noire. Kipper dit qu'elle n'a jamais été très noire. Kipper est un chat. Kipper a des avis.",
+        ],
+        missed: [
+          "La caisse noire est restée. Tant mieux : Sal la compte deux fois par nuit, et une fois de plus en dormant.",
+          "Pas de caisse. Kipper la garde. Kipper prend sa commission.",
+        ],
+      },
+      // L6 Sainte-Mildred
+      'jug of prep drink': {
+        got: [
+          "Le bidon de purge de Hank. Quatre litres. On a demandé à quoi ça sert. Réponse censurée. Deux fois.",
+          "La purge : les humains la boivent volontairement, la veille. Puis ils font la queue. Puis ils laissent un avis.",
+          "Bidon de purge enregistré. Ne laissez pas Zib en boire. Trop tard. Évacuez le couloir.",
+        ],
+        missed: [
+          "Le bidon est resté. Hank le finira au matin. Toute la salle d'attente sera au courant.",
+          "Pas de bidon. Hank reste à jeun et grognon. Côté protocole, il est prêt.",
+        ],
+      },
+      'silver butt plug': {
+        got: [
+          "Un plug anal en argent, trouvé dans le couloir des Affaires internes. Zib, ce n'est pas une très bonne sonde.",
+          "Ce n'est pas une très bonne sonde, Zib. Ça ne prend même pas la température. Arrêtez de le faire briller.",
+          "Un « dispositif » en argent, classé objet trouvé, Affaires internes. Personne ne viendra le réclamer.",
+          "Plug en argent, annexe du Cerfa 7-B. À « usage », Zib a écrit « décoratif ? ». Oh, Zib. Non.",
+        ],
+        missed: [
+          "Vous avez laissé le… truc en argent dans le couloir. Sage décision. Certaines affaires doivent rester internes.",
+          "Le truc brillant de l'endoscopie reste sur Terre. Le siège pousse un soupir de soulagement. Puis un deuxième.",
+          "Pas de plug en argent. Tant mieux : je n'avais aucune envie de justifier ce reçu à la compta.",
+        ],
+      },
+      'on-call coffee': {
+        got: [
+          "Le café de garde du Dr Osei. Réchauffé onze fois. Techniquement, un acte médical.",
+          "Son café. Elle le cherchera avant de nous chercher. Question de priorités.",
+        ],
+        missed: [
+          "Le café de garde est resté. Tant mieux : voler le café d'une médecin de garde, c'est comme ça que commencent les guerres.",
+          "Pas de café. Le Dr Osei garde la seule chose dont elle a vraiment besoin. On a pris le reste.",
+        ],
+      },
+      'inflated rubber glove': {
+        got: [
+          "Un gant en latex gonflé en forme de poulet, à 4 h du matin. La chose la plus joyeuse de l'hôpital.",
+          "Un gant gonflé. Zib a demandé à quoi servent les autres gants. J'ai changé de sujet. Fermement.",
+          "Gant gonflé, enregistré. Le saviez-vous : ce n'est jamais un lupus. Parfois, c'est un gant.",
+        ],
+        missed: [
+          "Le gant gonflé est resté. Quelque part dans la pharmacie, un poulet en latex monte la garde. Respect.",
+          "Pas de gant. Tant mieux. Je ne veux pas savoir où ce gant est allé. Je sais où ce gant est allé.",
+        ],
+      },
+      'hospital sock': {
+        got: [
+          "Une chaussette d'hôpital, picots antidérapants des deux côtés. Au cas où il marcherait au plafond. On va tester.",
+          "La chaussette d'hôpital de Pemberton. Taille unique : elle ne va à personne.",
+          "Chaussette d'hôpital enregistrée. Elle sent encore le sédatif et les regrets.",
+        ],
+        missed: [
+          "La chaussette est restée. Il gardera les pieds sur terre. Et, brièvement, la tête aussi.",
+          "Pas de chaussette. Pemberton arrive avec un pied froid et quatre étoiles à donner.",
+        ],
+      },
+      bedpan: {
+        got: [
+          "Un bassin hygiénique. Inutilisé, espère sincèrement le siège. Zib, enlevez ça de votre tête.",
+          "Un bassin, classé « casque de cérémonie ». C'est Zib qui l'a classé. Zib n'a plus le droit de classer.",
+          "Le bassin a descendu le vide-linge avec nous. On ne choisit pas tous ses voyages.",
+        ],
+        missed: [
+          "Le bassin est resté. Bon choix. Le seul bon choix de la nuit.",
+          "Pas de bassin. Tant mieux, on a le nôtre. Ne demandez pas pour quoi faire.",
+        ],
+      },
+      // L7 SS Buffet Royal
+      "captain's log": {
+        got: [
+          "La bûche de bord du commandant. Une vraie bûche. Date stellaire : cette nuit. Ne l'ouvrez pas, Zib. Ne la reniflez pas.",
+          "Bûche de bord, entrée supplémentaire. Trouvée dans la cheminée. On a préféré ne pas demander comment elle est arrivée là.",
+          "Le commandant tenait une bûche de bord. On ne veut pas savoir ce qu'il y consignait.",
+        ],
+        missed: [
+          "La bûche de bord est restée dans la cheminée. Tant mieux : certaines archives ne se touchent pas.",
+          "Pas de bûche. Les archives du navire restent à bord. Sous le vent, de préférence.",
+        ],
+      },
+      'chocolate éclair': {
+        got: [
+          "Un éclair du chariot de Marco. Il n'a pas survécu au débriefing. Mon régime non plus.",
+          "Un éclair. Zib l'a léché pour le revendiquer. C'est comme ça que ça marche sur Terre, paraît-il.",
+        ],
+        missed: [
+          "L'éclair est resté. Marco va les compter. Marco les compte toujours.",
+          "Pas d'éclair. Je ne suis pas en colère. J'ai faim. C'est pire.",
+        ],
+      },
+      'giant pepper mill': {
+        got: [
+          "Le moulin à poivre géant de Marco. Il dit qu'en cuisine, la taille compte. Zib le tourne depuis des heures.",
+          "Un moulin à poivre géant. Les serveurs l'agitent au-dessus des assiettes : « dites stop ». Personne ne dit jamais stop.",
+          "Moulin à poivre enregistré. Le siège l'a classé arme légère. Marco appelle ça « l'assaisonnement ».",
+        ],
+        missed: [
+          "Le moulin à poivre est resté. Marco garde sa dignité. Et son poivre. Surtout son poivre.",
+          "Pas de moulin. Tant pis : sur ce navire, tout est géant sauf les cabines.",
+        ],
+      },
+      'complimentary towel swan': {
+        got: [
+          "Un cygne en serviette offert. Greg en a pris trois. On en a pris un. Greg voudrait parler au responsable.",
+          "Un cygne en serviette. Zib l'a déplié pour voir comment ça marche. C'est une serviette, maintenant. Zib est en deuil.",
+        ],
+        missed: [
+          "Le cygne est resté. Greg se plaindra qu'il le regardait de travers.",
+          "Pas de cygne. Peu importe : il faut toujours savoir où est sa serviette, et la nôtre est dans la soute.",
+        ],
+      },
+      'lime mankini': {
+        got: [
+          "Le mankini vert fluo de Greg. Mis en quarantaine. Il essaie toujours de s'échapper.",
+          "Un mankini. Greg l'a porté au dîner du commandant. Deux fois. Très joli. Non, pas joli.",
+          "Mankini classé « textile dangereux ». Ne l'essayez pas, Zib. ZIB.",
+        ],
+        missed: [
+          "Le mankini est resté. Le paquebot devra vivre avec. Il l'a bien mérité.",
+          "Pas de mankini. Merci. Sincèrement. La soute sent déjà le poisson.",
+        ],
+      },
+    },
+    levels: {
+      level3: {
+        all: [
+          "Un souvenir dans chaque maison. Les Voisins vigilants parleront de vague de cambriolages. Pour une fois, Gary a raison.",
+          "Trois maisons, trois souvenirs. Le groupe WhatsApp du quartier n'a jamais été aussi actif.",
+        ],
+        none: [
+          "Trois spécimens et pas un souvenir. La banlieue garde ses chaussons. Je garde ma déception.",
+          "Rien de l'impasse ? Vous étiez chez eux, Zib. CHEZ EUX.",
+        ],
+      },
+      level4: {
+        all: [
+          "Un souvenir à chaque arrêt. La ville parle de série de vols. Le musée appelle ça un mardi.",
+          "Trois souvenirs du centre-ville. Zib a ouvert une boutique. Zib me fait payer.",
+        ],
+        none: [
+          "Pas un souvenir de toute la ville. Vous aviez un musée, une boîte de nuit et la mairie. Un MUSÉE.",
+          "Rien du centre-ville. La ville garde ses affaires, on garde son maire. Échange équitable.",
+        ],
+      },
+      level5: {
+        all: [
+          "Un souvenir de chaque bâtiment du port. La boutique de souvenirs dépose le bilan.",
+          "Trois souvenirs, tous humides. La soute sent le port. Le port sent l'extraterrestre.",
+        ],
+        none: [
+          "Pas un souvenir du bord de mer. Ni boîte, ni mug. Juste beaucoup de sable dans la trappe.",
+          "Rien du port. Le siège voulait une carte postale. Je lui ai envoyé le dauphin à la place.",
+        ],
+      },
+      level6: {
+        all: [
+          "Un souvenir dans chaque service. La Conformité a ouvert une enquête. Les Affaires internes, plus précisément.",
+          "Trois souvenirs d'un hôpital. Lavez-les tous. Certains deux fois.",
+        ],
+        none: [
+          "Pas un souvenir de Sainte-Mildred. Très hygiénique. Un peu trop hygiénique.",
+          "Rien de l'hôpital. Sage. À l'hôpital, on ne touche rien sans gants. Ni sans formulaire.",
+        ],
+      },
+      level7: {
+        all: [
+          "Un souvenir sur chaque pont. La compagnie appelle ça du vol. Nous, du tout compris.",
+          "Trois souvenirs du paquebot. Greg veut parler à notre service réclamations. Nous n'en avons pas.",
+        ],
+        none: [
+          "Pas un souvenir de la croisière. Tout compris, Zib. TOUT. COMPRIS.",
+          "Rien du paquebot. Même Greg emporte les serviettes, et Greg est un amateur.",
+        ],
+      },
+    },
+  },
+
+  // v4 easter eggs
+  easterEggs: {
+    zib: {
+      // L2 : la machine à voyager dans le temps derrière la laverie (doublage VF : « 88 miles à l'heure »)
+      timeCar: [
+        'Une machine à remonter le temps garée derrière la laverie. Un mardi normal.',
+        'Traces de brûlé, porte papillon, pas de plaque. Proprio en retard. Ou en avance.',
+        "Si cette voiture atteint 88 miles à l'heure, je ne remplis pas le formulaire.",
+      ],
+      // L7 : l'iceberg devant la proue (VF : « Iceberg, droit devant ! »)
+      iceberg: [
+        "Iceberg, droit devant ! Le buffet s'en sortira. Le buffet s'en sort toujours.",
+        "Je crois que c'est juste le seau à glace des premières classes.",
+        "Petit iceberg devant la proue. Dites à l'orchestre de continuer à jouer.",
+      ],
+    },
   },
 
   data: {
+    // v4 progression
+    'Practice decoy': "Leurre d'entraînement",
+    Landing: 'Palier',
     'Farmer Doyle': 'Le fermier Doyle',
     Larry: 'Larry',
     'Dentist Dave': 'Dave le dentiste',
@@ -836,7 +1468,7 @@ export const fr: Strings = {
     Counterweight: 'Contrepoids',
     'Cuckoo bird': 'Coucou',
     'CLOCK TOWER': "TOUR DE L'HORLOGE",
-    'ELEVATOR ROOF': 'TOIT DE LA CABINE',
+    'ELEVATOR ROOF': 'TOIT DE LA CAGE',
     'The dentist will be billing for this wake-up call.': 'Le dentiste facturera ce réveil. Dépassement d\'honoraires compris.',
     'Coach is calling a mandatory time-out.': 'Coach demande un temps mort réglementaire.',
     'Gary finally caught something. It was his own abduction.': "Gary a enfin attrapé quelque chose. C'était son propre enlèvement.",
@@ -852,9 +1484,9 @@ export const fr: Strings = {
     'Stop stretching the mascot.': "Arrêtez d'étirer la mascotte.",
     'Everybody hydrate the couch.': 'Tout le monde hydrate le canapé.',
     'That squirrel is casing us.': 'Cet écureuil fait du repérage.',
-    'Put the begonias on the watchlist.': 'Mettez les bégonias sous surveillance.',
-    'Enhance the wheelie bin.': 'Netteté max sur la poubelle.',
-    'The cul-de-sac needs a password.': "L'impasse a besoin d'un mot de passe.",
+    'Put the begonias on the watchlist.': 'Mettez les bégonias sur écoute.',
+    'Enhance the wheelie bin.': "Améliorez l'image sur la poubelle !",
+    'The cul-de-sac needs a password.': "Il faut un digicode pour l'impasse.",
     'The mummy has a parking pass.': 'La momie a un badge parking.',
     'Stop feeding the fossils.': 'Ne nourrissez pas les fossiles.',
     'The T. rex owes me a tenner.': 'Le T. rex me doit dix balles.',
@@ -868,12 +1500,12 @@ export const fr: Strings = {
     'The potholes are polling well.': 'Les nids-de-poule montent dans les sondages.',
     'My pillow has diplomatic immunity.': "Mon oreiller a l'immunité diplomatique.",
     'The truth is out there. Lock the back door.': 'La vérité est ailleurs. Pense à fermer à clé.',
-    'The mash needs more altitude.': 'La purée manque d’altitude.',
+    'The mash needs more altitude.': "La montagne de purée manque d'altitude.",
     'Go Saucers! Defence!': 'Allez les Soucoupes ! Défense !',
     "Don't panic. Where's my towel?": "Pas de panique. Où est ma serviette ?",
     'This one goes out to the Martians.': 'Celle-ci, c’est pour les Martiens.',
     'The Hendersons moved the hedge again.': 'Les Henderson ont encore déplacé la haie.',
-    'July 4th speech first. Then upload the virus.': 'Discours du 4 juillet, puis le virus.',
+    'July 4th speech first. Then upload the virus.': "D'abord le discours du 4 juillet. Ensuite, le virus.",
     // ---- L5 pier code
     Bubbles: 'Bubulle',
     'Harbourmaster Pete': 'Pete, capitaine de port',
@@ -979,9 +1611,9 @@ export const fr: Strings = {
     'Laundry flap': 'Clapet du vide-linge',
     'Chute draft': "Courant d'air du vide-linge",
     'FRONT DOORS': "PORTES D'ENTRÉE",
-    'REAR ENTRANCE': "ENTRÉE PAR L'ARRIÈRE",
+    'REAR ENTRANCE': 'ENTRÉE ARRIÈRE',
     'ROOF HELIPAD': 'HÉLIPORT DU TOIT',
-    'PHARMACY HATCH': 'GUICHET DE LA PHARMACIE',
+    'PHARMACY HATCH': 'GUICHET PHARMACIE',
     'RECOVERY WINDOW': 'FENÊTRE DU RÉVEIL',
     'LAUNDRY CHUTE': 'VIDE-LINGE',
     'Hank has lost his place in the queue.': 'Hank a perdu sa place dans la file.',
@@ -999,13 +1631,10 @@ export const fr: Strings = {
     'Thirty-one hours. Thirty-two.': 'Trente et une heures. Trente-deux.',
     'Is it over? Lovely.': "C'est fini ? Merveilleux.",
     'Tell the nurse I was brave.': "Dites à l'infirmière que j'ai été courageux.",
-    'Four stars. Would sleep again.': 'Quatre étoiles. Je redormirais.',
+    'Four stars. Would sleep again.': 'Quatre étoiles. Je reviendrai dormir.',
     'No, the other arm.': "Non, l'autre bras.",
     'Initial here to continue dreaming.': 'Parapher ici pour continuer à rêver.',
     'FORM 7-B': 'CERFA 7-B',
-    HEAD: 'TÊTE',
-    KNEE: 'GENOU',
-    FOOT: 'PIED',
     'Form 7-B first': "Cerfa 7-B d'abord",
     'Temperature': 'Température',
     'Reflexes': 'Réflexes',
@@ -1020,6 +1649,22 @@ export const fr: Strings = {
     'Reflexes: eventually': 'Réflexes : un jour',
     'Ticklishness: unbothered': 'Chatouilles : imperturbable',
     // ---- L7 cruise code
+    // v4 L8
+    Flint: 'Silex',
+    Reed: 'Roseau',
+    Echo: 'Écho',
+    'Practice toss': "Lancer d'essai",
+    'Loose shale': 'Éboulis',
+    'Iris stone': 'Diaphragme de pierre',
+    'Appeal bell': 'Cloche des recours',
+    'Patent office': 'Bureau des brevets',
+    'Appeal shaft': 'Puits des recours',
+    'APPEALS HATCH': 'TRAPPE DES RECOURS',
+    'Echo has filed a claim on the beam.': 'Écho vient de déposer le brevet du rayon.',
+    'Patent pending. Gravity contested.': 'Brevet déposé. Pesanteur contestée.',
+    'Please initial the rock.': 'Paraphez le caillou, merci.',
+    'Prior art is still art.': 'Mes gribouillis font jurisprudence.',
+    'The slab declines to comment.': "La pierre refuse de s'exprimer.",
     Doris: 'Doris',
     'Captain Sterling': 'Commandant Sterling',
     'Chef Marco': 'Le chef Marco',
@@ -1063,15 +1708,15 @@ export const fr: Strings = {
     'Room-service trolley': 'Chariot de room service',
     'MAST HATCH': 'TRAPPE DU MÂT',
     FUNNEL: 'CHEMINÉE',
-    'GALLEY SKYLIGHT': 'VERRIÈRE DE LA CUISINE',
+    'GALLEY SKYLIGHT': 'VERRIÈRE CUISINE',
     'PROMENADE DOOR': 'PONT PROMENADE',
     'SUN-DECK AWNING': 'STORE DU PONT SOLEIL',
     PORTHOLE: 'HUBLOT',
     'The captain has gone down with the nap.': 'Le commandant a sombré avec sa sieste.',
     'The chef has sent your compliments back to the kitchen.': 'Le chef renvoie vos compliments en cuisine.',
     'Greg would like to speak to the manager of the sky.': 'Greg veut parler au responsable du ciel.',
-    'Make it so… comfy.': 'Exécution… en douceur.',
-    'Engage the snooze button.': 'Enclenchez le bouton snooze.',
+    'Make it so… comfy.': 'Exécution… bien au chaud.',
+    'Engage the snooze button.': 'Engagez le bouton snooze.',
     'Set a course for the buffet. Warp nine.': 'Cap sur le buffet. Distorsion neuf.',
     'Iceberg? Tell it to make an appointment.': "Un iceberg ? Qu'il prenne rendez-vous.",
     'All hands to the hammocks.': "Tout l'équipage aux hamacs.",
@@ -1086,5 +1731,32 @@ export const fr: Strings = {
     'Is there a buffet on the mothership?': 'Il y a un buffet sur le vaisseau mère ?',
     'I want a refund on gravity.': "Je veux qu'on me rembourse la gravité.",
     // ---- report code
+  },
+
+  // v4 story: Field Check copy (between L2 and L3; Sol owns the screen & logic)
+  fieldCheck: {
+    badge: 'TEST TERRAIN · NON PAYÉ',
+    title: 'Test terrain — Fin de formation',
+    location: 'Chemin des Bouleaux · lisière',
+    blurb: 'Un détecteur, un cadre de porte, zéro chrono.',
+    re: 'Test terrain n°0002-B — Fin de formation',
+    body: "La camionnette de la laverie a tourné vers l'allée des Érables, et le siège m'a collé trois spécimens d'un coup. Avant la vraie course contre l'aube, faites un exercice non payé : frôlez un détecteur, passez le cadre de porte, ne réveillez pas le leurre.",
+    joke: "Zéro étoile, zéro Glorb, zéro dossier — sauf si vous cassez la soucoupe. Ma retraite est dans onze semaines, Zib. Ne gâchez pas tout.",
+    signoff: '— Vrell. Exercice gratuit, exigences payantes.',
+    start: 'Lancer le test terrain',
+    skip: "Passer à l'allée des Érables",
+    replay: 'Rejouer le test terrain',
+    continueToL3: "Ouvrir l'allée des Érables",
+    prompts: {
+      porch: "Passez le détecteur — sortez pour calmer l'alerte.",
+      ring: "Faites du surplace dans l'anneau vert pour verrouiller.",
+      doorLip: 'Passez le cadre de porte — lâchez pour calmer le ballant.',
+      // v4 council: the clatter demo, a clipboard dropped down the beam
+      clatter: 'Porte-bloc tombé ! Voyez les jauges.',
+      retry: 'Réessayer relance la pièce, pas toute la nuit.',
+      complete: '1 sur 3 validé. En vrai service, un seul chrono pour les trois.',
+    },
+    completeTitle: 'TEST TERRAIN VALIDÉ',
+    completeComment: "Correct. Votre tour de cou provisoire est dans la bannette. Le chrono démarre à l'allée des Érables — évitez Mme Pruitt.",
   },
 };

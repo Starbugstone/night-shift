@@ -1,9 +1,10 @@
+import { apeFallback } from '../abduct/monolith-art';
 import { Container, Graphics, Sprite } from 'pixi.js';
 import type { Assets, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
-import { MAX_STARS, RANKS, isLevelUnlocked, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
+import { MAX_STARS, RANKS, isLevelUnlocked, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, tr } from '../i18n';
 import { easeOutCubic } from '../core/fx';
 import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
@@ -11,7 +12,7 @@ import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Shape, panelPath, roundRect } from '../core/gfx/shapes';
 import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
-import { clamp, fmtTime, headKey } from './draw';
+import { clamp, fmtTime, targetHeadKey } from './draw';
 import { C } from './theme';
 import { Button } from './widgets';
 import { artSprite } from './views/art';
@@ -21,9 +22,9 @@ import { glorbTexture, iconSprite, starTexture } from './views/icons';
 import { highlightedPanel, SunIcon } from './views/menu-decor';
 
 const LIST_TOP = 262;
-const CARD_X = 24;
-const CARD_W = VIEW_W - 48;
-const CARD_H = 184;
+const CARD_X = 32;
+const CARD_W = VIEW_W - CARD_X - 24;
+const CARD_H = 204;
 const GAP = 20;
 
 /** Rank title and flavour in the current language. */
@@ -51,11 +52,14 @@ export class WorkOrdersScene implements Scene {
   readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
   readonly upgrades = new Button(336, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
   readonly cards: Card[] = [];
+  readonly recommended: number;
   private readonly look = new ViewSlot(() => new WorkOrdersView(this));
 
   constructor(readonly shell: Shell) {
+    this.recommended = nextDispatchIndex(shell.save);
     for (let i = 0; i < LEVELS.length; i++) this.cards.push({ kind: 'level', index: i, shake: 0 });
     for (let i = 0; i < tr().missionConcepts.length; i++) this.cards.push({ kind: 'concept', index: i, shake: 0 });
+    if (this.recommended >= 3) this.scroll = Math.min(this.maxScroll, (this.recommended - 1) * (CARD_H + GAP));
   }
 
   private get maxScroll(): number {
@@ -160,7 +164,8 @@ class WorkOrdersView implements SceneView {
     const { workOrders: strings } = tr();
     const mask = new Graphics().rect(0, LIST_TOP - 8, VIEW_W, VIEW_H - LIST_TOP + 8).fill('#ffffff');
     this.list.mask = mask;
-    this.cards = s.cards.map((c) => c.kind === 'level' ? new LevelCard(s.shell, c.index) : new ConceptCard(c.index));
+    this.cards = s.cards.map((c) => c.kind === 'level' ? new LevelCard(s.shell, c.index, c.index === s.recommended) : new ConceptCard(c.index));
+    this.list.addChild(dispatchRoute(save, s.recommended));
     for (const card of this.cards) this.list.addChild(card.root);
 
     const header = new Sprite(paintedTexture('workorders|header', 2, LIST_TOP - 6, (g, w, h) => {
@@ -233,13 +238,31 @@ class WorkOrdersView implements SceneView {
   }
 }
 
+function dispatchRoute(save: Shell['save'], recommended: number): Graphics {
+  const route = new Graphics();
+  const x = 16;
+  const stride = CARD_H + GAP;
+  for (let i = 0; i < LEVELS.length; i++) {
+    const y = i * stride + CARD_H / 2;
+    const unlocked = isLevelUnlocked(save, i);
+    if (i > 0) {
+      const color = LEVELS[i]!.id === 'level8' ? C.amber : C.mint;
+      for (let t = y - stride + 12; t < y - 9; t += 11) route.circle(x, t, 1.9).fill({ color, alpha: unlocked ? 0.65 : 0.28 });
+    }
+    const delivered = save.levels[LEVELS[i]!.id].delivered;
+    route.circle(x, y, i === recommended ? 7 : 5).fill(delivered || i === recommended ? C.mint : C.panel)
+      .stroke({ color: unlocked ? C.mint : C.muted, width: 2 });
+  }
+  return route;
+}
+
 class LevelCard {
   readonly root = new Container();
   private readonly photos: Mugshot[] = [];
   private readonly arrow: Graphics | null;
   private readonly sun: SunIcon | null;
 
-  constructor(shell: Shell, private readonly index: number) {
+  constructor(shell: Shell, private readonly index: number, recommended: boolean) {
     const { assets, save } = shell;
     const lv = LEVELS[index]!;
     const unlocked = isLevelUnlocked(save, index);
@@ -254,35 +277,36 @@ class LevelCard {
     this.root.addChild(card);
     if (lv.kind === 'deep') {
       const cx = CARD_W - 66;
-      const [a, b, c] = lv.map.targets;
-      this.photos.push(
-        new Mugshot(assets, headKey(a.short), cx - 26, 46, unlocked, index, 25),
-        new Mugshot(assets, headKey(b.short), cx + 24, 44, unlocked, index + 1, 25),
-        new Mugshot(assets, headKey(c.short), cx - 2, 84, unlocked, index + 2, 25),
-      );
+      const anchors = [[cx - 26, 46], [cx + 24, 44], [cx - 2, 84]] as const;
+      for (const [i, target] of lv.map.targets.entries()) {
+        const [x, y] = anchors[i]!;
+        this.photos.push(new Mugshot(assets, targetHeadKey(target), x, y, unlocked, index + i, 25));
+      }
     } else this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 62, 58, unlocked, index, 38));
     for (const photo of this.photos) this.root.addChild(photo.root);
 
     const order = fmt(strings.orderNo, { num: lv.num });
     const tagX = 44 + measure(order, 14, 800);
-    const tag = training ? strings.training : strings.deepShift;
-    const tw = measure(tag, 13, 900) + (training ? 40 : 18);
+    const learner = training && !recommended;
+    const mint = training || recommended;
+    const tag = recommended ? strings.nextDispatch : training ? strings.training : lv.id === 'level8' ? tr().timeTrial.badge : strings.deepShift;
+    const tw = measure(tag, 13, 900) + (learner ? 40 : 18);
     const badge = roundRect(new Graphics(), tagX, 14, tw, 24, 12)
-      .fill(training ? 'rgba(124,255,203,0.16)' : 'rgba(255,93,115,0.24)')
-      .stroke({ color: training ? 'rgba(124,255,203,0.6)' : 'rgba(255,138,154,0.75)', width: 1.5 });
-    if (training) roundRect(badge, tagX + 6, 18, 17, 16, 3).fill('#f4efe2');
+      .fill(mint ? 'rgba(124,255,203,0.16)' : 'rgba(255,93,115,0.24)')
+      .stroke({ color: mint ? 'rgba(124,255,203,0.6)' : 'rgba(255,138,154,0.75)', width: 1.5 });
+    if (learner) roundRect(badge, tagX + 6, 18, 17, 16, 3).fill('#f4efe2');
     this.root.addChild(
       new Label({ size: 14, color: unlocked ? C.mint : C.muted, align: 'left', weight: 800 }).set(order, 34, 26),
       badge,
-      new Label({ size: 13, color: training ? C.mint : '#ffa3b0', align: 'left', weight: 900 }).set(tag, tagX + (training ? 28 : 9), 27),
+      new Label({ size: 13, color: mint ? C.mint : '#ffa3b0', align: 'left', weight: 900 }).set(tag, tagX + (learner ? 28 : 9), 27),
     );
-    if (training) this.root.addChild(new Label({ size: 13, color: '#d33a52', weight: 900 }).set(strings.learner, tagX + 14.5, 27));
+    if (learner) this.root.addChild(new Label({ size: 13, color: '#d33a52', weight: 900 }).set(strings.learner, tagX + 14.5, 27));
     const title = wrapLines(lt.title, CARD_W - 150, 24, 800);
     const titleLook = { size: 24, color: unlocked ? C.text : C.muted, align: 'left', weight: 800 } as const;
     const lines = Math.min(2, title.length);
     for (let i = 0; i < lines; i++) this.root.addChild(new Label(titleLook).set(title[i]!, 34, 56 + i * 28));
     this.root.addChild(new Label({ size: 16, color: unlocked ? C.muted : C.amber, align: 'left', weight: 700 })
-      .set(unlocked ? lt.location : strings.locked, 34, 56 + lines * 28, CARD_W - 150));
+      .set(lt.location, 34, 56 + lines * 28, CARD_W - 150));
 
     this.sun = unlocked && lv.kind === 'deep' ? new SunIcon(5.5, 8, 11.5) : null;
     this.arrow = unlocked ? this.openBadge(training) : null;
@@ -295,6 +319,9 @@ class LevelCard {
       );
       return;
     }
+
+    this.root.addChild(new Label({ size: 15, color: C.muted, align: 'left', italic: true })
+      .set(lt.blurb, 34, 78 + lines * 28, CARD_W - 145));
 
     const empty = starTexture(assets, 38, false);
     const full = starTexture(assets, 38, true);
@@ -381,7 +408,7 @@ class Mugshot {
     const rim = new Graphics().circle(0, 0, r).stroke({ color: unlocked ? C.mint : '#4a4470', width: 4 })
       .circle(0, 0, r + 3).stroke({ color: C.ink, width: 2 });
     const mask = new Graphics().circle(0, 0, r).fill('#ffffff');
-    const art = artSprite(assets, key, 70 * r / 38, 80 * r / 38) ?? new Graphics().circle(0, -4 * r / 38, 26 * r / 38).fill('#d5a182');
+    const art = artSprite(assets, key, 70 * r / 38, 80 * r / 38) ?? apeFallback(key, 70 * r / 38, 80 * r / 38) ?? new Graphics().circle(0, -4 * r / 38, 26 * r / 38).fill('#d5a182');
     this.head.addChild(art);
     this.head.y = r * 0.21;
     this.head.alpha = unlocked ? 1 : 0.28;

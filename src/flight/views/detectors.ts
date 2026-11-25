@@ -95,7 +95,9 @@ export class PorchTell {
   sync(lit: number, arm: number, hot: number, index: number, t: number, rm: boolean): void {
     this.light.visible = lit > 0;
     this.ghost.visible = lit <= 0 && arm > 0;
-    this.standby.visible = lit <= 0 && arm <= 0 && (rm || (t * 0.45 + index * 0.31) % 1 < 0.08);
+    // idle blink with alpha: a visible flip rebuilds the render group
+    this.standby.visible = lit <= 0 && arm <= 0;
+    this.standby.alpha = rm || (t * 0.45 + index * 0.31) % 1 < 0.08 ? 0.9 : 0;
     this.sensor.alpha = arm > 0 ? 0.85 : 0.3;
     this.sensor.tint = arm > 0 ? '#ffbe6e' : '#ffe296';
     if (this.light.visible) {
@@ -196,7 +198,7 @@ export class CameraTell {
     this.scan.scale.set(k * 2);
     this.scan.rotation = a;
     this.scan.alpha = 0.55 * (1 - k);
-    this.rec.visible = rm || Math.floor(t * 2.5 + i) % 2 === 0;
+    this.rec.alpha = rm || Math.floor(t * 2.5 + i) % 2 === 0 ? 1 : 0;
   }
 }
 
@@ -273,14 +275,19 @@ export class WindowTell {
 
   sync(on: boolean, tell: boolean, hot: number, t: number, i: number, rm: boolean): void {
     const flicker = tell && (rm || Math.sin(t * 40) > 0.2);
-    this.lamp.visible = this.shaft.visible = on || flicker;
-    this.lamp.alpha = on ? 1 : 0.7;
-    this.shaft.alpha = on ? 0.16 : 0.1;
-    this.dark.visible = !this.lamp.visible;
+    // the warning flicker runs on alpha; visible only follows on / tell (a visible flip rebuilds
+    // the render group, and the flicker would flip it a dozen times a second)
+    const shown = on || tell;
+    const lampOn = on || flicker;
+    this.lamp.visible = this.shaft.visible = shown;
+    this.lamp.alpha = on ? 1 : lampOn ? 0.7 : 0;
+    this.shaft.alpha = on ? 0.16 : lampOn ? 0.1 : 0;
+    this.dark.alpha = lampOn ? 0 : 1;
     this.silhouette.visible = on;
     this.silhouette.x = rm ? 0 : Math.sin(t * 0.9 + i) * 6;
     const r = this.d.r * (on ? 1.1 : 1.05);
-    this.glow.place(0, 0, r, r, on ? 0.46 : flicker ? 0.38 : 0);
+    this.glow.place(0, 0, r, r, on ? 0.46 : tell ? 0.38 : 0);
+    if (!lampOn) this.glow.alpha = 0;
     this.idle.visible = !on && !tell;
     this.warm.visible = !on && tell;
     this.warm.rotation = rm ? 0 : t * 110 / this.d.r;

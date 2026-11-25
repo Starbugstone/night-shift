@@ -75,15 +75,16 @@ export function runHeadless(map: DeepMap, upgrades: UpgradeId[], make: (sim: Dee
       lockT = -1;
       const ref = sim.ringRef[sim.lockedRing]!;
       res.legs.push({ target: ref.target, entry: ref.entry, sec: t - legStart });
-      const ring = sim.ringPos(ref.target, ref.entry);
-      sim.markDelivered(ref.target);
+      const ring = { ...sim.rings[sim.lockedRing]! };
+      if (ref.ape) sim.collectApe();
+      else sim.markDelivered(ref.target);
       checkpoint = ring;
       if (sim.delivered.every(Boolean)) {
         res.done = true;
         res.totalSec = t;
         break;
       }
-      sim.place(ring.x, ring.y, SAFE_WINDOW);
+      if (!ref.ape) sim.place(ring.x, ring.y, SAFE_WINDOW);
       legStart = t;
     }
     res.totalSec = t;
@@ -124,6 +125,7 @@ export function beelineController(sim: DeepFlightSim): Controller {
       }
       if (!best) return { down: false, x: 0, y: 0 };
       path = best.pts;
+      if (goal && sim.ringRef[sim.rings.indexOf(goal)]?.ape) path[path.length - 1] = goal;
       k = 0;
     }
     while (k < path.length - 1 && Math.hypot(path[k]!.x - s.x, path[k]!.y - s.y) < 70) k++;

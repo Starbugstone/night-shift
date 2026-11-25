@@ -1,3 +1,4 @@
+import { ApeLimbProjection, apeFallback } from './monolith-art';
 import { Container, FillGradient, Graphics, Sprite } from 'pixi.js';
 import { ART, type ArtSpec } from '../art-manifest';
 import { VIEW_H, VIEW_W, type Assets, type GameContext } from '../contracts';
@@ -14,6 +15,7 @@ import type { AbductSimulation } from './simulation';
 import { TurnButtonsView, TurnTell } from './turn-draw';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Human, type Room, type Sprite as RoomSprite } from './rooms/layout';
 import { POP_SECONDS, SOUVENIR_HINT, SouvenirMarker, SouvenirPop, souvenirLabel } from './souvenir';
+import { paintSouvenir } from './souvenir-art';
 import { DeliveryView, ExitChevrons, Reticle, SnoozeView, SnoreView, SpeechBubble, WakeBurst, roundedZone, type AbductViewInput } from './views/effects';
 import { FailureView } from './views/failure';
 import { INK, MINT, Segment, bitmap, box } from './views/pieces';
@@ -223,6 +225,8 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
       g.fillRect(21, 22, 18, 3);
       g.fillRect(21, 30, 13, 3);
       break;
+    default:
+      paintSouvenir(g, key, w, h); // v4 items & recap humour
   }
   g.restore();
 }
@@ -232,6 +236,8 @@ const SHIRTS: Record<Human, string> = {
   gary: '#e9b258', nigel: '#416790', kev: '#ae73bd', mayor: '#575783',
   // L5 pier code (bubbles is drawn by src/abduct/dolphin-art.ts)
   bubbles: '#6f86a8', pete: '#3f5b7a', sal: '#8a6f9a',
+  // v4 L8
+  flint: '#855944', reed: '#a87e56', echo: '#62617d',
   // L7 cruise code
   sterling: '#eef0f4', marco: '#f4f1ea', greg: '#e36a8c',
   // L6 clinic code
@@ -242,6 +248,8 @@ const PANTS: Record<Human, string> = {
   gary: '#926861', nigel: '#374e6c', kev: '#62496d', mayor: '#443d5c',
   // L5 pier code
   bubbles: '#dfe8f0', pete: '#e2c25a', sal: '#4c4a62',
+  // v4 L8
+  flint: '#855944', reed: '#a87e56', echo: '#62617d',
   // L7 cruise code
   sterling: '#2c3550', marco: '#3a3a44', greg: '#5aa6c8',
   // L6 clinic code
@@ -254,7 +262,7 @@ export interface SpecimenArt {
 }
 
 function boneArt(ctx: GameContext, p: Part, head: boolean, awake: boolean): Sprite {
-  const image = artSprite(ctx.assets, p.key, p.w, p.h);
+  const image = artSprite(ctx.assets, p.key, p.w, p.h) ?? apeFallback(p.key, p.w, p.h);
   if (image) {
     image.anchor.set(0.5, head ? 1 : 5 / p.h);
     return image;
@@ -274,7 +282,8 @@ function boneArt(ctx: GameContext, p: Part, head: boolean, awake: boolean): Spri
 
 export class HumanArt implements SpecimenArt {
   readonly root = new Container();
-  private readonly bones: { joint: Joint; end: Joint; arm: boolean; torso: boolean; sprite: Container }[] = [];
+  private readonly bones: { joint: Joint; end: Joint; arm: boolean; torso: boolean; far: boolean; sprite: Container }[] = [];
+  private readonly ape: ApeLimbProjection | null; // v4 L8
   private readonly sleeping: Sprite;
   private readonly awake: Sprite;
 
@@ -287,6 +296,7 @@ export class HumanArt implements SpecimenArt {
     const lowerArm = part(key + '_lower_arm', '#c18b77');
     const upperLeg = part(key + '_upper_leg', PANTS[human]);
     const lowerLeg = part(key + '_lower_leg', PANTS[human]);
+    this.ape = human === 'echo' || human === 'flint' || human === 'reed' ? new ApeLimbProjection() : null; // v4 L8
     const parts = [
       [upperArm, Joint.Neck, Joint.FarElbow], [lowerArm, Joint.FarElbow, Joint.FarHand],
       [upperLeg, Joint.Pelvis, Joint.FarKnee], [lowerLeg, Joint.FarKnee, Joint.FarFoot],
@@ -297,27 +307,34 @@ export class HumanArt implements SpecimenArt {
     for (const [p, joint, end] of parts) {
       const sprite = new Container();
       sprite.addChild(boneArt(ctx, p, false, false));
-      if (this.bones.length < 4) sprite.alpha = 0.73;
-      this.bones.push({ joint, end, arm: p === upperArm, torso: p === torso, sprite });
+      const far = this.bones.length < 4;
+      if (far && this.ape) sprite.tint = 0x9c9bb2; // v4 L8
+      else if (far) sprite.alpha = 0.73;
+      this.bones.push({ joint, end, arm: p === upperArm, torso: p === torso, far, sprite });
       this.root.addChild(sprite);
     }
     this.sleeping = boneArt(ctx, head, true, false);
     this.awake = boneArt(ctx, awakeHead, true, true);
     const neck = new Container();
     neck.addChild(this.sleeping, this.awake);
-    this.bones.push({ joint: Joint.Neck, end: Joint.Head, arm: false, torso: false, sprite: neck });
+    this.bones.push({ joint: Joint.Neck, end: Joint.Head, arm: false, torso: false, far: false, sprite: neck });
     this.root.addChild(neck);
   }
 
   sync(body: Ragdoll, awake: boolean, breath: number): void {
     this.awake.visible = awake;
     this.sleeping.visible = !awake;
-    for (const { joint, end, arm, torso, sprite } of this.bones) {
+    this.ape?.sync(body); // v4 L8
+    for (const { joint, end, arm, torso, far, sprite } of this.bones) {
       let x = body.x[joint]!;
       let y = body.y[joint]!;
       if (arm) {
         x += (body.x[Joint.Pelvis]! - x) * 0.15;
         y += (body.y[Joint.Pelvis]! - y) * 0.15;
+      }
+      if (this.ape && !torso && end !== Joint.Head) { // v4 L8
+        this.ape.place(sprite, joint, end, far, x, y, body.x[end]!, body.y[end]!);
+        continue;
       }
       sprite.position.set(x, y);
       sprite.rotation = Math.atan2(body.y[end]! - y, body.x[end]! - x) + (end === Joint.Head ? Math.PI / 2 : -Math.PI / 2);
@@ -442,8 +459,9 @@ class RoomSaucer {
       const light = new Glow(glowTexture(GLOW.amber), true).place(lx, ly, 13, 13, 0.7);
       this.lamps.push(lamp);
       this.glows.push(light);
-      this.hull.addChild(lamp, light);
     }
+    // all lamps, then all glows: interleaved, each additive glow split the batch twice
+    this.hull.addChild(...this.lamps, ...this.glows);
   }
 
   sync(t: number, dragging: boolean, rm: boolean): void {
@@ -456,7 +474,8 @@ class RoomSaucer {
     for (let i = 0; i < HULL_LIGHTS; i++) {
       const on = rm ? i % 2 === 0 : i === head || (dragging && (i + 1) % HULL_LIGHTS === head);
       this.lamps[i]!.tint = on ? '#ffd27a' : '#4a4470';
-      this.glows[i]!.visible = on;
+      // blink with alpha: a visible flip rebuilds the render group
+      this.glows[i]!.alpha = on ? 0.7 : 0;
     }
     this.beam.place(0, -2, 46, 16, dragging ? 0.9 : 0.6);
   }
@@ -828,8 +847,10 @@ export class AbductView implements SceneView {
     this.speech.sync(this.sim.mumble, !delivered && wake.awake <= 0 ? mumbleFx : 0, x, y, 0, 0, rm);
     this.snore.sync(dreaming ? snoreFx : 0, x, y, rm);
     this.dream.visible = dreaming;
-    for (const dot of this.trail) dot.visible = false;
-    if (!dreaming) return;
+    if (!dreaming) {
+      this.showTrail(false);
+      return;
+    }
     const dream = wake.bonks % DREAMS.length;
     if (dream !== this.lastDream) {
       this.lastDream = dream;
@@ -846,13 +867,17 @@ export class AbductView implements SceneView {
     const dy = dreamY - y;
     const distance = Math.hypot(dx, dy) || 1;
     const to = distance - 31;
+    // set once per frame to the final value: a visible flip rebuilds the render group
+    this.showTrail(to >= 43);
     if (to < 43) return;
     for (let i = 0; i < this.trail.length; i++) {
-      const dot = this.trail[i]!;
       const k = (39 + (to - 39) * ((i + 0.6) / 3.2)) / distance;
-      dot.visible = true;
-      dot.position.set(x + dx * k, y + dy * k);
+      this.trail[i]!.position.set(x + dx * k, y + dy * k);
     }
+  }
+
+  private showTrail(on: boolean): void {
+    for (const dot of this.trail) dot.visible = on;
   }
 
   private hud(): void {

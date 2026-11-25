@@ -233,8 +233,11 @@ export class SnoreView {
   }
 
   sync(fx: number, x: number, y: number, rm: boolean): void {
-    this.root.visible = fx > 0;
-    if (!this.root.visible) return;
+    // every snore comes and goes: hide with alpha (a visible flip rebuilds the render group)
+    if (fx <= 0) {
+      this.root.alpha = 0;
+      return;
+    }
     const deep = this.deep;
     const k = clamp((1.1 - fx) / 1.1, 0, 1);
     const lift = rm ? 0 : k * (deep ? 32 : 34);

@@ -40,7 +40,7 @@ const provenance = {
 };
 const base = 'http://127.0.0.1:' + port;
 const wait = (ms) => new Promise((done) => setTimeout(done, ms));
-const saveKey = 'night-shift-save-v1';
+const saveKey = 'night-shift-save-v2';
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.once(signal, () => {
     interrupted = signal;

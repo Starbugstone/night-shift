@@ -11,6 +11,7 @@ import { clamp, type Blade, type Circle, type Rect, type Ragdoll, type SwingingR
 import type { Building, Cycle, Hazard } from '../rooms/interior';
 import type { Area } from '../rooms/layout';
 import { CastorTellView } from '../swell-draw';
+import { boneTossView } from './bone-toss';
 import { Mount, prop, roomArt } from './building';
 import { AMBER, DashedRect, INK, MINT, RED, Segment, TAU, box, circleInView, dashedRing, disc, intersects, placeBox, ring } from './pieces';
 
@@ -310,6 +311,19 @@ function zone(state: HazardState, spec: Extract<Hazard, { kind: 'draft' | 'creak
   const markings = new Graphics();
   const caption = new Label(CREAK, 'creeeak');
   root.addChild(edge.root, markings, caption);
+  if (spec.kind === 'draft' && spec.ay === 0) {
+    const direction = Math.sign(spec.ax);
+    for (let yy = y + 44; yy < y + h; yy += 78) {
+      for (let xx = x + 50; xx < x + w - 20; xx += 100) {
+        markings.moveTo(xx - direction * 9, yy - 7).lineTo(xx, yy).lineTo(xx - direction * 9, yy + 7)
+          .moveTo(xx - direction * 17, yy).lineTo(xx, yy);
+      }
+    }
+    markings.stroke({ color, width: 2.5 });
+    caption.visible = false;
+    root.alpha = 0.35;
+    return { root, sync(_t, _rm, cx, cy) { root.visible = areaVisible(area, cx, cy); } };
+  }
   if (creak) {
     for (let yy = 22; yy < h; yy += 78) {
       for (let xx = 20; xx < w; xx += 61) markings.rect(x + xx, y + yy, 12, 2).rect(x + xx + 4, y + yy - 4, 13, 2);
@@ -650,7 +664,7 @@ function gateOrPop(state: HazardState, spec: Extract<Hazard, { kind: 'gate' | 'p
         edge[0]!.visible = !shape.active && !tell;
         edge[1]!.visible = !shape.active && tell;
         if (shape.active) panel.sync(shape.x, shape.y, shape.w, shape.h, tell, true);
-        dial.sync(vertical ? x + w / 2 : x + 26, vertical ? y - 26 : y - 20, t, tell);
+        dial.sync(spec.dialX ?? (vertical ? x + w / 2 : x + 26), vertical ? y - 26 : y - 20, t, tell);
       },
     };
   }
@@ -701,6 +715,7 @@ export function hazardView(building: Building, state: HazardState, assets: Asset
     case 'swing': return swing(state, spec, assets);
     case 'fan': return fan(state, spec, assets);
     case 'gear': return gear(state, spec, assets);
+    case 'toss': return boneTossView(state, spec, assets);
     case 'patrol': return patrol(state, spec, assets);
     case 'fragile': return fragile(state, spec, assets);
     case 'castor': return castor(state, spec, assets);

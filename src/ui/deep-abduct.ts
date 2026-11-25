@@ -83,7 +83,8 @@ class DeepShiftView implements SceneView {
     private readonly reduced: () => boolean,
     private readonly time: () => number,
   ) {
-    this.sun = new HudSunClock(artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h));
+    this.sun = new HudSunClock(artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h),
+      run.level.id === 'level8' ? tr().timeTrial.left : undefined);
     this.sun.alpha = 0.92;
     this.warning.position.set(DEEP_HUD_WARNING_SLOT.x, DEEP_HUD_WARNING_SLOT.y);
     this.warning.addChild(this.panel, this.caption);

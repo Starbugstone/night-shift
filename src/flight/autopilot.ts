@@ -8,6 +8,7 @@
 // 3. Every 0.1 s the autopilot rolls the real physics forward (copied state, a second hazard
 //    field) for "go to the next hold point" and "wait here", and picks the
 //    first one that keeps the suspicion fuse well short of full.
+import { inHumBelt } from './monolith';
 import type { FlightAutopilotIntent, Vec2 } from '../contracts';
 import type { DeepMap } from '../levels/types';
 import { circleSegment, pointInCircle, pointInCone } from './geometry';
@@ -131,6 +132,9 @@ export function exposureGrid(m: DeepMap): ExposureGrid {
           raster(k, d.x, d.y, d.range, (px, py) => pointInCone(px, py, d.x, d.y, a, d.half, d.range));
           break;
         }
+        case 'hum':
+          if (field.on[i]) raster(k, d.x, d.y, d.outer, (x, y) => inHumBelt(d, x, y));
+          break;
         case 'dog': {
           const r = field.a[i]!;
           raster(k, d.x, d.y, r, (px, py) => pointInCircle(px, py, d.x, d.y, r));
@@ -386,6 +390,7 @@ export class FlightAutopilot {
     /** Fixed visiting order (target indices); default = cheapest next. */
     private readonly order?: readonly number[],
   ) {
+    this.avoid = new Float32Array(sim.rings.length);
     this.grid = exposureGrid(sim.map);
     this.rf = new HazardField(sim.map.hazards);
     this.rs = newFlightState(this.rf.porchCount, this.rf.ambCount, this.rf.photoCount);
@@ -410,7 +415,7 @@ export class FlightAutopilot {
   }
 
   /** Rings we gave up on (stuck too long): extra planning cost. */
-  private readonly avoid = new Float32Array(6);
+  private readonly avoid: Float32Array;
 
   private replan(): void {
     const sim = this.sim;
@@ -418,25 +423,27 @@ export class FlightAutopilot {
     let best: { pts: Vec2[]; cost: number } | null = null;
     let bestCost = Infinity;
     let bestT = -1;
-    let bestE = -1;
+    let bestRing = -1;
     const candidates = this.order ? this.order.filter((t) => !sim.delivered[t]).slice(0, 1) : [0, 1, 2].filter((t) => !sim.delivered[t]);
     for (const t of candidates) {
-      for (let e = 0; e < 2; e++) {
-        const r = sim.ringPos(t, e);
+      for (let i = 0; i < sim.rings.length; i++) {
+        const r = sim.rings[i]!;
+        if (sim.ringRef[i]!.target !== t || r.x < 0) continue;
         const p = findPath(this.grid, s, r);
-        const cost = p ? p.cost + this.avoid[t * 2 + e]! : Infinity;
+        const cost = p ? p.cost + this.avoid[i]! : Infinity;
         if (p && cost < bestCost) {
           bestCost = cost;
           best = p;
           bestT = t;
-          bestE = e;
+          bestRing = i;
         }
       }
     }
     this.stats.replans++;
     this.target = bestT;
-    this.ring = bestT >= 0 ? bestT * 2 + bestE : -1;
+    this.ring = bestRing;
     this.path = best ? best.pts : [{ x: s.x, y: s.y }];
+    if (sim.ringRef[bestRing]?.ape) this.path[this.path.length - 1] = sim.rings[bestRing]!;
     this.pi = 0;
     // hold points: never-exposed cells right before an exposed stretch, plus the goal
     const holds: number[] = [];
@@ -649,7 +656,7 @@ export class FlightAutopilot {
     const jumped = Math.hypot(s.x - this.lastPos.x, s.y - this.lastPos.y) > 200;
     this.lastPos.x = s.x;
     this.lastPos.y = s.y;
-    const ringGone = this.ring >= 0 && sim.delivered[this.target];
+    const ringGone = this.ring >= 0 && sim.rings[this.ring]!.x < 0;
     if (this.target < 0 || jumped || ringGone || this.path.length === 0) this.replan();
     if (this.target < 0) {
       o.down = false;

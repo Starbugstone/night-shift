@@ -1,5 +1,6 @@
 // After a failed (or abandoned) abduction in a deep shift: one big "Retry" and a way out.
 import { Container, Graphics } from 'pixi.js';
+import { apeFallback } from '../abduct/monolith-art';
 import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
@@ -10,7 +11,7 @@ import { GLOW, ScreenTint } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { roundRect } from '../core/gfx/shapes';
 import { Label, Paragraph } from '../core/gfx/text';
-import { headKey } from './draw';
+import { targetHeadKey } from './draw';
 import { artSprite } from './views/art';
 import { NightSky } from './views/backdrop';
 import { ButtonView } from './views/button';
@@ -62,6 +63,7 @@ export class DeepChoiceScene implements Scene {
   }
 
   update(dt: number): void {
+    if (this.t === 0) this.shell.audio.speak(this.line, 'vrell', { within: 3 }); // v4 voices: Vrell says it
     this.t += dt;
     const p = this.shell.ctx.pointer;
     const a = this.shell.audio;
@@ -84,6 +86,7 @@ export class DeepChoiceScene implements Scene {
   }
 
   dispose(): void {
+    this.shell.audio.hush('vrell'); // v4 voices
     this.look.destroy();
   }
 }
@@ -127,7 +130,8 @@ class DeepChoiceView implements SceneView {
       const x = 82 + i * 50;
       const done = run.delivered[i]!;
       const failed = run.lastFail?.target === i;
-      const face = artSprite(shell.assets, headKey(target.short), 42, 48) ?? new Graphics().circle(0, -2, 16).fill('#d5a182');
+      const headKey = targetHeadKey(target);
+      const face = artSprite(shell.assets, headKey, 42, 48) ?? apeFallback(headKey, 42, 48) ?? new Graphics().circle(0, -2, 16).fill('#d5a182');
       face.y = 4;
       face.alpha = done ? 0.6 : 1;
       if (failed) failedFace = face;

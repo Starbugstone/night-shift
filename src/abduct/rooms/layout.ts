@@ -10,6 +10,8 @@ export const RIGHT_WALL = 520;
 export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'kev' | 'mayor'
   // L5 pier code (bubbles is the dolphin: src/abduct/body-plan.ts)
   | 'bubbles' | 'pete' | 'sal'
+  // v4 L8
+  | 'flint' | 'reed' | 'echo'
   // L7 cruise code
   | 'sterling' | 'marco' | 'greg'
   // L6 clinic code
@@ -61,6 +63,8 @@ export interface Room {
   sign?: Sprite;
   par: number;
   route: readonly Waypoint[];
+  /** v4 council: the scene wrapping this room (Field Check) owns the lesson prompt; the room's own stays off. */
+  wrapperLessons?: boolean;
 }
 
 export function sprite(key: string, x: number, y: number): Sprite {

@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import type { AbductResult, Assets, FlightResult, Scene } from '../contracts';
-import { deepComment, sunriseMemo } from '../levels/humor';
+import { deepComment, storyFirstClear, sunriseMemo } from '../levels/humor'; // v4 story
 import type { DeepRun } from '../levels/run';
 import { VIEW_W } from '../contracts';
 import { P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles, easeOutBack, easeOutCubic } from '../core/fx';
@@ -83,7 +83,7 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
     ],
     stamp: abduct.delivered ? 'delivered' : 'failed',
     starLabels: tr().starLabels.tutorial,
-    comment: vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports),
+    comment: (abduct.delivered && outcome.newStarFlags[0] && storyFirstClear(lv.id)) || vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports), // v4 story
     delivered: abduct.delivered,
     ...(abduct.photo ? { photo: abduct.photo } : {}),
     cover: coverStory({ levelId: lv.id, items: abduct.itemsStolen, spotted: flight.spotted, sunrise: false, seed: outcome.save.reports }),
@@ -99,24 +99,28 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   const r = tr().report;
   const names = run.order.map((i) => gt(lv.map.targets[i]!.short)).join(r.listSep);
   const n = run.deliveredCount;
-  const left = Math.max(0, lv.budgetSec - run.elapsed);
+  const dignityCount = lv.id === 'level8' ? run.totals.rooms.length : n;
+  // Round the margin down and derive the used time from it: the two still add up to the budget, and
+  // a 24.85 s margin reads 0:24, not a 0:25 that looks like it earned the 25 s Night owl.
+  const spareSeconds = Math.max(0, Math.floor(run.budget - run.elapsed));
+  const usedSeconds = run.budget - spareSeconds;
   return {
     subtitle: fmt(r.subtitleDeep, { location: tr().levels[lv.id].location }),
     rows: [
-      [r.shiftTime, sunrise ? fmt(r.ranOut, { h: lv.hours[1] }) : fmt(r.usedSpare, { used: fmtTime(run.elapsed), left: fmtTime(left) })],
-      [r.delivered, names ? fmt(r.deliveredNames, { n, names }) : fmt(r.deliveredValue, { n })],
+      [r.shiftTime, sunrise ? (lv.id === 'level8' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] })) : fmt(r.usedSpare, { used: fmtTime(usedSeconds), left: fmtTime(spareSeconds) })],
+      [r.delivered, lv.id === 'level8' ? fmt(tr().timeTrial.count, { n: run.specimenCount }) : names ? fmt(r.deliveredNames, { n, names }) : fmt(r.deliveredValue, { n })],
       [r.spotted, String(run.spotted)],
       [r.failedAbductions, String(run.failedAbductions + run.aborts)],
       [r.bonked, String(run.totals.bonks)],
-      [r.avgDignity, n > 0 ? fmt(r.percent, { n: Math.round(run.totals.dignity / n) }) : tr().common.dash],
+      [r.avgDignity, dignityCount > 0 ? fmt(r.percent, { n: Math.round(run.totals.dignity / dignityCount) }) : tr().common.dash],
       [r.items, itemsPhrase(run.totals.items)],
     ],
     stamp: sunrise ? 'sunrise' : 'delivered',
-    starLabels: tr().starLabels.deep,
+    starLabels: lv.id === 'level8' ? tr().timeTrial.stars : tr().starLabels.deep,
     comment: sunrise
       ? sunriseMemo(outcome.save.reports)
-      : deepComment(
-          { levelId: lv.id, stars: countStars(outcome.stars), spotted: run.spotted, failed: run.failedAbductions, bonks: run.totals.bonks, remaining: left, order: run.order },
+      : (outcome.newStarFlags[0] && storyFirstClear(lv.id)) || deepComment( // v4 story
+          { levelId: lv.id, stars: countStars(outcome.stars), spotted: run.spotted, failed: run.failedAbductions, bonks: run.totals.bonks, remaining: run.remaining, order: run.order, items: run.totals.items, rooms: run.totals.rooms },
           outcome.save.reports,
         ),
     delivered: !sunrise && n >= 3,
@@ -143,16 +147,18 @@ export class ReportScene implements Scene {
   private readonly look = new ViewSlot(() => new ReportView(this));
   readonly end: number;
   private playedExtras = { approved: false, tabloid: false };
+  private spoke = false; // v4 voices: Vrell says his comment out loud
 
   constructor(
     readonly shell: Shell,
     private readonly levelIndex: number,
     readonly model: ReportModel,
     readonly outcome: RunOutcome,
+    private readonly advance?: () => void,
   ) {
     this.end = model.headline ? TABLOID_END : END;
     const hasNext = levelIndex + 1 < LEVELS.length;
-    this.next.label = model.delivered && hasNext ? tr().common.next : tr().common.workOrders;
+    this.next.label = advance ? tr().fieldCheckControls.short : model.delivered && hasNext ? tr().common.next : tr().common.workOrders;
     if (this.next.label.length > 9) this.next.size = 26;
   }
 
@@ -170,6 +176,7 @@ export class ReportScene implements Scene {
     this.next.enabled = ready;
     if (this.retry.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
     if (this.next.update(p, dt, audio)) {
+      if (this.advance) return this.advance();
       const n = this.levelIndex + 1;
       if (this.model.delivered && n < LEVELS.length) return this.shell.toMemo(n);
       return this.shell.toWorkOrders();
@@ -225,6 +232,11 @@ export class ReportScene implements Scene {
         }
       }
     }
+    // v4 voices: Vrell's comment, babbled as it appears (a skip lands here too: it is read then)
+    if (!this.spoke && this.t >= COMMENT_AT) {
+      this.spoke = true;
+      audio.speak(this.model.comment, 'vrell', { within: 3.2 });
+    }
     if (!this.played.glorbs && this.t >= GLORB_AT) {
       this.played.glorbs = true;
       if (this.model.delivered) audio.sfx('success', 0.7);
@@ -256,6 +268,7 @@ export class ReportScene implements Scene {
   }
 
   dispose(): void {
+    this.shell.audio.hush('vrell'); // v4 voices
     this.look.destroy();
   }
 }

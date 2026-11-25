@@ -8,6 +8,7 @@ import { VIEW_H, VIEW_W } from '../../contracts';
 import { LETTERBOX_COLOR, bitmapScaleOf, type Viewport } from '../viewport';
 import { applyPixiFixes } from './pixi-fixes';
 import { setTextureScale } from './textures';
+import { tickShapeClock } from './shapes';
 
 export interface RenderHost {
   readonly renderer: Renderer;
@@ -19,7 +20,16 @@ export interface RenderHost {
   /** Re-fit to the viewport (the shared viewport watcher calls this). */
   resize(viewport: Viewport): void;
   render(): void;
+  /**
+   * Frames so far whose render rebuilt every batch of the root render group (a `visible` flip, an
+   * add or a remove anywhere in the tree, a batched Graphics that changed geometry). Flipping
+   * `visible` each frame makes this every frame. Counted only in dev and e2e builds (0 elsewhere).
+   */
+  readonly rebuilds: number;
 }
+
+/** Same gate as the game's test fixtures: production builds don't patch Pixi just to count. */
+const COUNT_REBUILDS = import.meta.env.DEV || import.meta.env.MODE === 'e2e';
 
 let active: RenderHost | null = null;
 
@@ -56,6 +66,27 @@ export async function createRenderHost(canvas: HTMLCanvasElement, viewport: View
   root.mask = clip;
   stage.addChild(root);
 
+  /** Rebuilds are only counted where the test fixtures exist (dev and e2e builds): it patches Pixi. */
+  let rebuilds = 0;
+  /** A rebuild was asked for this frame: a `visible` flip before the render, or a renderable inside it. */
+  let flagged = false;
+  let watched = false;
+  /**
+   * Pixi also asks for a rebuild during `render()` (a batched Graphics that changed geometry, a
+   * texture that left its batch) and clears the flag in the same call, so watch the flag itself.
+   */
+  const watchRebuilds = (group: { structureDidChange: boolean }): boolean => {
+    let value = group.structureDidChange;
+    Object.defineProperty(group, 'structureDidChange', {
+      configurable: true,
+      get: () => value,
+      set: (v: boolean) => {
+        value = v;
+        if (v) flagged = true;
+      },
+    });
+    return true;
+  };
   const host: RenderHost = {
     renderer,
     canvas,
@@ -68,7 +99,16 @@ export async function createRenderHost(canvas: HTMLCanvasElement, viewport: View
       setTextureScale(bitmapScaleOf(v));
     },
     render() {
+      tickShapeClock(performance.now());
+      flagged = false;
+      // the root render group exists from the first render on
+      if (COUNT_REBUILDS && stage.renderGroup?.structureDidChange) flagged = true;
       renderer.render(stage);
+      if (!watched && COUNT_REBUILDS && stage.renderGroup) watched = watchRebuilds(stage.renderGroup);
+      if (flagged) rebuilds++;
+    },
+    get rebuilds() {
+      return rebuilds;
     },
   };
   host.resize(viewport);

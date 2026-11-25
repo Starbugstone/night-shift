@@ -1,6 +1,6 @@
 // L6 "Probe Compliance": St. Mildred's General (docs/GDD-3-new-shifts.md, L6). Three buildings,
 // two routes each. Every route carries two Form 7-B probe drones (src/abduct/probe.ts): the exit
-// stays shut until both readings are in. PG throughout: the joke is the paperwork and the signs.
+// stays shut until both readings are in. PG-13 leaning 16 (v4): the joke is the paperwork, the signs and the probe.
 import { building, type Building, type Checkpoint, type Hazard, type InteriorRoom, type Opening, type Sleeper } from './interior';
 import { BED_POSE, prop, sprite, type Area, type Furniture, type Room, type Sprite } from './layout';
 import type { ProbeDrone, ProbeKind } from '../probe';
@@ -159,7 +159,7 @@ export const hankRear = route(hankHome, 'hank', HANK_POSE,
 // West: lift shaft | on-call room (Osei, the pager) | corridor (camera) | pharmacy (shelves, hatch) :east
 
 const oseiBunk = support('bunk_bed', 230, 466, box(7, 52, 282, 16), box(7, 161, 282, 12));
-const OSEI_POSE: Pose = { ...BED_POSE, neckX: 330, neckY: 482 };
+const OSEI_POSE: Pose = { ...BED_POSE, neckX: 322, neckY: 482 };
 const OSEI_EXITS = {
   helipad: art('exit_roof_hatch', -320, -1316),
   pharmacy: art('exit_window', 2440, 240),
@@ -215,7 +215,7 @@ export const oseiPharmacy = route(oseiHome, 'osei', OSEI_POSE,
     point(1880, 250), point(2280, 250), point(2340, 350),
     point(2510, 350, 'Pharmacy hatch', 175),
   ], [
-    drone('osei', 'hammer', 830, 330, [0.6, -0.8]),
+    drone('osei', 'thermo', 830, 330),
     // the feather kick sends the foot up and back, away from the shelves
     drone('osei', 'feather', 1790, 290, [-0.9, -0.4]),
   ]);
@@ -224,7 +224,7 @@ export const oseiPharmacy = route(oseiHome, 'osei', OSEI_POSE,
 // West: chute (down) | linen room | recovery bay (Pemberton, Roland, monitors) | corridor | window :east
 
 const pembertonBed = support('hospital_bed', 60, 536, box(12, 48, 296, 50), box(3, 3, 9, 63));
-const PEMBERTON_POSE: Pose = { ...BED_POSE, neckX: 140, neckY: 548 };
+const PEMBERTON_POSE: Pose = { ...BED_POSE, neckX: 144, neckY: 548 };
 const PEMBERTON_EXITS = {
   window: art('exit_window', 2340, 200),
   chute: art('exit_vent', -660, 1300),
@@ -259,8 +259,7 @@ export const pembertonWindow = route(pembertonHome, 'pemberton', PEMBERTON_POSE,
     point(1890, 320, 'Ward camera', 235),
     point(2200, 310), point(2420, 300),
   ], [
-    // the feather in Bay 3: Roland is asleep in Bay 4, so the giggle carries
-    drone('pemberton', 'feather', 400, 320, [-0.7, -0.7]),
+    drone('pemberton', 'thermo', 400, 320),
     drone('pemberton', 'hammer', 1170, 320, [0.7, -0.7]),
   ]);
 

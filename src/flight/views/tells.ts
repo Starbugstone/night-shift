@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import { GLOW, glowTexture, Glow } from '../../core/gfx/glow';
-import { Shape, keyOf } from '../../core/gfx/shapes';
+import { Shape, batched, keyOf } from '../../core/gfx/shapes';
 import { paintedTexture } from '../../core/gfx/textures';
 import { rgbOf } from '../../core/fx';
 import { C } from '../../ui/theme';
@@ -109,11 +109,13 @@ export class DiscTell {
   private readonly hotRim: Graphics;
 
   constructor(width: number, hotWidth: number, dashed = false) {
+    // the dashed rims (~450 vertices, fixed geometry: sync only moves, tints and fades them) stay
+    // in their batch past Pixi's 200-vertex limit: one draw call instead of three
     this.rim = dashed
-      ? dashedArc(new Graphics(), 100, 0, TAU, 14, 12).stroke({ color: 0xffffff, width })
+      ? dashedArc(batched(new Graphics()), 100, 0, TAU, 14, 12).stroke({ color: 0xffffff, width })
       : new Graphics().circle(0, 0, 100).stroke({ color: 0xffffff, width });
     this.hotRim = dashed
-      ? dashedArc(new Graphics(), 100, 0, TAU, 14, 12).stroke({ color: RED, width: hotWidth })
+      ? dashedArc(batched(new Graphics()), 100, 0, TAU, 14, 12).stroke({ color: RED, width: hotWidth })
       : new Graphics().circle(0, 0, 100).stroke({ color: RED, width: hotWidth });
     this.root.addChild(this.disc, this.rim, this.hotRim);
   }

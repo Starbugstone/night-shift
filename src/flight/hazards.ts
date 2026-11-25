@@ -10,6 +10,7 @@ import { POWER_LINE, SAUCER, barkRadius, neonOn, neonScramble, type Saucer } fro
 import { beamAngle, lighthouseCovers, type LighthouseHazard } from './lighthouse';
 // L6 clinic code: the ambulance scramble
 import { AmbPhase, ambulancePose, triggerAmbulances, type AmbulanceHazard, type AmbulancePose } from './ambulance';
+import { HUM_WARNING, humPhase, inHumBelt, type HumSlab } from './monolith';
 // L7 cruise code: the deck photographer and the deck stewards
 import { STEWARD_REACH, inFrame, newPhotoState, stewardPose, stewardSees, triggerPhotographers, PHOTO, type PhotographerHazard, type StewardHazard, type StewardPose } from './photographer';
 
@@ -217,6 +218,8 @@ export type HazardDef =
   | LighthouseHazard
   // L6 clinic code
   | AmbulanceHazard
+  // v4 L8
+  | HumSlab
   // L7 cruise code
   | PhotographerHazard
   | StewardHazard;
@@ -312,6 +315,8 @@ export type SpotCause = 'police' | 'patrol' | 'traffic' | 'porch' | 'watcher' | 
   | 'lighthouse'
   // L6 clinic code
   | 'ambulance'
+  // v4 L8
+  | 'hum'
   // L7 cruise code
   | 'photographer'
   | 'steward';
@@ -512,6 +517,14 @@ export class HazardField {
           }
           break;
         }
+        case 'hum': {
+          const phase = humPhase(d, t);
+          this.x[i] = d.x;
+          this.y[i] = d.y;
+          this.on[i] = phase < d.sounding ? 1 : 0;
+          this.tell[i] = phase >= d.period - HUM_WARNING ? 1 : 0;
+          break;
+        }
         case 'watcher': {
           const n = d.angles.length;
           const k = Math.floor(t / d.hold);
@@ -659,6 +672,9 @@ export class HazardField {
         case 'porch':
           if (porchLit[this.porchSlot[i]!]! > 0 && pointInCircle(x, y, d.x, d.y, d.r)) return i;
           break;
+        case 'hum':
+          if (this.on[i] && inHumBelt(d, x, y)) return i;
+          break;
         case 'watcher':
           if (pointInCone(x, y, d.x, d.y, this.a[i]!, d.half, d.range)) return i;
           break;
@@ -797,6 +813,7 @@ export class HazardField {
         return 'traffic';
       case 'porch':
         return 'porch';
+      case 'hum': return 'hum';
       case 'watcher':
         return 'watcher';
       case 'dog':
@@ -831,6 +848,7 @@ export class HazardField {
   reach(i: number): number {
     const d = this.defs[i]!;
     switch (d.type) {
+      case 'hum': return d.outer;
       case 'car':
         return Math.max(d.coneRange + CAR_LEN, d.barR);
       case 'watcher':

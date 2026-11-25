@@ -1,10 +1,25 @@
-// Difficulty evaluator: plays a deep level with human-model players (./human.ts) and checks the
-// results against the level's target band. Used by tests/levels-difficulty.test.ts and the
+// Difficulty evaluator: scores each level with human-model players (./human.ts) and checks
+// the star and deep-level bands. Used by tests/levels-difficulty.test.ts and the
 // evaluate-difficulty skill (.claude/skills/evaluate-difficulty/SKILL.md).
 import type { RoomId } from '../../src/contracts';
-import type { DeepLevelDef } from '../../src/levels/types';
-import { beelineController, runHeadless } from '../flight-deep-harness';
-import { PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
+import type { LevelDef } from '../../src/levels/types';
+import { starLabels } from '../../src/levels/progress';
+import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
+import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
+import { evaluateStars, type StarReport } from './stars';
+
+// Minimum shares of full attempts, in the game's star order. The beeline and wake
+// checks below still enforce challenge when the route-aware player earns many stars.
+const STAR_FLOORS = {
+  tutorial: { skilled: [5 / 6, 0.75, 2 / 3], casual: [2 / 3, 0.60, 1 / 2] },
+  early: { skilled: [5 / 6, 2 / 3, 2 / 3], casual: [2 / 3, 0.60, 1 / 2] },
+  middle: { skilled: [5 / 6, 0.60, 2 / 3], casual: [2 / 3, 0.45, 1 / 2] },
+  late: { skilled: [5 / 6, 0.50, 2 / 3], casual: [2 / 3, 0.33, 1 / 2] },
+} as const;
+
+const CASUAL_GHOST_CAP = 0.9;
+const MIN_CASUAL_PAR_SHARE = 0.30;
+const MIN_CASUAL_PEAK_SUSPICION = 0.05;
 
 /** What "fair but not trivial" means for one level. Rates are 0..1. */
 export interface Band {
@@ -21,8 +36,6 @@ export interface Band {
   flightDone: number;
   /** Casual whole-shift estimate (flight + abductions with expected retries) must fit in this share of the sunrise budget. */
   casualBudgetShare: number;
-  /** Not trivial: a naive straight-line flight is spotted in at least this many of 4 start times. */
-  beelineCaught: number;
   /** Not trivial: mean over routes of the casual median peak wake (0..100) is at least this. */
   tension: number;
 }
@@ -37,7 +50,6 @@ export const BANDS: Record<string, Band | undefined> = {
     casualSpots: 2,
     flightDone: 0.8,
     casualBudgetShare: 0.8,
-    beelineCaught: 2,
     tension: 20,
   },
   level4: {
@@ -48,7 +60,6 @@ export const BANDS: Record<string, Band | undefined> = {
     casualSpots: 2,
     flightDone: 0.8,
     casualBudgetShare: 0.8,
-    beelineCaught: 2,
     tension: 20,
   },
   // L5 pier code: docs/GDD-3-new-shifts.md "Feel targets" (skilled >= 75 %, casual >= 40 % per
@@ -61,7 +72,6 @@ export const BANDS: Record<string, Band | undefined> = {
     casualSpots: 2,
     flightDone: 0.8,
     casualBudgetShare: 0.8,
-    beelineCaught: 2,
     tension: 20,
   },
   // L6 clinic code: docs/GDD-3-new-shifts.md "Feel targets" (skilled >= 75 %, casual >= 40 % per
@@ -74,7 +84,6 @@ export const BANDS: Record<string, Band | undefined> = {
     casualSpots: 2,
     flightDone: 0.8,
     casualBudgetShare: 0.8,
-    beelineCaught: 2,
     tension: 20,
   },
   // L7 cruise code: docs/GDD-3-new-shifts.md "Feel targets" (skilled >= 75 %, casual >= 40 % per
@@ -87,8 +96,13 @@ export const BANDS: Record<string, Band | undefined> = {
     casualSpots: 2,
     flightDone: 0.8,
     casualBudgetShare: 0.8,
-    beelineCaught: 2,
     tension: 20,
+  },
+
+  // v4 L8 · docs/GDD-4-monolith.md
+  level8: {
+    skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.6, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.8, casualBudgetShare: 0.8, tension: 20,
   },
 };
 
@@ -102,6 +116,7 @@ export interface RouteReport {
   medianSec: number;
   medianPeakWake: number;
   medianPeakSleeper: number;
+  obstacleShare: number;
   fails: Record<string, number>;
 }
 
@@ -113,19 +128,27 @@ export interface FlightReport {
   causes: Record<string, number>;
 }
 
-export interface LevelReport {
+interface StarLevelReport {
   levelId: string;
   title: string;
   seeds: number;
+  starLabels: readonly string[];
+  stars: StarReport[];
+  beelineCaught: number;
+  roomBeelines: { roomId: RoomId; clean: number }[];
+  casualMedianParShare: number;
+  casualMedianPeakSuspicion: number;
+  violations: string[];
+}
+
+export interface LevelReport extends StarLevelReport {
   routes: RouteReport[];
   flight: FlightReport[];
-  beelineCaught: number;
   /** Seconds, per profile: flight median + per building (best route median / success). */
   shiftEstimate: Record<string, number>;
   budgetSec: number;
   parSec: number;
   tension: number;
-  violations: string[];
 }
 
 const median = (xs: number[]): number => {
@@ -141,9 +164,9 @@ const tally = (keys: string[]): Record<string, number> => {
   return out;
 };
 
-function routeReport(roomId: RoomId, building: string, route: string, profile: HumanProfile, seeds: number): RouteReport {
+function routeReport(roomId: RoomId, building: string, route: string, profile: HumanProfile, seeds: number, play: (id: RoomId, profile: HumanProfile, seed: number) => AbductRun): RouteReport {
   const runs: AbductRun[] = [];
-  for (let s = 1; s <= seeds; s++) runs.push(playAbduction(roomId, profile, s));
+  for (let s = 1; s <= seeds; s++) runs.push(play(roomId, profile, s));
   const ok = runs.filter((r) => r.delivered);
   return {
     roomId,
@@ -154,18 +177,83 @@ function routeReport(roomId: RoomId, building: string, route: string, profile: H
     medianSec: median(ok.map((r) => r.timeSec)),
     medianPeakWake: median(runs.map((r) => r.peakWake)),
     medianPeakSleeper: median(runs.map((r) => r.peakSleeper)),
+    obstacleShare: runs.filter(run => run.approachedObstacle).length / runs.length,
     fails: tally(runs.filter((r) => !r.delivered).map((r) => `${r.failReason}${r.failBy ? `: ${r.failBy}` : ''}`)),
   };
 }
 
-export function evaluateLevel(level: DeepLevelDef, seeds = 6, profiles: HumanProfile[] = [PROFILES.skilled, PROFILES.casual]): LevelReport {
+export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile[] = [PROFILES.skilled, PROFILES.casual]): StarLevelReport | LevelReport {
   if (!Number.isSafeInteger(seeds) || seeds <= 0) throw new Error('DIFFICULTY_SEEDS must be a positive integer');
+  const rooms = new Map<string, AbductRun>();
+  const play = (room: RoomId, profile: HumanProfile, seed: number): AbductRun => {
+    const key = `${room}/${profile.name}/${seed}`;
+    const cached = rooms.get(key);
+    if (cached) return cached;
+    const run = playAbduction(room, profile, seed);
+    rooms.set(key, run);
+    return run;
+  };
+  const stars = profiles.map((p) => evaluateStars(level, p, seeds, play));
+  const skilledStars = stars.find((row) => row.profile === 'skilled');
+  const casualStars = stars.find((row) => row.profile === 'casual');
+  const casualRuns = casualStars?.runs ?? [];
+  const par = level.kind === 'tutorial' ? level.parSec : level.budgetSec - level.parMarginSec;
+  const entries = level.kind === 'tutorial' ? level.map.entries : level.map.targets.flatMap(target => target.entries);
+  const base: StarLevelReport = {
+    levelId: level.id,
+    title: level.title,
+    seeds,
+    starLabels: starLabels(level),
+    stars,
+    beelineCaught: beelineFlight(level),
+    roomBeelines: entries.map(entry => ({ roomId: entry.roomId, clean: naiveRoomWins(entry.roomId, level.kind === 'deep') })),
+    casualMedianParShare: median(casualRuns.filter(run => run.stars[0]).map(run => run.seconds / par)),
+    casualMedianPeakSuspicion: median(casualRuns.map(run => run.peakSuspicion)),
+    violations: [],
+  };
+  const floors = STAR_FLOORS[level.kind === 'tutorial' ? 'tutorial' : level.num <= 4 ? 'early' : level.num <= 6 ? 'middle' : 'late'];
+  for (const row of base.stars) {
+    const want = row.profile === 'skilled' ? floors.skilled : row.profile === 'casual' ? floors.casual : [];
+    for (const [i, floor] of want.entries()) {
+      const actual = row.earned[i]! / row.attempts;
+      if (actual < floor) base.violations.push(`${base.starLabels[i]} (${row.profile}) earns ${pct(actual)}, band wants ≥ ${pct(floor)}`);
+    }
+    if (level.kind === 'deep' && row.profile === 'casual' && row.earned[1] / row.attempts > CASUAL_GHOST_CAP) {
+      base.violations.push(`too easy: casual Ghost earns ${pct(row.earned[1] / row.attempts)}, band allows ≤ ${pct(CASUAL_GHOST_CAP)}`);
+    }
+  }
+  if (level.kind === 'deep' && skilledStars && casualStars) {
+    const skilled = skilledStars.earned[1] / skilledStars.attempts;
+    const casual = casualStars.earned[1] / casualStars.attempts;
+    if (skilled <= casual) base.violations.push(`Ghost must reward skilled play: skilled ${pct(skilled)}, casual ${pct(casual)}`);
+  }
+  if (base.beelineCaught !== BEELINE_DELAYS.length) {
+    base.violations.push(`too open: a naive flight is stopped at ${base.beelineCaught}/${BEELINE_DELAYS.length} start times`);
+  }
+  for (const room of base.roomBeelines) {
+    if (room.clean > 0) base.violations.push(`too open: ${room.roomId} delivers asleep on a direct drag at ${room.clean}/${BEELINE_DELAYS.length} start times`);
+  }
+  if (base.casualMedianParShare < MIN_CASUAL_PAR_SHARE) {
+    base.violations.push(`too easy: the median casual delivery spends ${pct(base.casualMedianParShare)} of par, band wants ≥ ${pct(MIN_CASUAL_PAR_SHARE)}`);
+  }
+  if (level.kind === 'deep' && base.casualMedianPeakSuspicion < MIN_CASUAL_PEAK_SUSPICION) {
+    base.violations.push(`too easy: median casual peak suspicion is ${pct(base.casualMedianPeakSuspicion)}, band wants ≥ ${pct(MIN_CASUAL_PEAK_SUSPICION)}`);
+  }
+  if (level.kind === 'tutorial') {
+    for (const entry of level.map.entries) {
+      const runs = casualRuns.filter(run => run.rooms.includes(entry.roomId));
+      if (runs.length > 0 && !runs.some(run => run.tutorialObstacle)) {
+        base.violations.push(noObstacle(entry.roomId));
+      }
+    }
+    return base;
+  }
   const band = BANDS[level.id];
   if (!band) throw new Error(`Missing difficulty band for ${level.id}`);
   const routes: RouteReport[] = [];
   for (const target of level.map.targets)
     for (const e of target.entries)
-      for (const p of profiles) routes.push(routeReport(e.roomId, target.short, e.route, p, seeds));
+      for (const p of profiles) routes.push(routeReport(e.roomId, target.short, e.route, p, seeds, play));
 
   const flightLimit = Math.min(300, level.budgetSec);
   const flight: FlightReport[] = profiles.map((p) => {
@@ -179,13 +267,11 @@ export function evaluateLevel(level: DeepLevelDef, seeds = 6, profiles: HumanPro
     };
   });
 
-  let beelineCaught = 0;
-  for (const delay of [0, 2.5, 5, 8]) if (runHeadless(level.map, [], beelineController, 240, false, delay).spots.length > 0) beelineCaught++;
-
   const shiftEstimate: Record<string, number> = {};
   for (const p of profiles) {
     let total = flight.find((f) => f.profile === p.name)!.medianSec;
     for (const target of level.map.targets) {
+      if (target.troop) continue; // Outdoor locks already count in flight time.
       // A player retries until it works: expected time = attempt time / success rate.
       const costs = target.entries.map((e) => {
         const r = routes.find((x) => x.roomId === e.roomId && x.profile === p.name)!;
@@ -199,20 +285,21 @@ export function evaluateLevel(level: DeepLevelDef, seeds = 6, profiles: HumanPro
   const casual = routes.filter((r) => r.profile === 'casual');
   const tension = casual.length ? casual.reduce((a, r) => a + r.medianPeakWake, 0) / casual.length : 0;
   const report: LevelReport = {
-    levelId: level.id,
-    title: level.title,
-    seeds,
+    ...base,
     routes,
     flight,
-    beelineCaught,
     shiftEstimate,
     budgetSec: level.budgetSec,
     parSec: level.budgetSec - level.parMarginSec,
     tension: Math.round(tension),
-    violations: [],
   };
-  report.violations = check(report, band);
+  report.violations.push(...check(report, band));
+  for (const room of casual) if (room.obstacleShare === 0) report.violations.push(noObstacle(room.roomId));
   return report;
+}
+
+function noObstacle(room: RoomId): string {
+  return `too open: no casual ${room} run approached within ${OBSTACLE_NEAR_PX} px of an obstacle or engaged a hazard`;
 }
 
 /** Every way the report misses its band, as readable sentences. */
@@ -235,30 +322,57 @@ export function check(r: LevelReport, band: Band): string[] {
   const casual = r.shiftEstimate.casual;
   if (casual !== undefined && casual > r.budgetSec * band.casualBudgetShare)
     v.push(`casual shift estimate ${casual} s exceeds ${pct(band.casualBudgetShare)} of the ${r.budgetSec} s sunrise budget`);
-  if (r.beelineCaught < band.beelineCaught) v.push(`too open: a naive beeline is caught in only ${r.beelineCaught}/4 start times (band ≥ ${band.beelineCaught})`);
   if (r.tension < band.tension) v.push(`too easy: casual median peak wake averages ${r.tension}, band wants ≥ ${band.tension}`);
   return v;
 }
 
 const pct = (x: number): string => `${Math.round(x * 100)}%`;
 
-export function formatReport(r: LevelReport): string {
+export function formatReport(r: StarLevelReport | LevelReport): string {
   const lines: string[] = [];
   lines.push(`## ${r.levelId} ${r.title} — ${r.seeds} seeds per cell`);
   lines.push('');
-  lines.push('| Building | Route | Profile | Delivers | Median s | Peak wake | Peak 2nd sleeper | Fails |');
-  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- |');
+  lines.push(`| Profile | ${r.starLabels.join(' | ')} | Attempts spotted | Attempts with room failures |`);
+  lines.push('| --- | --- | --- | --- | --- | --- |');
+  for (const x of r.stars) {
+    const earned = x.earned.map((n) => `${pct(n / x.attempts)} (${n}/${x.attempts})`);
+    const spotted = x.runs.filter((run) => run.sightings.length || run.tutorialSpots).length;
+    const failures = x.runs.filter((run) => run.roomFailures.length).length;
+    lines.push(`| ${x.profile} | ${earned.join(' | ')} | ${spotted} | ${failures} |`);
+  }
+  for (const x of r.stars) {
+    const firstSpots = x.runs.flatMap((run) => run.sightings.slice(0, 1));
+    const firstByDetector = tally(firstSpots.map((s) => `${s.cause} #${s.hazard}`));
+    if (firstSpots.length) {
+      const detectors = Object.entries(firstByDetector).map(([name, count]) => {
+        const spot = firstSpots.find((s) => name === `${s.cause} #${s.hazard}`)!;
+        return `${count}× ${name} (e.g. ${spot.x}, ${spot.y})`;
+      });
+      lines.push(`\n${x.profile} first sightings: ${detectors.join(', ')}.`);
+    }
+  }
+  lines.push('');
+  lines.push(`Naive flight stopped: ${r.beelineCaught}/${BEELINE_DELAYS.length} start times. Casual median par used: ${pct(r.casualMedianParShare)}. Casual median peak suspicion: ${pct(r.casualMedianPeakSuspicion)}.`);
+  const directWins = r.roomBeelines.filter(room => room.clean > 0);
+  if (directWins.length) lines.push(`Clean direct room drags: ${directWins.map(room => `${room.roomId} ${room.clean}/${BEELINE_DELAYS.length}`).join(', ')}.`);
+  lines.push('');
+  if ('routes' in r) appendDeepReport(lines, r);
+  lines.push(r.violations.length ? `**Out of band:**\n${r.violations.map((v) => `- ${v}`).join('\n')}` : '**In band.**');
+  return lines.join('\n');
+}
+
+function appendDeepReport(lines: string[], r: LevelReport): void {
+  lines.push('| Building | Route | Profile | Delivers | Median s | Peak wake | Peak 2nd sleeper | Obstacle approached | Fails |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const x of r.routes)
-    lines.push(`| ${x.building} | ${x.route} (${x.roomId}) | ${x.profile} | ${pct(x.success)} | ${Number.isNaN(x.medianSec) ? '–' : x.medianSec.toFixed(0)} | ${x.medianPeakWake} | ${x.medianPeakSleeper} | ${Object.entries(x.fails).map(([k, n]) => `${n}× ${k}`).join(', ') || '–'} |`);
+    lines.push(`| ${x.building} | ${x.route} (${x.roomId}) | ${x.profile} | ${pct(x.success)} | ${Number.isNaN(x.medianSec) ? '–' : x.medianSec.toFixed(0)} | ${x.medianPeakWake} | ${x.medianPeakSleeper} | ${pct(x.obstacleShare)} | ${Object.entries(x.fails).map(([k, n]) => `${n}× ${k}`).join(', ') || '–'} |`);
   lines.push('');
   lines.push('| Flight | Finishes | Median sightings | Median s | Causes |');
   lines.push('| --- | --- | --- | --- | --- |');
   for (const f of r.flight)
     lines.push(`| ${f.profile} | ${pct(f.done)} | ${f.medianSpots} | ${f.medianSec.toFixed(0)} | ${Object.entries(f.causes).map(([k, n]) => `${n}× ${k}`).join(', ') || '–'} |`);
   lines.push('');
-  lines.push(`Naive beeline caught: ${r.beelineCaught}/4 start times. Tension (casual mean peak wake): ${r.tension}.`);
+  lines.push(`Tension (casual mean peak wake): ${r.tension}.`);
   lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')} · sunrise ${r.budgetSec} s · Night owl by ${r.parSec} s.`);
   lines.push('');
-  lines.push(r.violations.length ? `**Out of band:**\n${r.violations.map((v) => `- ${v}`).join('\n')}` : '**In band.**');
-  return lines.join('\n');
 }

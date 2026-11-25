@@ -3,6 +3,7 @@ import { ART } from '../art-manifest';
 import type { PropDef, PropKind } from '../levels/types';
 import { roundRectPath } from '../ui/draw';
 import { tr } from '../i18n';
+import { drawEggFallback } from './easter-egg-art'; // v4 easter eggs
 
 const INK = '#1b1433';
 
@@ -260,6 +261,11 @@ export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: num
       g.fill();
       break;
     }
+    // v4 easter eggs
+    case 'timecar':
+    case 'iceberg':
+      drawEggFallback(g, kind, w, h);
+      break;
   }
 }
 

@@ -124,7 +124,7 @@ const PARK_WET: Wetness = {
   water: [
     { name: 'Show pool', area: box(14, 500, 872, 186) },
     { name: 'Viewing tunnel', area: box(-886, 150, 872, 536) },
-    { name: 'Rock pool', area: box(914, 610, 130, 76) },
+    { name: 'Rock pool', area: box(914, 580, 176, 106) },
   ],
   refills: [
     { name: 'Leaky roof panel', kind: 'sprinkler', area: box(1590, 40, 220, 230) },
@@ -155,7 +155,7 @@ export const bubblesTunnel = route(parkHome, 'bubbles', 'LOADING DOCK', PARK_EXI
  */
 const LENS: Hazard = {
   kind: 'camera', name: 'Lighthouse lens', x: 520, y: 122, angle: Math.PI / 2,
-  spread: 0.26, range: 330, sweep: 1.0, speed: 0.9, phase: 0, lens: true,
+  spread: 0.26, range: 310, sweep: 1.0, speed: 0.9, phase: 0, lens: true,
 };
 
 const LIGHT_EXITS = {
@@ -175,7 +175,7 @@ const lighthouse = building([
     [LIGHT_EXITS.slipway]),
 ], [
   // the gallery door has a high sill: climb out of the lens sweep, then step over it
-  door(900, 120, 470), hatch(700, 640, 'stairs', 200), door(900, 1000, 1386), door(1320, 1400, 1786),
+  door(900, 120, 358), hatch(700, 640, 'stairs', 200), door(900, 1000, 1386), door(1320, 1400, 1786),
 ], [
   LENS,
   swing('Storm lantern', fit('hanging_bulb', 1180, 14, 30, 150), 0.6, 1.9, 14),
@@ -194,7 +194,8 @@ const SLIPWAY_WET: Wetness = {
 
 export const peteGallery = route(lighthouse, 'pete', 'GALLERY WINDOW', LIGHT_EXITS.gallery, box(1780, 240, 90, 130), [
   point(230, 410), point(210, 400), point(840, 420, 'Lighthouse lens', 200),
-  point(860, 285, undefined, 32), point(1060, 290, undefined, 32), point(1300, 330, undefined, 32), point(1460, 300, undefined, 32),
+  point(860, 202, undefined, 32), point(1060, 212, undefined, 32),
+  point(1300, 330, undefined, 32), point(1460, 300, undefined, 32),
   point(1700, 330, undefined, 32), point(1830, 300, undefined, 32),
 ]);
 

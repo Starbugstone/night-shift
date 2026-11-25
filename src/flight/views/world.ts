@@ -10,6 +10,7 @@ import { artShadow, artSprite } from '../../ui/views/art';
 import { C } from '../../ui/theme';
 import { drawJunctions, drawRoad, type GroundTheme } from '../draw-common';
 import { drawFallback, propSize } from '../props';
+import { paintApeRoof } from './monolith';
 import { drawPierProp } from '../pier-ground';
 
 export const TAU = Math.PI * 2;
@@ -44,7 +45,8 @@ export function propSprite(assets: Assets, p: PropDef): Sprite {
   const { w, h } = propSize(p);
   const sprite = artSprite(assets, p.key, w, h) ??
     paintedSprite(`prop|${p.key}|${w}|${h}|${p.tint ?? ''}`, w, h, (g) => {
-      if (p.kind === 'pier') drawPierProp(g, p.key, w, h);
+      if (p.kind === 'terrace') paintApeRoof(g, p.key, w, h);
+      else if (p.kind === 'pier') drawPierProp(g, p.key, w, h);
       else drawFallback(g, p.kind, w, h, p.tint);
     });
   sprite.position.set(p.x, p.y);

@@ -1,7 +1,7 @@
 // Vector shapes for Pixi scenes. Pixi re-tessellates a Graphics whenever its path changes, which is
 // several times dearer than Canvas 2D per shape, so the rule is: build geometry once and move,
 // tint, fade or hide the object each frame. `Shape` rebuilds only when its key changes.
-import { Graphics } from 'pixi.js';
+import { Graphics, Texture } from 'pixi.js';
 import { C } from '../../ui/theme';
 
 /**
@@ -10,14 +10,69 @@ import { C } from '../../ui/theme';
  *
  *   this.bar.draw(Math.round(fillW * 2), (g) => g.roundRect(0, 0, fillW, 18, 9).fill(C.mint));
  */
+/**
+ * A `Shape` leaves its batch when it redraws often: three redraws on three frames within
+ * SOLO_WINDOW_MS (an arc that fills, a swinging tell). One that settles for QUIET_MS goes back in.
+ */
+const SOLO_WINDOW_MS = 1000;
+const QUIET_MS = 2500;
+
+/** Render clock the shapes read (ms), advanced once per frame by the render host. */
+let clock = 0;
+
+/** Called by the render host before each render. Tests that never render keep the clock at 0. */
+export function tickShapeClock(nowMs: number): void {
+  clock = nowMs;
+}
+
+/** True when every fill and stroke of `g` is a plain colour. */
+function untextured(g: Graphics): boolean {
+  for (const step of g.context.instructions) {
+    if (step.action === 'texture') return false;
+    const style = (step.data as { style?: { texture?: Texture } }).style;
+    if (style?.texture && style.texture !== Texture.WHITE) return false;
+  }
+  return true;
+}
+
 export class Shape extends Graphics {
+  /**
+   * Set to false for a shape that should stay batched however often it redraws: a rebuild of its
+   * render group is cheap there, or it is rarely on screen, and one draw call of its own isn't.
+   */
+  canGoSolo = true;
   private key: number | string | undefined;
+  /** Clock at the last redraw and the one before it. */
+  private last = -Infinity;
+  private before = -Infinity;
+  private solo = false;
 
   draw(key: number | string, build: (g: Graphics) => void): this {
-    if (key === this.key) return this;
+    if (key === this.key) {
+      // settled: back into the batch (one rebuild now saves a draw call every frame after)
+      if (this.solo && clock - this.last > QUIET_MS) {
+        this.solo = false;
+        this.context.batchMode = 'auto';
+        // same geometry, but Pixi must rebuild the gpu context to see the new batch mode
+        (this.context as unknown as { onUpdate(): void }).onUpdate();
+      }
+      return this;
+    }
     this.key = key;
     this.clear();
     build(this);
+    // When a batched Graphics changes geometry, Pixi rebuilds every batch of its render group on the
+    // next render. A shape that keeps changing is drawn on its own instead: one more draw call, and
+    // its redraws stop rebuilding the whole scene. A shape that only redrew a few times (a layout, a
+    // language switch) stays batched: a draw call every frame for nothing is the dearer trade. Not
+    // one with a texture or gradient fill: Pixi would warn when the scene frees it while still bound.
+    const now = clock;
+    if (!this.solo && this.canGoSolo && now - this.before <= SOLO_WINDOW_MS && this.before < this.last && this.last < now && untextured(this)) {
+      this.solo = true;
+      this.context.batchMode = 'no-batch';
+    }
+    this.before = this.last;
+    this.last = now;
     return this;
   }
 
@@ -25,6 +80,17 @@ export class Shape extends Graphics {
   invalidate(): void {
     this.key = undefined;
   }
+}
+
+/**
+ * Keep a Graphics in its batch past Pixi's automatic limit (200 vertices: one stroked circle).
+ * Above it Pixi draws the Graphics on its own and splits the batch around it, three draw calls
+ * where one would do. Use it for small static shapes: a batched Graphics that moves has its
+ * vertices re-packed on the CPU, which only stays cheap while there are a few hundred of them.
+ */
+export function batched<T extends Graphics>(g: T): T {
+  g.context.batchMode = 'batch';
+  return g;
 }
 
 /**

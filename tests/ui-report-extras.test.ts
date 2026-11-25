@@ -12,7 +12,7 @@ import { LEVELS } from '../src/levels/levels';
 import { DeepRun } from '../src/levels/run';
 import { defaultSave } from '../src/levels/save';
 import type { RunOutcome } from '../src/levels/progress';
-import { RANKS } from '../src/levels/progress';
+import { RANKS, computeDeepStars } from '../src/levels/progress';
 import { coverStory, tabloidHeadline } from '../src/ui/report-extras';
 import { BAND_BOTTOM, BAND_TOP, CW, CX, CY, STAR_Y, layoutReport, type Box, type Measure } from '../src/ui/report-layout';
 import { fitPhoto, WINDOW } from '../src/ui/report-photo';
@@ -217,6 +217,39 @@ function outcome(): RunOutcome {
 }
 
 describe('report scene', () => {
+  it('accounts for all 100 seconds on a fractional L8 finish', () => {
+    const run = new DeepRun(LEVELS[7] as DeepLevelDef, 7);
+    run.elapsed = 58.8;
+    expect(deepReport(run, outcome()).rows[0]![1]).toBe('0:59 used · 0:41 to spare');
+  });
+
+  it('never shows the 25 s Night owl margin on a run that missed it (L8)', () => {
+    setLang('en');
+    const lv = LEVELS[7] as DeepLevelDef;
+    expect(lv.parMarginSec).toBe(25);
+    const summary = (elapsedSec: number) => ({ delivered: 3, spotted: 0, failedAbductions: 0, elapsedSec, sunrise: false });
+    const run = new DeepRun(lv, 7);
+    run.elapsed = 75.15;
+    expect(computeDeepStars(lv.budgetSec, lv.parMarginSec, summary(run.elapsed), 'level8')[2]).toBe(false);
+    expect(deepReport(run, outcome()).rows[0]![1]).toBe('1:16 used · 0:24 to spare');
+    run.elapsed = 75;
+    expect(computeDeepStars(lv.budgetSec, lv.parMarginSec, summary(run.elapsed), 'level8')[2]).toBe(true);
+    expect(deepReport(run, outcome()).rows[0]![1]).toBe('1:15 used · 0:25 to spare');
+  });
+
+  it('reports an L8 timeout without a sunrise clock', () => {
+    for (const lang of LANGS) {
+      setLang(lang);
+      const run = new DeepRun(LEVELS[7] as DeepLevelDef, 7);
+      run.elapsed = 100;
+      run.phase = 'sunrise';
+      const line = deepReport(run, outcome()).rows[0]![1];
+      expect(line).toBe(tr().timeTrial.ranOut);
+      expect(line).not.toMatch(/\d/);
+    }
+    setLang('en');
+  });
+
   const photo = { human: 'doyle', x: [0, 0, 0, 10, 20, -10, -20, 5, 5, -5, -5].map((v, i) => v + i), y: [-80, -40, 60, -20, 0, -20, 0, 110, 170, 110, 170] };
   const abduct: AbductResult = { delivered: true, woke: false, timeSec: 20, bonks: 2, dignity: 80, snores: 3, itemsStolen: ['slipper'], aborted: false, photo, probeReadings: ['Temperature: lukewarm'] };
   const flight: FlightResult = { timeSec: 30, spotted: 2, roomId: 'farm_window' } as FlightResult;
@@ -241,14 +274,16 @@ describe('report scene', () => {
       const lv = LEVELS[li]!;
       if (lv.kind !== 'deep') continue;
       const run = new DeepRun(lv as DeepLevelDef, li);
-      for (let target = 0; target < 3; target++) {
+      // L8 time trial: the troops are beamed from the map (no entries), only Echo has a room
+      const rooms = (lv as DeepLevelDef).map.targets.map((t, i) => (t.entries.length > 0 ? i : -1)).filter((i) => i >= 0);
+      for (const target of rooms) {
         run.startAbduct(target, 0);
         run.finishAbduct({ ...abduct, probeReadings: ['Reflexes: brisk ✓'] });
       }
       run.spotted = 3;
       const model = deepReport(run, outcome());
       expect(model.photo, lv.id).toBe(photo);
-      expect(model.readings.length).toBe(3);
+      expect(model.readings.length).toBe(rooms.length);
       expect(model.headline).toBeTruthy();
       expect(model.cover).toMatch(/3/);
       const { layout } = reportContent(model, outcome(), measure);

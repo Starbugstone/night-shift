@@ -1,3 +1,4 @@
+import { caveBackdrop, paintCaveProp } from '../monolith-art';
 import { Container, Graphics, type Sprite as PixiSprite } from 'pixi.js';
 import { ART } from '../../art-manifest';
 import { VIEW_H, VIEW_W, type Assets } from '../../contracts';
@@ -10,6 +11,7 @@ import type { Sprite } from '../rooms/layout';
 import type { HazardState } from '../interior';
 import type { SwingingRect } from '../ragdoll';
 import { INK, MINT, RED, TAU, bitmap, box, circleInView, disc, intersects, Segment } from './pieces';
+import { paintSouvenir } from '../souvenir-art';
 
 const STAR_COUNT = 39;
 const WALL_COLORS = ['#423354', '#5b4b70', '#322943'] as const;
@@ -233,12 +235,15 @@ export function roomArt(assets: Assets, key: string, x: number, y: number, w: nu
     root.addChild(image);
   } else {
     root.addChild(bitmap(`room|${drawKey}|${lang}|${w}|${h}|${solid}`, 0, 0, w, h, g => {
+      if (paintCaveProp(g, key, w, h)) return;
       const fallback = DECOR_FALLBACKS[key];
       if (fallback) {
         g.lineWidth = 2.5;
         g.lineJoin = 'round';
         g.strokeStyle = INK;
         fallback(g, lang === 'fr');
+      } else if (paintSouvenir(g, key, w, h)) {
+        // v4 items & recap humour: drawn by src/abduct/souvenir-art.ts
       } else if (key === 'room/watch_dog') {
         watchDog(g, 0, 0, w, h);
       } else if (key === 'room/chimney_stack') {
@@ -305,6 +310,11 @@ function backdrop(assets: Assets, room: InteriorRoom): Container {
   root.position.set(x, y);
   const image = assets.get(room.backdrop);
   if (!image) {
+    const cave = caveBackdrop(room.backdrop, w, h);
+    if (cave) {
+      root.addChild(cave);
+      return root;
+    }
     const palette = PALETTES[room.backdrop] ?? DEFAULT_PALETTE;
     const g = new Graphics().rect(0, 0, w, h).fill(palette[0]);
     for (let line = 25; line < w - 15; line += 58) g.rect(line, 0, 2, h);
@@ -322,16 +332,14 @@ function backdrop(assets: Assets, room: InteriorRoom): Container {
     const drawW = Math.min(tileW, w - tileX);
     const flipX = col % 2 !== 0;
     const sx = flipX ? spec.w - drawW / scale : 0;
-    for (let tileY = 0, row = 0; tileY < baseboard; tileY += tileH, row++) {
+    for (let tileY = 0; tileY < baseboard; tileY += tileH) {
       const drawH = Math.min(tileH, baseboard - tileY);
       const slice = 600 * drawH / tileH;
-      const flipY = row % 2 !== 0;
-      root.addChild(bitmap(`wall|${room.backdrop}|${drawW}|${drawH}|${sx}|${slice}|${flipY}`, 0, 0, drawW, drawH, g => {
-        g.drawImage(image, sx, flipY ? 600 - slice : 0, drawW / scale, slice, 0, 0, drawW, drawH);
-      }));
-      const tile = root.children[root.children.length - 1]!;
-      tile.position.set(flipX ? tileX + drawW : tileX, flipY ? tileY + drawH : tileY);
-      tile.scale.set(flipX ? -1 : 1, flipY ? -1 : 1);
+      const tile = bitmap(`wall|${room.backdrop}|${drawW}|${drawH}|${sx}|${slice}`, flipX ? tileX + drawW : tileX, tileY, drawW, drawH, g => {
+        g.drawImage(image, sx, 0, drawW / scale, slice, 0, 0, drawW, drawH);
+      });
+      tile.scale.x = flipX ? -1 : 1;
+      root.addChild(tile);
     }
     const floor = bitmap(`floor|${room.backdrop}|${drawW}|${sx}`, flipX ? tileX + drawW : tileX, baseboard, drawW, 46, g => {
       g.drawImage(image, sx, 600, drawW / scale, 67, 0, 0, drawW, 46);
@@ -621,7 +629,8 @@ export class BuildingView {
     for (const gag of this.gags) gag.sync(t, rm, cx, cy);
     this.dim.position.set(cx - 8, cy - 8);
     this.dim.alpha = 0.26 * (1 - dawn * 0.6);
-    this.dawn.visible = false;
+    // the dawn glow sits on the last light: place it at most once (a visible flip rebuilds the render group)
+    let dawnPlaced = false;
     for (let i = 0; i < this.lights.length; i++) {
       const { x, y, r, flicker, glow, alpha } = this.lights[i]!;
       if (!circleInView(x, y, r, cx, cy, VIEW_W, VIEW_H)) {
@@ -635,9 +644,13 @@ export class BuildingView {
         else if (flicker === 3) k = 0.85 + 0.15 * Math.sin(t * 3.1 + i);
       }
       const last = i === this.lights.length - 1;
-      if (last) this.dawn.place(x, y, r * 1.2, r * 1.2, dawn * 0.7);
+      if (last) {
+        this.dawn.place(x, y, r * 1.2, r * 1.2, dawn * 0.7);
+        dawnPlaced = true;
+      }
       glow.place(x, y, r, r, alpha * k * (last ? 1 - dawn * 0.6 : 1));
     }
+    if (!dawnPlaced) this.dawn.visible = false;
     for (const group of this.hazardLights) group.sync(t, rm, cx, cy);
   }
 }

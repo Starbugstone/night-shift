@@ -19,12 +19,16 @@ import { BULB_ROWS, SHIP, SHIP_BOTTOM, SHIP_LEFT, SHIP_RIGHT, drawShipGround } f
 import { FLIGHT_HUD } from '../sim';
 import { DeepSpottedView } from '../spotted';
 import { AmbientView } from './ambient';
-import { EntryRingView, SaucerView } from './craft';
+import { EntryRingView, RING_CLEAR, SaucerView } from './craft';
+import { placePills, type Box, type PillAsk } from './clear-of';
 import { DeepFlightHud } from './deep-hud';
 import { HazardViews } from './hazards';
 import { FlightTintView, tick } from './overlays';
 import { ProgressArc, RED, dashedArc } from './tells';
+import { RoamView } from '../roam-view';
+import { paintBadlands } from './monolith';
 import { CameraView, GroundView, PropLayer, ShadowsView, TAU, TargetBuilding, basicGround, mapLamp } from './world';
+import { EggView } from './eggs'; // v4 easter eggs
 
 const SHADOW_OFF: Partial<Record<PropKind, number>> = {
   suburb_house: 13, highrise: 16, civic: 15, tree: 13, hedge: 5, trampoline: 4,
@@ -74,8 +78,13 @@ class DeepTargetView {
     this.building.sync(done, t + i / 3, rm);
     this.collected.visible = done;
     const cycle = (t * 0.16 + i * 0.37) % 1;
-    this.missed.visible = done && this.quips.length > 0 && cycle <= 0.36;
+    // the quip comes and goes on a cycle: fade it out with alpha (a visible flip rebuilds the render group)
+    this.missed.visible = done && this.quips.length > 0;
     if (!this.missed.visible) return;
+    if (cycle > 0.36) {
+      this.missed.alpha = 0;
+      return;
+    }
     const k = cycle / 0.36;
     this.missed.alpha = Math.min(1, k * 8, (1 - k) * 6);
     this.missed.y = this.y - (rm ? 0 : Math.sin(k * Math.PI) * 6);
@@ -170,14 +179,15 @@ class WorldFuse {
     this.coolSpark.place(x, y, r, r, exposed ? 0 : 1);
     this.hotSpark.place(x, y, r, r, exposed ? 1 : 0);
     this.spark.place(x, y, 8);
-    this.tether.visible = this.origin.visible = false;
-    if (!exposed) return;
-    const o = hazards.causeOrigin(st.cause);
-    const dx = o.x - saucer.x;
-    const dy = o.y - saucer.y;
+    // tether and origin get their final visibility once: a visible flip rebuilds the render group
+    const o = exposed ? hazards.causeOrigin(st.cause) : null;
+    const dx = o ? o.x - saucer.x : 0;
+    const dy = o ? o.y - saucer.y : 0;
     const d = Math.hypot(dx, dy);
-    if (d < FUSE_R + 30) return;
-    this.tether.visible = true;
+    const tethered = o !== null && d >= FUSE_R + 30;
+    this.tether.visible = tethered;
+    this.origin.visible = tethered && cam.sees(o.x, o.y, 20);
+    if (!tethered) return;
     this.tether.position.set(saucer.x, saucer.y);
     this.tether.rotation = Math.atan2(dy, dx);
     this.tether.alpha = 0.5 + 0.5 * v;
@@ -189,7 +199,6 @@ class WorldFuse {
       }
       g.stroke({ color: RED, width: 3.5, cap: 'round' });
     });
-    this.origin.visible = cam.sees(o.x, o.y, 20);
     this.origin.position.set(o.x, o.y);
     this.origin.scale.set(rm ? 1 : 1 + Math.sin(t * 20) * 0.18);
   }
@@ -284,11 +293,20 @@ export class DeepFlightView implements SceneView {
   private readonly groundProps: PropLayer;
   private readonly ambient: AmbientView;
   private readonly shadows: ShadowsView;
+  private readonly eggs: EggView; // v4 easter eggs
   private readonly targets: DeepTargetView[];
   private readonly checkpoint = new CheckpointView();
   private readonly hazards: HazardViews;
   private readonly lights: Glow[];
-  private readonly rings: EntryRingView[];
+  private readonly rings: (EntryRingView | RoamView)[];
+  /** v4 council: scratch obstacles for route pills (HUD boxes, the entry rings on screen, then the pills placed). */
+  private readonly clear: Box[];
+  /** v4 council: route pill scratch, one slot per visible entry ring (`placePills`). */
+  private readonly asks: PillAsk[];
+  private readonly spots: { x: number; y: number }[];
+  private readonly moved: Uint8Array;
+  /** Which ring each pill slot belongs to. */
+  private readonly pillOf: Uint8Array;
   private readonly saucer: SaucerView;
   private readonly fx: ParticleView;
   private readonly fuse = new WorldFuse();
@@ -308,6 +326,10 @@ export class DeepFlightView implements SceneView {
         case 'clinic':
           drawCampusGround(g, assets, x, y, s.speckles, w, h);
           break;
+        case 'badlands':
+          basicGround(g, assets, 'flight/ground_badlands', x, y, w, h, '#493743', '#614951', s.speckles, false);
+          if (!assets.get('flight/ground_badlands')) paintBadlands(g, x, y, w, h);
+          break;
         case 'ship':
           drawShipGround(g, assets, x, y, s.speckles, w, h);
           break;
@@ -322,22 +344,29 @@ export class DeepFlightView implements SceneView {
     this.groundProps = new PropLayer(assets, m.groundProps);
     this.props = new PropLayer(assets, m.props);
     this.shadows = new ShadowsView(assets, [...m.props, ...m.targets.map((tg) => tg.building)], SHADOW_OFF);
+    this.eggs = new EggView(m.props); // v4 easter eggs
     this.targets = m.targets.map((tg) => new DeepTargetView(assets, tg));
     this.ambient = new AmbientView(s.ambient);
     this.hazards = new HazardViews(s);
     this.saucer = new SaucerView(assets);
     this.fx = new ParticleView(s.fx);
     this.lights = m.lamps.map((l) => mapLamp(l.x, l.y));
-    this.rings = s.sim.ringRef.map((r) => new EntryRingView(assets, m.targets[r.target]!.entries[r.entry]!));
+    this.rings = s.sim.ringRef.map((r) => r.ape ? new RoamView(assets, r.ape, m.targets[r.target]!.short) : new EntryRingView(assets, m.targets[r.target]!.entries[r.entry]!));
     const world = this.camera.world;
     world.addChild(this.ground.root);
     if (this.ship) world.addChild(this.ship.root);
-    world.addChild(this.groundProps.root, this.ambient.ground, this.shadows.root, this.props.root);
+    world.addChild(this.groundProps.root, this.ambient.ground, this.eggs.ground, this.shadows.root, this.props.root); // v4 easter eggs: streaks
     for (const target of this.targets) world.addChild(target.root);
     world.addChild(this.checkpoint.root, this.hazards.ground, this.ambient.steam, this.saucer.shadow);
     for (const light of this.lights) this.upperWorld.addChild(light);
+    this.upperWorld.addChild(this.eggs.lights); // v4 easter eggs
     this.upperWorld.addChild(this.ambient.lights, this.saucer.groundGlow, this.ambient.critters, this.hazards.detectors, this.hazards.sky);
     for (const ring of this.rings) this.upperWorld.addChild(ring.root);
+    this.clear = Array.from({ length: this.rings.length * 2 + 4 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
+    this.moved = new Uint8Array(this.rings.length);
+    this.pillOf = new Uint8Array(this.rings.length);
+    this.asks = this.rings.map(() => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
+    this.spots = this.rings.map(() => ({ x: 0, y: 0 }));
     this.upperWorld.addChild(this.checkpoint.arrival, this.saucer.root, this.fuse.root, this.fx);
     world.addChild(this.tints.worldWash, this.upperWorld);
     this.tints.dawnDecor.addChild(this.dawn.root);
@@ -354,8 +383,11 @@ export class DeepFlightView implements SceneView {
     const dawn = run.dawn;
     const cam = this.camera;
     const saucer = sim.saucer;
-    const locking = s.state === 'locking';
-    const lock = locking ? Math.min(1, s.st / LOCK_ANIM) : 0;
+    const lifting = s.state === 'locking' && !!sim.ringRef[sim.lockedRing]?.ape;
+    const locking = s.state === 'locking' && !lifting;
+    // A pickup holds its lifted pose (static under reduced motion) for the whole gameplay lock: the
+    // ape is only collected at LOCK_ANIM, so ending the visual earlier left the saucer looking stuck.
+    const lock = locking ? Math.min(1, s.st / (rm ? 0.5 : LOCK_ANIM)) : 0;
     cam.sync(sim.camX, sim.camY, saucer.x, saucer.y, s.shake, lock, t, rm);
     this.tints.placeWorldWash(cam.world);
     this.ground.sync(cam);
@@ -363,6 +395,7 @@ export class DeepFlightView implements SceneView {
     this.groundProps.sync(cam);
     this.ambient.sync(cam, t, rm, dawn, saucer.x, saucer.y);
     this.props.sync(cam);
+    this.eggs.sync(cam, t, rm); // v4 easter eggs
     this.shadows.sync(cam, dawn);
     for (let i = 0; i < this.targets.length; i++) this.targets[i]!.sync(cam, sim.delivered[i]!, i, t, rm);
     this.checkpoint.sync(s, cam, t, rm);
@@ -371,13 +404,50 @@ export class DeepFlightView implements SceneView {
       l.alpha = 1 - dawn * 0.6;
     }
     this.hazards.sync(cam, t, rm);
+    // v4 council: route pills keep clear of the HUD boxes and of every entry ring on screen
+    const avoid = this.hud.avoid;
+    let n = avoid.length;
+    for (let i = 0; i < n; i++) {
+      // 4 px of air round each HUD box, so a pill never sits flush against the minimap or a chip
+      const a = avoid[i]!, b = this.clear[i]!;
+      b.x = a.x - 4;
+      b.y = a.y - 4;
+      b.w = a.w + 8;
+      b.h = a.h + 8;
+    }
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       const p = sim.rings[i]!;
       ring.root.visible = !sim.delivered[sim.ringRef[i]!.target] && cam.sees(p.x, p.y, 160);
+      if (ring.root.visible && ring instanceof EntryRingView) {
+        const b = this.clear[n++]!;
+        b.x = p.x - cam.x - RING_CLEAR;
+        b.y = p.y - cam.y - RING_CLEAR;
+        b.w = b.h = RING_CLEAR * 2;
+      }
+    }
+    for (let i = 0; i < this.rings.length; i++) {
+      const ring = this.rings[i]!;
       if (ring.root.visible) ring.sync(i, t, rm, sim.lock.ring === i, sim.lock.fraction, sim.lockedRing === i, s.st, cam.x);
     }
+    // pills whose own spot is free stay there; the others find room round them and each other
+    let count = 0;
+    for (let i = 0; i < this.rings.length; i++) {
+      const ring = this.rings[i]!;
+      if (ring.root.visible && ring instanceof EntryRingView) {
+        ring.ask(cam.x, cam.y, this.asks[count]!);
+        this.pillOf[count++] = i;
+      }
+    }
+    placePills(this.clear, n, this.asks, count, this.spots, this.moved);
+    for (let k = 0; k < count; k++) {
+      const ring = this.rings[this.pillOf[k]!] as EntryRingView;
+      ring.putPill(this.spots[k]!.x, this.spots[k]!.y, cam.x, cam.y);
+    }
+    this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0); // v4 UFO pilot
     this.saucer.sync(saucer, t, rm, locking, s.st, lock, sim.field.scramble(saucer.x, saucer.y), sim.st.safe, SAFE_WINDOW);
+    if (lifting && !rm) this.saucer.root.y -= Math.min(1, s.st * 6) * 36;
+    this.saucer.root.alpha = lifting ? 0.32 : sim.ringRef[sim.inRing]?.ape ? 0.65 : 1;
     this.fuse.sync(s, this.hazards, cam, t, rm);
     this.fx.sync();
     this.tints.sync(dawn, s.state === 'fly', sim.st.cause >= 0, sim.st.sus, locking, lock, s.st, t, rm);

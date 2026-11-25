@@ -9,6 +9,7 @@ import { pointInCone } from '../geometry';
 import { TRAFFIC_SCALE, type CarKey, type CarRT, type GagHazard, type HazardDef } from '../hazards';
 import { DogView } from './craft';
 import { BarkTell, BeaconView, CameraTell, PorchTell, SearchlightView, WatcherTell, WindowTell } from './detectors';
+import { MonolithView } from './monolith';
 import { LighthouseView } from './lighthouse';
 import { NeonView } from './overlays';
 import { cameraHead, CraneView, FlockView, HelicopterView, post, SkyWire } from './sky';
@@ -161,6 +162,7 @@ export class HazardViews {
       case 'watcher':
       case 'dog':
       case 'camera':
+      case 'hum':
       case 'lighthouse':
         o.x = d.x;
         o.y = d.y;
@@ -176,6 +178,14 @@ export class HazardViews {
     const { assets } = s.ctx;
     const f = s.sim.field;
     switch (d.type) {
+      case 'hum': {
+        const view = new MonolithView(assets, d);
+        this.detectors.addChild(view.root);
+        return (cam, _t, _rm, hot) => {
+          view.root.visible = cam.sees(d.x, d.y, d.outer);
+          if (view.root.visible) view.sync(!!f.on[i], !!f.tell[i], hot);
+        };
+      }
       case 'car': {
         const car = f.cars[i]![0]!;
         const body = carBody(assets, car.key, d.role === 'police', 1);

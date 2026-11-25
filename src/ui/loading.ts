@@ -6,6 +6,8 @@ import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Shape, ellipseArc, panelPath, roundRect } from '../core/gfx/shapes';
 import { Label, Paragraph, wrapLines } from '../core/gfx/text';
 import { fmt, tr } from '../i18n';
+import { loadingTips } from '../levels/humor'; // v4 story
+import type { SaveData } from '../levels/save'; // v4 story
 import { C } from './theme';
 import { NightSky } from './views/backdrop';
 
@@ -27,6 +29,7 @@ export class LoadingScene implements Scene {
     private readonly assets: AssetLoader,
     private readonly onReady: () => void,
     readonly reduced: () => boolean,
+    readonly save?: SaveData, // v4 story
   ) {}
 
   get view(): Container {
@@ -65,6 +68,10 @@ class LoadingView implements SceneView {
   private readonly pct = new Label(PCT);
   private readonly card = new Shape();
   private readonly tip = new Paragraph(TIP);
+  /** The tip on show, picked once per save and language (`loadingTips` builds an array). */
+  private tipText = '';
+  private tipSave: SaveData | undefined | null = null;
+  private tipTable: unknown = null;
 
   constructor(private readonly s: LoadingScene) {
     // little saucer, drawn round its own centre so the bob just moves the container
@@ -101,7 +108,13 @@ class LoadingView implements SceneView {
     this.fill.draw(Math.round(fw * 2), (g) => roundRect(g, BAR_X + 3, 643, fw, 18, 9).fill(C.mint));
     this.pct.set(fmt(str.calibrating, { pct: Math.round(s.shown * 100) }), VIEW_W / 2, 690, VIEW_W - 60);
 
-    const tip = str.tips[Math.floor(s.tipSeed * str.tips.length)]!;
+    if (this.tipSave !== s.save || this.tipTable !== str) {
+      this.tipSave = s.save;
+      this.tipTable = str;
+      const tips = loadingTips(s.save); // v4 story
+      this.tipText = tips[Math.floor(s.tipSeed * tips.length)]!;
+    }
+    const tip = this.tipText;
     // the card grows for a long tip (French runs longer) and stays centred on the same spot
     const lines = wrapLines(tip, TIP_W, 21, 600).length;
     const h = Math.max(110, 36 + lines * 27);

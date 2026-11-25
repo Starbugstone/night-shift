@@ -8,6 +8,7 @@
 //     └─────────────────────────────────────────────────────────────┘
 //   any phase with the clock running ──elapsed ≥ budget──▶ sunrise (level failed)
 import type { AbductFailReason, AbductResult, RoomId, Vec2 } from '../contracts';
+import { troopTallies, type TroopTally } from '../flight/roam';
 import type { DeepSummary } from './progress';
 import type { DeepLevelDef } from './types';
 
@@ -29,6 +30,8 @@ export interface RunTotals {
   bonks: number;
   snores: number;
   items: string[];
+  /** v4 items & recap humour: the route of each delivered specimen, in delivery order. */
+  rooms: RoomId[];
   /** Sum of dignity over delivered specimens. */
   dignity: number;
   beamSec: number;
@@ -38,7 +41,7 @@ export class DeepRun {
   phase: RunPhase = 'flight';
   /** Shift seconds used (flight + abduction). */
   elapsed = 0;
-  readonly delivered: boolean[] = [false, false, false];
+  readonly delivered: boolean[];
   /** Order specimens were delivered in. */
   readonly order: number[] = [];
   /** Where a spotted saucer respawns: last successful ring, or the start. */
@@ -51,7 +54,7 @@ export class DeepRun {
   /** Abduction in progress or just failed. */
   current: { target: number; entry: number; roomId: RoomId } | null = null;
   lastFail: RunFail | null = null;
-  readonly totals: RunTotals = { bonks: 0, snores: 0, items: [], dignity: 0, beamSec: 0 };
+  readonly totals: RunTotals = { bonks: 0, snores: 0, items: [], rooms: [], dignity: 0, beamSec: 0 };
   /** Flight legs started (for Zib's lines). */
   legs = 0;
   /** v3 report: ID photo of the last delivered specimen (else the first attempt's). */
@@ -59,10 +62,14 @@ export class DeepRun {
   /** v3 report (L6): Form 7-B readings of the delivered specimens. */
   readonly probeReadings: string[] = [];
 
+  readonly troops: (TroopTally | undefined)[];
+
   constructor(
     readonly level: DeepLevelDef,
     readonly levelIndex: number,
   ) {
+    this.delivered = level.map.targets.map(() => false);
+    this.troops = troopTallies(level.map.targets);
     this.checkpoint = { ...level.map.start };
     this.spawn = { ...level.map.start };
   }
@@ -94,6 +101,10 @@ export class DeepRun {
   }
 
   clockText(): string {
+    if (this.level.id === 'level8') {
+      const sec = Math.ceil(this.remaining);
+      return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    }
     const { h, m } = this.clock();
     return `${h}:${m < 10 ? '0' : ''}${m}`;
   }
@@ -129,6 +140,22 @@ export class DeepRun {
     return { x: e.x, y: e.y };
   }
 
+  /** The flight sim has added this witness to the shared troop tally. */
+  finishPickup(target: number, pos: Vec2): void {
+    if (this.phase !== 'flight') return;
+    this.checkpoint = { ...pos };
+    this.spawn = { ...pos };
+    if (this.troops[target]?.full && !this.delivered[target]) {
+      this.delivered[target] = true;
+      this.order.push(target);
+      if (this.deliveredCount === this.delivered.length) this.phase = 'done';
+    }
+  }
+
+  get specimenCount(): number {
+    return this.delivered.reduce((n, done, i) => n + (this.troops[i]?.caught.size ?? Number(done)), 0);
+  }
+
   /** The abduction ended. Returns the next phase. */
   finishAbduct(res: AbductResult): RunPhase {
     if (this.phase === 'sunrise') return this.phase;
@@ -143,12 +170,13 @@ export class DeepRun {
       this.order.push(cur.target);
       this.totals.dignity += res.dignity;
       this.totals.items.push(...res.itemsStolen);
+      this.totals.rooms.push(cur.roomId);
       if (res.probeReadings) this.probeReadings.push(...res.probeReadings);
       this.checkpoint = this.ringPos(cur.target, cur.entry);
       this.spawn = { ...this.checkpoint };
       this.lastFail = null;
       this.current = null;
-      this.phase = this.deliveredCount >= 3 ? 'done' : 'flight';
+      this.phase = this.deliveredCount >= this.delivered.length ? 'done' : 'flight';
       if (this.phase === 'flight') this.legs++;
       return this.phase;
     }

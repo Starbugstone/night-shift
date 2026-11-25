@@ -2,6 +2,7 @@
 // several targets, camera. DOM-free; the scene renders it and the autopilot / tests drive it.
 import type { PointerState, UpgradeId, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
+import { RoamingApe, troopTallies } from './roam';
 import type { DeepMap } from '../levels/types';
 import type { SegHit } from './geometry';
 import { BUMP_STUN, HazardField } from './hazards';
@@ -142,7 +143,8 @@ export function stepFlight(
 
 export interface RingRef {
   target: number;
-  entry: 0 | 1;
+  entry: number;
+  ape?: RoamingApe;
 }
 
 export type DeepFlightPhase = 'fly' | 'spotted' | 'locking';
@@ -155,8 +157,9 @@ export class DeepFlightSim {
   /** All entry rings, two per target, in target order. Delivered targets' rings move off-map. */
   readonly rings: Vec2[] = [];
   readonly ringRef: RingRef[] = [];
-  readonly delivered: boolean[] = [false, false, false];
+  readonly delivered: boolean[];
   readonly mult: number;
+  private readonly hasApes: boolean;
   phase: DeepFlightPhase = 'fly';
   camX = 0;
   camY = 0;
@@ -173,18 +176,27 @@ export class DeepFlightSim {
     readonly map: DeepMap,
     upgrades: ReadonlySet<UpgradeId>,
     t0 = 0,
+    readonly troops = troopTallies(map.targets),
   ) {
+    this.delivered = map.targets.map(() => false);
     this.field = new HazardField(map.hazards);
     this.st = newFlightState(this.field.porchCount, this.field.ambCount, this.field.photoCount);
     this.field.ambT = this.st.ambT;
     this.field.photo = this.st.photo;
     this.mult = suspicionMultiplier(upgrades) / (map.fuseSec ?? 1);
-    map.targets.forEach((tg, ti) =>
+    map.targets.forEach((tg, ti) => {
       tg.entries.forEach((e, ei) => {
         this.rings.push({ x: e.x, y: e.y });
-        this.ringRef.push({ target: ti, entry: ei as 0 | 1 });
-      }),
-    );
+        this.ringRef.push({ target: ti, entry: ei });
+      });
+      tg.troop?.trails.forEach((trail, entry) => {
+        const ape = new RoamingApe(trail.home, trail.lookout, entry * 3 + ti, t0);
+        this.rings.push({ x: ape.x, y: ape.y });
+        this.ringRef.push({ target: ti, entry, ape });
+      });
+    });
+    this.hasApes = this.troops.some(Boolean);
+    if (this.hasApes) this.stepApes(0);
     this.st.t = t0;
     this.field.sample(t0);
     this.place(map.start.x, map.start.y, 0);
@@ -215,7 +227,7 @@ export class DeepFlightSim {
     this.st.porchArm.fill(0);
     this.lock.reset();
     this.phase = 'fly';
-    this.lockedRing = -1;
+    this.inRing = this.lockedRing = -1;
     this.spottedBy = -1;
     this.snapCamera();
   }
@@ -230,9 +242,52 @@ export class DeepFlightSim {
     }
   }
 
-  /** Ring position for (target, entry) from the map (stable even after delivery). */
+  private stepApes(dt: number): void {
+    for (let i = 0; i < this.ringRef.length; i++) {
+      const { ape, target, entry } = this.ringRef[i]!;
+      if (!ape) continue;
+      const tally = this.troops[target]!;
+      const ring = this.rings[i]!;
+      if (tally.full || tally.caught.has(entry)) {
+        ring.x = ring.y = OFF_MAP;
+      } else {
+        if (dt > 0) ape.step(this.t, dt, this.saucer);
+        ring.x = ape.x;
+        ring.y = ape.y;
+      }
+    }
+  }
+
+  /** Resume flight without clearing the fuse or granting a spawn shield. */
+  collectApe(): void {
+    const ref = this.ringRef[this.lockedRing];
+    if (this.phase !== 'locking' || !ref?.ape) return;
+    const tally = this.troops[ref.target]!;
+    tally.catch(ref.entry);
+    if (tally.full) this.markDelivered(ref.target);
+    this.stepApes(0);
+    this.lock.reset();
+    this.inRing = this.lockedRing = -1;
+    this.phase = 'fly';
+  }
+
+  nearestApe(target: number): Vec2 | undefined {
+    let nearest: Vec2 | undefined;
+    let best = Infinity;
+    for (let i = 0; i < this.ringRef.length; i++) {
+      const ref = this.ringRef[i]!;
+      const p = this.rings[i]!;
+      if (!ref.ape || ref.target !== target || p.x < 0) continue;
+      const d = (p.x - this.saucer.x) ** 2 + (p.y - this.saucer.y) ** 2;
+      if (d < best) { best = d; nearest = p; }
+    }
+    return nearest;
+  }
+
+  /** A fixed entrance or the current position of a roaming witness. */
   ringPos(target: number, entry: number): Vec2 {
-    const e = this.map.targets[target]!.entries[entry]!;
+    const e = this.map.targets[target]!.entries[entry] ?? this.ringRef.find(r => r.target === target && r.entry === entry)?.ape;
+    if (!e) throw new RangeError('Unknown flight target or entry');
     return { x: e.x, y: e.y };
   }
 
@@ -281,6 +336,7 @@ export class DeepFlightSim {
       this.spottedBy = this.st.cause;
       return;
     }
+    if (this.hasApes) this.stepApes(dt);
     const idx = ringUnder(s.x, s.y, saucerSpeed(s), this.rings, RING_R);
     this.inRing = idx;
     if (this.lock.update(dt, idx)) {

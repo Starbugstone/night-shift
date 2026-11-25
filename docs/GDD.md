@@ -22,6 +22,10 @@ lifting a snoring man past a ceiling fan without bonking him is hard.
 - After every attempt a **Specimen Report** card stamps out with deadpan stats:
   *Times bonked: 3 · Dignity remaining: 41% · Snores recorded: 12 ·
   Items stolen from Earth: 1 slipper*. Plus one rotating joke line from Vrell.
+- v4 rating: **PG-13, leaning 16** (innuendo, butt and probe jokes, mild swearing, pop-culture and
+  sci-fi references; nothing sexually explicit, no slurs, nobody real mocked). Each route leaves a
+  themed souvenir lying about (src/abduct/souvenir-items.ts) and two recaps in three, Vrell's line
+  is about it: what came back, or what stayed behind (src/levels/souvenir-quips.ts).
 - Failure is funny, never punishing: restart is one tap and instant.
 - Short dream bubbles above sleeping humans (sheep, a sandwich, a tax form)
   change when they get bumped.

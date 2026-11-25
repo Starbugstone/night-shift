@@ -123,6 +123,7 @@ const L6_HAZARDS: HazardDef[] = [
       { x: 1112, y: 1760 },
     ],
     ...AMB,
+    trigger: 195,
   },
   // Ward bay (doors south): out onto the ward road, east, then up the pharmacy drive to the hatch.
   {
@@ -153,7 +154,7 @@ const L6_HAZARDS: HazardDef[] = [
     dwell: 1.6,
   },
   // ---- the medevac helicopter, circling the on-call block: its searchlight crosses the helipad
-  { type: 'heli', cx: 1560, cy: 1090, rx: 220, ry: 250, period: 22, phase: 0.6, spotR: 120, spotDist: 150, spotRate: 1.4 },
+  { type: 'heli', cx: 1560, cy: 1090, rx: 220, ry: 250, period: 22, phase: 0.6, spotR: 136, spotDist: 165, spotRate: 1.4 },
   // ---- CCTV
   // the ward's south-west corner, sweeping the south lawn and the recovery window
   { type: 'camera', x: 462, y: 862, range: 280, half: 0.3, base: 0.35, amp: 0.6, rate: 1.1, phase: 0 },
@@ -199,11 +200,11 @@ export const LEVEL6: DeepLevelDef = {
   parMarginSec: 140,
   hours: [1, 6],
   memo: {
-    re: 'Work Order #0006 — Mandatory Form 7-B audit',
+    re: 'Work Order #0006 — Mandatory Form 7-B Audit',
     body:
-      'Compliance noticed zero probes logged this quarter. Worse: humans queue up to be probed. Voluntarily. They book ahead, fast overnight and leave four-star reviews. Tonight every specimen needs Form 7-B signed en route: temperature, reflexes, ticklishness. Ambulances scramble without warning. Well, with a little warning.',
+      "Pete's lighthouse log reached Head Office, and Compliance noticed zero probes logged all quarter. Worse: humans queue voluntarily to be probed here and leave four-star reviews. Collect Hank, Dr. Osei and Mr. Pemberton with Form 7-B ticked en route.",
     joke:
-      "The Bureau's probe has been a brass thermometer and a clipboard since 1953. We have no idea where the humans got their other theories. Frankly, we are insulted.",
+      'Our probe has been a brass thermometer and a clipboard since 1953. We have no idea where humans got their other theories. Frankly, we are insulted.',
   },
   map: {
     theme: 'clinic',

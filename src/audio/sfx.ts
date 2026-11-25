@@ -1,4 +1,5 @@
-import type { Audio, SfxName } from '../contracts';
+import type { Audio, SfxName, SpeakOptions, VoiceId } from '../contracts';
+import { VoiceEngine } from './voice'; // v4 voices
 
 type Wave = OscillatorType;
 
@@ -9,6 +10,7 @@ export class SynthAudio implements Audio {
   private master: GainNode | null = null;
   private noiseBuf: AudioBuffer | null = null;
   private last = new Map<SfxName, number>();
+  private voice: VoiceEngine | null = null; // v4 voices
 
   /** Create/resume the AudioContext. Must be called from a user gesture. */
   unlock(): void {
@@ -46,6 +48,19 @@ export class SynthAudio implements Audio {
 
   setMuted(m: boolean): void {
     this.muted = m;
+    if (m) this.hush(); // v4 voices
+  }
+
+  // ---- v4 voices: alien babble for lines of text (src/audio/voice.ts)
+  speak(text: string, voice: VoiceId, opts?: SpeakOptions): void {
+    const ac = this.ac;
+    if (this.muted || !ac || !this.master || !this.noiseBuf || ac.state !== 'running') return;
+    this.voice ??= new VoiceEngine(ac, this.master, this.noiseBuf);
+    this.voice.speak(text, voice, opts);
+  }
+
+  hush(voice?: VoiceId): void {
+    this.voice?.stop(voice);
   }
 
   sfx(name: SfxName, volume = 1): void {
@@ -173,6 +188,11 @@ export class SynthAudio implements Audio {
         // a quick rising slurp and a bright blip: something small just joined the trip
         this.tone('sine', 360, 1300, t, 0.14, 0.26 * v);
         this.tone('triangle', 1250, 1680, t + 0.11, 0.12, 0.16 * v);
+        break;
+      case 'monolith_hum':
+        this.tone('triangle', 147, 147, t, 0.8, 0.19 * v);
+        this.tone('sine', 220, 220, t + 0.12, 0.72, 0.14 * v);
+        this.tone('sine', 294, 291, t + 0.24, 0.58, 0.1 * v);
         break;
       case 'lullaby': {
         const notes = [784, 659, 698, 587, 659, 523];

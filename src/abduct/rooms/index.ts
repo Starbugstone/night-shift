@@ -8,14 +8,18 @@ import { farmWindow } from './farm-window';
 import { laundryLoading } from './laundry-loading';
 import { laundrySkylight } from './laundry-skylight';
 import type { Room } from './layout';
+// v4 items & recap humour: per-route souvenirs
+import { withSouvenirs } from '../souvenir-items';
 // L5 pier code
 import { bubblesRoof, bubblesTunnel, peteGallery, peteSlipway, salDock, salLoft } from './deep-pier';
 // L6 clinic code
 import { hankFront, hankRear, oseiHelipad, oseiPharmacy, pembertonChute, pembertonWindow } from './deep-clinic';
+// v4 L8
+import { MONOLITH_ROOMS } from './deep-monolith';
 // L7 cruise code
 import { captainFunnel, captainMast, gregAwning, gregCabin, marcoPromenade, marcoSkylight } from './deep-ship';
 
-export const ROOMS: Readonly<Record<RoomId, Room>> = {
+export const ROOMS: Readonly<Record<RoomId, Room>> = withSouvenirs({
   farm_window: farmWindow,
   farm_chimney: farmChimney,
   laundry_skylight: laundrySkylight,
@@ -46,6 +50,8 @@ export const ROOMS: Readonly<Record<RoomId, Room>> = {
   osei_pharmacy: oseiPharmacy,
   pemberton_window: pembertonWindow,
   pemberton_chute: pembertonChute,
+  // v4 L8
+  ...MONOLITH_ROOMS,
   // L7 cruise code
   captain_mast: captainMast,
   captain_funnel: captainFunnel,
@@ -53,4 +59,4 @@ export const ROOMS: Readonly<Record<RoomId, Room>> = {
   marco_promenade: marcoPromenade,
   greg_awning: gregAwning,
   greg_cabin: gregCabin,
-};
+});

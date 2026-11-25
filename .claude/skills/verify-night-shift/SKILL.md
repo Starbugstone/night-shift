@@ -21,7 +21,7 @@ Use a free port from `ss` and a fresh run ID each time. The command binds that e
 
 ## Doctor
 
-Use the `doctor` command above for a read-only check. The runner checks that its own Vite server owns the selected loopback address, records the checkout and Git revision, and requires HTTP 200, a visible game canvas, the Night Shift title scene, an empty `night-shift-save-v1` key, and no browser errors. Every drive runs the same check against its own server and context first. If it fails, read `trace.json` and the command output from that run.
+Use the `doctor` command above for a read-only check. The runner checks that its own Vite server owns the selected loopback address, records the checkout and Git revision, and requires HTTP 200, a visible game canvas, the Night Shift title scene, an empty `night-shift-save-v2` key (saves before v2 live under `night-shift-save-v1`; the game imports that once and never writes it), and no browser errors. Every drive runs the same check against its own server and context first. If it fails, read `trace.json` and the command output from that run.
 
 ## Drive
 

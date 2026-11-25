@@ -8,7 +8,9 @@ import type { Container } from 'pixi.js';
 import type { FlightAutopilotIntent, GameContext, Scene, Vec2 } from '../contracts';
 import { P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles } from '../core/fx';
 import { ViewSlot } from '../core/gfx/scene';
-import { deepZibLine, spotCaption, spotShout, spotZibLine, type DeepZibEvent } from '../levels/humor';
+import { deepStartEvent, deepZibLine, spotCaption, spotShout, spotZibLine, type DeepZibEvent } from '../levels/humor'; // v4 story
+import { EggCues } from './easter-eggs'; // v4 easter eggs
+import { fmt, tr } from '../i18n'; // v4 voices
 import type { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
 import { HUD_ROW } from '../ui/hud';
@@ -16,6 +18,7 @@ import { Button } from '../ui/widgets';
 import { Ambient } from './ambient';
 import { FlightAutopilot } from './autopilot';
 import { DeepFlightSim, SAFE_WINDOW } from './deep-sim';
+import { nearHumOnset } from './monolith';
 import type { SpotCause } from './hazards';
 // L6 clinic code
 import { ambulanceScrambled } from './ambulance-draw';
@@ -33,10 +36,12 @@ export interface DeepFlightOptions {
   ctx: GameContext;
   level: DeepLevelDef;
   run: DeepRun;
+  practice?: boolean;
   /** Locked onto (target, entry): the shell starts the abduction. */
   onLocked(target: number, entry: number): void;
   /** The sun came up mid-flight. */
   onSunrise(): void;
+  onQuotaMet?(): void;
   onQuit(): void;
 }
 
@@ -48,6 +53,7 @@ export class DeepFlightScene implements Scene {
   readonly ctx: GameContext;
   readonly level: DeepLevelDef;
   readonly run: DeepRun;
+  readonly practice: boolean;
   readonly quit = new Button(14, HUD_ROW.y, 64, HUD_ROW.h, '', 'ghost', 30);
   readonly fx = new Particles(128);
   private readonly seen = new Set<string>();
@@ -79,6 +85,7 @@ export class DeepFlightScene implements Scene {
   photoCount = 0;
   private done = false;
   bannerT = 0;
+  private pendingOpener: DeepZibEvent | null = null; // v4 story
   private gagNear = -1;
   /** Seconds since the last respawn at a checkpoint, or -1. */
   cpT = -1;
@@ -87,13 +94,15 @@ export class DeepFlightScene implements Scene {
   deliveredIdx = -1;
 
   private readonly look = new ViewSlot(() => new DeepFlightView(this));
+  private eggs: EggCues | null = null; // v4 easter eggs
 
   constructor(private readonly opts: DeepFlightOptions) {
     this.ctx = opts.ctx;
     this.level = opts.level;
     this.run = opts.run;
-    this.sim = new DeepFlightSim(this.level.map, this.ctx.upgrades, this.run.elapsed);
-    for (let i = 0; i < 3; i++) if (this.run.delivered[i]) this.sim.markDelivered(i);
+    this.practice = opts.practice ?? false;
+    this.sim = new DeepFlightSim(this.level.map, this.ctx.upgrades, this.run.elapsed, this.run.troops);
+    for (let i = 0; i < this.run.delivered.length; i++) if (this.run.delivered[i]) this.sim.markDelivered(i);
     const sp = this.run.spawn;
     this.sim.place(sp.x, sp.y, this.run.legs === 0 && this.run.spotted === 0 ? 0.4 : SAFE_WINDOW);
     const n = this.level.map.hazards.length;
@@ -113,15 +122,28 @@ export class DeepFlightScene implements Scene {
       this.speckles[i * 3 + 1] = rnd() * m.h;
       this.speckles[i * 3 + 2] = 2 + rnd() * 5;
     }
-    if (this.run.legs === 0 && this.run.spotted === 0) this.bannerT = 3;
+    if (!this.practice && this.run.legs === 0 && this.run.spotted === 0) {
+      this.bannerT = 3;
+      this.pendingOpener = deepStartEvent(this.level.id); // v4 story
+      // v4 voices: Bureau dispatch reads the work order banner over the PA
+      const words = tr().flight;
+      this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.level.id === 'level8' ? tr().timeTrial.banner : words.collectAll}.`, 'bureau', { within: 2.9 });
+    }
     else if (this.run.legs > 0 && this.run.deliveredCount > 0 && this.run.lastFail === null) {
-      this.say('checkpoint', true);
+      this.say(this.level.id !== 'level8' && this.run.deliveredCount === 2 ? 'twoOfThree' : 'checkpoint', true); // v4 story
       // back from a successful abduction: count it
       this.deliverT = 2.6;
       this.deliveredIdx = this.run.order[this.run.order.length - 1] ?? -1;
       this.cpT = 0;
       this.checkpointBurst(sp.x, sp.y);
     }
+  }
+
+  get bannerHeading(): string {
+    const words = tr();
+    return this.level.id === 'level8'
+      ? fmt(words.workOrders.orderNo, { num: this.level.num })
+      : fmt(words.flight.banner, { num: this.level.num, h: this.level.hours[1] });
   }
 
   /** For test scripts: window.__nightShift.active.debug */
@@ -157,6 +179,16 @@ export class DeepFlightScene implements Scene {
     this.zibT = 2.8;
     this.zibCd = 3.2;
     this.zibPanic = panic;
+    this.ctx.audio.speak?.(this.zibText, 'zib', { panic }); // v4 voices
+  }
+
+  /** v4 easter eggs: a scenery line, said like any other. */
+  private sayLine(text: string): void {
+    this.zibText = text;
+    this.zibT = 2.8;
+    this.zibCd = 3.2;
+    this.zibPanic = false;
+    this.ctx.audio.speak?.(text, 'zib');
   }
 
   update(dt: number): void {
@@ -167,6 +199,12 @@ export class DeepFlightScene implements Scene {
     this.shake = Math.max(0, this.shake - dt * 3);
     this.flashT = Math.max(0, this.flashT - dt);
     this.bannerT = Math.max(0, this.bannerT - dt);
+    // v4 story: Zib's shift opener lands once the dispatch banner clears
+    if (this.pendingOpener && this.bannerT <= 0.4) {
+      const opener = this.pendingOpener;
+      this.pendingOpener = null;
+      if (this.zibT <= 0 && this.state === 'fly') this.say(opener, true);
+    }
     this.deliverT = Math.max(0, this.deliverT - dt);
     if (this.cpT >= 0 && (this.cpT += dt) > 1.7) this.cpT = -1;
     for (let i = 0; i < this.lineFlash.length; i++) this.lineFlash[i] = Math.max(0, this.lineFlash[i]! - dt * 3);
@@ -176,7 +214,7 @@ export class DeepFlightScene implements Scene {
 
     if (this.done) return;
     // the sunrise clock runs through everything, the SPOTTED freeze included
-    if (this.run.tick(dt)) {
+    if (!this.practice && this.run.tick(dt)) {
       this.done = true;
       audio.sfx('sunrise');
       this.opts.onSunrise();
@@ -190,10 +228,16 @@ export class DeepFlightScene implements Scene {
     this.wasDawn = dawn;
 
     if (this.state === 'spotted') {
+      // v4 voices: Zib's excuse on the SPOTTED card (shown from 0.35 s), once the alarm has rung
+      if (this.st >= 0.5 && this.st - dt < 0.5) this.ctx.audio.speak?.(this.spotLine, 'zib', { panic: true, within: 2.2 });
       if (this.st > SPOT_HOLD || (this.st > SPOT_SKIP && p.pressed)) this.respawn();
       return;
     }
 
+    if (this.state === 'locking' && this.sim.phase !== 'locking') {
+      this.state = 'fly';
+      this.st = 0;
+    }
     if (this.state !== 'locking' && this.quit.update(p, dt, audio)) {
       this.done = true;
       this.opts.onQuit();
@@ -201,12 +245,25 @@ export class DeepFlightScene implements Scene {
     }
 
     const sim = this.sim;
+    const previousTime = sim.st.t;
     sim.update(dt, p, !this.quit.pressedDown);
 
     if (this.state === 'locking') {
-      if (this.st >= (this.ctx.reducedMotion ? 0.5 : LOCK_ANIM)) {
-        this.done = true;
+      if (this.st >= LOCK_ANIM) {
         const ref = sim.ringRef[sim.lockedRing]!;
+        if (ref.ape) {
+          sim.collectApe();
+          this.run.finishPickup(ref.target, sim.saucer);
+          audio.sfx('pickup');
+          this.state = 'fly';
+          this.st = 0;
+          if (this.run.phase === 'done') {
+            this.done = true;
+            this.opts.onQuotaMet?.();
+          }
+          return;
+        }
+        this.done = true;
         this.opts.onLocked(ref.target, ref.entry);
       }
       return;
@@ -216,6 +273,7 @@ export class DeepFlightScene implements Scene {
     const s = sim.saucer;
     const field = sim.field;
     const rm = this.ctx.reducedMotion;
+    if (this.level.map.theme === 'badlands' && nearHumOnset(field.defs, s.x, s.y, previousTime, st.t)) audio.sfx('monolith_hum');
     // ---- events
     if (st.click >= 0) {
       audio.sfx('click', 0.9);
@@ -273,6 +331,10 @@ export class DeepFlightScene implements Scene {
       }
     }
     this.gagNear = near;
+    // v4 easter eggs: a film cameo on the map, once per run, never over a hazard line or the opener
+    this.eggs ??= new EggCues(this.level.map.props, this.run);
+    const egg = this.eggs.check(s.x, s.y, sim.camX, sim.camY, this.zibCd <= 0 && !this.pendingOpener && st.cause < 0 && sim.suspicion === 0);
+    if (egg) this.sayLine(egg);
 
     // ---- the fuse
     const exposed = st.cause >= 0;
@@ -320,7 +382,7 @@ export class DeepFlightScene implements Scene {
       return;
     }
 
-    if (sim.inRing >= 0 && !this.seen.has('ring')) {
+    if (sim.inRing >= 0 && !sim.ringRef[sim.inRing]!.ape && !this.seen.has('ring')) {
       this.seen.add('ring');
       this.say('nearRing', true);
     }
@@ -329,8 +391,10 @@ export class DeepFlightScene implements Scene {
       this.st = 0;
       audio.sfx('lock_on');
       audio.sfx('beam_on', 0.6);
-      this.say('locked', true);
-      this.lockBurst(sim.rings[sim.lockedRing]!);
+      if (!sim.ringRef[sim.lockedRing]!.ape) {
+        this.say('locked', true);
+        this.lockBurst(sim.rings[sim.lockedRing]!);
+      }
     }
   }
 
@@ -380,6 +444,7 @@ export class DeepFlightScene implements Scene {
   }
 
   dispose(): void {
+    this.ctx.audio.hush?.(); // v4 voices
     this.look.destroy();
   }
 }

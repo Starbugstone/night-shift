@@ -40,6 +40,7 @@ const L7_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
   {
     human: 'Captain Sterling',
     short: 'Captain',
+    head: 'human/sterling_head',
     building: BRIDGE,
     entries: [entry(BRIDGE, 'captain_mast', [90, 60], 'above'), entry(BRIDGE, 'captain_funnel', [250, 110], 'below')],
   },
@@ -59,9 +60,9 @@ const L7_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
 
 // ====================================================================== hazards
 
-/** A deck photographer at (x, y): frames a saucer that comes within `range`. */
+/** A deck photographer at (x, y): the fixed frame leaves a short sideways dodge. */
 const photographer = (x: number, y: number, range: number, facing: number): HazardDef =>
-  ({ type: 'photographer', x, y, range, halfW: 100, halfH: 80, facing });
+  ({ type: 'photographer', x, y, range, halfW: 80, halfH: 64, facing });
 
 /** A steward walking a promenade with a torch. */
 const steward = (x0: number, y0: number, x1: number, y1: number, phase: number): HazardDef => ({
@@ -118,13 +119,13 @@ const L7_HAZARDS: HazardDef[] = [
   // the galley's own CCTV on its roof corner, sweeping the promenade door (the skylight is the photographer's)
   { type: 'camera', x: 1010, y: 1762, range: 280, half: 0.28, base: 1.65, amp: 0.5, rate: 0.9, phase: 0.6 },
   // Greg's neighbour in the next cabin keeps switching the light on: it lights the porthole ring
-  { type: 'window', wx: 1372, wy: 2752, x: 1360, y: 2740, r: 95, period: 5.0, on: 2.2, phase: 1.1 },
+  { type: 'window', wx: 1372, wy: 2752, x: 1360, y: 2740, r: 95, period: 5.0, on: 4.15, phase: 1.1 },
   { type: 'camera', ...RADAR, base: 0 },
   { type: 'camera', ...RADAR, base: PI },
   // photographers: on the foredeck by the bridge, midships by the galley, aft by the lido
   photographer(1080, 760, 340, PI / 2),
   photographer(720, 1640, 320, 0),
-  photographer(1250, 2950, 380, -PI / 2),
+  photographer(1180, 3190, 290, PI / 2),
   // stewards on both promenades, out of step
   steward(700, 1300, 700, 2480, 0),
   steward(1460, 2480, 1460, 1300, 520),
@@ -182,6 +183,9 @@ export const LEVEL7: DeepLevelDef = {
       lifeboat(SHIP_RIGHT - 36, 1700),
       lifeboat(SHIP_RIGHT - 36, 2100),
       lifeboat(SHIP_RIGHT - 36, 2440),
+      // v4 easter eggs: a small iceberg in open water off the port bow, well clear of the painted hull,
+      // seen from the port rail on the way to the bridge (decor, src/flight/easter-eggs.ts)
+      { key: 'flight/iceberg', kind: 'iceberg', x: 470, y: 700 },
     ],
     targets: L7_TARGETS,
     hazards: L7_HAZARDS,

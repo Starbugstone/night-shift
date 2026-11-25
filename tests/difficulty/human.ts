@@ -7,10 +7,13 @@
 //   - reaction: the hand executes the plan this many seconds late (sees, then moves),
 //   - jitter: smooth tremor/wobble added to the finger or beam position (px),
 //   - fresh hazard phase on every run (start delay) and a seeded RNG, so runs are repeatable.
-import type { AbductRules, RoomId, UpgradeId } from '../../src/contracts';
+import type { AbductResult, AbductRules, FlightAutopilotIntent, RoomId, UpgradeId } from '../../src/contracts';
 import { AbductPilot } from '../../src/abduct/autopilot';
+import { solidRect } from '../../src/abduct/interior';
 import { ROOMS } from '../../src/abduct/rooms';
+import type { Room } from '../../src/abduct/rooms/layout';
 import { AbductSimulation } from '../../src/abduct/simulation';
+import { Contact } from '../../src/abduct/ragdoll';
 import { FlightAutopilot } from '../../src/flight/autopilot';
 import type { DeepFlightSim } from '../../src/flight/deep-sim';
 import type { DeepMap } from '../../src/levels/types';
@@ -68,10 +71,13 @@ function tremor(random: () => number, amplitude: number, hz = 1): (t: number) =>
 // ------------------------------------------------------------------ abduction
 
 export interface AbductRun {
+  result: AbductResult;
   delivered: boolean;
   failReason?: string;
   failBy?: string;
   timeSec: number;
+  /** Wall clock in the room, including the initial wait and the outcome animation. */
+  clockSec: number;
   bonks: number;
   /** Highest specimen wake meter reached, 0..100. */
   peakWake: number;
@@ -79,6 +85,8 @@ export interface AbductRun {
   peakSleeper: number;
   /** Highest camera fuse reached, 0..1. */
   peakCamera: number;
+  /** The model approached a real obstacle or engaged a room hazard after leaving spawn. */
+  approachedObstacle: boolean;
   /** Checkpoint the hand was steering to when the run ended, and where the chest was. */
   stall: { checkpoint: number; x: number; y: number };
   /** Times the hand had to drag back to a snagged body. */
@@ -89,13 +97,14 @@ export interface AbductRun {
 }
 
 export const HARD_RULES: AbductRules = { wakeFails: true, hard: true };
+export const OBSTACLE_NEAR_PX = 80;
 const DT = 1 / 60;
 
 export function playAbduction(
-  id: RoomId, profile: HumanProfile, seed: number, rules: AbductRules = HARD_RULES, upgrades: readonly UpgradeId[] = [],
+  id: RoomId | Room, profile: HumanProfile, seed: number, rules: AbductRules = HARD_RULES, upgrades: readonly UpgradeId[] = [],
 ): AbductRun {
   const random = rng(seed * 7919 + 17);
-  const room = ROOMS[id];
+  const room = typeof id === 'string' ? ROOMS[id] : id;
   // A person hears a creak or a rattle and eases off for a moment.
   let heard = -Infinity;
   const ears = { sfx(name: string) { if (name === 'creak' || name === 'crash') heard = sim?.elapsed ?? 0; } };
@@ -125,6 +134,10 @@ export function playAbduction(
   let snagY = 0;
   let recoveries = 0;
   let minMoisture = 1;
+  let approachedObstacle = false;
+  const approach = new Contact();
+  const hazardAreas = room.interior?.building.hazards.flatMap(hazard => 'area' in hazard ? [solidRect(hazard.area)] : []) ?? [];
+  let frames = wait;
   while (sim.elapsed - t0 < 180 && !sim.complete) {
     const { body } = sim;
     pilot.pace = sim.elapsed - heard < 2.5 ? Math.min(profile.pace, 1.4) : profile.pace;
@@ -162,21 +175,36 @@ export function playAbduction(
     const w = wobble(sim.elapsed);
     sim.moveBeam(hand.x + w.x, hand.y + w.y);
     sim.update(DT);
+    frames++;
     peakWake = Math.max(peakWake, sim.wake.value);
     for (const s of sim.interior?.sleepers ?? []) peakSleeper = Math.max(peakSleeper, s.wake);
     peakCamera = Math.max(peakCamera, sim.interior?.exposure ?? 0);
     if (sim.wet?.sheathed) minMoisture = Math.min(minMoisture, sim.wet.level);
+    if (!approachedObstacle && frames % 6 === 0 && Math.hypot(body.chestX - room.pose.neckX, body.chestY - room.pose.neckY) > 160) {
+      approachedObstacle = peakWake > 0 || peakSleeper > 0 || peakCamera > 0 || minMoisture < 0.95 ||
+        (sim.interior?.probes?.drones.some(drone => drone.fill > 0 || drone.done) ?? false);
+      for (const area of hazardAreas) {
+        if (approachedObstacle) break;
+        approachedObstacle = approach.find(body.chestX, body.chestY, OBSTACLE_NEAR_PX, area);
+      }
+      for (let i = sim.wallCount; i < sim.solids.length && !approachedObstacle; i++) {
+        approachedObstacle = approach.find(body.chestX, body.chestY, OBSTACLE_NEAR_PX, sim.solids[i]!);
+      }
+    }
   }
   const result = sim.result();
   return {
+    result,
     delivered: result.delivered,
     failReason: result.failReason ?? (result.delivered ? undefined : 'timeout'),
     failBy: result.failBy,
     timeSec: sim.elapsed - t0,
+    clockSec: frames * DT,
     bonks: result.bonks,
     peakWake: Math.round(peakWake),
     peakSleeper: Math.round(peakSleeper),
     peakCamera: Math.round(peakCamera * 100) / 100,
+    approachedObstacle,
     recoveries,
     minMoisture: Math.round(minMoisture * 100) / 100,
     driedOut: !!sim.wet?.dried,
@@ -189,6 +217,34 @@ export function playAbduction(
 /** Continuous steering lag: people track their own saucer smoothly, a beat behind. */
 const MOTOR_LAG = 0.08;
 
+export function humanSteering(profile: HumanProfile, seed: number) {
+  const random = rng(seed * 104729 + 3);
+  const shake = tremor(random, profile.jitter * 2.5);
+  const wander = tremor(random, profile.drift * 2.5, 0.18);
+  const lag = Math.round(Math.min(profile.reaction, MOTOR_LAG) / DT);
+  const queue = Array.from({ length: lag }, () => ({ down: false, x: 0, y: 0 }));
+  let mode = '';
+  let frozenUntil = -1;
+  const held = { down: false, dx: 0, dy: 0 };
+  return (it: FlightAutopilotIntent, t: number, sx: number, sy: number, nextMode: string) => {
+    if (nextMode !== mode) {
+      if (mode !== '') frozenUntil = t + profile.reaction;
+      mode = nextMode;
+    }
+    queue.push({ down: it.down, x: it.x, y: it.y });
+    let hand = queue.shift()!;
+    if (t < frozenUntil) hand = { down: held.down, x: sx + held.dx, y: sy + held.dy };
+    else {
+      held.down = hand.down;
+      held.dx = hand.x - sx;
+      held.dy = hand.y - sy;
+    }
+    const a = shake(t);
+    const b = wander(t);
+    return { down: hand.down, x: hand.x + a.x + b.x, y: hand.y + a.y + b.y };
+  };
+}
+
 /**
  * The flight autopilot's plan, with a person's reaction: when the right move changes (wait →
  * go, go → wait), the thumb keeps doing what it was doing for `reaction` seconds before it
@@ -197,34 +253,12 @@ const MOTOR_LAG = 0.08;
 export function humanFlightController(profile: HumanProfile, seed: number): (sim: DeepFlightSim) => Controller {
   return (sim) => {
     const ap = new FlightAutopilot(sim);
-    const random = rng(seed * 104729 + 3);
-    const shake = tremor(random, profile.jitter * 2.5);
-    const wander = tremor(random, profile.drift * 2.5, 0.18);
-    const lag = Math.round(Math.min(profile.reaction, MOTOR_LAG) / DT);
-    const queue: { down: boolean; x: number; y: number }[] = Array.from({ length: lag }, () => ({ down: false, x: 0, y: 0 }));
-    let mode = '';
-    let frozenUntil = -1;
-    const held = { down: false, dx: 0, dy: 0 };
+    const hand = humanSteering(profile, seed);
     const c: Controller = () => {
       const it = ap.intent();
-      const t = sim.st.t;
       const sx = sim.saucer.x - sim.camX;
       const sy = sim.saucer.y - sim.camY;
-      if (ap.last.mode !== mode) {
-        if (mode !== '') frozenUntil = t + profile.reaction;
-        mode = ap.last.mode;
-      }
-      queue.push({ down: it.down, x: it.x, y: it.y });
-      let hand = queue.shift()!;
-      if (t < frozenUntil) hand = { down: held.down, x: sx + held.dx, y: sy + held.dy };
-      else {
-        held.down = hand.down;
-        held.dx = hand.x - sx;
-        held.dy = hand.y - sy;
-      }
-      const a = shake(t);
-      const b = wander(t);
-      return { down: hand.down, x: hand.x + a.x + b.x, y: hand.y + a.y + b.y };
+      return hand(it, sim.st.t, sx, sy, ap.last.mode);
     };
     c.note = () => JSON.stringify(ap.last);
     return c;

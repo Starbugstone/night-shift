@@ -93,7 +93,7 @@ export class ParticleView extends Container {
     for (let i = 0; i < pool.cap; i++) {
       const s = new Sprite(this.tex[0]);
       s.anchor.set(0.5);
-      s.visible = false;
+      s.alpha = 0;
       this.sprites.push(s);
       this.addChild(s);
     }
@@ -101,12 +101,15 @@ export class ParticleView extends Container {
 
   sync(): void {
     const p = this.pool;
-    const none = p.active === 0;
+    // slots come and go every few frames, so a free slot is hidden with alpha 0, never `visible`
+    // (each visible flip rebuilds the render group); the whole view hides only when the pool is empty
+    this.visible = p.active > 0;
+    if (!this.visible) return;
     for (let i = 0; i < p.cap; i++) {
       const s = this.sprites[i]!;
       const life = p.life[i]!;
-      if (none || life <= 0) {
-        s.visible = false;
+      if (life <= 0) {
+        s.alpha = 0;
         continue;
       }
       const k = 1 - life / p.span[i]!;
@@ -154,8 +157,10 @@ export class ParticleView extends Container {
           break;
         }
       }
-      s.visible = on;
-      if (!on) continue;
+      if (!on) {
+        s.alpha = 0;
+        continue;
+      }
       const tex = this.tex[kind]!;
       if (s.texture !== tex) {
         s.texture = tex;

@@ -56,7 +56,8 @@ function porch(house: PropDef, wall: 'n' | 's' | 'e' | 'w', along: number): Haza
   return { type: 'porch', x, y, trigger: PORCH_TRIGGER, r: PORCH_LIT };
 }
 /** The same light on its own garden post, out in a yard or a drive. */
-const yardLight = (x: number, y: number): HazardDef => ({ type: 'porch', x, y, trigger: PORCH_TRIGGER, r: PORCH_LIT, mount: 'post' });
+const yardLight = (x: number, y: number, trigger = PORCH_TRIGGER, r = PORCH_LIT): HazardDef =>
+  ({ type: 'porch', x, y, trigger, r, mount: 'post' });
 
 // ====================================================================== L3
 
@@ -79,7 +80,7 @@ const L3_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
     building: DAVE,
     entries: [
       entry(DAVE, 'dave_roof', 'Roof hatch', 'attic, swingy', [73, 69], 'above'),
-      entry(DAVE, 'dave_patio', 'Patio door', 'creaky stairs', [188, 189], 'below'),
+      { ...entry(DAVE, 'dave_patio', 'Patio door', 'creaky stairs', [188, 189], 'below'), recommended: true },
     ],
   },
   {
@@ -140,18 +141,18 @@ const L3_HAZARDS: HazardDef[] = [
     sweepRate: 1.9,
   },
   // Gary's own CCTV, on the garage corner, sweeping his drive and roof
-  // Its sweep crosses the garage-door ring: lock on between passes.
-  { type: 'camera', x: 1440, y: 1930, range: 295, half: 0.27, base: 0.35, amp: 0.45, rate: 1.1, phase: 0 },
+  // Guard the obvious driveway approach. The skylight approach stays above the cone.
+  { type: 'camera', x: 1440, y: 1930, range: 295, half: 0.26, base: 0.69, amp: 0.13, rate: 1.25, phase: 0 },
   // motion-sensor lights on the walls along the way (none on Maple Court itself, the way north)
   porch(SW_B, 'n', 820),
   porch(SE_B, 'n', 1370),
-  yardLight(860, 560),
+  yardLight(860, 560, 72, 148),
   porch(N_A, 'e', 1250),
   porch(E_B, 'n', 2000),
   porch(PRUITT, 'w', 1300),
   // Lights by the doors: each lights its ring (~170-200 px) without being tripped from it, and its
   // trigger sits across the obvious way in. Come in from the side or wait out the 3 s.
-  yardLight(859, 861),
+  yardLight(905, 842),
   porch(DAVE, 'e', 741),
   yardLight(1560, 961),
   porch(BARB, 'e', 840),
@@ -160,7 +161,7 @@ const L3_HAZARDS: HazardDef[] = [
   { type: 'porch', x: 1515, y: 2205, trigger: 110, r: 200, mount: 'post' },
   yardLight(1600, 1785),
   // yard dogs: one in Dave's garden by the patio, one on Barb's back step between her chimney and back door
-  { type: 'dog', x: 760, y: 968, rMin: 55, rMax: 175, period: 1.9, phase: 0 },
+  { type: 'dog', x: 818, y: 1010, rMin: 55, rMax: 175, period: 1.9, phase: 0 },
   { type: 'dog', x: 1589, y: 620, rMin: 55, rMax: 175, period: 2.0, phase: 0.8 },
   // bats: one loop round the north houses, one zig-zag over the south blocks
   {
@@ -207,7 +208,7 @@ const L3_HAZARDS: HazardDef[] = [
   { type: 'gag', kind: 'cropcircle', x: 246, y: 2697, bx: 0, by: 0 },
 ];
 
-export const LEVEL3: DeepLevelDef = {
+export const LEVEL3 = {
   kind: 'deep',
   id: 'level3',
   num: 3,
@@ -223,9 +224,9 @@ export const LEVEL3: DeepLevelDef = {
   memo: {
     re: 'Work Order #0003 — Maple Court (bulk order)',
     body:
-      'Training is over. Maple Court has three specimens: Dentist Dave, Coach Barb and Gary, who runs the Neighbourhood Watch from his garage. Collect all three before sunrise. A police cruiser circles the block. Mrs. Pruitt watches the street through binoculars. She has not slept since 1994.',
+      "Training is over. Maple Court has three targets before dawn: Dentist Dave, Coach Barb, and Gary from Neighbourhood Watch. Dodge the cruiser and Mrs. Pruitt's binoculars—she hasn't slept since 1994 and logs everything in a binder.",
     joke:
-      'Gary has rigged his garage with laser tripwires to catch prowlers. In eleven years they have caught Gary eleven times. Please do not be the twelfth thing.',
+      'Gary rigged his garage with laser tripwires to catch prowlers. In eleven years they have caught Gary eleven times. Do not become entry twelve.',
   },
   map: {
     theme: 'suburb',
@@ -233,7 +234,7 @@ export const LEVEL3: DeepLevelDef = {
     h: 2880,
     // The first deep level gives a beat longer to react than L4's 1 s fuse.
     fuseSec: 1.3,
-    start: { x: 1080, y: 2700 },
+    start: { x: 1020, y: 2700 },
     roads: [
       { dir: 'h', at: 2460, from: 0, to: 2160 },
       // L-corners run on to the far kerb so the corner square is filled
@@ -306,7 +307,7 @@ export const LEVEL3: DeepLevelDef = {
       PRUITT_WIN,
     ],
   },
-};
+} satisfies DeepLevelDef;
 
 // ====================================================================== L4
 
@@ -322,7 +323,7 @@ const L4_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
     building: MUSEUM,
     entries: [
       entry(MUSEUM, 'nigel_skylight', 'Skylight', 'dino maze, lasers', [122, 94], 'above'),
-      entry(MUSEUM, 'nigel_loading', 'Loading bay', 'gift shop', [332, 161], 'below'),
+      { ...entry(MUSEUM, 'nigel_loading', 'Loading bay', 'gift shop', [332, 161], 'below'), recommended: true },
     ],
   },
   {
@@ -432,12 +433,12 @@ const L4_HAZARDS: HazardDef[] = [
   { type: 'traffic', dir: 'h', at: 1600 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 360, gap: 600, offset: 120, coneRange: 200, coneHalf: 0.32, keys: ['flight/taxi_top'] },
   { type: 'traffic', dir: 'h', at: 1600 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 360, gap: 620, offset: 400, coneRange: 200, coneHalf: 0.32, keys: ['flight/sedan_top'] },
   // rooftop cameras: the museum roof (sweeps skylight and loading bay), City Hall, and the route
-  roofCam(MUSEUM, 'ne', { range: 300, half: 0.3, base: 2.25, amp: 0.65, rate: 1.2, phase: 0 }, 15),
-  roofCam(CITYHALL, 'se', { range: 300, half: 0.3, base: -2.3, amp: 0.55, rate: 1.4, phase: 1 }),
-  // the Bassment's own camera, on its north-west corner, sweeping the roof vent and the fire escape
-  roofCam(CLUB, 'nw', { range: 300, half: 0.3, base: 0.9, amp: 0.6, rate: 1.3, phase: 0.4 }, 15),
+  roofCam(MUSEUM, 'ne', { range: 290, half: 0.26, base: 2.48, amp: 0.65, rate: 1.65, phase: 0 }, 15),
+  roofCam(CITYHALL, 'se', { range: 285, half: 0.29, base: -1.96, amp: 0.35, rate: 1.3, phase: 1.3 }),
+  // Sweeps the roof vent. The south-west fire escape has an approach outside the turning point.
+  roofCam(CLUB, 'nw', { range: 280, half: 0.28, base: 0.57, amp: 0.54, rate: 1.45, phase: 0.4 }, 15),
   // mid-town: CCTV poles in the plaza between the club and Market St
-  { type: 'camera', x: 1080, y: 1900, range: 300, half: 0.32, base: PI / 2, amp: 1.1, rate: 0.9, phase: 0, mount: 'pole' },
+  { type: 'camera', x: 1080, y: 1900, range: 300, half: 0.32, base: 1.85, amp: 0.8, rate: 0.9, phase: 0, mount: 'pole' },
   { type: 'camera', x: 860, y: 2300, range: 280, half: 0.3, base: -0.6, amp: 0.8, rate: 1.2, phase: 2, mount: 'pole' },
   { type: 'camera', x: 1880, y: 2860, range: 300, half: 0.3, base: PI, amp: 0.75, rate: 1.2, phase: 0 },
   roofCam(HR_W, 'n', { range: 300, half: 0.3, base: 0.2, amp: 0.8, rate: 1.1, phase: 1 }, 12),
@@ -447,7 +448,7 @@ const L4_HAZARDS: HazardDef[] = [
   { type: 'neon', x: 1080, y: 2700, r: 150, text: 'BURGERS', billboard: true },
   { type: 'neon', x: 1260, y: 1250, r: 140, text: "DON'T PANIC", billboard: true },
   // the crane: rotating boom, solid
-  { type: 'crane', x: 380, y: 1330, len: 430, rate: 0.6, a0: 0, width: 26 },
+  { type: 'crane', x: 390, y: 1790, len: 380, rate: 0.6, a0: 0, width: 26 },
   // pigeons
   {
     type: 'flock',
@@ -475,8 +476,8 @@ const L4_HAZARDS: HazardDef[] = [
     r: 50,
     phase: 500,
   },
-  // insomniac office windows (the first one, across the alley, lights the club's fire escape)
-  win(HR_PLAZA, 'e', 2092, 4.6, 2.0, 0.7),
+  // The alley window flashes south of the fire escape's holding pocket.
+  win(HR_PLAZA, 'e', 2220, 4.6, 1.2, 0.7),
   win(HR_SE, 'n', 1880, 5.2, 2.2, 0),
   win(HR_W, 's', 260, 4.6, 2.0, 1.3),
   win(HR_E, 's', 1860, 5.0, 2.4, 2.1),
@@ -501,7 +502,7 @@ const L4_LAMPS = [
   { x: 1160, y: 840 },
 ];
 
-export const LEVEL4: DeepLevelDef = {
+export const LEVEL4 = {
   kind: 'deep',
   id: 'level4',
   num: 4,
@@ -515,16 +516,17 @@ export const LEVEL4: DeepLevelDef = {
   parMarginSec: 170,
   hours: [1, 6],
   memo: {
-    re: 'Work Order #0004 — Grimsby city centre',
+    re: 'Work Order #0004 — Grimsby Centre (containment)',
     body:
-      'Head Office wants a vertical slice of civic life: Night Guard Nigel from the museum, DJ Kev from the Bassment, and Mayor Whitlock, who is "working late" at City Hall. The police helicopter has a searchlight and no hobbies. Rooftop cameras, traffic, a crane. Billboards scramble steering.',
+      "Thanks to Gary's CCTV complaint and Mrs. Pruitt's photo on City Hall's board, Head Office wants a civic audit: Night Guard Nigel at the museum, DJ Kev at the Bassment, and Mayor Whitlock. Watch the police chopper, traffic, and neon.",
     joke:
-      'The Mayor is technically an elected official, so this counts as a constituency visit. Please file Form 9-V (Votes, Alien). We have never needed Form 9-V before.',
+      "The Mayor is an elected official, so file Form 9-V (Votes, Alien). Also check Nigel's ledger—someone shipped an unlisted black rock out of that museum last week.",
   },
   map: {
     theme: 'city',
     w: 2160,
     h: 3840,
+    fuseSec: 0.8,
     start: { x: 1080, y: 3640 },
     roads: [
       { dir: 'h', at: 3420, from: 0, to: 2160 },
@@ -557,4 +559,4 @@ export const LEVEL4: DeepLevelDef = {
     hazards: L4_HAZARDS,
     lamps: L4_LAMPS,
   },
-};
+} satisfies DeepLevelDef;

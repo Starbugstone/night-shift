@@ -6,12 +6,14 @@ import {
   NEW_STAR_PAY,
   REPEAT_STAR_PAY,
   applyRun,
+  applyDeepRun,
   buyUpgrade,
   canBuy,
   computeStars,
   isLevelUnlocked,
   meterMultiplier,
   nextRank,
+  nextDispatchIndex,
   rankFor,
   runReward,
   totalStars,
@@ -88,6 +90,21 @@ describe('glorbs and ranks', () => {
 });
 
 describe('unlocks', () => {
+  it('opens each next district on its predecessor’s delivery star alone', () => {
+    let save = defaultSave();
+    for (const [index, level] of LEVELS.entries()) {
+      expect(nextDispatchIndex(save)).toBe(index);
+      expect(LEVELS.map((_, i) => isLevelUnlocked(save, i))).toEqual(LEVELS.map((_, i) => i <= index));
+      const outcome = level.kind === 'tutorial'
+        ? applyRun(save, level.id, abduct({ woke: true, timeSec: 999 }), flight())
+        : applyDeepRun(save, level.id, { delivered: 3, spotted: 1, failedAbductions: 1, elapsedSec: level.budgetSec - 1, sunrise: false });
+      expect(outcome.stars).toEqual([true, false, false]);
+      expect(outcome.unlockedNext).toBe(index < LEVELS.length - 1);
+      save = outcome.save;
+    }
+    expect(nextDispatchIndex(save)).toBe(-1);
+  });
+
   it('level 2 unlocks only after level 1 is delivered', () => {
     const s = defaultSave();
     expect(isLevelUnlocked(s, 0)).toBe(true);

@@ -22,7 +22,7 @@ const SRC_W = 288;
 const SRC_H = 192;
 
 const CAUSES: readonly SpotCause[] = ['police', 'patrol', 'traffic', 'porch', 'watcher', 'dog', 'heli',
-  'camera', 'window', 'lighthouse', 'ambulance', 'photographer', 'steward'];
+  'camera', 'window', 'lighthouse', 'ambulance', 'photographer', 'steward', 'hum'];
 const PHOTO_LABEL = { size: 19, color: C.paperInk, weight: 800, italic: true } as const;
 const CLOCK = { size: 13, color: 'rgba(255,255,255,0.9)', align: 'right', weight: 800 } as const;
 const QUESTION = { size: 34, color: '#e0304e', weight: 900, italic: true } as const;
@@ -466,6 +466,12 @@ function face(g: CanvasRenderingContext2D, eyes: boolean): void {
 
 function person(g: CanvasRenderingContext2D, cause: SpotCause, t: number, rm: boolean): void {
   switch (cause) {
+    case 'hum':
+      g.fillStyle = '#181522';
+      g.fillRect(-30, -60, 60, 146);
+      g.fillStyle = '#8b829b';
+      g.fillRect(26, -60, 4, 146);
+      break;
     case 'police':
     case 'patrol': {
       shoulders(g, '#2a3566');

@@ -3,6 +3,8 @@ import { LEVEL3, LEVEL4 } from './deep-levels';
 import { LEVEL5 } from './deep-pier'; // L5 pier code
 // L6 clinic code
 import { LEVEL6 } from './deep-clinic';
+// v4 L8
+import { LEVEL8 } from './deep-monolith';
 // L7 cruise code
 import { LEVEL7 } from './deep-ship';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from './types';
@@ -24,6 +26,7 @@ export const LEVELS: readonly LevelDef[] = [
     memo: { re: en.levels.level1.re, body: en.levels.level1.body, joke: en.levels.level1.joke },
     map: {
       theme: 'farm',
+      fuseSec: 0.72,
       w: 1080,
       h: 1920,
       start: { x: 540, y: 1600 },
@@ -60,7 +63,7 @@ export const LEVELS: readonly LevelDef[] = [
       target: { key: 'flight/farmhouse_top', kind: 'farmhouse', x: 420, y: 560 },
       entries: [
         // west bedroom window: farmhouse_top.svg local (2, 140)
-        { roomId: 'farm_window', route: 'Window', difficulty: 'easy', x: 292, y: 590, labelSide: 'below' },
+        { roomId: 'farm_window', route: 'Window', difficulty: 'easy', recommended: true, x: 292, y: 590, labelSide: 'below' },
         // chimney pot: farmhouse_top.svg local (202, 31)
         { roomId: 'farm_chimney', route: 'Chimney', difficulty: 'fast & risky', x: 492, y: 481, labelSide: 'above' },
       ],
@@ -81,7 +84,7 @@ export const LEVELS: readonly LevelDef[] = [
           sweepRate: 0.9,
         },
       ],
-      dogs: [{ x: 410, y: 770, rMin: 70, rMax: 165, period: 3.2 }],
+      dogs: [{ x: 427, y: 848, rMin: 202, rMax: 225, period: 3.2 }],
       neons: [],
       powerLines: [],
       // light spilling from the lit west bedroom window and the two south windows
@@ -128,17 +131,20 @@ export const LEVELS: readonly LevelDef[] = [
         { key: 'flight/tree_top', kind: 'tree', x: 690, y: 1650 },
         { key: 'flight/tree_top', kind: 'tree', x: 400, y: 120 },
         { key: 'flight/tree_top', kind: 'tree', x: 680, y: 130 },
-        { key: 'flight/streetlight_top', kind: 'streetlight', x: 455, y: 950 },
+        { key: 'flight/streetlight_top', kind: 'streetlight', x: 420, y: 950 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 625, y: 950 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 90, y: 950 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 990, y: 950 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 455, y: 1550 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 625, y: 1550 },
+        // v4 easter eggs: a time car parked nose-north in Spin City's back lot, by the east-yard way
+        // to the loading door, scorch streaks behind it (decor, src/flight/easter-eggs.ts)
+        { key: 'flight/gullwing_car', kind: 'timecar', x: 1010, y: 600, rot: -Math.PI / 2 },
       ],
       target: { key: 'flight/laundromat_top', kind: 'laundromat', x: 790, y: 560 },
       entries: [
         // skylight: laundromat_top.svg local (148, 128)
-        { roomId: 'laundry_skylight', route: 'Skylight', difficulty: 'short & risky', x: 788, y: 568, labelSide: 'below' },
+        { roomId: 'laundry_skylight', route: 'Skylight', difficulty: 'short & risky', recommended: true, x: 788, y: 568, labelSide: 'below' },
         // north loading dock: laundromat_top.svg local (225, -4)
         { roomId: 'laundry_loading', route: 'Loading door', difficulty: 'long & safe', x: 865, y: 436, labelSide: 'above' },
       ],
@@ -159,18 +165,18 @@ export const LEVELS: readonly LevelDef[] = [
         },
       ],
       dogs: [],
-      neons: [{ x: 445, y: 655, r: 160, text: 'EAT' }],
+      neons: [{ x: 420, y: 615, r: 145, text: 'EAT' }],
       // Strung along the south kerb of Main St's first block, pole to streetlight.
-      // Gaps: Main St (455..625, the short way) and the east yard (860..1080, the long way round).
+      // Main St has a wide first gap. The east yard still offers a second crossing.
       powerLines: [
         { ax: 16, ay: 950, bx: 90, by: 950 },
-        { ax: 90, ay: 950, bx: 455, by: 950 },
-        { ax: 625, ay: 950, bx: 860, by: 950 },
+        { ax: 90, ay: 950, bx: 420, by: 950 },
+        { ax: 625, ay: 950, bx: 870, by: 950 },
         // service drop to the diner
         { ax: 160, ay: 475, bx: 30, by: 340 },
       ],
       lamps: [
-        { x: 455, y: 950 },
+        { x: 420, y: 950 },
         { x: 625, y: 950 },
         { x: 90, y: 950 },
         { x: 990, y: 950 },
@@ -188,6 +194,8 @@ export const LEVELS: readonly LevelDef[] = [
   LEVEL6,
   // L7 cruise code
   LEVEL7,
+  // v4 L8
+  LEVEL8,
 ];
 
 export function isDeep(l: LevelDef): l is DeepLevelDef {
@@ -236,13 +244,15 @@ export const ROOM_IDS: readonly RoomId[] = [
   'marco_promenade',
   'greg_awning',
   'greg_cabin',
+  // v4 L8
+  'echo_appeal',
 ];
 
 export function isRoomId(s: string): s is RoomId {
   return (ROOM_IDS as readonly string[]).includes(s);
 }
 
-/** Every route of a level: tutorial = its two entries, deep = 2 per target. */
+/** Active interior routes. Outdoor pickups have no room entry. */
 export function levelRooms(l: LevelDef): RoomId[] {
   return isDeep(l) ? l.map.targets.flatMap((t) => t.entries.map((e) => e.roomId)) : l.map.entries.map((e) => e.roomId);
 }
@@ -254,8 +264,10 @@ export function levelIndexForRoom(room: RoomId): number {
 
 /** Deep levels: which target (0..2) and entry (0..1) a route belongs to. */
 export function deepSlot(l: DeepLevelDef, room: RoomId): { target: number; entry: number } | null {
-  for (let t = 0; t < 3; t++)
-    for (let e = 0; e < 2; e++) if (l.map.targets[t]!.entries[e]!.roomId === room) return { target: t, entry: e };
+  for (const [target, building] of l.map.targets.entries()) {
+    const entry = building.entries.findIndex(e => e.roomId === room);
+    if (entry >= 0) return { target, entry };
+  }
   return null;
 }
 

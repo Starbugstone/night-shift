@@ -18,6 +18,7 @@ import { drawVehicleFallback } from '../props';
 import { LOCK_ANIM, type FlightScene } from '../scene';
 import { FLIGHT_HUD, POWER_LINE, SUSPICION, barkRadius, neonOn, suspicionMultiplier } from '../sim';
 import { DogView, EntryRingView, SaucerView } from './craft';
+import { EggView } from './eggs'; // v4 easter eggs
 import { FlightBanner, FlightTintView, NeonView, TargetArrow, WireView, ZibBubble, woof } from './overlays';
 import { ConeView, DiscTell, lamp } from './tells';
 import { CameraView, GroundView, PropLayer, ShadowsView, TargetBuilding, VehicleView, basicGround, mapLamp, paintedSprite, plate } from './world';
@@ -44,6 +45,7 @@ export class TutorialFlightView implements SceneView {
   private readonly groundProps: PropLayer;
   private readonly props: PropLayer;
   private readonly shadows: ShadowsView;
+  private readonly eggs: EggView; // v4 easter eggs
   private readonly target: TargetBuilding;
   private readonly saucer: SaucerView;
   private readonly fx: ParticleView;
@@ -77,6 +79,7 @@ export class TutorialFlightView implements SceneView {
     this.groundProps = new PropLayer(assets, m.groundProps);
     this.props = new PropLayer(assets, m.props);
     this.shadows = new ShadowsView(assets, [m.target, ...m.props], SHADOW_OFF);
+    this.eggs = new EggView(m.props); // v4 easter eggs
     this.target = new TargetBuilding(assets, m.target);
     this.saucer = new SaucerView(assets);
     this.fx = new ParticleView(s.fx);
@@ -100,7 +103,7 @@ export class TutorialFlightView implements SceneView {
     this.lights = m.lamps.map((l) => mapLamp(l.x, l.y));
 
     const world = this.camera.world;
-    world.addChild(this.ground.root, this.groundProps.root, this.shadows.root);
+    world.addChild(this.ground.root, this.groundProps.root, this.eggs.ground, this.shadows.root); // v4 easter eggs: streaks
     for (const { body } of this.cars) if (body.shadow) world.addChild(body.shadow);
     world.addChild(this.target.root, this.props.root);
     for (const { body } of this.dogs) world.addChild(body.root);
@@ -108,6 +111,7 @@ export class TutorialFlightView implements SceneView {
     world.addChild(this.saucer.shadow);
     // Upper-world lighting is composited after the wash.
     for (const light of this.lights) this.upperWorld.addChild(light);
+    this.upperWorld.addChild(this.eggs.lights); // v4 easter eggs
     for (const n of this.neon) this.upperWorld.addChild(n.glow);
     for (const c of this.cars) this.upperWorld.addChild(c.cone.root, c.head);
     this.upperWorld.addChild(this.saucer.groundGlow);
@@ -150,8 +154,10 @@ export class TutorialFlightView implements SceneView {
     this.ground.sync(cam);
     this.groundProps.sync(cam);
     this.props.sync(cam);
+    this.eggs.sync(cam, t, rm); // v4 easter eggs
     this.shadows.sync(cam, 0);
     this.target.sync(false, t, rm);
+    this.saucer.cue(s.state, s.exposed && s.state === 'fly', s.sus.value, s.zibT > 0 && s.state !== 'spotted'); // v4 UFO pilot
     this.saucer.sync(s.saucer, t, rm, locking, s.st, lock, s.steerWobble);
     this.fx.sync();
     this.tints.sync(0, s.state === 'fly', s.exposed, s.sus.value, locking, lock, s.st, t, rm);
@@ -205,7 +211,7 @@ export class TutorialFlightView implements SceneView {
     f.exposed = s.exposed && s.state === 'fly';
     f.t = t;
     f.reduced = rm;
-    f.seconds = 1 / (SUSPICION.rate * suspicionMultiplier(s.ctx.upgrades));
+    f.seconds = (m.fuseSec ?? 1) / (SUSPICION.rate * suspicionMultiplier(s.ctx.upgrades));
     this.fuse.sync(90, HUD_ROW.y, 330, HUD_ROW.h, f);
     const sec = Math.floor(s.time);
     if (sec !== this.clockSec) {
@@ -223,12 +229,15 @@ export class TutorialFlightView implements SceneView {
     const ty = m.target.y - s.camY;
     this.arrow.root.visible = tx < -40 || tx > VIEW_W + 40 || ty < -40 || ty > VIEW_H + 40;
     if (this.arrow.root.visible) this.arrow.sync(m.target, s.camX, s.camY, t, rm, 210, 170);
-    this.prompt.visible = s.ctx.tutorial && s.tutStep < 3 && s.state === 'fly';
+    const tutorial = s.ctx.tutorial && s.tutStep < 3;
+    const crossing = s.level.id === 'level2' ? s.saucer.y > 940 && s.saucer.y < 1280 : s.ctx.tutorial && s.saucer.y > 1240 && s.saucer.y < 1450;
+    this.prompt.visible = (tutorial || crossing) && s.state === 'fly';
     if (this.prompt.visible) {
       const w = tr().flight;
       this.prompt.sync(VIEW_W / 2, FLIGHT_HUD.tutY, FLIGHT_HUD.tutH,
-        s.tutStep === 0 ? w.tutDrag : s.tutStep === 1 ? w.tutRelease : w.tutHold,
-        24, s.tutStep === 0 ? 'drag' : s.tutStep === 1 ? 'release' : 'hold', t, rm, 510);
+        crossing ? s.level.id === 'level2' ? tr().lessons.wireGap : tr().lessons.farmVerge
+          : s.tutStep === 0 ? w.tutDrag : s.tutStep === 1 ? w.tutRelease : w.tutHold,
+        22, !tutorial || crossing ? 'drag' : s.tutStep === 0 ? 'drag' : s.tutStep === 1 ? 'release' : 'hold', t, rm, 510);
     }
     this.zib.sync(s.zibText, s.state === 'spotted' ? 0 : s.zibT, t, rm);
     this.spotted.root.visible = s.state === 'spotted';

@@ -74,7 +74,8 @@ const BOATS: PropDef[] = [
   pier('boat_moored_top', 1500, 520, 0.15),
 ];
 const CRANE = pier('harbour_crane_top', 1000, 2240);
-const TOWER = pier('lifeguard_tower_top', 1120, 3010);
+const TOWER = pier('lifeguard_tower_top', 1170, 3010);
+const MARKET_SHED = pier('beach_hut_top', 930, 2520);
 
 const caster = (p: PropDef, r: number, len: number): ShadowCaster => ({ x: p.x, y: p.y, r, len });
 const CASTERS: ShadowCaster[] = [
@@ -82,19 +83,20 @@ const CASTERS: ShadowCaster[] = [
   caster(MARKET, 150, 700),
   caster(CRANE, 80, 620),
   caster(TOWER, 70, 700),
+  caster(MARKET_SHED, 52, 500),
   ...BOATS.map((b) => caster(b, 60, 760)),
 ];
 
-/** One turn ≈ 7 s, a wide hard-edged beam: a full pass takes ~1.1 s, so stand in the open and it has you. */
+/** A full pass can fill the fuse. The preview gives enough time to head for the nearest shadow. */
 const LIGHT: LighthouseHazard = {
   type: 'lighthouse',
   x: LIGHTHOUSE.x,
   y: LIGHTHOUSE.y,
-  period: 7,
-  half: 0.6,
+  period: 7.5,
+  half: 0.61,
   range: 3200,
-  phase: 1.5,
-  lead: 0.5,
+  phase: 2.3,
+  lead: 0.65,
   casters: CASTERS,
 };
 
@@ -186,9 +188,9 @@ export const LEVEL5: DeepLevelDef = {
   memo: {
     re: 'Work Order #0005 — Barnacle Bay (species revision)',
     body:
-      'Head Office suspects humans are only the second-smartest species on this rock. Collect Bubbles from the marine park, Harbourmaster Pete from his lighthouse and Sal from the fish market. The lighthouse beam sweeps the whole bay: hide in the shadows of tall things. Keep the mammal damp.',
+      "The Mayor's desk flagged an unaccounted crate down at Barnacle Bay—and Head Office now doubts humans are even the second-smartest species here. Grab Bubbles the dolphin, Harbourmaster Pete, and Sal. Hide behind tall things from the lighthouse. Keep the mammal damp.",
     joke:
-      'Head Office tried this with whales once. The paperwork ran to four volumes. If Bubbles tries to renegotiate your contract, do not engage: you are not authorised to lose an argument to a fish. (Yes, a mammal. File Form 4-M.)',
+      'We tried whales once; the paperwork ran four volumes. If Bubbles offers legal advice, ignore her—you are not authorised to lose an argument to a mammal who outranks you.',
   },
   map: {
     theme: 'pier',
@@ -202,6 +204,7 @@ export const LEVEL5: DeepLevelDef = {
       ...BOATS,
       CRANE,
       TOWER,
+      MARKET_SHED,
       pier('chip_kiosk_top', 960, 2920),
       pier('beach_hut_top', 220, 1600),
       pier('beach_hut_top', 330, 1600),

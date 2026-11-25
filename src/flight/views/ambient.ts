@@ -172,8 +172,12 @@ export class AmbientView {
     for (let i = 0; i < this.tvs.length; i++) {
       const g = this.tvs[i]!;
       const j = i * 4;
-      g.visible = cam.sees(g.x, g.y, 44);
-      if (!g.visible) continue;
+      // `place` sets the final visibility: showing it first and letting place hide a dark window
+      // would flip `visible` twice a frame and rebuild the whole render group every frame
+      if (!cam.sees(g.x, g.y, 44)) {
+        g.visible = false;
+        continue;
+      }
       if (dawn > a.tvs[j + 3]!) {
         g.texture = this.roomLight;
         g.place(g.x, g.y, 44, 30, 0.9);
@@ -212,10 +216,12 @@ export class AmbientView {
       const x = a.flies[j]! + (rm ? 0 : Math.sin(t * 0.31 + ph) * 46);
       const y = a.flies[j + 1]! + (rm ? 0 : Math.cos(t * 0.23 + ph * 1.7) * 38);
       const blink = rm ? 0.6 : Math.max(0, Math.sin(t * 1.4 + ph * 3));
-      fly.visible = blink >= 0.08 && cam.sees(x, y, 12);
+      // the blink goes through alpha (0 between blinks), not `visible`, so it never changes the
+      // render group's structure
+      fly.visible = cam.sees(x, y, 12);
       if (!fly.visible) continue;
       fly.position.set(x, y);
-      fly.alpha = blink * (a.suburb ? 1 - dawn : 0.35);
+      fly.alpha = blink >= 0.08 ? blink * (a.suburb ? 1 - dawn : 0.35) : 0;
     }
   }
 

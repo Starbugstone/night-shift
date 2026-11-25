@@ -61,7 +61,7 @@ class TitleView implements SceneView {
 | --- | --- |
 | Manifest art | `artSprite(assets, key, w?, h?)` / `artTex(...)` / `artShadow(...)` in `src/ui/views/art.ts`. They return `null` when the art is missing: build the primitive fallback instead (at construction). |
 | Static complex drawing (icons, painted fallbacks, gradients, anything that never changes) | `paintedTexture(id, w, h, painter, resolution?)` in `src/core/gfx/textures.ts`. The painter is Canvas 2D code that runs **once**. This is the only place Canvas 2D is allowed after the migration, which makes porting old static draw code cheap. |
-| Shapes whose geometry changes | `Shape.draw(keyOf(...inputs), (g) => ...)` in `src/core/gfx/shapes.ts`. It rebuilds only when the key changes. Key on rounded geometry inputs, never on time. A handful of small shapes rebuilt every frame (an arc that fills, an iris) is fine. Dozens are not. |
+| Shapes whose geometry changes | `Shape.draw(keyOf(...inputs), (g) => ...)` in `src/core/gfx/shapes.ts`. It rebuilds only when the key changes. Key on rounded geometry inputs, never on time. A batched Graphics that changes geometry makes Pixi rebuild its whole render group, so a `Shape` with plain-colour fills that redraws on three frames within a second leaves the batch (`batchMode = 'no-batch'`, one more draw call; `patchGraphicsPipe` in `pixi-fixes.ts` stops Pixi rebuilding the group for it) and goes back in after 2.5 s without a redraw. A shape that only redraws now and then stays batched. Set `canGoSolo = false` on one that should never leave the batch. A handful of solo shapes (an arc that fills, an iris) is fine. Dozens are not. A gradient or texture fill stays batched and rebuilds the group on every change. |
 | Path helpers | `roundRect` (clamped radius), `panelPath`, `panelHighlightPath`, `starPath`, `ellipseArc` (Pixi has no partial ellipse) in `shapes.ts`. |
 | Text | `Label` (one line, anchored like `fillText` with a middle baseline; `set(text, x, y, maxW)` squeezes like `maxWidth`), `Paragraph` (`setBlock` wraps with the same breaks as before), `wrapLines`, `measure` in `src/core/gfx/text.ts`. Keep `LabelStyle` objects in constants or fields. `restyle` with the same object is free. |
 | Glows and tints | `Glow` (centre + radii + alpha via `place`), `ScreenTint.vignette()/edge(rgb)/wash(...)` with `.strength`, and `glowTexture`, `lightTexture`, `radialTexture` in `src/core/gfx/glow.ts`. Canvas `lighter` = `blendMode = 'add'`. |
@@ -80,7 +80,20 @@ class TitleView implements SceneView {
    (cache strings, as the old code did). The one accepted exception is the small build callback
    passed to `Shape.draw` (it only runs when the key changes).
 3. **Toggle, don't rebuild.** Use `visible` for things that come and go, and pools for repeated
-   things (one sprite per slot, made up front).
+   things (one sprite per slot, made up front). Each real change of `visible` makes Pixi rebuild
+   every batch of the render group on the next render, so set it once per frame to its final value
+   (never `true` and then `false` in the same frame) and blink or flicker with `alpha` (0 hides).
+   Particle slots, chasing lights, blinking eyes and flickers all use `alpha`. Keep `visible` for
+   real state changes, and for big hidden shapes (a cone fill drawn at alpha 0 still costs fill rate).
+   `scripts/pixi/bench-frames.mjs` prints `rebuilt` (root render group, including rebuilds Pixi asks
+   for inside `render()`): well below the frame count in steady play, and `draws`, the WebGL draw
+   calls per frame.
+   Pixi still batches and draws a renderable at alpha 0. An additive glow (`new Glow(tex, true)`)
+   between two normal sprites splits their batch in two, at any alpha: give a row of lamps all its
+   lamps first and then all its glows. Pixi also draws a Graphics over 200 vertices (one stroked
+   circle) on its own; wrap a small static one in `batched()` from `shapes.ts`.
+   `scripts/pixi/batches.mjs` lists each page's batches, the non-normal blend runs, the unbatched
+   Graphics and the masks (an e2e or dev build: it reads `__nightShift.stage`).
 4. **Draw order is child order.** `addChild` order replaces the old call order. When the old code
    drew something conditionally in between, keep the slot and toggle `visible`.
 5. **Camera.** Put the world in a container whose position is `-cam` (+ shake), and the HUD in a

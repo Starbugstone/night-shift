@@ -19,8 +19,12 @@ second sleepers, autopilot proofs and difficulty bands). Merged from a three-age
 - **References are short homage lines only.** A Douglas Adams nod for the dolphin and Star Trek nods
   (the designer approved them) live in single lines: memos, mumbles, report quips. No characters,
   logos, ship designs, uniforms or copied text.
-- **PG.** The probe joke is bureaucratic medical comedy: forms, a thermometer, a reflex hammer, a
-  tickle feather, signage. Nothing is shown or described below the waist.
+- **PG-13, leaning 16** (raised from PG in v4, see AGENTS.md "v4 Deeper Jokes"). The probe joke is
+  still bureaucratic medical comedy at heart: forms, a thermometer, a reflex hammer, a tickle
+  feather, signage. On top of that, innuendo, butt and probe jokes, mild swearing and short
+  pop-culture or sci-fi nods are fine: the Endoscopy corridor hides a silver butt plug souvenir
+  ("Zib, that is not a very good probe"). Nothing sexually explicit, nothing anatomical drawn, no
+  slurs, nobody real mocked.
 - Deep levels unlock from the start like L3/L4. Ranks extend to 21 stars (see Progression).
 
 ## L5 "Pier Pressure" / « Dauphin de quart » (Barnacle Bay, seaside)
@@ -85,7 +89,7 @@ fin over the rim. Souvenir item: a sardine tin.
 
 Map ~2160×3120, theme `clinic`. Sunrise budget 450 s, par margin 140 s.
 
-**Premise (the probe joke, PG).** Bureau Compliance has noticed zero probes logged this quarter.
+**Premise (the probe joke, PG-13).** Bureau Compliance has noticed zero probes logged this quarter.
 Worse, intelligence reports that **humans queue up to be probed. Voluntarily.** They book
 appointments, fast the night before, bring a friend to drive them home and leave four-star
 reviews. The Endoscopy Wing is signposted **"Department of Internal Affairs"** (FR « Service des

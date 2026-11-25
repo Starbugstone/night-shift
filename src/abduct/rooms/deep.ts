@@ -76,7 +76,11 @@ const SUBJECTS = {
     mumbles: ['Floss the moon, please.', 'That’s a load-bearing molar.', 'The plaque has a lawyer.', 'No, the drill dreams about me.', 'The mash needs more altitude.'],
   },
   barb: {
-    pose: { ...BED_POSE, neckX: 139, neckY: 558 },
+    pose: {
+      neckX: 145, neckY: 535, torso: 0.61, head: 2.77,
+      nearArm: 1.61, nearForearm: 0.54, farArm: 1.62, farForearm: 0.54,
+      nearThigh: -0.06, nearShin: 0.76, farThigh: -0.08, farShin: 0.80,
+    },
     item: { sprite: art('slipper', 286, 608), name: 'team-issued slipper' },
     caption: 'Coach is calling a mandatory time-out.',
     mumbles: ['Give me twenty more naps.', 'That’s a foul on the pillow.', 'Stop stretching the mascot.', 'Everybody hydrate the couch.', 'Go Saucers! Defence!'],
@@ -148,7 +152,7 @@ const daveHome = building([
   fan('Living room fan', 1120, 830, 100, 2.6, false, 714),
   fragile('Fish tank', fit('fish_tank', 1390, 1212, 90, 64)),
   gate('Patio screen', box(1525, 881, 34, 505), 'y', 6.9, 3.85, 1.7),
-], [sleeper('Brenda', 99, 562, 330)]);
+], [sleeper('Brenda', 62, 562, 310)]);
 
 export const daveRoof = route(daveHome, 'dave', 'ROOF HATCH', EXITS.daveRoof,
   box(883, -755, 106, 97), [...daveHall, point(1192, -250, 'Attic ladder hatch', 195),
@@ -192,7 +196,7 @@ export const barbBackdoor = route(barbHome, 'barb', 'BACK DOOR', EXITS.barbBackd
   ]);
 
 const garyGarage = [
-  point(220, 386), point(383, 346), point(711, 341, "Gary's laser", 195),
+  point(220, 386), point(415, 346), point(711, 341, "Gary's laser", 195),
 ] as const;
 const garyHome = building([
   room('Garage HQ', 'garage', box(0, 0, 1000, 700),

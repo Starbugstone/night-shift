@@ -32,6 +32,10 @@ export class AbortScene implements Scene {
   ) {}
 
   update(dt: number): void {
+    if (this.t === 0) {
+      const lines = tr().abort.lines; // v4 voices: Vrell says it
+      this.shell.audio.speak(lines[this.lineN % lines.length]!, 'vrell', { within: 3 });
+    }
     this.t += dt;
     const p = this.shell.ctx.pointer;
     const a = this.shell.audio;
@@ -49,6 +53,7 @@ export class AbortScene implements Scene {
   }
 
   dispose(): void {
+    this.shell.audio.hush('vrell'); // v4 voices
     this.look.destroy();
   }
 }

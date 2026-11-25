@@ -110,20 +110,20 @@ export class HudMeter extends Container {
     const tone = hot ? C.red : m.value >= m.warn ? C.amber : C.mint;
     const isEye = m.icon === 'eye';
     this.eye.visible = isEye;
-    this.pupil.visible = false;
+    const open = m.value >= m.warn ? 1 : m.value > 0.02 ? 0.55 : 0.12;
+    // set once to its final value: a visible flip rebuilds the render group
+    this.pupil.visible = isEye && open > 0.3;
     const asleep = !isEye && !m.alarm;
     this.zLow.visible = asleep;
     this.zHigh.visible = asleep;
     this.alarm.visible = !isEye && m.alarm;
     if (isEye) {
-      const open = m.value >= m.warn ? 1 : m.value > 0.02 ? 0.55 : 0.12;
       const lid = 2 + 8 * open;
       this.eye.draw(keyOf(lid, cy), (g) =>
         g.moveTo(19, cy).quadraticCurveTo(30, cy - lid * 1.5, 41, cy).quadraticCurveTo(30, cy + lid * 1.5, 19, cy).stroke({ color: '#ffffff', width: 2.6, cap: 'round' }),
       );
       paint(this.eye, tone);
-      if (open > 0.3) {
-        this.pupil.visible = true;
+      if (this.pupil.visible) {
         this.pupil.position.set(30, cy);
         this.pupil.scale.set(2.2 + open * 2.2);
         paint(this.pupil, tone);
@@ -141,7 +141,8 @@ export class HudMeter extends Container {
       paint(this.zHigh, tone);
     }
 
-    this.caption.restyle(hot ? METER_LABEL_HOT : METER_LABEL).set(m.label, 56, 19);
+    // squeeze long captions (« LEURRE D'ENTRAÎNEMENT ») inside the pill instead of spilling past it
+    this.caption.restyle(hot ? METER_LABEL_HOT : METER_LABEL).set(m.label, 56, 19, w - 68);
 
     const bx = 56;
     const by = 32;
@@ -326,6 +327,10 @@ export class HudPrompt extends Container {
   private readonly caption = new Label(promptLook(20));
   private readonly ring = new Graphics().circle(0, 0, 15).stroke({ color: '#ffffff', width: 2.5 });
   private readonly dot = new Graphics().circle(0, 0, 1).fill('#ffffff');
+  /** Last measured message and size: `measure` builds a key string, so skip it when unchanged. */
+  private lastMsg = '';
+  private lastSize = 0;
+  private textW = 0;
 
   constructor() {
     super();
@@ -334,7 +339,12 @@ export class HudPrompt extends Container {
 
   /** Same arguments as the old `hudPrompt(g, cx, cy, h, msg, size, glyph, t, reduced, maxW)`. */
   sync(cx: number, cy: number, h: number, msg: string, size: number, glyph: PromptGlyph, t: number, reduced: boolean, maxW = 500): void {
-    const w = Math.min(maxW, measure(msg, size, 800) + 86);
+    if (msg !== this.lastMsg || size !== this.lastSize) {
+      this.lastMsg = msg;
+      this.lastSize = size;
+      this.textW = measure(msg, size, 800);
+    }
+    const w = Math.min(maxW, this.textW + 86);
     const x = cx - w / 2;
     this.pill.draw(keyOf(x, cy, w, h), (g) => {
       roundRect(g, x, cy - h / 2 + 4, w, h, h / 2).fill('rgba(5,3,20,0.45)');
@@ -585,7 +595,7 @@ export class HudSunClock extends Container {
   private readonly caption = new Label(SUN_LABEL);
   private readonly time = new Label(SUN_TIME);
 
-  constructor(face?: Texture | null) {
+  constructor(face?: Texture | null, private readonly clockLabel?: string) {
     super();
     this.face = face ? new Sprite(face) : null;
     this.dial.circle(0, 0, DIAL).fill(TRACK).stroke({ color: C.muted, width: 2 });
@@ -647,7 +657,7 @@ export class HudSunClock extends Container {
     // inside the border, and both squeeze to the width right of the dial.
     const tx = 58;
     const tw = Math.max(20, w - 58 - 10);
-    this.caption.restyle(hot ? SUN_LABEL_HOT : SUN_LABEL).set(hot ? tr().hud.sunrise : tr().hud.shift, tx, cy - 11, tw);
+    this.caption.restyle(hot ? SUN_LABEL_HOT : SUN_LABEL).set(this.clockLabel ?? (hot ? tr().hud.sunrise : tr().hud.shift), tx, cy - 11, tw);
     this.time.restyle(hot ? SUN_TIME_HOT : SUN_TIME).set(time, tx, cy + 9, tw);
   }
 }

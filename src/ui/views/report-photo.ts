@@ -1,3 +1,4 @@
+import { apeFallback } from '../../abduct/monolith-art';
 import { Container, Graphics } from 'pixi.js';
 import { ART } from '../../art-manifest';
 import type { Assets } from '../../contracts';
@@ -43,7 +44,7 @@ function bone(assets: Assets, photo: Photo, key: string, color: string, a: Joint
   if (!Number.isFinite(x + y + dx + dy)) return null;
 
   const spec = ART[key] ?? { w: 30, h: 60 };
-  const art = artSprite(assets, key, spec.w, spec.h);
+  const art = artSprite(assets, key, spec.w, spec.h) ?? apeFallback(key, spec.w, spec.h);
   const left = -spec.w * 0.5;
   const top = head ? -spec.h : -5;
   const part = new Container();

@@ -37,7 +37,7 @@ export class AbductPilot {
     if (!checkpoints) return;
     let best = this.index;
     let distance = Infinity;
-    for (let i = this.index; i >= 0; i--) {
+    for (let i = Math.min(this.index, checkpoints.length - 1); i >= 0; i--) {
       const c = checkpoints[i]!;
       const d = Math.hypot(c.x - x, c.y - y);
       if (d < distance) {

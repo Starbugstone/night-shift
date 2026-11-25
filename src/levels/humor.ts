@@ -1,8 +1,11 @@
 // Joke selection. The lines themselves live in src/i18n (en.ts is the source); the exported
 // tables below are the English ones, kept for tests and tools. DOM-free so selection is testable.
-import type { AbductResult, FlightResult } from '../contracts';
+import type { AbductResult, FlightResult, RoomId } from '../contracts';
 import { en } from '../i18n/en';
 import { fmt, gt, isSingular, plural, tr } from '../i18n';
+import type { SaveData } from './save'; // v4 story
+// v4 items & recap humour
+import { offeredItems, souvenirTurn } from './souvenir-quips';
 
 export const LOADING_TIPS: readonly string[] = en.loading.tips;
 
@@ -81,8 +84,12 @@ export function itemsPhrase(items: readonly string[]): string {
 /** Pick a comment for the outcome; `rotation` cycles through the lines. */
 export function vrellComment(r: CommentInput, rotation: number): string {
   const key = commentKey(r);
+  // v4 items & recap humour: two reports in three are about the room's souvenir (not after a failure)
+  const fail = key === 'rejected' || key === 'woke';
+  const turn = fail ? null : souvenirTurn({ levelId: '', offered: offeredItems([r.flight.roomId]), got: r.abduct.itemsStolen }, rotation);
+  if (turn?.line) return turn.line;
   const lines = tr().humor.vrell[key];
-  const line = lines[Math.abs(Math.floor(rotation)) % lines.length]!;
+  const line = lines[Math.abs(Math.floor(turn ? turn.rest : rotation)) % lines.length]!;
   return fmt(line, {
     bonks: r.abduct.bonks,
     spotted: r.flight.spotted,
@@ -130,10 +137,18 @@ export type DeepZibEvent =
   // L6 clinic code: an ambulance sees you / is scrambled
   | 'ambulance'
   | 'scramble'
+  // v4 L8
+  | 'hum'
   // L7 cruise code: a photographer frames you / is lining up; a steward's torch; the radar
   | 'photographer'
   | 'framed'
-  | 'steward';
+  | 'steward'
+  // v4 story: per-level shift openers & 2-of-3 banter
+  | 'start5'
+  | 'start6'
+  | 'start7'
+  | 'start8'
+  | 'twoOfThree';
 
 export const DEEP_ZIB: Record<DeepZibEvent, readonly string[]> = en.humor.deepZib;
 
@@ -198,6 +213,9 @@ export interface DeepCommentInput {
   bonks: number;
   remaining: number;
   order: readonly number[];
+  /** v4 items & recap humour: souvenirs that came back, and the route of each delivered specimen. */
+  items?: readonly string[];
+  rooms?: readonly RoomId[];
 }
 
 /** Vrell on a delivered deep shift. */
@@ -205,8 +223,14 @@ export const DEEP_COMMENTS = en.humor.deepComments;
 
 export function deepComment(r: DeepCommentInput, rotation: number): string {
   const c = tr().humor.deepComments;
+  // v4 items & recap humour: two reports in three are about the shift's souvenirs
+  const turn = r.rooms ? souvenirTurn({ levelId: r.levelId, offered: offeredItems(r.rooms), got: r.items ?? [] }, rotation) : null;
+  if (turn?.line) return turn.line;
+  if (turn) rotation = turn.rest;
   let list: readonly string[];
-  if (r.stars >= 3) list = c.perfect;
+  // v4 council: L8 is a time trial (four apes and Echo), so the three-specimen lines don't fit it
+  if (r.levelId === 'level8') list = r.spotted > 0 ? c.monolithSpotted : c.monolith;
+  else if (r.stars >= 3) list = c.perfect;
   else if (r.spotted === 0 && r.failed === 0) list = c.ghost;
   else if (r.spotted >= 3) list = c.spotted;
   else if (r.failed >= 2) list = c.failed;
@@ -218,4 +242,36 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
   else if (r.levelId === 'level7' && rotation % 2 === 0) list = c.cruise; // L7 cruise code
   else list = c.default;
   return fmt(pick(list, rotation), { spotted: r.spotted, failed: r.failed, remaining: Math.round(r.remaining) });
+}
+
+// v4 story
+const DEEP_START: Readonly<Record<string, DeepZibEvent>> = {
+  level3: 'start3',
+  level4: 'start4',
+  level5: 'start5',
+  level6: 'start6',
+  level7: 'start7',
+  level8: 'start8',
+};
+
+/** v4 story: shift-opener Zib event for a deep level id, or null if none. */
+export function deepStartEvent(levelId: string): DeepZibEvent | null {
+  return DEEP_START[levelId] ?? null;
+}
+
+/** v4 story: Vrell's scripted arc line on a level's first delivery, or null if none. */
+export function storyFirstClear(levelId: string): string | null {
+  return (tr().humor.storyFirstClear as Readonly<Record<string, string>>)[levelId] ?? null;
+}
+
+/** v4 story: loading tips available for the player's current progress (base tips + unlocked tiers). */
+export function loadingTips(save?: Pick<SaveData, 'levels'>): readonly string[] {
+  const { tips, tierTips } = tr().loading;
+  if (!save) return tips;
+  const out: string[] = [...tips];
+  if (save.levels.level2.delivered) out.push(...tierTips.afterL2);
+  if (save.levels.level4.delivered) out.push(...tierTips.afterL4);
+  if (save.levels.level5.delivered) out.push(...tierTips.afterL5);
+  if (save.levels.level7.delivered) out.push(...tierTips.afterL7);
+  return out;
 }

@@ -3,7 +3,7 @@ import { Container, Graphics } from 'pixi.js';
 import { VIEW_H, VIEW_W, type Assets } from '../contracts';
 import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
 import { Label } from '../core/gfx/text';
-import { gt, localArt } from '../i18n';
+import { fmt, gt, localArt, num, tr } from '../i18n';
 import { artSprite } from '../ui/views/art';
 import { HudPanel } from '../ui/views/hud';
 import { PROBE, type ProbeKind, type ProbeSim, type ProbeState } from './probe';
@@ -18,7 +18,6 @@ const DRONE_KEY: Readonly<Record<ProbeKind, string>> = {
   hammer: 'room/probe_drone_hammer',
   feather: 'room/probe_drone_feather',
 };
-const JOINT_NAME: Readonly<Record<ProbeKind, string>> = { thermo: 'HEAD', hammer: 'KNEE', feather: 'FOOT' };
 const LETTERED = new Set(['room/ticket_sign', 'room/internal_affairs_sign', 'room/saucer_poster']);
 const JOINT_TEXT = { size: 12, weight: 850, color: MINT, outline: INK, outlineW: 3 } as const;
 const FORM_TEXT = { size: 11, weight: 850, color: AMBER, outline: INK, outlineW: 3 } as const;
@@ -119,7 +118,8 @@ class ProbeView {
     this.dash.tint = MINT;
     this.arc = new Arc(r - 6, 8);
     this.zone.addChild(this.glow, this.fill, this.open, this.dash, this.done, this.check, this.arc.root);
-    this.caption = new Label(JOINT_TEXT, gt(JOINT_NAME[spec.kind]));
+    const instruction = fmt(tr().lessons.probe, { joint: tr().lessons.probeJoint[spec.kind], seconds: num(PROBE.hold, 1) });
+    this.caption = new Label(JOINT_TEXT).set(instruction, 0, 0, 155);
     this.drone = new DroneArt(assets, spec.kind);
     this.effects.addChild(this.joint, this.kick.root);
     this.root.addChild(this.reach.root, this.zone, this.caption, this.effects, this.drone.root);

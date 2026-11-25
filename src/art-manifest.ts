@@ -533,6 +533,51 @@ export const ART: Record<string, ArtSpec> = {
   'ui/clipboard_7b': { w: 120, h: 150 }, // small clipboard (code writes the Form 7-B lines and ticks)
   'ui/droplet': { w: 40, h: 48 }, // mint water droplet icon (moisture meter)
 
+  // ---- v4 L8 Prior Contact
+  'flight/ape_roaming': { w: 54, h: 54 }, // Knuckle-walking ape from above, nose north; warm muzzle and big hands.
+  'flight/ape_beamed': { w: 54, h: 54 }, // Same ape lifted belly-up, limbs splayed; same centre, transparent ground.
+  'flight/ground_badlands': { w: 540, h: 540 }, // Seamless weathered dry riverbed with subdued gravel and sediment bands.
+  'flight/quarry_top': { w: 320, h: 220 }, // Ochre terrace, split ledge at (76,66) and square chimney at (247,149).
+  'flight/bandstand_top': { w: 320, h: 220 }, // Reedy circular amphitheatre, stage awning to the west and organ loft to the east.
+  'flight/archive_top': { w: 320, h: 220 }, // Slates filed upright like books, west records door and east appeals hatch.
+  'flight/hum_slab_top': { w: 76, h: 100 }, // Oblique black monolith from above, one thin cool bevel, empty ground around it.
+  'room/exit_stone_hatch': { w: 160, h: 70 }, // An open shaft framed in hand-cut shale, overhead exit.
+  'room/bg_patent_cave': { w: 540, h: 720 }, // Blue shale, ancient thumbprints filed in rows, low contrast.
+  'room/stone_plinth': { w: 260, h: 110 }, // Flat-topped weathered stone bench, fills its rectangular collider.
+  'room/practice_bone': { w: 84, h: 34 }, // Horizontal ivory bone with two pronounced double-knuckle ends, broad centre.
+  'room/patent_bone': { w: 50, h: 24 }, // Pocket-sized ivory bone, stamped with an ochre thumbprint.
+  'room/uplift_slab': { w: 100, h: 210 }, // Black upright slab, lavender bevel, chipped corner and pale stone foot.
+  'room/stone_chime': { w: 60, h: 100 }, // Two flints on a full-width bound frame, pivot at top centre.
+  'human/flint_head': { w: 70, h: 80 }, // Sleeping ape with chestnut fur and knapped-stone visor.
+  'human/reed_head': { w: 70, h: 80 }, // Sleeping ape with tawny fur and a reed behind the ear.
+  'human/echo_head': { w: 70, h: 80 }, // Sleeping ape with slate fur and stone spectacles.
+  'human/echo_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
+  'human/echo_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
+  'human/echo_upper_arm': { w: 26, h: 60 }, // Tufted upper arm, joint top centre.
+  'human/echo_lower_arm': { w: 24, h: 60 }, // Long wrist ending in a broad knuckled hand.
+  'human/echo_upper_leg': { w: 32, h: 70 }, // Compact furred thigh, overlapping the knee.
+  'human/echo_lower_leg': { w: 30, h: 72 }, // Shaggy shin ending in a gripping bare foot.
+
+  // ---- v4 items & recap humour: souvenirs (src/abduct/souvenir-items.ts). Small loose props, side
+  // view, resting on their bottom edge; code draws a primitive fallback (src/abduct/souvenir-art.ts).
+  'room/prize_marrow': { w: 56, h: 24 }, // L1 farm: a fat striped green marrow with a red-and-gold prize rosette
+  'room/heart_boxers': { w: 40, h: 30 }, // L2 laundry: white boxer shorts with red hearts, blue waistband, laid flat
+  'room/odd_sock': { w: 36, h: 24 }, // L2 laundry: one lonely cream sock with coloured stripes, lying on its side
+  'room/demo_dentures': { w: 40, h: 26 }, // L3 Dave: a dentist's demo denture set, pink gums, slightly open in a grin
+  'room/coach_whistle': { w: 40, h: 22 }, // L3 Barb: chrome coach's whistle on a red lanyard
+  'room/tinfoil_hat': { w: 40, h: 30 }, // L3 Gary: a crumpled, pointy tinfoil hat
+  'room/ufo_snow_globe': { w: 30, h: 34 }, // L4 Nigel: gift-shop snow globe with a tiny flying saucer inside, wooden base
+  'room/vinyl_12inch': { w: 36, h: 36 }, // L4 Kev: a 12-inch record sliding out of a loud orange sleeve marked 12"
+  'room/toupee': { w: 46, h: 20 }, // L4 Mayor: a glossy auburn toupee, swept to one side
+  'room/rubber_duck': { w: 32, h: 30 }, // L5 Bubbles: classic yellow rubber duck, orange beak
+  'room/ship_bottle': { w: 54, h: 24 }, // L5 Pete: a ship in a bottle lying on its side, cork, tiny white sail
+  'room/cash_tin': { w: 44, h: 26 }, // L5 Sal: a dented green petty-cash tin with a little brass lock
+  'room/silver_plug': { w: 24, h: 38 }, // L6 Hank: a polished silver butt plug standing on its flared base (shiny, cartoon, not anatomical)
+  'room/glove_balloon': { w: 38, h: 34 }, // L6 Osei: a blue latex glove blown up like a balloon, a smiley face drawn on it
+  'room/bedpan': { w: 52, h: 20 }, // L6 Pemberton: a steel hospital bedpan with a handle, side view
+  'room/captains_log': { w: 50, h: 22 }, // L7 Captain: a literal wooden log with a brass plaque reading LOG
+  'room/pepper_mill': { w: 58, h: 20 }, // L7 Marco: a giant wooden restaurant pepper mill lying on its side
+  'room/mankini': { w: 44, h: 26 }, // L7 Greg: a lime-green mankini laid flat (a V of straps), comic not revealing
   // ---- APPEND: L5 pier code — extra keys, one-line art note each
   'flight/lifeguard_tower_top': { w: 90, h: 90 }, // lifeguard tower on stilts from above: little hut roof, ladder (a tall prop: casts a beam shadow)
   'room/sea_lion_rocks': { w: 400, h: 100 }, // wet, rounded rocks for Barnacle to sleep on, a rock pool on one side
@@ -544,6 +589,40 @@ export const ART: Record<string, ArtSpec> = {
   'flight/steward_top': { w: 44, h: 44 }, // deck steward from above: white cap, epaulettes, a torch held out in front (code draws the beam)
   // ---- APPEND: report code — extra keys, one-line art note each
   // (no new keys) ui/id_photo_frame: keep the photo window transparent at x/y 22–198; src/ui/report-photo.ts WINDOW draws the pose there.
+
+  // ---- v4 easter eggs (docs/research/film-references.md "Easter eggs for existing levels"). Decor
+  // only: no detector, no collider. Code draws a primitive fallback (src/flight/props.ts,
+  // src/abduct/souvenir-art.ts); src/flight/easter-eggs.ts places the glow and the tyre streaks.
+  'flight/gullwing_car': { w: 144, h: 80 }, // L2 back lot: unbadged stainless two-seater from above at map-car scale, nose east (right), one gull-wing door raised, round rear lamps, no logo/plate/grille; car only, transparent bg (code draws the scorch streaks behind and the soft cockpit glow at 52% across)
+  'flight/iceberg': { w: 120, h: 90 }, // L7 off the port bow: a small, chunky iceberg from above, pale cyan facets on dark sea, a paper napkin frozen to one edge; no wreck, no flags, soft foam ring baked in
+  'room/blue_heart_pendant': { w: 40, h: 40 }, // L7 Captain (mast route) souvenir, side view resting on its bottom edge: squat blue enamel heart on a gold chain coiled behind it, tiny PREMIUM DECK PASS stamp; no diamond facets or halo
+};
+
+/**
+ * Art used only by the retired L8 routes (flint_split, flint_summit, reed_stage, reed_loft and the
+ * echo_records side door; the layouts stay unregistered in src/abduct/rooms/deep-monolith.ts for
+ * reuse). Flint and Reed are outdoor pickups now, so only their head keys stay in ART (HUD, Work
+ * Orders). The SVGs stay in public/art, but these keys are not preloaded: move one back into ART to
+ * use it again.
+ */
+export const RETIRED_ART: Record<string, ArtSpec> = {
+  'human/flint_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
+  'human/flint_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
+  'human/flint_upper_arm': { w: 26, h: 60 }, // Tufted upper arm, joint top centre.
+  'human/flint_lower_arm': { w: 24, h: 60 }, // Long wrist ending in a broad knuckled hand.
+  'human/flint_upper_leg': { w: 32, h: 70 }, // Compact furred thigh, overlapping the knee.
+  'human/flint_lower_leg': { w: 30, h: 72 }, // Shaggy shin ending in a gripping bare foot.
+  'human/reed_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
+  'human/reed_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
+  'human/reed_upper_arm': { w: 26, h: 60 }, // Tufted upper arm, joint top centre.
+  'human/reed_lower_arm': { w: 24, h: 60 }, // Long wrist ending in a broad knuckled hand.
+  'human/reed_upper_leg': { w: 32, h: 70 }, // Compact furred thigh, overlapping the knee.
+  'human/reed_lower_leg': { w: 30, h: 72 }, // Shaggy shin ending in a gripping bare foot.
+  'room/exit_stone_door': { w: 160, h: 240 }, // An open cave mouth with two rough jambs and a stone lintel.
+  'room/bg_quarry_cave': { w: 540, h: 720 }, // Ochre strata with a charcoal drawing of a hand and one experimental thumb.
+  'room/bg_reed_cave': { w: 540, h: 720 }, // Plum cavern with fine reed impressions in the clay, a few score-like tally marks.
+  'room/understudy_asleep': { w: 110, h: 84 }, // Young ape asleep on her drum.
+  'room/understudy_awake': { w: 110, h: 112 }, // Same drummer awake, sticks raised.
 };
 
 export type ArtKey = keyof typeof ART;

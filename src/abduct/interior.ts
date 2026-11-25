@@ -1,3 +1,4 @@
+import { moveBone, canPassBone, tossTime } from './monolith';
 import { CameraCone } from './camera-cone';
 import type { AbductFailReason, Audio } from '../contracts';
 import { clamp, type Blade, type Circle, type Ragdoll, type Rect, type Solid, STEP, type SwingingRect } from './ragdoll';
@@ -72,6 +73,7 @@ export class HazardState {
         this.next = spec.period;
         this.shapes = [solidRect(spec.sprite)];
         break;
+      case 'toss':
       case 'patrol':
       case 'fragile':
         this.shapes = [solidRect(spec.sprite)];
@@ -177,6 +179,10 @@ export class InteriorSimulation {
         }
         case 'gear':
           state.angle = time * spec.speed;
+          break;
+        case 'toss':
+          moveBone(spec, state.shapes[0] as Rect, time);
+          state.tell = tossTime(spec, time) >= spec.period - 0.55;
           break;
         case 'patrol': {
           const shape = state.shapes[0] as Rect;
@@ -287,6 +293,12 @@ export class InteriorSimulation {
           state.detecting = state.cone?.overlapsBody(body, state.angle) ?? false;
           if (state.detecting) this.watching ??= state;
           break;
+        case 'toss':
+          if (!state.broken && body.impacts[state.firstSolid]! >= BREAK_SPEED) {
+            state.broken = true;
+            (state.shapes[0] as Rect).active = false;
+          }
+          break;
         case 'fragile':
           if (!state.broken && body.impacts[state.firstSolid]! >= BREAK_SPEED) {
             state.broken = true;
@@ -384,6 +396,7 @@ export class InteriorSimulation {
     const state = this.namedHazards.get(target.cross);
     if (!state) throw new Error('Unknown crossing hazard: ' + target.cross);
     const { spec } = state;
+    if (spec.kind === 'toss') return state.broken || canPassBone(spec, time, Math.hypot(target.x - from.x, target.y - from.y) / speed);
     if (spec.kind === 'laser' || spec.kind === 'gate' || spec.kind === 'pop') {
       const p = phase(spec.cycle, time);
       const margin = spec.kind === 'laser' ? LASER_CLEARANCE : GATE_TRAVEL;

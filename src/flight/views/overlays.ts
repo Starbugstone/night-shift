@@ -93,9 +93,10 @@ export class ZibBubble {
     }
     const closed = !rm && isBlinking(t, 1.7);
     const alarm = panic && !!this.panic;
-    this.portrait.visible = !alarm && !closed;
-    this.blink.visible = !alarm && closed;
-    if (this.panic) this.panic.visible = alarm;
+    // blink with alpha: a visible flip rebuilds the render group
+    this.portrait.alpha = !alarm && !closed ? 1 : 0;
+    this.blink.alpha = !alarm && closed ? 1 : 0;
+    if (this.panic) this.panic.alpha = alarm ? 1 : 0;
   }
 }
 

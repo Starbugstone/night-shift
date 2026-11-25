@@ -67,6 +67,11 @@ export function headKey(short: string): string {
 }
 const headKeys = new Map<string, string>();
 
+/** A deep target's portrait key: its own `head`, else the one named after its short label. */
+export function targetHeadKey(t: { short: string; head?: string }): string {
+  return t.head ?? headKey(t.short);
+}
+
 // Eye shapes lifted from the portrait SVGs (200×200 box, inside each file's own group transform),
 // so a blink can be painted over the sprite without a second image.
 const VRELL_EYES = 'M49 83Q62 75 80 83Q75 98 58 96Q51 93 49 83ZM95 80Q111 69 131 76Q126 91 109 92Q100 91 95 80Z';

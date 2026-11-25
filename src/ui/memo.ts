@@ -3,11 +3,12 @@ import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
+import { routeAdvice } from '../levels/route-advice';
 import { fmt, tr } from '../i18n';
 import { easeOutBack } from '../core/fx';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { panelPath } from '../core/gfx/shapes';
-import { Label, wrapLines, type LabelStyle } from '../core/gfx/text';
+import { Label, measure, wrapLines, type LabelStyle } from '../core/gfx/text';
 import { fmtTime } from './draw';
 import { C } from './theme';
 import { Button } from './widgets';
@@ -29,15 +30,27 @@ export class MemoScene implements Scene {
   chars = 0;
   readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
   readonly start = new Button(90, 852, VIEW_W - 180, 84, tr().memo.startShift, 'primary', 32);
+  readonly practice?: Button;
   readonly totalChars: number;
   private readonly look = new ViewSlot(() => new MemoView(this));
 
   constructor(
     readonly shell: Shell,
     private readonly levelIndex: number,
+    private readonly openPractice?: () => void,
   ) {
     const level = tr().levels[this.level.id];
     this.totalChars = level.body.length + level.joke.length;
+    if (openPractice) {
+      const words = tr().fieldCheck;
+      const label = shell.save.fieldCheckSeen ? words.replay : words.start;
+      // v4 council: a long label (« Lancer le test terrain ») gets a smaller size, not a squeeze
+      const size = Math.max(17, Math.min(22, Math.floor(22 * 208 / measure(label, 22, 800))));
+      this.practice = new Button(24, 852, 236, 84, label, 'secondary', size);
+      this.start.x = 272;
+      this.start.w = 244;
+      this.start.size = 24;
+    }
   }
 
   get level() {
@@ -50,10 +63,17 @@ export class MemoScene implements Scene {
     const audio = this.shell.audio;
     if (this.back.update(p, dt, audio)) return this.shell.toWorkOrders();
     if (this.start.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
-    const before = Math.floor(this.chars);
+    if (this.practice?.update(p, dt, audio)) return this.openPractice?.();
+    // v4 voices: Vrell babbles the memo while it types (in place of the old key clicks)
+    if (this.chars === 0 && this.totalChars > 0) {
+      const lt = tr().levels[this.level.id];
+      audio.speak(`${lt.body} ${lt.joke}`, 'vrell', { within: this.totalChars / CPS });
+    }
     this.chars += dt * CPS;
-    if (this.totalChars > 0 && before < this.totalChars && Math.floor(this.chars / 6) !== Math.floor(before / 6)) audio.sfx('click', 0.25);
-    if (p.pressed && !this.start.contains(p.x, p.y) && !this.back.contains(p.x, p.y)) this.chars = 1e6; // tap: finish typing
+    if (p.pressed && !this.start.contains(p.x, p.y) && !this.back.contains(p.x, p.y) && !this.practice?.contains(p.x, p.y)) {
+      if (this.chars < this.totalChars) audio.hush('vrell');
+      this.chars = 1e6; // tap: finish typing
+    }
   }
 
   get view(): Container {
@@ -65,6 +85,7 @@ export class MemoScene implements Scene {
   }
 
   dispose(): void {
+    this.shell.audio.hush('vrell'); // v4 voices
     this.look.destroy();
   }
 }
@@ -113,6 +134,7 @@ class MemoView implements SceneView {
   private readonly cursor = new Graphics().rect(PX + PW - 44, PAPER_Y + PAPER_H - 40, 12, 3).fill(C.paperInk);
   private readonly back: ButtonView;
   private readonly start: ButtonView;
+  private readonly practice?: ButtonView;
   private readonly skip = new Label({ size: 14, color: C.muted, weight: 600 }).set(tr().common.tapToSkip, VIEW_W / 2, 838);
   private typedCount = -1;
 
@@ -123,6 +145,7 @@ class MemoView implements SceneView {
     const lt = tr().levels[lv.id];
     this.back = new ButtonView(s.back);
     this.start = new ButtonView(s.start);
+    if (s.practice) this.practice = new ButtonView(s.practice);
     const page = panelPath(new Graphics(), PX, PAPER_Y, PW, PAPER_H, { fill: C.paper, r: 20, shadow: 8 });
     panelPath(page, VIEW_W / 2 - 70, PAPER_Y - 14, 140, 30, { fill: '#b9a58a', r: 10, lineW: 3, shadow: 0 });
     for (let y = PAPER_Y + 240; y < PAPER_Y + PAPER_H - 20; y += 27) {
@@ -143,27 +166,35 @@ class MemoView implements SceneView {
     for (let i = 0; i < Math.min(2, reLines.length); i++) {
       this.paper.addChild(new Label(subject).set(reLines[i]!, PX + 148, PAPER_Y + 98 + i * 22));
     }
+    const entries = lv.kind === 'deep' ? lv.map.targets.flatMap((target) => target.entries) : lv.map.entries;
+    const first = entries.find((entry) => entry.recommended);
+    if (first) {
+      const hint = fmt(m.recommended, { route: tr().routes[first.roomId].route, tip: routeAdvice(first.roomId) });
+      this.paper.addChild(new Label(subject).set(hint, PX + 28, PAPER_Y + 214, PW - 56));
+    }
 
     // Step down the body size when the copy would reach the goals block.
+    const bodyOffset = first ? 24 : 0;
+    const bodyY = BODY_Y + bodyOffset;
     const joke = wrapLines(lt.joke, PW - 84, JOKE_SIZE, 600, true);
     let bodySize = BODY_SIZE;
     let bodyLH = BODY_LH;
     let body = wrapLines(lt.body, PW - 56, bodySize, 500);
-    while (bodySize > 16 && 228 + body.length * bodyLH + 12 + joke.length * JOKE_LH > PAPER_H - 160 - 22) {
+    while (bodySize > 16 && 228 + bodyOffset + body.length * bodyLH + 12 + joke.length * JOKE_LH > PAPER_H - 160 - 22) {
       bodySize--;
       bodyLH = Math.round(bodySize * 1.35);
       body = wrapLines(lt.body, PW - 56, bodySize, 500);
     }
-    this.body = typedLines(this.paper, body, { size: bodySize, color: C.paperInk, align: 'left', weight: 500 }, PX + 28, BODY_Y, bodyLH);
-    const jokeTop = BODY_Y + body.length * bodyLH + 6;
+    this.body = typedLines(this.paper, body, { size: bodySize, color: C.paperInk, align: 'left', weight: 500 }, PX + 28, bodyY, bodyLH);
+    const jokeTop = bodyY + body.length * bodyLH + 6;
     this.jokeBox.addChild(panelPath(new Graphics(), PX + 18, jokeTop - 14, PW - 36, joke.length * JOKE_LH + 20, { fill: '#fff6c9', r: 12, stroke: '#d8c48a', lineW: 2, shadow: 0 }));
     this.joke = typedLines(this.jokeBox, joke, JOKE, PX + 32, jokeTop + 8, JOKE_LH);
     this.paper.addChild(this.jokeBox, this.cursor);
 
     const gy = PAPER_Y + PAPER_H - 160;
     this.paper.addChild(new Label({ size: 15, color: '#6a3fbf', align: 'left', weight: 900 }).set(m.goals, PX + 28, gy));
-    const labels = lv.kind === 'deep' ? tr().starLabels.deep : tr().starLabels.tutorial;
-    const lines = lv.kind === 'deep' ? m.deepGoals : m.tutorialGoals;
+    const labels = lv.id === 'level8' ? tr().timeTrial.stars : lv.kind === 'deep' ? tr().starLabels.deep : tr().starLabels.tutorial;
+    const lines = lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : lv.kind === 'deep' ? m.deepGoals : m.tutorialGoals;
     const times = lv.kind === 'deep' ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec)] : ['', '', fmtTime(lv.parSec)];
     const best = save.levels[lv.id].stars;
     const goalLook = { size: 17, color: C.paperInk, align: 'left', weight: 700 } as const;
@@ -173,12 +204,13 @@ class MemoView implements SceneView {
       star.position.set(PX + 46, y);
       this.paper.addChild(star, new Label(goalLook).set(fmt(lines[i]!, { star: labels[i]!, time: times[i]! }), PX + 72, y, PW - 72 - 20));
     }
-    this.paper.addChild(new Label({ size: 14, color: '#7a70a0', align: 'right', weight: 600, italic: true }).set(m.signoff, PX + PW - 24, PAPER_Y + PAPER_H - 22, PW - 48));
+    this.paper.addChild(new Label({ size: 14, color: '#7a70a0', align: 'right', weight: 600, italic: true }).set(lt.signoff ?? m.signoff, PX + PW - 24, PAPER_Y + PAPER_H - 22, PW - 48)); // v4 story
     this.root.addChild(
       this.sky, this.back,
       new Label({ size: 22, color: C.mint, weight: 900 }).set(m.incoming, VIEW_W / 2 + 20, 48, 230),
       this.dot, this.paper, this.start, this.skip,
     );
+    if (this.practice) this.root.addChild(this.practice);
   }
 
   sync(): void {
@@ -188,6 +220,7 @@ class MemoView implements SceneView {
     this.sky.sync(t, reduced);
     this.back.sync();
     this.start.sync();
+    this.practice?.sync();
     this.portrait.sync(t, reduced);
     this.dot.alpha = reduced ? 1 : 0.55 + 0.45 * Math.sin(t * 5);
     const land = reduced ? 1 : easeOutBack(t / 0.42, 1.1);

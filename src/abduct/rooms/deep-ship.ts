@@ -66,19 +66,19 @@ const EXITS = {
 
 const SUBJECTS = {
   sterling: {
-    pose: { ...CHAIR_POSE, neckX: 90, neckY: 489 },
+    pose: { ...CHAIR_POSE, neckX: 162, neckY: 489, torso: 1.65 },
     item: { sprite: art('coffee_mug', 196, 512), name: "captain's mug" },
     caption: 'The captain has gone down with the nap.',
     mumbles: ['Make it so… comfy.', 'Engage the snooze button.', 'Set a course for the buffet. Warp nine.', 'Iceberg? Tell it to make an appointment.', 'All hands to the hammocks.'],
   },
   marco: {
-    pose: { ...CHAIR_POSE, neckX: 100, neckY: 445 },
+    pose: { ...CHAIR_POSE, neckX: 134, neckY: 449, nearThigh: 0.30, farThigh: 0.32 },
     item: { sprite: art('eclair', 196, 560), name: 'chocolate éclair' },
     caption: 'The chef has sent your compliments back to the kitchen.',
     mumbles: ['More butter. No. More.', 'The soufflé can hear us.', 'Yes chef. No chef. Nap chef.', 'Fold the meringue, not the captain.', 'The jelly wobbles for no one.'],
   },
   greg: {
-    pose: { ...BED_POSE, neckX: 111, neckY: 588 },
+    pose: { ...BED_POSE, neckX: 119, neckY: 588 },
     item: { sprite: art('complimentary_towel', 330, 584), name: 'complimentary towel swan' },
     caption: 'Greg would like to speak to the manager of the sky.',
     mumbles: ['Is the tractor beam all-inclusive?', 'I paid for the premium sunset.', 'Three towels is the legal limit.', 'Is there a buffet on the mothership?', 'I want a refund on gravity.'],
@@ -120,7 +120,7 @@ const captainHome = building([
   fan('Engine fan', 600, 1180, 90, 2.4, true),
   draft('Steam updraft', box(-406, -286, 392, 1672), 0, -120),
   gate('Soot damper', box(-406, 200, 392, 28), 'x', 7.3, 3.95, 1.25),
-], [sleeper('Anchovy', 600, 576, 330)]);
+], [sleeper('Anchovy', 660, 576, 300)]);
 
 const captainDeck = [point(196, 330), point(470, 290)] as const;
 

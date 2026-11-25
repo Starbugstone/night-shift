@@ -25,7 +25,7 @@ describe('levels and routes', () => {
   });
 
   it('knows every route, and which level each belongs to', () => {
-    expect(ROOM_IDS).toHaveLength(4 + 6 * (LEVELS.length - 2));
+    expect(ROOM_IDS).toHaveLength(LEVELS.flatMap(levelRooms).length);
     for (const id of ROOM_IDS) expect(isRoomId(id)).toBe(true);
     expect(isRoomId('nope')).toBe(false);
     expect(levelIndexForRoom('farm_chimney')).toBe(0);
@@ -40,12 +40,9 @@ describe('levels and routes', () => {
 });
 
 describe('progression', () => {
-  it('offers L3 and L4 without any deliveries, stars, or upgrades', () => {
+  it('opens only Doyle on a fresh save', () => {
     const s = defaultSave();
-    expect(isLevelUnlocked(s, 2)).toBe(true);
-    expect(isLevelUnlocked(s, 3)).toBe(true);
-    // v3: every deep level is open from the start; nothing past the last one
-    for (let i = 2; i < LEVELS.length; i++) expect(isLevelUnlocked(s, i), LEVELS[i]!.id).toBe(true);
+    expect(LEVELS.map((_, i) => isLevelUnlocked(s, i))).toEqual([true, false, false, false, false, false, false, false]);
     expect(isLevelUnlocked(s, LEVELS.length)).toBe(false);
   });
 
@@ -65,7 +62,7 @@ describe('progression', () => {
     expect(DEEP_PAY_MULT).toBe(2);
     expect(full.glorbs).toBe((5 + 3 * 10) * 2);
     expect(full.save.levels.level3.delivered).toBe(true);
-    expect(full.unlockedNext).toBe(false);
+    expect(full.unlockedNext).toBe(true);
     const sun = applyDeepRun(s, 'level3', { delivered: 2, elapsedSec: 300, spotted: 3, failedAbductions: 0, sunrise: true });
     expect(sun.glorbs).toBe(0);
     expect(sun.save.levels.level3.attempts).toBe(1);

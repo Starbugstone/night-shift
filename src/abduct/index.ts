@@ -33,8 +33,8 @@ export function emitterPoint(roomId: RoomId): Vec2 {
   return { x: room.roofExit ? room.exit.x + room.exit.w / 2 : VIEW_W / 2, y: CEILING };
 }
 
-export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: (result: AbductResult) => void): AbductScene {
-  const simulation = new AbductSimulation(ROOMS[start.roomId], ctx.upgrades, ctx.audio, Math.random, start.rules);
+export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: (result: AbductResult) => void, room = ROOMS[start.roomId]): AbductScene {
+  const simulation = new AbductSimulation(room, ctx.upgrades, ctx.audio, Math.random, start.rules);
   let tutorial = ctx.tutorial;
   let dragging = false;
   let lastX = 0;

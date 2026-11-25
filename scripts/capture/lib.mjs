@@ -280,7 +280,7 @@ export class Capture {
     await context.addInitScript(VIRTUAL_TIME);
     // optional save fixture (e.g. owned upgrades), written before the game boots
     // (once per tab: later navigations keep whatever the clip did to the save)
-    if (save) await context.addInitScript((s) => { try { if (!sessionStorage.getItem('__fixture')) { localStorage.setItem('night-shift-save-v1', s); sessionStorage.setItem('__fixture', '1'); } } catch (e) { /* ignore */ } }, JSON.stringify(save));
+    if (save) await context.addInitScript((s) => { try { if (!sessionStorage.getItem('__fixture')) { localStorage.setItem('night-shift-save-v2', s); sessionStorage.setItem('__fixture', '1'); } } catch (e) { /* ignore */ } }, JSON.stringify(save));
     const page = await context.newPage();
     const cap = new Capture(browser, page, out, { crf, quality });
     page.on('pageerror', (e) => cap.errors.push(String(e)));

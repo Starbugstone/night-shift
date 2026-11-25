@@ -22,6 +22,8 @@ const HUMAN_NAMES = {
   gary: 'Gary', nigel: 'Night Guard Nigel', kev: 'DJ Kev', mayor: 'Mayor Whitlock',
   // L5 pier code
   bubbles: 'Bubbles', pete: 'Harbourmaster Pete', sal: 'Sal',
+  // v4 L8
+  flint: 'Flint', reed: 'Reed', echo: 'Echo',
   // L7 cruise code
   sterling: 'Captain Sterling', marco: 'Chef Marco', greg: 'Greg',
   // L6 clinic code
@@ -107,7 +109,7 @@ export class AbductSimulation {
   readonly snoozeOwned: boolean;
   readonly camera = { x: 0, y: 0 };
   private readonly pilot: AbductPilot;
-  private readonly wallCount: number;
+  readonly wallCount: number;
   failure: InteriorFailure | undefined;
   failureTime = 0;
   snoozeUsed = false;

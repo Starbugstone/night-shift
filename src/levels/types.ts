@@ -1,5 +1,6 @@
 import type { RoomId, Vec2 } from '../contracts';
 import type { HazardDef } from '../flight/hazards';
+import type { RoamingTroop } from '../flight/roam';
 import type { GroundPatch } from '../flight/pier-ground'; // L5 pier code
 import type { LevelId } from './save';
 
@@ -25,7 +26,9 @@ export type PropKind =
   | 'park'
   | 'crop_field'
   // L5 pier code: every seaside prop (fallback drawn by key in src/flight/pier-ground.ts)
-  | 'pier';
+  | 'pier' | 'terrace'
+  // v4 easter eggs: decor only (src/flight/easter-eggs.ts), never a detector or a collider
+  | 'timecar' | 'iceberg';
 
 /** A sprite placed by its centre. Size defaults to the manifest size. */
 export interface PropDef {
@@ -55,6 +58,7 @@ export interface EntryDef {
   route: string;
   /** e.g. "easy" */
   difficulty: string;
+  recommended?: boolean;
   x: number;
   y: number;
   /** Where the label pill sits relative to the ring. */
@@ -102,6 +106,7 @@ export interface PowerLineDef {
 
 export interface FlightMap {
   theme: 'farm' | 'town';
+  fuseSec?: number;
   w: number;
   h: number;
   start: Vec2;
@@ -140,26 +145,29 @@ export interface TutorialLevelDef extends LevelBase {
 }
 
 /** One specimen's building in a deep level. */
-export interface DeepTarget {
+export interface DeepTarget<Entries extends EntryDef[] = [EntryDef, EntryDef]> {
   /** Full name for the HUD list, e.g. "Dentist Dave". */
   human: string;
   /** Short name, e.g. "Dave". */
   short: string;
   building: PropDef;
-  /** Both rings lead into the same interior. */
-  entries: [EntryDef, EntryDef];
+  /** Portrait art key when it is not `human/<short>_head` (the Captain's art is `sterling`). */
+  head?: string;
+  /** Outdoor troops are collected directly at moving hover rings. */
+  troop?: RoamingTroop;
+  entries: Entries;
 }
 
 export interface DeepMap {
   /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
-  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship';
+  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands';
   w: number;
   h: number;
   start: Vec2;
   roads: RoadDef[];
   groundProps: PropDef[];
   props: PropDef[];
-  targets: [DeepTarget, DeepTarget, DeepTarget];
+  targets: [DeepTarget<EntryDef[]>] | [DeepTarget<EntryDef[]>, DeepTarget<EntryDef[]>, DeepTarget<EntryDef[]>];
   hazards: HazardDef[];
   /** Warm light pools (decor). */
   lamps: Vec2[];

@@ -78,10 +78,26 @@ export type SfxName =
   /** A souvenir (slipper, mug) gets sucked into the beam. */
   | 'pickup'
   | 'checkpoint'
-  | 'sunrise';
+  | 'sunrise'
+  | 'monolith_hum';
+
+/** v4 voices: who is talking when a line of text appears (src/audio/voice.ts). */
+export type VoiceId = 'zib' | 'vrell' | 'bureau';
+
+export interface SpeakOptions {
+  /** The babble must be over by then, seconds (the text's reveal time). */
+  within?: number;
+  /** Zib in a panic: higher and quicker. */
+  panic?: boolean;
+  volume?: number;
+}
 
 export interface Audio {
   sfx(name: SfxName, volume?: number): void;
+  /** v4: alien babble for a line of text as it appears. Optional so test doubles can skip it. */
+  speak?(text: string, voice: VoiceId, opts?: SpeakOptions): void;
+  /** v4: stop a voice (or every voice) now, e.g. when the text is skipped or the scene ends. */
+  hush?(voice?: VoiceId): void;
 }
 
 export type UpgradeId =
@@ -156,6 +172,8 @@ export type RoomId =
   | 'marco_promenade'
   | 'greg_awning'
   | 'greg_cabin'
+  // v4 L8
+  | 'echo_appeal'
   ;
 
 /** How punishing an abduction is. Tutorials: all false. Deep levels: all true. */

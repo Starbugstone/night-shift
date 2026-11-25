@@ -2,6 +2,7 @@ import type { FlightResult, GameContext, Scene, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { ART } from '../art-manifest';
 import { pick, zibLine, type ZibEvent } from '../levels/humor';
+import { EggCues } from './easter-eggs'; // v4 easter eggs
 import { tr } from '../i18n';
 import type { TutorialLevelDef, VehicleDef } from '../levels/types';
 import { clamp } from '../ui/draw';
@@ -100,10 +101,12 @@ export class FlightScene implements Scene {
   steerWobble = 0;
 
   private readonly look = new ViewSlot(() => new TutorialFlightView(this));
+  private readonly eggs: EggCues; // v4 easter eggs
 
   constructor(private readonly opts: FlightOptions) {
     this.ctx = opts.ctx;
     this.level = opts.level;
+    this.eggs = new EggCues(this.level.map.props, this); // v4 easter eggs
     this.spotted = opts.spotted;
     this.ringPts = this.level.map.entries.map((e) => ({ x: e.x, y: e.y }));
     this.lineFlash = this.level.map.powerLines.map(() => 0);
@@ -179,6 +182,15 @@ export class FlightScene implements Scene {
     this.zibText = zibLine(evt, this.zibN++ + (evt.length % 2));
     this.zibT = 2.8;
     this.zibCd = 3.4;
+    this.ctx.audio.speak?.(this.zibText, 'zib'); // v4 voices
+  }
+
+  /** v4 easter eggs: a scenery line, said like any other. */
+  private sayLine(text: string): void {
+    this.zibText = text;
+    this.zibT = 2.8;
+    this.zibCd = 3.4;
+    this.ctx.audio.speak?.(text, 'zib');
   }
 
   /** Where the saucer is on screen (the scene transition irises in on it). */
@@ -329,7 +341,7 @@ export class FlightScene implements Scene {
       this.alertT = 0.2 - this.sus.value * 0.1;
     }
     if (rate <= 0) this.alertT = 0;
-    this.sus.update(dt, rate, suspicionMultiplier(this.ctx.upgrades));
+    this.sus.update(dt, rate, suspicionMultiplier(this.ctx.upgrades) / (m.fuseSec ?? 1));
     const high = this.sus.value > 0.7;
     if (high && !this.wasHighSus) {
       this.say('highSus', true);
@@ -344,6 +356,10 @@ export class FlightScene implements Scene {
       this.ctx.audio.sfx('spotted');
       return;
     }
+
+    // v4 easter eggs: a film cameo on the map, once per run, never over a hazard line
+    const egg = this.eggs.check(s.x, s.y, this.camX, this.camY, this.zibCd <= 0 && !this.exposed && this.sus.value === 0);
+    if (egg) this.sayLine(egg);
 
     // lock-on
     const idx = ringUnder(s.x, s.y, saucerSpeed(s), this.ringPts, RING_R);
@@ -404,6 +420,7 @@ export class FlightScene implements Scene {
   }
 
   dispose(): void {
+    this.ctx.audio.hush?.(); // v4 voices
     this.look.destroy();
   }
 }

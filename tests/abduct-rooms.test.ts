@@ -183,8 +183,9 @@ describe('abduction rooms', () => {
     }
   });
 
-  it('can take a mug out of the loading door', () => {
-    expect(runRoute('laundry_loading').result().itemsStolen).toEqual(['coffee mug']);
+  // v4 items & recap humour: the loading door's souvenir is Larry's boxers (src/abduct/souvenir-items.ts)
+  it('can take the boxers out of the loading door', () => {
+    expect(runRoute('laundry_loading').result().itemsStolen).toEqual(['heart-print boxers']);
   });
 
   it('can take a slipper out of the bedroom window', () => {
@@ -197,10 +198,10 @@ describe('abduction rooms', () => {
       sfx(name) { sounds.push(name); },
     }, () => 0.5);
     steer(sim, [
-      { x: 145, y: 563, seconds: 3 },
-      { x: 360, y: 546, seconds: 5 },
-      { x: 310, y: 465, seconds: 2 },
-      { x: 260, y: 411, seconds: 2 },
+      { x: 145, y: 560, seconds: 3 },
+      { x: 306, y: 515, seconds: 3 },
+      { x: 306, y: 370, seconds: 3 },
+      { x: 192, y: 370, seconds: 2 },
     ]);
     expect(sounds).toContain('yowl');
     expect(sim.wake.value).toBeGreaterThan(25);
