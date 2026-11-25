@@ -1,6 +1,6 @@
 // Drive the flight scenes without a view, then score their full attempts with the game's star rules.
 import type { FlightAutopilotIntent, FlightResult, GameContext, PointerState, RoomId, Vec2 } from '../../src/contracts';
-import { DeepFlightScene } from '../../src/flight/deep-scene';
+import { DeepFlightScene, SPOT_HOLD } from '../../src/flight/deep-scene';
 import { FlightScene } from '../../src/flight/scene';
 import { computeDeepStars, computeStars } from '../../src/levels/progress';
 import { DeepRun } from '../../src/levels/run';
@@ -48,6 +48,9 @@ function flightContext(): GameContext {
   };
 }
 
+const RETRY_TAP: FlightAutopilotIntent = { down: true, x: 270, y: 480 };
+const TUTORIAL_RETRY_TAP_SEC = 3.4;
+
 function steer(pointer: PointerState, hand?: FlightAutopilotIntent): void {
   const down = hand?.down ?? false;
   pointer.pressed = down && !pointer.down;
@@ -79,7 +82,8 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     let exposure: Record<number, number> | undefined;
     while (shift.phase === 'flight') {
       const wasFlying = flight.state === 'fly';
-      steer(ctx.pointer, wasFlying ? controller(sim) : undefined);
+      // the SPOTTED card waits for a tap: the player taps when it used to close by itself
+      steer(ctx.pointer, wasFlying ? controller(sim) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
       ctx.time += DT;
       flight.update(DT);
       peakSuspicion = Math.max(peakSuspicion, sim.suspicion);
@@ -171,7 +175,8 @@ function tutorialAttempt(level: TutorialLevelDef, entry: TutorialLevelDef['map']
       }, t, sx, sy, down ? String(waypoint) : 'hover'));
       if (!last && d < 50) waypoint++;
     } else {
-      steer(ctx.pointer);
+      // the SPOTTED card waits for a tap: the player taps when it used to close by itself (3.4 s)
+      steer(ctx.pointer, scene.state === 'spotted' && scene.st >= TUTORIAL_RETRY_TAP_SEC ? RETRY_TAP : undefined);
       if (scene.state === 'spotted') waypoint = 0;
     }
     t += DT;

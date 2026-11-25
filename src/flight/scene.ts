@@ -221,7 +221,8 @@ export class FlightScene implements Scene {
     this.fx.update(dt);
 
     if (this.state === 'spotted') {
-      if ((this.st > 0.9 && p.pressed) || this.st > 3.4) {
+      // the card waits for a tap: reading the witness's line is part of the joke
+      if (this.st > 0.9 && p.pressed) {
         this.spotted++;
         this.reset(true);
       }

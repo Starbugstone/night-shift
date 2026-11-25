@@ -78,7 +78,14 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     while (Date.now() - t0 < 90000) {
       const s = await page.evaluate(() => { const a = window.__nightShift.active; if (!a || !a.saucer) return null; return { x: a.saucer.x, y: a.saucer.y, vx: a.saucer.vx, vy: a.saucer.vy, cx: a.camX, cy: a.camY, state: a.state, scene: window.__nightShift.scene }; });
       if (!s || s.scene !== 'flight') break;
-      if (s.state === 'spotted') { if (down) { await page.mouse.up(); down = false; } wp = 0; await sleep(300); continue; }
+      if (s.state === 'spotted') {
+        // the SPOTTED card waits for a tap
+        if (down) { await page.mouse.up(); down = false; }
+        wp = 0; await sleep(1200);
+        const box = await page.locator('canvas').boundingBox();
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        await sleep(200); continue;
+      }
       const tgt = pts[wp];
       const dx = tgt.x - s.x, dy = tgt.y - s.y, d = Math.hypot(dx, dy);
       const last = wp === pts.length - 1;

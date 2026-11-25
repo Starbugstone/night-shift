@@ -27,9 +27,13 @@ import { photoHalfPressed } from './photographer-draw';
 import { DeepFlightView } from './views/deep';
 
 export const LOCK_ANIM = 0.9;
-/** The SPOTTED freeze lasts this long before the respawn (tap skips after SPOT_SKIP). */
+/**
+ * The SPOTTED card stays up until the player taps (from SPOT_SKIP on). The sunrise clock charges
+ * the first SPOT_HOLD seconds of it, the same penalty as when the card closed by itself; reading
+ * the joke after that costs nothing.
+ */
 export const SPOT_HOLD = 1.35;
-const SPOT_SKIP = 0.4;
+export const SPOT_SKIP = 0.9;
 const TAU = Math.PI * 2;
 
 export interface DeepFlightOptions {
@@ -213,8 +217,9 @@ export class DeepFlightScene implements Scene {
     this.ambient.update(dt, this.sim.saucer.x, this.sim.saucer.y);
 
     if (this.done) return;
-    // the sunrise clock runs through everything, the SPOTTED freeze included
-    if (!this.practice && this.run.tick(dt)) {
+    // the sunrise clock runs through everything, the SPOTTED freeze included (up to SPOT_HOLD)
+    const charged = this.state !== 'spotted' || this.st < SPOT_HOLD;
+    if (!this.practice && charged && this.run.tick(dt)) {
       this.done = true;
       audio.sfx('sunrise');
       this.opts.onSunrise();
@@ -230,7 +235,7 @@ export class DeepFlightScene implements Scene {
     if (this.state === 'spotted') {
       // v4 voices: Zib's excuse on the SPOTTED card (shown from 0.35 s), once the alarm has rung
       if (this.st >= 0.5 && this.st - dt < 0.5) this.ctx.audio.speak?.(this.spotLine, 'zib', { panic: true, within: 2.2 });
-      if (this.st > SPOT_HOLD || (this.st > SPOT_SKIP && p.pressed)) this.respawn();
+      if (this.st > SPOT_SKIP && p.pressed) this.respawn();
       return;
     }
 

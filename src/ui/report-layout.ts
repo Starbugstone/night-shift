@@ -175,3 +175,18 @@ export function layoutReport(measure: Measure, inp: LayoutInput): ReportLayout {
     clip,
   };
 }
+
+/**
+ * A stat row whose value is too long for the space beside its label (three souvenirs, say) stacks:
+ * the label moves up and the value gets its own full-width line under it, inside the row's rules.
+ * Returns the value's size, or null when it fits beside the label at no less than 85% of `size`
+ * (the Label shrinks it that far). `full` is the row's whole width.
+ */
+export function stackedRowValue(measure: Measure, value: string, room: number, full: number, size: number): number | null {
+  if (measure(value, size, 800, false) * 0.85 <= room) return null;
+  // at most 14 px: label and value must both sit between the row rules (35 px apart on deep reports)
+  for (let s = Math.min(size - 3, 14); s >= 11; s--) {
+    if (measure(value, s, 800, false) <= full) return s;
+  }
+  return 11;
+}
