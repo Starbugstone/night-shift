@@ -7,7 +7,7 @@ Story editor's pass over the shipped story (L1–L9) and the planned shifts (GDD
 `fr.ts`), `src/ui/memo.ts`, `src/levels/*.ts` and the room props in `src/abduct/`. Line numbers are
 taken from that commit. No game file was changed.
 
-**Count: 7 blockers, 23 should-fix, 14 nits.**
+**Count: 7 blockers, 25 should-fix, 14 nits.** Era dates may be played in any order (user, 2026-11-25); see §5.
 
 ---
 
@@ -29,9 +29,13 @@ taken from that commit. No game file was changed.
 | #0009 | `level7` | A Whole Cruise Ship | SS Buffet Royale | The manifest. **Krix revealed.** |
 | #0010 | `level8` | Prior Contact | Patent Valley, 3,000,000 BC | Basement B-4 is broken open. Patents voided. **Zib is hired, with a salary.** |
 | #0011 | `level9` | Clocking Out at 10:04 | Crest Valley, 12 Nov 1955 | Krix can't patent time travel. Zib is now **Agent (junior)**. |
-| #0012 | `level10` | Ni! | Grimsby Keep, 1122 | Krix tries to patent the Grail. The first tease of the Tripod Division's sick leave. |
+| #0012 | `level10` | Ni! | Grimsby Keep, 1122 | Krix tries to patent the Grail. A tease of the Tripod Division's sick leave. |
 | #0013 | `level11` | The War of the Worlds | Grimsby drive-in, 1953 | Rookie Vrell writes the first Form 7-B. A return ping comes in from 2199. |
 | #0014 | `level12` | Your Town Is in the Way | Grimsby, 2199 | Finale. The census voids the bypass and Krix is billed. Bubbles leaves. **Zib gets a parking ring.** |
+
+The three Dispatch dates are a **choice, not a sequence** (user, 2026-11-25: "we are also time
+travelers so we can choose any era"). The numbers #0012–#0014 are catalogue numbers, not a required
+order. 1122 → 1953 → 2199 is the *recommended* path. §5 checks every order and proposes the gating.
 
 ### In-universe chronology
 
@@ -315,9 +319,10 @@ before anyone finds it."
 appliance counts as alien technology." Leave the L1 man anonymous.
 
 **S13 · L9's last line closes the door that 1122 needs open.**
-`en.ts:1005`: "…Put the dial back, Zib." GDD-12:7 makes the 1955 delivery open 1122.
+`en.ts:1005`: "…Put the dial back, Zib." GDD-12:7 makes the 1955 delivery open 1122. With eras chosen
+freely (§5), the line should open the dial, not name one date.
 *Fix:* "Three 1955 witnesses logged, and Krix can't patent time travel now. Put the dial back, Zib. Why
-is it blinking 1122?" (FR to match.)
+is it blinking two more dates?" (FR to match.)
 
 **S14 · Era archives borrow other films, and repeat Grimsby gags.**
 This breaks "one film per era level" and doubles up existing jokes.
@@ -387,6 +392,26 @@ GDD-6 calls L8 the "Season climax" with a "Season Finale" interlude. GDD-14 call
 **S23 · Bubbles is 14 but remembers 1997.**
 `en.ts:1327`: "Bubbles ate them in 1997." Her Archive age is 14 (`:2225`), and FR `:1283` has the same
 year. *Fix:* "in 2019".
+
+**S24 · Two era lines assume the next date.**
+- GDD-12:116, Vrell's 1122 first clear: "Next stop, 1953. A whole division seems to have called in sick."
+  This is wrong if 1953 is already delivered. → "The witnesses are in. No one owns the cup. Somewhere on
+  that dial, a whole division is still off sick." It reads as a tease before 1953 and as a callback after.
+- GDD-13:7, "The 1122 report opens this date". → "The first 1955 delivery opens this date" (see S25).
+
+**S25 · The unlock chain is a fixed line, but 2199 depends on both earlier eras.**
+GDD-12:7, GDD-13:7 and GDD-14:7 chain 1955 → 1122 → 1953 → 2199. GDD-14 also relies on both earlier
+dates:
+- "Vrell recognises Krix's docket number from the 1122 case" (:9).
+- "That was the return ping at the end of 1953" (:9).
+- "the final ruling closes OBELISK™'s outstanding claims from the Dispatch season" (:9).
+- The epilogue retires Bubbles and hands over the ring (:168–174).
+
+If 2199 could be played first, 1122 would show Krix active after his "final" ruling, and the 1953 ping
+would point at a finale the player has already seen.
+*Fix:* open **1122 and 1953 together** after the first 1955 delivery, in either order. Open **2199** once
+**both** are delivered. Keep 1122 → 1953 as the highlighted "Next dispatch" (§5).
+**User decision D7.**
 
 ### Nits
 
@@ -468,7 +493,44 @@ Tracked jokes:
 
 ---
 
-## 5. What the 2199 finale must resolve
+## 5. Era levels in any order
+
+Zib is a time traveller and picks the date, so a non-chronological order is not a continuity problem.
+Every Dispatch trip leaves from the present-day basement and comes back to it, so "earlier" only means
+earlier in **Zib's** week, never in the calendar.
+
+### What each era assumes the player already knows
+
+| Era | Needs before it | Facts that depend on order | Works in any order? |
+| --- | --- | --- | --- |
+| **1122 · Ni!** | L8 (Krix, OBELISK™, patents), L9 ("Agent" title, Krix can't patent time travel) | Krix is free after L8: *needs S11 ("Krix made bail")*. The first-clear line names 1953 as next: *needs S24*. The Tripod tease reads fine before or after 1953 once S24 is applied. | **Yes**, after S11 and S24 |
+| **1953 · War of the Worlds** | L6 (thermometer "since 1953"), L9 | Rookie Vrell is Vrell **remembering** from the present ("I was a rookie pilot that night"), so it depends on nothing Zib has done. There's no Krix, so there's no OBELISK™ fact to order. The 2199 ping only needs 2199 still ahead, which the gating in S25 guarantees. | **Yes**, before or after 1122 |
+| **2199 · Your Town Is in the Way** | 1122 (the Krix docket), 1953 (the return ping), Bubbles still in her tank | It closes OBELISK™'s Dispatch claims, retires Bubbles and hands over the ring. Played before either earlier era, 1122 would show Krix active after his "final" ruling. | **No.** Keep it last (S25) |
+
+### Replays after the finale
+
+Replaying 1122 or 1953 after 2199 is fine: the memos describe the past, and Krix "made bail" still
+reads. The 2199 epilogue plays once (`dispatch2199Finale`), and replays use the ordinary lines, as
+GDD-14:168 already says. L5 replays still beam up Bubbles after she leaves. Treat that as an archive
+replay; it's not worth a special case.
+
+### Recommended order: keep 1122 → 1953 → 2199 as the suggested path
+
+- **1122 follows L9 directly on Krix.** L9 ends "Krix can't patent time travel", and 1122 opens with
+  him trying the Grail instead. His momentum doesn't stall.
+- **1953 right before the finale sets up Vrell's mentor beat.** Vrell's confession is the
+  season's most personal moment, and it lands one shift before he clips the permit on Zib's lanyard.
+  The 2199 ping at the end of 1953 then works as the cliffhanger into the finale.
+- **The difficulty targets already ramp this way.** Casual Ghost is 40–45% in 1122, 35–40% in 1953 and
+  33–38% in 2199.
+- **The alternative, 1953 → 1122 → 2199, is weaker.** It spends the Vrell beat early, puts a pure
+  comedy level between the ping and the finale (the cliffhanger goes stale), and plays the 1122 Tripod
+  tease after its payoff.
+
+So: open 1122 and 1953 together after the first 1955 delivery and mark 1122 as **Next dispatch**. Open
+2199 once both are delivered (S25, D7).
+
+## 6. What the 2199 finale must resolve
 
 Checked against GDD-14 as committed (`ae14562`).
 
@@ -496,7 +558,7 @@ Checked against GDD-14 as committed (`ae14562`).
 - [ ] *Optional:* GDD-6's thread "specimens remember fragments as the same dream" was never paid off. A
   single Gazette variant would do it: "HALF OF GRIMSBY HAD THE SAME DREAM AGAIN".
 
-## 6. Decisions for the user
+## 7. Decisions for the user
 
 - **D1** (S1): strip *Hitchhiker's* from L4, L5 and L7 so the finale owns it (recommended), or cut the
   finale's repeats instead.
@@ -507,3 +569,6 @@ Checked against GDD-14 as committed (`ae14562`).
 - **D4** (S14): enforce "one film per era" in the specimen addenda as well, or exempt the `at10` addenda.
 - **D5** (S8): the Mum payoff goes in Vrell's 2199 first-clear line (recommended) or a fourth panel.
 - **D6** (S9): does Vrell's pension vest? Does he retire, or stay on as the mentor?
+- **D7** (S25, §5): 1122 and 1953 in either order with 2199 gated on both (recommended), or 2199 free as
+  well? A free 2199 would mean making its 1122 and 1953 references conditional, and the finale's
+  closing of Krix and Bubbles would no longer be final.

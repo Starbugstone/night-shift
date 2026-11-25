@@ -24,3 +24,6 @@ running-joke cap, era levels built on one film, Grimsby levels generic). These s
   them rather than meeting them.
 - **Work order numbers:** pad the number in code, not `#000{num}` in strings; key the "Agent Zib" address on the level ID, not the index.
 - **Retired gags stay retired** (new "Tuesday" jokes).
+- **D7 · Unlocks for the era levels:** once L9 (1955) is delivered, 1122 and 1953 can be played in either order. 2199, the season
+  finale, opens once both are delivered, because it closes Krix's and Bubbles' stories. Era first-clear lines never name the "next"
+  date (S24); L9's last line opens the dial ("Why is it blinking two more dates?").
