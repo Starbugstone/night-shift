@@ -12,7 +12,7 @@ import { easeOutBack, easeOutCubic } from '../core/fx';
 import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Shape, keyOf, roundRect } from '../core/gfx/shapes';
-import { Label, Paragraph, wrapLines } from '../core/gfx/text';
+import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
 import { clamp } from './draw';
 import { C } from './theme';
@@ -63,6 +63,7 @@ import {
   shortLocation,
   specimenCaptureText,
   specimenCatalog,
+  specimenDetailState,
   specimenInfo,
   townCatalog,
   townDescription,
@@ -148,6 +149,8 @@ export class TrophiesScene implements Scene {
   specimenPageIndex = 0;
   selected: SelectedExhibit | null = null;
   modalT = 0;
+  modalY = MODAL_Y;
+  modalH = MODAL_H;
 
   readonly back = new Button(16, 16, 64, 58, '‹', 'ghost', 40);
   readonly tabSouvenirs = new Button(24, 88, 158, 48, '', 'primary', 14.5);
@@ -290,6 +293,12 @@ export class TrophiesScene implements Scene {
     else this.shell.toTitle();
   }
 
+  setModalBox(y: number, h: number): void {
+    this.modalY = y;
+    this.modalH = h;
+    this.closeBtn.y = y + h - 74;
+  }
+
   private closeModal(): void {
     this.selected = null;
     this.modalT = 0;
@@ -309,7 +318,7 @@ export class TrophiesScene implements Scene {
         this.closeModal();
         return;
       }
-      const inCard = p.x >= MODAL_X && p.x <= MODAL_X + MODAL_W && p.y >= MODAL_Y && p.y <= MODAL_Y + MODAL_H;
+      const inCard = p.x >= MODAL_X && p.x <= MODAL_X + MODAL_W && p.y >= this.modalY && p.y <= this.modalY + this.modalH;
       if (p.pressed && !inCard) this.scrimArmed = true;
       if (p.released) {
         if (this.scrimArmed && !inCard) {
@@ -576,7 +585,7 @@ class TrophiesView implements SceneView {
       this.wingLabel = null;
     }
 
-    this.modal = new DetailModalView(assets, s.closeBtn);
+    this.modal = new DetailModalView(assets, s.closeBtn, (y, h) => s.setModalBox(y, h));
     this.root.addChild(this.modal.root);
   }
 
@@ -1143,11 +1152,11 @@ class SpecimenCardView {
     if (found && entry) {
       if (entry.count > 1) {
         const badgeText = `×${entry.count}`;
-        const bw = Math.max(28, badgeText.length * 8.5 + 11);
-        const pill = roundRect(new Graphics(), SPECIMEN_SLOT_W - bw - 5, 5, bw, 18, 9)
+        const bw = Math.max(30, badgeText.length * 9 + 12);
+        const pill = roundRect(new Graphics(), SPECIMEN_SLOT_W - bw - 5, 5, bw, 19, 9.5)
           .fill(C.amberHi)
-          .stroke({ color: C.ink, width: 1.6 });
-        const pillLbl = new Label(SLOT_MULT).set(badgeText, SPECIMEN_SLOT_W - bw / 2 - 5, 14);
+          .stroke({ color: C.ink, width: 1.8 });
+        const pillLbl = new Label(SLOT_MULT).set(badgeText, SPECIMEN_SLOT_W - bw / 2 - 5, 15);
         this.root.addChild(pill, pillLbl);
       }
 
@@ -1190,14 +1199,18 @@ const TAG_BADGE_MISS = { size: 13, color: C.amberHi, weight: 900 } as const;
 const TAG_LOC = { size: 13, color: C.muted, align: 'right', weight: 700 } as const;
 const MODAL_TITLE = { size: 26, color: C.text, weight: 900, outline: C.ink } as const;
 const MODAL_DESC = { size: 17, color: '#e6e0ff', italic: true, weight: 500, lineHeight: 23 } as const;
-const MODAL_SPEC_DESC = { size: 16, color: '#e6e0ff', italic: true, weight: 500, lineHeight: 21 } as const;
+const MODAL_SPEC_DESC = { size: 15.5, color: '#e6e0ff', italic: true, weight: 500, lineHeight: 20 } as const;
+const ADDENDUM_HDR_3 = { size: 11.5, color: C.amberHi, align: 'left', weight: 900 } as const;
+const ADDENDUM_HDR_10 = { size: 11.5, color: '#ff8ea0', align: 'left', weight: 900 } as const;
+const ADDENDUM_BODY = { size: 14.5, color: '#e6e0ff', align: 'left', weight: 500, lineHeight: 19 } as const;
+const ABDUCTED_PILL_TXT = { size: 12.5, color: C.amberHi, weight: 900 } as const;
 const PROV_KEY = { size: 14, color: C.muted, align: 'left', weight: 700 } as const;
 const PROV_VAL = { size: 15, color: C.mint, align: 'right', weight: 800 } as const;
 const PROV_VAL_WARN = { size: 14.5, color: C.amberHi, align: 'right', weight: 700 } as const;
 const STAT_KEY = { size: 11, color: C.muted, weight: 800 } as const;
 const STAT_VAL = { size: 15, color: C.text, weight: 800 } as const;
 const STAT_VAL_MISS = { size: 15, color: 'rgba(169,162,214,0.55)', weight: 700 } as const;
-const PROBE_STAMP_TXT = { size: 16, color: '#ff7086', weight: 900 } as const;
+const PROBE_STAMP_TXT = { size: 15.5, color: '#ff7086', weight: 900 } as const;
 const PROBE_TAG_RED = { size: 12.5, color: '#fff6ec', weight: 900 } as const;
 const PROBE_TAG_MINT = { size: 12, color: C.mint, weight: 800 } as const;
 const PROBE_NOTE_RED = { size: 13.5, color: '#ffb3bf', align: 'left', italic: true, weight: 600 } as const;
@@ -1222,6 +1235,7 @@ class DetailModalView {
   private readonly specimenFigures = new Map<string, SpecimenFigure>();
   private activeSpecimenFig: SpecimenFigure | null = null;
   private readonly probeStamp = new Container();
+  private readonly probeStampLabel = new Label(PROBE_STAMP_TXT);
   private readonly titleLabel = new Label(MODAL_TITLE);
   private readonly statsGroup = new Container();
   private readonly ageKey = new Label(STAT_KEY);
@@ -1232,10 +1246,18 @@ class DetailModalView {
   private readonly weightVal = new Label(STAT_VAL);
   private readonly descPara = new Paragraph(MODAL_DESC);
   private readonly specDescPara = new Paragraph(MODAL_SPEC_DESC);
+  private readonly addendum3Bg = new Shape();
+  private readonly addendum3Title = new Label(ADDENDUM_HDR_3);
+  private readonly addendum3Para = new Paragraph(ADDENDUM_BODY);
+  private readonly addendum10Bg = new Shape();
+  private readonly addendum10Title = new Label(ADDENDUM_HDR_10);
+  private readonly addendum10Para = new Paragraph(ADDENDUM_BODY);
   private readonly divider = new Shape();
   private readonly provBox = new Shape();
   private readonly probeBadgeBg = new Shape();
   private readonly probeBadgeLabel = new Label(PROBE_TAG_RED);
+  private readonly abductedBadgeBg = new Shape();
+  private readonly abductedBadgeLabel = new Label(ABDUCTED_PILL_TXT);
   private readonly probeNoteLabel = new Label(PROBE_NOTE_RED);
   private readonly row1Key = new Label(PROV_KEY);
   private readonly row1Val = new Label(PROV_VAL);
@@ -1247,8 +1269,13 @@ class DetailModalView {
 
   private shownKey = '';
   private artBaseY = 128;
+  private curModalH = MODAL_H;
 
-  constructor(private readonly assets: Assets, closeBtn: Button) {
+  constructor(
+    private readonly assets: Assets,
+    closeBtn: Button,
+    private readonly onResize: (y: number, h: number) => void,
+  ) {
     this.root.visible = false;
 
     const scrim = new Graphics().rect(0, 0, VIEW_W, VIEW_H).fill('rgba(8,5,24,0.8)');
@@ -1273,11 +1300,11 @@ class DetailModalView {
     }
 
     // Pre-build one animated SpecimenFigure per catalogued specimen so sync() allocates zero display objects
-    this.specimenStage.position.set(MODAL_W / 2, 120);
+    this.specimenStage.position.set(MODAL_W / 2, 118);
     this.specimenStage.visible = false;
     for (const sec of specimenCatalog()) {
       for (const slot of sec.slots) {
-        const scale = specimenFitScale(slot.id, 174, 110, 1.05);
+        const scale = specimenFitScale(slot.id, 174, 108, 1.05);
         const fig = new SpecimenFigure(assets, slot.id, scale);
         fig.root.visible = false;
         this.specimenFigures.set(slot.id, fig);
@@ -1287,27 +1314,36 @@ class DetailModalView {
 
     // Tilted Bureau rubber stamp beside the vitrine for probed specimens
     const stampBox = new Graphics();
-    roundRect(stampBox, -48, -17, 96, 34, 6)
+    roundRect(stampBox, -52, -17, 104, 34, 6)
       .fill('rgba(200,40,65,0.16)')
       .stroke({ color: '#ff5d73', width: 2.6 });
-    roundRect(stampBox, -43, -12, 86, 24, 4).stroke({ color: 'rgba(255,112,134,0.55)', width: 1.2 });
-    this.probeStamp.addChild(stampBox, new Label(PROBE_STAMP_TXT).set(tr().trophies.specimens.probedStamp, 0, 1, 82));
-    this.probeStamp.position.set(MODAL_W - 68, 108);
+    roundRect(stampBox, -47, -12, 94, 24, 4).stroke({ color: 'rgba(255,112,134,0.55)', width: 1.2 });
+    this.probeStampLabel.set(tr().trophies.specimens.probedStamp, 0, 1, 90);
+    this.probeStamp.addChild(stampBox, this.probeStampLabel);
+    this.probeStamp.position.set(MODAL_W - 64, 106);
     this.probeStamp.rotation = -0.16;
     this.probeStamp.visible = false;
 
-    // 3-cell vital stats strip for Specimen Archive detail view (x = 24, y = 232, w = 428, h = 50)
+    // 3-cell vital stats strip for Specimen Archive detail view (x = 24, y = 224, w = 428, h = 48)
     const statsBg = new Graphics();
-    roundRect(statsBg, 24, 232, MODAL_W - 48, 50, 14)
+    roundRect(statsBg, 24, 224, MODAL_W - 48, 48, 14)
       .fill('#151034')
       .stroke({ color: 'rgba(169,162,214,0.28)', width: 1.8 });
-    statsBg.rect(144, 240, 1.5, 34).rect(304, 240, 1.5, 34).fill('rgba(169,162,214,0.22)');
+    statsBg.rect(144, 232, 1.5, 32).rect(304, 232, 1.5, 32).fill('rgba(169,162,214,0.22)');
     this.statsGroup.addChild(statsBg, this.ageKey, this.ageVal, this.heightKey, this.heightVal, this.weightKey, this.weightVal);
     this.statsGroup.visible = false;
 
     this.specDescPara.visible = false;
+    this.addendum3Bg.visible = false;
+    this.addendum3Title.visible = false;
+    this.addendum3Para.visible = false;
+    this.addendum10Bg.visible = false;
+    this.addendum10Title.visible = false;
+    this.addendum10Para.visible = false;
     this.probeBadgeBg.visible = false;
     this.probeBadgeLabel.visible = false;
+    this.abductedBadgeBg.visible = false;
+    this.abductedBadgeLabel.visible = false;
     this.probeNoteLabel.visible = false;
 
     this.closeView = new ButtonView(closeBtn);
@@ -1329,10 +1365,18 @@ class DetailModalView {
       this.statsGroup,
       this.descPara,
       this.specDescPara,
+      this.addendum3Bg,
+      this.addendum3Title,
+      this.addendum3Para,
+      this.addendum10Bg,
+      this.addendum10Title,
+      this.addendum10Para,
       this.divider,
       this.provBox,
       this.probeBadgeBg,
       this.probeBadgeLabel,
+      this.abductedBadgeBg,
+      this.abductedBadgeLabel,
       this.probeNoteLabel,
       this.row1Key,
       this.row1Val,
@@ -1346,10 +1390,27 @@ class DetailModalView {
     this.root.addChild(scrim, this.card);
   }
 
-  private drawModalChrome(found: boolean, mode: ModalMode, innerRule = false): void {
+  private applyModalHeight(h: number): void {
+    const clampedH = Math.min(VIEW_H - 32, Math.max(MODAL_H, Math.ceil(h)));
+    const my = Math.round((VIEW_H - clampedH) / 2);
+    this.curModalH = clampedH;
+    this.card.pivot.set(MODAL_W / 2, clampedH / 2);
+    this.card.position.set(MODAL_X + MODAL_W / 2, my + clampedH / 2);
+    this.onResize(my, clampedH);
+    this.closeView.position.set(-MODAL_X, -my);
+  }
+
+  private drawModalChrome(
+    found: boolean,
+    mode: ModalMode,
+    divY: number,
+    provY: number,
+    provH: number,
+    innerRuleY = 0,
+  ): void {
     const modeNum = mode === 'souvenir' ? 0 : mode === 'town' ? 1 : 2;
-    this.cardFrame.draw(keyOf(Number(found)), (g) => {
-      highlightedPanel(g, 0, 0, MODAL_W, MODAL_H, {
+    this.cardFrame.draw(keyOf(Number(found), this.curModalH), (g) => {
+      highlightedPanel(g, 0, 0, MODAL_W, this.curModalH, {
         fill: C.panel,
         r: 24,
         stroke: found ? C.mint : C.muted,
@@ -1365,10 +1426,10 @@ class DetailModalView {
           .stroke({ color: 'rgba(124,255,203,0.38)', width: 2 });
         roundRect(g, 126, 204, 224, 6, 3).fill('rgba(169,162,214,0.22)');
       } else if (mode === 'specimen') {
-        roundRect(g, 128, 54, 220, 132, 18)
+        roundRect(g, 128, 54, 220, 128, 18)
           .fill('#131130')
           .stroke({ color: 'rgba(124,255,203,0.38)', width: 2 });
-        roundRect(g, 154, 170, 168, 5, 2.5).fill('rgba(169,162,214,0.22)');
+        roundRect(g, 154, 166, 168, 5, 2.5).fill('rgba(169,162,214,0.22)');
       } else {
         roundRect(g, 118, 58, 240, 140, 18)
           .fill('#131130')
@@ -1377,19 +1438,16 @@ class DetailModalView {
       }
     });
 
-    this.divider.draw(keyOf(modeNum), (g) => {
-      const dy = mode === 'town' ? 412 : mode === 'specimen' ? 390 : 374;
-      g.rect(28, dy, MODAL_W - 56, 2).fill('rgba(169,162,214,0.2)');
+    this.divider.draw(keyOf(divY), (g) => {
+      g.rect(28, divY, MODAL_W - 56, 2).fill('rgba(169,162,214,0.2)');
     });
 
-    this.provBox.draw(keyOf(modeNum, Number(innerRule)), (g) => {
-      const py = mode === 'town' ? 426 : mode === 'specimen' ? 402 : 390;
-      const ph = mode === 'town' ? 102 : mode === 'specimen' ? 136 : 138;
-      roundRect(g, 24, py, MODAL_W - 48, ph, 16)
+    this.provBox.draw(keyOf(provY, provH, innerRuleY), (g) => {
+      roundRect(g, 24, provY, MODAL_W - 48, provH, 16)
         .fill(C.night2)
         .stroke({ color: 'rgba(169,162,214,0.24)', width: 2 });
-      if (innerRule) {
-        g.rect(38, 470, MODAL_W - 76, 1.5).fill('rgba(169,162,214,0.18)');
+      if (innerRuleY > 0) {
+        g.rect(38, innerRuleY, MODAL_W - 76, 1.5).fill('rgba(169,162,214,0.18)');
       }
     });
   }
@@ -1402,8 +1460,16 @@ class DetailModalView {
       this.specimenStage.visible = false;
       this.activeSpecimenFig = null;
       this.probeStamp.visible = false;
+      this.addendum3Bg.visible = false;
+      this.addendum3Title.visible = false;
+      this.addendum3Para.visible = false;
+      this.addendum10Bg.visible = false;
+      this.addendum10Title.visible = false;
+      this.addendum10Para.visible = false;
       this.probeBadgeBg.visible = false;
       this.probeBadgeLabel.visible = false;
+      this.abductedBadgeBg.visible = false;
+      this.abductedBadgeLabel.visible = false;
       this.probeNoteLabel.visible = false;
     }
   }
@@ -1413,7 +1479,8 @@ class DetailModalView {
     const strings = tr().trophies;
     const lvText = tr().levels[slot.levelId];
 
-    this.drawModalChrome(found, 'souvenir');
+    this.applyModalHeight(MODAL_H);
+    this.drawModalChrome(found, 'souvenir', 374, 390, 138);
     this.setSpecimenOnlyVisible(false);
     this.townStage.visible = false;
     this.activeTownFig = null;
@@ -1483,7 +1550,8 @@ class DetailModalView {
     const townStr = strings.town;
     const lvText = tr().levels[slot.levelId];
 
-    this.drawModalChrome(found, 'town');
+    this.applyModalHeight(MODAL_H);
+    this.drawModalChrome(found, 'town', 412, 426, 102);
     this.setSpecimenOnlyVisible(false);
 
     // Top-left badge
@@ -1547,8 +1615,8 @@ class DetailModalView {
     const specStr = strings.specimens;
     const lvText = tr().levels[slot.levelId];
     const info = specimenInfo(slot.id);
+    const detail = specimenDetailState(item);
 
-    this.drawModalChrome(found, 'specimen', found && entry !== null);
     this.setSpecimenOnlyVisible(true);
     this.townStage.visible = false;
     this.activeTownFig = null;
@@ -1566,7 +1634,7 @@ class DetailModalView {
     this.locLabel.set(`#0${slot.levelNum} · ${lvText.location}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
 
     // Showcase portrait: animated SpecimenFigure when collected, still silhouette when uncollected
-    this.stageGlow.place(MODAL_W / 2, 120, 88, 56, found ? 0.28 : 0.06);
+    this.stageGlow.place(MODAL_W / 2, 118, 88, 56, found ? 0.28 : 0.06);
     if (found) {
       this.artSprite.visible = false;
       this.specimenStage.visible = true;
@@ -1575,14 +1643,15 @@ class DetailModalView {
         fig.root.visible = match;
         if (match) this.activeSpecimenFig = fig;
       }
-      this.probeStamp.visible = entry?.probed === true;
+      this.probeStamp.visible = detail.probed;
+      if (detail.probed) this.probeStampLabel.set(detail.probeStampLabel, 0, 1, 90);
     } else {
       this.specimenStage.visible = false;
       this.activeSpecimenFig = null;
       this.probeStamp.visible = false;
       this.artSprite.visible = true;
-      this.artBaseY = 120;
-      const fit = specimenFitSize(slot.id, 174, 108, 1.05);
+      this.artBaseY = 118;
+      const fit = specimenFitSize(slot.id, 174, 106, 1.05);
       this.artSprite.texture = specimenSilhouetteTexture(this.assets, slot.id, fit.w, fit.h);
       this.artSprite.width = fit.w;
       this.artSprite.height = fit.h;
@@ -1591,59 +1660,136 @@ class DetailModalView {
     }
 
     // Name & 3-cell vital stats strip
-    this.titleLabel.set(found ? info.name : UNKNOWN_TAG, MODAL_W / 2, 209, MODAL_W - 48);
+    this.titleLabel.set(found ? info.name : UNKNOWN_TAG, MODAL_W / 2, 203, MODAL_W - 48);
 
     const dash = tr().common.dash;
     const valLook = found ? STAT_VAL : STAT_VAL_MISS;
-    this.ageKey.set(specStr.ageLabel, 84, 245, 108);
-    this.ageVal.restyle(valLook).set(found ? info.age : dash, 84, 266, 108);
-    this.heightKey.set(specStr.heightLabel, 224, 245, 148);
-    this.heightVal.restyle(valLook).set(found ? info.height : dash, 224, 266, 148);
-    this.weightKey.set(specStr.weightLabel, 378, 245, 136);
-    this.weightVal.restyle(valLook).set(found ? info.weight : dash, 378, 266, 136);
+    this.ageKey.set(specStr.ageLabel, 84, 236, 108);
+    this.ageVal.restyle(valLook).set(found ? info.age : dash, 84, 257, 108);
+    this.heightKey.set(specStr.heightLabel, 224, 236, 148);
+    this.heightVal.restyle(valLook).set(found ? info.height : dash, 224, 257, 148);
+    this.weightKey.set(specStr.weightLabel, 378, 236, 136);
+    this.weightVal.restyle(valLook).set(found ? info.weight : dash, 378, 257, 136);
 
     // Funny Bureau bio (or uncollected shift hint)
     const desc = found
       ? info.desc
       : fmt(specStr.notCollectedDetail, { num: slot.levelNum, location: lvText.location });
-    this.specDescPara.setBlock(desc, 30, 294, MODAL_W - 60);
+    const descH = this.specDescPara.setBlock(desc, 30, 284, MODAL_W - 60);
+    let cursorY = 284 + descH;
 
-    // Probe status + intake provenance rows
+    // Dated Bureau addenda at repeat-visit thresholds (3rd and 10th abduction)
+    const add3 = detail.addenda[0] ?? null;
+    const add10 = detail.addenda[1] ?? null;
+    const addBoxX = 24;
+    const addBoxW = MODAL_W - 48;
+    if (add3) {
+      cursorY += 10;
+      const boxY = cursorY;
+      this.addendum3Bg.visible = true;
+      this.addendum3Title.visible = true;
+      this.addendum3Para.visible = true;
+      this.addendum3Title.set(add3.heading, addBoxX + 16, boxY + 14, addBoxW - 28);
+      const bodyH = this.addendum3Para.setBlock(add3.text, addBoxX + 16, boxY + 24, addBoxW - 28);
+      const boxH = 24 + bodyH + 9;
+      this.addendum3Bg.draw(keyOf(boxY, boxH, 3), (g) => {
+        roundRect(g, addBoxX, boxY, addBoxW, boxH, 12)
+          .fill('rgba(17,13,44,0.72)')
+          .stroke({ color: 'rgba(255,197,94,0.34)', width: 1.5 });
+        roundRect(g, addBoxX + 2, boxY + 6, 4, boxH - 12, 2).fill(C.amberHi);
+      });
+      cursorY += boxH;
+    } else {
+      this.addendum3Bg.visible = false;
+      this.addendum3Title.visible = false;
+      this.addendum3Para.visible = false;
+    }
+
+    if (add10) {
+      cursorY += 8;
+      const boxY = cursorY;
+      this.addendum10Bg.visible = true;
+      this.addendum10Title.visible = true;
+      this.addendum10Para.visible = true;
+      this.addendum10Title.set(add10.heading, addBoxX + 16, boxY + 14, addBoxW - 28);
+      const bodyH = this.addendum10Para.setBlock(add10.text, addBoxX + 16, boxY + 24, addBoxW - 28);
+      const boxH = 24 + bodyH + 9;
+      this.addendum10Bg.draw(keyOf(boxY, boxH, 10), (g) => {
+        roundRect(g, addBoxX, boxY, addBoxW, boxH, 12)
+          .fill('rgba(28,12,42,0.76)')
+          .stroke({ color: 'rgba(255,112,134,0.4)', width: 1.5 });
+        roundRect(g, addBoxX + 2, boxY + 6, 4, boxH - 12, 2).fill('#ff7086');
+      });
+      cursorY += boxH;
+    } else {
+      this.addendum10Bg.visible = false;
+      this.addendum10Title.visible = false;
+      this.addendum10Para.visible = false;
+    }
+
+    // Dynamic modal height so both addenda + dossier box fit cleanly with zero clip or overlap
+    const divY = detail.addenda.length > 0 ? cursorY + 11 : Math.max(384, cursorY + 12);
+    const provY = divY + 10;
+    const provH = 136;
+    const modalH = Math.max(MODAL_H, provY + provH + 90);
+    this.applyModalHeight(modalH);
+    this.drawModalChrome(found, 'specimen', divY, provY, provH, found && entry !== null ? provY + 68 : 0);
+
+    // Probe status + abduction count + intake provenance rows
     const leftX = 40;
     const rightX = MODAL_W - 40;
     this.row3Key.visible = false;
     this.row3Val.visible = false;
     if (found && entry) {
-      const probed = entry.probed;
-      const tagText = probed ? specStr.probedStamp : specStr.unprobedTag;
-      const pw = probed ? 112 : 196;
+      const probed = detail.probed;
+      const tagText = detail.probeTagLabel;
+      const pw = probed
+        ? Math.max(106, Math.min(184, Math.ceil(measure(tagText, PROBE_TAG_RED.size, PROBE_TAG_RED.weight) + 28)))
+        : Math.max(168, Math.min(228, Math.ceil(measure(tagText, PROBE_TAG_MINT.size, PROBE_TAG_MINT.weight) + 24)));
+      const pillY = provY + 10;
+
       this.probeBadgeBg.visible = true;
       this.probeBadgeLabel.visible = true;
+      this.abductedBadgeBg.visible = true;
+      this.abductedBadgeLabel.visible = true;
       this.probeNoteLabel.visible = true;
-      this.probeBadgeBg.draw(keyOf(Number(probed), pw), (g) => {
+      this.probeBadgeBg.draw(keyOf(Number(probed), pw, pillY), (g) => {
         if (probed) {
-          roundRect(g, 38, 412, pw, 24, 12).fill('#c83249').stroke({ color: C.ink, width: 1.8 });
+          roundRect(g, 38, pillY, pw, 24, 12).fill('#c83249').stroke({ color: C.ink, width: 1.8 });
         } else {
-          roundRect(g, 38, 412, pw, 24, 12).fill('rgba(124,255,203,0.16)').stroke({ color: 'rgba(124,255,203,0.7)', width: 1.6 });
+          roundRect(g, 38, pillY, pw, 24, 12).fill('rgba(124,255,203,0.16)').stroke({ color: 'rgba(124,255,203,0.7)', width: 1.6 });
         }
       });
-      this.probeBadgeLabel.restyle(probed ? PROBE_TAG_RED : PROBE_TAG_MINT).set(tagText, 38 + pw / 2, 424.5, pw - 14);
+      this.probeBadgeLabel.restyle(probed ? PROBE_TAG_RED : PROBE_TAG_MINT).set(tagText, 38 + pw / 2, pillY + 12.5, pw - 14);
+
+      const abText = detail.abductedLabel;
+      const abW = Math.max(104, Math.min(156, Math.ceil(measure(abText, ABDUCTED_PILL_TXT.size, ABDUCTED_PILL_TXT.weight) + 24)));
+      const abX = MODAL_W - 38 - abW;
+      this.abductedBadgeBg.draw(keyOf(abX, abW, pillY), (g) => {
+        roundRect(g, abX, pillY, abW, 24, 12)
+          .fill('rgba(255,197,94,0.16)')
+          .stroke({ color: 'rgba(255,197,94,0.75)', width: 1.6 });
+      });
+      this.abductedBadgeLabel.set(abText, abX + abW / 2, pillY + 12.5, abW - 14);
+
       this.probeNoteLabel
         .restyle(probed ? PROBE_NOTE_RED : PROBE_NOTE_MINT)
-        .set(probed ? specStr.probedNote : specStr.unprobedNote, 38, 452, MODAL_W - 76);
+        .set(probed ? specStr.probedNote : specStr.unprobedNote, 38, provY + 50, MODAL_W - 76);
 
-      this.row1Key.set(specStr.capturedVia, leftX, 491, 136);
-      this.row1Val.restyle(PROV_VAL).set(specimenCaptureText(entry), rightX, 491, 250);
-      this.row2Key.set(specStr.firstLogged, leftX, 519, 136);
-      this.row2Val.restyle(PROV_VAL_WARN).set(fmt(specStr.reportCount, { n: entry.first + 1, count: entry.count }), rightX, 519, 250);
+      this.row1Key.set(specStr.capturedVia, leftX, provY + 89, 136);
+      this.row1Val.restyle(PROV_VAL).set(specimenCaptureText(entry), rightX, provY + 89, 250);
+      this.row2Key.set(specStr.firstLogged, leftX, provY + 117, 136);
+      this.row2Val.restyle(PROV_VAL).set(fmt(strings.reportNo, { n: entry.first + 1 }), rightX, provY + 117, 250);
     } else {
       this.probeBadgeBg.visible = false;
       this.probeBadgeLabel.visible = false;
+      this.abductedBadgeBg.visible = false;
+      this.abductedBadgeLabel.visible = false;
       this.probeNoteLabel.visible = false;
-      this.row1Key.set(strings.statusLabel, leftX, 446, 120);
-      this.row1Val.restyle(PROV_VAL_WARN).set(specStr.notCollected, rightX, 446, 286);
-      this.row2Key.set(specStr.workOrderLabel, leftX, 494, 120);
-      this.row2Val.restyle(PROV_VAL).set(`#0${slot.levelNum} · ${lvText.title}`, rightX, 494, 286);
+      this.row1Key.set(strings.statusLabel, leftX, provY + 44, 120);
+      this.row1Val.restyle(PROV_VAL_WARN).set(specStr.notCollected, rightX, provY + 44, 286);
+      this.row2Key.set(specStr.workOrderLabel, leftX, provY + 92, 120);
+      this.row2Val.restyle(PROV_VAL).set(`#0${slot.levelNum} · ${lvText.title}`, rightX, provY + 92, 286);
     }
   }
 
@@ -1660,7 +1806,7 @@ class DetailModalView {
     const key = selected.kind === 'souvenir'
       ? `s|${selected.item.slot.itemId}|${selected.item.found ? selected.item.entry?.count ?? 0 : -1}`
       : selected.kind === 'specimen'
-        ? `p|${selected.item.slot.id}|${selected.item.found ? `${selected.item.entry?.count ?? 0}|${Number(selected.item.entry?.probed)}` : -1}`
+        ? `p|${selected.item.slot.id}|${selected.item.found ? `${selected.item.entry?.count ?? 0}|${selected.item.entry?.probes ?? 0}` : -1}`
         : `t|${selected.item.slot.id}|${selected.item.found ? 1 : 0}`;
     if (key !== this.shownKey) {
       this.shownKey = key;

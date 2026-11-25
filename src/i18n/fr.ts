@@ -2256,6 +2256,105 @@ export const fr: Strings = {
           desc: "Chef d'orchestre blessé à la main, il a passé son propre bal endormi dans un coffre. S'est réveillé en appelant son cousin pour un « nouveau son ».",
         },
       },
+      // v4 specimen repeats
+      abductedCount: 'Enlevé ×{count}',
+      probedStampCount: 'SONDÉ ×{count}',
+      addendum3: 'ADDENDUM · 3E VISITE',
+      addendum10: 'ADDENDUM · 10E VISITE',
+      repeats: {
+        doyle: {
+          at3: "Laisse désormais sa fenêtre entrebâillée le mardi et dort en pyjama du dimanche.",
+          at10: "A perdu tant de temps en rayon qu'il a raté une récolte. Jure encore qu'on est en octobre dernier.",
+        },
+        larry: {
+          at3: "Plie une serviette chaude sous sa nuque avant sa sieste pour éviter les plis du rayon.",
+          at10: "Dix visites et quelques sondes ont calé son transit sur un essorage strict de 40 minutes.",
+        },
+        dave: {
+          at3: "Se passe désormais du fil dentaire avant nos visites. A demandé si l'infirmerie tamponne le parking.",
+          at10: "Son agenda retarde d'un an : il envoie encore des rappels de détartrage pour l'année dernière.",
+        },
+        barb: {
+          at3: "S'échauffe désormais avant de dormir. Nos stagiaires font trois tours de soute avant son arrivée.",
+          at10: "Les sondages répétés ont changé sa foulée ; elle impose désormais des étirements fessiers à l'équipage.",
+        },
+        gary: {
+          at3: "Est passé à l'alu spécial rôti et a boulonné son matelas au sol. Tout a flotté quand même.",
+          at10: "Jure avoir encore 47 ans alors qu'un an s'est écoulé sur sa carte d'identité. Accuse la mairie.",
+        },
+        nigel: {
+          at3: "Laisse ses clés du musée sur le bureau avec un mot : « Je reviens, nourrissez le T-Rex. »",
+          at10: "A perdu un an dans notre soute et raté son pot de départ. Au musée, personne n'a rien remarqué.",
+        },
+        kev: {
+          at3: "Dort casque sur les oreilles pour enregistrer le bruit du rayon comme intro de son prochain mix.",
+          at10: "À force d'être sondé, son ventre sort des basses en continu. Ses deux fans adorent le caisson.",
+        },
+        mayor: {
+          at3: "Épingle désormais un badge « MISSION OFFICIELLE » sur son pyjama et salue le rayon en montant.",
+          at10: "Trop de sondes l'empêchent de s'asseoir au conseil municipal. Sa cote de popularité a grimpé.",
+        },
+        bubbles: {
+          at3: "Attend désormais à la surface avec une boîte de sardines et plonge toute seule dans le rayon.",
+          at10: "Dix visites lui ont valu une carte de fidélité. Elle préside désormais les réunions du labo 4.",
+        },
+        pete: {
+          at3: "Attache désormais son thermos de thé à sa ceinture pour qu'il ne renverse pas à la montée.",
+          at10: "Son carnet des marées retarde d'un an. Refuse de le corriger : « La lune n'a qu'à suivre. »",
+        },
+        sal: {
+          at3: "A passé ses « déplacements orbitaux » en frais réels. Le fisc n'a même pas bronché.",
+          at10: "Après dix visites, elle nous facture un forfait mensuel avec supplément à chaque sonde.",
+        },
+        hank: {
+          at3: "Zappe désormais la clinique et boit sa purge à la fenêtre dès que le ciel bourdonne.",
+          at10: "Dix visites et tant de sondes ont réglé son transit comme une horloge suisse. Cinq étoiles.",
+        },
+        osei: {
+          at3: "Profite de la montée pour faire une micro-sieste et note la douceur du rayon sur son dossier.",
+          at10: "Corrige désormais l'angle de sonde de notre infirmerie en dormant. Deux stagiaires ont démissionné.",
+        },
+        pemberton: {
+          at3: "Emporte des bonbons à la menthe pour l'équipage et salue le plafond chaque soir avant de dormir.",
+          at10: "A raté ses 72 ans dans notre soute et se croit toujours à 71. Trouve que voler le rajeunit.",
+        },
+        sterling: {
+          at3: "A équipé son hamac de mousquetons rapides pour ne plus s'emmêler les cordes dans le rayon.",
+          at10: "Dix visites et trop de sondes l'empêchent de s'asseoir. Il tient la barre debout, à côté du chat.",
+        },
+        marco: {
+          at3: "Dort désormais avec un tablier propre pour inspecter l'assaisonnement de notre cuisine à l'arrivée.",
+          at10: "Les sondages répétés ont tellement accéléré son transit qu'il sert le dessert avant l'entrée.",
+        },
+        greg: {
+          at3: "Dort désormais en mankini fluo en permanence pour être « toujours prêt pour le rayon ».",
+          at10: "Sa croisière de sept jours s'est finie il y a un an ; le temps perdu l'a laissé au buffet.",
+        },
+        flint: {
+          at3: "Agite désormais son fémur vers les soucoupes comme s'il hélait un taxi.",
+          at10: "Marche les jambes bien écartées après dix visites. Sa tribu a copié la démarche : vive l'évolution.",
+        },
+        reed: {
+          at3: "Tape un décompte de quatre temps dès que l'ombre de la soucoupe touche son rocher.",
+          at10: "A perdu un an dans le rayon et en est revenu en inventant le jazz. Toute la vallée râle.",
+        },
+        echo: {
+          at3: "Transporte désormais des décharges d'enlèvement pré-remplies en trois exemplaires — sur ardoise.",
+          at10: "A déposé un brevet de fidélité après dix visites et nous facture un péage à chaque rayon.",
+        },
+        doc: {
+          at3: "Attache désormais un carnet à son poignet pour chronométrer notre rayon à la microseconde près.",
+          at10: "A perdu une année entière entre deux visites. Parle de déplacement temporel et accuse la foudre.",
+        },
+        buff: {
+          at3: "Double la dose de gomina sur sa banane pour que le rayon ne déplace pas un seul cheveu.",
+          at10: "Trop de sondes l'obligent à s'asseoir sur un coussin au café. Jure que c'est une blessure de sport.",
+        },
+        marvin: {
+          at3: "Glisse désormais un oreiller dans le coffre avant chaque concert, au cas où le rayon repasse.",
+          at10: "A perdu un an entre deux visites et raté les classements : son cousin avait déjà enregistré le tube.",
+        },
+      },
     },
     town: {
       subtitle: 'Annexe Terrain · Entrepôt 4B',

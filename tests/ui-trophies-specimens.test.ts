@@ -10,13 +10,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { ART } from '../src/art-manifest';
 import { ROOMS } from '../src/abduct/rooms';
-import { VIEW_W, type AbductResult, type FlightResult, type RoomId } from '../src/contracts';
+import { VIEW_H, VIEW_W, type AbductResult, type FlightResult, type RoomId } from '../src/contracts';
 import { setLang, type Lang } from '../src/i18n';
 import { en } from '../src/i18n/en';
 import { fr } from '../src/i18n/fr';
 import { FIELD_CHECK_ROOM } from '../src/levels/field-check';
 import { LEVELS, isDeep } from '../src/levels/levels';
-import { applyDeepRun, applyRun, recordSpecimens } from '../src/levels/progress';
+import { applyDeepRun, applyRun, backfillSpecimens, recordSpecimens } from '../src/levels/progress';
 import { DeepRun } from '../src/levels/run';
 import { defaultSave, validateSave, type SaveData } from '../src/levels/save';
 import {
@@ -26,11 +26,14 @@ import {
   buildSpecimenShelfState,
   hitTestSpecimenPage,
   layoutSpecimenPage,
+  specimenAddenda,
   specimenCaptureText,
+  specimenDetailState,
   specimenInfo,
   trophyProgress,
   type SpecimenSection,
   type SpecimenSlot,
+  type SpecimenSlotState,
 } from '../src/ui/trophy-data';
 import { wrapWith, type Measure } from '../src/ui/report-layout';
 
@@ -98,21 +101,38 @@ describe('HARD RULE: every abductable specimen belongs in Room 3 (Specimen Archi
     expect(slots.length).toBe(expectedIds.size);
   });
 
-  it('every specimen has EN & FR name, age, height, weight and funny description fitting the detail card', () => {
+  it('every specimen has EN & FR name, age, height, weight, description, and at3/at10 repeat notes fitting the detail modal', () => {
     const descW = VIEW_W - 64 - 60; // 416 px modal text width
+    const addW = VIEW_W - 64 - 48 - 28; // 400 px addendum body text width
     for (const slot of slots) {
       for (const [lang, table] of [['en', en], ['fr', fr]] as const) {
         const entries = table.trophies.specimens.entries as Readonly<Record<string, { name: string; age: string; height: string; weight: string; desc: string }>>;
+        const repeats = table.trophies.specimens.repeats as Readonly<Record<string, { at3: string; at10: string }>>;
         const entry = entries[slot.id];
+        const rep = repeats[slot.id];
         expect(entry, `${lang}.trophies.specimens.entries missing "${slot.id}"`).toBeDefined();
+        expect(rep, `${lang}.trophies.specimens.repeats missing "${slot.id}"`).toBeDefined();
         expect(entry!.name.trim().length, `${lang} name empty for "${slot.id}"`).toBeGreaterThan(1);
         expect(entry!.age.trim().length, `${lang} age empty for "${slot.id}"`).toBeGreaterThan(0);
         expect(entry!.height.trim().length, `${lang} height empty for "${slot.id}"`).toBeGreaterThan(2);
         expect(entry!.weight.trim().length, `${lang} weight empty for "${slot.id}"`).toBeGreaterThan(2);
         expect(entry!.desc.trim().length, `${lang} description too short for "${slot.id}"`).toBeGreaterThan(20);
-        // Fits comfortably in <= 4 wrapped lines at 16 px on the detail card
-        const lines = wrapWith(measure, entry!.desc, descW, 16, 500, true);
-        expect(lines.length, `${lang} description too long for "${slot.id}": ${entry!.desc}`).toBeLessThanOrEqual(4);
+        expect(rep!.at3.trim().length, `${lang} at3 note too short for "${slot.id}"`).toBeGreaterThan(20);
+        expect(rep!.at10.trim().length, `${lang} at10 note too short for "${slot.id}"`).toBeGreaterThan(20);
+
+        // Fits cleanly in <= 4 lines (desc) and <= 3 lines (each addendum), and total modal fits inside 960 px
+        const descLines = wrapWith(measure, entry!.desc, descW, 15.5, 500, true);
+        const at3Lines = wrapWith(measure, rep!.at3, addW, 14.5, 500, false);
+        const at10Lines = wrapWith(measure, rep!.at10, addW, 14.5, 500, false);
+        expect(descLines.length, `${lang} description too long for "${slot.id}": ${entry!.desc}`).toBeLessThanOrEqual(4);
+        expect(at3Lines.length, `${lang} at3 too long for "${slot.id}": ${rep!.at3}`).toBeLessThanOrEqual(3);
+        expect(at10Lines.length, `${lang} at10 too long for "${slot.id}": ${rep!.at10}`).toBeLessThanOrEqual(3);
+
+        const descH = descLines.length * 20;
+        const add3H = 24 + at3Lines.length * 19 + 9;
+        const add10H = 24 + at10Lines.length * 19 + 9;
+        const totalModalH = 284 + descH + 10 + add3H + 8 + add10H + 11 + 10 + 136 + 90;
+        expect(totalModalH, `${lang} modal overflows portrait height for "${slot.id}" (${totalModalH}px)`).toBeLessThanOrEqual(VIEW_H - 32);
       }
 
       for (const lang of ['en', 'fr'] as Lang[]) {
@@ -120,8 +140,51 @@ describe('HARD RULE: every abductable specimen belongs in Room 3 (Specimen Archi
         const info = specimenInfo(slot.id);
         expect(info.name.length).toBeGreaterThan(1);
         expect(info.desc.length).toBeGreaterThan(20);
+        expect(info.at3.length).toBeGreaterThan(20);
+        expect(info.at10.length).toBeGreaterThan(20);
       }
     }
+  });
+
+  it('reveals 0, 1 or 2 Bureau addenda at counts 2, 3, 9 and 10 and formats counts and probe badges in EN and FR', () => {
+    const doyleSlot = byId.get('doyle')!;
+    const makeState = (count: number, probes: number): SpecimenSlotState => ({
+      slot: doyleSlot,
+      found: count > 0,
+      entry: count > 0 ? { count, room: 'farm_window', first: 0, probed: probes > 0, probes } : null,
+    });
+
+    setLang('en');
+    expect(specimenAddenda('doyle', 1)).toEqual([]);
+    expect(specimenAddenda('doyle', 2)).toEqual([]);
+    expect(specimenDetailState(makeState(2, 0)).addenda.length).toBe(0);
+    expect(specimenDetailState(makeState(2, 0)).abductedLabel).toBe('Abducted ×2');
+    expect(specimenDetailState(makeState(2, 0)).probeTagLabel).toBe('UNPROBED · pending');
+
+    const at3 = specimenDetailState(makeState(3, 1));
+    expect(at3.addenda.map((a) => a.threshold)).toEqual([3]);
+    expect(at3.addenda[0]!.heading).toBe(en.trophies.specimens.addendum3);
+    expect(at3.addenda[0]!.text).toBe(en.trophies.specimens.repeats.doyle.at3);
+    expect(at3.probeTagLabel).toBe('PROBED');
+    expect(at3.abductedLabel).toBe('Abducted ×3');
+
+    const at9 = specimenDetailState(makeState(9, 4));
+    expect(at9.addenda.map((a) => a.threshold)).toEqual([3]);
+    expect(at9.probeTagLabel).toBe('PROBED ×4');
+    expect(at9.probeStampLabel).toBe('PROBED ×4');
+
+    const at10 = specimenDetailState(makeState(10, 6));
+    expect(at10.addenda.map((a) => a.threshold)).toEqual([3, 10]);
+    expect(at10.addenda[1]!.heading).toBe(en.trophies.specimens.addendum10);
+    expect(at10.addenda[1]!.text).toBe(en.trophies.specimens.repeats.doyle.at10);
+    expect(at10.abductedLabel).toBe('Abducted ×10');
+    expect(at10.probeTagLabel).toBe('PROBED ×6');
+
+    setLang('fr');
+    const at10Fr = specimenDetailState(makeState(10, 6));
+    expect(at10Fr.addenda.map((a) => a.threshold)).toEqual([3, 10]);
+    expect(at10Fr.abductedLabel).toBe('Enlevé ×10');
+    expect(at10Fr.probeTagLabel).toBe('SONDÉ ×6');
   });
 
   it('fits cleanly in the wing with zero overlapping slots, every slot inside 540 px, and accurate hit-testing', () => {
@@ -182,50 +245,72 @@ describe('HARD RULE: every abductable specimen belongs in Room 3 (Specimen Archi
   });
 });
 
-describe('specimen save round-trip, validation, probe persistence & cosmetic invariance', () => {
-  it('survives a save round-trip, starts empty on old saves, and drops unknown ids and malformed shapes', () => {
+describe('specimen save round-trip, validation, probe accumulation & cosmetic invariance', () => {
+  it('survives a save round-trip, migrates old saves without probes, and drops unknown ids and malformed shapes', () => {
     const saved = applyRun(defaultSave(), 'level1', abductOk(), flightOk('farm_window'), () => 0.1).save;
-    expect(saved.specimens.doyle).toEqual({ count: 1, room: 'farm_window', first: 0, probed: true });
+    expect(saved.specimens.doyle).toEqual({ count: 1, room: 'farm_window', first: 0, probed: true, probes: 1 });
     expect(validateSave(JSON.parse(JSON.stringify(saved))).specimens).toEqual(saved.specimens);
 
     // Old saves without `specimens` load cleanly with `{}`
     expect(validateSave({ version: 2, levels: {} }).specimens).toEqual({});
 
-    // Unknown ids and bad shapes drop out; valid indoor & outdoor entries survive
+    // Old entries without `probes` migrate: probed: true -> probes: 1, probed: false -> probes: 0
+    // New entries keep their `probes` count; unknown ids and bad shapes drop out
     expect(validateSave({
       version: 2,
       specimens: {
         doyle: { count: 2, room: 'farm_window', first: 1, probed: true },
         flint: { count: 1, first: 4, probed: false }, // outdoor pickup: no room
+        bubbles: { count: 5, room: 'bubbles_roof', first: 2, probed: true, probes: 3 },
         unknown_alien: { count: 1, room: 'farm_window', first: 0, probed: true },
         larry: { count: 0, room: 'laundry_skylight', first: 0, probed: false }, // count < 1
         dave: { count: 1, room: 'not_a_room', first: 0, probed: true }, // invalid room
         barb: { count: 1, room: 'barb_chimney', first: 0, probed: 'yes' }, // non-boolean probed
         gary: { count: 1, room: 123, first: 0, probed: false }, // bad room type
+        pete: { count: 2, room: 'pete_gallery', first: 0, probed: true, probes: -1 }, // negative probes
+        sal: { count: 2, room: 'sal_loft', first: 0, probed: true, probes: 'three' }, // bad probes type
         nigel: null,
       },
     }).specimens).toEqual({
-      doyle: { count: 2, room: 'farm_window', first: 1, probed: true },
-      flint: { count: 1, first: 4, probed: false },
+      doyle: { count: 2, room: 'farm_window', first: 1, probed: true, probes: 1 },
+      flint: { count: 1, first: 4, probed: false, probes: 0 },
+      bubbles: { count: 5, room: 'bubbles_roof', first: 2, probed: true, probes: 3 },
     });
+
+    // Back-fill sets deterministic probes (1 or 0) matching probed
+    const legacy = defaultSave();
+    legacy.levels.level1.delivered = true;
+    legacy.levels.level2.delivered = true;
+    backfillSpecimens(legacy);
+    for (const entry of Object.values(legacy.specimens)) {
+      expect(entry.probes).toBe(entry.probed ? 1 : 0);
+    }
   });
 
-  it('keeps `probed`, `room`, and `first` fixed after first delivery across repeated abductions', () => {
-    // First delivery rolls probed = true (0.2 < 0.5)
+  it('rolls probes on every delivery, accumulates probes, never reverts probed, and keeps room/first fixed', () => {
+    // First delivery rolls probed = true (0.2 < 0.5) -> probes: 1
     const firstTrue = applyRun(defaultSave(), 'level1', abductOk(), flightOk('farm_window'), () => 0.2).save;
-    expect(firstTrue.specimens.doyle).toEqual({ count: 1, room: 'farm_window', first: 0, probed: true });
+    expect(firstTrue.specimens.doyle).toEqual({ count: 1, room: 'farm_window', first: 0, probed: true, probes: 1 });
 
-    // Second delivery tries rng = 0.99 (would be false) and a different route -> probed, room, first MUST NOT change
-    const secondTrue = applyRun(firstTrue, 'level1', abductOk(), flightOk('farm_chimney'), () => 0.99).save;
-    expect(secondTrue.specimens.doyle).toEqual({ count: 2, room: 'farm_window', first: 0, probed: true });
+    // Second delivery misses probe (0.99 >= 0.5) on a different route -> probed stays true, probes stays 1, room/first fixed
+    const secondMiss = applyRun(firstTrue, 'level1', abductOk(), flightOk('farm_chimney'), () => 0.99).save;
+    expect(secondMiss.specimens.doyle).toEqual({ count: 2, room: 'farm_window', first: 0, probed: true, probes: 1 });
 
-    // First delivery rolls probed = false (0.8 >= 0.5)
+    // Third delivery hits probe (0.1 < 0.5) -> probes increments to 2
+    const thirdHit = applyRun(secondMiss, 'level1', abductOk(), flightOk('farm_chimney'), () => 0.1).save;
+    expect(thirdHit.specimens.doyle).toEqual({ count: 3, room: 'farm_window', first: 0, probed: true, probes: 2 });
+
+    // First delivery rolls unprobed (0.8 >= 0.5) -> probes: 0
     const firstFalse = applyRun(defaultSave(), 'level2', abductOk(), flightOk('laundry_skylight'), () => 0.8).save;
-    expect(firstFalse.specimens.larry).toEqual({ count: 1, room: 'laundry_skylight', first: 0, probed: false });
+    expect(firstFalse.specimens.larry).toEqual({ count: 1, room: 'laundry_skylight', first: 0, probed: false, probes: 0 });
 
-    // Second delivery tries rng = 0.01 (would be true) -> stays false!
-    const secondFalse = applyRun(firstFalse, 'level2', abductOk(), flightOk('laundry_loading'), () => 0.01).save;
-    expect(secondFalse.specimens.larry).toEqual({ count: 2, room: 'laundry_skylight', first: 0, probed: false });
+    // Second delivery hits probe (0.01 < 0.5) -> UNPROBED transitions to PROBED (probes: 1)
+    const secondNowProbed = applyRun(firstFalse, 'level2', abductOk(), flightOk('laundry_loading'), () => 0.01).save;
+    expect(secondNowProbed.specimens.larry).toEqual({ count: 2, room: 'laundry_skylight', first: 0, probed: true, probes: 1 });
+
+    // Third delivery misses probe (0.9 >= 0.5) -> NEVER reverts to unprobed!
+    const thirdStaysProbed = applyRun(secondNowProbed, 'level2', abductOk(), flightOk('laundry_loading'), () => 0.9).save;
+    expect(thirdStaysProbed.specimens.larry).toEqual({ count: 3, room: 'laundry_skylight', first: 0, probed: true, probes: 1 });
   });
 
   it('records nothing on failed or aborted runs', () => {
@@ -300,9 +385,9 @@ describe('specimen save round-trip, validation, probe persistence & cosmetic inv
     let seq = 0;
     const rolls = [0.2, 0.8, 0.3];
     const outcome = applyDeepRun(defaultSave(), 'level8', run.summary(), () => rolls[seq++] ?? 0.5);
-    expect(outcome.save.specimens.flint).toEqual({ count: 1, first: 0, probed: true });
-    expect(outcome.save.specimens.reed).toEqual({ count: 1, first: 0, probed: false });
-    expect(outcome.save.specimens.echo).toEqual({ count: 1, room: 'echo_appeal', first: 0, probed: true });
+    expect(outcome.save.specimens.flint).toEqual({ count: 1, first: 0, probed: true, probes: 1 });
+    expect(outcome.save.specimens.reed).toEqual({ count: 1, first: 0, probed: false, probes: 0 });
+    expect(outcome.save.specimens.echo).toEqual({ count: 1, room: 'echo_appeal', first: 0, probed: true, probes: 1 });
 
     setLang('en');
     expect(specimenCaptureText(outcome.save.specimens.flint!)).toBe('Outdoor beam-up');

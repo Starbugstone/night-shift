@@ -132,7 +132,7 @@ export function recordTrophies(save: SaveData, finds: readonly TrophyFind[]): vo
   }
 }
 
-/** v4 specimens: log each delivered specimen; `probed` is rolled once on first delivery (~50%) and never changes. */
+/** v4 specimens: log each delivered specimen; roll a cosmetic Bureau probe (~50%) on every delivery. */
 export function recordSpecimens(
   save: SaveData,
   finds: readonly SpecimenFind[],
@@ -141,9 +141,21 @@ export function recordSpecimens(
   for (const { id, room } of finds) {
     if (!isSpecimenId(id)) continue;
     if (room !== undefined && !isRoomId(room)) continue;
+    const hit = rng() < 0.5 ? 1 : 0;
     const entry = save.specimens[id];
-    if (entry) entry.count += 1;
-    else save.specimens[id] = { count: 1, ...(room ? { room } : {}), first: save.reports, probed: rng() < 0.5 };
+    if (entry) {
+      entry.count += 1;
+      entry.probes += hit;
+      entry.probed = entry.probes > 0;
+    } else {
+      save.specimens[id] = {
+        count: 1,
+        ...(room ? { room } : {}),
+        first: save.reports,
+        probed: hit > 0,
+        probes: hit,
+      };
+    }
   }
 }
 
@@ -169,7 +181,8 @@ export function backfillSpecimens(save: SaveData): void {
     if (!id || !isSpecimenId(id) || save.specimens[id]) return;
     let h = 0;
     for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-    save.specimens[id] = { count: 1, ...(room ? { room } : {}), first, probed: h % 2 === 0 };
+    const probed = h % 2 === 0;
+    save.specimens[id] = { count: 1, ...(room ? { room } : {}), first, probed, probes: probed ? 1 : 0 };
   };
   for (const { room, first } of Object.values(save.trophies)) add(ROOMS[room]?.human ?? null, room, first);
   for (const lv of LEVELS) {

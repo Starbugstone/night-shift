@@ -584,18 +584,89 @@ export function townHint(id: MapCollectibleId): string {
   return memoHint ? fmt(tr().trophies.town.memoHintFallback, { hint: memoHint }) : '';
 }
 
+export const SPECIMEN_REPEAT_THRESHOLDS = [3, 10] as const;
+
 export interface SpecimenCopy {
   readonly name: string;
   readonly age: string;
   readonly height: string;
   readonly weight: string;
   readonly desc: string;
+  readonly at3: string;
+  readonly at10: string;
 }
 
-/** Localized specimen stats & bio in the active language. */
+export interface SpecimenAddendum {
+  readonly threshold: 3 | 10;
+  readonly heading: string;
+  readonly text: string;
+}
+
+export interface SpecimenDetailState {
+  readonly found: boolean;
+  readonly count: number;
+  readonly probes: number;
+  readonly probed: boolean;
+  readonly abductedLabel: string;
+  readonly probeTagLabel: string;
+  readonly probeStampLabel: string;
+  readonly addenda: readonly SpecimenAddendum[];
+}
+
+/** Localized specimen stats, bio & repeat-visit notes in the active language. */
 export function specimenInfo(id: string): SpecimenCopy {
-  const map = tr().trophies.specimens.entries as Readonly<Record<string, SpecimenCopy>>;
-  return map[id] ?? { name: id, age: '—', height: '—', weight: '—', desc: '' };
+  const entries = tr().trophies.specimens.entries as Readonly<Record<string, Omit<SpecimenCopy, 'at3' | 'at10'>>>;
+  const repeats = tr().trophies.specimens.repeats as Readonly<Record<string, { readonly at3: string; readonly at10: string }>>;
+  const base = entries[id];
+  const rep = repeats[id];
+  if (!base) return { name: id, age: '—', height: '—', weight: '—', desc: '', at3: '', at10: '' };
+  return { ...base, at3: rep?.at3 ?? '', at10: rep?.at10 ?? '' };
+}
+
+/** Reached repeat-visit Bureau addenda for specimen `id` at abduction `count` (0 before 3, 1 at 3..9, 2 at 10+). */
+export function specimenAddenda(id: string, count: number): readonly SpecimenAddendum[] {
+  if (count < 3) return [];
+  const specStr = tr().trophies.specimens;
+  const info = specimenInfo(id);
+  const out: SpecimenAddendum[] = [];
+  if (count >= 3 && info.at3) {
+    out.push({ threshold: 3, heading: specStr.addendum3, text: info.at3 });
+  }
+  if (count >= 10 && info.at10) {
+    out.push({ threshold: 10, heading: specStr.addendum10, text: info.at10 });
+  }
+  return out;
+}
+
+/** Pure detail-modal state for a specimen slot (shared by DetailModalView and tests). */
+export function specimenDetailState(item: SpecimenSlotState): SpecimenDetailState {
+  const specStr = tr().trophies.specimens;
+  const entry = item.found ? item.entry : null;
+  if (!entry) {
+    return {
+      found: false,
+      count: 0,
+      probes: 0,
+      probed: false,
+      abductedLabel: '',
+      probeTagLabel: specStr.unprobedTag,
+      probeStampLabel: specStr.probedStamp,
+      addenda: [],
+    };
+  }
+  const probes = entry.probes;
+  const probed = probes > 0;
+  const stampLabel = probes > 1 ? fmt(specStr.probedStampCount, { count: probes }) : specStr.probedStamp;
+  return {
+    found: true,
+    count: entry.count,
+    probes,
+    probed,
+    abductedLabel: fmt(specStr.abductedCount, { count: entry.count }),
+    probeTagLabel: probed ? stampLabel : specStr.unprobedTag,
+    probeStampLabel: stampLabel,
+    addenda: specimenAddenda(item.slot.id, entry.count),
+  };
 }
 
 /** Localized capture route label for a collected specimen ("Window", or "Outdoor beam-up" for Flint/Reed). */

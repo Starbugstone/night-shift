@@ -84,8 +84,10 @@ export interface SpecimenEntry {
   room?: RoomId;
   /** Reports filed before it was first delivered (`SaveData.reports` then). */
   first: number;
-  /** Purely cosmetic Bureau probe flag, rolled once on first delivery (~50%) and fixed forever. */
+  /** Purely cosmetic Bureau probe flag (`probes > 0`): once probed, never reverts. */
   probed: boolean;
+  /** Purely cosmetic count of Bureau probes accumulated across deliveries (~50% roll each visit). */
+  probes: number;
 }
 
 export interface KeyValueStore {
@@ -173,10 +175,22 @@ export function readSpecimens(raw: unknown): Record<string, SpecimenEntry> {
   for (const [id, e] of Object.entries(raw)) {
     if (!isSpecimenId(id) || !isObj(e)) continue;
     const count = Math.floor(finiteNonNeg(e.count, 0, 1e6));
-    if (count < 1 || typeof e.probed !== 'boolean') continue;
+    if (count < 1) continue;
     if (e.room !== undefined && (typeof e.room !== 'string' || !isRoomId(e.room))) continue;
+    let probes: number;
+    if (e.probes === undefined) {
+      if (typeof e.probed !== 'boolean') continue;
+      probes = e.probed ? 1 : 0;
+    } else {
+      if (typeof e.probes !== 'number' || !Number.isFinite(e.probes) || e.probes < 0) continue;
+      if (e.probed !== undefined && typeof e.probed !== 'boolean') continue;
+      probes = Math.floor(Math.min(1e6, e.probes));
+    }
+    const probed = probes > 0;
     const first = Math.floor(finiteNonNeg(e.first, 0, 1e9));
-    out[id] = e.room !== undefined ? { count, room: e.room, first, probed: e.probed } : { count, first, probed: e.probed };
+    out[id] = e.room !== undefined
+      ? { count, room: e.room, first, probed, probes }
+      : { count, first, probed, probes };
   }
   return out;
 }
