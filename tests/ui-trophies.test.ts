@@ -20,6 +20,7 @@ import { defaultSave, type SaveData } from '../src/levels/save';
 import {
   ROOM_CAPACITY,
   buildShelfState,
+  buildSpecimenShelfState,
   buildTownCatalog,
   buildTownShelfState,
   buildTrophyCatalog,
@@ -231,13 +232,16 @@ describe('trophy shelf model, Town Finds state & pagination', () => {
     for (let i = 1; i < town.slots.length; i++) {
       expect(town.slots[i]!.slot.levelNum).toBeGreaterThan(town.slots[i - 1]!.slot.levelNum);
     }
+    const spec = buildSpecimenShelfState(defaultSave());
     expect(trophyProgress(defaultSave())).toEqual({
       found: 0,
-      total: shelf.totalCount + town.totalCount,
+      total: shelf.totalCount + town.totalCount + spec.totalCount,
       souvenirsFound: 0,
       souvenirsTotal: shelf.totalCount,
       townFound: 0,
       townTotal: town.totalCount,
+      specimensFound: 0,
+      specimensTotal: spec.totalCount,
     });
   });
 
@@ -280,13 +284,16 @@ describe('trophy shelf model, Town Finds state & pagination', () => {
     expect(town.slots.find((s) => s.slot.id === 'defibrillator')?.found).toBe(true);
     expect(town.slots.find((s) => s.slot.id === 'krix')?.found).toBe(false);
 
+    const spec = buildSpecimenShelfState(save);
     expect(trophyProgress(save)).toEqual({
-      found: 4,
-      total: shelf.totalCount + town.totalCount,
+      found: 6, // 2 souvenirs + 2 town pickups + 2 specimens (doyle & larry from applyRun)
+      total: shelf.totalCount + town.totalCount + spec.totalCount,
       souvenirsFound: 2,
       souvenirsTotal: shelf.totalCount,
       townFound: 2,
       townTotal: town.totalCount,
+      specimensFound: 2,
+      specimensTotal: spec.totalCount,
     });
 
     const slipper = shelf.slots.find((s) => s.slot.itemId === 'slipper')!;

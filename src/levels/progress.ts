@@ -1,8 +1,9 @@
 // Stars, Glorbs, ranks, unlocks and upgrades. Pure functions over SaveData.
 import type { AbductResult, FlightResult, MapCollectibleId, RoomId, UpgradeId } from '../contracts';
-import { LEVELS, isDeep } from './levels';
-import { cloneSave, type LevelId, type SaveData, type Stars } from './save';
-import type { LevelDef } from './types';
+import { ROOMS } from '../abduct/rooms';
+import { LEVELS, isDeep, isRoomId } from './levels';
+import { cloneSave, isSpecimenId, type LevelId, type SaveData, type Stars } from './save';
+import type { DeepTarget, EntryDef, LevelDef } from './types';
 import { en } from '../i18n/en';
 
 /** English labels (the shown ones come from src/i18n: starLabels). */
@@ -98,12 +99,20 @@ export interface DeepSummary {
   mapCollectible?: MapCollectibleId;
   /** v4 trophy room: souvenirs taken home this shift. */
   trophies?: readonly TrophyFind[];
+  /** v4 specimens: specimens delivered this shift. */
+  specimens?: readonly SpecimenFind[];
 }
 
 /** A souvenir taken home: the item id (its English name) and the route it came from. */
 export interface TrophyFind {
   item: string;
   room: RoomId;
+}
+
+/** v4 specimens: a delivered specimen id (`Human`) and the route it came from (omitted for outdoor troop pickups). */
+export interface SpecimenFind {
+  id: string;
+  room?: RoomId;
 }
 
 export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary, levelId?: LevelId): Stars {
@@ -120,6 +129,57 @@ export function recordTrophies(save: SaveData, finds: readonly TrophyFind[]): vo
     const entry = save.trophies[item];
     if (entry) entry.count += 1;
     else save.trophies[item] = { count: 1, room, first: save.reports };
+  }
+}
+
+/** v4 specimens: log each delivered specimen; `probed` is rolled once on first delivery (~50%) and never changes. */
+export function recordSpecimens(
+  save: SaveData,
+  finds: readonly SpecimenFind[],
+  rng: () => number = Math.random,
+): void {
+  for (const { id, room } of finds) {
+    if (!isSpecimenId(id)) continue;
+    if (room !== undefined && !isRoomId(room)) continue;
+    const entry = save.specimens[id];
+    if (entry) entry.count += 1;
+    else save.specimens[id] = { count: 1, ...(room ? { room } : {}), first: save.reports, probed: rng() < 0.5 };
+  }
+}
+
+/** v4 specimens: the specimen a deep target delivers (its route's `human`, or its head art for outdoor pickups). */
+export function specimenForTarget(target: DeepTarget<EntryDef[]>): string | null {
+  for (const e of target.entries) {
+    const room = ROOMS[e.roomId];
+    if (room) return room.human;
+  }
+  const head = target.head ?? `human/${target.short.toLowerCase()}_head`;
+  const m = /^human\/(.+)_head$/.exec(head);
+  return m ? m[1]! : null;
+}
+
+/**
+ * v4 specimens: saves from before the Specimen Archive hold no specimens, though their trophies and
+ * delivered levels prove who was abducted. Fill the archive once from that evidence (only while it is
+ * empty, so it never touches a live archive). The probe stamp is fixed per specimen so reloads agree.
+ */
+export function backfillSpecimens(save: SaveData): void {
+  if (Object.keys(save.specimens).length > 0) return;
+  const add = (id: string | null, room: RoomId | undefined, first: number): void => {
+    if (!id || !isSpecimenId(id) || save.specimens[id]) return;
+    let h = 0;
+    for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    save.specimens[id] = { count: 1, ...(room ? { room } : {}), first, probed: h % 2 === 0 };
+  };
+  for (const { room, first } of Object.values(save.trophies)) add(ROOMS[room]?.human ?? null, room, first);
+  for (const lv of LEVELS) {
+    if (!save.levels[lv.id].delivered) continue;
+    if (isDeep(lv)) {
+      for (const t of lv.map.targets) add(specimenForTarget(t), t.entries[0]?.roomId, 0);
+    } else {
+      const room = lv.map.entries[0]?.roomId;
+      if (room) add(ROOMS[room]?.human ?? null, room, 0);
+    }
   }
 }
 
@@ -149,25 +209,39 @@ export interface RunOutcome {
 }
 
 /** Apply a finished (non-aborted) tutorial attempt to a copy of the save. */
-export function applyRun(save: SaveData, levelId: LevelId, abduct: AbductResult, flight: FlightResult): RunOutcome {
+export function applyRun(save: SaveData, levelId: LevelId, abduct: AbductResult, flight: FlightResult, rng: () => number = Math.random): RunOutcome {
   const level = LEVELS.find((l) => l.id === levelId)!;
   const par = isDeep(level) ? level.budgetSec : level.parSec;
-  const finds = abduct.delivered && !abduct.aborted ? abduct.itemsStolen.map(item => ({ item, room: flight.roomId })) : [];
-  return applyStars(save, levelId, computeStars(par, abduct, flight, level.map.collectible?.id), flight.timeSec + abduct.timeSec, 1, flight.mapCollectible, finds);
+  const ok = abduct.delivered && !abduct.aborted;
+  const finds = ok ? abduct.itemsStolen.map(item => ({ item, room: flight.roomId })) : [];
+  const human = ok ? ROOMS[flight.roomId]?.human : undefined;
+  const specimens: SpecimenFind[] = human ? [{ id: human, room: flight.roomId }] : [];
+  return applyStars(save, levelId, computeStars(par, abduct, flight, level.map.collectible?.id), flight.timeSec + abduct.timeSec, 1, flight.mapCollectible, finds, specimens, rng);
 }
 
 /** Apply a finished deep shift (delivered all, or sunrise) to a copy of the save. */
-export function applyDeepRun(save: SaveData, levelId: LevelId, r: DeepSummary): RunOutcome {
+export function applyDeepRun(save: SaveData, levelId: LevelId, r: DeepSummary, rng: () => number = Math.random): RunOutcome {
   const level = LEVELS.find((l) => l.id === levelId)!;
   const budget = isDeep(level) ? level.budgetSec : 300;
   const margin = isDeep(level) ? level.parMarginSec : 0;
-  return applyStars(save, levelId, computeDeepStars(budget, margin, r, levelId), r.elapsedSec, DEEP_PAY_MULT, r.mapCollectible, r.trophies ?? []);
+  return applyStars(save, levelId, computeDeepStars(budget, margin, r, levelId), r.elapsedSec, DEEP_PAY_MULT, r.mapCollectible, r.trophies ?? [], r.specimens ?? [], rng);
 }
 
-function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: number, payMult: number, mapCollectible?: MapCollectibleId, finds: readonly TrophyFind[] = []): RunOutcome {
+function applyStars(
+  save: SaveData,
+  levelId: LevelId,
+  stars: Stars,
+  timeSec: number,
+  payMult: number,
+  mapCollectible?: MapCollectibleId,
+  finds: readonly TrophyFind[] = [],
+  specimens: readonly SpecimenFind[] = [],
+  rng: () => number = Math.random,
+): RunOutcome {
   const idx = LEVELS.findIndex((l) => l.id === levelId);
   const next = cloneSave(save);
   recordTrophies(next, finds);
+  recordSpecimens(next, specimens, rng);
   const lv = next.levels[levelId];
   if (mapCollectible && LEVELS[idx]?.map.collectible?.id === mapCollectible) lv.mapCollectible = mapCollectible;
   const prev: Stars = [...lv.stars];

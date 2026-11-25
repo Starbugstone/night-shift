@@ -62,6 +62,8 @@ export interface SaveData {
   lang: LangPref;
   /** v4 trophy room: every souvenir taken home, by item id (its English name, a key of `tr().items`). */
   trophies: Record<string, TrophyEntry>;
+  /** v4 specimens: every specimen delivered, by specimen id (`Human`, a key of `en.trophies.specimens.entries`). */
+  specimens: Record<string, SpecimenEntry>;
 }
 
 /** One souvenir on the trophy shelf. */
@@ -72,6 +74,18 @@ export interface TrophyEntry {
   room: RoomId;
   /** Reports filed before it was first taken (`SaveData.reports` then): orders the shelf by find. */
   first: number;
+}
+
+/** v4 specimens: one delivered specimen in the Specimen Archive. */
+export interface SpecimenEntry {
+  /** Times this specimen was successfully delivered. */
+  count: number;
+  /** The route it was first taken from (omitted for outdoor troop pickups such as Flint & Reed). */
+  room?: RoomId;
+  /** Reports filed before it was first delivered (`SaveData.reports` then). */
+  first: number;
+  /** Purely cosmetic Bureau probe flag, rolled once on first delivery (~50%) and fixed forever. */
+  probed: boolean;
 }
 
 export interface KeyValueStore {
@@ -101,6 +115,7 @@ export function defaultSave(): SaveData {
     reports: 0,
     lang: 'auto',
     trophies: {},
+    specimens: {},
   };
 }
 
@@ -147,6 +162,25 @@ function readTrophies(raw: unknown): Record<string, TrophyEntry> {
   return out;
 }
 
+export function isSpecimenId(value: unknown): value is string {
+  return typeof value === 'string' && Object.hasOwn(en.trophies.specimens.entries, value);
+}
+
+/** v4 specimens: keep only well-formed entries for known specimens (unknown ids and bad shapes drop out). */
+export function readSpecimens(raw: unknown): Record<string, SpecimenEntry> {
+  const out: Record<string, SpecimenEntry> = {};
+  if (!isObj(raw)) return out;
+  for (const [id, e] of Object.entries(raw)) {
+    if (!isSpecimenId(id) || !isObj(e)) continue;
+    const count = Math.floor(finiteNonNeg(e.count, 0, 1e6));
+    if (count < 1 || typeof e.probed !== 'boolean') continue;
+    if (e.room !== undefined && (typeof e.room !== 'string' || !isRoomId(e.room))) continue;
+    const first = Math.floor(finiteNonNeg(e.first, 0, 1e9));
+    out[id] = e.room !== undefined ? { count, room: e.room, first, probed: e.probed } : { count, first, probed: e.probed };
+  }
+  return out;
+}
+
 function isMapCollectibleId(value: unknown): value is MapCollectibleId {
   return typeof value === 'string' && Object.hasOwn(en.mapCollectibles.items, value);
 }
@@ -182,6 +216,7 @@ export function validateSave(raw: unknown): SaveData {
   out.fieldCheckSeen = raw.fieldCheckSeen === true || (oldDispatch && out.levels.level2.delivered);
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
   out.trophies = readTrophies(raw.trophies);
+  out.specimens = readSpecimens(raw.specimens);
   return out;
 }
 

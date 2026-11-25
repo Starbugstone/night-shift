@@ -549,7 +549,11 @@ export const ART: Record<string, ArtSpec> = {
   'room/uplift_slab': { w: 100, h: 210 }, // Black upright slab, lavender bevel, chipped corner and pale stone foot.
   'room/stone_chime': { w: 60, h: 100 }, // Two flints on a full-width bound frame, pivot at top centre.
   'human/flint_head': { w: 70, h: 80 }, // Sleeping ape with chestnut fur and knapped-stone visor.
+  'human/flint_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
+  'human/flint_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
   'human/reed_head': { w: 70, h: 80 }, // Sleeping ape with tawny fur and a reed behind the ear.
+  'human/reed_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
+  'human/reed_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
   'human/echo_head': { w: 70, h: 80 }, // Sleeping ape with slate fur and stone spectacles.
   'human/echo_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
   'human/echo_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
@@ -717,14 +721,10 @@ export const ART: Record<string, ArtSpec> = {
  * use it again.
  */
 export const RETIRED_ART: Record<string, ArtSpec> = {
-  'human/flint_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
-  'human/flint_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
   'human/flint_upper_arm': { w: 26, h: 60 }, // Tufted upper arm, joint top centre.
   'human/flint_lower_arm': { w: 24, h: 60 }, // Long wrist ending in a broad knuckled hand.
   'human/flint_upper_leg': { w: 32, h: 70 }, // Compact furred thigh, overlapping the knee.
   'human/flint_lower_leg': { w: 30, h: 72 }, // Shaggy shin ending in a gripping bare foot.
-  'human/reed_head_awake': { w: 70, h: 80 }, // Same pivot, wide panicked eyes and pursed lips.
-  'human/reed_torso': { w: 80, h: 120 }, // Barrel chest with a lighter fur bib and stooped shoulders.
   'human/reed_upper_arm': { w: 26, h: 60 }, // Tufted upper arm, joint top centre.
   'human/reed_lower_arm': { w: 24, h: 60 }, // Long wrist ending in a broad knuckled hand.
   'human/reed_upper_leg': { w: 32, h: 70 }, // Compact furred thigh, overlapping the knee.

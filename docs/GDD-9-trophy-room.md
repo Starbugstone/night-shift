@@ -1,9 +1,10 @@
 # Night Shift · Trophy Room (Evidence Locker)
 
-The **Trophy Room** (*Bureau Evidence Locker · Warehouse 4* / *Scellés du Bureau · Entrepôt 4*) has two wings switched by a one-thumb tab bar at the top:
+The **Trophy Room** (*Bureau Evidence Locker · Warehouse 4* / *Scellés du Bureau · Entrepôt 4*) has three wings switched by a one-thumb tab bar at the top:
 
-1. **Room 1 — Souvenirs** (*Warehouse 4* / *Entrepôt 4*): every abduction souvenir hauled back to the saucer from building interiors (35 exhibits across L1–L8).
-2. **Room 2 — Field finds** (*Field Detours Annex · Warehouse 4B* / *Annexe Terrain · Entrepôt 4B*): every optional town object or cameo character picked up outdoors on flight maps (7 exhibits across L2–L8, iterated dynamically from `LEVELS`).
+1. **Room 1 — Souvenirs** (*Warehouse 4* / *Entrepôt 4*): every abduction souvenir hauled back to the saucer from building interiors (iterated dynamically from `LEVELS` + `ROOMS`).
+2. **Room 2 — Field finds** (*Field Detours Annex · Warehouse 4B* / *Annexe Terrain · Entrepôt 4B*): every optional town object or cameo character picked up outdoors on flight maps (iterated dynamically from `LEVELS`).
+3. **Room 3 — Specimen Archive** (*Specimen Archive · Warehouse 4C* / *Archives des spécimens · Entrepôt 4C*): every abducted specimen across all shifts — humans, Bubbles the dolphin, and L8's prehistoric apes (iterated dynamically from `LEVELS` + `ROOMS`, 23 specimens across L1–L9).
 
 ## Design goals
 
@@ -15,10 +16,10 @@ The **Trophy Room** (*Bureau Evidence Locker · Warehouse 4* / *Scellés du Bure
 
 ## Navigation & entry points
 
-- **Title screen (`src/ui/title.ts`):** a secondary `Trophy room · N/42` button (combined souvenirs + town finds) sits directly beneath `Clock in`, clear of the bottom utility bar.
-- **Work Orders (`src/ui/workorders.ts`):** a compact trophy-cup icon button sits top-right (symmetrical with the top-left `‹` back button) so players can check newly filed souvenirs and field finds immediately after a shift.
+- **Title screen (`src/ui/title.ts`):** a secondary `Trophy room · N/M` button (combined souvenirs + town finds + specimens) sits directly beneath `Clock in`, clear of the bottom utility bar.
+- **Work Orders (`src/ui/workorders.ts`):** a compact trophy-cup icon button sits top-right (symmetrical with the top-left `‹` back button) so players can check newly filed souvenirs, field finds and specimen dossiers immediately after a shift.
 - **Back button:** returns to whichever screen opened the Trophy Room (`title` or `workorders`).
-- **Debug hook:** `window.__nightShift.goto('trophies')` opens the room directly; `debug.setRoom('town')` and `debug.selectTown(id)` inspect Room 2 for automated checks and evidence capture.
+- **Debug hook:** `window.__nightShift.goto('trophies')` opens the room directly; `debug.setRoom('souvenirs' | 'town' | 'specimens')`, `debug.selectTown(id)` and `debug.selectSpecimen(id)` inspect all three wings for automated checks and evidence capture.
 
 ## Layout & visual hierarchy
 
@@ -26,13 +27,15 @@ The **Trophy Room** (*Bureau Evidence Locker · Warehouse 4* / *Scellés du Bure
 
 - Top-left: `‹` back button (`16, 16, 64, 58`).
 - Title (`TROPHY ROOM` / `SALLE DES TROPHÉES`) and room-aware subtitle (`Bureau Evidence Locker · Warehouse 4` in Room 1; `Field Detours Annex · Warehouse 4B` in Room 2).
-- **Room switcher (`y = 88..136`, two `240 × 48` pill tabs):**
-  - Left: `Souvenirs · N/35` / `Scellés · N/35`
-  - Right: `Field finds · N/7` / `Trouvailles · N/7`
-  - Active tab uses the bright mint `'primary'` pill; inactive tab uses dark `'ghost'`.
+- **Room switcher (`y = 88..136`, three `158 × 48` pill tabs, `9 px` gaps):**
+  - Left: `Souvenirs · N/M` / `Scellés · N/M`
+  - Middle: `Field finds · N/M` / `Trouvailles · N/M`
+  - Right: `Specimens · N/M` / `Spécimens · N/M`
+  - Active tab uses the bright mint `'primary'` pill; inactive tabs use dark `'ghost'`.
 - **Summary bar (`x = 24, y = 146, w = 492, h = 58`):**
-  - Room 1: trophy-cup icon, `N / 35 FILED` (gold `35 / 35 COMPLETE!` at 100%), progress bar, total hauls or empty hint + tap hint.
-  - Room 2: 4-point mint glint badge, `N / 7 LOGGED` (gold `7 / 7 COMPLETE!` at 100%), progress bar, remaining count / empty hint / completion line + tap hint.
+  - Room 1: trophy-cup icon, `N / M FILED` (gold `M / M COMPLETE!` at 100%), progress bar, total hauls or empty hint + tap hint.
+  - Room 2: 4-point mint glint badge, `N / M LOGGED` (gold `M / M COMPLETE!` at 100%), progress bar, remaining count / empty hint / completion line + tap hint.
+  - Room 3: specimen dossier icon, `N / M ARCHIVED` (gold `M / M COMPLETE!` at 100%), progress bar, `{p} probed · {u} pending` (or empty hint) + tap hint.
 
 ### 2. Scrollable display cases (`y = 180..960`, masked)
 
@@ -65,7 +68,8 @@ Tapping any slot freezes background scroll and opens a Bureau Exhibit Tag modal 
 
 - **Room 1 (Souvenirs)** reads `SaveData.trophies` (`Record<string, TrophyEntry>` in `src/levels/save.ts`, populated by `recordTrophies` in `src/levels/progress.ts`). Unknown or retired item ids are already stripped by `validateSave`.
 - **Room 2 (Field finds)** reads `SaveData.levels[levelId].mapCollectible` (`docs/GDD-8-map-collectibles.md`) read-only: a town pickup counts as found when `save.levels[levelId].mapCollectible === pickup.id`.
-- **Title screen counter:** `trophyProgress(save)` sums both rooms (`souvenirs + town finds`, e.g. `N/42`), while the top room switcher inside the Trophy Room breaks them out per wing (`Souvenirs · N/35` | `Field finds · N/7`).
+- **Room 3 (Specimen Archive)** reads `SaveData.specimens` (`Record<string, SpecimenEntry>`, additive on `SAVE_VERSION = 2` — old saves load with `{}`). Each entry stores `{ count, room?, first, probed }`, where `probed` is rolled once at first delivery (`rng() < 0.5`, ~50%) and never changes thereafter. Purely cosmetic: zero effect on stars, Glorbs, ranks or unlocks. `readSpecimens` drops unknown ids and malformed shapes.
+- **Title screen counter:** `trophyProgress(save)` sums all three wings (`souvenirs + town finds + specimens`), while the top room switcher inside the Trophy Room breaks them out per wing.
 
 ## Room 2 — Field Finds Annex (`Warehouse 4B`)
 
@@ -96,6 +100,48 @@ Displays every level's optional map collectible (`LEVELS` iterated dynamically, 
 | 06 | L7 · SS Buffet Royale | `shrimp_tower` | `flight/pickup_shrimp_tower` | Refrigerated, under protest | Three tiers of all-you-can-eat crustacean arrogance on crushed ice. Zib claims it jumped into the tractor beam of its own free will. |
 | 07 | L8 · Patent Valley | `krix` | `flight/pickup_krix` | Under HR review | Turned an unpaid Bureau internship into a three-million-year tech monopoly. Still insists the toaster is a "paradigm-shifting monolith". |
 
+## Room 3 — Specimen Archive (`Warehouse 4C`)
+
+Displays every abductable specimen across all levels — derived dynamically by walking `LEVELS` and `ROOMS` (including tutorial humans, deep targets, Bubbles the dolphin, L8's outdoor roaming apes Flint & Reed + Echo, and L9's 1955 trio; future levels' sleepers appear automatically). Reuses `ROOM_CAPACITY = 48` wing paging automatically if the roster outgrows one wing.
+
+- **3-column dossier cards grouped by level (`148 × 152 px` cards inside level display cases — every deep level L3–L9 forms one clean row of 3):**
+  - **Collected card:** illuminated portrait vitrine with an animated `SpecimenFigure` bust (head + torso using existing `human/<id>_*` art with primitive fallbacks; blinks via alpha, looks sideways, yawns and breathes gently via `figurePose`, honouring `ctx.reducedMotion`), localized display name, repeat count pill (`×N`) if abducted more than once, and a high-contrast probe badge (red `PROBED` / `SONDÉ` stamp vs mint `UNPROBED` / `NON SONDÉ` tag).
+  - **Uncollected card:** dimmed recess with a still dark-lavender bust silhouette, `Not yet collected` (`Pas encore enlevé`), and `#0N · <short location>`.
+- **Detail modal (on tap):**
+  - Header badge (`SPECIMEN #01`..`#23` / `NOT COLLECTED`) + `#0N · <location>`.
+  - Enlarged portrait vitrine (`220 × 132 px`) with animated `SpecimenFigure` (or still silhouette when uncollected) and a tilted red Bureau `PROBED` rubber stamp beside the vitrine when probed.
+  - Display name + 3-cell vital stats strip (`AGE` / `HEIGHT` / `WEIGHT`; EN displays imperial + metric, FR displays metric; uncollected shows `—`).
+  - Funny 1–2 line Bureau description in EN and FR.
+  - Dossier inset panel: red `PROBED` vs mint `UNPROBED · pending` tag with dry Bureau note, capture route (`Captured via` — route name, or `Outdoor beam-up` / `Enlèvement en plein air` for L8 roaming apes), and `First filed` (`Report #{first + 1} · ×{count}`).
+
+### Complete Specimen Archive catalogue (L1–L9 · 23 specimens)
+
+| # | Level | ID | EN Name | Age | Height (EN / FR) | Weight (EN / FR) | EN Description | FR Name & Description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 01 | L1 | `doyle` | Farmer Doyle | 58 | 6′1″ · 185 cm / 185 cm | 238 lb · 108 kg / 108 kg | Sleeps at 95 decibels and snores straight through tractor beams. Rated his abduction 'quieter than the tractor'. | **Le fermier Doyle** — Dort à 95 décibels et ronfle à travers le rayon tracteur. A jugé son enlèvement « plus calme que le tracteur ». |
+| 02 | L2 | `larry` | Laundromat Larry | 34 | 5′10″ · 178 cm / 178 cm | 168 lb · 76 kg / 76 kg | Six years on the night shift without once seeing a spin cycle finish. Didn't wake up for the beam, or the probe. | **Larry de la laverie** — Six ans de quart de nuit sans jamais voir un essorage finir. Ne s'est réveillé ni pour le rayon, ni pour la sonde. |
+| 03 | L3 | `dave` | Dentist Dave | 44 | 5′11″ · 180 cm / 180 cm | 154 lb · 70 kg / 70 kg | Told our medical bay to 'open wide' while still unconscious. Still billed the Bureau for a routine check-up. | **Dave le dentiste** — A ordonné « ouvrez grand » à l'infirmerie en plein sommeil. A quand même facturé un bilan dentaire au Bureau. |
+| 04 | L3 | `barb` | Coach Barb | 52 | 5′7″ · 170 cm / 170 cm | 174 lb · 79 kg / 79 kg | Bench-presses interns in her sleep. Blew her whistle during debrief and got three alien flight crews doing burpees. | **Coach Barb** — Fait du développé couché avec les stagiaires en dormant. A sifflé en débriefing : trois équipages font des pompes. |
+| 05 | L3 | `gary` | Gary | 47 | 5′9″ · 175 cm / 175 cm | 192 lb · 87 kg / 87 kg | Head of a one-man Neighbourhood Watch. Wears tinfoil to block alien mind rays; forgot it does nothing against a beam. | **Gary** — Chef des Voisins vigilants (un seul membre). Porte du papier alu contre nos ondes ; a oublié le rayon tracteur. |
+| 06 | L4 | `nigel` | Night Guard Nigel | 63 | 5′8″ · 173 cm / 173 cm | 181 lb · 82 kg / 82 kg | Guarded Grimsby Museum for thirty years, mostly from behind his eyelids. Mistook our mothership for the new space wing. | **Nigel, gardien de nuit** — Garde le musée de Grimsby depuis trente ans, surtout derrière ses paupières. A pris notre vaisseau pour l'aile Espace. |
+| 07 | L4 | `kev` | DJ Kev | 26 | 5′10″ · 178 cm / 178 cm | 159 lb · 72 kg / 72 kg | Swears he's huge on the club circuit; both of his fans agree. Tried to sample our tractor beam hum for a remix. | **DJ Kévin** — Jure qu'il cartonne en boîte ; ses deux fans confirment. A essayé de sampler notre rayon tracteur pour un remix. |
+| 08 | L4 | `mayor` | Mayor Whitlock | 61 | 5′9″ · 175 cm / 175 cm | 216 lb · 98 kg / 98 kg | Elected official with a wind-tunnel-tested toupee. Slept through the whole abduction—still livelier than his council meetings. | **Le maire Whitlock** — Élu local équipé d'une moumoute testée en soufflerie. A dormi tout du long — presque plus actif qu'en conseil municipal. |
+| 09 | L5 | `bubbles` | Bubbles | 14 | 8′2″ · 248 cm / 248 cm | 419 lb · 190 kg / 190 kg | Bottlenose dolphin who sleeps one hemisphere at a time. Outsmarted Lab 4 during debrief and negotiated her own parking ring. | **Bubulle** — Grand dauphin qui dort un hémisphère à la fois. A piégé le labo 4 au débriefing et négocié son anneau de parking. |
+| 10 | L5 | `pete` | Harbourmaster Pete | 67 | 5′11″ · 180 cm / 180 cm | 205 lb · 93 kg / 93 kg | Runs Barnacle Bay's lighthouse on industrial-strength tea and pure stubbornness. Logged our saucer as 'rude weather'. | **Pete, capitaine de port** — Tient le phare de Barnacle Bay au thé ultra-fort et à l'entêtement. A inscrit notre soucoupe en « météo malpolie ». |
+| 11 | L5 | `sal` | Sal | 49 | 5′5″ · 165 cm / 165 cm | 139 lb · 63 kg / 63 kg | Fish-market accountant who audits in her sleep. Invoiced the Bureau for emotional distress and two missing paperclips. | **Sal** — Comptable de la criée qui fait ses bilans en dormant. A facturé au Bureau un préjudice moral et deux trombones. |
+| 12 | L6 | `hank` | Hank | 54 | 5′10″ · 178 cm / 178 cm | 209 lb · 95 kg / 95 kg | Fasted all day and chugged four litres of prep drink just to get probed. Left our beam four stars for 'shorter queues'. | **Hank** — A jeûné tout le jour et bu quatre litres de purge pour se faire sonder. A mis quatre étoiles au rayon : « moins d'attente ». |
+| 13 | L6 | `osei` | Dr. Osei | 39 | 5′7″ · 170 cm / 170 cm | 143 lb · 65 kg / 65 kg | Thirty-two hours on call and running on coffee thick enough to stand a spoon in. Called our brass probe 'a bit vintage'. | **Dr Osei** — Trente-deux heures de garde grâce à un café assez épais pour tenir une cuillère. A trouvé notre sonde « un peu rétro ». |
+| 14 | L6 | `pemberton` | Mr. Pemberton | 71 | 5′9″ · 175 cm / 175 cm | 165 lb · 75 kg / 75 kg | So cheerfully sedated he thanked the tractor beam for the lovely lift. Left four stars and zero dignity complaints. | **M. Pemberton** — Si joyeusement sous sédatif qu'il a remercié le rayon pour cette jolie balade. Quatre étoiles et zéro plainte. |
+| 15 | L7 | `sterling` | Captain Sterling | 56 | 6′0″ · 183 cm / 183 cm | 203 lb · 92 kg / 92 kg | Commands a luxury cruise ship from his hammock. Nobody noticed he was gone for six hours: the ship's cat was steering. | **Commandant Sterling** — Commande un paquebot de luxe depuis son hamac. Personne n'a remarqué son absence pendant six heures : le chat tenait la barre. |
+| 16 | L7 | `marco` | Chef Marco | 43 | 5′8″ · 173 cm / 173 cm | 196 lb · 89 kg / 89 kg | Fiercely proud of his soufflés and his three-foot pepper mill. Demanded to know if our saucer's hold was properly seasoned. | **Le chef Marco** — Très fier de ses soufflés et de son moulin à poivre d'un mètre. A exigé de savoir si notre soute était bien assaisonnée. |
+| 17 | L7 | `greg` | Greg | 46 | 5′10″ · 178 cm / 178 cm | 223 lb · 101 kg / 101 kg | All-inclusive tourist who wore a lime mankini to the captain's table. Asked whether the probing came with free buffet access. | **Greg** — Touriste en tout compris qui a osé le mankini fluo à la table du commandant. A demandé si le sondage incluait le buffet. |
+| 18 | L8 | `flint` | Flint | 19 | 4′9″ · 145 cm / 145 cm | 148 lb · 67 kg / 67 kg | Prehistoric innovator who picked up a bone, threw it, and immediately asked about royalties. Still waiting on his parking ring. | **Silex** — Inventeur préhistorique qui a lancé un os et aussitôt réclamé des droits d'auteur. Attend toujours son anneau de parking. |
+| 19 | L8 | `reed` | Reed | 22 | 4′7″ · 140 cm / 140 cm | 134 lb · 61 kg / 61 kg | Prehistoric percussionist obsessed with dramatic drumrolls. Refused to rise up the beam until someone gave him a proper cue. | **Roseau** — Percussionniste préhistorique obsédé par les roulements dramatiques. A refusé de monter dans le rayon sans top départ. |
+| 20 | L8 | `echo` | Echo | 24 | 4′6″ · 137 cm / 137 cm | 126 lb · 57 kg / 57 kg | Prehistoric patent clerk with stone spectacles and ruthless paperwork. Tried to trademark our tractor beam before breakfast. | **Écho** — Greffière préhistorique à lunettes de pierre et paperasse impitoyable. A tenté de breveter notre rayon avant le petit-déj. |
+| 21 | L9 | `doc` | Doc | 65 | 6′1″ · 185 cm / 185 cm | 172 lb · 78 kg / 78 kg | Wired a whole clock tower to catch a lightning bolt without a single Bureau permit. Tried to sketch our engine in his sleep. | **Doc** — A câblé tout un clocher pour capter la foudre sans aucun permis du Bureau. A tenté de croquer notre moteur en dormant. |
+| 22 | L9 | `buff` | Buff Tanner | 18 | 6′2″ · 188 cm / 188 cm | 214 lb · 97 kg / 97 kg | 1955 diner bully with a bulletproof pompadour and a deep hatred of manure trucks. Swung at the tractor beam and missed. | **Buff Tanner** — Brute de café de 1955 à banane en béton et allergique aux camions de fumier. A collé un crochet au rayon et l'a raté. |
+| 23 | L9 | `marvin` | Marvin Cherry | 29 | 5′10″ · 178 cm / 178 cm | 163 lb · 74 kg / 74 kg | Bandleader who hurt his hand and slept through his own prom gig in a car trunk. Woke up phoning his cousin about a new sound. | **Marvin Cherry** — Chef d'orchestre blessé à la main, il a passé son propre bal endormi dans un coffre. S'est réveillé en appelant son cousin pour un « nouveau son ». |
+
 ## Scaling & multi-room threshold
 
 - **Threshold: `ROOM_CAPACITY = 48` exhibits per Souvenirs wing** (up to 16 rows of 3, ~3.4 portrait screens of scroll).
@@ -116,7 +162,12 @@ Enforced automatically by **`tests/ui-trophies.test.ts`**:
    - a non-empty EN & FR name in `tr().mapCollectibles.items[id]`,
    - a non-empty catchy EN & FR description in `tr().trophies.town.descriptions[id]` (distinct from shift-report comments and fitting cleanly in the detail card),
    - a non-empty funny Bureau status line in `tr().trophies.town.statuses[id]` and a vague non-spoiling hint in `tr().trophies.town.hints[id]`.
-3. **Room capacity & geometry:** every page produced by `buildTrophyPages` respects `ROOM_CAPACITY`, stays within one wing while `total <= 48`, and both Room 1 and Room 2 have zero overlapping slots and keep every slot inside the 540 px portrait width.
+3. **Every abductable specimen** — iterating `ROOMS`, `FIELD_CHECK_ROOM` and `LEVELS` targets (including outdoor troop targets like L8's Flint and Reed), never a hard-coded list — enforced by **`tests/ui-trophies-specimens.test.ts`**, **must have:**
+   - a slot in the Room 3 Specimen Archive (`buildSpecimenCatalog()`),
+   - a non-empty EN & FR name, age, height, weight and funny description in `tr().trophies.specimens.entries[id]` fitting the detail card cleanly,
+   - a valid `human/<id>_head` entry in `ART` (with primitive fallback in `src/ui/views/specimen-figure.ts`),
+   - clean save round-trip & validation (`readSpecimens` drops unknown ids and malformed shapes, `probed` stays fixed after first delivery), and zero gameplay effect on stars, Glorbs or unlocks.
+4. **Room capacity & geometry:** every page produced by `buildTrophyPages` and `buildSpecimenPages` respects `ROOM_CAPACITY`, stays within one wing while `total <= 48`, and Rooms 1, 2 and 3 have zero overlapping slots and keep every slot inside the 540 px portrait width.
 
 ## Complete exhibit catalogue (L1–L8 · 35 items)
 

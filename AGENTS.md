@@ -105,7 +105,10 @@ description in EN and FR. When you add a level or a room, add its souvenirs to t
 `tests/ui-trophies*.test.ts` walks every room, so a new souvenir fails until it is on the shelf. When the
 shelves outgrow a room, the design (docs/GDD-9-trophy-room.md) opens another wing. Town pickups have
 their own room in the trophy room: a level's map collectible needs a slot there too, with an EN and FR
-name and description (the same test walks `LEVELS`).
+name and description (the same test walks `LEVELS`). Abducted specimens have a third room (the Specimen
+Archive): every room's `human` needs an entry with an EN and FR name, age, height, weight and funny
+description (`tests/ui-trophies-specimens.test.ts`). The "probed" stamp is rolled once at first delivery
+and is cosmetic only: it never touches stars, Glorbs or unlocks.
 
 **Hard rule: no bump on start.** Every room spawn must sit 10 s without input with zero bonks and
 zero wake (`tests/abduct-spawn.test.ts`); fix the spawn pose or position, never the wake rules.

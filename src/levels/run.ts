@@ -8,11 +8,13 @@
 //     └─────────────────────────────────────────────────────────────┘
 //   any phase with the clock running ──elapsed ≥ budget──▶ sunrise (level failed)
 import type { AbductFailReason, AbductResult, RoomId, Vec2 } from '../contracts';
+import { ROOMS } from '../abduct/rooms';
 import { MapCollectible } from '../flight/collectible';
 import { crestValleyClock } from '../flight/time-car';
 import { troopTallies, type TroopTally } from '../flight/roam';
-import type { DeepSummary, TrophyFind } from './progress';
+import { specimenForTarget, type DeepSummary, type SpecimenFind, type TrophyFind } from './progress';
 import type { DeepLevelDef } from './types';
+
 
 export type RunPhase = 'flight' | 'abduct' | 'choice' | 'done' | 'sunrise';
 
@@ -58,6 +60,8 @@ export class DeepRun {
   lastFail: RunFail | null = null;
   /** v4 trophy room: each souvenir taken home this shift, with the route it came from. */
   readonly trophies: TrophyFind[] = [];
+  /** v4 specimens: each specimen delivered this shift, with its route (if abducted indoors). */
+  readonly specimens: SpecimenFind[] = [];
   readonly totals: RunTotals = { bonks: 0, snores: 0, items: [], rooms: [], dignity: 0, beamSec: 0 };
   /** Flight legs started (for Zib's lines). */
   legs = 0;
@@ -169,6 +173,8 @@ export class DeepRun {
     if (this.troops[target]?.full && !this.delivered[target]) {
       this.delivered[target] = true;
       this.order.push(target);
+      const id = specimenForTarget(this.level.map.targets[target]!);
+      if (id) this.specimens.push({ id }); // v4 specimens
       if (this.deliveredCount === this.delivered.length) this.phase = 'done';
     }
   }
@@ -193,6 +199,8 @@ export class DeepRun {
       this.totals.items.push(...res.itemsStolen);
       this.totals.rooms.push(cur.roomId);
       for (const item of res.itemsStolen) this.trophies.push({ item, room: cur.roomId }); // v4 trophy room
+      const human = ROOMS[cur.roomId]?.human;
+      if (human) this.specimens.push({ id: human, room: cur.roomId }); // v4 specimens
       if (res.probeReadings) this.probeReadings.push(...res.probeReadings);
       this.checkpoint = this.ringPos(cur.target, cur.entry);
       this.spawn = { ...this.checkpoint };
@@ -229,6 +237,7 @@ export class DeepRun {
     const mapCollectible = this.collectible?.collectedId;
     return {
       trophies: [...this.trophies],
+      specimens: [...this.specimens],
       delivered: this.deliveredCount,
       elapsedSec: this.elapsed,
       spotted: this.spotted,

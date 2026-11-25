@@ -6,7 +6,7 @@ import { DeepFlightScene } from '../flight/deep-scene';
 import { FlightScene } from '../flight/scene';
 import { FIELD_CHECK, FIELD_CHECK_INDEX, FIELD_CHECK_ROOM, FIELD_CHECK_RULES } from '../levels/field-check';
 import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom, levelRooms } from '../levels/levels';
-import { applyDeepRun, applyRun, isLevelUnlocked } from '../levels/progress';
+import { applyDeepRun, applyRun, backfillSpecimens, isLevelUnlocked } from '../levels/progress';
 import { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
 import { clearSave, loadSave, writeSave, type KeyValueStore, type SaveData } from '../levels/save';
@@ -123,6 +123,7 @@ export class Game implements Shell {
     this.input = new PointerInput(gfx.canvas, viewport);
     this.storage = browserStorage();
     this._save = loadSave(this.storage);
+    backfillSpecimens(this._save); // v4 specimens: older saves get their archive from past deliveries
     this.audio.setMuted(this._save.muted);
     this.ctx = {
       pointer: this.input.state,
