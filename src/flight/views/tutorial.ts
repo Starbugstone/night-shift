@@ -198,7 +198,7 @@ export class TutorialFlightView implements SceneView {
       n.root.visible = n.glow.visible = cam.sees(n.root.x, n.root.y, m.neons[i]!.r);
       if (n.root.visible) n.sync(on, s.hazT, rm);
     }
-    for (let i = 0; i < this.wires.length; i++) this.wires[i]!.sync(s.lineFlash[i]!);
+    for (let i = 0; i < this.wires.length; i++) this.wires[i]!.sync(s.lineFlash[i]!, t, rm);
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       ring.root.visible = cam.sees(ring.root.x, ring.root.y, 180);

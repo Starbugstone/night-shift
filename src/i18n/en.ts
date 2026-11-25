@@ -607,7 +607,7 @@ export const en = {
     seenRule: 'Seen for {s} s = spotted',
     banner: 'WORK ORDER #000{num} · SUNRISE AT {h}:00',
     secured: 'SPECIMEN SECURED',
-    backToCheckpoint: 'Tap to go back to the last checkpoint',
+    backToCheckpoint: 'back to the last checkpoint…',
     countOf: '{n} of 3',
     /** "Window — easy" on the map. */
     entrySep: ' — ',

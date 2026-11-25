@@ -19,7 +19,7 @@ export class SkyWire {
 
   constructor(d: WireHazard) {
     const tram = d.kind === 'tram';
-    this.wire = new WireView(d.ax, d.ay, d.bx, d.by, POWER_LINE.wireGap, POWER_LINE.sag, tram);
+    this.wire = new WireView(d.ax, d.ay, d.bx, d.by, POWER_LINE.wireGap, POWER_LINE.sag, tram, d.kind !== 'bunting');
     const poles = new Graphics();
     const r = tram ? 7 : POWER_LINE.poleR;
     for (const [x, y] of [[d.ax, d.ay], [d.bx, d.by]] as const) {
@@ -39,9 +39,9 @@ export class SkyWire {
     }
   }
 
-  sync(cam: CameraView, flash: number): void {
+  sync(cam: CameraView, flash: number, t: number, rm: boolean): void {
     this.root.visible = cam.sees(this.x, this.y, this.margin);
-    if (this.root.visible) this.wire.sync(flash);
+    if (this.root.visible) this.wire.sync(flash, t, rm);
   }
 }
 

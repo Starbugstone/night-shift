@@ -16,7 +16,7 @@ import { fmt, gt, localArt, tr } from '../i18n';
 import { fmtTime } from './draw';
 import { reportContent } from './report-content';
 import { coverStory, tabloidHeadline } from './report-extras';
-import { CH, CW, CX, CY, GLORB_Y, STAR_Y, stackedRowValue, type ReportLayout, type TextBlock } from './report-layout';
+import { CH, CW, CX, CY, GLORB_Y, STAR_Y, type ReportLayout, type TextBlock } from './report-layout';
 import type { Photo } from './report-photo';
 import { C } from './theme';
 import { Button } from './widgets';
@@ -320,21 +320,11 @@ class ReportView implements SceneView {
       const text = new Container();
       const row = new Container();
       const room = CW - 52 - measure(label, L.rowSize, 700) - 14;
-      const valueSize = L.rowSize + (i === 0 ? -2 : 1);
-      // a long value (three souvenirs) gets its own line under the label instead of shrinking to a smudge
-      const stacked = stackedRowValue(measure, value, room, CW - 52, valueSize);
-      if (stacked !== null) {
-        const half = Math.round(L.rowGap * 0.24);
-        text.addChild(
-          new Label(rowLabel).set(label, CX + 26, y - half),
-          new Label({ size: stacked, color: '#4b2fa0', align: 'right', weight: 800 }).set(value, CX + CW - 26, y + half + 1, CW - 52),
-        );
-      } else {
-        text.addChild(
-          new Label(rowLabel).set(label, CX + 26, y),
-          new Label({ size: valueSize, color: '#4b2fa0', align: 'right', weight: 800 }).set(value, CX + CW - 26, y, room),
-        );
-      }
+      text.addChild(
+        new Label(rowLabel).set(label, CX + 26, y),
+        new Label({ size: L.rowSize + (i === 0 ? -2 : 1), color: '#4b2fa0', align: 'right', weight: 800 })
+          .set(value, CX + CW - 26, y, room),
+      );
       row.addChild(text, new Graphics().rect(CX + 26, y + L.rowLine, CW - 52, 2).fill(C.paperLine));
       this.paper.addChild(row);
       return { root: row, text };

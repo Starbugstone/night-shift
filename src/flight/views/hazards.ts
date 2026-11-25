@@ -314,7 +314,7 @@ export class HazardViews {
       case 'wire': {
         const wire = new SkyWire(d);
         this.sky.addChild(wire.root);
-        return (cam) => wire.sync(cam, s.lineFlash[i]!);
+        return (cam, t, rm) => wire.sync(cam, s.lineFlash[i]!, t, rm);
       }
       case 'flock': {
         const flock = new FlockView(assets, d);

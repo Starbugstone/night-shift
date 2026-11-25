@@ -467,7 +467,7 @@ export const fr: Strings = {
     seenRule: 'Vu pendant {s} s = repéré',
     banner: 'ORDRE N°000{num} · AUBE À {h} H',
     secured: 'SPÉCIMEN EMBARQUÉ',
-    backToCheckpoint: 'Touchez pour revenir à la dernière étape',
+    backToCheckpoint: 'retour à la dernière étape…',
     countOf: '{n} sur 3',
     entrySep: ' — ',
     spinCity: 'SPIN CITY',
