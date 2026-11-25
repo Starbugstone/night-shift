@@ -1,5 +1,7 @@
 # Night Shift · Temporal Dispatch
 
+> **Superseded on films and order (2026-11-25).** Use the current [1955](GDD-10-1955.md), [1122](GDD-12-1122-grail.md), [1953](GDD-13-1953-tripods.md) and [2199](GDD-14-2199-hitchhiker.md) specs and the [story decisions](story/decisions.md) for films, order and story. The engine, registry and save notes below still apply where the current specs use them.
+
 Build **1953 · Grimsby Mob Docks** first. A waterfront numbers racket gives the saucer a new town to fly through using the current traffic, patrol, camera and room rules. It also pays off the brass thermometer from L6 and the last line of Season 1. The first playable cut is **Cold Storage**, a full three-specimen shift with six exits. The rest of the chapter adds a wedding and a drive-in without requiring outdoor abductions, moving landing rings or new controls.
 
 The other dates on the console are **1122** and **2199**. They're part of the story as soon as L8 is delivered. Patent Valley remains the prehistoric end of the original work-order list and becomes a Dispatch replay entry. The dates below describe a fictional Grimsby. Research and prop references live in [Film references](research/film-references.md).
