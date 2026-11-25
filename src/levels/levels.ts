@@ -108,6 +108,8 @@ export const LEVELS: readonly LevelDef[] = [
     memo: { re: en.levels.level2.re, body: en.levels.level2.body, joke: en.levels.level2.joke },
     map: {
       theme: 'town',
+      // v4 map collectibles: the first pickup sits in the verge before Main Street's wire gap.
+      collectible: { id: 'seti_dish', x: 744, y: 1534 },
       w: 1080,
       h: 1920,
       start: { x: 540, y: 1600 },

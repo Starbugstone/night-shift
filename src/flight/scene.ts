@@ -3,6 +3,7 @@ import { VIEW_H, VIEW_W } from '../contracts';
 import { ART } from '../art-manifest';
 import { pick, zibLine, type ZibEvent } from '../levels/humor';
 import { EggCues } from './easter-eggs'; // v4 easter eggs
+import { MapCollectible, mapPickupFeedback } from './collectible';
 import { tr } from '../i18n';
 import type { TutorialLevelDef, VehicleDef } from '../levels/types';
 import { clamp } from '../ui/draw';
@@ -61,6 +62,8 @@ export class FlightScene implements Scene {
   readonly saucer: Saucer = { x: 0, y: 0, vx: 0, vy: 0, stun: 0 };
   readonly sus = new SuspicionMeter();
   readonly lock = new LockOn();
+  readonly collectible: MapCollectible | null;
+  collectibleToastT = 0;
   vehicles: VehicleRT[] = [];
   private readonly ringPts: Vec2[];
   private readonly hit: SegHit = { nx: 0, ny: 0, depth: 0 };
@@ -106,6 +109,7 @@ export class FlightScene implements Scene {
   constructor(private readonly opts: FlightOptions) {
     this.ctx = opts.ctx;
     this.level = opts.level;
+    this.collectible = this.level.map.collectible ? new MapCollectible(this.level.map.collectible) : null;
     this.eggs = new EggCues(this.level.map.props, this); // v4 easter eggs
     this.spotted = opts.spotted;
     this.ringPts = this.level.map.entries.map((e) => ({ x: e.x, y: e.y }));
@@ -150,6 +154,8 @@ export class FlightScene implements Scene {
     this.saucer.stun = 0;
     this.sus.reset();
     this.lock.reset();
+    this.collectible?.resetHover();
+    this.collectibleToastT = 0;
     this.vehicles = m.vehicles.map((def, i) => ({
       def,
       path: new PathFollower(def.path, def.speed, def.dwell),
@@ -213,6 +219,7 @@ export class FlightScene implements Scene {
   update(dt: number): void {
     const p = this.ctx.pointer;
     this.zibT = Math.max(0, this.zibT - dt);
+    this.collectibleToastT = Math.max(0, this.collectibleToastT - dt);
     this.zibCd = Math.max(0, this.zibCd - dt);
     this.shake = Math.max(0, this.shake - dt * 3);
     for (let i = 0; i < this.lineFlash.length; i++) this.lineFlash[i] = Math.max(0, this.lineFlash[i]! - dt * 3);
@@ -245,7 +252,13 @@ export class FlightScene implements Scene {
       const dur = this.ctx.reducedMotion ? 0.5 : LOCK_ANIM;
       if (this.st >= dur && !this.done) {
         this.done = true;
-        this.opts.onLocked({ roomId: this.level.map.entries[this.lockedRing]!.roomId, timeSec: this.time, spotted: this.spotted });
+        const mapCollectible = this.collectible?.collectedId;
+        this.opts.onLocked({
+          roomId: this.level.map.entries[this.lockedRing]!.roomId,
+          timeSec: this.time,
+          spotted: this.spotted,
+          ...(mapCollectible ? { mapCollectible } : {}),
+        });
       }
       return;
     }
@@ -363,7 +376,11 @@ export class FlightScene implements Scene {
     if (egg) this.sayLine(egg);
 
     // lock-on
-    const idx = ringUnder(s.x, s.y, saucerSpeed(s), this.ringPts, RING_R);
+    const speed = saucerSpeed(s);
+    const idx = ringUnder(s.x, s.y, speed, this.ringPts, RING_R);
+    if (this.collectible?.update(dt, s, speed, idx)) {
+      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, this.collectible.def);
+    }
     if (idx >= 0 && !this.saidNearRing) {
       this.saidNearRing = true;
       this.say('nearRing', true);

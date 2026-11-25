@@ -15,7 +15,7 @@ import { countStars, type RunOutcome } from '../levels/progress';
 import { fmt, gt, localArt, tr } from '../i18n';
 import { fmtTime } from './draw';
 import { reportContent } from './report-content';
-import { coverStory, tabloidHeadline } from './report-extras';
+import { coverStory, mapCollectibleReport, tabloidHeadline } from './report-extras';
 import { CH, CW, CX, CY, GLORB_Y, STAR_Y, stackedRowValue, type ReportLayout, type TextBlock } from './report-layout';
 import type { Photo } from './report-photo';
 import { C } from './theme';
@@ -71,6 +71,7 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
   const par = lv.kind === 'tutorial' ? lv.parSec : 0;
   const total = flight.timeSec + abduct.timeSec;
   const r = tr().report;
+  const pickup = lv.map.collectible && mapCollectibleReport(lv.map.collectible.id, flight.mapCollectible);
   return {
     subtitle: fmt(r.subtitle, { name: tr().levels[lv.id].human, route: tr().routes[flight.roomId].route }),
     rows: [
@@ -79,11 +80,14 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
       [r.dignity, fmt(r.percent, { n: Math.round(Math.max(0, Math.min(100, abduct.dignity))) })],
       [r.snores, String(abduct.snores)],
       [r.items, itemsPhrase(abduct.itemsStolen)],
+      ...(pickup ? [pickup.row] : []),
       [r.spotted, String(flight.spotted)],
     ],
     stamp: abduct.delivered ? 'delivered' : 'failed',
     starLabels: tr().starLabels.tutorial,
-    comment: (abduct.delivered && outcome.newStarFlags[0] && storyFirstClear(lv.id)) || vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports), // v4 story
+    comment: (abduct.delivered && (
+      (outcome.newStarFlags[0] && storyFirstClear(lv.id)) || pickup?.comment
+    )) || vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports),
     delivered: abduct.delivered,
     ...(abduct.photo ? { photo: abduct.photo } : {}),
     cover: coverStory({ levelId: lv.id, items: abduct.itemsStolen, spotted: flight.spotted, sunrise: false, seed: outcome.save.reports }),
@@ -97,6 +101,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   const lv = run.level;
   const sunrise = run.phase === 'sunrise';
   const r = tr().report;
+  const pickup = lv.map.collectible && mapCollectibleReport(lv.map.collectible.id, run.collectible?.collectedId);
   const names = run.order.map((i) => gt(lv.map.targets[i]!.short)).join(r.listSep);
   const n = run.deliveredCount;
   const dignityCount = lv.id === 'level8' ? run.totals.rooms.length : n;
@@ -114,12 +119,13 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
       [r.bonked, String(run.totals.bonks)],
       [r.avgDignity, dignityCount > 0 ? fmt(r.percent, { n: Math.round(run.totals.dignity / dignityCount) }) : tr().common.dash],
       [r.items, itemsPhrase(run.totals.items)],
+      ...(pickup ? [pickup.row] : []),
     ],
     stamp: sunrise ? 'sunrise' : 'delivered',
     starLabels: lv.id === 'level8' ? tr().timeTrial.stars : tr().starLabels.deep,
     comment: sunrise
       ? sunriseMemo(outcome.save.reports)
-      : (outcome.newStarFlags[0] && storyFirstClear(lv.id)) || deepComment( // v4 story
+      : (outcome.newStarFlags[0] && storyFirstClear(lv.id)) || pickup?.comment || deepComment( // v4 story
           { levelId: lv.id, stars: countStars(outcome.stars), spotted: run.spotted, failed: run.failedAbductions, bonks: run.totals.bonks, remaining: run.remaining, order: run.order, items: run.totals.items, rooms: run.totals.rooms },
           outcome.save.reports,
         ),

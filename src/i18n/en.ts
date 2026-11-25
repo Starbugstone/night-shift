@@ -1819,6 +1819,19 @@ export const en = {
     completeTitle: 'FIELD CHECK PASSED',
     completeComment: "Adequate. Your temporary lanyard is in the tray. Sunrise starts on Maple Court—don't get seen by Mrs. Pruitt.",
   },
+  // v4 map collectibles
+  mapCollectibles: {
+    row: 'Town pickup',
+    found: '{name} · collected',
+    missed: '{name} · left behind',
+    toast: 'Collected: {name}',
+    items: {
+      seti_dish: {
+        name: 'SETI dish',
+        comment: 'The dish picked up three prime numbers and a request to move our van.',
+      },
+    },
+  },
 };
 
 export type Strings = typeof en;

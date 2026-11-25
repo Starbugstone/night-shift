@@ -1,5 +1,5 @@
 // Stars, Glorbs, ranks, unlocks and upgrades. Pure functions over SaveData.
-import type { AbductResult, FlightResult, UpgradeId } from '../contracts';
+import type { AbductResult, FlightResult, MapCollectibleId, UpgradeId } from '../contracts';
 import { LEVELS, isDeep } from './levels';
 import { cloneSave, type LevelId, type SaveData, type Stars } from './save';
 import type { LevelDef } from './types';
@@ -86,6 +86,7 @@ export interface DeepSummary {
   spotted: number;
   failedAbductions: number;
   sunrise: boolean;
+  mapCollectible?: MapCollectibleId;
 }
 
 export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary, levelId?: LevelId): Stars {
@@ -122,7 +123,7 @@ export interface RunOutcome {
 export function applyRun(save: SaveData, levelId: LevelId, abduct: AbductResult, flight: FlightResult): RunOutcome {
   const level = LEVELS.find((l) => l.id === levelId)!;
   const par = isDeep(level) ? level.budgetSec : level.parSec;
-  return applyStars(save, levelId, computeStars(par, abduct, flight), flight.timeSec + abduct.timeSec, 1);
+  return applyStars(save, levelId, computeStars(par, abduct, flight), flight.timeSec + abduct.timeSec, 1, flight.mapCollectible);
 }
 
 /** Apply a finished deep shift (delivered all, or sunrise) to a copy of the save. */
@@ -130,13 +131,14 @@ export function applyDeepRun(save: SaveData, levelId: LevelId, r: DeepSummary): 
   const level = LEVELS.find((l) => l.id === levelId)!;
   const budget = isDeep(level) ? level.budgetSec : 300;
   const margin = isDeep(level) ? level.parMarginSec : 0;
-  return applyStars(save, levelId, computeDeepStars(budget, margin, r, levelId), r.elapsedSec, DEEP_PAY_MULT);
+  return applyStars(save, levelId, computeDeepStars(budget, margin, r, levelId), r.elapsedSec, DEEP_PAY_MULT, r.mapCollectible);
 }
 
-function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: number, payMult: number): RunOutcome {
+function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: number, payMult: number, mapCollectible?: MapCollectibleId): RunOutcome {
   const idx = LEVELS.findIndex((l) => l.id === levelId);
   const next = cloneSave(save);
   const lv = next.levels[levelId];
+  if (mapCollectible && LEVELS[idx]?.map.collectible?.id === mapCollectible) lv.mapCollectible = mapCollectible;
   const prev: Stars = [...lv.stars];
   const before = rankFor(totalStars(save));
   const nextWasUnlocked = isLevelUnlocked(save, idx + 1);

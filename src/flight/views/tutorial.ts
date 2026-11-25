@@ -18,6 +18,7 @@ import { drawVehicleFallback } from '../props';
 import { LOCK_ANIM, type FlightScene } from '../scene';
 import { FLIGHT_HUD, POWER_LINE, SUSPICION, barkRadius, neonOn, suspicionMultiplier } from '../sim';
 import { DogView, EntryRingView, SaucerView } from './craft';
+import { MapCollectibleToast, MapCollectibleView } from './collectible';
 import { EggView } from './eggs'; // v4 easter eggs
 import { FlightBanner, FlightTintView, NeonView, TargetArrow, WireView, ZibBubble, woof } from './overlays';
 import { ConeView, DiscTell, lamp } from './tells';
@@ -46,6 +47,8 @@ export class TutorialFlightView implements SceneView {
   private readonly props: PropLayer;
   private readonly shadows: ShadowsView;
   private readonly eggs: EggView; // v4 easter eggs
+  private readonly collectible: MapCollectibleView | null;
+  private readonly pickupToast: MapCollectibleToast | null;
   private readonly target: TargetBuilding;
   private readonly saucer: SaucerView;
   private readonly fx: ParticleView;
@@ -80,6 +83,8 @@ export class TutorialFlightView implements SceneView {
     this.props = new PropLayer(assets, m.props);
     this.shadows = new ShadowsView(assets, [m.target, ...m.props], SHADOW_OFF);
     this.eggs = new EggView(m.props); // v4 easter eggs
+    this.collectible = s.collectible ? new MapCollectibleView(s.collectible) : null;
+    this.pickupToast = s.collectible ? new MapCollectibleToast(s.collectible.def.id) : null;
     this.target = new TargetBuilding(assets, m.target);
     this.saucer = new SaucerView(assets);
     this.fx = new ParticleView(s.fx);
@@ -120,6 +125,7 @@ export class TutorialFlightView implements SceneView {
     for (const l of this.wires) this.upperWorld.addChild(l.root);
     this.upperWorld.addChild(poles);
     for (const r of this.rings) this.upperWorld.addChild(r.root);
+    if (this.collectible) this.upperWorld.addChild(this.collectible.root);
     this.upperWorld.addChild(this.saucer.root, this.fx);
 
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
@@ -130,7 +136,9 @@ export class TutorialFlightView implements SceneView {
     );
     this.arrow = new TargetArrow(assets, words.specimen, false);
     this.zib = new ZibBubble(assets);
-    this.hud.addChild(this.quit, this.fuse, this.timer, this.banner.root, this.arrow.root, this.prompt, this.zib.root, this.spotted.root);
+    this.hud.addChild(this.quit, this.fuse, this.timer, this.banner.root, this.arrow.root, this.prompt, this.zib.root);
+    if (this.pickupToast) this.hud.addChild(this.pickupToast);
+    this.hud.addChild(this.spotted.root);
     world.addChild(this.tints.worldWash, this.upperWorld);
     this.root.addChild(this.camera.root, this.tints.root, this.hud);
   }
@@ -155,6 +163,8 @@ export class TutorialFlightView implements SceneView {
     this.groundProps.sync(cam);
     this.props.sync(cam);
     this.eggs.sync(cam, t, rm); // v4 easter eggs
+    this.collectible?.sync(cam, t, rm);
+    this.pickupToast?.sync(s.collectibleToastT, rm);
     this.shadows.sync(cam, 0);
     this.target.sync(false, t, rm);
     this.saucer.cue(s.state, s.exposed && s.state === 'fly', s.sus.value, s.zibT > 0 && s.state !== 'spotted'); // v4 UFO pilot

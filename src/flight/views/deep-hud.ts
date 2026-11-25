@@ -16,6 +16,7 @@ import { HudButton, HudFuse, HudPanel, HudPrompt, HudSunClock } from '../../ui/v
 import type { DeepFlightScene } from '../deep-scene';
 import { propSize } from '../props';
 import { RING_R, SUSPICION } from '../sim';
+import { mapCollectibleMinimapMark } from './collectible';
 import { FlightBanner, ZibBubble, tick } from './overlays';
 import { flightLesson } from './progression-hint';
 
@@ -46,6 +47,7 @@ class MiniMap {
   readonly root = new Container();
   private readonly window: Graphics;
   private readonly marks: Graphics[];
+  private readonly pickup: Graphics | null;
   private readonly ship = new Graphics().circle(0, 0, 3.5).fill(C.amberHi);
   private readonly scale: number;
   /** Screen box of the card, for labels that must keep clear of it. */
@@ -75,6 +77,8 @@ class MiniMap {
     this.root.position.set(VIEW_W - MINI_W - 14, HUD_Y);
     this.box = { x: VIEW_W - MINI_W - 17, y: HUD_Y - 3, w: MINI_W + 6, h: h + 6 };
     this.root.addChild(card, roads, this.window, ...this.marks);
+    this.pickup = s.sim.collectible ? mapCollectibleMinimapMark(s.sim.collectible, k) : null;
+    if (this.pickup) this.root.addChild(this.pickup);
     s.sim.ringRef.forEach((ref, ring) => {
       if (!ref.ape) return;
       this.marks[ref.target]!.visible = false;
@@ -90,6 +94,7 @@ class MiniMap {
     const k = this.scale;
     this.window.position.set(sim.camX * k, sim.camY * k);
     this.ship.position.set(sim.saucer.x * k, sim.saucer.y * k);
+    if (this.pickup) this.pickup.alpha = sim.collectible?.collected ? 0 : 1;
     for (const { ring, dot } of this.apes) {
       const p = sim.rings[ring]!;
       dot.visible = p.x >= 0;

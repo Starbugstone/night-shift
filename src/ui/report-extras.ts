@@ -1,6 +1,20 @@
 // v3 report additions (docs/GDD-3-new-shifts.md "Report additions"): Vrell's cover story and the
 // tabloid headline. Pure text selection, DOM-free; strings live in `tr().reportExtras`.
 import { fmt, gt, tr } from '../i18n';
+import type { MapCollectibleId } from '../contracts';
+
+export function mapCollectibleReport(id: MapCollectibleId, pickup: MapCollectibleId | undefined): {
+  row: [string, string];
+  comment: string;
+} {
+  const words = tr().mapCollectibles;
+  const { name, comment } = words.items[id];
+  const collected = id === pickup;
+  return {
+    row: [words.row, fmt(collected ? words.found : words.missed, { name })],
+    comment: collected ? comment : '',
+  };
+}
 
 /** Sightings from which the local paper runs the story. */
 export const TABLOID_SPOTTED = 2;

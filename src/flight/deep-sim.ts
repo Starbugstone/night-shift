@@ -3,6 +3,7 @@
 import type { PointerState, UpgradeId, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { RoamingApe, troopTallies } from './roam';
+import { MapCollectible } from './collectible';
 import type { DeepMap } from '../levels/types';
 import type { SegHit } from './geometry';
 import { BUMP_STUN, HazardField } from './hazards';
@@ -169,6 +170,7 @@ export class DeepFlightSim {
   spottedBy = -1;
   /** Set on the step lock-on completed. */
   justLocked = false;
+  justCollected = false;
   /** Saucer was in a ring (for Zib) */
   inRing = -1;
 
@@ -177,6 +179,7 @@ export class DeepFlightSim {
     upgrades: ReadonlySet<UpgradeId>,
     t0 = 0,
     readonly troops = troopTallies(map.targets),
+    readonly collectible = map.collectible ? new MapCollectible(map.collectible) : null,
   ) {
     this.delivered = map.targets.map(() => false);
     this.field = new HazardField(map.hazards);
@@ -226,6 +229,7 @@ export class DeepFlightSim {
     this.st.safe = safe;
     this.st.porchArm.fill(0);
     this.lock.reset();
+    this.collectible?.resetHover();
     this.phase = 'fly';
     this.inRing = this.lockedRing = -1;
     this.spottedBy = -1;
@@ -309,6 +313,7 @@ export class DeepFlightSim {
   /** Advance one frame. `pointer` is in logical screen coords; `pointerFree` = not on a HUD button. */
   update(dt: number, pointer: PointerState, pointerFree = true): void {
     this.justLocked = false;
+    this.justCollected = false;
     if (this.phase === 'spotted') {
       // the world keeps moving behind the photo-flash freeze (the clock is running)
       this.st.t += dt;
@@ -337,8 +342,10 @@ export class DeepFlightSim {
       return;
     }
     if (this.hasApes) this.stepApes(dt);
-    const idx = ringUnder(s.x, s.y, saucerSpeed(s), this.rings, RING_R);
+    const speed = saucerSpeed(s);
+    const idx = ringUnder(s.x, s.y, speed, this.rings, RING_R);
     this.inRing = idx;
+    this.justCollected = this.collectible?.update(dt, s, speed, idx) ?? false;
     if (this.lock.update(dt, idx)) {
       this.phase = 'locking';
       this.lockedRing = idx;

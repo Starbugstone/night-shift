@@ -1,6 +1,7 @@
 // Save data: load, validate, migrate. DOM-free (storage is injected).
-import type { UpgradeId } from '../contracts';
+import type { MapCollectibleId, UpgradeId } from '../contracts';
 import { isLangPref, type LangPref } from '../i18n';
+import { en } from '../i18n/en';
 
 /**
  * Where this build keeps its save. The production build (/night-shift/) and preprod
@@ -32,6 +33,8 @@ export interface LevelProgress {
   /** Best combined flight + abduction time of a delivered run (deep: whole-shift time). */
   bestTimeSec: number | null;
   attempts: number;
+  /** The map pickup has appeared on a filed report at least once. */
+  mapCollectible?: MapCollectibleId;
 }
 
 export interface SaveData {
@@ -103,7 +106,13 @@ function readLevel(raw: unknown): LevelProgress {
   const bt = raw.bestTimeSec ?? raw.bestTime;
   lv.bestTimeSec = typeof bt === 'number' && Number.isFinite(bt) && bt > 0 ? bt : null;
   lv.attempts = Math.floor(finiteNonNeg(raw.attempts, 0));
+  const collectible = raw.mapCollectible;
+  if (isMapCollectibleId(collectible)) lv.mapCollectible = collectible;
   return lv;
+}
+
+function isMapCollectibleId(value: unknown): value is MapCollectibleId {
+  return typeof value === 'string' && Object.hasOwn(en.mapCollectibles.items, value);
 }
 
 /** Turn anything (parsed JSON, garbage, older shapes) into a valid SaveData. */

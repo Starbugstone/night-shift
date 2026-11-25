@@ -235,12 +235,17 @@ export type CreateAbductScene = (
 
 // ---------------------------------------------------------------- flight
 
+// v4 map collectibles
+export type MapCollectibleId = 'seti_dish';
+
 export interface FlightResult {
   /** Which entry point the player locked onto. */
   roomId: RoomId;
   timeSec: number;
   /** Times spotted (flight restarted) before success. */
   spotted: number;
+  /** Optional side pickup logged during this flight. */
+  mapCollectible?: MapCollectibleId;
 }
 
 // ---------------------------------------------------------------- v2 autopilots (tests + e2e bot)

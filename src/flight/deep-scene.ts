@@ -10,6 +10,7 @@ import { P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles } from '../core/fx';
 import { ViewSlot } from '../core/gfx/scene';
 import { deepStartEvent, deepZibLine, spotCaption, spotShout, spotZibLine, type DeepZibEvent } from '../levels/humor'; // v4 story
 import { EggCues } from './easter-eggs'; // v4 easter eggs
+import { mapPickupFeedback } from './collectible';
 import { fmt, tr } from '../i18n'; // v4 voices
 import type { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
@@ -73,6 +74,7 @@ export class DeepFlightScene implements Scene {
   shake = 0;
   zibText = '';
   zibT = 0;
+  collectibleToastT = 0;
   private zibCd = 0;
   private zibN = 0;
   zibPanic = false;
@@ -105,7 +107,7 @@ export class DeepFlightScene implements Scene {
     this.level = opts.level;
     this.run = opts.run;
     this.practice = opts.practice ?? false;
-    this.sim = new DeepFlightSim(this.level.map, this.ctx.upgrades, this.run.elapsed, this.run.troops);
+    this.sim = new DeepFlightSim(this.level.map, this.ctx.upgrades, this.run.elapsed, this.run.troops, this.run.collectible);
     for (let i = 0; i < this.run.delivered.length; i++) if (this.run.delivered[i]) this.sim.markDelivered(i);
     const sp = this.run.spawn;
     this.sim.place(sp.x, sp.y, this.run.legs === 0 && this.run.spotted === 0 ? 0.4 : SAFE_WINDOW);
@@ -199,6 +201,7 @@ export class DeepFlightScene implements Scene {
     const p = this.ctx.pointer;
     const audio = this.ctx.audio;
     this.zibT = Math.max(0, this.zibT - dt);
+    this.collectibleToastT = Math.max(0, this.collectibleToastT - dt);
     this.zibCd = Math.max(0, this.zibCd - dt);
     this.shake = Math.max(0, this.shake - dt * 3);
     this.flashT = Math.max(0, this.flashT - dt);
@@ -252,6 +255,9 @@ export class DeepFlightScene implements Scene {
     const sim = this.sim;
     const previousTime = sim.st.t;
     sim.update(dt, p, !this.quit.pressedDown);
+    if (sim.justCollected && sim.collectible) {
+      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, sim.collectible.def);
+    }
 
     if (this.state === 'locking') {
       if (this.st >= LOCK_ANIM) {

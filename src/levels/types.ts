@@ -1,4 +1,5 @@
 import type { RoomId, Vec2 } from '../contracts';
+import type { MapCollectibleDef } from '../flight/collectible';
 import type { HazardDef } from '../flight/hazards';
 import type { RoamingTroop } from '../flight/roam';
 import type { GroundPatch } from '../flight/pier-ground'; // L5 pier code
@@ -106,6 +107,7 @@ export interface PowerLineDef {
 
 export interface FlightMap {
   theme: 'farm' | 'town';
+  collectible?: MapCollectibleDef;
   fuseSec?: number;
   w: number;
   h: number;
@@ -161,6 +163,7 @@ export interface DeepTarget<Entries extends EntryDef[] = [EntryDef, EntryDef]> {
 export interface DeepMap {
   /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
   theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands';
+  collectible?: MapCollectibleDef;
   w: number;
   h: number;
   start: Vec2;

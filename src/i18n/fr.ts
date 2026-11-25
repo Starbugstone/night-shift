@@ -1759,4 +1759,17 @@ export const fr: Strings = {
     completeTitle: 'TEST TERRAIN VALIDÉ',
     completeComment: "Correct. Votre tour de cou provisoire est dans la bannette. Le chrono démarre à l'allée des Érables — évitez Mme Pruitt.",
   },
+  // v4 map collectibles
+  mapCollectibles: {
+    row: 'Trouvaille en ville',
+    found: '{name} · récupérée',
+    missed: '{name} · laissée sur place',
+    toast: '{name} récupérée !',
+    items: {
+      seti_dish: {
+        name: 'Parabole SETI',
+        comment: "La parabole a capté trois nombres premiers et une demande de déplacer notre camionnette.",
+      },
+    },
+  },
 };

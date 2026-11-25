@@ -8,6 +8,7 @@
 //     └─────────────────────────────────────────────────────────────┘
 //   any phase with the clock running ──elapsed ≥ budget──▶ sunrise (level failed)
 import type { AbductFailReason, AbductResult, RoomId, Vec2 } from '../contracts';
+import { MapCollectible } from '../flight/collectible';
 import { troopTallies, type TroopTally } from '../flight/roam';
 import type { DeepSummary } from './progress';
 import type { DeepLevelDef } from './types';
@@ -63,6 +64,7 @@ export class DeepRun {
   readonly probeReadings: string[] = [];
 
   readonly troops: (TroopTally | undefined)[];
+  readonly collectible: MapCollectible | null;
 
   constructor(
     readonly level: DeepLevelDef,
@@ -70,6 +72,7 @@ export class DeepRun {
   ) {
     this.delivered = level.map.targets.map(() => false);
     this.troops = troopTallies(level.map.targets);
+    this.collectible = level.map.collectible ? new MapCollectible(level.map.collectible) : null;
     this.checkpoint = { ...level.map.start };
     this.spawn = { ...level.map.start };
   }
@@ -204,12 +207,14 @@ export class DeepRun {
   }
 
   summary(): DeepSummary {
+    const mapCollectible = this.collectible?.collectedId;
     return {
       delivered: this.deliveredCount,
       elapsedSec: this.elapsed,
       spotted: this.spotted,
       failedAbductions: this.failedAbductions,
       sunrise: this.phase === 'sunrise',
+      ...(mapCollectible ? { mapCollectible } : {}),
     };
   }
 }
