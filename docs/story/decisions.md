@@ -27,3 +27,9 @@ running-joke cap, era levels built on one film, Grimsby levels generic). These s
 - **D7 · Unlocks for the era levels:** once L9 (1955) is delivered, 1122 and 1953 can be played in either order. 2199, the season
   finale, opens once both are delivered, because it closes Krix's and Bubbles' stories. Era first-clear lines never name the "next"
   date (S24); L9's last line opens the dial ("Why is it blinking two more dates?").
+- **Callbacks to the story so far (user, 2026-11-25: "tie in the actual story into future episodes, just for humour and context").**
+  Each new level carries a few light callbacks to what the player has already done and met: Doyle's slipper, Larry asleep somewhere,
+  Gary's complaints, Mrs. Pruitt's binder, Krix and the toaster, Bubbles in her tank, the odd-sock hoard, souvenirs from earlier levels,
+  Gazette headlines that remember past nights. In era levels these can be ancestors, an heirloom, or the same object in another age,
+  as long as the level's film still leads. Each callback must make sense cold (setup visible on the screen, or a joke that works
+  without it), and they count towards the 2–3 running-joke cap only if they repeat across levels.
