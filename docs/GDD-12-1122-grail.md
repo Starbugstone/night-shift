@@ -12,7 +12,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Work Order #0012 · Ni!**
 >
-> Agent Zib, Krix made bail. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. Bring in the three knights who signed his witness roll in their sleep. You have until dawn. The knights by the west hedge demand a shrubbery.
+> Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. Bring in the three knights who signed his witness roll in their sleep. You have until dawn. The knights by the west hedge demand a shrubbery.
 >
 > The French are throwing cows. If the road moos, move.
 >
@@ -20,7 +20,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Ordre n°0012 · Sacré Graal !**
 >
-> Agent Zib, Krix est sorti sous caution. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ramenez avant l’aube les trois chevaliers qui ont signé sa déposition en dormant. Près de la haie à l’ouest, des chevaliers réclament un jardinet.
+> Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ramenez avant l’aube les trois chevaliers qui ont signé sa déposition en dormant. Près de la haie à l’ouest, des chevaliers réclament un jardinet.
 >
 > Les Français lancent des vaches. Si la route meugle, dégagez.
 >
@@ -35,14 +35,16 @@ Greybox **1800 × 2320** logical px, coordinates from the top left. South launch
 | Rodney’s pavilion, west market | (445, 955) | **Supply flap** (315, 990), recommended · **Banner loft** (495, 790) |
 | Black Knight’s bridge gatehouse | (900, 735) | **Toll arch** (785, 855), recommended · **Portcullis loft** (1020, 650) |
 | Tom’s tower, east crag | (1405, 560) | **Stone stair** (1550, 620), recommended · **Smoke hole** (1325, 390) |
-| French outwork | (900, 1450) | Cow gantry looks north over the inner road. The watch slit faces the south approach. |
+| French outwork | (900, 1450) | Cow gantry looks north over the inner road. The watch slit faces the south approach. Park an abandoned wooden rabbit on wheels beside the wall, well away from the Killer Rabbit’s cave. The wooden rabbit is scenery without a collider or detector. |
 | Rabbit cave | (1190, 970) | Set its mouth into the crag at the tempting turn from bridge to tower. |
 
 Draw the entry rings and pickup lock in mint with the existing UI. Draw the real edge of each active detector, with red on exposure. Amber previews the actual next danger. Torch spill and moonlight stay soft. Build the views once. Keep the same hazard footprints and phase changes in reduced motion, and drop the shake and animated flourishes.
 
+Mark a diagonal shortcut from a wait pocket near **(505, 1290)** to Rodney’s supply flap with wagon ruts. The first cow lands across that diagonal. The west cart track stays open the whole time.
+
 | Hazard | System and tell | Greybox |
 | --- | --- | --- |
-| **French cow barrage** | New timed impact patch using the existing circle detection and shared fuse. The catapult gives a creak and the cow moos as it leaves the wall. Zib sees a stationary, dashed amber landing mark for **1.15 s**, then the cow lands and the patch detects for **1.25 s**. The actual circle has a hard edge and goes red on exposure. Sample the warning, impact and clear phases in the sim. The cow gets up and walks off as the patch clears. The walk-off is scenery. | Alternate **(650, 1230)** and **(1010, 1090)** every **3.8 s**, radius **108**. The first drop is on the obvious shortcut from the outwork to Rodney, the second cuts the bridge approach. Show where the next cow lands before it leaves the wall. Place a full saucer-sized wait pocket at about **(470, 1180)** and leave both outer banks clear. The shortcut becomes clear when the landed cow gets up. |
+| **French cow barrage** | New timed impact patch using the existing circle detection and shared fuse. The catapult gives a creak and the cow moos as it leaves the wall. Zib sees a stationary, dashed amber landing mark for **1.15 s**, then the cow lands and the patch detects for **1.25 s**. The actual circle has a hard edge and goes red on exposure. Sample the warning, impact and clear phases in the sim. The cow gets up and walks off the diagonal as the patch clears. The walk-off is scenery. | Alternate **(460, 1125)** and **(1010, 1090)** every **3.8 s**, radius **108**. The first drop cuts the diagonal to Rodney and the second cuts the bridge approach. Show both landing marks from their safe approaches before the cows leave the wall. Verify the whole wait pocket and outer cart track clear the landing patches. |
 | French sentry | Existing fixed `camera` cone with a taunter leaning out. The taunter is plainly visible above the exact hard-edged sector. The edge and fuse go red while he sees the saucer. A continuous watch has no arming phase. | Source **(900, 1510)**, facing south, range **565**, half angle **0.80 rad**, zero sweep. This is the dependable beeline stop. |
 | Coconut squires | Move the emitter along an existing `steward` route and use the `dog` radial pulse shape instead of the torch. The squire raises the halves as an amber rim previews the full clop reach. After the strike, the hard current ring shows the true danger radius and goes red on contact. Animate a horseless trot. Audio can be muted and the gap remains readable. | One squire on **(605, 920) ↔ (630, 590)** at **82 px/s**, **1.0 s** turn dwell. Begin at **2.6 s** per clop, **0.45 s** amber lead, **118 px** max radius. Use the same clock and route pose in the autopilot and the view. Keep the ring’s outer extent clear of Rodney’s supply-flap lock. |
 | Killer Rabbit | Local proximity detector adapted from the porch arming pattern. Slow hover within **118 px** of the mouth at **≤110 px/s** arms the lunge for **0.75 s**. Amber arc and raised ears show the coming footprint. Leaving or speeding up during arming cancels it. On commit the white rabbit lunges across the same **118 px** half-disc for **0.95 s** and its exact edge goes red on exposure. Then it retreats for **1.5 s** before it can rearm. | Use a south-facing half-disc centred on the cave. “Low” means the existing hover speed. Normal cruise passes the mouth safely and the east bank gives a route around the entire footprint. Keep all entry and pickup catchments outside it. |
@@ -80,7 +82,7 @@ Use the standard ragdoll. Start both routes of each sleeper on the same settled 
 | --- | --- | --- |
 | Name / exact memo hint | Shrubbery / `a shrubbery` | Jardinet / `un jardinet` |
 | Description | The knights wanted something tasteful. After the beam took it, they had to make do with a tasteful hole. | Les chevaliers voulaient quelque chose de joli. Après le rayon, il ne leur est resté qu’un joli trou. |
-| Status | In nine hundred years this will be the Hendersons’ hedge. It’s already being blamed for things. | Dans neuf cents ans, ce sera la haie des Henderson. On lui reproche déjà des trucs. |
+| Status | The Hendersons will spend nine hundred years growing a hedge in this exact spot. The knights would like it a little higher. | Les Henderson mettront neuf siècles à faire pousser une haie pile ici. Les chevaliers la voudraient un peu plus haute. |
 | Locked hint | The loudest voices on the west bank want a little greenery. | Sur la rive ouest, les plus bruyants réclament un peu de verdure. |
 
 One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-room.md). Use each English item name as its lower-case ID, and register singular and plural in both languages.
@@ -89,43 +91,46 @@ One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-roo
 | --- | --- | --- |
 | Coconut halves | Horse sold separately. These two have never stopped for hay. | Demi-noix de coco · Cheval vendu séparément. Ces deux-là ne réclament jamais de foin. |
 | Stuffed swallow | Unladen. African or European? The taxidermist charged both rates. | Hirondelle empaillée · Sans charge. D’Afrique ou d’Europe ? Le taxidermiste a facturé les deux tarifs. |
-| Black Knight’s arm | An empty gauntlet and sleeve. It still insists on shaking hands. | Bras du Chevalier noir · Un gant et une manche vides. Ils tiennent à vous serrer la main. |
-| Black Knight’s shield | NONE SHALL PASS on the front. OPENING HOURS 9–5 on the back. | Bouclier du Chevalier noir · NUL NE PASSERA devant. HORAIRES 9 H–17 H derrière. |
-| Holy Hand Grenade | Pin in. Count to three. Zib counted to five. The hold has a skylight now. | Sainte Grenade · Goupille en place. Comptez jusqu’à trois. Zib a compté jusqu’à cinq. On a désormais un puits de lumière dans la soute. |
-| Enchanter’s horns | Two decorative horns. One points at the nearest fire exit. The other is more optimistic. | Cornes de l’enchanteur · Deux cornes décoratives. L’une indique l’issue de secours. L’autre est plus optimiste. |
+| Black Knight’s arm | Spare. He says he has another one somewhere. He said that last time. | Bras du Chevalier noir · De rechange. Il dit qu’il en a un autre quelque part. Il a dit ça la dernière fois. |
+| Black Knight’s shield | NONE SHALL PASS on the front. OPENING HOURS on the back. | Bouclier du Chevalier noir · NUL NE PASSERA devant. HORAIRES D’OUVERTURE derrière. |
+| Holy Hand Grenade | Count to three. Zib asked if that meant out loud. The hold has a skylight now. | Sainte Grenade · Comptez jusqu’à trois. Zib a demandé si c’était à voix haute. La soute a maintenant une lucarne. |
+| Enchanter’s horns | Ram’s horns on a skullcap. The ram has been asking for them back. | Cornes de l’enchanteur · Des cornes de bélier sur une calotte. Le bélier les réclame. |
 
 ### Specimen Archive
 
 | ID · name (EN / FR) | Age · height · weight | Description | `at3` | `at10` |
 | --- | --- | --- | --- | --- |
-| `rodney` · Sir Rodney the Not-Quite-So-Brave / Sire Rodney le Pas-si-Brave | 32 · 173 cm · 71 kg | Asked the farrier to shoe his horse. The farrier put two tiny horseshoes on his squire. | Asked the beam to carry him backwards so he could claim he was advancing. | Commissioned a victory song. The drummer had to play it from a safe distance. |
+| `rodney` · Sir Rodney the Not-Quite-So-Brave / Sire Rodney le Pas-si-Brave | 32 · 173 cm · 71 kg | Asked the farrier to shoe his horse. The farrier fitted his squire with tiny horseshoes. | Asked the beam to carry him backwards so he could claim he was advancing. | Commissioned a victory song. The minstrels keep adding verses about the running away. |
 | `black_knight` · The Black Knight / Le Chevalier noir | 41 · 188 cm · 91 kg | His armour is held on by pride. We found the spare fasteners unopened. | Declared the cargo bay a bridge. Nobody has crossed it since. | Asked for his armour back by weight. Swears we still owe him an elbow. |
-| `tom_enchanter` · Tom the Enchanter / Tom l’Enchanteur | 56 · 169 cm · 74 kg | The tower sign has the wrong name on it. Tom had already paid for the sign. | Brought his own lightning for the mugshot. The flash fired back. | His latest spell turns any rabbit into a perfectly ordinary rabbit. He is frightened of saying it wrong. |
+| `tom_enchanter` · Tom the Enchanter / Tom l’Enchanteur | 56 · 169 cm · 74 kg | Insisted on lighting his own birthday candles. We held it outdoors. | Warned the intake nurse about the rabbit. Showed her the size of the teeth with his hands. | His latest spell makes anything disappear. He’s still working on how to get it back. |
 
 | ID | Description FR | `at3` FR | `at10` FR |
 | --- | --- | --- | --- |
-| `rodney` | A demandé au maréchal-ferrant de ferrer son cheval. L’écuyer s’est retrouvé avec deux tout petits fers. | A demandé au rayon de le porter à reculons pour prétendre qu’il avançait. | A commandé un chant de victoire. Le tambour a dû jouer à bonne distance. |
+| `rodney` | A demandé au maréchal-ferrant de ferrer son cheval. L’écuyer s’est retrouvé avec de tout petits fers aux pieds. | A demandé au rayon de le porter à reculons pour prétendre qu’il avançait. | A commandé un chant de victoire. Les ménestrels n’arrêtent pas d’ajouter des couplets sur sa fuite. |
 | `black_knight` | Son armure tient par orgueil. Les attaches de rechange sont encore sous emballage. | A décrété que la soute était un pont. Plus personne ne la traverse. | A réclamé qu’on lui rende son armure au poids. Jure qu’il manque un coude. |
-| `tom_enchanter` | L’enseigne de la tour porte le mauvais nom. Tom l’avait déjà payée. | A apporté son propre éclair pour la photo. Le flash a riposté. | Son dernier sort transforme n’importe quel lapin en lapin ordinaire. Il a peur de se tromper d’un mot. |
+| `tom_enchanter` | A tenu à allumer lui-même ses bougies d’anniversaire. On a fait la fête dehors. | A mis l’infirmière en garde contre le lapin. Il lui a montré avec les mains la taille des dents. | Son dernier sort fait disparaître n’importe quoi. Il cherche encore comment le faire revenir. |
 
 ## Lines
 
 | Cue | EN | FR |
 | --- | --- | --- |
-| Zib, launch | “Those knights are banging coconuts together. Is that how humans flirt?” | « Ces chevaliers tapent des noix de coco. C’est comme ça que les humains draguent ? » |
-| French sentry, first sighting | “I fart in your general direction, you flying saucepan!” | « Je pète dans votre direction, casserole volante ! » |
+| Zib, launch | “They don’t have horses. Just coconuts. Vrell, is this what you meant by half?” | « Ils n’ont pas de chevaux. Juste des noix de coco. Vrell, c’est de ça que vous remboursez la moitié ? » |
+| French sentry, first sighting | “I fart in your general airspace, you flying saucepan!” | « Je pète dans votre espace aérien, casserole volante ! » |
+| French sentry, next approach after the first sighting | “A census? We’ve already got one!” | « Un recensement ? On en a déjà un ! » |
+| French sentry, next eligible approach, then Zib | “Your mother was a hamster!” / “Leave Mum out of this. She has Head Office on speed dial.” | « Votre mère était un hamster ! » / « Laissez ma mère en dehors de ça. Elle a le numéro du siège en favori. » |
 | Killer Rabbit, first approach / sighting | “Aw, a bunny!” / “Why does it have a body count?” | « Oh, un lapin ! » / « Pourquoi il a un tableau de chasse ? » |
-| Vrell, first clear | “Claim denied. Krix called his toaster to the stand. The court gave it two minutes to pop.” | « Demande rejetée. Krix a appelé son grille-pain à la barre. Le juge lui a laissé deux minutes pour faire sauter les tartines. » |
-| Gazette, default clipping at two or more sightings | **COWS STILL DENY ALL KNOWLEDGE** | **LES VACHES NIENT TOUJOURS TOUT EN BLOC** |
-| Ghost cover story | “Silent knight reported missing. Bridge open.” | « Le Chevalier noir s’est volatilisé. Le pont est libre. » |
+| Vrell, first clear | “Claim denied. Krix called his toaster to the stand. The court struck the toast from the record.” | « Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal a déclaré les tartines irrecevables. » |
+| Gazette, lead clipping at two or more sightings | **COW CLEARS CASTLE WALL. LANDING SCORES A FOUR.** | **UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.** |
+| Gazette, alternate clipping at two or more sightings | **COWS STILL DENY ALL KNOWLEDGE** | **LES VACHES NIENT TOUT EN BLOC** |
+| Ghost cover story | “Bridge reopens. Black Knight’s post ‘temporarily unarmed’.” | « Le pont rouvre. Poste du Chevalier noir « provisoirement désarmé ». » |
 | Pickup cover story, delivery with shrubbery | “Knights say Ni to garden centre price hike.” | « Les chevaliers disent Ni à la hausse des prix en jardinerie. » |
 | Rodney, retreat / ordinary mumble | “Bravely… back the way we came!” / “I’ll guard the rear… from home…” | « Courage… on repart par où on est venus ! » / « Je couvre nos arrières… de chez moi… » |
 | Black Knight, first / second / third and later bonks | “‘Tis but a dent.” → “Merely a flesh wound.” → “Fine. We’ll call it a draw.” | « Ce n’est qu’une bosse. » → « Une blessure superficielle. » → « Bon. Disons match nul. » |
-| Tom, mumbles | “There are some who call me… Tim.” / “Next spell… indoors voice…” | « Certains m’appellent… Tim. » / « Le prochain sort… à voix basse… » |
-| Pickup, collected on a repeat | “You brought a shrubbery. The knights want a slightly taller one. I’m hanging up.” | « Vous avez rapporté un jardinet. Les chevaliers en veulent un un peu plus haut. Je raccroche. » |
-| Pickup, missed rotation | “The knights are on hold. They seem to think the music is a challenge.” | « J’ai mis les chevaliers en attente. La musique, ils prennent ça pour un défi. » |
+| Tom, mumbles | “Some call me Tim. The sign painter won’t take it back.” / “Just a pilot light… stand back… further…” | « Certains m’appellent Tim. Le peintre ne veut pas reprendre l’enseigne. » / « Juste une petite flamme… reculez… encore… » |
+| Pickup, collected on a repeat | “You brought a shrubbery. Now they want a tree cut down with a herring. I’m hanging up.” | « Vous avez rapporté un jardinet. Maintenant ils veulent qu’on abatte un arbre avec un hareng. Je raccroche. » |
+| Pickup, missed rotation | “No shrubbery. The knights are saying Ni to Accounting. Accounting is saying it back.” | « Pas de jardinet. Les chevaliers disent Ni à la compta. La compta répond Ni. » |
 
-Treat the Gazette headline as an archive clipping, as in 1955. Put the Ghost and pickup variants in the existing report cover-story row so the sighting threshold still applies to the clipping. A report gets one cover-story line. Prefer the pickup variant if both qualify. Use existing flight speech timing for the taunt and rabbit lines and keep the hazard edges readable while they play.
+Treat both Gazette headlines as archive clippings, as in 1955, and select one through the existing headline rotation. Put the Ghost and pickup variants in the existing report cover-story row. Prefer the pickup variant if both qualify. Run the sentry taunts in order through the existing approach and sighting speech hooks. Advance when a line has played, keep the rotation at the flight checkpoint, and give Zib’s reply its own beat. Use `FLIGHT_BUBBLES` and `readSeconds()` for the taunts and rabbit lines. Keep the hazard edges readable during speech.
 
 ## Clock, stars and proof
 
@@ -148,13 +153,14 @@ Reuse farm ground, dirt roads, sea tint, stone hatch, door frames, crates, gear,
 | --- | --- |
 | `flight/grail_pavilion_top`, `flight/grail_bridge_top`, `flight/grail_tower_top`, `flight/grail_battlement_top`, `flight/grail_cave_top` | **240×180**, **300×240**, **230×220**, **300×180**, **160×130**. Cloth pavilion, gatehouse and bridge deck, stone tower, square French outwork and rabbit mouth. Keep roofs and props separate from entry rings. |
 | `flight/grail_cow_top`, `flight/grail_squire_top`, `flight/grail_rabbit_top`, `flight/grail_ni_knights_top`, `flight/pickup_shrubbery` | **106×64**, **60×60**, **46×35**, **82×66**, **106×116**. Original silhouettes. Animate the landing shadow, cow’s walk-off, clop pose and lunge in the retained view. Add the knights’ raised board as retained geometry with localized text. |
+| `flight/grail_wooden_rabbit_top` | **112×82**. Rough planks, little cart wheels and long squared-off ears. Park at the French outwork with a soft shadow. |
 | `room/bg_grail_pavilion`, `room/bg_grail_bridge`, `room/bg_grail_tower` | **540×720** each. Cloth, stone and dim candle-warm air. Use existing gate and obstacle silhouettes for the greybox. |
 | `human/{rodney,black_knight,tom_enchanter}_{head,head_awake,torso,upper_arm,lower_arm,upper_leg,lower_leg}` | Standard humanoid sizes from the manifest. Rodney’s soft cap, a visor with a face opening, and Tom’s crooked horned hat. Compose the Knight’s detachable plates in the view. Typeset TIM on the tower sign. |
 | `room/{coconut_halves,stuffed_swallow,black_knight_arm,black_knight_shield,holy_hand_grenade,enchanter_horns}` | Long sides **45–70 px**. Give the pin-in orb a broad pull ring and simple gold cross. Use the same silhouettes in the trophy view. |
 
 | Pass | Owner and handoff |
 | --- | --- |
-| 1. Flight greybox | **Flight/level** owns the map, safe approaches, fixed sentry and candidate geometry for hazards. **Flight hazards** adds the three local behaviours and tells, with pure clock sampling for cows and clops and flight-local rabbit state. Share the data with autopilot. |
+| 1. Flight greybox | **Flight/level** owns the map, safe approaches, fixed sentry, marked cow shortcut and wait pocket. Place the wooden rabbit through the existing prop view and use the existing speech rotation for the sentry. **Flight hazards** owns the three local behaviours and tells, with pure clock sampling for cows and clops and flight-local rabbit state. Share the data with autopilot. |
 | 2. Rooms | **Abduction** owns the six routes, collision/wake proof, Rodney’s reaction and the Knight’s per-bonk armour pieces and escalating mumbles. Reuse room timers and report plumbing. |
 | 3. Registry and save | **Coordinator** registers the stable level, room, human and pickup IDs, and the shared 1955 prerequisite by stable ID. Verify both orders through the 2199 gate and use the delivery flag for the gnome’s 1122 postcard. Check the migrated 1955 save and Dispatch returns from memo, abort and report. |
 | 4. Art and copy | **Art** supplies the original SVG pack. **Story/UI** puts the memo, Vrell priorities, lines, two-language item names, archive and Field Find data into the existing surfaces and checks their layout. |

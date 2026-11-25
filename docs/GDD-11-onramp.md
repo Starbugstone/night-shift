@@ -39,7 +39,10 @@ Park Spin City’s van at the Birch Lane turn. Larry’s report grants the tempo
 | Field Check skip / continue | “Skip to the bakery” / “Start the bakery call” | « Passer à la boulangerie » / « Partir pour la boulangerie » |
 | Field Check completed | “One logged. On a live shift the clock keeps running in every room. First live call: Birch Lane Bakery.” | « Un spécimen recensé. En mission, le chrono tourne dans toutes les pièces. Première vraie mission à la boulangerie du chemin des Bouleaux. » |
 | Maple Court memo | “Three before dawn this time, Zib. Dentist Dave, Coach Barb and Gary from Neighbourhood Watch. Watch for the cruiser. Pruitt’s still got her binoculars. Gary’s been shopping.” | « Trois avant l’aube cette fois, Zib. Dave le dentiste, Barb la coach et Gary de la surveillance du quartier. Gare à la voiture de police. Mme Pruitt a toujours ses jumelles. Gary a fait des achats. » |
-| Maple Court laser joke | “Gary’s new laser has caught him eleven times.” | « Le nouveau laser de Gary l’a déjà attrapé onze fois. » |
+| Maple Court laser joke | “Gary’s new lasers have caught him eleven times. A volunteer astronomer is on Birch Lane with a SETI dish, if you fancy a detour.” | « Les nouveaux lasers de Gary l’ont déjà attrapé onze fois. Un astronome bénévole est installé chemin des Bouleaux avec une antenne SETI, si le détour vous tente. » |
+| Maple Court laser failure (`garyFail`, record-books variant) | “{by}. Gary’s system has caught Gary eleven times and you once. You’re in the record books. Gary’s.” | « {by}. Le système de Gary a attrapé Gary onze fois, et vous une fois. Vous entrez dans le livre des records. Celui de Gary. » |
+
+The Maple Court memo keeps the astronomer as its sole pickup. The two laser lines refer to the same tally on Gary’s new system. In the loading tip rotation, show Pruitt’s wave-and-calibration line only after delivery of `birch_neighbours` so her first appearance stays on Birch Lane.
 
 ### Tuning targets
 
@@ -56,7 +59,7 @@ Use six seeds for the release gate. Use floors of 6/6 delivered, 6/6 skilled Gho
 
 ## #0003 · Baker Mabel’s First Batch
 
-**Setting.** Mabel sits down for five minutes while her dough rises. Crumb has curled around the bakery keys at the foot of the cooling rack. A missing-slipper flyer sits in the bakery window, with the familiar slipper silhouette printed on it.
+**Setting.** Mabel sits down while her dough rises. Crumb has curled around the bakery keys at the foot of the cooling rack. A missing-slipper flyer sits in the front window, with a large slipper silhouette.
 
 **Work Order card.** *Baker Mabel’s First Batch* · *Birch Lane Bakery* · “Up before the town. Asleep before the bread.” FR *La première fournée de Mabel* · *Boulangerie du chemin des Bouleaux* · « Debout avant le quartier. Endormie avant la pâte. » Mabel’s portrait has flour on one cheek and a pencil behind her ear.
 
@@ -64,7 +67,7 @@ Use six seeds for the release gate. Use floors of 6/6 delivered, 6/6 skilled Gho
 
 > **Work Order #0003 · Baker Mabel’s First Batch**
 >
-> Zib, your first live call is the bakery on Birch Lane. Collect Mabel. There’s a cherry pie cooling on the back step. Cartoon law says that makes it fair game.
+> Zib, your first live call is the bakery on Birch Lane. Collect Mabel. There’s a cherry pie cooling on the back windowsill. If it comes aboard, I’ll weigh it before Accounting does.
 >
 > Crumb sleeps on the bakery keys. Mabel has to ask permission to open.
 >
@@ -72,7 +75,7 @@ Use six seeds for the release gate. Use floors of 6/6 delivered, 6/6 skilled Gho
 
 > **Ordre n°0003 · La première fournée de Mabel**
 >
-> Zib, votre première vraie mission vous attend à la boulangerie du chemin des Bouleaux. Ramenez Mabel. Il y a une tarte aux cerises qui refroidit sur le perron. Dans les dessins animés, ça vaut invitation.
+> Zib, votre première vraie mission vous attend à la boulangerie du chemin des Bouleaux. Ramenez Mabel. Une tarte aux cerises refroidit sur le rebord de la fenêtre, à l’arrière. Si elle monte à bord, je la pèserai avant la compta.
 >
 > Miettes dort sur les clés de la boulangerie. Mabel doit lui demander la permission d’ouvrir.
 >
@@ -81,7 +84,7 @@ Use six seeds for the release gate. Use floors of 6/6 delivered, 6/6 skilled Gho
 ### Flight
 
 - Greybox a **1080 × 1440** suburb block. Start at **(540, 1250)**, with the bakery centred at **(540, 460)**. Put the Roof vent at roughly **(470, 400)** and the Stockroom door at **(615, 505)**. Use a cream roof, a wide extractor cap and a striped canopy over the loading door. Tuck the parked Spin City van out of the live approach.
-- Start with one existing `porch` detector on a loading-yard post at **(540, 910)**, trigger radius **290 px**, active radius **340 px** and map fuse **1.00 s**. At the 430 px/s speed cap the shorter direct approach still spends about **1.05 s** under the light after its **0.40 s** arm. The shortest paths from spawn to either ring cross its trigger. The obvious wide approach goes via the west verge near **(140, 910)**. Leave an equally legible retreat from the edge. The lamp shows its arming arc in amber before the hard active boundary appears. The boundary and saucer fuse go red on actual exposure. A player who brushes the boundary can steer out while the fuse still has room, then see it drain in clear air.
+- Mount the existing `porch` detector over the loading-yard gate at **(540, 910)**, with a **290 px** trigger radius, **340 px** active radius and **1.00 s** map fuse. On arm, the lamp head swivels toward the saucer and lights up a floury handprint on the gate. Keep that light local to the prop and show a static handprint reveal in reduced motion. At the 430 px/s speed cap the shorter direct approach still spends about **1.05 s** under the light after its **0.40 s** arm. The shortest paths from spawn to either ring cross its trigger. The obvious wide approach goes via the west verge near **(140, 910)**. Leave an equally legible retreat from the edge. The lamp shows its exact arming arc in amber before the hard active boundary appears. The boundary and saucer fuse go red on actual exposure. A player who brushes the boundary can steer out while the fuse still has room, then see it drain in clear air.
 - Keep the whole hover pocket at both rings outside the active radius. The first lesson is how far to go around a triggered hazard. Each ring has a name and a terrain landmark. No concurrent flight detector. Any pools of decorative light remain soft.
 
 ### Specimen and rooms
@@ -90,43 +93,47 @@ Use six seeds for the release gate. Use floors of 6/6 delivered, 6/6 skilled Gho
 
 | Route | Room and drag | Souvenir |
 | --- | --- | --- |
-| **Stockroom door** (*Porte de la réserve*) · recommended · `mabel_stockroom` | Mabel is on a padded bench. Lift her over the cooling rack, hold above the open gap, then guide her out the wide door. The direct drag hits the rack. Crumb sleeps curled on the keys at its foot, with an odd sock under one paw. Release to settle Mabel’s dangling feet right over the keys, then cross. Give the full body safe clearance above the existing secondary-sleeper wake radius. Rushing the turn can hit the rack and wake Crumb. | **Sourdough starter** on a shelf facing the safe approach. |
+| **Stockroom door** (*Porte de la réserve*) · recommended · `mabel_stockroom` | Mabel is on a padded bench. Lift her over the cooling rack, hold above the open gap, then guide her out the wide door. The direct drag hits the rack. Crumb sleeps curled on the keys at its foot. A paper bag marked **LARRY** sits beside them. Release to settle Mabel’s dangling feet right over the keys, then cross. Give the full body safe clearance above the existing secondary-sleeper wake radius. Rushing the turn can hit the rack and wake Crumb. | **Sourdough starter** on a shelf facing the safe approach. |
 | **Roof vent** (*Aération du toit*) · short · `mabel_vent` | Start on the same bench. Drift sideways past the overhanging trays on the flour trolley to get under a broad vent, then lift. The overhang catches a straight lift, and a bump near the trolley can wake Crumb. Keep enough headroom for Mabel’s feet to follow into the vent. | **Kitchen timer** on the service shelf at the turn. |
 
 Start both routes from the same settled pose. Seat the chest, hips and heels on the bench or leave them clear of the supports. Separate the paws, rack and souvenir from the initial body envelope. No timed object crosses the spawn. Use the existing hard interior rules with the normal release-to-hold behaviour. The first screen should show the sleeper and the lift direction so a player can recover by looking at the room.
+
+The dough swells over its bowl as Mabel sleeps. Scale its sprite above a fixed bowl and use a static overflowing pose in reduced motion. Show her floury outline on the bench when the body clears it for the first time. The roll bag, dough and flour imprint are scenery with no collider, wake or pickup.
 
 ### Evidence Locker
 
 | Slot | EN name and catalogue text | FR name and catalogue text |
 | --- | --- | --- |
 | Souvenir · `sourdough starter` | **Sourdough starter.** Mabel’s oldest employee. Fed twice a day, never paid. Zib says they relate. | **Levain.** Le plus ancien employé de Mabel. Nourri deux fois par jour, jamais payé. Zib connaît ça. |
-| Souvenir · `kitchen timer` | **Kitchen timer.** It rings at five. Mabel trained herself to sleep until it falls off the shelf. | **Minuteur de cuisine.** Il sonne à cinq heures. Mabel a appris à dormir jusqu’à ce qu’il tombe de l’étagère. |
-| Field Finds · `cherry_pie` | **Cherry pie.** Mabel flutes the crust with her thumbs. The Bureau failed it for having too many fingerprints. | **Tarte aux cerises.** Mabel pince les bords avec les pouces. Le Bureau l’a refusée pour excès d’empreintes. |
+| Souvenir · `kitchen timer` | **Kitchen timer.** Loud enough to wake the whole street. Mabel wakes when it falls off the shelf. | **Minuteur de cuisine.** Il réveille toute la rue. Mabel se réveille quand il tombe de l’étagère. |
+| Field Finds · `cherry_pie` | **Cherry pie.** Its steam curled into a little finger and beckoned. Zib followed it by the nose. | **Tarte aux cerises.** Un petit doigt de vapeur a fait signe à Zib. Son nez a fait le reste. |
 
-The **cherry pie** is the only town pickup. Set it on the back step at the west loading apron near **(180, 660)**. Use a **112 × 96 logical px** silhouette with a broad lattice, dark-red filling and a contrasting tin. Soft steam can stay static under reduced motion. Keep the entire 48 px hover catchment beyond detector coverage. Use the one-second mint lock. File the pie on any filed report and award its fourth star on delivery with the pie aboard. [Town pickup rules](GDD-8-map-collectibles.md)
+The **cherry pie** is the only town pickup. Set it on a back windowsill at the west loading apron near **(180, 660)**. Draw a short outbuilding wall and sill behind the pickup so the lattice and tin read in full against them. Use a **112 × 96 logical px** silhouette with a broad lattice, dark-red filling and a contrasting tin. Curl the soft steam like a beckoning finger, with a static pose in reduced motion. Keep the entire 48 px hover catchment beyond detector coverage. Use the one-second mint lock. File the pie on any filed report and award its fourth star on delivery with the pie aboard. [Town pickup rules](GDD-8-map-collectibles.md)
 
 | Pickup copy | EN | FR |
 | --- | --- | --- |
 | `memoHint` | `a cherry pie` | `une tarte aux cerises` |
-| Unfound hint | Cooling on the bakery’s back step | Refroidit sur le perron derrière la boulangerie |
+| Unfound hint | Cooling on the bakery’s back windowsill. | Refroidit à l’arrière de la boulangerie, sur un rebord de fenêtre. |
 | Found status | Half eaten. Vrell denies everything. There’s cherry on his clipboard. | À moitié mangée. Vrell nie tout. Son porte-bloc est taché de cerise. |
 
 | Archive ID | Name | Age | Height | Weight | Description | At 3 deliveries | At 10 deliveries |
 | --- | --- | ---: | ---: | ---: | --- | --- | --- |
-| `mabel` · EN | Baker Mabel | 55 | 163 cm | 71 kg | Has baked Larry from the laundromat a breakfast roll every morning for six years. He has never been awake to collect it. | Poked the saucer wall and said it needed another ten minutes. | Stopped selling bread by weight after a customer asked for a hundred grams of holes. |
-| `mabel` · FR | Mabel la boulangère | 55 | 163 cm | 71 kg | Depuis six ans, elle prépare chaque matin un petit pain pour Larry de la laverie. Il n’a jamais été réveillé pour venir le chercher. | A tâté la paroi de la soucoupe et demandé dix minutes de plus. | Ne vend plus le pain au poids depuis qu’un client a demandé cent grammes de trous. |
+| `mabel` · EN | Baker Mabel | 55 | 163 cm | 71 kg | Bakes a breakfast roll for Larry from the laundromat every morning. He has never been awake to collect it. | Poked the saucer wall and said it needed another ten minutes. | Tried our complimentary biscuit. Sent it back. Called it a cracker with ambitions. |
+| `mabel` · FR | Mabel la boulangère | 55 | 163 cm | 71 kg | Prépare chaque matin un petit pain pour Larry, de la laverie. Il dort toujours à l’heure de venir le chercher. | A tâté la paroi de la soucoupe et dit qu’il lui fallait encore dix minutes. | A goûté le biscuit offert. L’a renvoyé. « Un biscuit apéro qui se prend pour un sablé. » |
 
 ### Lines
 
 | Cue | EN | FR |
 | --- | --- | --- |
-| Zib, launch | “Motion light. I’ve got one thing going for me and it’s motion.” | « Un détecteur de mouvement. Le mouvement, c’était mon seul atout. » |
-| Vrell, first delivery | “Mabel’s aboard. Crumb opened on time. Prices are up, and everything comes with fur.” | « Mabel est à bord. Miettes a ouvert à l’heure. Les prix ont monté et tout est servi avec des poils. » |
+| Zib, launch | “I haven’t touched a thing and the bakery’s already caught me with my hands in it.” | « J’ai encore rien touché et la boulangerie m’a déjà pris la main dans le sac. » |
+| Vrell, first delivery | “Crumb opened at five. He knocked the card reader off the counter. Cash only.” | « Miettes a ouvert à cinq heures. Il a fait tomber le terminal de paiement. Espèces uniquement. » |
 | Gazette, two or more sightings | **BAKER’S BUNS SEEN RISING INTO NIGHT SKY** | **LES MICHES DE LA BOULANGÈRE MONTENT AU SEPTIÈME CIEL** |
-| Mabel, mumble | “Charge extra. Call it crust…” | « Faites payer la croûte en supplément… » |
+| Mabel, mumble | “I knead five more minutes…” | « Laissez-moi lever encore un peu… je me lève après… » |
 | Pickup, collected on a repeat | “Another pie. Mabel’s started baking one for the sky.” | « Encore une tarte. Mabel en prépare une de plus pour le ciel. » |
 | Pickup, left behind | “You left the pie. Crumb sat in it.” | « Vous avez laissé la tarte. Miettes s’est assis dedans. » |
-| Zib, sighting retry | “Around the lamp this time. I can still see my skeleton.” | « Cette fois, je contourne le projecteur. Je vois encore mon squelette. » |
+| Zib, sighting retry | “Around the lamp this time. It knows what I look like now.” | « Je contourne la lampe, cette fois. Elle sait à quoi je ressemble. » |
+
+Use the existing first-clear cover-story row for “The cat runs the bakery now. Nobody has questioned it.” / « C’est le chat qui tient la boulangerie. Personne n’a posé de question. » Show a floury paw print on the **OPEN** / **OUVERT** sign in the report art. The sign sets up Crumb’s cash-only punchline.
 
 ### Clock and proof
 
@@ -138,13 +145,13 @@ Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the moti
 
 **Setting.** The Hendersons are away. Nora Finch is house-sitting and Len Briggs is fixing a bicycle next door. Gary from Neighbourhood Watch fitted the garage alarm. Mrs. Pruitt has her binoculars and binder out across the lane. The Hendersons stay offscreen.
 
-**Work Order card.** *While the Hendersons Are Away* · *Birch Lane, Maple Court turn* · “Two sleepers. One nosy neighbour.” FR *En l’absence des Henderson* · *Chemin des Bouleaux, angle de l’allée des Érables* · « Deux dormeurs. Une voisine qui a l’œil. » Nora wears her quilted vest, with Len in work overalls just behind her.
+**Work Order card.** *While the Hendersons Are Away* · *Birch Lane, Maple Court turn* · “Two sleepers. One neighbour who isn’t.” FR *En l’absence des Henderson* · *Chemin des Bouleaux, angle de l’allée des Érables* · « Deux dorment. La voisine, elle, veille. » Nora wears her quilted vest, with Len in work overalls just behind her.
 
 **Shift memo**
 
 > **Work Order #0004 · While the Hendersons Are Away**
 >
-> Bring in Nora from the Hendersons’ garage and Len from next door before dawn. Mrs. Pruitt across the lane hasn’t slept since 1994. Their garden gnome is sulking by Len’s east drive.
+> Bring in Nora from the Hendersons’ garage and Len from next door before dawn. Mrs. Pruitt across the lane hasn’t slept since 1994. The Hendersons left their garden gnome behind. He’s sulking by Len’s east drive.
 >
 > Nora wrote the alarm code on a list. The list is inside, behind the laser. Gary from Neighbourhood Watch fitted it for free. It has caught Gary four times.
 >
@@ -152,7 +159,7 @@ Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the moti
 
 > **Ordre n°0004 · En l’absence des Henderson**
 >
-> Ramenez Nora du garage des Henderson et Len de l’atelier voisin avant l’aube. Mme Pruitt, en face, n’a pas dormi depuis 1994. Leur nain de jardin boude près de l’allée est de Len.
+> Ramenez Nora du garage des Henderson et Len de l’atelier voisin avant l’aube. Mme Pruitt, en face, n’a pas dormi depuis 1994. Les Henderson ont oublié leur nain de jardin. Il boude près de l’allée de Len, côté est.
 >
 > Nora a noté le code de l’alarme sur une liste. La liste est à l’intérieur, derrière le laser. Gary, de la surveillance du quartier, l’a installé gratuitement. Il a déjà attrapé Gary quatre fois.
 >
@@ -162,7 +169,7 @@ Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the moti
 
 - Greybox a **1440 × 1680** block. Start at **(720, 1570)**. The northbound Birch Lane frontage splits into two drives by a low brick wall. Put the Hendersons’ garage near **(460, 620)** and Len’s workshop near **(1020, 760)**. Give the garage a shallow tiled roof with a raised loft hatch, and the workshop a corrugated lean-to with a wide skylight and a parked bicycle. Start the Nora ring centres at **(560, 675)** and **(450, 565)**, and Len’s at **(915, 775)** and **(1025, 675)**, in recommended-first order. Connect the drives by an open cross lane north of the detector, so a first delivery leaves the saucer on the safer side. Place both approaches in view of their respective ring landmarks.
 - Angle a blue bin lid against the fence like a parked saucer, with the handle showing. Draw a soft shadow under it. Put Mrs. Pruitt and her binder in one upstairs window near **(720, 950)** using the existing `watcher` detector and house. Start at **590 px** range, **0.88 rad** half angle and a **0.90 s** fuse. Use south-facing bearings **π/2 ± 0.20 rad**, sweep amplitude **0.06 rad** and a **3 s** hold at each bearing. The shared sector covers at least **412 px** of each straight line to a first ring, about **0.96 s** at the speed cap. At either flank, place a turnout around **(125, 1420)** or **(1315, 1420)**. From there the player can cross when the cone moves away or take the outer verge. Put a permanent clear return along the north cross lane. Greybox the angular overlap and the two turnouts against all four start delays before locking the roof positions. Only the watcher raises Suspicion.
-- Reuse the amber binocular glint and future sector. Show the current cone as a hard edge at its actual angle, and turn its edge and the fuse red on exposure. Keep the two cones distinct through the transition. From either delivery ring, the next valid rings and the route back stay visible through the same minimap and labels. Leave the cruiser for Maple Court.
+- Use the existing proximity bark on the first approach to the bin lid. Reuse the amber binocular glint and future sector. Show the current cone as a hard edge at its actual angle, and turn its edge and the fuse red on exposure. Keep the two cones distinct through the transition. From either delivery ring, the next valid rings and the route back stay visible through the same minimap and labels. Leave the cruiser for Maple Court.
 
 ### Specimens and rooms
 
@@ -170,12 +177,14 @@ Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the moti
 
 | Specimen | Route | Room and drag | Souvenir |
 | --- | --- | --- | --- |
-| Nora | **Side door** (*Porte latérale*) · recommended · `nora_side` | Lift Nora above the garage workbench. There’s room to park her whole body, see the emitter and cross the laser perpendicularly when it drops. Keep the side door wide and clear. The workbench stops a straight drag even when the laser starts off. | **House-sitting checklist** on the near shelf just before the wait pocket. |
+| Nora | **Side door** (*Porte latérale*) · recommended · `nora_side` | Lift Nora above the garage workbench. There’s room to park her whole body, see the emitter and cross the laser perpendicularly when it drops. Keep the side door wide and clear. The workbench stops a straight drag even when the laser starts off. | **House-sitting checklist**, headed **ALARM CODE** / **CODE DE L’ALARME**, on the far shelf beyond the laser. Make it visible from the wait pocket and reachable on the natural line to the exit. |
 | Nora | **Loft hatch** (*Trappe du grenier*) · short · `nora_loft` | Lift sideways out of the cot bay, then hold Nora horizontally above a low tool chest before the last lift. The chest and loft fascia are solid. The same loaned laser covers the opening into the loft bay. The high wait pocket is tighter and the hatch itself is clear. | **Magnetic parts dish** on the pegboard shelf just beyond the crossing. |
 | Len | **Workshop door** (*Porte de l’atelier*) · recommended · `len_workshop` | Lift Len over the repair counter, let the feet catch up in the gap above the vice, then move out the wide door. A counter return blocks the direct drag. The furniture is the only obstacle in this building. | **Bicycle bell** on the counter’s open end. |
 | Len | **Skylight** (*Lucarne*) · short · `len_skylight` | Take Len feet-first around the handlebars of an upside-down bicycle on the repair stand, then up through the skylight. Match the static collider to the obstruction and give his feet room to settle beyond it. | **Biscuit tin** on the open shelf above the stand. |
 
 Keep each room to one short cutaway, at most two screen widths. Pegboard, exposed rafters and a bare bulb set the rooms apart from the bakery. For Nora, start with the existing laser cycle at **7.5 s** with **4.5 s off**. Use an amber rearming line and a sharply drawn live beam whose rendered segment matches its collision area. A strike trips the alarm and shows the red failure cue. Place the early warning, crossing and safe waiting space in view together. Use “Wait for the line to go dark” / « Attendez que la ligne s’éteigne » at the garage wait pocket and “Cross when she looks away” / « Passez quand elle regarde ailleurs » at the flight turnout. Keep the laser as the only timed obstacle and put the emitter well beyond the idle body envelope. Keep Nora supported by the cot and Len in a settled chair pose with all limbs clear. The souvenir spots and actor supports must pass the idle test before tuning anything else.
+
+In both garage routes, pin a strip of four flash photos next to the alarm panel. Every frame shows Gary caught in his own laser. In the last photo he is still holding the installer’s manual. The strip is scenery without text. Show the checklist’s alarm-code header from both wait pockets. In the loft route the checklist is scenery and the parts dish stays the souvenir.
 
 ### Evidence Locker
 
@@ -201,27 +210,28 @@ The gnome sends postcards in his Field Finds status. The existing found flag gat
 | --- | --- | --- |
 | 1122 | “Wet. Cows. Wish you were here.” | « Pluie. Vaches. Dommage que vous ne soyez pas là. » |
 | 1953 | “Saw a film. It came true.” | « J’ai vu un film. Il est sorti de l’écran. » |
-| 2199 | “Home. The Hendersons didn’t notice.” | « De retour. Les Henderson n’ont rien remarqué. » |
+| 2199 | “The future. Nearly a road. Saved by paperwork. Typical.” | « L’avenir. J’ai failli finir sous une route. Sauvé par la paperasse. Évidemment. » |
 
 | Archive ID | Name | Age | Height | Weight | Description | At 3 deliveries | At 10 deliveries |
 | --- | --- | ---: | ---: | ---: | --- | --- | --- |
 | `nora` · EN | Nora Finch | 46 | 168 cm | 73 kg | Keeps a list of keys and a second list of where she put the first list. Lost the second list. | Took the spare saucer key home. Hung it on the Hendersons’ peg marked MISCELLANEOUS. | Found out the fern was plastic. Watered it anyway, out of respect. |
 | `nora` · FR | Nora Finch | 46 | 168 cm | 73 kg | Tient une liste des clés et une deuxième pour retrouver la première. A perdu la deuxième. | A emporté la clé de secours de la soucoupe. L’a accrochée chez les Henderson, au crochet DIVERS. | A découvert que la fougère était en plastique. L’a arrosée quand même, par respect. |
-| `len` · EN | Len Briggs | 62 | 177 cm | 81 kg | Has been borrowing the Hendersons’ tools since 1998. Calls it “storage”. They’re too polite to ask. | Oiled the hangar door. The crew now misses the afternoon delivery because nobody can hear it open. | Fitted the saucer with stabilisers. Now it turns like a pram. |
-| `len` · FR | Len Briggs | 62 | 177 cm | 81 kg | Emprunte les outils des Henderson depuis 1998. Il appelle ça « du stockage ». Ils sont trop polis pour les réclamer. | A huilé la porte du hangar. Plus personne ne l’entend s’ouvrir et l’équipage rate les livraisons de l’après-midi. | A monté des petites roues sur la soucoupe. Elle tourne comme une poussette. |
+| `len` · EN | Len Briggs | 62 | 177 cm | 81 kg | Has borrowed the Hendersons’ tools for so long he calls it ‘storage’. They’re too polite to ask. | Serviced the saucer while in the hold. It now has a bell. Nobody knows where he got the bell. | Fitted the saucer with stabilisers. Now it turns like a pram. |
+| `len` · FR | Len Briggs | 62 | 177 cm | 81 kg | Ça fait si longtemps qu’il emprunte les outils des Henderson qu’il dit les « garder en dépôt ». Ils sont trop polis pour les réclamer. | A révisé la soucoupe pendant le trajet. Elle a maintenant une sonnette. Personne ne sait d’où elle sort. | A monté des petites roues sur la soucoupe. Elle tourne comme une poussette. |
 
 ### Lines
 
 | Cue | EN | FR |
 | --- | --- | --- |
-| Zib, launch | “She’s opened a fresh page. I can hear the binder rings.” | « Elle ouvre une nouvelle page. J’entends les anneaux du classeur. » |
+| Zib, launch | “Binoculars and a binder. Vrell, I think she’s one of us.” | « Des jumelles et un classeur. Vrell, je crois qu’elle est des nôtres. » |
+| Zib, first approach to the bin lid | “Is that one of ours? …It’s a bin lid. Nice lines, though.” | « C’est un des nôtres ?… Ah, un couvercle de poubelle. Belle ligne, quand même. » |
 | Vrell, first clear | “Both aboard. Mrs. Pruitt has logged the saucer as an extension without planning permission.” | « Les deux sont à bord. Mme Pruitt a inscrit la soucoupe dans son registre comme extension sans permis de construire. » |
-| Gazette, two or more sightings | **MRS. PRUITT REPORTS LOW-FLYING SAUCER. ALSO A FLYING SLIPPER, LAST WEEK.** | **MME PRUITT SIGNALE UNE SOUCOUPE À BASSE ALTITUDE. ET UN CHAUSSON VOLANT LA SEMAINE DERNIÈRE.** |
+| Gazette, two or more sightings | **MRS. PRUITT REPORTS SAUCER FOR 37TH TIME. FIRST TIME SHE’S RIGHT.** | **MME PRUITT SIGNALE UNE SOUCOUPE POUR LA 37ᵉ FOIS. ET CETTE FOIS, ELLE A RAISON.** |
 | Nora, mumble | “If that’s the owners… I’m dusting…” | « Si c’est les propriétaires… je fais la poussière… » |
-| Len, mumble | “Tea, milk, no chain oil…” | « Du thé, du lait, pas d’huile de chaîne… » |
-| Pickup, collected on a repeat | “He’s requested a window seat. He’s had the same view since 1986.” | « Il a demandé une place côté hublot. Il a la même vue depuis 1986. » |
+| Len, mumble | “It’s not the wheel ticking… it’s me…” | « C’est pas la roue qui fait tic-tac… c’est moi… » |
+| Pickup, collected on a repeat | “He’s requested a window seat. He’s faced the same drive his whole life.” | « Il a demandé une place côté hublot. Il a passé sa vie à regarder la même allée. » |
 | Pickup, left behind | “The gnome stayed. Tomorrow he’s trying the bus.” | « Le nain est resté. Demain, il tente le bus. » |
-| Zib, return to flight | “One aboard. Sun’s still coming up. Next house.” | « Un à bord. L’aube approche. Maison suivante. » |
+| Zib, return to flight | “One aboard. That’s already my record. Next house.” | « Un à bord. J’égale déjà mon record. Maison suivante. » |
 
 ### Clock and proof
 
@@ -267,22 +277,25 @@ Use original vector designs and primitive fallbacks. Reuse suburb tiles and roof
 | --- | ---: | --- |
 | `flight/birch_bakery_top`, `flight/henderson_garage_top`, `flight/len_workshop_top` | 3 | 300×240, 320×240, 260×200. Extractor cap, loft hatch and corrugated lean-to read from overhead. |
 | `flight/pickup_cherry_pie`, `flight/pickup_garden_gnome` | 2 | 112×96, 96×120. Three-quarter angles and clear profiles on the ground and in Field Finds. |
+| `flight/bakery_loading_gate_top`, `flight/bakery_back_windowsill_top` | 2 | 150×86, 160×108. Gate and lamp mount with a handprint layer revealed by the porch arm. Short rear wall with a broad sill. The pie has its own sprite. |
 | `human/{mabel,nora,len}_{head,head_awake,torso,upper_arm,lower_arm,upper_leg,lower_leg}` | 21 | Standard L1–L3 rig and manifest sizes. Flour and pencil, quilted vest and wool cap distinguish the three portraits. |
 | `room/bg_birch_bakery`, `room/bg_birch_workshop` | 2 | 540×960 each. Atmosphere and wall treatments only. |
 | `room/cooling_rack`, `room/flour_trolley`, `room/bike_repair_stand`, `room/folding_cot` | 4 | 220×120, 140×120, 180×110, 240×36. Match outlines to the colliders and leave space to read the tell. Reuse the existing workbench and counter, and a low cabinet for the tool chest where it fits. |
 | `room/sourdough_starter`, `room/kitchen_timer`, `room/house_sitting_checklist`, `room/magnetic_parts_dish`, `room/bicycle_bell`, `room/biscuit_tin` | 6 | 48×55, 40×52, 48×32, 46×36, 48×44, 56×38. Read from the route and in the trophy silhouette. |
+| `room/bakery_roll_bag`, `room/bakery_dough_bowl`, `room/bakery_dough`, `room/bakery_flour_imprint`, `room/gary_flash_strip` | 5 | 56×68, 80×36, 72×42, 190×64, 104×38. Leave the bag blank for the retained **LARRY** label. Separate dough from bowl for scaling. Draw the flour imprint flat on the bench and give each flash frame a distinct Gary pose. |
+| `ui/bakery_open_sign` | 1 | 96×54. Floury paw print and room for the localized sign text. |
 
-Total first-pass cost is **38 SVG keys, two maps, six playable room routes and three specimen rigs**. The four level/room data modules are the main new code. Existing detectors cover both shifts. Use retained shapes for the keys at Crumb’s paws, the wheel and bin-lid decoy. Paint the slipper flyer and odd sock into the scene. Reuse checklist art for the alarm code hung behind the beam. Add the icons to the art contact sheet and use the two field-find models at normal flier scale when checking the phone view.
+Total first-pass cost is **46 SVG keys, two maps, six playable room routes and three specimen rigs**. The four level/room data modules are the main new code. Existing detectors cover both shifts. Use retained shapes for the handprint, steam, keys at Crumb’s paws, wheel and bin-lid decoy. Place the slipper flyer in the front window and use a retained localized header on the checklist behind the laser. Add the icons to the art contact sheet and use the two field-find models at normal flier scale when checking the phone view.
 
 ## Build split and acceptance
 
 | Pass | Owner and scope | Proof |
 | --- | --- | --- |
 | 1. Dispatch and scoring | **Coordinator** owns `levels/{types,levels,run,save,progress}.ts`, IDs in `contracts.ts`, the clock mode, target-count stars/reports, Field Check routing and numbers. | Fresh, L2-only import, Maple attempt, later delivery including sparse/out-of-order saves, v1 legacy, reset and reload. Verify 1/1, 2/2, 3/3 and L8 troop counts, deadline and par boundaries, skip/replay, next dispatch and fourth star versus filed pickup. |
-| 2. Flight greyboxes | **Flight** owns `src/levels/deep-birch-bakery.ts` and `deep-birch-neighbours.ts`. Reuse porch and watcher fields. Author road junctions, ring positions, lookout timing and pickup pockets, with the false saucer as scenery and a clean pointer approach to each exit. | `flight-autopilot`, `flight-roads`, layout and pickup-figure tests, both new maps in `scripts/pixi/check-bubbles.mjs`, four beeline start delays, flight restart and next-leg checkpoint. |
-| 3. Room greyboxes | **Rooms** owns `src/abduct/rooms/deep-birch-bakery.ts` and `deep-birch-neighbours.ts`, the six exits, Crumb’s keyring hold, Len’s handlebars and every souvenir placement. | `abduct-spawn` across `ROOMS` and Field Check, `abduct-deep`, souvenir reach, direct-drag regressions, mouse/touch jitter and release-to-hold with the authored exits. Both wake meters start at zero. |
+| 2. Flight greyboxes | **Flight** owns `src/levels/deep-birch-bakery.ts` and `deep-birch-neighbours.ts`. Reuse porch and watcher fields. Stage the gate, windowsill and false saucer with the existing prop and speech views. Author road junctions, ring positions, lookout timing, pickup pockets and a clean pointer approach to each exit. | `flight-autopilot`, `flight-roads`, layout and pickup-figure tests, both new maps in `scripts/pixi/check-bubbles.mjs`, four beeline start delays, flight restart and next-leg checkpoint. |
+| 3. Room greyboxes | **Rooms** owns `src/abduct/rooms/deep-birch-bakery.ts` and `deep-birch-neighbours.ts`, the six exits, Crumb’s keyring hold, Len’s handlebars and every souvenir placement. Set the checklist past the laser and stage the bag, dough, flour imprint and photo strip in the retained room view. | `abduct-spawn` across `ROOMS` and Field Check, `abduct-deep`, souvenir reach, direct-drag regressions, mouse/touch jitter and release-to-hold with the authored exits. Both wake meters start at zero. |
 | 4. Art | **Art** owns the keys above, with final sizes agreed with the flight and room owners, plus the contact sheet. | Real phone previews of pickups, roofs, sleeper portraits and cutaways, including missing SVGs and reduced-motion tells. |
-| 5. Copy and catalogue | **Story/UI** owns EN/FR work orders, lanyard and Maple Court handoffs, radio and report jokes, Gazette and both Evidence Locker entries, including the three gnome postcards. | `flight-collectible` covers unique pickups and both memo hints, `ui-trophies*` covers items, finds and specimen entries, and `ui-report*` covers the report rows, Vrell comment priorities and localized wrapping. |
+| 5. Copy and catalogue | **Story/UI** owns EN/FR work orders, lanyard and Maple Court handoffs, the Pruitt tip gate, radio and report jokes, the bakery’s paw-print sign, Gazette and both Evidence Locker entries, including the three gnome postcards. | `flight-collectible` covers unique pickups and both memo hints, `ui-trophies*` covers items, finds and specimen entries, and `ui-report*` covers the report rows, Vrell comment priorities and localized wrapping. |
 | 6. Tune and play | **Difficulty** owns the two new bands, standard and pickup-first samples and seeded beelines. **Verification** drives the phone build. | Run `DIFFICULTY_LEVELS=birch_bakery,birch_neighbours,level3 npm run difficulty` at 6 and 20 seeds, then `npm test`, typecheck and build. Extend the real-pointer playthrough and bubble script to enumerate from stable IDs. |
 
 Measure skip and detour runs via `DeepRun`, live flight and simulated abduction. Record all four beeline phases, first sighting source, time per leg and peak Suspicion, room failures, secondary-sleeper wake, clearance, retries and all four star rates. Keep the existing early deep gates for par usage (30% minimum), casual median peak Suspicion (5% minimum), average route median peak wake (20 minimum) and 80 px obstacle-or-mechanic approach. For each level, prove one four-star detour with the bot and at least one per model over 20 seeds. Keep the room-route samples separate from whole-shift samples. A high result from the route-aware model needs a real-thumb check.

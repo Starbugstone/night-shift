@@ -36,7 +36,8 @@ Use existing `camera` detection and its sinusoidal heading, `base + amp × sin(r
 | Complaints lectern | (900, 690) | 285 px | 0.32 | −1.57 | 0.58 | 0.82 rad/s | 4.4 |
 
 - The active cone has a hard pale edge. Show a dashed **amber** edge at the cone heading sampled **0.45 s ahead** whenever the predicted edge advances into clear space. Use the exact sampled shape for the preview with faint fill confined to that shape. The current edge and saucer fuse turn **red** on live exposure. **Mint** is reserved for Zib, entries and the towel lock. A static sign, floor arrows and lamp spill have no detector edges. All cues retain their geometry and timing in reduced motion and with muted audio.
-- One fixed listener beside each inner lectern slumps whenever its anchor enters that live cone and straightens when it clears. The view samples the same cone predicate and clock. The listener is scenery with no movement through the map, wake, collision or extra beams. On the first approach to the opening recital, play its two-line verse as a `FLIGHT_BUBBLES` bark with `readSeconds()` and alien babble. Let Zib’s first-leg line finish before the verse starts. The edge and fuse communicate the hazard on their own. A full fuse uses the standard spot delay and flight respawn, with the poetry caption. It cancels the interrupted lock and preserves the timer, last delivered ring and earlier deliveries.
+- One fixed listener beside each inner lectern slumps whenever its anchor enters that live cone and straightens when it clears. The view samples the same cone predicate and clock. The listener is scenery. On the first approach to the opening recital, play the numbered ode under **Copy**. Subsequent approaches use the next verse in the three-line rotation, wrapping after the third and respecting the existing speech cooldown. Use `FLIGHT_BUBBLES`, `readSeconds()` and alien babble. Let Zib’s first-leg line finish before the verse starts. A full fuse uses the standard spot delay and flight respawn, with the poetry caption. It cancels the interrupted lock and preserves the timer, last delivered ring and earlier deliveries.
+- Pose Zib with fingers in their ears when the saucer enters the existing amber preview. Hold that pose in reduced motion. The live edge and fuse still show the actual exposure. Use the existing cockpit rig and test the pose at phone size.
 - **East demolition dozer.** Use the existing `steward` route and cone with a dozer skin. The blade turns with the chassis, and the lamp uses the same origin offset as the cone. Start the route at **(1170, 955) ↔ (1170, 780)** at **72 px/s**, **1.0 s** turn dwell, **148 px** range, **0.30 rad** half angle and zero torch sweep. Show the next turn’s bounded cone in amber, with a hard live edge and red on exposure. The lower street, outside lane and service door stay clear at all phases. The north turn can catch the fast loft approach until the blade turns away. The dozer’s lamp uses standard sighting and recovery.
 - Target starting safe pockets for the fast rings are **(535, 565)**, **(1265, 565)** and **(760, 375)**. Measure their entire usable hover area against the sweep envelope. Players can wait outside the cone until the amber edge moves away, make the short approach, brake and lock. At each fast entry leave a quiet interval of **at least 2.2 s** for braking and hovering. Leave the entire usable area of each recommended ring clear over a full cycle. The return from each fast entry must reach a safe pocket within the standard checkpoint grace once the player starts to steer.
 
@@ -50,9 +51,9 @@ All three use the standard humanoid ragdoll and deep wake rules. Moe’s standby
 | --- | --- | --- |
 | **Artie Duvet** fell asleep on his front-room sofa in the dressing gown he wore lying in the mud in front of a bulldozer to save his house. | **Garden door** · `artie_garden` | Steer around the end of a parked demolition blade and settle above the shoe bench before lowering through the garden door. The blade’s static collider catches the direct pull. Lift the **bowl of petunias** from the bench shelf. |
 | Artie | **Bathroom hatch** · `artie_bath` | Pull sideways clear of the tall airing cupboard, then lift into the bathroom shaft. Let the hanging shower rail swing away before raising his trailing feet. The cupboard catches a straight lift. Collect the **spare dressing gown** from the peg on the turn. |
-| **Penny Thumb**, stranded travel-guide writer and habitual hitchhiker, gave the last shuttle two stars as it pulled away. She dozed on a transit-office bench. | **Service door** · `penny_service` | Lift past the ticket counter and stop in the empty queue bay. Let the baggage cart roll under, then bring Penny along the landing and out the side door. The counter blocks a straight drag. Collect the **ear fish** off the counter’s far ledge. It sits in a clear jar. |
-| Penny | **Ticket loft** · `penny_loft` | Round the ticket cabinet and hold over the locker bank. Lead feet through a timed luggage shutter before climbing to the roof. Start with a **7.8 s** gate cycle and **4.2 s** of full crossing clearance. The cabinet blocks a direct lift at every phase. Collect Penny’s **pocket travel guide** on the loft landing. |
-| **Moe Dread**, the complaint bureau’s robot, put himself into standby while waiting to complain about his own standby mode. | **Side returns** · `moe_returns` | Lift off the dock and go over the return counter. Settle past it while a stamp counterweight travels down its guide, then go behind it to the exit. The counter blocks the direct pull. Collect the **complaint stamp** from the shelf above the return tray. |
+| **Penny Thumb**, stranded travel-guide writer and habitual hitchhiker, stuck out her thumb at the last shuttle. The driver waved back. She dozed on a transit-office bench. | **Service door** · `penny_service` | Lift past the ticket counter and stop in the empty queue bay. Let the baggage cart roll under, then bring Penny along the landing and out the side door. The counter blocks a straight drag. Collect the **ear fish** off the counter’s far ledge. It sits in a clear jar. |
+| Penny | **Ticket loft** · `penny_loft` | Round the ticket cabinet and hold over the locker bank. Lead feet through a timed luggage shutter before climbing to the roof. Start with a **7.8 s** gate cycle and **4.2 s** of full crossing clearance. The cabinet blocks a direct lift at every phase. Collect Penny’s chunky **electronic travel guide** at the loft turn. Typeset **GRIMSBY ★☆☆☆☆** on its screen. |
+| **Moe Dread**, the complaint bureau’s robot, put himself into standby while waiting to complain about his own standby mode. | **Side returns** · `moe_returns` | Lift off the dock and go over the return counter. Settle past it while a stamp counterweight travels down its guide, then go behind it to the exit. The counter blocks the direct pull. Collect the **complaint stamp** from the shelf above the return tray. Typeset **HOME ADDRESS: THIS DESK** / **DOMICILE : CE BUREAU** on the existing tray. |
 | Moe | **Voice vent** · `moe_vent` | Drag around the tall voice cabinet and pause where a moving fan is in view. Take the clear side of the duct during the slow part of its cycle. The cabinet obstructs the straight ascent. Collect the **answer display** on the maintenance rest. |
 
 Use a **740 × 700** starting bay per sleeper as in [the 1955 rooms](../src/abduct/rooms/deep-1955.ts). Initial staging for greybox measurements follows. Coords are room-local and distinct from the map.
@@ -74,8 +75,8 @@ For side routes, begin with a **300 px** tall bay opening at **x = 740** and the
 | Name | Bypass towel | Serviette de la déviation |
 | Status | Issue standard. Laundering optional. | Modèle réglementaire. Lavage facultatif. |
 | `memoHint` | `a towel` | `une serviette` |
-| Unfound hint | Drying on the west harbour rack. | Sèche sur le portant à l’ouest du port. |
-| Catalogue | Standard issue for emergency hitchhiking. Under “destination” somebody wrote “away”. | Équipement réglementaire pour l’auto-stop d’urgence. À la rubrique « destination », quelqu’un a écrit « ailleurs ». |
+| Unfound hint | Always know where your towel is. Yours is on the west harbour rack. | Sachez toujours où est votre serviette. La vôtre est sur le portant à l’ouest du port. |
+| Catalogue | The most useful thing a traveller can carry. Zib has used it as a cape, a pillow and a white flag. All tonight. | L’objet le plus utile en voyage. Zib s’en est servi comme cape, oreiller et drapeau blanc. Tout ça ce soir. |
 | Vrell, collected on a repeat | “Good. For once the emergency equipment is machine washable.” | « Parfait. Pour une fois, le matériel de secours passe en machine. » |
 
 Put each room souvenir on the natural line through the first hold, clear of moving geometry. Use the existing beam pickup and matching item ID from the EN name in lowercase. Each gets its own Souvenirs shelf slot and localized singular/plural counts. Use the existing wing paging for the Dispatch cases. The bridge reaches 47 souvenir slots and the three eras add 18, for 65 slots in all. [Trophy Room scaling](GDD-9-trophy-room.md#scaling--multi-room-threshold)
@@ -83,9 +84,9 @@ Put each room souvenir on the natural line through the first hold, clear of movi
 | Route | Item · EN / FR | Trophy description · EN | Trophy description · FR |
 | --- | --- | --- | --- |
 | `artie_garden` | Bowl of petunias / Pot de pétunias | Fell from a great height. Its only comment: “Oh no, not again.” | Pot tombé de très haut. Son seul commentaire : « Oh non, pas encore. » |
-| `artie_bath` | Spare dressing gown / Robe de chambre de rechange | Artie packed it as formal wear in the unlikely event of lunch. | Artie l’a pliée comme tenue de cérémonie, au cas peu probable où il faudrait déjeuner. |
+| `artie_bath` | Spare dressing gown / Robe de chambre de rechange | Artie’s formal one. Identical to the other, but he’s ironed the belt. | La tenue de cérémonie d’Artie. La même que l’autre, mais il a repassé la ceinture. |
 | `penny_service` | Ear fish / Poisson d’oreille | Translates anything. Zib tried it on a tax return. The fish asked to be let out. | Traduit tout. Zib l’a essayé sur une déclaration d’impôts. Le poisson a demandé à sortir. |
-| `penny_loft` | Pocket travel guide / Guide de voyage de poche | “Grimsby, one star.” The author was trying to leave when she wrote it. | « Grimsby, une étoile. » L’autrice essayait de partir quand elle a écrit ça. |
+| `penny_loft` | Electronic travel guide / Guide de voyage électronique | Grimsby’s entry reads, in full: “Mostly harmless.” The author was trying to leave when she wrote it. | La fiche de Grimsby, en entier : « Globalement inoffensive. » L’autrice essayait de quitter la ville quand elle l’a rédigée. |
 | `moe_returns` | Complaint stamp / Tampon à réclamations | Worn smooth on the side that says RECEIVED. The reply side is pristine. | La face REÇU est complètement usée. La face RÉPONDU est intacte. |
 | `moe_vent` | Answer display / Afficheur de réponses | It displays 42. The customer is expected to supply the question. | Il affiche 42. Au client de fournir la question. |
 
@@ -101,15 +102,15 @@ Use archive IDs `artie`, `penny` and `moe`. The dossier and repeat addenda fit t
 
 | ID · field | EN | FR |
 | --- | --- | --- |
-| `artie` · `desc` | Dozed through lift-off. Filed a noise complaint about the teaspoon in his own mug. | A dormi au décollage. S’est plaint du bruit de sa propre petite cuillère. |
+| `artie` · `desc` | Asked our machine for tea. Got something almost, but not quite, entirely unlike tea. | A demandé du thé à notre distributeur. Il a reçu quelque chose de presque, mais pas tout à fait, complètement différent du thé. |
 | `artie` · `at3` | Submitted a complaint about the demolition fleet. It parked on his rhubarb. | A déposé une réclamation contre la flotte de démolition. Elle s’était garée sur sa rhubarbe. |
-| `artie` · `at10` | Has asked the saucer to come back on bin day. The bins won’t take themselves out. | A demandé à la soucoupe de revenir le jour des poubelles. Les poubelles ne vont pas se sortir toutes seules. |
+| `artie` · `at10` | Still in the dressing gown. Says he’ll change when the universe makes sense. | Toujours en robe de chambre. Il se changera quand l’univers aura un sens. |
 | `penny` · `desc` | Hitchhiked to her own driving test. The examiner made her get out and walk back. | Est venue à son permis en stop. L’examinateur l’a fait descendre et revenir à pied. |
-| `penny` · `at3` | Hitched a lift out of town. The driver lived next door and was on his way home. | A trouvé un chauffeur pour sortir de la ville. Il habitait à côté et rentrait chez lui. |
-| `penny` · `at10` | Was hitchhiking on a roundabout. After the third lift she was still on it. | Faisait du stop sur un rond-point. Après trois trajets, elle y était toujours. |
+| `penny` · `at3` | Hitched a lift on our saucer. Gave it two stars. Docked one for the probe. | A fait du stop en soucoupe. Deux étoiles. Elle en a retiré une pour la sonde. |
+| `penny` · `at10` | Updated the guide. Earth now reads “Mostly harmless. Grimsby: less so.” | A mis à jour son guide. À l’entrée « Terre », on lit désormais « Globalement inoffensive. Grimsby, un peu moins. » |
 | `moe` · `desc` | His off switch is labelled NOT NOW. It is the only part of the manual he agrees with. | Son interrupteur porte la mention PAS MAINTENANT. C’est le seul point du manuel sur lequel il est d’accord. |
-| `moe` · `at3` | Still working through Gary’s CCTV complaints. He’s on page four. Gary filed eleven pages. | Traite encore les plaintes de Gary sur la vidéosurveillance. Il en est à la page quatre. Gary en a déposé onze. |
-| `moe` · `at10` | “I’ve lived at this desk for sixteen years. They still call it hot-desking.” | « Ça fait seize ans que je vis à ce bureau. Pour eux, il est toujours en libre-service. » |
+| `moe` · `at3` | Filed a complaint about the recital. They read it aloud at the next recital. | A déposé une plainte contre le récital. Ils l’ont lue à voix haute au récital suivant. |
+| `moe` · `at10` | “I live at this desk. They still make me book it.” | « Je vis à ce bureau. Ils m’obligent quand même à le réserver. » |
 
 ## The clock and the stars
 
@@ -135,7 +136,7 @@ At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual 
 
 **Shift memo · Work Order #0014 · Your Town Is in the Way**
 
-> Agent Zib, Grimsby’s down as vacant. The fleet is clearing it for a hyperspace bypass. File Artie, Penny and Moe before demolition. There’s a towel on the west harbour rack.
+> Agent Zib, Bubbles found Krix’s hyperspace bypass notice. He sold Grimsby as vacant. File Artie, Penny and Moe before the fleet starts digging. There’s a towel on the west harbour rack.
 >
 > The plans were on display at the planning office in Alpha Centauri. For fifty years.
 >
@@ -143,7 +144,7 @@ At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual 
 
 **Ordre n°0014 · Votre ville gêne le passage**
 
-> Agent Zib, Grimsby est déclarée inhabitée. La flotte va la raser pour une déviation hyperspatiale. Recensez Artie, Penny et Moe avant la démolition. Il y a une serviette sur le portant à l’ouest du port.
+> Agent Zib, Bubulle a trouvé l’avis de déviation hyperspatiale de Krix. Il a vendu Grimsby en prétendant que la ville était inhabitée. Recensez Artie, Penny et Moe avant que la flotte ne creuse. Il y a une serviette sur le portant à l’ouest du port.
 >
 > Les plans étaient affichés au bureau de l’urbanisme d’Alpha du Centaure. Depuis cinquante ans.
 >
@@ -151,18 +152,20 @@ At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual 
 
 | Where | EN | FR |
 | --- | --- | --- |
-| Work Orders card | His house was in the way. Then they zoomed out. | Sa maison gênait. Puis ils ont dézoomé. |
+| Work Orders card | Artie’s house was in the way. Then they zoomed out. | La maison d’Artie gênait. Puis ils ont dézoomé. |
 | Zib, first leg | “He’s opened a book. In my experience that’s a weapon.” | « Il a ouvert un livre. D’expérience, c’est une arme. » |
-| Opening reciter | “O demolition, sweet and free. / Your house is where my road will be.” | « Ô démolition, si douce et si belle. / Ta maison sera ma bretelle. » |
+| Opening reciter, first approach | “Ode, verse 1 of 300: / O squat and crumbly house of brown, / I’ll pave you flat. And all the town.” | « Ode, strophe 1 sur 300 : / Ô maison trapue et marron, / je vous aplatis. Et le canton. » |
+| Opening reciter, next verse | “O bypass, gleaming slab of tar. / I paved my heart. There’s room for a car.” | « Ô déviation, mon beau goudron. / J’ai bitumé mon cœur. Garez-vous donc. » |
+| Opening reciter, third verse | “Roses are red, your roof is slate. / Kindly vacate by half past eight.” | « Roses rouges, toit d’ardoise. / À huit heures et demie, on vous rase. » |
 | Poetry sighting | “He got to the second stanza. I had to leave.” | « Il a attaqué la deuxième strophe. J’ai dû partir. » |
-| Dozer sighting | “That thing signals for the turns and demolishes the straights.” | « Il met le clignotant dans les virages et rase tout en ligne droite. » |
+| Dozer sighting | “Artie lay down in front of one of those. I’m not lying down in front of anything.” | « Artie s’est allongé devant un de ces engins. Moi, je ne m’allonge devant rien. » |
 | Deadline report | “The demolition went ahead. We’ve been invited to comment on the rubble.” | « La démolition a eu lieu. On nous invite à donner notre avis sur les gravats. » |
-| Vrell, first clear | “Three residents. Grimsby stays. Krix gets the bill. Your mother called, Zib. I told her: adequate.” | « Trois habitants. Grimsby reste. Krix reçoit la facture. Votre mère a appelé, Zib. Je lui ai dit : convenable. » |
+| Vrell, first clear | “Three residents. Grimsby stays. Your mother called, Zib. I told her: adequate.” | « Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : convenable. » |
 | Cover story, ordinary delivery | **TOWN FOUND IN AREA MARKED VACANT** | **UNE VILLE DÉCOUVERTE EN ZONE INHABITÉE** |
-| Cover story, Ghost | **POETRY GUARDS REPORT PERFECT SILENCE** | **LES GARDES-POÈTES SIGNALENT UN SILENCE PARFAIT** |
+| Cover story, Ghost | **POETRY GUARDS PERFORM TO EMPTY TOWN. BEST RECEPTION YET.** | **LES GARDES-POÈTES JOUENT DEVANT UNE VILLE VIDE. ILS N’AVAIENT JAMAIS ÉTÉ AUSSI BIEN ACCUEILLIS.** |
 | Gazette, deadline with two or more sightings | **RUBBLE ENTERS PUBLIC CONSULTATION** | **LES GRAVATS SOUMIS À CONSULTATION PUBLIQUE** |
 | Artie mumbles | “Tea first. Then the end of the world.” / “I’m decent. It’s a dressing gown.” | « D’abord le thé. La fin du monde après. » / « Je suis habillé. C’est une robe de chambre. » |
-| Penny mumbles | “Anywhere’s fine. I can change at the moon.” / “If you’re going my way, blink twice.” | « N’importe où. Je changerai sur la Lune. » / « Si c’est sur votre route, clignez deux fois des yeux. » |
+| Penny mumbles | “I can change at the moon…” / “Any planet’s fine… not this one…” | « Je peux prendre la correspondance sur la Lune… » / « N’importe quelle planète… sauf celle-ci… » |
 | Moe mumbles | “An unexpected lift. How disappointing.” / “Brain the size of a planet. They want me to nap.” | « On vient me chercher. Quelle déception. » / « Un cerveau gros comme une planète. Et on me demande de faire la sieste. » |
 
 Use the existing cover-story row for ordinary and Ghost deliveries, with Ghost first if both qualify. The Gazette still needs two sightings. A clean deadline loss uses the deadline report line.
@@ -174,8 +177,8 @@ After Vrell’s first-clear line, show a skippable three-panel Bureau epilogue w
 | Panel | Action | EN | FR |
 | --- | --- | --- | --- |
 | 1 | Vrell stamps the bypass plan void. Zib’s signature goes above Vrell’s countersignature. Vrell slides the bill to Krix, whose pen hovers over “Received.” | **ORDER VOID** | **ORDRE ANNULÉ** |
-| 2 | Bubbles’ porthole is empty. A damp note rests against the glass. The parking transfer underneath has her finprint and a handwritten “Nobody taught me.” / « J’ai appris toute seule. » | “So long, and thanks for all the fish.” | « Salut, et encore merci pour le poisson. » |
-| 3 | Vrell files his vested retirement form in the drawer marked **LATER** / **PLUS TARD**. He clips the transferred permit onto Zib’s old lanyard. Outside, **ZIB** appears above the mint ring. The saucer floats in Bubbles’ pool. | Zib: “It has a POOL.” | Zib : « Il y a une PISCINE. » |
+| 2 | Bubbles’ porthole is empty. A damp note rests against the glass. The parking transfer underneath has her finprint and a handwritten “Nobody coached me. I’m just that good.” / « Personne ne m’a donné de cours. Je suis douée, c’est tout. » | “So long, and thanks for all the fish.” | « Salut, et encore merci pour le poisson. » |
+| 3 | Vrell stamps his retirement form **PENSION VESTED** / **DROITS À LA RETRAITE ACQUIS** and files it in **LATER** / **PLUS TARD**. He clips the transferred permit to Zib’s old lanyard and hands it back. Outside, **ZIB** appears above the mint ring and the saucer floats in Bubbles’ pool. | Zib: “It has a POOL.” | Zib : « Il y a une PISCINE. » |
 
 Use the French edition’s **« Pas de panique »** on the sign and its farewell wording on the note. **42** appears on Moe’s answer display in both locales. Keep it off the countdown and the parking ring so each beat lands on its own. Use **Bubulle** in French labels. Translate “returns” as **retours** in route names and use **déviation hyperspatiale** consistently. Garden door / Porte du jardin, Bathroom hatch / Trappe de la salle de bains, Service door / Porte de service, Ticket loft / Mezzanine des billets, Side returns / Accès aux retours, Voice vent / Conduit vocal. Use **gardes-poètes** throughout and give the two longest route labels a phone-width pass. Typeset signs, stamps and display numerals in the view, styling them as local props with original designs.
 
@@ -186,16 +189,16 @@ The base pack proposes **33 new manifest keys**. Draw room surfaces and roofs fr
 | Pack | Keys and size in logical px |
 | --- | --- |
 | Flight | `flight/ground_grimsby2199` **540 × 540** seamless, `flight/duvet_house2199_top` **270 × 220**, `flight/transit2199_top` **300 × 230**, `flight/complaints2199_top` **320 × 248**, `flight/reciter2199_top` **72 × 68**, `flight/recital_listener2199` **38 × 36**, `flight/demolition_barge2199_top` **360 × 186**, `flight/demolition_dozer2199_top` **100 × 78**, `flight/towel_rack2199_top` **108 × 88**, `flight/pickup_bypass_towel` **96 × 72**. Reuse town roads, lighthouse silhouette and standard entry rings. |
-| Rooms | `room/bg_duvet2199`, `room/bg_transit2199`, `room/bg_complaints2199` at **540 × 960** each. `room/robe_sofa2199` **256 × 113**, `room/luggage_shutter2199` **240 × 30**, `room/charge_cradle2199` **244 × 112**, `room/voice_cabinet2199` **114 × 268**, `room/demolition_blade2199` **246 × 115**. Fill the static blocker silhouette. Reuse shelf, tracks, desk, fan, cart and exit art. |
+| Rooms | `room/bg_duvet2199`, `room/bg_transit2199`, `room/bg_complaints2199` at **540 × 960** each. `room/robe_sofa2199` **256 × 113**, `room/luggage_shutter2199` **240 × 30**, `room/charge_cradle2199` **244 × 112**, `room/voice_cabinet2199` **114 × 268**, `room/demolition_blade2199` **246 × 115**. Fill the static blocker silhouette. Reuse shelf, tracks, desk, fan, cart and exit art. Use a retained label for the address on Moe’s returns tray. |
 | Specimens | `human/artie_head`, `human/penny_head`, `human/moe_head` and matching `_head_awake` keys, **64 × 66** each. `human/artie_torso`, `human/penny_torso`, `human/moe_torso`, **76 × 88** each. Use shared humanoid joints and donor limbs in the base pack. |
-| Souvenirs | `room/petunias2199` **56 × 62**, `room/spare_robe2199` **64 × 76**, `room/ear_fish2199` **54 × 48**, `room/pocket_travel_guide2199` **54 × 68**, `room/complaint_stamp2199` **54 × 64**, `room/answer_display2199` **70 × 42**. Typeset **42** on the display in the room and trophy views. |
-| Finale | Existing Vrell, Zib, Krix and saucer art with simple retained prop shapes for the empty porthole, letter, permit, drawer, vested form and pool in the ring. Typeset the note and labels through the same locale strings used in the report. |
+| Souvenirs | `room/petunias2199` **56 × 62**, `room/spare_robe2199` **64 × 76**, `room/ear_fish2199` **54 × 48**, `room/electronic_guide2199` **74 × 84**, `room/complaint_stamp2199` **54 × 64**, `room/answer_display2199` **70 × 42**. Give the Guide a big empty screen and chunky buttons. Typeset **GRIMSBY ★☆☆☆☆** and **42** on their respective displays in room and trophy views. |
+| Finale | Existing Vrell, Zib, Krix and saucer art with retained prop shapes for the pen and bill, empty porthole, damp note, finprint, permit, **LATER** drawer, pension stamp and pool in the ring. Typeset the note, stamp and labels in both locales. |
 
 | Build pass | Ownership and proof |
 | --- | --- |
-| 1. Flight and clock greybox | Flight owner drafts `src/levels/deep-2199.ts`, approaches, recap cause, reciter and dozer skins, and a reusable countdown presentation for the deadline. Use the camera and steward cone sims in live play and autopilot. Check cone/preview agreement, zero exposure in the outside approach pockets, all six entry locks and safe departures with no upgrades. Prove the four beeline catches before adding scenery. |
-| 2. Room greyboxes | Abduction owner puts the six routes in `src/abduct/rooms/deep-2199.ts`. Test idle spawns, naive drags and all exits with the production ragdoll, plus snag recovery and retries. Verify the stage where each souvenir enters the beam. |
-| 3. Dispatch and copy | Coordinator binds stable level, route, specimen and town IDs, deadline copy, EN/FR catalogue entries and the combined 1122 and 1953 prerequisite. Route the report and memo through Dispatch. Verify full-shift restart, loss at zero in either phase, towel filing after demolition and its fourth star on delivery, epilogue replay and reload, the gnome’s 2199 postcard, junior-label removal and waitlisted rank wording. Reserve the four film anchors for 2199 by applying the L4, L5 and L7 copy handoff in the story bible. |
+| 1. Flight and clock greybox | Flight owner drafts `src/levels/deep-2199.ts`, approaches, recap cause, reciter and dozer skins, and the countdown presentation for the deadline. Play the verse rotation through existing speech and drive Zib’s ear-cover pose from the existing amber preview. Use the camera and steward cone sims in live play and autopilot. Check cone/preview agreement, zero exposure in the outside approach pockets, all six entry locks and safe departures with no upgrades. Prove the four beeline catches before adding scenery. |
+| 2. Room greyboxes | Abduction owner puts the six routes in `src/abduct/rooms/deep-2199.ts` and stages the guide display and returns-tray label. Test idle spawns, naive drags and all exits with the production ragdoll, plus snag recovery and retries. Verify the stage where each souvenir enters the beam. |
+| 3. Dispatch and copy | Coordinator binds stable level, route, specimen and town IDs, deadline copy, EN/FR catalogue entries and the combined 1122 and 1953 prerequisite. Route the report and memo through Dispatch and build the finale’s prop and stamp beats in the three existing panels. Verify full-shift restart, loss at zero in either phase, towel filing after demolition and its fourth star on delivery, epilogue replay and reload, the gnome’s 2199 postcard, junior-label removal and waitlisted rank wording. Reserve the four film anchors for 2199 by applying the L4, L5 and L7 copy handoff in the story bible. |
 | 4. Art and tuning | Art owner delivers the manifest-size pack after the greybox proves the flight lanes and exits. Run the shared headless autopilot proofs, `npm run difficulty` with 6 and 20 seeds, and the existing real-pointer journey at **375 × 690** in EN/FR. Inspect readability with sound off and reduced motion, check the three trophy wings, and run typecheck, tests and build. |
 
 Placement, safe windows and finish rates are design targets pending greybox proof.
