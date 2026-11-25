@@ -297,7 +297,7 @@ export class DeepFlightSim {
   }
 
   private get cameraAnchorX(): number {
-    // Keep the parked time car and its countdown fully in the opening portrait frame.
+    // L9's westward approach gets a little extra space on the left of the portrait frame.
     return this.map.theme === 'storm55' ? VIEW_W * 0.56 : VIEW_W / 2;
   }
 

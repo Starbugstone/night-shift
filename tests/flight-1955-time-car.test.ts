@@ -15,23 +15,25 @@ import { evaluateCarFirst } from './difficulty/stars';
 const DT = 1 / 60;
 const CLOSED: PointerState = { x: 270, y: 480, down: false, pressed: false, released: false };
 const CLEAR: AbductResult = { delivered: true, aborted: false, woke: false, bonks: 0, timeSec: 24, snores: 0, dignity: 100, itemsStolen: [] };
-const match = (car: TimeCar): Saucer => ({ ...car.position, vx: 0, vy: -car.speed, stun: 0 });
+const match = (car: TimeCar): Saucer => ({ ...car.position, vx: car.speed, vy: 0, stun: 0 });
 
 describe('1955 time car', () => {
   it('rolls at 13 s, opens at 15 s and arrives at the cable at 20 s', () => {
     const car = new TimeCar(TIME_CAR.bay);
     car.advance(12.99);
-    expect(car).toMatchObject({ phase: 'parked', position: { x: 820, y: 1740 }, speed: 0 });
+    expect(car).toMatchObject({ phase: 'parked', position: { x: 170, y: 755 }, speed: 0 });
     car.advance(13);
-    expect(car).toMatchObject({ phase: 'rolling', position: { y: 1740 }, speed: 70 });
+    expect(car).toMatchObject({ phase: 'rolling', position: { x: 170, y: 755 }, speed: 70 });
     car.advance(14);
-    expect(car).toMatchObject({ phase: 'rolling', position: { y: 1670 }, speed: 70 });
+    expect(car).toMatchObject({ phase: 'rolling', position: { x: 240, y: 755 }, speed: 70 });
     car.advance(15);
-    expect(car).toMatchObject({ phase: 'open', position: { y: 1600 }, speed: 70 });
+    expect(car).toMatchObject({ phase: 'open', position: { x: 310, y: 755 }, speed: 70 });
     car.advance(17);
-    expect(car).toMatchObject({ phase: 'open', position: { y: 1356 }, speed: 174 });
+    expect(car.position.x).toBeCloseTo(458.32);
+    expect(car.speed).toBeCloseTo(86.64);
     car.advance(20);
-    expect(car).toMatchObject({ phase: 'missed', position: { y: 600 }, speed: 330, visible: false });
+    expect(car).toMatchObject({ phase: 'missed', position: { x: 985, y: 755 }, speed: 330, visible: false });
+    expect(car.position.x - TIME_CAR.hookOffset).toBe(TIME_CAR.cable.x);
     car.advance(60);
     expect(car.phase).toBe('missed');
   });
@@ -42,10 +44,11 @@ describe('1955 time car', () => {
     const s = match(car);
     expect(car.update(0.15, { ...s, x: s.x + 64.01 }, -1)).toBe(false);
     expect(car.progress).toBe(0);
-    expect(car.update(0.15, { ...s, vx: 40, vy: s.vy + 40 }, -1)).toBe(false);
+    const diagonal = TIME_CAR.relativeSpeed * 0.75;
+    expect(car.update(0.15, { ...s, vx: s.vx + diagonal, vy: diagonal }, -1)).toBe(false);
     expect(car.matchPrompt).toBe(true);
     expect(car.progress).toBe(0);
-    car.update(0.4, { ...s, x: s.x + 64, vx: 55 }, -1);
+    car.update(0.4, { ...s, x: s.x + 64, vy: TIME_CAR.relativeSpeed }, -1);
     expect(car.progress).toBeCloseTo(0.4 / TIME_CAR.hold);
     car.update(0.1, { ...s, stun: 0.1 }, -1);
     expect(car.progress).toBeCloseTo(0.2 / TIME_CAR.hold);
@@ -64,7 +67,7 @@ describe('1955 time car', () => {
     car.update(0.2, match(car), -1);
     expect(car.progress).toBeCloseTo(0.05 / TIME_CAR.hold);
     car.advance(19.98);
-    car.update(0.79, match(car), -1);
+    car.update(TIME_CAR.hold - 0.06, match(car), -1);
     expect(car.progress).toBeGreaterThan(0.98);
     car.advance(20);
     expect(car.update(0.02, match(car), -1)).toBe(false);
@@ -73,7 +76,7 @@ describe('1955 time car', () => {
 
   it('interrupts a partial lock when a detector fills the fuse on the same frame', () => {
     const map = { ...LEVEL9.map, hazards: [{
-      type: 'camera' as const, x: 820, y: 1200, range: 600, half: 0.5,
+      type: 'camera' as const, x: 380, y: 600, range: 300, half: 0.5,
       base: Math.PI / 2, amp: 0, rate: 0, phase: 0,
     }] };
     const sim = new DeepFlightSim(map, new Set(), 16);

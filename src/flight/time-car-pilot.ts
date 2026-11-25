@@ -18,16 +18,15 @@ export class TimeCarPilot {
 
     let ax: number;
     let ay: number;
-    if (this.west && s.y < 1640 && car.elapsed >= TIME_CAR.opens - 0.55) {
+    if (this.west && s.y < TIME_CAR.turnout.y + 100 && car.elapsed >= TIME_CAR.opens - 0.55) {
       this.mode = 'intercept';
       // Correct both axes while providing the thrust needed to hold the car's pace.
-      ax = (car.position.x - s.x) * 11 - s.vx * 5;
-      ay = (car.position.y - s.y) * 11 + (-car.speed - s.vy) * 5;
-      if (car.phase === 'open') ay -= TIME_CAR.acceleration;
+      ax = (car.position.x - s.x) * 11 + (car.speed - s.vx) * 5 + car.acceleration;
+      ay = (car.position.y - s.y) * 11 - s.vy * 5;
     } else {
       this.mode = this.west ? 'stage' : 'west';
-      const targetX = this.west ? TIME_CAR.turnout.x + 92 : TIME_CAR.turnout.x;
-      const targetY = this.west ? TIME_CAR.turnout.y - 20 : this.sim.map.start.y;
+      const targetX = this.west ? TIME_CAR.turnout.x : 650;
+      const targetY = this.west ? TIME_CAR.turnout.y : this.sim.map.start.y;
       const x = targetX - s.x;
       const y = targetY - s.y;
       const pace = Math.min(2.4, 390 / Math.max(1, Math.hypot(x, y)));

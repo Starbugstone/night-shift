@@ -13,8 +13,7 @@ import type { CameraView } from './world';
 export const TOWER_CLOCK = { x: 824, y: 272 } as const;
 const ROD = { x: 826, y: 178 } as const;
 const AXLE = { x: 31, y: 45 } as const;
-const HOOK_Y = 82;
-const TRACK_LENGTH = 384;
+const TRACK_LENGTH = 324;
 const REVEAL_BEFORE = 0.48;
 const REVEAL_END = 1.12;
 const ICE = '#d5edff';
@@ -65,6 +64,7 @@ export class CrestValleyStrike {
   private readonly contact = new Container();
   private readonly contactGlow = new Glow(glowTexture(PAGE_BLUE));
   private readonly carFlash = new Glow(glowTexture('244,251,255'));
+  private readonly flashCore = new Glow(glowTexture('255,255,255'));
   private readonly speedFlare = new Container();
   private readonly tyres: TilingSprite[] = [];
   private readonly fireFront = new Container();
@@ -87,22 +87,28 @@ export class CrestValleyStrike {
     this.bolt.rotation = -0.38;
     this.world.addChild(this.bolt, this.rodFlash);
 
-    const arc = new Graphics().poly([145, -142, 94, -75, 68, -85, 32, -31, 27, -44, 0, 0], false)
+    const contactPath = [0, TIME_CAR.cable.south - TIME_CAR.bay.y, -9, 105, 12, 73, -9, 42, 9, 22, 0, 0];
+    const arc = new Graphics().poly(contactPath, false)
       .stroke({ color: '#86bdff', width: 7, alpha: 0.62, join: 'round' })
-      .poly([145, -142, 94, -75, 68, -85, 32, -31, 27, -44, 0, 0], false)
+      .poly(contactPath, false)
       .stroke({ color: HOT, width: 2.6, join: 'round' });
     this.contact.addChild(this.contactGlow, arc, sparkle(0, 0, 24));
-    this.speedFlare.addChild(sparkle(-AXLE.x, 0, 18), sparkle(AXLE.x, 0, 18),
-      new Label({ size: 27, weight: 900, color: HOT, outline: '#395785', outlineW: 4 }).set('88', 0, 24));
-    this.world.addChild(this.carFlash, this.contact, this.speedFlare);
+    this.speedFlare.addChild(sparkle(-32, -AXLE.x, 20), sparkle(-32, AXLE.x, 20),
+      new Label({ size: 27, weight: 900, color: HOT, outline: '#395785', outlineW: 4 }).set('88', 0, -52));
+    this.world.addChild(this.carFlash, this.flashCore, this.contact, this.speedFlare);
 
     const texture = trackTexture(assets);
+    // The long axis points east. The short fixed segment covers the tyre print under the vanishing car.
+    this.ground.rotation = -Math.PI / 2;
     for (const x of [-AXLE.x, AXLE.x]) {
+      const under = new TilingSprite({ texture, width: 24, height: AXLE.y });
+      under.anchor.x = 0.5;
+      under.position.set(x, -AXLE.y);
       const strip = new TilingSprite({ texture, width: 24, height: TRACK_LENGTH });
       strip.anchor.x = 0.5;
       strip.x = x;
       this.tyres.push(strip);
-      this.ground.addChild(strip);
+      this.ground.addChild(under, strip);
       this.fireFront.addChild(new Glow(glowTexture('255,189,95')).place(x, 0, 21, 32));
     }
     this.ground.addChild(this.fireFront);
@@ -164,20 +170,21 @@ export class CrestValleyStrike {
     const missed = this.car.phase === 'missed';
     const contactOn = missed && active && age < 0.52 && cam.sees(x, y, 240);
     this.contact.visible = this.speedFlare.visible = contactOn;
-    this.carFlash.place(x, y, 86, 113, contactOn ? (reduced ? 0.32 : 1) * (1 - ease(age / 0.23)) : 0);
+    const bloom = contactOn ? 1 - ease(age / 0.29) : 0;
+    this.carFlash.place(x, y, 170, 112, bloom * (reduced ? 0.34 : 1));
+    this.flashCore.place(x + 5, y, 113, 64, reduced ? 0 : bloom * bloom);
     if (contactOn) {
-      this.contact.position.set(x, y + HOOK_Y);
+      this.contact.position.set(x - TIME_CAR.hookOffset, y);
       this.contact.alpha = (reduced ? 0.54 : 1) * (1 - ease((age - 0.12) / 0.26));
       this.contactGlow.place(0, 0, 57, 53);
-      this.speedFlare.position.set(x, y + AXLE.y - (reduced ? 0 : 26 * ease(age / 0.52)));
+      this.speedFlare.position.set(x + (reduced ? 0 : 52 * ease(age / 0.52)), y);
       this.speedFlare.alpha = (reduced ? 0.56 : 1) * (1 - ease((age - 0.19) / 0.33));
     }
 
-    const trackY = y + AXLE.y;
-    const burn = active ? ease((age - 0.055) / 0.43) : 1;
-    this.ground.visible = missed && burn > 0 && cam.sees(x, trackY + TRACK_LENGTH / 2, TRACK_LENGTH / 2);
+    const burn = active ? ease((age - 0.055) / 0.4) : 1;
+    this.ground.visible = missed && burn > 0 && cam.sees(x + (TRACK_LENGTH - AXLE.y) / 2, y, (TRACK_LENGTH + AXLE.y) / 2);
     if (!this.ground.visible) return;
-    this.ground.position.set(x, trackY);
+    this.ground.position.set(x, y);
     this.ground.alpha = reduced ? 0.82 * Math.min(1, burn * 2) : 0.82 + 0.18 * (1 - unit(age));
     // Inverse tile scale keeps the texture's repeat at 96 px as the strip unfurls at its far end.
     const length = reduced ? 1 : Math.max(0.005, burn);

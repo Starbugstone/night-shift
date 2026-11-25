@@ -4,7 +4,7 @@
 
 Saturday, November 12, 1955. Temporal Dispatch sends Zib to the town
 square at **10:03:40 p.m.** Collect three sleeping witnesses in any order. A
-time car is about to make a run up Main Street. Lead it and match its pace to
+time car is about to race east along Courthouse Row, past the clock. Lead it and match its pace to
 beam it aboard before lightning hits the courthouse clock at **10:04:00 p.m.**
 
 L9 (`level9`) is the first paid Temporal Dispatch order after **Prior Contact**.
@@ -26,16 +26,16 @@ for the naming pass. [Story and names](story-and-names.md)
 
 | Shift rule | Initial values |
 | --- | --- |
-| Shared shift clock | **260 active seconds**, one real second per local second. Start at 10:03:40 p.m., strike at elapsed 20 s, close at **10:08:00 p.m.** |
+| Shared shift clock | **380 active seconds**, one real second per local second. Start at 10:03:40 p.m., strike at elapsed 20 s, close at **10:10:00 p.m.** |
 | Deadline | Dispatch closes the extraction window before the post-strike street sweep. Show the local time to the second in flight and rooms, a remaining-time dial, and a closure warning in the last 30 s. Keep the night palette. |
 | Clock and recovery | Flight, room play, lock animations and the usual spotted interval spend time. Memo, pause and room retry choice follow the existing pause behavior. A sighting returns to the normal last-delivery checkpoint. Room retry keeps the chosen entry and the clock already spent. |
 | Delivered | All three specimens out before the deadline. The last extraction immediately files the report. |
 | Ghost | Delivered with zero full flight sightings and zero failed room attempts, using ordinary deep-shift failure accounting. Partial Suspicion is allowed. |
-| Night owl | Delivered with **75 s left** (elapsed **≤185 s**, 10:06:45 p.m.). The detour, sightings and retries spend their usual time. |
+| Night owl | Delivered with **120 s left** (elapsed **≤260 s**, 10:08:00 p.m.). The detour, sightings and retries spend their usual time. |
 | Fourth star | Delivered with the **time car** picked up in the same shift. Room souvenirs belong to the trophy room and leave scoring unchanged. |
 
 A 20-second strike deadline offers the car a distinct opening window. A further
-four minutes gives a first-time player space for room decisions and a retry.
+six minutes gives a first-time player space for room decisions and a retry.
 If a player enters a room before 10:04, the street event continues on the same
 clock. Both the straight-to-rooms journey and a clean four-star replay must
 work with zero upgrades.
@@ -52,21 +52,21 @@ readable in rain at 375 × 690 CSS px.
 
 | Landmark | Position and footprint | Approach |
 | --- | --- | --- |
-| Courthouse and clock | (820, 310), 360 × 300. Square spans x490–1150, y455–805. | Main Street meets the square at the working lamp. Use either flank past the cable ends. |
+| Courthouse and clock | (820, 310), 360 × 300. The square drawing is centred at (820, 553). | Courthouse Row runs along the south side of the square. The cross-street wire reaches the contact lamp on its far side. |
 | Café | (390, 1100), 272 × 210. Booth windows face the southwest pavement. | West Alley leads into the delivery yard. The shorter awning approach crosses the café watcher's sidewalk. |
 | Movie theatre | (1270, 820), 236 × 190. | The marquee is a landmark on the eastern loop. |
 | High school and dance | Gym at (1380, 1320), 320 × 232. A sedan sits in the rear lot, between the two rings. | The eastern service lane reaches the loading canopy. The direct approach from the residential verge crosses the dance beam. |
-| Residential edge and turnout | Low roofs behind hedges below y1830. West turnout centred at (650, 1550), with an open pocket of at least 130 × 150. | The spawn-to-turnout route bends near (650, 2010). Keep the corner clear of poles and roof props. Paint an old kerb arrow northbound at the merge. |
+| Residential edge and turnout | Low roofs behind hedges below y1830. West turnout centred at (320, 850) on the short spur south of Courthouse Row. | Fly west near (650, 2010) around the marshal, then northwest to the turnout. The kerb arrow bends east at the merge. |
 
 Road centre lines and approximate widths:
 
-- **Main Street** runs north on x820, y540–2240, width 200. The last 70 px
-  becomes square paving beneath the wire. The car stays on this centre line.
-- **Courthouse Row** runs east–west on y755, x200–1730, width 140. Keep both
-  flanks of the courthouse within reach of open square paving.
-- **Market Street** runs east–west on y1140, x530–1730, width 150.
-- **West Alley** runs north on x590, y755–2060, width 120, with a driveway spur
-  west into the café rear yard and a turnout between it and Main.
+- **Main Street** runs north on x820, y755–2240, and ends at Courthouse Row.
+- **Courthouse Row** runs east–west on y755, x76–1730. The time car stays on
+  this centre line, moving east along the front of the courthouse. The west
+  turnout spur runs north on x320 from the café connector at y928 to the row.
+- **Market Street** runs east–west on y1140, x530–1730.
+- **West Alley** runs north on x590, y755–2060, with a connector westward
+  along y928.
 - **School Lane** runs on x1640, y755–2130, width 140. A service spur follows
   y1545 from x1250 to the lane. Residential Cross runs on y2050 from x420
   to x1710. Leave at least 90 px of manoeuvring space around turns and
@@ -87,17 +87,17 @@ room time that the faster entries offer a real par advantage.
 ### Detectors, wire and light
 
 These are greybox values. Angles use +x east and +y south. All detection
-uses the shared fuse, initially **1.2 s** with zero upgrades. Give each
+uses the shared **0.86 s** fuse with zero upgrades. Give each
 fixed source an era-appropriate silhouette and a source name for spotting.
 
 | Source | Starting placement and behavior |
 | --- | --- |
-| Lot marshal's flashlight | At (1030, 1940), range 330 px, base −2.32 rad, half-angle 0.38 rad, gentle sweep ±0.07 rad. Reuse the camera cone geometry with a flashlight source. It covers the straight line to the parked car. The spawn verge and the west turnout are outside the cone. |
+| Lot marshal's flashlight | At (1030, 1940), range 440 px, base −2.25 rad, half-angle 0.49 rad, gentle sweep ±0.06 rad. Reuse the camera cone geometry with a flashlight source. It covers the straight line to the parked car. The spawn verge and the west turnout are outside the cone. |
 | Dance spotlight | At (1400, 1550), range 465 px, base 2.32 rad, half-angle 0.37 rad, gentle sweep ±0.05 rad. Reuse the fixed camera cone with a dance lamp skin. It crosses the diagonal from spawn to the Bandstand Hatch. Both rings have safe hover pockets. |
-| Courthouse work lamp | At (820, 755), facing south, range **540 px**, half-angle 0.52 rad. Reuse the steady cone. It occupies the obvious straight route up Main to the clock and the late part of a pursuit. Both flanks have a continuous way around it. |
-| Police cruiser | Single era sedan, 150 px/s, 240 px headlights, 0.32 rad half-angle, no siren or beacon radius. Loop clockwise around the theatre on (1140, 755) → (1605, 755) → (1605, 1030) → (1140, 1030). Put the east crossing's holding point below y1140. |
+| Courthouse work lamp | At (820, 694), facing south, range 540 px, half-angle 0.52 rad. The cone points across Courthouse Row and down Main Street, so the west turnout intercept catches the car before the late approach to the cable. |
+| Police cruiser | Single era sedan, 150 px/s, 240 px headlights, 0.32 rad half-angle, no siren or beacon radius. Loop around the theatre on (1135, 755) → (1640, 755) → (1640, 1030) → (1135, 1030). Start 450 px into the loop so the cruiser is beyond the fire trails at 10:04. Put the east crossing's holding point below y1140. |
 | Café watcher | Counter regular at (555, 1100), range 190 px, cone half-angle 0.32 rad, turns between south-southwest and east every 3.2 s with the standard 0.45 s amber preview. The window source and broad sidewalk give the player a place to read the turn. |
-| Lightning cable | Ordinary wire capsule from (675, 540) to (965, 540), with posts and matching drawn geometry. Use x≤620 or x≥1020 to clear the ends. It stuns on collision at any time. The car's forward receiver reaches (820, 540) while the car centre is at (820, 600). |
+| Lightning cable | The tower feed runs to (903, 610) on the square side. The wire capsule crosses the row at x903 and ends at the lamp spool (903, 898). It stuns on collision. At 10:04 the car centre reaches (985, 755) with its trailing hook at (903, 755). |
 
 Use the normal soft ambient lamps around the square, marquee, café windows
 and school doors. A cream-green marquee glow, sidewalk reflections and pairs
@@ -108,9 +108,10 @@ exit clear of clutter.
 
 The storm gathers visually. Flags lean first, light rain begins around
 **10:03:48**, and a quiet amber pulse marks the *tower and cable* during the
-last 2 s before impact. At 10:04, use a single local strike and a soft wash
-with a brief tail. Reduced motion uses a steady tower highlight and retained
-road marks. The flash leaves steering, visibility, Suspicion and wake
+last 2 s before impact. At 10:04, the tower bolt and car bloom share a single
+bright wash with a quick fade. The camera can pull back around the saucer to
+show the tower. A direction cue covers an out-of-frame tower. Reduced motion
+keeps the regular camera scale and dims the wash. The flash leaves steering, visibility, Suspicion and wake
 untouched. A global detector would make the safest route depend on a
 whole-map cover rule and could punish a player's timing while the camera is
 elsewhere. The three readable cones and wire put the challenge on the
@@ -124,16 +125,16 @@ keep active detector outlines visible over its reflections.
 
 | Elapsed | Local time | Player sees and does |
 | --- | --- | --- |
-| 0 s | 10:03:40 | The camera frames the verge and the car bay at **(820, 1740)**. Headlights and a steady countdown chip show the approaching launch. The minimap uses the town-pickup diamond. A short Zib line and the kerb arrow point to the west turnout. |
-| 13 s | 10:03:53 | The car launches north at **70 px/s**. The countdown switches from launch to the strike deadline. Hold ahead at the turnout before merging. |
-| 15 s | 10:03:55 | At **(820, 1600)** the receiver clears the bay and the moving mint ring opens. The car begins accelerating at **52 px/s²**. The recommended intercept follows the ring from the west between y1560 and y1370. |
-| 20 s | 10:04:00 | The tower takes the strike and its hands stop in either outcome. An uncollected car's centre reaches **(820, 600)** at **330 px/s**, its receiver contacts the cable and the car vanishes. Two fire trails stick to the roadway. Zib's HUD clock keeps running. |
+| 0 s | 10:03:40 | The saucer starts on the residential verge. The minimap marks the car in its east-facing bay at **(170, 755)**. Its headlights and countdown are visible on arrival. The short Zib line and kerb arrow point to the west turnout. |
+| 13 s | 10:03:53 | The car launches east on Courthouse Row at **70 px/s**. The countdown switches to the strike deadline and the first arcs appear. |
+| 15 s | 10:03:55 | At **(310, 755)** the mint ring opens. Merge from the turnout at **(320, 850)**. Speed ramps up cubically over the next five seconds, with progressively more and longer arcs. |
+| 20 s | 10:04:00 | The tower takes the strike and its hands stop in either outcome. A missed car reaches **(985, 755)** at **330 px/s**, its rear hook meets the cable at **(903, 755)**, and a white bloom obscures its disappearance. Zib's HUD clock keeps running. |
 
 Use the existing steering, the L8 moving-ring presentation and the town
 pickup's fill and drain pattern. A bigger ring with a **64 px centre
-tolerance** (80 px drawn radius if retaining the 0.8 ratio) and **0.85 s of
+tolerance** (80 px drawn radius) and **0.75 s of
 lock progress** gives a thumb margin during acceleration. Check **relative
-velocity** in both axes, initially ≤**55 px/s** between car and saucer.
+velocity** in both axes, ≤**40 px/s** between car and saucer.
 Absolute saucer speed still uses the normal flight cap of 430 px/s. In a
 flat chase a stationary saucer misses the relative-speed threshold even at
 the car's slowest. A player can dip into the ring from ahead, then follow it
@@ -143,27 +144,22 @@ If the ship is in the ring but moving too differently, an unobtrusive
 `Match speed` prompt explains the missing fill. Stun and specimen-ring
 priority apply. A sighting interrupts the lock.
 
-The 70 px/s rollout covers 140 px in 2 s. The acceleration phase covers
-1,000 px in 5 s. It puts the car at y1451 around t=16.4, with speed about
-143 px/s, comfortably below the saucer cap. From the verge the approach via
-(650, 2010) to (650, 1550) is about 860 px before braking and merging. Flight
-models can therefore include starts delayed by as much as 8–9 s. These are
-kinematic estimates. Pointer lag, camera movement and detector clearance
-need the greybox proof below.
-
-The west approach has an open waiting pocket, then a window in which the
-entire lock area clears the marshal cone. The late run towards the courthouse is
-more exposed. Telegraph an interception, since trying to follow the bumper
-from behind the car's starting position leads into the marshal's flashlight.
+The rollout covers 140 px in two seconds. The five-second acceleration
+covers another 675 px. The car reaches x458 at about 87 px/s at t=17 and
+ends at x985 at 330 px/s. The west turnout gives players room to merge from
+the south. Reaching it from the residential verge takes about 1,600 px
+via (650, 2010), leaving room for the 0–9 s starts in the human-model tests.
+The marshal covers the diagonal from spawn toward the bay. The work lamp
+and wire make the late pursuit across the square more exposed.
 The first low-pressure exercise is watching the two-second rollout from
 outside the cone, with the normal three-specimen run as a
 fallback. Put the instruction in the memo so it can be read before the clock
 starts. Both localisations must use the same pickup phrase as their
 `memoHint`: working copy **“time car”** / **« voiture temporelle »**.
-Suggested instruction: *“Optional: the time car leaves Main Street at
+Suggested instruction: *“Optional: the time car leaves the west end of Courthouse Row at
 10:03:53. Take the west turnout, then match its pace before the clock
 strikes.”* / *« En option : la voiture temporelle s’élance dans la rue
-principale à 22:03:53. Passez par le renfoncement à l’ouest, puis suivez-la à
+du palais de justice à 22:03:53. Passez par le renfoncement à l’ouest, puis suivez-la à
 la même vitesse avant que la foudre frappe l’horloge. »* The Zib line can be
 as short as *“West turnout. Meet it up the road!”* Use the existing
 `readSeconds()` and bubble layers.
@@ -176,8 +172,9 @@ as short as *“West turnout. Meet it up the road!”* Use the existing
   at 10:04. The wire stays in place and the road has no fire trails.
 - On a miss, resolve the car at the cable on the first clock crossing of
   20 s. It leaves two soft orange-and-charcoal tracks aligned to the rear
-  tyres, initially x794 and x846 from y990 to y654. The flames settle into a
-  low glow and scorch marks for the rest of the shift, including after a
+  tyres at y724 and y786. Short tracks show under the car from x940 to
+  x985. The leading ends race east from x985 to x1309 over 0.4 s, then
+  settle into a low glow and scorch marks for the rest of the shift, including after a
   sighting or room visit. Use retained
   decor under the world objects. Entering the tracks adds zero Suspicion,
   stun or collision.
@@ -355,8 +352,8 @@ deep star bands for the mandatory loop.
 | Standard shift · Night owl | ≥2/3 | ≥1/2 |
 | Per route · delivery | ≥80% on each of six | ≥50% on each, one route per specimen ≥80% |
 | Independent flight | ≥80% finish, median ≤1 full sighting | ≥80% finish, median ≤2 full sightings |
-| Car-first · actual catches per attempt, six-seed gate | ≥5/6 | ≥4/6 |
-| Car-first · actual catches per attempt, 20-seed tuning | ≥90% | ≥60% |
+| Car-first · actual catches per attempt, six-seed gate | ≥5/6 | 4–5/6 |
+| Car-first · actual catches per attempt, 20-seed tuning | ≥90% | 60–85% |
 
 Use six seeds for the release gate and at least 20 matched seeds for
 greybox tuning. Aim for 90–100% skilled and 85–100% casual delivery in the
@@ -426,9 +423,7 @@ handling or wake rules.
 
 ### Decisions for review
 
-- The strike is at 10:04 exactly, with extraction ending four minutes
-  later. Confirm the desired amount of aftermath if the fiction should
-  end closer to the strike.
+- The strike is at 10:04 and the extraction window closes at 10:10.
 - L9 opens Temporal Dispatch immediately after L8. Confirm the 1955 card's
   display name and whether the console still shows Cold Storage as the
   next planned date.

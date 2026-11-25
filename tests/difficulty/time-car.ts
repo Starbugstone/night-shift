@@ -83,7 +83,7 @@ export function naiveCarCatches(level: DeepLevelDef): { mode: string; delay: num
     while (car.visible && sim.phase === 'fly') {
       const intent = mode === 'at launch' && sim.t < TIME_CAR.launch
         ? { down: false, x: 270, y: 480 }
-        : direct(sim, mode === 'park on path' ? { x: TIME_CAR.bay.x, y: 1490 } : car.position, mode === 'park on path');
+        : direct(sim, mode === 'park on path' ? { x: TIME_CAR.bay.x + 250, y: TIME_CAR.bay.y } : car.position, mode === 'park on path');
       sim.update(DT, { ...intent, pressed: false, released: false });
     }
     return { mode, delay, caught: car.phase === 'caught' };

@@ -309,7 +309,10 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     for (const row of report.carFirst) {
       const floor = row.profile === 'skilled' ? (seeds === 6 ? 5 / 6 : 0.9)
         : row.profile === 'casual' ? (seeds === 6 ? 4 / 6 : 0.6) : 0;
-      if (row.catches / seeds < floor) report.violations.push(`Time car (${row.profile}) catches ${pct(row.catches / seeds)}, band wants ≥ ${pct(floor)}`);
+      const ceiling = row.profile === 'casual' ? 0.85 : 1;
+      const rate = row.catches / row.attempts;
+      if (rate < floor) report.violations.push(`Time car (${row.profile}) catches ${pct(rate)}, band wants ≥ ${pct(floor)}`);
+      if (rate > ceiling) report.violations.push(`Time car (${row.profile}) catches ${pct(rate)}, band wants ≤ ${pct(ceiling)}`);
       if (seeds >= 20 && row.allFour === 0) report.violations.push(`Time car (${row.profile}): no four-star shift`);
     }
   }

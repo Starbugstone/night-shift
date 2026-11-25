@@ -3,16 +3,18 @@ import type { Vec2 } from '../contracts';
 import { LOCK, LockOn, type Saucer } from './sim';
 
 export const TIME_CAR = {
-  bay: { x: 820, y: 1740 },
-  turnout: { x: 650, y: 1550 },
+  bay: { x: 170, y: 755 },
+  turnout: { x: 320, y: 850 },
+  cable: { x: 903, north: 610, south: 898 },
+  hookOffset: 82,
   launch: 13,
   opens: 15,
   strike: 20,
   launchSpeed: 70,
-  acceleration: 52,
+  topSpeed: 330,
   radius: 80,
-  relativeSpeed: 55,
-  hold: 0.85,
+  relativeSpeed: 40,
+  hold: 0.75,
 } as const;
 
 const CLOCK_START = 22 * 3600 + 3 * 60 + 40;
@@ -39,6 +41,12 @@ export class TimeCar {
 
   get progress(): number { return this.lock.fraction; }
   get visible(): boolean { return this.phase !== 'caught' && this.phase !== 'missed'; }
+  get charge(): number {
+    return Math.min(1, Math.max(0, this.elapsed - TIME_CAR.opens) / (TIME_CAR.strike - TIME_CAR.opens));
+  }
+  get acceleration(): number {
+    return 3 * (TIME_CAR.topSpeed - TIME_CAR.launchSpeed) * this.charge ** 2 / (TIME_CAR.strike - TIME_CAR.opens);
+  }
 
   /** Called by the shift even when flight control is suspended. */
   advance(elapsed: number): void {
@@ -47,9 +55,12 @@ export class TimeCar {
     if (!this.visible) return;
     const t = this.elapsed + CLOCK_EPSILON;
     const motionTime = Math.max(0, Math.min(TIME_CAR.strike, this.elapsed) - TIME_CAR.launch);
-    const accelTime = Math.max(0, motionTime - (TIME_CAR.opens - TIME_CAR.launch));
-    this.position.y = this.bay.y - motionTime * TIME_CAR.launchSpeed - TIME_CAR.acceleration * accelTime ** 2 / 2;
-    this.speed = t < TIME_CAR.launch ? 0 : TIME_CAR.launchSpeed + TIME_CAR.acceleration * accelTime;
+    const charge = this.charge;
+    const gain = TIME_CAR.topSpeed - TIME_CAR.launchSpeed;
+    // A cubic speed ramp keeps the intercept readable and saves the strongest acceleration for the cable.
+    this.position.x = this.bay.x + motionTime * TIME_CAR.launchSpeed
+      + gain * (TIME_CAR.strike - TIME_CAR.opens) * charge ** 4 / 4;
+    this.speed = t < TIME_CAR.launch ? 0 : TIME_CAR.launchSpeed + gain * charge ** 3;
     this.phase = t >= TIME_CAR.strike ? 'missed' : t >= TIME_CAR.opens ? 'open' : t >= TIME_CAR.launch ? 'rolling' : 'parked';
     if (this.phase === 'missed') this.resetHover();
   }
@@ -68,7 +79,7 @@ export class TimeCar {
     }
     const inside = saucer.stun <= 0
       && Math.hypot(saucer.x - this.position.x, saucer.y - this.position.y) <= TIME_CAR.radius * LOCK.insideFrac;
-    const matched = inside && Math.hypot(saucer.vx, saucer.vy + this.speed) <= TIME_CAR.relativeSpeed;
+    const matched = inside && Math.hypot(saucer.vx - this.speed, saucer.vy) <= TIME_CAR.relativeSpeed;
     this.matching = matched;
     this.matchPrompt = inside && !matched;
     // The opening frame cannot credit time from before the ring opened.

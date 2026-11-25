@@ -83,11 +83,13 @@ describe('town pickup art', () => {
       const m = lv.map;
       const p = m.collectible;
       if (!p) continue;
-      const [w, h] = PICKUP_SIZE[p.id];
+      const [artW, artH] = PICKUP_SIZE[p.id];
+      const w = p.id === 'time_car' ? artH : artW;
+      const h = p.id === 'time_car' ? artW : artH;
       const box = { l: p.x - w / 2, r: p.x + w / 2, t: p.y - h / 2, b: p.y + h / 2 };
       expect(box.l >= 0 && box.t >= 0 && box.r <= m.w && box.b <= m.h, `${lv.id} inside the map`).toBe(true);
       // the kerb may be brushed (14 px), the lanes and the centre line never
-      // The time car is a moving vehicle. Its bay is on Main Street.
+      // The time car is parked along Courthouse Row.
       for (const r of p.id === 'time_car' ? [] : m.roads) {
         const lanes = ROAD_W / 2 - 14;
         const across = r.dir === 'h' ? box.t < r.at + lanes && box.b > r.at - lanes : box.l < r.at + lanes && box.r > r.at - lanes;

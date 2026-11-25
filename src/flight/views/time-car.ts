@@ -48,12 +48,47 @@ const carCoils = () => new Graphics().moveTo(-35, -22).lineTo(-42, 17).lineTo(-3
   .moveTo(35, -22).lineTo(42, 17).lineTo(37, 55)
   .stroke({ color: '#96cdff', width: 4, cap: 'round' });
 
+const ARC_ANCHORS = [[-39, 46], [37, -39], [40, 25], [-38, -28], [-35, 68], [38, 63],
+  [15, -78], [-20, -68], [28, 76], [-28, -46]] as const;
+
+class CarArcs extends Container {
+  private readonly arcs: Graphics[];
+
+  constructor() {
+    super();
+    this.arcs = ARC_ANCHORS.map(([x, y], i) => {
+      const shape = [0, 0, -7, -9, 4, -16, -5, -27, 2, -39 - (i % 3) * 8];
+      const bolt = new Graphics().poly(shape, false).stroke({ color: '#538eff', width: 6, alpha: 0.7, join: 'round' })
+        .poly(shape, false).stroke({ color: '#effdff', width: 2.5, join: 'round' });
+      bolt.position.set(x, y);
+      return this.addChild(bolt);
+    });
+  }
+
+  sync(rolling: boolean, charge: number, elapsed: number, reduced: boolean): void {
+    this.visible = rolling;
+    if (!rolling) return;
+    for (let i = 0; i < this.arcs.length; i++) {
+      const bolt = this.arcs[i]!;
+      const energy = Math.min(1, Math.max(0, (charge * 10 + 2 - i) / 2.3));
+      bolt.visible = energy > 0 && (!reduced || i < 3);
+      if (!bolt.visible) continue;
+      const pulse = reduced ? 1 : 0.73 + 0.27 * Math.sin(elapsed * (18 + i * 2) + i * 1.9);
+      bolt.alpha = energy * pulse * (reduced ? 0.38 : 0.8 + charge * 0.2);
+      bolt.scale.set(0.5 + charge * (reduced ? 0.25 : 0.95) * pulse);
+      bolt.rotation = (ARC_ANCHORS[i]![0] < 0 ? -1 : 1) * (1.1 + i % 3 * 0.32);
+    }
+  }
+}
+
 class TimeCarView {
   readonly root = new Container();
   private readonly lift = new Container();
+  private readonly body = new Container();
   private readonly light = new Glow(glowTexture(GLOW.lamp)).place(0, -86, 48, 72, 0.55);
   private readonly beam = new Glow(glowTexture(GLOW.mint)).place(0, 0, 100, 115, 0);
   private readonly coils: Container;
+  private readonly arcs = new CarArcs();
   private readonly ring = new Container();
   private readonly segments: Graphics[] = [];
   private readonly chip = new Container();
@@ -64,7 +99,10 @@ class TimeCarView {
 
   constructor(assets: Assets, private readonly car: TimeCar) {
     this.coils = artSprite(assets, 'flight/pickup_time_car_coils') ?? carCoils();
-    this.lift.addChild(this.beam, this.light, artSprite(assets, CAR_KEY) ?? timeCarWedge(), this.coils);
+    // The source art faces north. Only the body and its lights rotate, leaving the countdown upright.
+    this.body.rotation = Math.PI / 2;
+    this.body.addChild(this.light, artSprite(assets, CAR_KEY) ?? timeCarWedge(), this.coils, this.arcs);
+    this.lift.addChild(this.beam, this.body);
     this.ring.addChild(new Graphics().circle(0, 0, TIME_CAR.radius)
       .fill({ color: C.mint, alpha: 0.055 }).stroke({ color: C.mint, alpha: 0.8, width: 2.5 }));
     for (let i = 0; i < SECTIONS; i++) {
@@ -96,6 +134,7 @@ class TimeCarView {
     this.lift.alpha = dissolving ? 1 - Math.max(0, (missAge - 0.035) / 0.125) : pulling ? 1 - amount : 1;
     this.beam.alpha = pulling ? 0.85 : 0;
     this.coils.alpha = speed === 0 ? Math.min(0.35, Math.max(0, (elapsed - 9) * 0.1)) : 0.22 + Math.min(0.72, speed / 360);
+    this.arcs.sync(phase === 'rolling' || phase === 'open' || dissolving, this.car.charge, elapsed, rm);
     this.chip.visible = this.car.visible;
     this.ring.visible = phase === 'open';
     if (this.chip.visible) {
@@ -119,7 +158,7 @@ export class CrestValleyView {
   readonly strike: CrestValleyStrike;
   private readonly clockHands = new CrestValleyClockHands(0, 0);
   private readonly warning = new Glow(glowTexture(GLOW.lamp)).place(826, 178, 95, 110, 0);
-  private readonly contact = new Glow(glowTexture(GLOW.lamp)).place(965, 540, 66, 60, 0);
+  private readonly contact = new Glow(glowTexture(GLOW.lamp)).place(TIME_CAR.cable.x, TIME_CAR.cable.south, 66, 60, 0);
   private readonly rain: TilingSprite;
   private readonly people: CrestValleyPerson[];
 
@@ -138,7 +177,8 @@ export class CrestValleyView {
     }
     clock.addChild(this.strike.dial, this.clockHands);
     const line = new Graphics().moveTo(826, 178).quadraticCurveTo(858, 204, 872, 232)
-      .quadraticCurveTo(930, 326, 965, 540).stroke({ color: INK, width: 3 });
+      .quadraticCurveTo(897, 370, TIME_CAR.cable.x, TIME_CAR.cable.north)
+      .stroke({ color: INK, width: 4 });
     const words = tr().crestValley;
     const marquee = new Container();
     marquee.position.set(1370, 956);
@@ -162,8 +202,10 @@ export class CrestValleyView {
     this.scenery.addChild(line, clock, marquee, banner);
     for (const person of this.people) this.scenery.addChild(person.root);
     this.scenery.addChild(this.warning, this.contact);
-    const turnout = new Graphics().moveTo(650, 1575).lineTo(650, 1538).lineTo(747, 1538).lineTo(747, 1514)
-      .moveTo(734, 1527).lineTo(747, 1514).lineTo(760, 1527).stroke({ color: '#d9bea0', width: 5, cap: 'round', alpha: 0.58 });
+    const { x, y } = TIME_CAR.turnout;
+    const turnout = new Graphics().moveTo(x, y + 29).lineTo(x, y - 17).quadraticCurveTo(x, y - 35, x + 22, y - 35)
+      .lineTo(x + 48, y - 35).moveTo(x + 36, y - 47).lineTo(x + 48, y - 35).lineTo(x + 36, y - 23)
+      .stroke({ color: '#d9bea0', width: 5, cap: 'round', alpha: 0.58 });
     this.ground.addChild(turnout, this.strike.ground);
     const rainArt = artTex(assets, 'flight/rain_stitch55') ?? paintedTexture('crest-valley|rain', 144, 144, g => {
       g.strokeStyle = '#90acc4';

@@ -462,9 +462,9 @@ export class DeepFlightView implements SceneView {
     if (this.collectible?.avoid(this.clear[n]!, cam.x, cam.y)) n++;
     if (this.crestValley?.car.root.visible) {
       const b = this.clear[n++]!;
-      b.x = this.crestValley.car.root.x - cam.x - 81;
+      b.x = this.crestValley.car.root.x - cam.x - 96;
       b.y = this.crestValley.car.root.y - cam.y - 88;
-      b.w = 162;
+      b.w = 192;
       b.h = 209;
     }
     if (quietPills) {
