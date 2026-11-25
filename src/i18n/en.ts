@@ -144,7 +144,7 @@ const deepZib = {
     "10:04! Lightning nailed the tower—glad I'm rubber! Wait, AM I?",
   ],
   timeCarMissed: [
-    'Gone in twin flames! See you in 1985, I guess.',
+    'Gone in two trails of fire! See you in 1985, I guess.',
     "88 mph and poof! Vrell's making me file Form 88-MPH by hand.",
   ],
   timeCarCaught: [
@@ -2176,7 +2176,7 @@ export const en = {
           age: '34',
           height: '5′10″ · 178 cm',
           weight: '168 lb · 76 kg',
-          desc: "Six years on the night shift without once seeing a spin cycle finish. Didn't wake up for the beam, or the probe.",
+          desc: "Six years on the night shift without once seeing a spin cycle finish. Didn't wake up for the beam, or the medical bay.",
         },
         dave: {
           name: 'Dentist Dave',
@@ -2346,7 +2346,7 @@ export const en = {
         },
         barb: {
           at3: "Punched a cargo crate in her sleep yelling \"Welcome to Earth!\" Lab 4 now wears helmets around her.",
-          at10: "Clenched so hard on probe six she bent our 1953 brass thermometer. Lab 4 had to switch to titanium.",
+          at10: "Clenched so hard mid-probe she bent our 1953 brass thermometer. Lab 4 had to switch to titanium.",
         },
         gary: {
           at3: "Pinned an \"I WANT TO BELIEVE\" poster over his bench, then crossed out \"WANT TO\" in thick red ink.",
@@ -2509,7 +2509,7 @@ export const en = {
       'rubber duck': "Bubbles the dolphin's bath-time confidant. Squeaks louder than our hull-breach alarm.",
       'harbourmaster mug': "Salt-crusted stoneware that survives force-nine gales and Pete's industrial-strength tea.",
       'ship in a bottle': 'Nine years of tweezers and swearing. We beamed it out faster than Pete got the mast in.',
-      'accounts mug': "Sal's bookkeeping mug. He already billed the Bureau for wear, tear and emotional distress.",
+      'accounts mug': "Sal's bookkeeping mug. She already billed the Bureau for wear, tear and emotional distress.",
       'petty cash tin': 'Fourteen quid, two paperclips and a stern IOU signed with a paw print by Kipper the dock cat.',
       // L6 St. Mildred's General
       'jug of prep drink': 'Four litres of lemon-flavoured clinic prep juice. Propulsion reclassified it as rocket fuel.',
