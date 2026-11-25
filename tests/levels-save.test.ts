@@ -22,7 +22,7 @@ describe('save', () => {
     const s = memStore();
     const save = defaultSave();
     save.glorbs = 42;
-    save.levels.level1 = { stars: [true, false, true], delivered: true, bestTimeSec: 33.5, attempts: 2 };
+    save.levels.level1 = { stars: [true, false, true, false], delivered: true, bestTimeSec: 33.5, attempts: 2 };
     save.upgrades = ['hush_drive'];
     save.muted = true;
     expect(writeSave(s, save)).toBe(true);
@@ -37,7 +37,7 @@ describe('save', () => {
     const s = memStore({ [LEGACY_SAVE_KEY]: v1 });
     const save = loadSave(s);
     expect(save).toMatchObject({ version: SAVE_VERSION, glorbs: 30, muted: true, lang: 'fr' });
-    expect(save.levels.level1.stars).toEqual([true, true, false]);
+    expect(save.levels.level1.stars).toEqual([true, true, false, false]);
     save.glorbs = 31;
     expect(writeSave(s, save)).toBe(true);
     expect(s.data[LEGACY_SAVE_KEY]).toBe(v1);
@@ -52,7 +52,7 @@ describe('save', () => {
     const s = memStore();
     const save = defaultSave();
     save.glorbs = 88;
-    save.levels.level8 = { stars: [true, true, true], delivered: true, bestTimeSec: 44, attempts: 1 };
+    save.levels.level8 = { stars: [true, true, true, false], delivered: true, bestTimeSec: 44, attempts: 1 };
     save.fieldCheckSeen = true;
     save.muted = true;
     save.lang = 'fr';
@@ -62,7 +62,7 @@ describe('save', () => {
     s.data[LEGACY_SAVE_KEY] = JSON.stringify({ version: 1, glorbs: 88, levels: v1Levels, upgrades: [], muted: false, allUnlocked: false });
     const back = loadSave(s);
     expect(back).toEqual(save);
-    expect(back.levels.level8.stars).toEqual([true, true, true]);
+    expect(back.levels.level8.stars).toEqual([true, true, true, false]);
     expect(back).toMatchObject({ fieldCheckSeen: true, muted: true, lang: 'fr' });
   });
 
@@ -81,7 +81,7 @@ describe('save', () => {
     // preprod reloads: progress intact, and the production write is not imported again
     const back = loadSave(s);
     expect(back).toEqual(first);
-    expect(back.levels.level8).toEqual({ stars: [true, true, true], delivered: true, bestTimeSec: 44, attempts: 0 });
+    expect(back.levels.level8).toEqual({ stars: [true, true, true, false], delivered: true, bestTimeSec: 44, attempts: 0 });
     expect(back).toMatchObject({ fieldCheckSeen: true, glorbs: 88, muted: false });
   });
 
@@ -115,7 +115,7 @@ describe('save', () => {
       reports: Infinity,
     });
     expect(v.glorbs).toBe(0);
-    expect(v.levels.level1).toEqual({ stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 });
+    expect(v.levels.level1).toEqual({ stars: [false, false, false, false], delivered: false, bestTimeSec: null, attempts: 0 });
     expect(v.levels.level2.delivered).toBe(false);
     expect(v.upgrades).toEqual(['hush_drive']);
     expect(v.muted).toBe(false);
@@ -127,7 +127,7 @@ describe('save', () => {
   it('migrates a legacy star-count shape', () => {
     const v = validateSave({ glorbs: 12.7, levels: { level1: { stars: 2, bestTime: 40 } } });
     expect(v.glorbs).toBe(12);
-    expect(v.levels.level1.stars).toEqual([true, true, false]);
+    expect(v.levels.level1.stars).toEqual([true, true, false, false]);
     expect(v.levels.level1.delivered).toBe(true);
     expect(v.levels.level1.bestTimeSec).toBe(40);
     expect(v.version).toBe(SAVE_VERSION);
@@ -143,7 +143,7 @@ describe('save', () => {
     expect(save.reports).toBe(clears);
     expect(totalStars(save)).toBe(clears * 2);
     expect(rankFor(totalStars(save))).toBe(rankFor(clears * 2));
-    for (const id of completed) expect(save.levels[id]).toEqual({ ...record, delivered: true });
+    for (const id of completed) expect(save.levels[id]).toEqual({ ...record, stars: [...record.stars, false], delivered: true });
     expect(LEVEL_IDS.map((_, i) => isLevelUnlocked(save, i))).toEqual([
       true, clears >= 1, clears > 0, clears > 0, clears > 0, clears > 0, clears > 0, clears >= 7,
     ]);
@@ -158,7 +158,7 @@ describe('save', () => {
     expect(isLevelUnlocked(old, 1)).toBe(false);
     expect(isLevelUnlocked(old, 4)).toBe(true);
     expect(isLevelUnlocked(old, 7)).toBe(true);
-    expect(old.levels.level7).toMatchObject({ stars: [true, true, false], bestTimeSec: 170 });
+    expect(old.levels.level7).toMatchObject({ stars: [true, true, false, false], bestTimeSec: 170 });
     expect(old.levels.level5.attempts).toBe(2);
     expect(nextDispatchIndex(old)).toBe(0);
   });

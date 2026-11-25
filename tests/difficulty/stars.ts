@@ -187,7 +187,7 @@ function tutorialAttempt(level: TutorialLevelDef, entry: TutorialLevelDef['map']
   const room = flight && playAbduction(flight.roomId, profile, seed, TUTORIAL_RULES);
   return {
     seed,
-    stars: room && flight ? computeStars(level.parSec, room.result, flight) : [false, false, false],
+    stars: room && flight ? computeStars(level.parSec, room.result, flight, level.map.collectible?.id) : [false, false, false, false],
     seconds: flight ? flight.timeSec + (room ? room.result.timeSec : 0) : t,
     rooms: flight ? [flight.roomId] : [],
     sightings: [],

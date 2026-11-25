@@ -14,7 +14,8 @@ import { artSprite } from './views/art';
 import { NightSky, Skyline } from './views/backdrop';
 import { ButtonView } from './views/button';
 import { SpeakerIcon } from './views/icons';
-import { getLang, langVersion, localArt, tr, type Lang } from '../i18n';
+import { fmt, getLang, langVersion, localArt, tr, type Lang } from '../i18n';
+import { trophyProgress } from './trophy-data';
 
 /** Moon, top-left; the logo box spans y 130..330 and its built-in saucer sits top-right. */
 export const MOON = { x: 92, y: 84, r: 40 };
@@ -33,6 +34,7 @@ const CLOUDS = [
 export class TitleScene implements Scene {
   t = 0;
   readonly start = new Button(110, 640, 320, 92, '', 'primary', 36);
+  readonly trophies = new Button(135, 748, 270, 58, '', 'secondary', 21);
   readonly mute = new Button(VIEW_W - 92, VIEW_H - 92, 68, 68, '', 'ghost');
   /** Language toggle, bottom right beside the speaker: the active language is lit. */
   readonly langs: ReadonlyArray<{ lang: Lang; b: Button }> = [
@@ -56,6 +58,7 @@ export class TitleScene implements Scene {
     for (const { lang, b } of this.langs) if (b.update(p, dt, this.shell.audio) && lang !== getLang()) this.shell.setLanguage(lang);
     this.relabel();
     if (this.start.update(p, dt, this.shell.audio)) this.shell.toWorkOrders();
+    if (this.trophies.update(p, dt, this.shell.audio)) this.shell.toTrophies('title');
   }
 
   /** Button labels and toggle state follow the language. */
@@ -64,6 +67,8 @@ export class TitleScene implements Scene {
     this.labelsFor = langVersion();
     const s = tr();
     this.start.label = s.title.clockIn;
+    const prog = trophyProgress(this.shell.save);
+    this.trophies.label = fmt(s.trophies.buttonCount, { n: prog.found, max: prog.total });
     for (const { lang, b } of this.langs) {
       b.kind = lang === getLang() ? 'secondary' : 'ghost';
       b.label = lang === 'en' ? 'EN' : 'FR';
@@ -107,6 +112,7 @@ class TitleView implements SceneView {
   private readonly startGlow = new Glow(glowTexture(GLOW.mint), true);
   private readonly startPop = new Container();
   private readonly startBtn: ButtonView;
+  private readonly trophiesBtn: ButtonView;
   private readonly vignette = ScreenTint.vignette();
   private readonly muteBtn: ButtonView;
   private readonly speaker = new SpeakerIcon(C.text);
@@ -154,9 +160,10 @@ class TitleView implements SceneView {
     this.startPop.pivot.set(b.x + b.w / 2, b.y + b.h / 2);
     this.startPop.position.set(b.x + b.w / 2, b.y + b.h / 2);
 
+    this.trophiesBtn = new ButtonView(s.trophies);
     this.muteBtn = new ButtonView(s.mute);
     this.langBtns = s.langs.map(({ b: lb }) => new ButtonView(lb));
-    r.addChild(this.vignette, this.muteBtn, this.speaker, ...this.langBtns, this.build);
+    r.addChild(this.vignette, this.trophiesBtn, this.muteBtn, this.speaker, ...this.langBtns, this.build);
     this.vignette.strength = 0.7;
   }
 
@@ -248,6 +255,8 @@ class TitleView implements SceneView {
       this.startPop.scale.set(pop * (1 + breathe * 0.012));
       this.startBtn.sync();
     }
+    this.trophiesBtn.alpha = fade;
+    this.trophiesBtn.sync();
     this.muteBtn.sync();
     this.speaker.set(s.mute.x + 30, s.mute.y + 34, s.shell.save.muted);
     for (const v of this.langBtns) v.sync();

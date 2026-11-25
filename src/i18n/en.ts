@@ -337,6 +337,8 @@ export const en = {
     goals: 'PERFORMANCE GOALS',
     deepGoals: ['{star} — before sunrise ({time})', '{star} — never spotted, no failed jobs', '{star} — {time} of night to spare'],
     tutorialGoals: ['{star} — specimen through the hatch', '{star} — never wakes up', '{star} — whole job under {time}'],
+    // v4 town pickup star
+    pickupGoal: '{star} — bonus, grab it on the way',
     signoff: '— Vrell. Sent from my clipboard.',
     startShift: 'Start shift',
   },
@@ -1856,6 +1858,7 @@ export const en = {
         comment: 'The machine is alive. Its service contract expired last Tuesday.',
         missedComment: "Left the stray defibrillator by the drop-off lane. Probably fine, unless there's lightning.",
         memoHint: 'defibrillator',
+        shout: "It's alive! IT'S ALIVE!",
       },
       shrimp_tower: {
         name: 'Shrimp tower',
@@ -1870,6 +1873,76 @@ export const en = {
         memoHint: 'toaster intern',
       },
     },
+  },
+  // v4 trophy room
+  trophies: {
+    button: 'Trophy room',
+    buttonCount: 'Trophy room · {n}/{max}',
+    title: 'TROPHY ROOM',
+    subtitle: 'Bureau Evidence Locker · Warehouse 4',
+    filed: '{n} / {max} FILED',
+    complete: '{n} / {max} COMPLETE!',
+    hauled: { one: '{n} haul total', other: '{n} hauls total' },
+    tapHint: 'Tap any exhibit to inspect',
+    emptyHint: 'Grab glinting items during shifts',
+    exhibitNo: 'EXHIBIT #{num}',
+    unfiledBadge: 'UNFILED EXHIBIT',
+    unknownTitle: 'Unidentified artefact',
+    takenFrom: 'Taken from',
+    filedOn: 'Filed on',
+    reportNo: 'Report #{n}',
+    timesHauled: 'Taken home',
+    timesCount: { one: '{n} time', other: '{n} times' },
+    statusLabel: 'Status',
+    stillOnEarth: 'Still on Earth — grab it on shift',
+    unfiledHint: 'Spotted during Work Order #000{num} ({location}). Sweep the specimen past the glinting item before leaving.',
+    close: 'Close',
+    wing: 'Wing {n}/{total}',
+    descriptions: {
+      // L1 Doyle Farm
+      slipper: 'Left foot only. Somewhere in Grimsby, one very stubborn farmer is hopping to the barn.',
+      'prize marrow': 'Eleven pounds of village envy. Doyle whispers sweet nothings to it; Lab 4 refuses to touch it.',
+      // L2 Spin City
+      'odd sock': 'The great laundromat mystery, solved. Warehouse 4 holds 40,000 singles and not one match.',
+      'heart-print boxers': 'Tumble-dried to a romantic crisp. Larry calls them his lucky pair; the stats disagree.',
+      // L3 Maple Court
+      'orthodontic slipper': "Fitted with tiny braces and a retainer bill. Even Dave's footwear gets a six-month check-up.",
+      'demo dentures': 'Oversized clinic chompers. They still snap shut whenever an intern reaches past them.',
+      'team-issued slipper': 'Number 9, non-slip sole, smells faintly of pep talks and victorious liniment.',
+      "coach's whistle": 'One sharp blast in the hangar and three alien flight crews dropped for twenty push-ups.',
+      'neighbourhood watch mug': 'Reads "I SAW SOMETHING" in bold. Ironically abducted right under Gary\'s own blinking lens.',
+      'tinfoil hat': 'Hand-crimped for maximum paranoia. Blocks mind rays, boosts FM radio, zero protection against beams.',
+      // L4 Grimsby City Centre
+      'fossilized coffee': "Older than half the museum's Mesozoic wing. Lab 4 uses a chisel to take samples.",
+      'UFO snow globe': 'Unlicensed Bureau merch from the gift shop. Shake it for glitter and a cease-and-desist.',
+      'limited-edition DJ mug': 'Number 1 of 1. Keeps lukewarm energy drink at the exact temperature of a 3 AM club floor.',
+      '12-inch remix': "Kev swears it's a full twelve inches of pure bass. Accounting measured; Accounting disagrees.",
+      'municipal mug': 'Expensed as "civic infrastructure". Somehow the most productive object in City Hall.',
+      'mayoral toupee': 'Aerodynamic auburn weave. Tested in our wind tunnel; refused to budge up to Mach 2.',
+      // L5 Barnacle Bay
+      'sardine tin': 'Pried open with suspiciously neat flipper-work. So long, and thanks for all the snacks.',
+      'rubber duck': "Bubbles' rubber-duck debugger for marine law. Squeaks louder than a hull breach alarm.",
+      'harbourmaster mug': "Salt-crusted stoneware that survives force-nine gales and Pete's industrial-strength tea.",
+      'ship in a bottle': 'Nine years of tweezers and swearing. We beamed it out faster than Pete got the mast in.',
+      'accounts mug': 'Double-entry ceramic. Sal already billed the Bureau for depreciation and emotional distress.',
+      'petty cash tin': 'Fourteen quid, two paperclips, and a stern IOU signed with a paw print by Kipper.',
+      // L6 St. Mildred's General
+      'jug of prep drink': 'Four litres of lemon-flavoured hubris. Classified as rocket propellant by Propulsion.',
+      'silver butt plug': 'Seized in Internal Affairs. Flared base, mirror polish—still failed Form 7-B probe certification.',
+      'on-call coffee': 'Darker than deep space, thick enough to hold a spoon upright. Handle with lead gloves.',
+      'inflated rubber glove': 'Five-fingered night-shift mascot with a Sharpie grin. Morale in the hold jumped 14%.',
+      'hospital sock': 'Treaded on both sides for peak hallway traction. Zero style, maximum dignity loss.',
+      bedpan: "Brushed steel, suspiciously gleaming. Zib insists it's a Viking helmet; HR disagrees.",
+      // L7 SS Buffet Royale
+      'blue heart pendant': "Souvenir-deck enamel on a gold-ish chain. Please don't toss it overboard; Accounting is watching.",
+      "captain's log": 'A literal timber log with a brass plaque. Stardate classified; splinters very real.',
+      'chocolate éclair': 'Stasis-sealed to preserve the glaze. Only two bite marks—Zib blames turbulence.',
+      'giant pepper mill': 'Three feet of walnut-turned intimidation. Say when, or spend eternity sneezing.',
+      'complimentary towel swan': 'Origami terrycloth that survived re-entry. Always know where your towel is—ours is labelled.',
+      'lime mankini': 'Radioactive-lime sling stored behind double blast glass. Very nice—from two parsecs away.',
+      // L8 Patent Valley
+      'first-edition bone': 'Thumbprint-notarised femur, seized before dawn. One toss away from inventing orbital lawsuits.',
+    } satisfies Record<string, string>,
   },
 };
 

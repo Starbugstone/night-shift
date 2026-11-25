@@ -4,6 +4,11 @@ import { LockOn, RING_R, ringUnder, type Saucer } from './sim';
 
 export interface MapCollectibleDef extends Vec2 {
   id: MapCollectibleId;
+  /**
+   * Optional: someone shouting about the pickup from a nearby window (the tail tip, world px); the
+   * line is `tr().mapCollectibles.items[id].shout`. It cycles while the pickup is still there.
+   */
+  shout?: Vec2;
 }
 
 /** One optional pickup per map. Keep the same instance across flight legs within a shift. */

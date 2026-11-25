@@ -209,7 +209,8 @@ export const LEVEL6: DeepLevelDef = {
   map: {
     theme: 'clinic',
     // v4 map collectibles: stray defibrillator trolley off the southern drop-off lane across from the Endoscopy Wing.
-    collectible: { id: 'defibrillator', x: 495, y: 2675 },
+    // "It's alive!" from the Endoscopy Wing's south windows, across the lane, so the Frankenstein nod reads
+    collectible: { id: 'defibrillator', x: 495, y: 2675, shout: { x: 470, y: 2428 } },
     w: 2160,
     h: 3120,
     start: { x: 1080, y: 2960 },

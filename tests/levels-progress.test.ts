@@ -36,22 +36,22 @@ const flight = (o: Partial<FlightResult> = {}): FlightResult => ({ roomId: 'farm
 
 describe('stars', () => {
   it('awards delivered / asleep / night owl', () => {
-    expect(computeStars(50, abduct(), flight())).toEqual([true, true, true]);
-    expect(computeStars(30, abduct(), flight())).toEqual([true, true, false]);
-    expect(computeStars(50, abduct({ woke: true }), flight())).toEqual([true, false, true]);
-    expect(computeStars(50, abduct({ delivered: false }), flight())).toEqual([false, false, false]);
-    expect(computeStars(35, abduct(), flight())).toEqual([true, true, true]); // exactly par counts
+    expect(computeStars(50, abduct(), flight())).toEqual([true, true, true, false]);
+    expect(computeStars(30, abduct(), flight())).toEqual([true, true, false, false]);
+    expect(computeStars(50, abduct({ woke: true }), flight())).toEqual([true, false, true, false]);
+    expect(computeStars(50, abduct({ delivered: false }), flight())).toEqual([false, false, false, false]);
+    expect(computeStars(35, abduct(), flight())).toEqual([true, true, true, false]); // exactly par counts
   });
 });
 
 describe('glorbs and ranks', () => {
   it('pays new stars more than repeats', () => {
-    expect(runReward([false, false, false], [true, true, false])).toEqual({ glorbs: DELIVERY_PAY + 2 * NEW_STAR_PAY, newStars: 2 });
-    expect(runReward([true, true, false], [true, true, true])).toEqual({
+    expect(runReward([false, false, false, false], [true, true, false, false])).toEqual({ glorbs: DELIVERY_PAY + 2 * NEW_STAR_PAY, newStars: 2 });
+    expect(runReward([true, true, false, false], [true, true, true, false])).toEqual({
       glorbs: DELIVERY_PAY + 2 * REPEAT_STAR_PAY + NEW_STAR_PAY,
       newStars: 1,
     });
-    expect(runReward([true, true, true], [false, false, false])).toEqual({ glorbs: 0, newStars: 0 });
+    expect(runReward([true, true, true, false], [false, false, false, false])).toEqual({ glorbs: 0, newStars: 0 });
   });
 
   it('ranks follow total stars', () => {
@@ -75,12 +75,12 @@ describe('glorbs and ranks', () => {
     const s0 = defaultSave();
     const r1 = applyRun(s0, 'level1', abduct({ woke: true }), flight());
     expect(s0.glorbs).toBe(0);
-    expect(r1.save.levels.level1.stars).toEqual([true, false, true]);
+    expect(r1.save.levels.level1.stars).toEqual([true, false, true, false]);
     expect(r1.glorbs).toBe(DELIVERY_PAY + 2 * NEW_STAR_PAY);
     expect(r1.unlockedNext).toBe(true);
     const r2 = applyRun(r1.save, 'level1', abduct(), flight({ timeSec: 500 }));
-    expect(r2.save.levels.level1.stars).toEqual([true, true, true]);
-    expect(r2.newStarFlags).toEqual([false, true, false]);
+    expect(r2.save.levels.level1.stars).toEqual([true, true, true, false]);
+    expect(r2.newStarFlags).toEqual([false, true, false, false]);
     expect(totalStars(r2.save)).toBe(3);
     expect(r2.rankBefore.title).toBe('Intern');
     expect(r2.rankAfter.title).toBe('Probationary Abductor');
@@ -98,7 +98,7 @@ describe('unlocks', () => {
       const outcome = level.kind === 'tutorial'
         ? applyRun(save, level.id, abduct({ woke: true, timeSec: 999 }), flight())
         : applyDeepRun(save, level.id, { delivered: 3, spotted: 1, failedAbductions: 1, elapsedSec: level.budgetSec - 1, sunrise: false });
-      expect(outcome.stars).toEqual([true, false, false]);
+      expect(outcome.stars).toEqual([true, false, false, false]);
       expect(outcome.unlockedNext).toBe(index < LEVELS.length - 1);
       save = outcome.save;
     }

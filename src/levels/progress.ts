@@ -9,9 +9,16 @@ import { en } from '../i18n/en';
 export const STAR_LABELS: readonly string[] = en.starLabels.tutorial;
 export const DEEP_STAR_LABELS: readonly string[] = en.starLabels.deep;
 
+/** English star labels of a level, the town pickup star (named after the pickup) included when it has one. */
 export function starLabels(l: LevelDef): readonly string[] {
-  if (l.id === 'level8') return en.timeTrial.stars;
-  return isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
+  const base = l.id === 'level8' ? en.timeTrial.stars : isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
+  const id = l.map.collectible?.id;
+  return id ? [...base, en.mapCollectibles.items[id].name] : base;
+}
+
+/** Stars a level can award: three, plus the town pickup star where the map has a pickup. */
+export function levelStarCount(l: LevelDef): number {
+  return l.map.collectible ? 4 : 3;
 }
 
 /** Deep levels pay this many times the tutorial rates. */
@@ -24,13 +31,15 @@ export const NEW_STAR_PAY = 10;
 /** Paid for re-earning a star you already had. */
 export const REPEAT_STAR_PAY = 2;
 
-export function computeStars(parSec: number, abduct: AbductResult, flight: FlightResult): Stars {
+/** `pickup`: the level's town pickup; its star needs it taken on a delivered run. */
+export function computeStars(parSec: number, abduct: AbductResult, flight: FlightResult, pickup?: MapCollectibleId): Stars {
   const delivered = abduct.delivered && !abduct.aborted;
-  return [delivered, delivered && !abduct.woke, delivered && flight.timeSec + abduct.timeSec <= parSec];
+  return [delivered, delivered && !abduct.woke, delivered && flight.timeSec + abduct.timeSec <= parSec,
+    delivered && pickup !== undefined && flight.mapCollectible === pickup];
 }
 
 export function countStars(s: Stars): number {
-  return (s[0] ? 1 : 0) + (s[1] ? 1 : 0) + (s[2] ? 1 : 0);
+  return s.reduce((n, on) => n + (on ? 1 : 0), 0);
 }
 
 export function totalStars(save: SaveData): number {
@@ -39,7 +48,7 @@ export function totalStars(save: SaveData): number {
   return n;
 }
 
-export const MAX_STARS = LEVELS.length * 3;
+export const MAX_STARS = LEVELS.reduce((n, l) => n + levelStarCount(l), 0);
 
 export interface Rank {
   title: string;
@@ -66,7 +75,7 @@ export function runReward(prev: Stars, earned: Stars, mult = 1): { glorbs: numbe
   if (!earned[0]) return { glorbs: 0, newStars: 0 };
   let glorbs = DELIVERY_PAY * mult;
   let newStars = 0;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < earned.length; i++) {
     if (!earned[i]) continue;
     if (prev[i]) glorbs += REPEAT_STAR_PAY * mult;
     else {
@@ -99,7 +108,9 @@ export interface TrophyFind {
 
 export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary, levelId?: LevelId): Stars {
   const all = r.delivered >= 3 && !r.sunrise;
-  return [all, all && r.spotted === 0 && (levelId === 'level8' || r.failedAbductions === 0), all && budgetSec - r.elapsedSec >= parMarginSec];
+  const pickup = LEVELS.find((l) => l.id === levelId)?.map.collectible?.id;
+  return [all, all && r.spotted === 0 && (levelId === 'level8' || r.failedAbductions === 0), all && budgetSec - r.elapsedSec >= parMarginSec,
+    all && pickup !== undefined && r.mapCollectible === pickup];
 }
 
 /** v4 trophy room: put this run's souvenirs on the shelf (first find keeps its route and report number). */
@@ -142,7 +153,7 @@ export function applyRun(save: SaveData, levelId: LevelId, abduct: AbductResult,
   const level = LEVELS.find((l) => l.id === levelId)!;
   const par = isDeep(level) ? level.budgetSec : level.parSec;
   const finds = abduct.delivered && !abduct.aborted ? abduct.itemsStolen.map(item => ({ item, room: flight.roomId })) : [];
-  return applyStars(save, levelId, computeStars(par, abduct, flight), flight.timeSec + abduct.timeSec, 1, flight.mapCollectible, finds);
+  return applyStars(save, levelId, computeStars(par, abduct, flight, level.map.collectible?.id), flight.timeSec + abduct.timeSec, 1, flight.mapCollectible, finds);
 }
 
 /** Apply a finished deep shift (delivered all, or sunrise) to a copy of the save. */
@@ -163,7 +174,7 @@ function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: num
   const before = rankFor(totalStars(save));
   const nextWasUnlocked = isLevelUnlocked(save, idx + 1);
   const reward = runReward(prev, stars, payMult);
-  lv.stars = [prev[0] || stars[0], prev[1] || stars[1], prev[2] || stars[2]];
+  lv.stars = [prev[0] || stars[0], prev[1] || stars[1], prev[2] || stars[2], prev[3] || stars[3]];
   lv.attempts += 1;
   if (stars[0]) {
     lv.delivered = true;
@@ -174,7 +185,7 @@ function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: num
   return {
     save: next,
     stars,
-    newStarFlags: [stars[0] && !prev[0], stars[1] && !prev[1], stars[2] && !prev[2]],
+    newStarFlags: [stars[0] && !prev[0], stars[1] && !prev[1], stars[2] && !prev[2], stars[3] && !prev[3]],
     glorbs: reward.glorbs,
     rankBefore: before,
     rankAfter: rankFor(totalStars(next)),

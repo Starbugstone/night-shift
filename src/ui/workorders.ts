@@ -4,7 +4,7 @@ import type { Assets, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS } from '../levels/levels';
-import { MAX_STARS, RANKS, isLevelUnlocked, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
+import { MAX_STARS, RANKS, isLevelUnlocked, levelStarCount, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, tr } from '../i18n';
 import { easeOutCubic } from '../core/fx';
 import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
@@ -20,6 +20,7 @@ import { NightSky } from './views/backdrop';
 import { ButtonView } from './views/button';
 import { glorbTexture, iconSprite, starTexture } from './views/icons';
 import { highlightedPanel, SunIcon } from './views/menu-decor';
+import { trophyCupTexture } from './views/trophy-art';
 
 const LIST_TOP = 262;
 const CARD_X = 32;
@@ -50,6 +51,7 @@ export class WorkOrdersScene implements Scene {
   toast = '';
   toastT = 0;
   readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
+  readonly trophies = new Button(VIEW_W - 80, 18, 64, 60, '', 'ghost', 24);
   readonly upgrades = new Button(336, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
   readonly cards: Card[] = [];
   readonly recommended: number;
@@ -72,6 +74,7 @@ export class WorkOrdersScene implements Scene {
     const p = this.shell.ctx.pointer;
     const audio = this.shell.audio;
     if (this.back.update(p, dt, audio)) return this.shell.toTitle();
+    if (this.trophies.update(p, dt, audio)) return this.shell.toTrophies('workorders');
     if (this.upgrades.update(p, dt, audio)) return this.shell.toUpgrades();
 
     if (p.pressed && p.y >= LIST_TOP) {
@@ -153,6 +156,8 @@ class WorkOrdersView implements SceneView {
   private readonly list = new Container();
   private readonly cards: (LevelCard | ConceptCard)[];
   private readonly back: ButtonView;
+  private readonly trophies: ButtonView;
+  private readonly trophyIcon: Sprite;
   private readonly upgrades: ButtonView;
   private readonly toast = new Container();
   private readonly toastPanel = new Shape();
@@ -178,6 +183,9 @@ class WorkOrdersView implements SceneView {
     header.width = VIEW_W;
     const rule = new Graphics().rect(0, LIST_TOP - 8, VIEW_W, 2).fill('rgba(124,255,203,0.25)');
     this.back = new ButtonView(s.back);
+    this.trophies = new ButtonView(s.trophies);
+    this.trophyIcon = iconSprite(trophyCupTexture(34, C.amberHi), 34);
+    this.trophyIcon.position.set(s.trophies.x + s.trophies.w / 2, s.trophies.y + s.trophies.h / 2);
     this.upgrades = new ButtonView(s.upgrades);
 
     const stars = totalStars(save);
@@ -189,9 +197,9 @@ class WorkOrdersView implements SceneView {
     coin.position.set(410, 138);
     this.toast.addChild(this.toastPanel, this.toastText);
     this.root.addChild(
-      this.sky, mask, this.list, header, rule, this.back,
-      new Label({ size: 38, color: C.mint, weight: 900, outline: C.ink }).set(strings.title, VIEW_W / 2 + 20, 48, VIEW_W - 150),
-      new Label({ size: 17, color: C.muted, weight: 600 }).set(strings.subtitle, VIEW_W / 2 + 20, 80, VIEW_W - 150),
+      this.sky, mask, this.list, header, rule, this.back, this.trophies, this.trophyIcon,
+      new Label({ size: 38, color: C.mint, weight: 900, outline: C.ink }).set(strings.title, VIEW_W / 2, 48, VIEW_W - 180),
+      new Label({ size: 17, color: C.muted, weight: 600 }).set(strings.subtitle, VIEW_W / 2, 80, VIEW_W - 180),
       highlightedPanel(new Graphics(), 24, 100, VIEW_W - 48, 76, { fill: C.panel, r: 18, lineW: 3, shadow: 4 }),
       new Label({ size: 14, color: C.muted, align: 'left', weight: 800 }).set(strings.rank, 44, 120),
       new Label({ size: rank.title.length > 16 ? 22 : 26, color: C.text, align: 'left', weight: 800 }).set(rank.title, 44, 146, 328),
@@ -209,6 +217,8 @@ class WorkOrdersView implements SceneView {
     const reduced = shell.ctx.reducedMotion;
     this.sky.sync(t, reduced);
     this.back.sync();
+    this.trophies.sync();
+    this.trophyIcon.y = this.s.trophies.y + this.s.trophies.h / 2 + (this.s.trophies.pressedDown ? 4 : 0);
     this.upgrades.sync();
     this.list.y = LIST_TOP - scroll;
     for (let i = 0; i < this.cards.length; i++) {
@@ -325,7 +335,8 @@ class LevelCard {
 
     const empty = starTexture(assets, 38, false);
     const full = starTexture(assets, 38, true);
-    for (let i = 0; i < 3; i++) {
+    // three stars, plus the town pickup star where the map has a pickup
+    for (let i = 0; i < levelStarCount(lv); i++) {
       const star = iconSprite(prog.stars[i] ? full : empty, 38);
       star.position.set(52 + i * 44, CARD_H - 32);
       this.root.addChild(star);

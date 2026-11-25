@@ -26,6 +26,7 @@ import { ButtonView } from './views/button';
 import { glorbTexture, iconSprite, starTexture } from './views/icons';
 import { VrellPortrait } from './views/portrait';
 import { idPhoto } from './views/report-photo';
+import { shownStarLabels } from './star-labels';
 
 // Timeline (seconds): rows tick in, the stamp slams, stars pop one by one, Glorbs count up,
 // then Vrell stops writing and says his piece. Something is always landing.
@@ -84,7 +85,7 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
       [r.spotted, String(flight.spotted)],
     ],
     stamp: abduct.delivered ? 'delivered' : 'failed',
-    starLabels: tr().starLabels.tutorial,
+    starLabels: shownStarLabels(lv),
     comment: (abduct.delivered && (
       (outcome.newStarFlags[0] && storyFirstClear(lv.id)) || pickup?.comment
     )) || vrellComment({ abduct, flight, parSec: par, stars: countStars(outcome.stars) }, outcome.save.reports),
@@ -122,7 +123,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
       ...(pickup ? [pickup.row] : []),
     ],
     stamp: sunrise ? 'sunrise' : 'delivered',
-    starLabels: lv.id === 'level8' ? tr().timeTrial.stars : tr().starLabels.deep,
+    starLabels: shownStarLabels(lv),
     comment: sunrise
       ? sunriseMemo(outcome.save.reports)
       : (outcome.newStarFlags[0] && storyFirstClear(lv.id)) || pickup?.comment || deepComment( // v4 story
@@ -139,7 +140,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
 
 export class ReportScene implements Scene {
   t = 0;
-  private played = { stamp: false, stars: [false, false, false], glorbs: false };
+  private played = { stamp: false, stars: [false, false, false, false], glorbs: false };
   readonly retry = new Button(24, 846, 232, 84, tr().common.retry, 'secondary', 30);
   readonly next = new Button(272, 846, 244, 84, tr().common.next, 'primary', 30);
   /** Star and Glorb bursts, drawn over the card. */
@@ -224,13 +225,14 @@ export class ReportScene implements Scene {
         if (!skipped) this.shake = Math.max(this.shake, 0.6);
       }
     }
-    for (let i = 0; i < 3; i++) {
+    const starCount = this.model.starLabels.length;
+    for (let i = 0; i < starCount; i++) {
       if (!this.played.stars[i] && this.t >= STAR_AT + i * STAR_GAP) {
         this.played.stars[i] = true;
         if (this.outcome.stars[i]) {
           audio.sfx('lock_on', 0.5);
           if (!skipped) {
-            const sx = VIEW_W / 2 + (i - 1) * 132;
+            const sx = starX(i, starCount);
             this.fx.spawn(P_RING, sx, STAR_Y, 0, 0, 0.4, 76, PC.amber);
             this.fx.burst(P_STAR, sx, STAR_Y, rm ? 3 : 6, 150, 280, 0.6, 9, PC.amber, 420, 1.2);
             if (!rm) this.fx.burst(P_TWINKLE, sx, STAR_Y, 5, 60, 160, 0.55, 9, PC.white, 0, 2);
@@ -373,7 +375,7 @@ class ReportView implements SceneView {
     this.stamp.position.set(L.stamp.x, L.stamp.y);
     this.paper.addChild(this.cover, this.dust, this.stamp);
 
-    this.stars = model.starLabels.map((label, i) => new RatingStar(assets, i, label, outcome.stars[i] === true, outcome.newStarFlags[i] === true));
+    this.stars = model.starLabels.map((label, i) => new RatingStar(assets, i, model.starLabels.length, label, outcome.stars[i] === true, outcome.newStarFlags[i] === true));
     for (const star of this.stars) this.paper.addChild(star.root);
     this.payout = new Payout(assets, outcome.glorbs > 0, content.payoutExtra);
     this.vrell = new ReportComment(assets, model.comment);
@@ -492,6 +494,14 @@ function resultStamp(assets: Assets, result: ReportModel['stamp']): Container {
   return root;
 }
 
+/** Spacing of the report's rating stars: three at 132 px, four (with the town pickup star) at 112. */
+function starGap(n: number): number {
+  return n > 3 ? 112 : 132;
+}
+function starX(i: number, n: number): number {
+  return VIEW_W / 2 + (i - (n - 1) / 2) * starGap(n);
+}
+
 class RatingStar {
   readonly root = new Container();
   private readonly full: Container;
@@ -499,17 +509,18 @@ class RatingStar {
   private readonly shrug = new Label({ size: 18, color: '#9a92bf', weight: 900 }, '—');
   private readonly caption: Label;
 
-  constructor(assets: Assets, i: number, text: string, private readonly earned: boolean, private readonly isNew: boolean) {
-    this.root.position.set(VIEW_W / 2 + (i - 1) * 132, STAR_Y);
-    this.full = iconSprite(starTexture(assets, 66, true), 66);
-    this.caption = new Label(STAR_EMPTY).set(text, 0, 46, 124);
+  constructor(assets: Assets, i: number, n: number, text: string, private readonly earned: boolean, private readonly isNew: boolean) {
+    this.root.position.set(starX(i, n), STAR_Y);
+    const px = n > 3 ? 58 : 66;
+    this.full = iconSprite(starTexture(assets, px, true), px);
+    this.caption = new Label(STAR_EMPTY).set(text, 0, 46, starGap(n) - 8);
     this.badge.position.set(32, -36);
     this.badge.rotation = 0.2;
     this.badge.addChild(
       panelPath(new Graphics(), -25, -11, 50, 22, { fill: C.red, r: 11, lineW: 2, shadow: 0 }),
       new Label({ size: 13, color: '#ffffff', weight: 900 }).set(tr().report.newStar, 0, 1, 44),
     );
-    this.root.addChild(iconSprite(starTexture(assets, 66, false), 66), this.full, this.badge, this.shrug, this.caption);
+    this.root.addChild(iconSprite(starTexture(assets, px, false), px), this.full, this.badge, this.shrug, this.caption);
   }
 
   sync(age: number, rm: boolean): void {

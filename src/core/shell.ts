@@ -25,6 +25,7 @@ export interface Shell {
   toTitle(): void;
   toWorkOrders(): void;
   toUpgrades(): void;
+  toTrophies(from?: 'title' | 'workorders'): void;
   toMemo(levelIndex: number): void;
   toFlight(levelIndex: number, spotted?: number): void;
   toAbduct(levelIndex: number, room: RoomId, flight: FlightResult): void;

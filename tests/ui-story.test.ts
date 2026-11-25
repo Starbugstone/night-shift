@@ -29,8 +29,8 @@ const measure: Measure = (s, size, weight) => {
 function makeOutcome(firstClear: boolean): RunOutcome {
   return {
     save: defaultSave(),
-    stars: [true, true, false],
-    newStarFlags: [firstClear, firstClear, false],
+    stars: [true, true, false, false],
+    newStarFlags: [firstClear, firstClear, false, false],
     glorbs: 25,
     rankBefore: RANKS[0]!,
     rankAfter: RANKS[0]!,

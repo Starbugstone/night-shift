@@ -377,6 +377,7 @@ export class DeepFlightView implements SceneView {
     bubbles.label = FLIGHT_BUBBLES;
     for (const target of this.targets) bubbles.addChild(target.bubble);
     bubbles.addChild(this.hazards.bubbles);
+    if (this.collectible?.shout) bubbles.addChild(this.collectible.shout);
     this.upperWorld.addChild(bubbles);
     this.clear = Array.from({ length: this.rings.length * 2 + 6 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
     this.moved = new Uint8Array(this.rings.length);

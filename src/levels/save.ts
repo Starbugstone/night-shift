@@ -26,7 +26,13 @@ export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive',
 const RETIRED_UPGRADES: Readonly<Record<string, number>> = { afterburner: 60 };
 
 /** Tutorials: [Delivered, Still asleep, Night owl]. Deep levels: [Delivered all 3, Ghost, Night owl]. */
-export type Stars = [boolean, boolean, boolean];
+/**
+ * Delivered, Still asleep / Ghost, Night owl, and (v4) the town pickup star: the level's map
+ * collectible taken on a successful run. L1 has no pickup, so its fourth star stays false and unshown.
+ */
+export type Stars = [boolean, boolean, boolean, boolean];
+/** Index of the town pickup star. */
+export const PICKUP_STAR = 3;
 
 export interface LevelProgress {
   stars: Stars;
@@ -75,7 +81,7 @@ export interface KeyValueStore {
 }
 
 export function defaultLevel(): LevelProgress {
-  return { stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 };
+  return { stars: [false, false, false, false], delivered: false, bestTimeSec: null, attempts: 0 };
 }
 
 export function defaultSave(): SaveData {
@@ -110,11 +116,11 @@ function readLevel(raw: unknown): LevelProgress {
   if (!isObj(raw)) return lv;
   const s = raw.stars;
   if (Array.isArray(s)) {
-    lv.stars = [s[0] === true, s[1] === true, s[2] === true];
+    lv.stars = [s[0] === true, s[1] === true, s[2] === true, s[3] === true];
   } else if (typeof s === 'number' && Number.isFinite(s)) {
     // legacy shape: star count only
     const n = Math.max(0, Math.min(3, Math.floor(s)));
-    lv.stars = [n >= 1, n >= 2, n >= 3];
+    lv.stars = [n >= 1, n >= 2, n >= 3, false];
   }
   lv.delivered = raw.delivered === true || lv.stars[0];
   const bt = raw.bestTimeSec ?? raw.bestTime;
@@ -122,6 +128,8 @@ function readLevel(raw: unknown): LevelProgress {
   lv.attempts = Math.floor(finiteNonNeg(raw.attempts, 0));
   const collectible = raw.mapCollectible;
   if (isMapCollectibleId(collectible)) lv.mapCollectible = collectible;
+  // saves from before the pickup star: a delivered level whose pickup was already filed earns it
+  if (Array.isArray(s) && s.length < 4 && lv.mapCollectible && lv.delivered) lv.stars[3] = true;
   return lv;
 }
 

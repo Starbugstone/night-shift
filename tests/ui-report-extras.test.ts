@@ -213,7 +213,7 @@ describe('report layout', () => {
 });
 
 function outcome(): RunOutcome {
-  return { save: defaultSave(), stars: [true, false, true], newStarFlags: [true, false, false], glorbs: 40, rankBefore: RANKS[0]!, rankAfter: RANKS[0]!, unlockedNext: false };
+  return { save: defaultSave(), stars: [true, false, true, false], newStarFlags: [true, false, false, false], glorbs: 40, rankBefore: RANKS[0]!, rankAfter: RANKS[0]!, unlockedNext: false };
 }
 
 describe('report scene', () => {

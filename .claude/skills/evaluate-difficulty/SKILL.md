@@ -128,6 +128,11 @@ whatever the bands say.
   a memo, keep the hint. `tests/flight-collectible*.test.ts` enforces it over all of `LEVELS`. The
   pickup is optional: check that the bands, the beeline and Ghost are unchanged with it in the map.
 
+- **Every souvenir has a place in the trophy room.** A new room or route brings its souvenir to the
+  trophy room: a slot, a name in `tr().items` and a catchy EN and FR description.
+  `tests/ui-trophies*.test.ts` checks every room. One room for now; a second room opens when the shelves
+  outgrow the first (docs/GDD-9-trophy-room.md).
+
 ## Too-easy checks
 
 - **Flight.** At each delay (0, 2.5, 5 and 8 s), a straight hold toward either tutorial ring must

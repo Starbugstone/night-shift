@@ -16,6 +16,7 @@ import { NightSky } from './views/backdrop';
 import { ButtonView } from './views/button';
 import { iconSprite, starTexture } from './views/icons';
 import { VrellPortrait } from './views/portrait';
+import { shownStarLabels } from './star-labels';
 
 const PX = 24;
 const PW = VIEW_W - 48;
@@ -191,16 +192,20 @@ class MemoView implements SceneView {
     this.joke = typedLines(this.jokeBox, joke, JOKE, PX + 32, jokeTop + 8, JOKE_LH);
     this.paper.addChild(this.jokeBox, this.cursor);
 
-    const gy = PAPER_Y + PAPER_H - 160;
+    // a fourth goal (the town pickup star) packs the lines a little tighter in the same space
+    const labels = shownStarLabels(lv);
+    const goals = labels.length;
+    const pitch = goals > 3 ? 30 : 38;
+    const gy = PAPER_Y + PAPER_H - (goals > 3 ? 166 : 160);
     this.paper.addChild(new Label({ size: 15, color: '#6a3fbf', align: 'left', weight: 900 }).set(m.goals, PX + 28, gy));
-    const labels = lv.id === 'level8' ? tr().timeTrial.stars : lv.kind === 'deep' ? tr().starLabels.deep : tr().starLabels.tutorial;
-    const lines = lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : lv.kind === 'deep' ? m.deepGoals : m.tutorialGoals;
-    const times = lv.kind === 'deep' ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec)] : ['', '', fmtTime(lv.parSec)];
+    const lines = [...(lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : lv.kind === 'deep' ? m.deepGoals : m.tutorialGoals), m.pickupGoal];
+    const times = lv.kind === 'deep' ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec), ''] : ['', '', fmtTime(lv.parSec), ''];
     const best = save.levels[lv.id].stars;
-    const goalLook = { size: 17, color: C.paperInk, align: 'left', weight: 700 } as const;
-    for (let i = 0; i < 3; i++) {
-      const star = iconSprite(starTexture(assets, 30, best[i] === true), 30);
-      const y = gy + 34 + i * 38;
+    const goalLook = { size: goals > 3 ? 16 : 17, color: C.paperInk, align: 'left', weight: 700 } as const;
+    const starPx = goals > 3 ? 26 : 30;
+    for (let i = 0; i < goals; i++) {
+      const star = iconSprite(starTexture(assets, starPx, best[i] === true), starPx);
+      const y = gy + (goals > 3 ? 30 : 34) + i * pitch;
       star.position.set(PX + 46, y);
       this.paper.addChild(star, new Label(goalLook).set(fmt(lines[i]!, { star: labels[i]!, time: times[i]! }), PX + 72, y, PW - 72 - 20));
     }

@@ -19,6 +19,7 @@ import { LoadingScene } from '../ui/loading';
 import { MemoScene } from '../ui/memo';
 import { ReportScene, deepReport, tutorialReport } from '../ui/report';
 import { TitleScene } from '../ui/title';
+import { TrophiesScene, type TrophyReturnTarget } from '../ui/trophies';
 import { UpgradesScene } from '../ui/upgrades';
 import { WorkOrdersScene } from '../ui/workorders';
 import { AssetLoader } from './assets';
@@ -36,6 +37,7 @@ export type SceneName =
   | 'title'
   | 'workorders'
   | 'upgrades'
+  | 'trophies'
   | 'memo'
   | 'field-check'
   | 'flight'
@@ -255,6 +257,10 @@ export class Game implements Shell {
 
   toUpgrades(): void {
     this.scenes.go('upgrades', () => new UpgradesScene(this));
+  }
+
+  toTrophies(from: TrophyReturnTarget = 'title'): void {
+    this.scenes.go('trophies', () => new TrophiesScene(this, from));
   }
 
   toMemo(levelIndex: number): void {
@@ -581,6 +587,8 @@ export class Game implements Shell {
             return game.toWorkOrders();
           case 'upgrades':
             return game.toUpgrades();
+          case 'trophies':
+            return game.toTrophies(arg === 'workorders' ? 'workorders' : 'title');
           case 'memo':
             return game.toMemo(lvl);
           case 'flight':

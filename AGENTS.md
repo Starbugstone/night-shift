@@ -99,6 +99,12 @@ English and French. If a memo already names an object or person, that thing is t
 none. `tests/flight-collectible*.test.ts` checks every level in `LEVELS`, so a new level fails until it
 has its pickup and its memo hint.
 
+**Hard rule: every souvenir has a place in the trophy room.** Each item any room can yield (room items
+and `SOUVENIR_SWAPS`, Field Check included) has a trophy-room slot, a name in `tr().items` and a catchy
+description in EN and FR. When you add a level or a room, add its souvenirs to the trophy room.
+`tests/ui-trophies*.test.ts` walks every room, so a new souvenir fails until it is on the shelf. One
+room for now; when the shelves outgrow it, the design (docs/GDD-9-trophy-room.md) opens a second room.
+
 **Hard rule: no bump on start.** Every room spawn must sit 10 s without input with zero bonks and
 zero wake (`tests/abduct-spawn.test.ts`); fix the spawn pose or position, never the wake rules.
 

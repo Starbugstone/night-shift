@@ -198,12 +198,12 @@ describe('Prior Contact', () => {
     run.failedAbductions++;
     const score = () => computeDeepStars(run.budget, LEVEL8.parMarginSec, run.summary(), LEVEL8.id);
     run.tick(run.budget - LEVEL8.parMarginSec);
-    expect(score()).toEqual([true, true, true]);
+    expect(score()).toEqual([true, true, true, false]);
     run.tick(0.01);
     run.onSpotted();
-    expect(score()).toEqual([true, false, false]);
+    expect(score()).toEqual([true, false, false, false]);
     expect(run.tick(run.remaining)).toBe(true);
-    expect(score()).toEqual([false, false, false]);
+    expect(score()).toEqual([false, false, false, false]);
   });
 
   it('completes the live timed shift and its sole cave with the headless pilot', () => {

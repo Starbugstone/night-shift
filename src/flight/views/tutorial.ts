@@ -130,6 +130,7 @@ export class TutorialFlightView implements SceneView {
     const bubbles = new Container();
     bubbles.label = FLIGHT_BUBBLES;
     for (const d of this.dogs) bubbles.addChild(d.bark, d.question, d.sleep);
+    if (this.collectible?.shout) bubbles.addChild(this.collectible.shout);
     this.upperWorld.addChild(bubbles, abovePlayer(this.saucer.root), abovePlayer(this.fx));
 
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));

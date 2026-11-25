@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { VIEW_W, type MapCollectibleId } from '../../contracts';
-import { batched } from '../../core/gfx/shapes';
-import { Label } from '../../core/gfx/text';
+import { batched, panelPath } from '../../core/gfx/shapes';
+import { Label, measure } from '../../core/gfx/text';
 import { fmt, tr } from '../../i18n';
 import { C } from '../../ui/theme';
 import { HudPanel } from '../../ui/views/hud';
@@ -252,14 +252,50 @@ const makeProp: Record<MapCollectibleId, () => Container> = {
   krix: krixIntern,
 };
 
+const SHOUT = { size: 16, color: C.paperInk, weight: 900, italic: true } as const;
+
+/**
+ * Someone shouting about the pickup from a window: a paper bubble whose tail points at the window.
+ * The flight view puts `root` in its FLIGHT_BUBBLES layer. It speaks for ~4 s, rests ~3 s, while the
+ * pickup is still there and the window is on screen.
+ */
+class PickupShout {
+  readonly root = new Container();
+
+  constructor(private readonly at: { x: number; y: number }, text: string) {
+    const w = Math.min(300, measure(text, 16, 900, true) + 30);
+    this.root.position.set(at.x, at.y);
+    // the bubble sits below the window (over the street), its tail pointing up at it
+    this.root.addChild(panelPath(new Graphics(), -w / 2 + 40, 20, w, 36, { fill: C.paper, r: 18, lineW: 2.5, shadow: 3 })
+      .poly([-6, 21, 0, 4, 10, 21]).fill(C.paper), new Label(SHOUT).set(text, 40, 39, w - 20));
+    this.root.alpha = 0;
+  }
+
+  sync(cam: CameraView, t: number, reduced: boolean, present: boolean): void {
+    const on = present && cam.sees(this.at.x, this.at.y + 40, 200);
+    if (this.root.visible !== on) this.root.visible = on;
+    if (!on) return;
+    const k = (t % 7) / 4;
+    // fade in and out with alpha (the cycle is not a state change)
+    this.root.alpha = k >= 1 ? 0 : Math.min(1, k * 10, (1 - k) * 8);
+    this.root.y = this.at.y + (reduced || k >= 1 ? 0 : -Math.sin(k * Math.PI) * 4);
+  }
+}
+
 export class MapCollectibleView {
   readonly root = new Container();
+  /** The window shout (see PickupShout), for the flight's bubble layer; null when the pickup has none. */
+  readonly shout: Container | null;
+  private readonly shouter: PickupShout | null;
   private readonly glint = sparkle(15);
   private readonly lock = new Container();
   private readonly progress: Graphics[] = [];
 
   constructor(private readonly pickup: MapCollectible) {
     const { id, x, y } = pickup.def;
+    const line = (tr().mapCollectibles.items[id] as { shout?: string }).shout;
+    this.shouter = pickup.def.shout && line ? new PickupShout(pickup.def.shout, line) : null;
+    this.shout = this.shouter?.root ?? null;
     this.root.position.set(x, y);
     this.glint.position.set(29, -30);
     this.root.addChild(makeProp[id](), this.glint, this.lock);
@@ -277,6 +313,7 @@ export class MapCollectibleView {
 
   sync(cam: CameraView, t: number, reduced: boolean): void {
     const { x, y } = this.pickup.def;
+    this.shouter?.sync(cam, t, reduced, !this.pickup.collected);
     // collected or off-screen is a real state change: `visible` (alpha 0 would still batch and draw)
     const show = !this.pickup.collected && cam.sees(x, y, PICKUP_VIEW_R);
     if (this.root.visible !== show) this.root.visible = show;

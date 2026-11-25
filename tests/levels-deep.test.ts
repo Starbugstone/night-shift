@@ -21,7 +21,8 @@ describe('levels and routes', () => {
   it('has two training levels and two deep levels, 12 stars in all', () => {
     // v3 (L5-L7) adds deep levels as each lands: every level after the two tutorials is deep
     expect(LEVELS.map((l) => l.kind)).toEqual(['tutorial', 'tutorial', ...LEVELS.slice(2).map(() => 'deep')]);
-    expect(MAX_STARS).toBe(LEVELS.length * 3);
+    // three stars a level, plus the town pickup star on every level with a map pickup (all but L1)
+    expect(MAX_STARS).toBe(LEVELS.length * 3 + LEVELS.filter((l) => l.map.collectible).length);
   });
 
   it('knows every route, and which level each belongs to', () => {
@@ -48,12 +49,12 @@ describe('progression', () => {
 
   it('deep stars: all three, ghost, night owl', () => {
     const base = { delivered: 3, elapsedSec: 200, spotted: 0, failedAbductions: 0, sunrise: false };
-    expect(computeDeepStars(300, 45, base)).toEqual([true, true, true]);
-    expect(computeDeepStars(300, 45, { ...base, spotted: 1 })).toEqual([true, false, true]);
-    expect(computeDeepStars(300, 45, { ...base, failedAbductions: 1 })).toEqual([true, false, true]);
-    expect(computeDeepStars(300, 45, { ...base, elapsedSec: 270 })).toEqual([true, true, false]);
-    expect(computeDeepStars(300, 45, { ...base, delivered: 2 })).toEqual([false, false, false]);
-    expect(computeDeepStars(300, 45, { ...base, sunrise: true })).toEqual([false, false, false]);
+    expect(computeDeepStars(300, 45, base)).toEqual([true, true, true, false]);
+    expect(computeDeepStars(300, 45, { ...base, spotted: 1 })).toEqual([true, false, true, false]);
+    expect(computeDeepStars(300, 45, { ...base, failedAbductions: 1 })).toEqual([true, false, true, false]);
+    expect(computeDeepStars(300, 45, { ...base, elapsedSec: 270 })).toEqual([true, true, false, false]);
+    expect(computeDeepStars(300, 45, { ...base, delivered: 2 })).toEqual([false, false, false, false]);
+    expect(computeDeepStars(300, 45, { ...base, sunrise: true })).toEqual([false, false, false, false]);
   });
 
   it('deep levels pay about twice per star, sunrise pays nothing', () => {
@@ -92,9 +93,9 @@ describe('progression', () => {
     };
     const s = validateSave(old);
     expect(s.glorbs).toBe(77);
-    expect(s.levels.level1.stars).toEqual([true, true, false]);
-    expect(s.levels.level2.stars).toEqual([true, true, false]);
-    expect(s.levels.level3).toEqual({ stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 });
+    expect(s.levels.level1.stars).toEqual([true, true, false, false]);
+    expect(s.levels.level2.stars).toEqual([true, true, false, false]);
+    expect(s.levels.level3).toEqual({ stars: [false, false, false, false], delivered: false, bestTimeSec: null, attempts: 0 });
     expect(s.levels.level4.delivered).toBe(false);
     expect(s.upgrades).toEqual(['hush_drive']);
     expect(validateSave({ upgrades: ['hush_drive', 'snooze_ray'] }).upgrades).toEqual(['hush_drive', 'snooze_ray']);

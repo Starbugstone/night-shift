@@ -89,7 +89,8 @@ describe('optional map collectibles', () => {
     expect(direct).toMatchObject({ roomId: 'laundry_skylight', spotted: 0 });
     expect(direct.mapCollectible).toBeUndefined();
     expect(detour.timeSec).toBeGreaterThan(direct.timeSec + LOCK.time);
-    expect(applyRun(defaultSave(), 'level2', delivery, detour).stars).toEqual([true, true, true]);
+    // the flyer taken on a delivered run earns the fourth (town pickup) star
+    expect(applyRun(defaultSave(), 'level2', delivery, detour).stars).toEqual([true, true, true, true]);
   });
 
   // HARD RULE (applies automatically to every future level added to LEVELS):
@@ -158,7 +159,7 @@ describe('optional map collectibles', () => {
     next.update(DT);
     expect(onSunrise).toHaveBeenCalledOnce();
     const outcome = applyDeepRun(defaultSave(), 'level3', run.summary());
-    expect(outcome.stars).toEqual([false, false, false]);
+    expect(outcome.stars).toEqual([false, false, false, false]);
     expect(deepReport(run, outcome).rows).toContainEqual(['Town pickup', 'Slipper flyer · collected']);
   });
 
