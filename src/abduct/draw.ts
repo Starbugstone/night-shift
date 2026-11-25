@@ -243,6 +243,8 @@ const SHIRTS: Record<Human, string> = {
   sterling: '#eef0f4', marco: '#f4f1ea', greg: '#e36a8c',
   // L6 clinic code
   hank: '#b98b5e', osei: '#4f8f8a', pemberton: '#c9cfe0',
+  // v4 L9 1955
+  doc: '#e0d6b1', buff: '#533752', marvin: '#88516c',
 };
 const PANTS: Record<Human, string> = {
   doyle: '#904951', larry: '#b4977f', dave: '#76569c', barb: '#744451',
@@ -255,6 +257,8 @@ const PANTS: Record<Human, string> = {
   sterling: '#2c3550', marco: '#3a3a44', greg: '#5aa6c8',
   // L6 clinic code
   hank: '#7f8aa8', osei: '#3f7773', pemberton: '#c9cfe0',
+  // v4 L9 1955
+  doc: '#8b7258', buff: '#5b536b', marvin: '#39304e',
 };
 
 export interface SpecimenArt {
@@ -274,6 +278,14 @@ function boneArt(ctx: GameContext, p: Part, head: boolean, awake: boolean): Spri
     g.lineWidth = 3;
     roundBox(g, -p.w / 2 + 2, top + 2, p.w - 4, p.h - 4, head ? 26 : 12, p.color, INK);
     if (head) {
+      if (p.key.startsWith('human/doc_')) {
+        ellipse(g, -19, -63, 13, 14, '#e8ddcc', INK);
+        ellipse(g, 14, -67, 15, 11, '#f1e5d3', INK);
+        ellipse(g, 0, -72, 14, 7, '#f1e5d3');
+      } else if (p.key.startsWith('human/buff_') || p.key.startsWith('human/marvin_')) {
+        ellipse(g, -4, -66, 25, 11, INK);
+        ellipse(g, 11, -69, 15, 9, p.key.startsWith('human/marvin_') ? '#4a303c' : '#474258');
+      }
       ellipse(g, -12, -47, 4, awake ? 6 : 1.2, INK);
       ellipse(g, 12, -47, 4, awake ? 6 : 1.2, INK);
       ellipse(g, 6, -27, 6, awake ? 8 : 4, '#76434c');
@@ -290,11 +302,12 @@ export class HumanArt implements SpecimenArt {
 
   constructor(human: Human, ctx: GameContext) {
     const key = 'human/' + human;
-    const head = part(key + '_head', '#d5a182');
-    const awakeHead = part(key + '_head_awake', '#d5a182');
+    const skin = human === 'marvin' ? '#9e6047' : '#d5a182';
+    const head = part(key + '_head', skin);
+    const awakeHead = part(key + '_head_awake', skin);
     const torso = part(key + '_torso', SHIRTS[human]);
     const upperArm = part(key + '_upper_arm', SHIRTS[human]);
-    const lowerArm = part(key + '_lower_arm', '#c18b77');
+    const lowerArm = part(key + '_lower_arm', human === 'marvin' ? skin : '#c18b77');
     const upperLeg = part(key + '_upper_leg', PANTS[human]);
     const lowerLeg = part(key + '_lower_leg', PANTS[human]);
     this.ape = human === 'echo' || human === 'flint' || human === 'reed' ? new ApeLimbProjection() : null; // v4 L8

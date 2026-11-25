@@ -1,5 +1,6 @@
 import type { GameContext, MapCollectibleId, Vec2 } from '../contracts';
 import { P_RING, P_TWINKLE, PC, type Particles } from '../core/fx';
+import { TimeCar } from './time-car';
 import { LockOn, RING_R, ringUnder, type Saucer } from './sim';
 
 export interface MapCollectibleDef extends Vec2 {
@@ -15,27 +16,38 @@ export interface MapCollectibleDef extends Vec2 {
 export class MapCollectible {
   private readonly lock = new LockOn();
   private readonly ring: readonly Vec2[];
+  readonly timeCar: TimeCar | null;
   collected = false;
 
   constructor(readonly def: MapCollectibleDef) {
     this.ring = [def];
+    this.timeCar = def.id === 'time_car' ? new TimeCar(def) : null;
   }
 
   get progress(): number {
-    return this.lock.fraction;
+    return this.timeCar?.progress ?? this.lock.fraction;
   }
 
   get collectedId(): MapCollectibleId | undefined {
     return this.collected ? this.def.id : undefined;
   }
 
+  get position(): Readonly<Vec2> { return this.timeCar?.position ?? this.def; }
+
+  get available(): boolean { return !this.collected && (this.timeCar?.visible ?? true); }
+
   resetHover(): void {
+    this.timeCar?.resetHover();
     this.lock.reset();
   }
 
   /** Reuse the ape hover thresholds. An overlapping specimen ring takes priority. */
   update(dt: number, s: Saucer, speed: number, specimenRing: number): boolean {
     if (this.collected) return false;
+    if (this.timeCar) {
+      this.collected = this.timeCar.update(dt, s, specimenRing);
+      return this.collected;
+    }
     if (specimenRing >= 0) {
       this.resetHover();
       return false;
@@ -46,7 +58,7 @@ export class MapCollectible {
   }
 }
 
-export function mapPickupFeedback(ctx: GameContext, fx: Particles, { x, y }: MapCollectibleDef): number {
+export function mapPickupFeedback(ctx: GameContext, fx: Particles, { x, y }: Readonly<Vec2>): number {
   ctx.audio.sfx('pickup');
   if (!ctx.reducedMotion) {
     fx.spawn(P_RING, x, y, 0, 0, 0.45, 106, PC.mint);

@@ -1109,7 +1109,7 @@ class DetailModalView {
 
     const desc = found
       ? townDescription(slot.id)
-      : fmt(townStr.unfiledDetail, { hint: townHint(slot.id), num: slot.levelNum });
+      : fmt(slot.id === 'time_car' ? tr().crestValley.trophyUnfiled : townStr.unfiledDetail, { hint: townHint(slot.id), num: slot.levelNum });
     this.descPara.setBlock(desc, 30, 276, MODAL_W - 60);
 
     // Two-row provenance inset (where it was found + Bureau status; no star line)

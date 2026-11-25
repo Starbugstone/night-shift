@@ -186,11 +186,12 @@ export class CameraTell {
   private readonly scan: Graphics;
   private readonly rec = new Glow(glowTexture(GLOW.red), true).place(0, 0, 15);
 
-  constructor(d: CameraHazard) {
+  constructor(private readonly d: CameraHazard) {
     this.root.position.set(d.x, d.y);
-    this.cone = new ConeView(d.half, d.range, '255,150,165', 0.75);
-    this.scan = arc(new Graphics(), d.range / 2, -d.half, d.half).stroke({ color: '#ffd2d8', width: 2 });
+    this.cone = new ConeView(d.half, d.range, d.skin ? '255,224,168' : '255,150,165', 0.75);
+    this.scan = arc(new Graphics(), d.range / 2, -d.half, d.half).stroke({ color: d.skin ? '#ffebcf' : '#ffd2d8', width: 2 });
     this.root.addChild(this.cone.root, this.scan, this.rec);
+    this.rec.visible = !d.skin;
   }
 
   sync(a: number, hot: number, lead: number, t: number, i: number, rm: boolean): void {
@@ -198,7 +199,7 @@ export class CameraTell {
     const k = rm ? 0.6 : (t * 0.9 + i * 0.37) % 1;
     this.scan.scale.set(k * 2);
     this.scan.rotation = a;
-    this.scan.alpha = 0.55 * (1 - k);
+    this.scan.alpha = this.d.skin ? 0 : 0.55 * (1 - k);
     this.rec.alpha = rm || Math.floor(t * 2.5 + i) % 2 === 0 ? 1 : 0;
   }
 }

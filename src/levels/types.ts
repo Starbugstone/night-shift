@@ -29,7 +29,9 @@ export type PropKind =
   // L5 pier code: every seaside prop (fallback drawn by key in src/flight/pier-ground.ts)
   | 'pier' | 'terrace'
   // v4 easter eggs: decor only (src/flight/easter-eggs.ts), never a detector or a collider
-  | 'timecar' | 'iceberg';
+  | 'timecar' | 'iceberg'
+  // v4 L9 1955
+  | 'sedan55';
 
 /** A sprite placed by its centre. Size defaults to the manifest size. */
 export interface PropDef {
@@ -162,7 +164,7 @@ export interface DeepTarget<Entries extends EntryDef[] = [EntryDef, EntryDef]> {
 
 export interface DeepMap {
   /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
-  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands';
+  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55';
   collectible?: MapCollectibleDef;
   w: number;
   h: number;

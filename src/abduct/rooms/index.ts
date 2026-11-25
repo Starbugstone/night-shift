@@ -14,6 +14,8 @@ import { withSouvenirs } from '../souvenir-items';
 import { bubblesRoof, bubblesTunnel, peteGallery, peteSlipway, salDock, salLoft } from './deep-pier';
 // L6 clinic code
 import { hankFront, hankRear, oseiHelipad, oseiPharmacy, pembertonChute, pembertonWindow } from './deep-clinic';
+// v4 L9 1955
+import { ROOMS_1955 } from './deep-1955';
 // v4 L8
 import { MONOLITH_ROOMS } from './deep-monolith';
 // L7 cruise code
@@ -52,6 +54,8 @@ export const ROOMS: Readonly<Record<RoomId, Room>> = withSouvenirs({
   pemberton_chute: pembertonChute,
   // v4 L8
   ...MONOLITH_ROOMS,
+  // v4 L9 1955
+  ...ROOMS_1955,
   // L7 cruise code
   captain_mast: captainMast,
   captain_funnel: captainFunnel,

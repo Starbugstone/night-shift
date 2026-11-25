@@ -443,7 +443,7 @@ export class Game implements Shell {
             if (done) return;
             done = true;
             // the sun comes up over everything
-            this.toDeepReport(run, { style: 'sunrise' });
+            this.toDeepReport(run, { style: level.id === 'level9' ? 'fade' : 'sunrise' });
           },
           onQuit: () => {
             if (done) return;
@@ -482,7 +482,7 @@ export class Game implements Shell {
         return new DeepAbductScene(inner, run, this.assets, () => this.ctx.reducedMotion, () => {
           if (done) return;
           done = true;
-          this.toDeepReport(run, { style: 'sunrise' });
+          this.toDeepReport(run, { style: level.id === 'level9' ? 'fade' : 'sunrise' });
         });
       },
       false,

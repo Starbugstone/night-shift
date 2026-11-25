@@ -43,12 +43,14 @@ describe('town pickup art', () => {
       expect(ART[pickupKey(id)], pickupKey(id)).toEqual({ w, h });
       // readable on a phone: about the saucer's size, never the 40 px blob it was
       expect(Math.max(w, h), `${id} long side`).toBeGreaterThanOrEqual(84);
-      expect(Math.max(w, h), `${id} long side`).toBeLessThanOrEqual(130);
+      expect(Math.max(w, h), `${id} long side`).toBeLessThanOrEqual(id === 'time_car' ? 172 : 130);
     }
     for (const key of pickupArtKeys()) {
       const spec = ART[key];
       expect(spec, `${key} in the manifest`).toBeDefined();
       const svg = file(key);
+      // L9 greybox runs on its primitive until the separate art pack lands.
+      if (!svg && key === pickupKey('time_car')) continue;
       expect(svg, `public/art/${key}.svg`).toBeDefined();
       expect(svg, `${key} viewBox`).toContain(`viewBox="0 0 ${spec!.w} ${spec!.h}"`);
       expect(svg, `${key}: no text in art`).not.toMatch(/<text|font-family/);
@@ -85,7 +87,8 @@ describe('town pickup art', () => {
       const box = { l: p.x - w / 2, r: p.x + w / 2, t: p.y - h / 2, b: p.y + h / 2 };
       expect(box.l >= 0 && box.t >= 0 && box.r <= m.w && box.b <= m.h, `${lv.id} inside the map`).toBe(true);
       // the kerb may be brushed (14 px), the lanes and the centre line never
-      for (const r of m.roads) {
+      // The time car is a moving vehicle. Its bay is on Main Street.
+      for (const r of p.id === 'time_car' ? [] : m.roads) {
         const lanes = ROAD_W / 2 - 14;
         const across = r.dir === 'h' ? box.t < r.at + lanes && box.b > r.at - lanes : box.l < r.at + lanes && box.r > r.at - lanes;
         const along = r.dir === 'h' ? box.l < r.to && box.r > r.from : box.t < r.to && box.b > r.from;

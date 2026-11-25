@@ -1,6 +1,6 @@
 // Wrap an abduction during a deep shift, with the sunrise clock and warning over the room.
 import { Container } from 'pixi.js';
-import { tr } from '../i18n';
+import { getLang, tr } from '../i18n';
 import type { Assets, Scene } from '../contracts';
 import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT, deepShift } from '../abduct/deep-view';
 import { GLOW, ScreenTint } from '../core/gfx/glow';
@@ -83,8 +83,9 @@ class DeepShiftView implements SceneView {
     private readonly reduced: () => boolean,
     private readonly time: () => number,
   ) {
-    this.sun = new HudSunClock(artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h),
-      run.level.id === 'level8' ? tr().timeTrial.left : undefined);
+    const storm = run.level.id === 'level9';
+    this.sun = new HudSunClock(storm ? null : artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h),
+      storm ? tr().crestValley.left : run.level.id === 'level8' ? tr().timeTrial.left : undefined, storm);
     this.sun.alpha = 0.92;
     this.warning.position.set(DEEP_HUD_WARNING_SLOT.x, DEEP_HUD_WARNING_SLOT.y);
     this.warning.addChild(this.panel, this.caption);
@@ -92,24 +93,24 @@ class DeepShiftView implements SceneView {
   }
 
   sync(): void {
-    const { dawn, elapsed, budget } = this.run;
+    const { dawn, deadlineWarning, elapsed, budget } = this.run;
     const t = this.time();
     const rm = this.reduced();
     this.tint.strength = dawn * 0.8;
     const key = Math.floor(elapsed * 4);
     if (key !== this.clockKey) {
       this.clockKey = key;
-      this.clock = this.run.clockText();
+      this.clock = this.run.clockText(getLang());
     }
     const { x, y, w, h } = DEEP_HUD_SUNRISE_SLOT;
-    this.sun.sync(x, y, w, h, this.clock, elapsed / budget, dawn, t, rm);
-    this.warning.visible = dawn > 0.5;
+    this.sun.sync(x, y, w, h, this.clock, elapsed / budget, deadlineWarning, t, rm);
+    this.warning.visible = deadlineWarning > 0.5;
     if (this.warning.visible) {
       const warn = DEEP_HUD_WARNING_SLOT;
       const on = rm || Math.floor(t * 2) % 2 === 0;
       this.panel.set(warn.w, warn.h, on ? C.amber : C.ink);
       this.caption.tint = on ? C.amberHi : C.muted;
-      this.caption.set(tr().hud.sunComing, warn.w / 2, warn.h / 2, warn.w - 20);
+      this.caption.set(this.run.level.id === 'level9' ? tr().crestValley.deadline : tr().hud.sunComing, warn.w / 2, warn.h / 2, warn.w - 20);
     }
   }
 

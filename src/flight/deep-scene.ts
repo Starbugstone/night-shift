@@ -15,6 +15,8 @@ import { ViewSlot } from '../core/gfx/scene';
 import { deepStartEvent, deepZibLine, spotCaption, spotShout, spotZibLine, type DeepZibEvent } from '../levels/humor'; // v4 story
 import { EggCues } from './easter-eggs'; // v4 easter eggs
 import { mapPickupFeedback } from './collectible';
+import { TIME_CAR } from './time-car';
+import { TimeCarPilot } from './time-car-pilot';
 import { fmt, tr } from '../i18n'; // v4 voices
 import type { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
@@ -74,6 +76,7 @@ export class DeepFlightScene implements Scene {
   readonly speckles: Float32Array;
   readonly ambient: Ambient;
   private autopilot: FlightAutopilot | null = null;
+  private timeCarPilot?: TimeCarPilot;
   st = 0;
   shake = 0;
   zibText = '';
@@ -139,7 +142,7 @@ export class DeepFlightScene implements Scene {
       this.pendingOpener = deepStartEvent(this.level.id); // v4 story
       // v4 voices: Bureau dispatch reads the work order banner over the PA
       const words = tr().flight;
-      this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.level.id === 'level8' ? tr().timeTrial.banner : words.collectAll}.`, 'bureau', { within: 2.9 });
+      this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.level.id === 'level8' ? tr().timeTrial.banner : this.level.id === 'level9' ? tr().crestValley.banner : words.collectAll}.`, 'bureau', { within: 2.9 });
     }
     else if (this.run.legs > 0 && this.run.deliveredCount > 0 && this.run.lastFail === null) {
       this.say(this.level.id !== 'level8' && this.run.deliveredCount === 2 ? 'twoOfThree' : 'checkpoint', true); // v4 story
@@ -153,16 +156,18 @@ export class DeepFlightScene implements Scene {
 
   get bannerHeading(): string {
     const words = tr();
+    if (this.level.id === 'level9') return words.crestValley.order;
     return this.level.id === 'level8'
       ? fmt(words.workOrders.orderNo, { num: this.level.num })
       : fmt(words.flight.banner, { num: this.level.num, h: this.level.hours[1] });
   }
 
   /** For test scripts: window.__nightShift.active.debug */
-  get debug(): { autopilot: () => FlightAutopilotIntent; sim: DeepFlightSim; run: DeepRun; state: string; ap: FlightAutopilot | null } {
+  get debug(): { autopilot: () => FlightAutopilotIntent; timeCarAutopilot: () => FlightAutopilotIntent; sim: DeepFlightSim; run: DeepRun; state: string; ap: FlightAutopilot | null } {
     const self = this;
     return {
       autopilot: () => self.autopilotIntent(),
+      timeCarAutopilot: () => (self.timeCarPilot ??= new TimeCarPilot(self.sim)).intent(),
       sim: self.sim,
       run: self.run,
       state: self.state,
@@ -229,6 +234,8 @@ export class DeepFlightScene implements Scene {
 
     if (this.done) return;
     // the sunrise clock runs through everything, the SPOTTED freeze included (up to SPOT_HOLD)
+    const car = this.sim.collectible?.timeCar;
+    const beforeCarTime = car?.elapsed ?? 0;
     const charged = this.state !== 'spotted' || this.st < SPOT_HOLD;
     if (!this.practice && charged && this.run.tick(dt)) {
       this.done = true;
@@ -236,12 +243,20 @@ export class DeepFlightScene implements Scene {
       this.opts.onSunrise();
       return;
     }
-    const dawn = this.run.dawn > 0;
-    if (dawn && !this.wasDawn) {
-      this.say('dawn', true, true);
+    const warning = this.run.deadlineWarning > 0;
+    if (warning && !this.wasDawn) {
+      this.say(this.level.id === 'level9' ? 'stormClosing' : 'dawn', true, true);
       audio.sfx('sunrise', 0.6);
     }
-    this.wasDawn = dawn;
+    this.wasDawn = warning;
+    if (car && this.state === 'fly') {
+      if (beforeCarTime < TIME_CAR.strike && car.elapsed >= TIME_CAR.strike) {
+        this.say(car.phase === 'missed' ? 'timeCarMissed' : 'lightning', true, true);
+      } else if (car.visible) {
+        if (beforeCarTime < TIME_CAR.launch && car.phase === 'rolling') this.say('timeCarLaunch', true);
+        else if (beforeCarTime < 9 && car.elapsed >= 9 && this.zibT <= 0) this.say('timeCarWarn', true);
+      }
+    }
 
     if (this.state === 'spotted') {
       // v4 voices: Zib's excuse on the SPOTTED card (shown from 0.35 s), once the alarm has rung
@@ -264,7 +279,8 @@ export class DeepFlightScene implements Scene {
     const previousTime = sim.st.t;
     sim.update(dt, p, !this.quit.pressedDown);
     if (sim.justCollected && sim.collectible) {
-      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, sim.collectible.def);
+      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, sim.collectible.position);
+      if (car) this.say('timeCarCaught', true);
     }
 
     if (this.state === 'locking') {

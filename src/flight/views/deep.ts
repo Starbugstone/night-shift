@@ -30,6 +30,7 @@ import { paintBadlands } from './monolith';
 import { CameraView, GroundView, PropLayer, ShadowsView, TAU, TargetBuilding, basicGround, mapLamp } from './world';
 import { EggView } from './eggs'; // v4 easter eggs
 import { MapCollectibleToast, MapCollectibleView } from './collectible';
+import { CrestValleyView } from './time-car';
 
 const SHADOW_OFF: Partial<Record<PropKind, number>> = {
   suburb_house: 13, highrise: 16, civic: 15, tree: 13, hedge: 5, trampoline: 4,
@@ -300,6 +301,7 @@ export class DeepFlightView implements SceneView {
   private readonly shadows: ShadowsView;
   private readonly eggs: EggView; // v4 easter eggs
   private readonly collectible: MapCollectibleView | null;
+  private readonly crestValley: CrestValleyView | null;
   private readonly pickupToast: MapCollectibleToast | null;
   private readonly targets: DeepTargetView[];
   private readonly checkpoint = new CheckpointView();
@@ -337,6 +339,9 @@ export class DeepFlightView implements SceneView {
           basicGround(g, assets, 'flight/ground_badlands', x, y, w, h, '#493743', '#614951', s.speckles, false);
           if (!assets.get('flight/ground_badlands')) paintBadlands(g, x, y, w, h);
           break;
+        case 'storm55':
+          basicGround(g, assets, 'flight/ground_storm55', x, y, w, h, '#303849', '#3b4253', s.speckles, false);
+          break;
         case 'ship':
           drawShipGround(g, assets, x, y, s.speckles, w, h);
           break;
@@ -352,7 +357,9 @@ export class DeepFlightView implements SceneView {
     this.props = new PropLayer(assets, m.props);
     this.shadows = new ShadowsView(assets, [...m.props, ...m.targets.map((tg) => tg.building)], SHADOW_OFF);
     this.eggs = new EggView(m.props); // v4 easter eggs
-    this.collectible = s.sim.collectible ? new MapCollectibleView(assets, s.sim.collectible) : null;
+    const pickup = s.sim.collectible;
+    this.crestValley = pickup?.timeCar ? new CrestValleyView(assets, pickup.timeCar) : null;
+    this.collectible = pickup && !pickup.timeCar ? new MapCollectibleView(assets, pickup) : null;
     this.pickupToast = s.sim.collectible ? new MapCollectibleToast(s.sim.collectible.def.id) : null;
     this.targets = m.targets.map((tg) => new DeepTargetView(assets, tg));
     this.ambient = new AmbientView(s.ambient);
@@ -366,12 +373,17 @@ export class DeepFlightView implements SceneView {
     if (this.ship) world.addChild(this.ship.root);
     world.addChild(this.groundProps.root, this.ambient.ground, this.eggs.ground, this.shadows.root, this.props.root); // v4 easter eggs: streaks
     for (const target of this.targets) world.addChild(target.root);
+    if (this.crestValley) {
+      world.addChildAt(this.crestValley.ground, 2);
+      world.addChild(this.crestValley.scenery);
+    }
     world.addChild(this.checkpoint.root, this.hazards.ground, this.ambient.steam, this.saucer.shadow);
     for (const light of this.lights) this.upperWorld.addChild(light);
     this.upperWorld.addChild(this.eggs.lights); // v4 easter eggs
     this.upperWorld.addChild(this.ambient.lights, this.saucer.groundGlow, this.ambient.critters, this.hazards.detectors, this.hazards.sky);
     for (const ring of this.rings) this.upperWorld.addChild(ring.root);
     if (this.collectible) this.upperWorld.addChild(this.collectible.root);
+    if (this.crestValley) this.upperWorld.addChild(this.crestValley.car.root);
     // speech bubbles above every map object (houses, dogs, critters, rings), under the saucer
     const bubbles = new Container();
     bubbles.label = FLIGHT_BUBBLES;
@@ -389,7 +401,9 @@ export class DeepFlightView implements SceneView {
     this.tints.dawnDecor.addChild(this.dawn.root);
     this.hud = new DeepFlightHud(s);
     this.spotted = new DeepSpottedView(assets);
-    this.root.addChild(this.camera.root, this.tints.root, this.hud.root);
+    this.root.addChild(this.camera.root, this.tints.root);
+    if (this.crestValley) this.root.addChild(this.crestValley.weather);
+    this.root.addChild(this.hud.root);
     if (this.pickupToast) this.root.addChild(this.pickupToast);
     this.root.addChild(this.spotted.root);
   }
@@ -416,6 +430,7 @@ export class DeepFlightView implements SceneView {
     this.props.sync(cam);
     this.eggs.sync(cam, t, rm); // v4 easter eggs
     this.collectible?.sync(cam, t, rm, saucer.x, saucer.y);
+    this.crestValley?.sync(cam, rm, s.collectibleToastT);
     this.pickupToast?.sync(s.collectibleToastT, rm);
     this.shadows.sync(cam, dawn);
     for (let i = 0; i < this.targets.length; i++) this.targets[i]!.sync(cam, sim.delivered[i]!, i, t, rm);
@@ -436,8 +451,14 @@ export class DeepFlightView implements SceneView {
       b.w = a.w + 8;
       b.h = a.h + 8;
     }
-    // the pickup and, while it shows, its name tag
     if (this.collectible?.avoid(this.clear[n]!, cam.x, cam.y)) n++;
+    if (this.crestValley?.car.root.visible) {
+      const b = this.clear[n++]!;
+      b.x = this.crestValley.car.root.x - cam.x - 81;
+      b.y = this.crestValley.car.root.y - cam.y - 88;
+      b.w = 162;
+      b.h = 209;
+    }
     if (this.pickupToast && s.collectibleToastT > 0) {
       const b = this.clear[n++]!;
       b.x = VIEW_W / 2 - 162;

@@ -19,6 +19,8 @@ export const PICKUP_SIZE: Record<MapCollectibleId, readonly [w: number, h: numbe
   defibrillator: [116, 84],
   shrimp_tower: [104, 116],
   krix: [92, 116],
+  // v4 L9 1955
+  time_car: [96, 172],
 };
 
 /** How far one channel moves a part at full strength: px, radians, and extra scale (0.05 = +5 %). */

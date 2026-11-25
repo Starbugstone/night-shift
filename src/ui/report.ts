@@ -52,7 +52,8 @@ export interface ReportModel {
   /** Small line under the title. */
   subtitle: string;
   rows: Array<[string, string]>;
-  stamp: 'delivered' | 'failed' | 'sunrise';
+  stamp: 'delivered' | 'failed' | 'sunrise' | 'storm';
+  archive?: boolean;
   starLabels: readonly string[];
   comment: string;
   delivered: boolean;
@@ -113,7 +114,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   return {
     subtitle: fmt(r.subtitleDeep, { location: tr().levels[lv.id].location }),
     rows: [
-      [r.shiftTime, sunrise ? (lv.id === 'level8' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] })) : fmt(r.usedSpare, { used: fmtTime(usedSeconds), left: fmtTime(spareSeconds) })],
+      [r.shiftTime, sunrise ? (lv.id === 'level9' ? tr().crestValley.ranOut : lv.id === 'level8' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] })) : fmt(r.usedSpare, { used: fmtTime(usedSeconds), left: fmtTime(spareSeconds) })],
       [r.delivered, lv.id === 'level8' ? fmt(tr().timeTrial.count, { n: run.specimenCount }) : names ? fmt(r.deliveredNames, { n, names }) : fmt(r.deliveredValue, { n })],
       [r.spotted, String(run.spotted)],
       [r.failedAbductions, String(run.failedAbductions + run.aborts)],
@@ -122,10 +123,11 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
       [r.items, itemsPhrase(run.totals.items)],
       ...(pickup ? [pickup.row] : []),
     ],
-    stamp: sunrise ? 'sunrise' : 'delivered',
+    stamp: sunrise ? (lv.id === 'level9' ? 'storm' : 'sunrise') : 'delivered',
+    archive: lv.id === 'level9',
     starLabels: shownStarLabels(lv),
     comment: sunrise
-      ? sunriseMemo(outcome.save.reports)
+      ? sunriseMemo(outcome.save.reports, lv.id)
       : (outcome.newStarFlags[0] && storyFirstClear(lv.id)) || pickup?.comment || deepComment( // v4 story
           { levelId: lv.id, stars: countStars(outcome.stars), spotted: run.spotted, failed: run.failedAbductions, bonks: run.totals.bonks, remaining: run.remaining, order: run.order, items: run.totals.items, rooms: run.totals.rooms },
           outcome.save.reports,
@@ -381,7 +383,7 @@ class ReportView implements SceneView {
     this.vrell = new ReportComment(assets, model.comment);
     this.effects = new ParticleView(s.fx);
     this.paper.addChild(this.payout.root, this.vrell.root, this.effects);
-    this.tabloid = L.tabloid && L.clip ? tabloidClipping(assets, L.tabloid, L.clip) : null;
+    this.tabloid = L.tabloid && L.clip ? tabloidClipping(assets, L.tabloid, L.clip, model.archive) : null;
     if (this.tabloid) this.paper.addChild(this.tabloid);
 
     this.retry = new ButtonView(s.retry);
@@ -482,12 +484,12 @@ function approvedStamp(assets: Assets, ap: ReportLayout['approved'], caption: st
 
 function resultStamp(assets: Assets, result: ReportModel['stamp']): Container {
   const key = result === 'delivered' ? 'ui/stamp_delivered' : result === 'sunrise' ? 'ui/stamp_sunrise' : 'ui/stamp_failed';
-  const art = artSprite(assets, localArt(key), 240, 120);
+  const art = result === 'storm' ? null : artSprite(assets, localArt(key), 240, 120);
   if (art) return art;
   const root = new Container();
-  const col = result === 'delivered' ? '#1f9a6c' : result === 'sunrise' ? '#d9782a' : '#d33a52';
+  const col = result === 'delivered' ? '#1f9a6c' : result === 'failed' ? '#d33a52' : '#d9782a';
   const r = tr().report;
-  const caption = result === 'delivered' ? r.stampDelivered : result === 'sunrise' ? r.stampSunrise : r.stampRejected;
+  const caption = result === 'storm' ? tr().crestValley.stamp : result === 'delivered' ? r.stampDelivered : result === 'sunrise' ? r.stampSunrise : r.stampRejected;
   const outline = roundRect(new Graphics(), -120, -46, 240, 92, 14).stroke({ color: col, width: 8 });
   roundRect(outline, -108, -35, 216, 70, 8).stroke({ color: col, width: 3 });
   root.addChild(outline, new Label({ size: 40, color: col, weight: 900 }).set(caption, 0, 2, 196));
@@ -641,7 +643,7 @@ function fittedBlock(b: TextBlock, color: string, weight: number, italic: boolea
   return root;
 }
 
-function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<ReportLayout['clip']>): Container {
+function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<ReportLayout['clip']>, archive = false): Container {
   const root = new Container();
   const mx = clip.x + clip.w / 2;
   const my = clip.y + 26;
@@ -650,7 +652,7 @@ function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<
   root.rotation = -0.03;
   const paper = new Graphics()
     .rect(clip.x + 4, clip.y + 6, clip.w, clip.h).fill('rgba(29,22,49,0.25)')
-    .rect(clip.x, clip.y, clip.w, clip.h).fill('#f3efe4').stroke({ color: '#3a3350', width: 2 });
+    .rect(clip.x, clip.y, clip.w, clip.h).fill(archive ? '#e9d8b9' : '#f3efe4').stroke({ color: '#3a3350', width: 2 });
   root.addChild(paper);
   const art = artSprite(assets, localArt('ui/tabloid_masthead'), 200, 40);
   if (art) {
@@ -660,6 +662,7 @@ function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<
     new Graphics().rect(mx - 100, my - 16, 200, 32).fill('#c8323f'),
     new Label({ size: 17, color: '#ffffff', weight: 900 }).set(tr().reportExtras.masthead, mx, my, 186),
   );
+  if (archive) root.addChild(new Label({ size: 10, weight: 900, color: '#63462f' }).set(tr().crestValley.archive, mx, clip.y + clip.h - 9, 144));
   root.addChild(fittedBlock(headline, '#1d1631', 900, false, 'center'));
   return root;
 }

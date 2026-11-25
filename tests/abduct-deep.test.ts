@@ -16,6 +16,8 @@ const DEEP = [
   'dave_roof', 'dave_patio', 'barb_chimney', 'barb_backdoor', 'gary_skylight', 'gary_garagedoor',
   'nigel_skylight', 'nigel_loading', 'kev_vent', 'kev_fireescape', 'mayor_clocktower', 'mayor_elevator',
 ] as const satisfies readonly RoomId[];
+// v4 L9 1955: the compact cutaways have a shorter bot route than L3/L4.
+const L9 = ['inventor_balcony', 'inventor_service', 'bully_transom', 'bully_kitchen', 'band_hatch', 'band_canopy'] as const;
 const HARD = { wakeFails: true, hard: true };
 // These cases run several rooms or input schedules in one test.
 const ROOM_SWEEP_TIMEOUT_MS = 10_000;
@@ -73,13 +75,13 @@ function flyRoute(id: RoomId, delay: number, cadenceShift: number): AbductSimula
   expect(result.failReason).toBeUndefined();
   expect(onDone).toHaveBeenCalledExactlyOnceWith(result);
   if (sim.interior) {
-    expect(result.timeSec).toBeGreaterThanOrEqual(40);
+    if (DEEP.some(room => room === id)) expect(result.timeSec).toBeGreaterThanOrEqual(40);
     expect(result.timeSec).toBeLessThanOrEqual(90);
   }
   return sim;
 }
 
-it.each([...TRAINING, ...DEEP])('%s delivers asleep under hard rules with jittered pointer input', (id) => {
+it.each([...TRAINING, ...DEEP, ...L9])('%s delivers asleep under hard rules with jittered pointer input', (id) => {
   const runs = [flyRoute(id, 0, 0), flyRoute(id, 31, 3), flyRoute(id, 97, 6), flyRoute(id, 257, 2)];
   process.stdout.write(`[abduction ${id}] ${runs.map(sim => `${sim.elapsed.toFixed(2)}s (${sim.wake.bonks} bonks)`).join(', ')}\n`);
 }, ROOM_SWEEP_TIMEOUT_MS);
@@ -146,7 +148,7 @@ function flyWithMouseLatency(
   return sim;
 }
 
-it.each(DEEP)('%s delivers with whole CSS-pixel mouse input delayed by 1–3 frames', (id) => {
+it.each([...DEEP, ...L9])('%s delivers with whole CSS-pixel mouse input delayed by 1–3 frames', (id) => {
   const times = [1, 2, 3].map(delay => flyWithMouseLatency(id, delay).elapsed.toFixed(2));
   process.stdout.write(`[abduction mouse latency ${id}] ${times.join(', ')}s\n`);
 });

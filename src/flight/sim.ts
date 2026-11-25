@@ -187,6 +187,8 @@ export class LockOn {
   progress = 0;
   ring = -1;
 
+  constructor(private readonly hold = LOCK.time) {}
+
   /** Returns true on the frame lock-on completes. */
   update(dt: number, ringIndex: number): boolean {
     if (ringIndex >= 0) {
@@ -195,8 +197,8 @@ export class LockOn {
         this.progress = 0;
       }
       this.progress += dt;
-      if (this.progress >= LOCK.time) {
-        this.progress = LOCK.time;
+      if (this.progress >= this.hold) {
+        this.progress = this.hold;
         return true;
       }
     } else if (this.ring >= 0) {
@@ -210,7 +212,7 @@ export class LockOn {
   }
 
   get fraction(): number {
-    return this.progress / LOCK.time;
+    return this.progress / this.hold;
   }
 
   reset(): void {

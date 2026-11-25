@@ -2,7 +2,7 @@
 // animated town pickup figures via Fable's `PickupFigure` (`src/flight/views/collectible.ts`),
 // crisp dark-lavender silhouettes for unfound slots, and the Work Orders trophy-cup / Field Finds icons.
 // Canvas 2D runs only inside `paintedTexture` painters (never per frame).
-import type { Container, Texture } from 'pixi.js';
+import { Sprite, type Container, type Texture } from 'pixi.js';
 import type { Assets, MapCollectibleId } from '../../contracts';
 import { paintCaveProp } from '../../abduct/monolith-art';
 import { paintSouvenir } from '../../abduct/souvenir-art';
@@ -10,6 +10,9 @@ import { INK } from '../../abduct/views/pieces';
 import { artTexture, paintedTexture } from '../../core/gfx/textures';
 import { PICKUP_SIZE, pickupKey } from '../../flight/pickup-rig';
 import { PickupFigure } from '../../flight/views/collectible';
+import { paintTimeCarDisplay } from '../../flight/views/time-car';
+import { ART } from '../../art-manifest';
+import { artTex } from './art';
 import { C } from '../theme';
 
 const TAU = Math.PI * 2;
@@ -179,19 +182,27 @@ export interface PickupFigureHandle {
 }
 
 /** Compute uniform scale for a `PickupFigure` to fit cleanly inside `maxW × maxH`. */
+const TIME_CAR_EXHIBIT = 'flight/time_car_display';
+const { w: exhibitW, h: exhibitH } = ART[TIME_CAR_EXHIBIT]!;
+const timeCarFootprint = [exhibitW, exhibitH] as const;
+
 export function townPickupScale(id: MapCollectibleId, maxW: number, maxH: number, maxScale: number): number {
-  const [aw, ah] = PICKUP_SIZE[id];
+  const [aw, ah] = id === 'time_car' ? timeCarFootprint : PICKUP_SIZE[id];
   return Math.min(maxW / Math.max(1, aw), maxH / Math.max(1, ah), maxScale);
 }
 
 /** Fit a town pickup's footprint proportionally into `maxW × maxH` (for still silhouettes). */
 export function townPickupFitSize(id: MapCollectibleId, maxW: number, maxH: number, maxScale: number): { w: number; h: number } {
-  const [aw, ah] = PICKUP_SIZE[id];
+  const [aw, ah] = id === 'time_car' ? timeCarFootprint : PICKUP_SIZE[id];
   return fitArtSize(aw, ah, maxW, maxH, maxScale);
 }
 
 /** Paint a crisp Canvas 2D fallback shape for an unfound town pickup silhouette when SVG art is missing. */
 function paintTownPickupShape(g: CanvasRenderingContext2D, id: MapCollectibleId, w: number, h: number): void {
+  if (id === 'time_car') {
+    paintTimeCarDisplay(g, w, h);
+    return;
+  }
   const s = Math.min(w, h) / 60;
   g.save();
   g.translate(w / 2, h / 2);
@@ -275,7 +286,7 @@ function paintTownPickupShape(g: CanvasRenderingContext2D, id: MapCollectibleId,
 
 /** Crisp dark-lavender silhouette texture for an unfound town pickup (still, never animated). */
 export function townPickupSilhouetteTexture(assets: Assets, id: MapCollectibleId, w: number, h: number): Texture {
-  const key = pickupKey(id);
+  const key = id === 'time_car' ? TIME_CAR_EXHIBIT : pickupKey(id);
   const img = assets.get(key);
   const hasImg = !!img && img.complete && (img.naturalWidth > 0 || img.width > 0);
   return paintedTexture(`trophy|town-sil|${hasImg ? 1 : 0}|${id}|${w}x${h}`, w, h, (g, ww, hh) => {
@@ -297,7 +308,16 @@ export function townPickupSilhouetteTexture(assets: Assets, id: MapCollectibleId
 
 /** Create an animated `PickupFigure` for a found town pickup in the Trophy Room. */
 export function createTownPickupFigure(assets: Assets, id: MapCollectibleId, scale: number): PickupFigureHandle {
-  return new PickupFigure(assets, id, scale);
+  if (id !== 'time_car') return new PickupFigure(assets, id, scale);
+  const w = exhibitW * scale;
+  const h = exhibitH * scale;
+  const texture = artTex(assets, TIME_CAR_EXHIBIT, w, h)
+    ?? paintedTexture(`trophy|time-car|${w}x${h}`, w, h, paintTimeCarDisplay);
+  const root = new Sprite(texture);
+  root.anchor.set(0.5);
+  root.width = w;
+  root.height = h;
+  return { root, sync() {} };
 }
 
 /** Crisp Bureau trophy-cup icon (for Work Orders header button & Trophy Room badges). */

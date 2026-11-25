@@ -174,6 +174,8 @@ export type RoomId =
   | 'greg_cabin'
   // v4 L8
   | 'echo_appeal'
+  // v4 L9 1955
+  | 'inventor_balcony' | 'inventor_service' | 'bully_transom' | 'bully_kitchen' | 'band_hatch' | 'band_canopy'
   ;
 
 /** How punishing an abduction is. Tutorials: all false. Deep levels: all true. */
@@ -243,7 +245,9 @@ export type MapCollectibleId =
   | 'obelisk_crate'
   | 'defibrillator'
   | 'shrimp_tower'
-  | 'krix';
+  | 'krix'
+  // v4 L9 1955
+  | 'time_car';
 
 export interface FlightResult {
   /** Which entry point the player locked onto. */

@@ -202,6 +202,7 @@ export class DeepFlightSim {
     if (this.hasApes) this.stepApes(0);
     this.st.t = t0;
     this.field.sample(t0);
+    this.collectible?.timeCar?.advance(t0);
     this.place(map.start.x, map.start.y, 0);
   }
 
@@ -318,11 +319,13 @@ export class DeepFlightSim {
       // the world keeps moving behind the photo-flash freeze (the clock is running)
       this.st.t += dt;
       this.field.sample(this.st.t);
+      this.collectible?.timeCar?.advance(this.st.t);
       return;
     }
     if (this.phase === 'locking') {
       this.st.t += dt;
       this.field.sample(this.st.t);
+      this.collectible?.timeCar?.advance(this.st.t);
       const ring = this.rings[this.lockedRing]!;
       const k = 1 - Math.exp(-8 * dt);
       const s = this.st.s;
@@ -336,7 +339,9 @@ export class DeepFlightSim {
     const sx = s.x - this.camX;
     const sy = s.y - this.camY;
     stepFlight(this.field, this.map, this.st, down, pointer.x - sx, pointer.y - sy, dt, this.mult);
+    this.collectible?.timeCar?.advance(this.st.t);
     if (this.st.sus >= 1) {
+      this.collectible?.resetHover();
       this.phase = 'spotted';
       this.spottedBy = this.st.cause;
       return;

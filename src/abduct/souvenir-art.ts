@@ -2,6 +2,7 @@
 // shown while their SVGs are missing. Each painter draws in the sprite's own w×h box; both room
 // views call `paintSouvenir` from their fallback painters (Canvas 2D runs only inside texture painters).
 import { INK } from './views/pieces';
+import { paintSouvenir55 } from './crest-valley-art';
 
 type Painter = (g: CanvasRenderingContext2D, w: number, h: number) => void;
 
@@ -347,8 +348,12 @@ export const SOUVENIR_ART: Readonly<Record<string, Painter>> = {
 /** Draws the souvenir's fallback when `key` is a v4 souvenir; false otherwise. */
 export function paintSouvenir(g: CanvasRenderingContext2D, key: string, w: number, h: number): boolean {
   const paint = SOUVENIR_ART[key];
-  if (!paint) return false;
   g.save();
+  if (!paint) {
+    const painted = paintSouvenir55(g, key, w, h);
+    g.restore();
+    return painted;
+  }
   g.lineWidth = 2.5;
   g.lineJoin = 'round';
   g.lineCap = 'round';

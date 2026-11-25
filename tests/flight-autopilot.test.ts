@@ -9,6 +9,8 @@ import { LEVEL5 } from '../src/levels/deep-pier';
 import { LEVEL6 } from '../src/levels/deep-clinic';
 // L7 cruise code
 import { LEVEL7 } from '../src/levels/deep-ship';
+// v4 L9 1955
+import { LEVEL9 } from '../src/levels/deep-1955';
 import type { DeepLevelDef } from '../src/levels/types';
 import { autopilotController, runHeadless, type HeadlessResult } from './flight-deep-harness';
 import { BEELINE_DELAYS, beelineFlight } from './difficulty/beeline';
@@ -27,7 +29,7 @@ function overview(_level: DeepLevelDef, _name: string, _r: HeadlessResult): void
   // map + exposure + trail SVG dump lives in a scratch tool; no-op here
 }
 
-for (const level of [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7]) {
+for (const level of [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL9]) {
   describe(`${level.id} ${level.title}: flight legs`, () => {
     it('the autopilot visits all three targets without being spotted', () => {
       const r = runHeadless(level.map, [], autopilotController(), 400);

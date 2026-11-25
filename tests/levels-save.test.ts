@@ -133,7 +133,7 @@ describe('save', () => {
     expect(v.version).toBe(SAVE_VERSION);
   });
 
-  it.each([0, 1, 2, 3, 4, 5, 6, 7, 8])('migrates a v1 save with %s deliveries and retains its access', (clears) => {
+  it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])('migrates a v1 save with %s deliveries and retains its access', (clears) => {
     const completed = LEVEL_IDS.slice(0, clears);
     const record = { stars: [true, false, true], bestTimeSec: 40, attempts: 3 };
     const levels = Object.fromEntries(completed.map(id => [id, record]));
@@ -145,7 +145,7 @@ describe('save', () => {
     expect(rankFor(totalStars(save))).toBe(rankFor(clears * 2));
     for (const id of completed) expect(save.levels[id]).toEqual({ ...record, stars: [...record.stars, false], delivered: true });
     expect(LEVEL_IDS.map((_, i) => isLevelUnlocked(save, i))).toEqual([
-      true, clears >= 1, clears > 0, clears > 0, clears > 0, clears > 0, clears > 0, clears >= 7,
+      true, clears >= 1, clears > 0, clears > 0, clears > 0, clears > 0, clears > 0, clears >= 7, clears >= 8,
     ]);
     expect(nextDispatchIndex(save)).toBe(clears === LEVEL_IDS.length ? -1 : clears);
     expect(save.fieldCheckSeen).toBe(clears >= 2);

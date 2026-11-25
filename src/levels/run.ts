@@ -9,6 +9,7 @@
 //   any phase with the clock running ──elapsed ≥ budget──▶ sunrise (level failed)
 import type { AbductFailReason, AbductResult, RoomId, Vec2 } from '../contracts';
 import { MapCollectible } from '../flight/collectible';
+import { crestValleyClock } from '../flight/time-car';
 import { troopTallies, type TroopTally } from '../flight/roam';
 import type { DeepSummary, TrophyFind } from './progress';
 import type { DeepLevelDef } from './types';
@@ -93,19 +94,33 @@ export class DeepRun {
 
   /** 0 = night, 1 = sunrise; ramps over the last SUNRISE_WARN seconds. */
   get dawn(): number {
+    return this.level.id === 'level9' ? 0 : this.deadlineWarning;
+  }
+
+  get deadlineWarning(): number {
     const r = this.remaining;
     return r >= SUNRISE_WARN ? 0 : 1 - r / SUNRISE_WARN;
   }
 
   /** Clock face time, e.g. { h: 3, m: 17 } on a 2:00 → 6:00 shift. */
   clock(): { h: number; m: number } {
+    if (this.level.id === 'level9') {
+      const seconds = crestValleyClock(this.elapsed);
+      return { h: Math.floor(seconds / 3600) % 12, m: Math.floor(seconds / 60) % 60 };
+    }
     const [h0, h1] = this.level.hours;
     const k = Math.min(1, this.elapsed / this.level.budgetSec);
     const mins = Math.floor((h0 + (h1 - h0) * k) * 60);
     return { h: Math.floor(mins / 60), m: mins % 60 };
   }
 
-  clockText(): string {
+  clockText(locale = 'en'): string {
+    if (this.level.id === 'level9') {
+      const seconds = crestValleyClock(this.elapsed);
+      const hour = locale === 'fr' ? 22 : 10;
+      const minutes = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+      return `${hour}:${minutes}:${String(seconds % 60).padStart(2, '0')}`;
+    }
     if (this.level.id === 'level8') {
       const sec = Math.ceil(this.remaining);
       return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
@@ -117,7 +132,8 @@ export class DeepRun {
   /** Advance the sunrise clock (flight and abduction). Returns true when the sun comes up. */
   tick(dt: number): boolean {
     if (this.phase !== 'flight' && this.phase !== 'abduct') return false;
-    this.elapsed += dt;
+    this.elapsed = Math.min(this.level.budgetSec, this.elapsed + dt);
+    this.collectible?.timeCar?.advance(this.elapsed);
     if (this.elapsed >= this.level.budgetSec) {
       this.elapsed = this.level.budgetSec;
       this.phase = 'sunrise';

@@ -51,7 +51,7 @@ export function coverStory(c: CoverInput): string {
   const causes = x.causes[c.levelId] ?? x.causes.generic!;
   const cause = pickLine(causes, c.seed);
   const item = c.items[c.items.length - 1];
-  const kind = c.sunrise ? 'sunrise' : c.spotted >= TABLOID_SPOTTED ? 'spotted' : item ? 'item' : 'clean';
+  const kind = c.sunrise ? (c.levelId === 'level9' ? 'storm' : 'sunrise') : c.spotted >= TABLOID_SPOTTED ? 'spotted' : item ? 'item' : 'clean';
   const line = pickLine(x.cover[kind], Math.floor(c.seed / causes.length));
   return fmt(line, { cause, item: item ? itemNoun(item) : '', n: c.spotted });
 }

@@ -15,7 +15,9 @@ export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'ke
   // L7 cruise code
   | 'sterling' | 'marco' | 'greg'
   // L6 clinic code
-  | 'hank' | 'osei' | 'pemberton';
+  | 'hank' | 'osei' | 'pemberton'
+  // v4 L9 1955
+  | 'doc' | 'buff' | 'marvin';
 
 export interface Sprite {
   key: string;

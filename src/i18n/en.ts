@@ -8,6 +8,13 @@ type Lines = readonly string[];
 type Plural = { one: string; other: string };
 
 const routes = {
+  // v4 L9 1955
+  inventor_balcony: { route: "Clock balcony", difficulty: "gears & cable" },
+  inventor_service: { route: "Service door", difficulty: "bell & draft" },
+  bully_transom: { route: "Awning transom", difficulty: "jukebox & fans" },
+  bully_kitchen: { route: "Kitchen door", difficulty: "manure & crates" },
+  band_hatch: { route: "Bandstand hatch", difficulty: "band & balloons" },
+  band_canopy: { route: "Loading canopy", difficulty: "headlights & trunks" },
   farm_window: { route: 'Window', difficulty: 'easy' },
   farm_chimney: { route: 'Chimney', difficulty: 'fast & risky' },
   laundry_skylight: { route: 'Skylight', difficulty: 'short & risky' },
@@ -119,6 +126,17 @@ const vrell = {
 } satisfies Record<CommentKey, Lines>;
 
 const deepZib = {
+  // v4 L9 1955
+  start9: ["Great… 1955! Where we're napping, no pillows. West turnout, Zib!", "Three 1955 witnesses. Meet the time car from the west turnout!"],
+  timeCarWarn: ["Hear that engine? Take the west turnout and meet it up the road!"],
+  timeCarLaunch: ["It's flooring it! Match its speed before 10:04."],
+  lightning: ["1.21 gigawatts into the clock! My antennae are standing straight up!"],
+  timeCarMissed: ["Gone in flames! See you in 1985, I guess."],
+  timeCarCaught: ["Impounded at 87 mph! Does this void its warranty?"],
+  stormClosing: ["Thirty seconds until the storm passes. After that, our pass expires!"],
+  eraLight: ["That lamp's looking at ME. Back into the dark!", "Spotlight! Act like a cloud. A completely ordinary cloud."],
+  eraWatcher: ["That regular's looking straight out the window!"],
+  eraPolice: ["1955 patrol car. Its headlights can see just fine!"],
   start3: ['Three houses before dawn. Suburbia: ring doorbells, dogs, and grudges.', "Three specimens before sunrise. That's one more than I've ever done. Total."],
   start4: ['Downtown Grimsby. Mom said cities are where saucers go to get towed.', 'Okay. Downtown. Be cool. Act like a pigeon.'],
   // v4 story
@@ -253,6 +271,8 @@ export const en = {
     ],
     // v4 story: progress-gated loading tips (unlocked by delivered milestones)
     tierTips: {
+      // v4 L9 1955
+      afterL8: ["If a stainless car hits 88 mph in a thunderstorm, step aside. Our hull insurance stops at 85."],
       afterL2: [
         'Tip: every odd sock lost in Spin City since 1998 is in Bureau Warehouse 4.',
         'Tip: if Mrs. Pruitt waves at you, she is not being friendly. She is calibrating.',
@@ -345,6 +365,18 @@ export const en = {
 
   /** Work order text per level id. */
   levels: {
+    // v4 L9 1955
+    level9: {
+      title: "Clocking Out at 10:04",
+      location: "Crest Valley · Nov 12, 1955",
+      blurb: "An inventor, a bully, a bandleader. One storm at 10:04.",
+      human: "Doc, Buff & Marvin",
+      collect: "Doc, Buff & Marvin",
+      re: "Work Order #0009 • Nov 12, 1955 (10:04)",
+      body: "Basement B-4 tripped a 1.21-gigawatt alarm in 1955. Someone built a time machine without Form 88-MPH. Grab Doc off the clock tower, Buff from Lyle's Coffee Shop and Marvin Cherry behind the school dance. Be out by 10:10, when the storm passes.",
+      joke: "A gull-wing time car is due at the clock tower at 10:04 sharp. Wait at the west turnout, then match its speed to impound it before the lightning hits.",
+      signoff: "— Vrell. I told you to leave the dial alone.",
+    },
     level1: {
       title: 'Farmer Doyle Sleeps Like a Log',
       location: 'Doyle Farm · Route 9',
@@ -456,6 +488,31 @@ export const en = {
     { title: 'Fleet Admiral of Naps', flavour: 'Salary pending. Vrell is "looking into it".' },
   ],
 
+  // v4 L9 1955
+  crestValley: {
+    left: "PM",
+    banner: "Collect all three by 10:10",
+    order: "WORK ORDER #0009 · CREST VALLEY, 1955",
+    duration: "Storm passes in {time}",
+    deliverGoal: "{star} by 10:10",
+    owlGoal: "{star} with {time} to spare",
+    carGoal: "{star} before 10:04",
+    deadline: "THE STORM IS PASSING",
+    ranOut: "pass expired at 10:10",
+    stamp: "PASS EXPIRED",
+    launch: "Launch in {n} s",
+    strike: "Strike in {n} s",
+    match: "Match speed",
+    dance: "Enchantment Beneath the Waves",
+    trophyUnfiled: "{hint} Take the west turnout and match the car’s speed until it beams up.",
+    archive: "1955 ARCHIVE",
+    sleepers: {
+      doc: { caption: "Doc woke up shouting about gigawatts and drew a diagram on your hull.", mumbles: ["One point two one… snoozewatts…", "Where we're napping, no pillows…", "Great… somebody check the clock…"] },
+      buff: { caption: "Buff woke up swinging. Luckily he mostly hit the jukebox.", mumbles: ["Knock, knock… anybody dreaming?", "Make like a pillow and… fold…", "Ugh… not the manure truck again…"] },
+      marvin: { caption: "Marvin woke up, grabbed a guitar and invented three decades of noise complaints.", mumbles: ["Chuck? Listen to this… snore…", "They're not ready for this nap yet…", "Play it in B-flat, boys… zzz…"] },
+    },
+  },
+
   // v4 L8 time trial
   timeTrial: {
     // v4 council
@@ -547,12 +604,16 @@ export const en = {
     readings: 'Form 7-B readings',
     /** Vrell's cover story. {cause} from `causes`, {item} one souvenir, {n} sightings. */
     cover: {
+      // v4 L9 1955
+      storm: ["Filed as {cause}. Temporal Dispatch closed the case at 10:10."],
       item: ['Filed as: {cause} off one disputed {item}.', 'Filed as: {cause}. Also missing: one {item}. Unrelated.', 'Filed as: {cause}. Only clue: one {item}.'],
       spotted: ['Filed as: {cause}. {n} witnesses, all reclassified as dreaming.', 'Filed as: {cause}. {n} sightings, mostly by people in dressing gowns.'],
       clean: ['Filed as: {cause}. Nobody saw a thing. Nobody ever does.', 'Filed as: {cause}. Case closed before it opened.'],
       sunrise: ['Filed as: {cause}, at dawn. Head Office is not buying it.', 'Filed as: {cause}. The sunrise made it hard to argue.'],
     },
     causes: {
+      // v4 L9 1955
+      level9: ["ball lightning off the courthouse", "a prototype tailfin reflection", "too many chocolate malts"],
       level1: ['swamp gas', 'a very tall barn owl', 'a combine harvester with ambitions'],
       level2: ['a washing machine on spin', 'reflections off the diner sign', 'static from a lost sock'],
       level3: ['a weather balloon', "Gary's neighbourhood watch drone", 'Venus, again'],
@@ -566,6 +627,8 @@ export const en = {
     } as Record<string, Lines>,
     /** Stamped on the report when the saucer was spotted twice or more. All caps, PG. */
     headlines: {
+      // v4 L9 1955
+      level9: ["LIGHTNING STOPS COURTHOUSE CLOCK AT 10:04. FLYING HUBCAP BLAMED", "CHROME HUBCAP SEEN ON MAIN STREET. DINER ORDERS STILL CASH ONLY", "PROM BANDLEADER VANISHES. TEENS CALL SOUND OUT OF THIS WORLD"],
       level1: ['FARMER FLOATS OUT OF PYJAMAS, DOG "SAW NOTHING"', 'COWS DENY ALL KNOWLEDGE OF SAUCER'],
       level2: ['LAUNDROMAT MAN VANISHES MID-SPIN, COFFEE STILL WARM', 'SOCK SHORTAGE: ALIENS BLAMED AT LAST'],
       level3: ['BLURRY HUBCAP MOVES FROM FARM TO SUBURBS — GARY DEMANDS LASER BUDGET', 'CUL-DE-SAC "TOO QUIET", SAYS WOMAN WITH BINOCULARS', 'GARY WAS RIGHT, SAYS GARY'],
@@ -616,6 +679,10 @@ export const en = {
     spinCity: 'SPIN CITY',
     /** A delivered specimen is missed, eventually (by short name). */
     missed: {
+      // v4 L9 1955
+      Doc: ["Doc? The cable's dangling. Where's Doc?!", "Who's supposed to plug in the lightning now?"],
+      Buff: ["Buff? Did somebody knock him out AGAIN?", "His booth's empty! Check the manure truck!"],
+      Marvin: ["Marvin? Who's taking the guitar solo?!", "The trunk's empty. Did the band leave without him?"],
       Dave: ['Dave? DAVE?', 'He sleepwalks. It is fine.', 'Did the Hendersons take Dave?'],
       Barb: ['Coach? ...Coach?', 'Biscuit, where did she go?'],
       Gary: ['HQ, come in. HQ?', 'Watch log: Gary has left the chair.'],
@@ -822,6 +889,10 @@ export const en = {
       "Dawn. Still beats the tripod division: one Earth cold and the whole fleet called in sick.",
     ],
     deepComments: {
+      // v4 L9 1955
+      clocktower: ["Doc, Buff and Marvin logged with {remaining} s to spare. The clock stopped at 10:04 right on time.", "Buff blamed the saucer on a manure truck. Doc tried to patent our tractor beam in his sleep."],
+      clocktowerSpotted: ["Delivered, and spotted {spotted} times in 1955. The whole dance thinks aliens invented rock and roll."],
+      clocktowerExpired: ["10:10. The storm passed, the town clock is stuck, and the Temporal Dispatch pass just expired.", "Storm's over. Your pass expired at 10:10. Zib, please return the saucer to the century you found it in."],
       perfect: [
         'Three specimens, no sightings, home before dawn. I have nothing to complain about and I resent it.',
         'Flawless shift. I have forwarded your report to Head Office with my name on it. Standard procedure.',
@@ -865,6 +936,8 @@ export const en = {
     },
     // v4 story: Vrell's scripted arc lines on a level's first delivery
     storyFirstClear: {
+      // v4 L9 1955
+      level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Put the dial back, Zib.",
       level1: "Not dead, not fired, and Doyle is in the hold. Take Route 9 into town—Spin City's night clerk is next.",
       level2: 'Larry is logged, and Accounting traced forty missing socks to your saucer. Off training, Zib—Maple Court awaits.',
       level3: "Suburbia cleared, though Gary filed a complaint and Mrs. Pruitt mailed your photo to City Hall. We're going downtown.",
@@ -897,6 +970,13 @@ export const en = {
 
   /** Stolen items, by the item's id (its English name in the room data). */
   items: {
+    // v4 L9 1955
+    "spare flex capacitor": { one: "{n} spare flex capacitor", other: "{n} spare flex capacitors" },
+    "yellow hazmat suit": { one: "{n} yellow hazmat suit", other: "{n} yellow hazmat suits" },
+    "red puffy vest": { one: "{n} red puffy vest", other: "{n} red puffy vests" },
+    "retro skateboard": { one: "{n} retro skateboard", other: "{n} retro skateboards" },
+    "cherry electric guitar": { one: "{n} cherry electric guitar", other: "{n} cherry electric guitars" },
+    "clock-tower flyer": { one: "{n} clock-tower flyer", other: "{n} clock-tower flyers" },
     slipper: { one: '{n} slipper', other: '{n} slippers' },
     'coffee mug': { one: '{n} coffee mug', other: '{n} coffee mugs' },
     'orthodontic slipper': { one: '{n} orthodontic slipper', other: '{n} orthodontic slippers' },
@@ -949,6 +1029,31 @@ export const en = {
    */
   souvenirs: {
     items: {
+      // v4 L9 1955
+      "spare flex capacitor": {
+        got: ["A spare flex capacitor, pulsing gently in a biscuit tin. Propulsion says it shouldn't work. It's currently heating my lunch from yesterday.", "Spare flex capacitor, logged. Three blinking tubes and zero safety certification—classic Earth engineering.", "Doc built a time-bending capacitor out of junkyard relays. Meanwhile our Accounting server takes four hours to open a PDF."],
+        missed: ["You left the spare capacitor on the clock ledge. Good. If Zib had dropped it, we'd have owed last Thursday's overtime.", "No flex capacitor. Shame—Propulsion wanted to see how humans bent time without filing Form 88-MPH."],
+      },
+      "yellow hazmat suit": {
+        got: ["A bright yellow radiation suit, complete with hairdryer tucked in the belt. Humans think we dress like this. Frankly, it's flattering.", "Yellow hazmat suit, logged. Zib wore it into Accounting and claimed to be a visitor from Planet Vulcan. Accounting believed them.", "Radiation suit from 1955. Smells faintly of storm ozone and terrible heavy-metal cassette tapes."],
+        missed: ["You left the yellow hazmat suit on the service bench. Some poor 1955 farmer is going to wake up thinking we're giant bananas.", "No hazmat suit. Pity—it was cleaner than our official Bureau uniforms."],
+      },
+      "red puffy vest": {
+        got: ["A red quilted vest from a crate at the dance. Everyone in 1955 kept asking why the kid jumped ship in a life preserver. Honestly, fair question.", "Red puffy vest, logged under 'buoyancy aids, suspiciously heavy'. Zib is wearing it over three sweaters and sweating.", "One 1985 puffy vest, stranded in 1955. Temporal fashion crime—and we don't even have a form for that."],
+        missed: ["You left the red puffy vest behind the gym. The chaperone will keep it handy in case the Coast Guard stops by for a malt.", "No puffy vest. Fine. Zib already has enough questionable jackets in the hold."],
+      },
+      "retro skateboard": {
+        got: ["A purple-and-yellow wooden skateboard, clearly snapped off a kid's crate scooter. Still has 1955 manure on the rear wheels. Wash it.", "Retro skateboard, logged. Zib tried to ollie down the saucer ramp and invented three new bruise forms.", "One homemade skateboard. Humans invented extreme sports purely to escape one guy in a convertible."],
+        missed: ["You left the skateboard by the counter. Buff will trip over it in the morning and blame the sky anyway.", "No skateboard. Good. Our medical plan does not cover alien ankle sprains."],
+      },
+      "cherry electric guitar": {
+        got: ["A cherry-red hollow-body guitar, still warm from a solo that shouldn't exist for another twenty years. Accounting has confiscated the amp.", "Electric guitar, logged. Zib played one power chord in the hangar and shattered four specimen jars. Their kids are gonna love it.", "Marvin's cherry guitar. Half the gym fainted; the other half is still trying to figure out what happened to the prom playlist."],
+        missed: ["You left the cherry guitar by the stage. Good—Zib would have started a band, and I cannot survive an intern tour.", "No guitar. Marvin keeps his axe, and the timeline keeps rock and roll. Call it a draw."],
+      },
+      "clock-tower flyer": {
+        got: ["'SAVE THE CLOCK TOWER!'—and somebody scribbled a frantic phone number on the back. Keep it away from Temporal Dispatch.", "A crumpled clock-tower flyer from 1955. Apparently the lightning hit at 10:04 sharp. Spoiler alert: we noticed.", "Save-the-Clock-Tower leaflet, logged. Legal says donating a quarter in 1955 counts as tampering with the timeline. Put it back."],
+        missed: ["You left the clock-tower flyer on the kitchen tray. Someone's going to need that exact timestamp in thirty years.", "No flyer. Fine. We already know when the lightning hits—my fillings are still humming."],
+      },
       // v4 L8
       'first-edition bone': {
         got: ["A first-edition throwing bone. Keep the receipt. Flint charges royalties every time you drop it.",
@@ -1339,6 +1444,11 @@ export const en = {
     } satisfies Record<string, { got: Lines; missed: Lines }>,
     /** Deep levels: every delivered specimen came with its souvenir (`all`), or none did (`none`). */
     levels: {
+      // v4 L9 1955
+      level9: {
+        all: ["A souvenir from every 1955 stop. Congratulations—you've officially turned a Temporal Audit into a vintage flea market.", "Three 1955 artefacts in the hold. If anyone from 1985 starts fading out of family photos, I'm blaming you."],
+        none: ["Zero souvenirs from 1955. Textbook non-interference—and deeply boring for Warehouse 4.", "Nothing taken from Crest Valley. History stays intact, and Zib's shelf stays painfully tidy."],
+      },
       level3: {
         all: [
           'A souvenir from every house. The Neighbourhood Watch will call it a crime wave. For once, Gary is right.',
@@ -1417,6 +1527,55 @@ export const en = {
    * source text as an id; only drawing goes through `gt()`.
    */
   data: {
+    // v4 L9 1955
+    Doc: "Doc",
+    Buff: "Buff",
+    Marvin: "Marvin",
+    "Doc woke up shouting about gigawatts and drew a diagram on your hull.": "Doc woke up shouting about gigawatts and drew a diagram on your hull.",
+    "One point two one… snoozewatts…": "One point two one… snoozewatts…",
+    "Where we're napping, no pillows…": "Where we're napping, no pillows…",
+    "Great… somebody check the clock…": "Great… somebody check the clock…",
+    "Buff woke up swinging. Luckily he mostly hit the jukebox.": "Buff woke up swinging. Luckily he mostly hit the jukebox.",
+    "Knock, knock… anybody dreaming?": "Knock, knock… anybody dreaming?",
+    "Make like a pillow and… fold…": "Make like a pillow and… fold…",
+    "Ugh… not the manure truck again…": "Ugh… not the manure truck again…",
+    "Marvin woke up, grabbed a guitar and invented three decades of noise complaints.": "Marvin woke up, grabbed a guitar and invented three decades of noise complaints.",
+    "Chuck? Listen to this… snore…": "Chuck? Listen to this… snore…",
+    "They're not ready for this nap yet…": "They're not ready for this nap yet…",
+    "Play it in B-flat, boys… zzz…": "Play it in B-flat, boys… zzz…",
+    "Clock ledge": "Clock ledge",
+    "Clock riser": "Clock riser",
+    "Winch gallery": "Winch gallery",
+    "Lyle's booth": "Lyle's booth",
+    "Awning gallery": "Awning gallery",
+    "Back kitchen": "Back kitchen",
+    "Trunk bay": "Trunk bay",
+    "Stage rigging": "Stage rigging",
+    "Tower draft": "Tower draft",
+    "Lightning cable": "Lightning cable",
+    "Clock gear": "Clock gear",
+    "Service gate": "Service gate",
+    "Service bell": "Service bell",
+    "Jukebox": "Jukebox",
+    "Ceiling fan": "Ceiling fan",
+    "Hinged sash": "Hinged sash",
+    "Bus cart": "Bus cart",
+    "Pie case": "Pie case",
+    "Lyle": "Lyle",
+    "Microphone stand": "Microphone stand",
+    "Party balloons": "Party balloons",
+    "Amp trolley": "Amp trolley",
+    "Canopy floorboards": "Canopy floorboards",
+    "Chaperone": "Chaperone",
+    "Café watcher": "Café watcher",
+    "CLOCK BALCONY": "CLOCK BALCONY",
+    "SERVICE DOOR": "SERVICE DOOR",
+    "AWNING TRANSOM": "AWNING TRANSOM",
+    "KITCHEN DOOR": "KITCHEN DOOR",
+    "BANDSTAND HATCH": "BANDSTAND HATCH",
+    "LOADING CANOPY": "LOADING CANOPY",
+    "Buff Tanner": "Buff Tanner",
+    "Marvin Cherry": "Marvin Cherry",
     // v4 progression
     'Practice decoy': 'Practice decoy',
     Landing: 'Landing',
@@ -1829,6 +1988,13 @@ export const en = {
     toast: 'Collected: {name}',
     flyerHeader: 'LOST',
     items: {
+      // v4 L9 1955
+      time_car: {
+        name: "Time car",
+        memoHint: "gull-wing time car",
+        comment: "You impounded a speeding time car mid-thunderstorm. Propulsion is stripping it for parts. Legal is pretending we never owned 1955.",
+        missedComment: "You let a sports car outrun a saucer into 1985. That explains the scorched tyres behind Spin City. And my migraine.",
+      },
       slipper_flyer: {
         name: 'Slipper flyer',
         comment: "You took Doyle's missing-slipper flyer. We already have the slipper—now we're just rubbing his nose in it.",
@@ -1915,6 +2081,8 @@ export const en = {
       unfiledDetail: '{hint} Hover slowly over the mint glint during Work Order #000{num} to bring it aboard.',
       memoHintFallback: 'Shift memo mentions "{hint}".',
       descriptions: {
+        // v4 L9 1955
+        time_car: "Brushed stainless coupe with gull-wing doors, scorched tyres, and zero Bureau permits. Propulsion refuses to let Zib test what happens at 88.",
         slipper_flyer: 'Photocopied in frantic Comic Sans with one tear-off tab already missing. Whoever took that number is about to be very disappointed.',
         astronomer: 'Spent twelve years waiting for a cosmic signal; got beamed up mid-sip of lukewarm cocoa. Still insists we check out Vega next.',
         saucer_photo: 'Out of focus, tilted twenty degrees, and somehow still clearer than every UFO tabloid since 1947. Legal paid cash to bury the negatives.',
@@ -1924,6 +2092,8 @@ export const en = {
         krix: 'Turned an unpaid Bureau internship into a three-million-year tech monopoly. Still insists the toaster is a "paradigm-shifting monolith".',
       } satisfies Record<string, string>,
       statuses: {
+        // v4 L9 1955
+        time_car: "Impounded · Capped at 87 mph",
         slipper_flyer: "Pinned to Vrell's corkboard",
         astronomer: 'Debriefed; refuses to leave',
         saucer_photo: 'Redacted · Eyes Only',
@@ -1933,6 +2103,8 @@ export const en = {
         krix: 'Under HR review',
       } satisfies Record<string, string>,
       hints: {
+        // v4 L9 1955
+        time_car: "Check the shift memo for an unlicensed gull-wing coupe racing the clock tower before 10:04.",
         slipper_flyer: 'The shift memo mentions a desperate missing-footwear notice near the laundromat.',
         astronomer: 'Check the shift memo: someone in suburbia set up an optimistic backyard dish.',
         saucer_photo: 'The memo warns that Mrs. Pruitt left an unflattering snapshot somewhere downtown.',
@@ -1943,6 +2115,13 @@ export const en = {
       } satisfies Record<string, string>,
     },
     descriptions: {
+      // v4 L9 1955
+      "spare flex capacitor": "Three blinking tubes wired inside a metal box. Makes time travel possible—and voids every warranty in the galaxy.",
+      "yellow hazmat suit": "Blinding canary vinyl with a hairdryer holster. Officially listed in Earth folklore as \"typical Martian evening wear\".",
+      "red puffy vest": "Quilted crimson waistcoat from thirty years in the future. Every 1955 local assumed its owner fell off a boat.",
+      "retro skateboard": "Purple-and-yellow plank stripped off a crate scooter. Four steel wheels, zero brakes, trace amounts of 1955 manure.",
+      "cherry electric guitar": "Semi-hollow 1950s beauty with a singed pickup. Played so loud at prom it briefly cracked the space-time continuum.",
+      "clock-tower flyer": "Reads \"SAVE THE CLOCK TOWER!\" in bold 1955 ink. Someone wrote a frantic phone number and \"10:04 PM\" on the back.",
       // L1 Doyle Farm
       slipper: 'Left foot only. Somewhere in Grimsby, one very stubborn farmer is hopping to the barn.',
       'prize marrow': 'Eleven pounds of village envy. Doyle whispers sweet nothings to it; Lab 4 refuses to touch it.',

@@ -1,3 +1,4 @@
+import { crestValleyPortrait } from '../../ui/views/crest-valley-portrait';
 import { apeFallback } from '../../abduct/monolith-art';
 import type { Box } from './clear-of';
 import { Container, Graphics } from 'pixi.js';
@@ -6,7 +7,7 @@ import { VIEW_H, VIEW_W } from '../../contracts';
 import { easeOutBack } from '../../core/fx';
 import { panelPath } from '../../core/gfx/shapes';
 import { Label, measure } from '../../core/gfx/text';
-import { fmt, gt, num, tr } from '../../i18n';
+import { fmt, getLang, gt, num, tr } from '../../i18n';
 import type { DeepMap } from '../../levels/types';
 import { clamp, targetHeadKey } from '../../ui/draw';
 import { HUD_ROW, type FuseState } from '../../ui/hud';
@@ -94,7 +95,11 @@ class MiniMap {
     const k = this.scale;
     this.window.position.set(sim.camX * k, sim.camY * k);
     this.ship.position.set(sim.saucer.x * k, sim.saucer.y * k);
-    if (this.pickup) this.pickup.alpha = sim.collectible?.collected ? 0 : 1;
+    const pickup = sim.collectible;
+    if (this.pickup && pickup) {
+      this.pickup.alpha = Number(pickup.available);
+      this.pickup.position.set(pickup.position.x * k, pickup.position.y * k);
+    }
     for (const { ring, dot } of this.apes) {
       const p = sim.rings[ring]!;
       dot.visible = p.x >= 0;
@@ -127,7 +132,7 @@ class TargetChip {
     this.root.position.set(x + this.w / 2, HUD_Y + 17);
     this.root.pivot.set(this.w / 2, 17);
     this.label = new Label(CHIP);
-    this.head = artSprite(assets, key, 26, 30) ?? apeFallback(key, 26, 30);
+    this.head = artSprite(assets, key, 26, 30) ?? apeFallback(key, 26, 30) ?? crestValleyPortrait(key, 26, 30);
     this.root.addChild(this.panel, this.back);
     if (this.head) {
       this.head.position.set(19, 19);
@@ -224,12 +229,14 @@ export class DeepFlightHud {
     const words = tr().flight;
     const m = s.level.map;
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
-    this.sun = new HudSunClock(artTex(assets, 'ui/sunrise_clock'), s.level.id === 'level8' ? tr().timeTrial.left : undefined);
+    const storm = s.level.id === 'level9';
+    this.sun = new HudSunClock(storm ? null : artTex(assets, 'ui/sunrise_clock'),
+      storm ? tr().crestValley.left : s.level.id === 'level8' ? tr().timeTrial.left : undefined, storm);
     this.fuseState.seconds = 1 / (SUSPICION.rate * s.sim.mult);
     const fuse = Math.round(this.fuseState.seconds * 10) / 10;
     this.banner = new FlightBanner(400, 86,
       new Label(SHIFT).set(s.bannerHeading, VIEW_W / 2, 424, VIEW_W - 150),
-      new Label(COLLECT).set(s.level.id === 'level8' ? tr().timeTrial.banner : words.collectAll, VIEW_W / 2, 452, VIEW_W - 150),
+      new Label(COLLECT).set(storm ? tr().crestValley.banner : s.level.id === 'level8' ? tr().timeTrial.banner : words.collectAll, VIEW_W / 2, 452, VIEW_W - 150),
       new Label(SEEN_RULE).set(s.level.id === 'level8' ? tr().timeTrial.hover : fmt(words.seenRule, { s: num(fuse, Number.isInteger(fuse) ? 0 : 1) }), VIEW_W / 2, 474, VIEW_W - 150),
     );
     this.map = new MiniMap(s);
@@ -271,9 +278,9 @@ export class DeepFlightHud {
     const sec = Math.floor(run.elapsed * 4);
     if (sec !== this.clockSec) {
       this.clockSec = sec;
-      this.clock = run.clockText();
+      this.clock = run.clockText(getLang());
     }
-    this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.dawn, t, rm);
+    this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.deadlineWarning, t, rm);
     const targets = s.level.map.targets;
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i]!;

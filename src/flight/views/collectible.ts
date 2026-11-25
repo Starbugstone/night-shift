@@ -12,6 +12,7 @@ import { PERSON_RIGS, PICKUP_SIZE, pickupKey, type PartMove, type PersonRig, typ
 import type { Box } from './clear-of';
 import { arc } from './tells';
 import type { CameraView } from './world';
+import { timeCarWedge } from './time-car';
 
 const TOAST = { size: 20, color: C.mint, weight: 800 } as const;
 const SEGMENTS = 12;
@@ -225,6 +226,7 @@ function krixIntern(): Graphics {
 
 /** Each sketch, its own bounding box and its tilt. */
 const FALLBACK: Record<MapCollectibleId, { draw: () => Graphics; w: number; h: number; rot: number }> = {
+  time_car: { draw: () => timeCarWedge(true), w: 96, h: 172, rot: 0 },
   slipper_flyer: { draw: slipperFlyer, w: 46, h: 58, rot: -0.14 },
   astronomer: { draw: volunteerAstronomer, w: 56, h: 46, rot: 0 },
   saucer_photo: { draw: saucerPhoto, w: 50, h: 44, rot: 0.08 },

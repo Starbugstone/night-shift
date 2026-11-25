@@ -12,6 +12,7 @@ import type { HazardState } from '../interior';
 import type { SwingingRect } from '../ragdoll';
 import { INK, MINT, RED, TAU, bitmap, box, circleInView, disc, intersects, Segment } from './pieces';
 import { paintSouvenir } from '../souvenir-art';
+import { paintRoom55 } from '../crest-valley-art';
 
 const STAR_COUNT = 39;
 const WALL_COLORS = ['#423354', '#5b4b70', '#322943'] as const;
@@ -32,6 +33,10 @@ const PALETTES: Record<string, readonly [string, string]> = {
   'room/bg_corridor': ['#272d44', '#4d5577'],
   'room/bg_clocktower': ['#302b3e', '#664f63'],
   'room/bg_shaft': ['#282c3c', '#4a5065'],
+  // v4 L9 1955
+  'room/bg_tower55': ['#433b4c', '#87755f'],
+  'room/bg_cafe55': ['#554456', '#4d7a77'],
+  'room/bg_dance_lot55': ['#30394c', '#736078'],
 };
 const FALLBACK_NAMES = new Map(Object.keys(ART).filter(key => key.startsWith('room/')).map(key => [key, key.slice(5).replaceAll('_', ' ')]));
 const DEFAULT_PALETTE = ['#273347', '#4e5972'] as const;
@@ -235,7 +240,7 @@ export function roomArt(assets: Assets, key: string, x: number, y: number, w: nu
     root.addChild(image);
   } else {
     root.addChild(bitmap(`room|${drawKey}|${lang}|${w}|${h}|${solid}`, 0, 0, w, h, g => {
-      if (paintCaveProp(g, key, w, h)) return;
+      if (paintCaveProp(g, key, w, h) || paintRoom55(g, key, w, h)) return;
       const fallback = DECOR_FALLBACKS[key];
       if (fallback) {
         g.lineWidth = 2.5;

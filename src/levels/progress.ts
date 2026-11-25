@@ -127,7 +127,7 @@ export function isLevelUnlocked(save: SaveData, index: number): boolean {
   const level = LEVELS[index];
   if (!level) return false;
   if (index === 0 || save.allUnlocked || save.levels[level.id].delivered) return true;
-  if (save.legacyDispatch && isDeep(level) && level.id !== 'level8') return true;
+  if (save.legacyDispatch && isDeep(level) && level.num <= 7) return true;
   const prev = LEVELS[index - 1]!;
   return save.levels[prev.id].delivered;
 }

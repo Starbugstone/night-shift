@@ -166,7 +166,7 @@ describe('deep-shift recap (three rooms)', () => {
 
   it('falls back to the outcome lines when nobody knows the rooms or the items have no lines', () => {
     expect(souvenirTurn({ levelId: 'level8', offered: ['mystery thing'], got: [] }, 1)).toBeNull();
-    expect(en.humor.deepComments.default).toContain(deepComment(deep({ levelId: 'level9', stars: 1, spotted: 1, failed: 1 }), 1));
+    expect(en.humor.deepComments.default).toContain(deepComment(deep({ levelId: 'level99', stars: 1, spotted: 1, failed: 1 }), 1));
   });
 
   it('reads in French with the same choice', () => {

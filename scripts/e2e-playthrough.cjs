@@ -1,5 +1,5 @@
 // End-to-end bot: plays all four tutorial routes (L1 window/chimney, L2 skylight/loading door), then
-// full deep shifts from L3 through L8, all through real pointer input.
+// full deep shifts from L3 through L9, all through real pointer input.
 // Every abduction (tutorial and deep) is driven by the scene's own per-frame autopilot through
 // `debug.autopilotFinger()`: the screen point to hold the mouse button at (the beam heads for it).
 // The mouse stays down for the whole room.
@@ -10,7 +10,8 @@
 //   npm run preview -- --outDir review/e2e-build --port <free port> --strictPort
 //   source ~/.local/share/claude-media-tools/env.sh
 //   BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs   (add GPUARGS=... for the real GPU, below)
-// Env: ONLY=tutorial|deep|L3…L8|probe to run a subset (RUNS=L1-window,... picks tutorial routes, ROOM= the probe room); PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE to find playwright.
+// Env: ONLY=tutorial|deep|L3…L9|probe to run a subset (RUNS=L1-window,... picks tutorial routes, ROOM= the probe room); PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE to find playwright.
+// CAR_FIRST=1 exercises the optional intercept on L9 and requires all four stars.
 // Screenshots use window.__nightShift.capture() (page.screenshot hangs on this WSL box, and the
 // WebGL canvas is blank to toDataURL outside the frame that drew it).
 const path = require('path');
@@ -195,8 +196,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
 
   // ------------------------------------------------------------------ deep shifts (L3, L4)
   /** In-page per-frame driver for the abduction autopilot (see the abduct branch of deepShift). */
-  async function installDriver() {
-    await page.evaluate(() => {
+  async function installDriver(carFirst = false) {
+    await page.evaluate((carFirst) => {
       if (window.__e2eDrv) return;
       const drv = (window.__e2eDrv = { fx: 270, fy: 520, on: false, flight: null });
       const tick = () => {
@@ -205,7 +206,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         const p = ns && ns.pointer;
         // flight: ask the autopilot every frame; the bot replays its finger with the real mouse
         if (ns && ns.scene === 'flight' && a && a.debug && typeof a.debug.autopilot === 'function') {
-          const it = a.debug.autopilot();
+          const timeCar = ns.run?.collectible?.timeCar;
+          const it = carFirst && timeCar?.visible ? a.debug.timeCarAutopilot() : a.debug.autopilot();
           drv.flight = { down: it.down, x: it.x, y: it.y };
         } else drv.flight = null;
         if (ns && ns.scene === 'abduct' && a && a.debug && typeof a.debug.autopilot === 'function' && drv.on && p && p.down) {
@@ -216,14 +218,15 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-    });
+    }, carFirst);
   }
 
   async function deepShift(level, name) {
-    await openFixture('?unlock=1');
-    await page.evaluate((l) => window.__nightShift.goto('flight', l), level);
+    const carFirst = level === 9 && process.env.CAR_FIRST === '1';
+    await openFixture(level === 9 ? '?unlock=1&flight=9' : '?unlock=1');
+    if (level !== 9) await page.evaluate((l) => window.__nightShift.goto('flight', l), level);
     await waitScene('flight');
-    await installDriver();
+    await installDriver(carFirst);
     const log = [];
     const t0 = Date.now();
     let down = false;
@@ -232,6 +235,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     let lastWitnesses = 0;
     let lifted = false;
     let caveShot = false;
+    let carShot = false;
+    let lastCarPhase;
     const renderer = await page.evaluate(() => {
       const gl = document.querySelector('canvas#game')?.getContext('webgl2');
       const ext = gl?.getExtension('WEBGL_debug_renderer_info');
@@ -254,6 +259,12 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
           base.inCave = ns.scene === 'abduct' && !ns.transitioning && a?.debug?.elapsed > 4;
           base.lifting = ns.scene === 'flight' && a?.state === 'locking' && a.st > 0.22 && !!a.sim.ringRef[a.sim.lockedRing]?.ape;
         }
+        if (run?.level.id === 'level9') {
+          base.room = run.current?.roomId;
+          const car = run.collectible?.timeCar;
+          base.carPhase = car?.phase;
+          base.carProgress = car?.progress ?? 0;
+        }
         if (!a || !a.debug || typeof a.debug.autopilot !== 'function') return base;
         if (ns.scene === 'flight') { const f = window.__e2eDrv && window.__e2eDrv.flight; return { ...base, kind: 'flight', it: f ? { down: f.down, x: f.x, y: f.y } : null, state: a.state }; }
         if (ns.scene === 'abduct') return { ...base, kind: 'abduct', drv: window.__e2eDrv ? { fx: window.__e2eDrv.fx, fy: window.__e2eDrv.fy } : null };
@@ -271,6 +282,14 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         caveShot = true;
         await shot(name + '-cave');
       }
+      if (info.carPhase && info.carPhase !== lastCarPhase) {
+        log.push({ clock: info.clock, carPhase: info.carPhase, scene: info.scene });
+        lastCarPhase = info.carPhase;
+      }
+      if (!carShot && carFirst && info.carProgress > 0.2) {
+        carShot = true;
+        await shot(name + '-time-car-lock');
+      }
       if (info.room && info.scene !== lastScene) log.push({ room: info.room });
       if (info.scene !== lastScene) {
         log.push({ at: ((Date.now() - t0) / 1000).toFixed(1), scene: info.scene, clock: info.clock, delivered: info.delivered, spotted: info.spotted, failed: info.failed });
@@ -285,7 +304,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       // presses are swallowed while a transition runs: don't start a gesture until it ends
       if (info.busy && !down) { await sleep(16); continue; }
       if (info.kind === 'flight') {
-        if (!info.it) { await installDriver(); await sleep(30); continue; }
+        if (!info.it) { await installDriver(carFirst); await sleep(30); continue; }
         const it = info.it;
         if (!it.down) { await up(); await sleep(16); continue; }
         await moveTo(Math.max(2, Math.min(538, it.x)), Math.max(84, Math.min(958, it.y)));
@@ -312,6 +331,16 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       if (JSON.stringify(reloaded) !== JSON.stringify(end.level.level8)) throw new Error('Time-trial save changed on reload');
       log.push({ reloaded });
     }
+    if (level === 9) {
+      const result = end.level.level9;
+      if (end.scene !== 'report' || !result.delivered || carFirst && (!carShot || !result.stars.every(Boolean))) {
+        throw new Error('Crest Valley did not finish with the requested outcome: ' + JSON.stringify({ result, log }));
+      }
+      await openFixture('');
+      const reloaded = await page.evaluate(() => window.__nightShift.save.levels.level9);
+      if (JSON.stringify(reloaded) !== JSON.stringify(result)) throw new Error('Crest Valley save changed on reload');
+      log.push({ reloaded });
+    }
     return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), renderer, end, log };
   }
 
@@ -328,8 +357,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     await browser.close();
     return;
   }
-  const DEEP_LEVELS = [3, 4, 5, 6, 7, 8];
-  if (ONLY === 'deep' || /^L[3-8]$/.test(ONLY ?? '')) {
+  const DEEP_LEVELS = [3, 4, 5, 6, 7, 8, 9];
+  if (ONLY === 'deep' || /^L[3-9]$/.test(ONLY ?? '')) {
     for (const n of DEEP_LEVELS) if (ONLY === 'deep' || ONLY === `L${n}`) results[`L${n}`] = await deepShift(n, `L${n}`);
     console.log(JSON.stringify({ results, errors }, null, 1));
     await browser.close();

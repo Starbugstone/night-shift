@@ -595,7 +595,7 @@ export class HudSunClock extends Container {
   private readonly caption = new Label(SUN_LABEL);
   private readonly time = new Label(SUN_TIME);
 
-  constructor(face?: Texture | null, private readonly clockLabel?: string) {
+  constructor(face?: Texture | null, private readonly clockLabel?: string, private readonly storm = false) {
     super();
     this.face = face ? new Sprite(face) : null;
     this.dial.circle(0, 0, DIAL).fill(TRACK).stroke({ color: C.muted, width: 2 });
@@ -619,9 +619,9 @@ export class HudSunClock extends Container {
     this.panel.set(w, h, hot && blink ? C.amber : C.ink);
     const cx = 30;
     const cy = h / 2;
-    this.warm.visible = hot;
-    this.rays.visible = hot;
-    if (hot) {
+    this.warm.visible = hot && !this.storm;
+    this.rays.visible = hot && !this.storm;
+    if (hot && !this.storm) {
       // the chip itself warms up, and the sun comes up behind the dial
       this.warm.draw(keyOf(w, h), (g) => roundRect(g, 2, 2, w - 4, h - 4, R - 2).fill('#ff9a55'));
       this.warm.alpha = 0.12 + 0.3 * dawn;

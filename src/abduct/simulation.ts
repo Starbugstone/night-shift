@@ -29,6 +29,8 @@ const HUMAN_NAMES = {
   sterling: 'Captain Sterling', marco: 'Chef Marco', greg: 'Greg',
   // L6 clinic code
   hank: 'Hank', osei: 'Dr. Osei', pemberton: 'Mr. Pemberton',
+  // v4 L9 1955
+  doc: 'Doc', buff: 'Buff Tanner', marvin: 'Marvin Cherry',
 } as const;
 const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
 /** Pop-culture decor and the sleep-talk it sets off when the specimen floats past it (once). */

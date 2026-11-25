@@ -6,7 +6,8 @@ import type { LevelDef } from '../../src/levels/types';
 import { starLabels } from '../../src/levels/progress';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
 import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
-import { evaluateStars, type StarReport } from './stars';
+import { evaluateCarFirst, evaluateStars, type CarReport, type StarReport } from './stars';
+import { naiveCarCatches } from './time-car';
 
 // Minimum shares of full attempts, in the game's star order. The beeline and wake
 // checks below still enforce challenge when the route-aware player earns many stars.
@@ -104,6 +105,11 @@ export const BANDS: Record<string, Band | undefined> = {
     skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.6, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: 0.8, tension: 20,
   },
+  // v4 L9 1955: chapter-opener room delivery, late-tier stars (docs/GDD-10-1955.md).
+  level9: {
+    skilledRoute: 0.8, casualRoute: 0.5, casualBuilding: 0.8, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.8, casualBudgetShare: 208 / 380, tension: 20,
+  },
 };
 
 export interface RouteReport {
@@ -149,6 +155,8 @@ export interface LevelReport extends StarLevelReport {
   budgetSec: number;
   parSec: number;
   tension: number;
+  carFirst?: CarReport[];
+  carBeelines?: ReturnType<typeof naiveCarCatches>;
 }
 
 const median = (xs: number[]): number => {
@@ -294,6 +302,17 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     tension: Math.round(tension),
   };
   report.violations.push(...check(report, band));
+  if (level.id === 'level9') {
+    report.carFirst = profiles.map(profile => evaluateCarFirst(level, profile, seeds, play));
+    report.carBeelines = naiveCarCatches(level);
+    if (report.carBeelines.some(attempt => attempt.caught)) report.violations.push('A naive time-car approach catches the car');
+    for (const row of report.carFirst) {
+      const floor = row.profile === 'skilled' ? (seeds === 6 ? 5 / 6 : 0.9)
+        : row.profile === 'casual' ? (seeds === 6 ? 4 / 6 : 0.6) : 0;
+      if (row.catches / seeds < floor) report.violations.push(`Time car (${row.profile}) catches ${pct(row.catches / seeds)}, band wants ≥ ${pct(floor)}`);
+      if (seeds >= 20 && row.allFour === 0) report.violations.push(`Time car (${row.profile}): no four-star shift`);
+    }
+  }
   for (const room of casual) if (room.obstacleShare === 0) report.violations.push(noObstacle(room.roomId));
   return report;
 }
@@ -333,9 +352,12 @@ export function formatReport(r: StarLevelReport | LevelReport): string {
   lines.push(`## ${r.levelId} ${r.title} — ${r.seeds} seeds per cell`);
   lines.push('');
   lines.push(`| Profile | ${r.starLabels.join(' | ')} | Attempts spotted | Attempts with room failures |`);
-  lines.push('| --- | --- | --- | --- | --- | --- |');
+  lines.push(`| ${Array(r.starLabels.length + 3).fill('---').join(' | ')} |`);
   for (const x of r.stars) {
-    const earned = x.earned.map((n) => `${pct(n / x.attempts)} (${n}/${x.attempts})`);
+    const earned = r.starLabels.map((_, i) => {
+      const n = i === 3 ? x.runs.filter(run => run.stars[3]).length : x.earned[i]!;
+      return `${pct(n / x.attempts)} (${n}/${x.attempts})`;
+    });
     const spotted = x.runs.filter((run) => run.sightings.length || run.tutorialSpots).length;
     const failures = x.runs.filter((run) => run.roomFailures.length).length;
     lines.push(`| ${x.profile} | ${earned.join(' | ')} | ${spotted} | ${failures} |`);
@@ -373,6 +395,13 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
     lines.push(`| ${f.profile} | ${pct(f.done)} | ${f.medianSpots} | ${f.medianSec.toFixed(0)} | ${Object.entries(f.causes).map(([k, n]) => `${n}× ${k}`).join(', ') || '–'} |`);
   lines.push('');
   lines.push(`Tension (casual mean peak wake): ${r.tension}.`);
-  lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')} · sunrise ${r.budgetSec} s · Night owl by ${r.parSec} s.`);
+  const deadline = r.levelId === 'level9' ? 'storm passes at' : 'sunrise';
+  lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')} · ${deadline} ${r.budgetSec} s · Night owl by ${r.parSec} s.`);
+  if (r.carFirst && r.carBeelines) {
+    lines.push('', '| Car-first | Catches | Delivered | Pickup star | All four |', '| --- | --- | --- | --- | --- |');
+    for (const row of r.carFirst)
+      lines.push(`| ${row.profile} | ${row.catches}/${row.attempts} | ${row.delivered}/${row.attempts} | ${row.fourthStars}/${row.attempts} | ${row.allFour}/${row.attempts} |`);
+    lines.push(`Naive car catches: ${r.carBeelines.filter(attempt => attempt.caught).length}/${r.carBeelines.length}.`);
+  }
   lines.push('');
 }

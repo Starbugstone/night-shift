@@ -46,6 +46,8 @@ const SAME_IN_FRENCH = new Set([
   'Hank', 'Osei', 'Pemberton', 'Gladys', 'Roland',
   // L7 cruise code
   'Greg', 'Marco', 'CASINO', 'Doris',
+  // v4 L9 1955: names and a loanword
+  'Doc', 'Buff', 'Buff Tanner', 'Marvin', 'Marvin Cherry', 'Lyle', 'Jukebox',
 ]);
 
 afterEach(() => setLang('en'));

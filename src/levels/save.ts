@@ -14,7 +14,7 @@ export const SAVE_KEY = 'night-shift-save-v2';
 export const LEGACY_SAVE_KEY = 'night-shift-save-v1';
 export const SAVE_VERSION = 2;
 
-export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8'] as const;
+export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
 
 export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive', 'snooze_ray'];
@@ -91,6 +91,7 @@ export function defaultSave(): SaveData {
     levels: {
       level1: defaultLevel(), level2: defaultLevel(), level3: defaultLevel(), level4: defaultLevel(),
       level5: defaultLevel(), level6: defaultLevel(), level7: defaultLevel(), level8: defaultLevel(),
+      level9: defaultLevel(),
     },
     upgrades: [],
     muted: false,

@@ -5,6 +5,8 @@ import { LEVEL5 } from './deep-pier'; // L5 pier code
 import { LEVEL6 } from './deep-clinic';
 // v4 L8
 import { LEVEL8 } from './deep-monolith';
+// v4 L9 1955
+import { LEVEL9 } from './deep-1955';
 // L7 cruise code
 import { LEVEL7 } from './deep-ship';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from './types';
@@ -198,6 +200,8 @@ export const LEVELS: readonly LevelDef[] = [
   LEVEL7,
   // v4 L8
   LEVEL8,
+  // v4 L9 1955
+  LEVEL9,
 ];
 
 export function isDeep(l: LevelDef): l is DeepLevelDef {
@@ -248,6 +252,8 @@ export const ROOM_IDS: readonly RoomId[] = [
   'greg_cabin',
   // v4 L8
   'echo_appeal',
+  // v4 L9 1955
+  'inventor_balcony', 'inventor_service', 'bully_transom', 'bully_kitchen', 'band_hatch', 'band_canopy',
 ];
 
 export function isRoomId(s: string): s is RoomId {

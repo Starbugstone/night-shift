@@ -16,7 +16,9 @@ import { STEWARD_REACH, inFrame, newPhotoState, stewardPose, stewardSees, trigge
 
 export type CarKey = 'flight/police_top' | 'flight/sedan_top' | 'flight/taxi_top' | 'flight/pickup_top' | 'flight/van_top'
   // L5 pier code: the harbour patrol boat drives a water path
-  | 'flight/patrol_boat_top';
+  | 'flight/patrol_boat_top'
+  // v4 L9 1955
+  | 'flight/police55_top';
 
 /** A car on a route: police cruiser (light bar), patrol car or plain car. */
 export interface CarHazard {
@@ -82,6 +84,7 @@ export interface WatcherHazard {
   hold: number;
   sweepAmp: number;
   sweepRate: number;
+  skin?: 'cafe55';
 }
 
 export interface DogHazard {
@@ -146,6 +149,8 @@ export interface CameraHazard {
   mount?: 'roof' | 'pole' | 'radar';
   /** L7 cruise code: turn steadily at this many rad/s from `base` instead of sweeping (a radar). */
   spin?: number;
+  /** v4 L9 1955: era fixture at the cone origin. */
+  skin?: 'marshal55_torch' | 'dance_spot55' | 'worklamp55';
 }
 
 /** Neon sign / billboard: inside the glow, steering is scrambled while it is lit. */
@@ -310,7 +315,7 @@ export class Route {
 // ------------------------------------------------------------------ runtime
 
 /** Reasons the saucer can be detected (for Zib's lines and the spotted caption). */
-export type SpotCause = 'police' | 'patrol' | 'traffic' | 'porch' | 'watcher' | 'dog' | 'heli' | 'camera' | 'window'
+export type SpotCause = 'eraLight' | 'eraWatcher' | 'eraPolice' | 'police' | 'patrol' | 'traffic' | 'porch' | 'watcher' | 'dog' | 'heli' | 'camera' | 'window'
   // L5 pier code
   | 'lighthouse'
   // L6 clinic code
@@ -808,20 +813,20 @@ export class HazardField {
     const d = this.defs[i]!;
     switch (d.type) {
       case 'car':
-        return d.role;
+        return d.key === 'flight/police55_top' ? 'eraPolice' : d.role;
       case 'traffic':
         return 'traffic';
       case 'porch':
         return 'porch';
       case 'hum': return 'hum';
       case 'watcher':
-        return 'watcher';
+        return d.skin ? 'eraWatcher' : 'watcher';
       case 'dog':
         return 'dog';
       case 'heli':
         return 'heli';
       case 'camera':
-        return 'camera';
+        return d.skin ? 'eraLight' : 'camera';
       case 'ambulance':
         return 'ambulance';
       // L5 pier code

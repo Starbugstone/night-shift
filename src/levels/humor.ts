@@ -3,7 +3,7 @@
 import type { AbductResult, FlightResult, RoomId } from '../contracts';
 import { en } from '../i18n/en';
 import { fmt, gt, isSingular, plural, tr } from '../i18n';
-import type { SaveData } from './save'; // v4 story
+import type { LevelId, SaveData } from './save'; // v4 story
 // v4 items & recap humour
 import { offeredItems, souvenirTurn } from './souvenir-quips';
 
@@ -148,6 +148,9 @@ export type DeepZibEvent =
   | 'start6'
   | 'start7'
   | 'start8'
+  // v4 L9 1955
+  | 'start9' | 'timeCarWarn' | 'timeCarLaunch' | 'lightning' | 'timeCarMissed' | 'timeCarCaught'
+  | 'stormClosing' | 'eraLight' | 'eraWatcher' | 'eraPolice'
   | 'twoOfThree';
 
 export const DEEP_ZIB: Record<DeepZibEvent, readonly string[]> = en.humor.deepZib;
@@ -201,8 +204,9 @@ export function abductFailLine(reason: string | undefined, by: string | undefine
 /** Vrell's sunrise memos (level failed), rotating. */
 export const SUNRISE_MEMOS: readonly string[] = en.humor.sunriseMemos;
 
-export function sunriseMemo(rotation: number): string {
-  return pick(tr().humor.sunriseMemos, rotation);
+export function sunriseMemo(rotation: number, levelId?: LevelId): string {
+  const words = tr().humor;
+  return pick(levelId === 'level9' ? words.deepComments.clocktowerExpired : words.sunriseMemos, rotation);
 }
 
 export interface DeepCommentInput {
@@ -230,6 +234,7 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
   let list: readonly string[];
   // v4 council: L8 is a time trial (four apes and Echo), so the three-specimen lines don't fit it
   if (r.levelId === 'level8') list = r.spotted > 0 ? c.monolithSpotted : c.monolith;
+  else if (r.levelId === 'level9') list = r.spotted > 0 ? c.clocktowerSpotted : c.clocktower;
   else if (r.stars >= 3) list = c.perfect;
   else if (r.spotted === 0 && r.failed === 0) list = c.ghost;
   else if (r.spotted >= 3) list = c.spotted;
@@ -252,6 +257,7 @@ const DEEP_START: Readonly<Record<string, DeepZibEvent>> = {
   level6: 'start6',
   level7: 'start7',
   level8: 'start8',
+  level9: 'start9',
 };
 
 /** v4 story: shift-opener Zib event for a deep level id, or null if none. */
@@ -273,5 +279,6 @@ export function loadingTips(save?: Pick<SaveData, 'levels'>): readonly string[] 
   if (save.levels.level4.delivered) out.push(...tierTips.afterL4);
   if (save.levels.level5.delivered) out.push(...tierTips.afterL5);
   if (save.levels.level7.delivered) out.push(...tierTips.afterL7);
+  if (save.levels.level8.delivered) out.push(...tierTips.afterL8);
   return out;
 }

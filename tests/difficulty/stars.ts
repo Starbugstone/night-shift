@@ -6,6 +6,7 @@ import { computeDeepStars, computeStars } from '../../src/levels/progress';
 import { DeepRun } from '../../src/levels/run';
 import type { Stars } from '../../src/levels/save';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from '../../src/levels/types';
+import { CarFirst, type CarAttempt } from './time-car';
 import { humanFlightController, humanSteering, playAbduction, rng, type AbductRun, type HumanProfile } from './human';
 
 const DT = 1 / 60;
@@ -32,6 +33,7 @@ interface StarRun {
   tutorialSpots?: number;
   tutorialObstacle?: boolean;
   peakSuspicion: number;
+  car?: CarAttempt;
 }
 
 type FirstAbduction = (room: RoomId, profile: HumanProfile, seed: number) => AbductRun;
@@ -62,7 +64,7 @@ function steer(pointer: PointerState, hand?: FlightAutopilotIntent): void {
   }
 }
 
-function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction): StarRun {
+function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, carFirst = false): StarRun {
   const ctx = flightContext();
   const shift = new DeepRun(level, level.num - 1);
   shift.tick(rng(seed)() * 9);
@@ -70,6 +72,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
   const rooms: RoomId[] = [];
   const roomFailures: string[] = [];
   let peakSuspicion = 0;
+  let car: CarFirst | undefined;
   while (shift.phase === 'flight') {
     const flight = new DeepFlightScene({
       ctx, level, run: shift,
@@ -79,13 +82,16 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     });
     const { sim } = flight;
     const controller = humanFlightController(profile, seed + shift.legs * 1009)(sim);
+    if (carFirst && !car) car = new CarFirst(sim, profile, seed);
     let exposure: Record<number, number> | undefined;
     while (shift.phase === 'flight') {
       const wasFlying = flight.state === 'fly';
       // the SPOTTED card waits for a tap: the player taps when it used to close by itself
-      steer(ctx.pointer, wasFlying ? controller(sim) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
+      const chase = wasFlying && car?.active ? car : undefined;
+      steer(ctx.pointer, wasFlying ? (chase?.steer() ?? controller(sim)) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
       ctx.time += DT;
       flight.update(DT);
+      chase?.record();
       peakSuspicion = Math.max(peakSuspicion, sim.suspicion);
       if (sim.suspicion === 0) exposure = undefined;
       if (wasFlying && sim.st.cause >= 0) {
@@ -127,6 +133,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     sightings,
     roomFailures,
     peakSuspicion,
+    ...(car ? { car: car.result() } : {}),
   };
 }
 
@@ -219,4 +226,27 @@ export function evaluateStars(level: LevelDef, profile: HumanProfile, seeds: num
     if (run.stars[2]) earned[2]++;
   }
   return { profile: profile.name, earned, attempts: runs.length, runs };
+}
+
+export interface CarReport {
+  profile: string;
+  attempts: number;
+  catches: number;
+  delivered: number;
+  fourthStars: number;
+  allFour: number;
+  runs: StarRun[];
+}
+
+export function evaluateCarFirst(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction): CarReport {
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, true));
+  return {
+    profile: profile.name,
+    attempts: seeds,
+    catches: runs.filter(r => r.car?.caughtAt !== undefined).length,
+    delivered: runs.filter(r => r.stars[0]).length,
+    fourthStars: runs.filter(r => r.stars[3]).length,
+    allFour: runs.filter(r => r.stars.every(Boolean)).length,
+    runs,
+  };
 }

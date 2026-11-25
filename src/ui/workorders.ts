@@ -1,3 +1,4 @@
+import { crestValleyPortrait } from './views/crest-valley-portrait';
 import { apeFallback } from '../abduct/monolith-art';
 import { Container, Graphics, Sprite } from 'pixi.js';
 import type { Assets, Scene } from '../contracts';
@@ -318,7 +319,7 @@ class LevelCard {
     this.root.addChild(new Label({ size: 16, color: unlocked ? C.muted : C.amber, align: 'left', weight: 700 })
       .set(lt.location, 34, 56 + lines * 28, CARD_W - 150));
 
-    this.sun = unlocked && lv.kind === 'deep' ? new SunIcon(5.5, 8, 11.5) : null;
+    this.sun = unlocked && lv.kind === 'deep' && lv.id !== 'level9' ? new SunIcon(5.5, 8, 11.5) : null;
     this.arrow = unlocked ? this.openBadge(training) : null;
     if (!unlocked) {
       const prev = LEVELS[index - 1];
@@ -341,14 +342,14 @@ class LevelCard {
       star.position.set(52 + i * 44, CARD_H - 32);
       this.root.addChild(star);
     }
-    if (lv.kind === 'deep' && this.sun) {
-      const label = fmt(strings.sunriseIn, { time: fmtTime(lv.budgetSec) });
-      this.sun.root.position.set(CARD_W - 42 - measure(label, 16, 800), CARD_H - 43);
-      this.root.addChild(
-        new Label({ size: 16, color: C.amberHi, align: 'right', weight: 800 }).set(label, CARD_W - 24, CARD_H - 44),
-        this.sun.root,
-      );
-    } else if (lv.kind === 'tutorial') {
+    if (lv.kind === 'deep') {
+      const label = fmt(lv.id === 'level9' ? tr().crestValley.duration : strings.sunriseIn, { time: fmtTime(lv.budgetSec) });
+      this.root.addChild(new Label({ size: 16, color: C.amberHi, align: 'right', weight: 800 }).set(label, CARD_W - 24, CARD_H - 44, CARD_W - 230));
+      if (this.sun) {
+        this.sun.root.position.set(CARD_W - 42 - measure(label, 16, 800), CARD_H - 43);
+        this.root.addChild(this.sun.root);
+      }
+    } else {
       this.root.addChild(new Label({ size: 16, color: C.muted, align: 'right', weight: 700 })
         .set(fmt(strings.par, { time: fmtTime(lv.parSec) }), CARD_W - 24, CARD_H - 44));
     }
@@ -419,7 +420,7 @@ class Mugshot {
     const rim = new Graphics().circle(0, 0, r).stroke({ color: unlocked ? C.mint : '#4a4470', width: 4 })
       .circle(0, 0, r + 3).stroke({ color: C.ink, width: 2 });
     const mask = new Graphics().circle(0, 0, r).fill('#ffffff');
-    const art = artSprite(assets, key, 70 * r / 38, 80 * r / 38) ?? apeFallback(key, 70 * r / 38, 80 * r / 38) ?? new Graphics().circle(0, -4 * r / 38, 26 * r / 38).fill('#d5a182');
+    const art = artSprite(assets, key, 70 * r / 38, 80 * r / 38) ?? apeFallback(key, 70 * r / 38, 80 * r / 38) ?? crestValleyPortrait(key, 70 * r / 38, 80 * r / 38) ?? new Graphics().circle(0, -4 * r / 38, 26 * r / 38).fill('#d5a182');
     this.head.addChild(art);
     this.head.y = r * 0.21;
     this.head.alpha = unlocked ? 1 : 0.28;

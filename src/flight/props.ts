@@ -165,6 +165,15 @@ export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: num
       }
       break;
     }
+    case 'sedan55':
+      box(g, x + w * 0.12, y + 4, w * 0.76, h - 8, 12, tint ?? '#75888d');
+      box(g, x + w * 0.19, y + h * 0.28, w * 0.62, h * 0.38, 6, '#d2c2b2');
+      g.fillStyle = '#354756';
+      g.fillRect(x + w * 0.23, y + h * 0.28, w * 0.54, h * 0.12);
+      g.fillStyle = '#c5665b';
+      g.fillRect(x + w * 0.16, y + h * 0.88, w * 0.15, 7);
+      g.fillRect(x + w * 0.69, y + h * 0.88, w * 0.15, 7);
+      break;
     case 'tractor': {
       box(g, x + 4, y + h * 0.55, 24, 50, 6, '#2a2a2a');
       box(g, x + w - 28, y + h * 0.55, 24, 50, 6, '#2a2a2a');

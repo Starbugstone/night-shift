@@ -273,7 +273,15 @@ export class HazardViews {
         };
       }
       case 'camera': {
-        const body = cameraHead(assets, d.x, d.y, d.mount);
+        const body = d.skin ? new Container() : cameraHead(assets, d.x, d.y, d.mount);
+        if (d.skin) {
+          body.position.set(d.x, d.y);
+          const fixture = artSprite(assets, 'flight/' + d.skin) ?? new Graphics()
+            .circle(0, 3, 15).fill('#625163').stroke({ color: C.ink, width: 3 })
+            .roundRect(-13, -15, 26, 18, 4).fill('#8e7772').stroke({ color: C.ink, width: 3 })
+            .roundRect(-11, -17, 22, 7, 3).fill('#ffe5ac');
+          body.addChild(fixture);
+        }
         const head = body.children[body.children.length - 1]!;
         const camera = new CameraTell(d);
         this.ground.addChild(body);

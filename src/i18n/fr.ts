@@ -64,6 +64,8 @@ export const fr: Strings = {
     ],
     // v4 story: progress-gated loading tips (unlocked by delivered milestones)
     tierTips: {
+      // v4 L9 1955
+      afterL8: ["Si une voiture en inox atteint 88 miles à l'heure sous l'orage, écartez-vous. Notre assurance plafonne à 85."],
       afterL2: [
         "Astuce : chaque chaussette orpheline de Spin City depuis 1998 dort dans l'entrepôt 4.",
         "Astuce : si Mme Pruitt vous fait coucou, ce n'est pas amical. Elle calibre ses jumelles.",
@@ -155,6 +157,18 @@ export const fr: Strings = {
   },
 
   levels: {
+    // v4 L9 1955
+    level9: {
+      title: "Fin de quart à 22 h 04",
+      location: "Crest Valley · 12 nov. 1955",
+      blurb: "Un savant, une brute, un guitariste. Orage à 22 h 04.",
+      human: "Doc, Buff et Marvin",
+      collect: "Doc, Buff et Marvin",
+      re: "Ordre n°0009 • 12 nov. 1955 (22 h 04)",
+      body: "Le sous-sol B-4 a détecté un pic de 2,21 gigowatts en 1955. Un voyageur temporel sans Cerfa 88-MPH ! Embarquez Doc à l'horloge, Buff au café de Lyle et Marvin Cherry derrière le bal du lycée. L'orage passe à 22 h 10. Soyez parti avant.",
+      joke: "Une voiture temporelle file vers l'horloge à 22 h 04 pile. Attendez dans le renfoncement à l'ouest, puis suivez-la à la même vitesse avant que la foudre frappe.",
+      signoff: "— Vrell. J'avais dit de laisser le cadran tranquille.",
+    },
     level1: {
       title: 'Le fermier Doyle dort comme un loir',
       location: 'Ferme Doyle · D9',
@@ -253,6 +267,13 @@ export const fr: Strings = {
   ],
 
   routes: {
+    // v4 L9 1955
+    inventor_balcony: { route: "Balcon de l'horloge", difficulty: "engrenages et câble" },
+    inventor_service: { route: "Porte de service", difficulty: "cloche et courant d'air" },
+    bully_transom: { route: "Imposte de l'auvent", difficulty: "jukebox et ventilos" },
+    bully_kitchen: { route: "Porte de la cuisine", difficulty: "fumier et caisses" },
+    band_hatch: { route: "Trappe de l'estrade", difficulty: "orchestre et ballons" },
+    band_canopy: { route: "Auvent de livraison", difficulty: "phares et coffres" },
     farm_window: { route: 'Fenêtre', difficulty: 'facile' },
     farm_chimney: { route: 'Cheminée', difficulty: 'rapide et risqué' },
     laundry_skylight: { route: 'Lucarne', difficulty: 'court et risqué' },
@@ -303,6 +324,31 @@ export const fr: Strings = {
     { title: 'Chef des Affaires internes', flavour: 'Autorisé au thermomètre en laiton de 1953.' },
     { title: 'Grand amiral de la sieste', flavour: "Salaire à l'étude. Vrell « s'en occupe »." },
   ],
+
+  // v4 L9 1955
+  crestValley: {
+    left: "HEURE LOCALE",
+    banner: "Les trois spécimens avant 22 h 10",
+    order: "ORDRE N°0009 · CREST VALLEY, 1955",
+    duration: "Fin de l'orage dans {time}",
+    deliverGoal: "{star} avant 22 h 10",
+    owlGoal: "{star} avec {time} de marge",
+    carGoal: "{star} avant 22 h 04",
+    deadline: "FIN DE L’ORAGE IMMINENTE",
+    ranOut: "laissez-passer expiré à 22 h 10",
+    stamp: "LAISSEZ-PASSER EXPIRÉ",
+    launch: "Départ dans {n} s",
+    strike: "Foudre dans {n} s",
+    match: "Suivez sa vitesse",
+    dance: "Enchantement sous les vagues",
+    trophyUnfiled: "{hint} Attendez au renfoncement à l’ouest et suivez sa vitesse pour la faire monter.",
+    archive: "ARCHIVES DE 1955",
+    sleepers: {
+      doc: { caption: "Doc s'est réveillé en hurlant aux gigowatts et a dessiné un schéma sur votre coque.", mumbles: ["Deux virgule vingt-et-un… gigasiestes…", "Là où on dort, pas besoin de route…", "Nom de… vérifiez l'horloge…"] },
+      buff: { caption: "Buff s'est réveillé en distribuant des coups. Heureusement, il a surtout visé le jukebox.", mumbles: ["Allô ? Y a quelqu'un dans ce rêve ?", "Fais comme un oreiller et… plie-toi…", "Pouah… pas encore le camion de fumier…"] },
+      marvin: { caption: "Marvin s'est réveillé, a pris une guitare et inventé trente ans de tapage nocturne.", mumbles: ["Chuck ? Écoute ce… ronflement…", "Ils sont pas prêts pour cette sieste…", "En si bémol, les gars… zzz…"] },
+    },
+  },
 
   // v4 L8 time trial
   timeTrial: {
@@ -408,12 +454,16 @@ export const fr: Strings = {
     masthead: 'LA GAZETTE DE GRIMSBY',
     readings: 'Relevés du Cerfa 7-B',
     cover: {
+      // v4 L9 1955
+      storm: ["Classé sous {cause}. Le Dispatch temporel a clos le dossier à 22 h 10."],
       item: ['Classé : {cause}. Objet du litige : {item}.', "Classé : {cause}. Manque à l'inventaire : {item}. Sans rapport.", 'Classé : {cause}. Seul indice : {item}.'],
       spotted: ['Classé : {cause}. {n} témoins, reclassés « en train de rêver ».', 'Classé : {cause}. {n} signalements, surtout en robe de chambre.'],
       clean: ["Classé : {cause}. Personne n'a rien vu. Comme d'habitude.", "Classé : {cause}. Dossier clos avant même d'être ouvert."],
       sunrise: ["Classé : {cause}, à l'aube. Le siège n'y croit pas.", 'Classé : {cause}. Avec le soleil levé, dur à défendre.'],
     },
     causes: {
+      // v4 L9 1955
+      level9: ["la foudre en boule sur le tribunal", "un reflet sur un pare-chocs chromé", "un abus de milk-shakes au chocolat"],
       level1: ['des gaz des marais', 'une très grande chouette effraie', 'une moissonneuse-batteuse ambitieuse'],
       level2: ['un lave-linge en plein essorage', "des reflets de l'enseigne du snack", "l'électricité statique d'une chaussette perdue"],
       level3: ['un ballon-sonde', 'le drone des Voisins vigilants de Gary', 'Vénus, encore'],
@@ -426,6 +476,8 @@ export const fr: Strings = {
       generic: ['des gaz des marais', 'un ballon-sonde', 'Vénus'],
     },
     headlines: {
+      // v4 L9 1955
+      level9: ["LA FOUDRE FIGE L'HORLOGE À 22 H 04. UN ENJOLIVEUR VOLANT ACCUSÉ", "ENJOLIVEUR CHROMÉ VU DANS LA GRAND-RUE. LE CAFÉ EXIGE TOUJOURS L'APPOINT", "LE CHEF D'ORCHESTRE DISPARAÎT. AU BAL, ON PARLE D'UN SON VENU D'AILLEURS"],
       level1: ["UN FERMIER S'ENVOLE EN PYJAMA, LE CHIEN « N'A RIEN VU »", 'LES VACHES NIENT TOUT EN BLOC'],
       level2: ['LE GARDIEN DE LA LAVERIE DISPARAÎT EN PLEIN ESSORAGE, SON CAFÉ ENCORE CHAUD', 'PÉNURIE DE CHAUSSETTES : LES EXTRATERRESTRES ENFIN ACCUSÉS'],
       level3: ["L'ENJOLIVEUR PASSE DE LA FERME À LA BANLIEUE — GARY RÉCLAME DES LASERS", 'IMPASSE « TROP CALME », SELON UNE DAME AUX JUMELLES', 'GARY AVAIT RAISON, AFFIRME GARY'],
@@ -474,6 +526,10 @@ export const fr: Strings = {
     entrySep: ' — ',
     spinCity: 'SPIN CITY',
     missed: {
+      // v4 L9 1955
+      Doc: ["Doc ? Le câble pend dans le vide. Il est où, Doc ?", "Qui va brancher la foudre maintenant ?"],
+      Buff: ["Buff ? Quelqu'un l'a ENCORE mis K.O. ?", "Sa banquette est vide ! Regardez le camion de fumier !"],
+      Marvin: ["Marvin ? Qui assure le solo de guitare ?", "Le coffre est vide. Le groupe est parti sans lui ?"],
       Dave: ['Dave ? DAVE ?', 'Il est somnambule. Tout va bien.', 'Les Henderson ont embarqué Dave ?'],
       Barb: ['Coach ? …Coach ?', 'Biscuit, elle est passée où ?'],
       Gary: ['QG, répondez. QG ?', 'Registre de veille : Gary a quitté sa chaise.'],
@@ -647,6 +703,17 @@ export const fr: Strings = {
     },
     itemsNone: 'aucun',
     deepZib: {
+      // v4 L9 1955
+      start9: ["Nom de Zeus, 1955 ! Là où on dort, pas besoin de route. À l'ouest, Zib !", "Trois témoins de 1955. Attends la voiture au renfoncement à l'ouest !"],
+      timeCarWarn: ["Tu entends ce moteur ? Coupe-lui la route par le renfoncement à l'ouest !"],
+      timeCarLaunch: ["Elle fonce ! Suis-la à la même vitesse avant 22 h 04."],
+      lightning: ["2,21 gigowatts en plein sur l'horloge ! Antennes au garde-à-vous !"],
+      timeCarMissed: ["Volatilisée en flammes ! À 1985, j'imagine."],
+      timeCarCaught: ["Saisie à 87 miles à l'heure ! Ça annule la garantie ?"],
+      stormClosing: ["Encore trente secondes d'orage. Après ça, notre laissez-passer expire !"],
+      eraLight: ["Cette lampe ME suit ! Dans l'ombre, vite !", "Un projecteur ! Fais le nuage. Un nuage tout à fait ordinaire."],
+      eraWatcher: ["Le client du café regarde droit par la fenêtre !"],
+      eraPolice: ["Une voiture de police de 1955. Ses phares y voient très bien !"],
       start3: ["Trois maisons avant l'aube. La banlieue : sonnettes vidéo, chiens et rancunes.", "Trois spécimens avant le jour. C'est un de plus que mon total à vie."],
       start4: ['Grimsby centre-ville. Maman dit que les villes mettent les soucoupes en fourrière.', 'OK. Le centre-ville. Du calme. Fais le pigeon.'],
       // v4 story
@@ -785,6 +852,10 @@ export const fr: Strings = {
       "L'aube. Toujours mieux que la division Trépieds : un petit rhume terrien et toute la flotte en arrêt maladie.",
     ],
     deepComments: {
+      // v4 L9 1955
+      clocktower: ["Doc, Buff et Marvin enregistrés avec {remaining} s de marge. L'horloge s'est figée à 22 h 04 pile.", "Buff accuse le camion de fumier. Doc a tenté de breveter notre rayon tracteur en dormant."],
+      clocktowerSpotted: ["Livrés, et repéré {spotted} fois en 1955. Tout le bal croit désormais que les extraterrestres ont inventé le rock'n'roll."],
+      clocktowerExpired: ["22 h 10. L'orage est passé, l'horloge est bloquée et le laissez-passer temporel vient d'expirer.", "L'orage est fini. Votre laissez-passer a expiré à 22 h 10. Zib, ramenez la soucoupe à son siècle d'origine."],
       perfect: [
         "Trois spécimens, zéro témoin, rentré avant l'aube. Je n'ai rien à redire et je vous en veux.",
         "Service impeccable. J'ai transmis votre rapport au siège avec mon nom dessus. Procédure standard.",
@@ -828,6 +899,8 @@ export const fr: Strings = {
     },
     // v4 story: Vrell's scripted arc lines on a level's first delivery
     storyFirstClear: {
+      // v4 L9 1955
+      level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Remettez le cadran à zéro, Zib.",
       level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la D9 vers la ville : le veilleur de Spin City vous attend.',
       level2: "Larry est enregistré, et la compta a relié quarante chaussettes à votre soucoupe. Fini l'essai, cap sur l'allée des Érables.",
       level3: 'Banlieue bouclée, mais Gary a porté plainte et Mme Pruitt a envoyé votre photo à la mairie. Direction le centre-ville.',
@@ -858,6 +931,13 @@ export const fr: Strings = {
   ],
 
   items: {
+    // v4 L9 1955
+    "spare flex capacitor": { one: "{n} convecteur de flou", other: "{n} convecteurs de flou" },
+    "yellow hazmat suit": { one: "{n} combinaison jaune", other: "{n} combinaisons jaunes" },
+    "red puffy vest": { one: "{n} doudoune rouge", other: "{n} doudounes rouges" },
+    "retro skateboard": { one: "{n} skate rétro", other: "{n} skates rétro" },
+    "cherry electric guitar": { one: "{n} guitare électrique rouge", other: "{n} guitares électriques rouges" },
+    "clock-tower flyer": { one: "{n} tract de l'horloge", other: "{n} tracts de l'horloge" },
     slipper: { one: '{n} chausson', other: '{n} chaussons' },
     'coffee mug': { one: '{n} tasse à café', other: '{n} tasses à café' },
     'orthodontic slipper': { one: '{n} chausson orthodontique', other: '{n} chaussons orthodontiques' },
@@ -906,6 +986,31 @@ export const fr: Strings = {
   // v4 items & recap humour
   souvenirs: {
     items: {
+      // v4 L9 1955
+      "spare flex capacitor": {
+        got: ["Un convecteur de flou de rechange, qui clignote dans une boîte à biscuits. La Propulsion dit que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur de flou enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
+        missed: ["Vous avez laissé le convecteur sur le rebord. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur de flou. Dommage, la Propulsion voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
+      },
+      "yellow hazmat suit": {
+        got: ["Une combinaison jaune fluo, avec un sèche-cheveux à la ceinture. Les humains croient qu'on s'habille comme ça. C'est presque flatteur.", "Combinaison jaune enregistrée. Zib l'a mise à la compta en se prétendant envoyé de la planète Vulcain. Ils y ont cru.", "Tenue antiradiation de 1955. Sent légèrement l'ozone et les cassettes de hard rock mal rembobinées."],
+        missed: ["Vous avez laissé la combinaison jaune sur le banc de service. Un fermier de 1955 va encore croire que nous sommes des bananes géantes.", "Pas de combinaison. Dommage, elle était plus propre que nos uniformes officiels."],
+      },
+      "red puffy vest": {
+        got: ["Une doudoune rouge sans manches prise derrière le gymnase. En 1955, tout le monde demande pourquoi le gamin porte un gilet de sauvetage. Bonne question.", "Doudoune rouge classée en « bouée terrestre, pas le pied à ranger ». Zib la porte par-dessus trois pulls et fond sur place.", "Une doudoune de 1985 égarée en 1955. Crime de mode temporel — et on n'a même pas de Cerfa pour ça."],
+        missed: ["Vous avez laissé la doudoune rouge derrière le gymnase. Le chaperon la gardera en réserve au cas où les garde-côtes passent prendre un milk-shake.", "Pas de doudoune rouge. Tant mieux : Zib a déjà bien assez de vestes douteuses en soute."],
+      },
+      "retro skateboard": {
+        got: ["Un skate en bois violet et jaune, visiblement arraché à une trottinette à caisse. Encore du fumier de 1955 sur les roues. Lavez ça.", "Skate rétro enregistré. Zib a tenté un saut sur la rampe de la soucoupe et inventé trois nouvelles fiches d'hématome.", "Une planche à roulettes maison. Les humains ont inventé la glisse juste pour semer une brute en décapotable."],
+        missed: ["Vous avez laissé le skate près du comptoir. Buff trébuchera dessus demain matin et accusera le ciel de toute façon.", "Pas de skate. Tant mieux : notre mutuelle ne couvre pas les entorses d'antenne."],
+      },
+      "cherry electric guitar": {
+        got: ["Une guitare rouge cerise encore brûlante d'un solo qui ne devrait pas exister avant vingt ans. La compta a confisqué l'ampli.", "Guitare électrique enregistrée. Zib a plaqué un accord dans le hangar et brisé quatre bocaux. Mais vos enfants adoreront ça.", "La guitare rouge de Marvin. La moitié du gymnase a fait un malaise ; l'autre cherche encore ce qui est arrivé au slow."],
+        missed: ["Vous avez laissé la guitare rouge sur scène. Tant mieux : Zib aurait monté un groupe, et je ne survivrais pas à une tournée.", "Pas de guitare. Marvin garde son instrument et la chronologie garde le rock'n'roll. Match nul."],
+      },
+      "clock-tower flyer": {
+        got: ["« SAUVEZ L'HORLOGE ! » — avec un numéro de téléphone griffonné en panique au dos. Éloignez ça du Dispatch Temporel.", "Un tract froissé de 1955 pour sauver l'horloge. La foudre frapperait à 22 h 04 pile. Alerte divulgâchage : on a remarqué.", "Tract de l'horloge classé. Le juridique dit que donner une pièce en 1955 altère la chronologie. Rangez votre monnaie."],
+        missed: ["Vous avez laissé le tract sur le plateau. Quelqu'un aura grand besoin de cette heure exacte dans trente ans.", "Pas de tract. Peu importe : on connaît déjà l'heure de la foudre, mes plombages vibrent encore."],
+      },
       // v4 L8
       'first-edition bone': {
         got: ["Un os à lancer, première édition. Gardez le reçu. Silex touche des droits chaque fois qu'on le fait tomber.",
@@ -1295,6 +1400,11 @@ export const fr: Strings = {
       },
     },
     levels: {
+      // v4 L9 1955
+      level9: {
+        all: ["Un souvenir de chaque arrêt de 1955. Bravo : vous avez transformé un audit temporel en brocante vintage.", "Trois artefacts de 1955 en soute. Si quelqu'un commence à s'effacer sur les photos de famille en 1985, je vous dénonce."],
+        none: ["Zéro souvenir de 1955. Non-ingérence exemplaire — et terriblement ennuyeux pour l'entrepôt 4.", "Rien emporté de Crest Valley. L'Histoire reste intacte, et l'étagère de Zib désespérément propre."],
+      },
       level3: {
         all: [
           "Un souvenir dans chaque maison. Les Voisins vigilants parleront de vague de cambriolages. Pour une fois, Gary a raison.",
@@ -1367,6 +1477,55 @@ export const fr: Strings = {
   },
 
   data: {
+    // v4 L9 1955
+    Doc: "Doc",
+    Buff: "Buff",
+    Marvin: "Marvin",
+    "Doc woke up shouting about gigawatts and drew a diagram on your hull.": "Doc s'est réveillé en hurlant aux gigowatts et a dessiné un schéma sur votre coque.",
+    "One point two one… snoozewatts…": "Deux virgule vingt-et-un… gigasiestes…",
+    "Where we're napping, no pillows…": "Là où on dort, pas besoin de route…",
+    "Great… somebody check the clock…": "Nom de… vérifiez l'horloge…",
+    "Buff woke up swinging. Luckily he mostly hit the jukebox.": "Buff s'est réveillé en distribuant des coups. Heureusement, il a surtout visé le jukebox.",
+    "Knock, knock… anybody dreaming?": "Allô ? Y a quelqu'un dans ce rêve ?",
+    "Make like a pillow and… fold…": "Fais comme un oreiller et… plie-toi…",
+    "Ugh… not the manure truck again…": "Pouah… pas encore le camion de fumier…",
+    "Marvin woke up, grabbed a guitar and invented three decades of noise complaints.": "Marvin s'est réveillé, a pris une guitare et inventé trente ans de tapage nocturne.",
+    "Chuck? Listen to this… snore…": "Chuck ? Écoute ce… ronflement…",
+    "They're not ready for this nap yet…": "Ils sont pas prêts pour cette sieste…",
+    "Play it in B-flat, boys… zzz…": "En si bémol, les gars… zzz…",
+    "Clock ledge": "Rebord de l'horloge",
+    "Clock riser": "Cage d'horloge",
+    "Winch gallery": "Galerie du treuil",
+    "Lyle's booth": "Banquette chez Lyle",
+    "Awning gallery": "Galerie de l'auvent",
+    "Back kitchen": "Arrière-cuisine",
+    "Trunk bay": "Coffre de la berline",
+    "Stage rigging": "Cintres de scène",
+    "Tower draft": "Courant d'air",
+    "Lightning cable": "Câble du paratonnerre",
+    "Clock gear": "Engrenage",
+    "Service gate": "Grille de service",
+    "Service bell": "Cloche de service",
+    "Jukebox": "Jukebox",
+    "Ceiling fan": "Ventilateur",
+    "Hinged sash": "Châssis basculant",
+    "Bus cart": "Chariot de service",
+    "Pie case": "Vitrine à tarte",
+    "Lyle": "Lyle",
+    "Microphone stand": "Pied de micro",
+    "Party balloons": "Ballons du bal",
+    "Amp trolley": "Chariot d'ampli",
+    "Canopy floorboards": "Plancher de l'auvent",
+    "Chaperone": "Chaperon",
+    "Café watcher": "Client du café",
+    "CLOCK BALCONY": "BALCON DE L'HORLOGE",
+    "SERVICE DOOR": "PORTE DE SERVICE",
+    "AWNING TRANSOM": "IMPOSTE DE L'AUVENT",
+    "KITCHEN DOOR": "PORTE DE LA CUISINE",
+    "BANDSTAND HATCH": "TRAPPE DE L'ESTRADE",
+    "LOADING CANOPY": "AUVENT DE LIVRAISON",
+    "Buff Tanner": "Buff Tanner",
+    "Marvin Cherry": "Marvin Cherry",
     // v4 progression
     'Practice decoy': "Leurre d'entraînement",
     Landing: 'Palier',
@@ -1769,6 +1928,13 @@ export const fr: Strings = {
     toast: '{name} récupéré !',
     flyerHeader: 'PERDU',
     items: {
+      // v4 L9 1955
+      time_car: {
+        name: "Voiture temporelle",
+        memoHint: "voiture temporelle",
+        comment: "Vous avez saisi une voiture temporelle lancée en plein orage. La Propulsion la démonte déjà. Le juridique jure qu'on n'a jamais mis un pied en 1955.",
+        missedComment: "Une voiture de sport a semé une soucoupe jusqu'en 1985. De là les pneus brûlés derrière Spin City. Et ma migraine.",
+      },
       slipper_flyer: {
         name: 'Avis de chausson',
         comment: "Vous avez pris l'avis de chausson de Doyle. On a déjà le chausson : là, c'est juste de la provocation.",
@@ -1855,6 +2021,8 @@ export const fr: Strings = {
       unfiledDetail: "{hint} Stationnez lentement sur la lueur menthe pendant l'Ordre n°000{num} pour l'embarquer.",
       memoHintFallback: 'La note de service évoque « {hint} ».',
       descriptions: {
+        // v4 L9 1955
+        time_car: "Coupé en inox brossé à portes papillon, pneus roussis et zéro permis du Bureau. La Propulsion interdit à Zib de tester ce qui arrive à 88.",
         slipper_flyer: "Photocopié en Comic Sans paniqué, avec une languette déjà arrachée. Celui qui l'a prise va tomber de haut.",
         astronomer: "Douze ans à guetter un signal cosmique, enlevé en pleine gorgée de cacao tiède. Il insiste pour qu'on fasse un saut vers Véga.",
         saucer_photo: 'Floue, penchée à vingt degrés, et pourtant plus nette que tous les tabloïds depuis 1947. Le juridique a racheté les négatifs.',
@@ -1864,6 +2032,8 @@ export const fr: Strings = {
         krix: "A transformé un stage non payé en monopole techno de trois millions d'années. Jure encore que son grille-pain révolutionne le secteur.",
       },
       statuses: {
+        // v4 L9 1955
+        time_car: "En fourrière · Bridée à 87 mph",
         slipper_flyer: 'Épinglé chez Vrell',
         astronomer: 'Débriefé ; refuse de partir',
         saucer_photo: 'Censuré · Confidentiel Bureau',
@@ -1873,6 +2043,8 @@ export const fr: Strings = {
         krix: 'Convoqué aux RH',
       },
       hints: {
+        // v4 L9 1955
+        time_car: "Relisez la note. Une voiture sans permis fait la course avec l'horloge avant 22 h 04.",
         slipper_flyer: 'La note de service évoque un avis de chausson perdu près de la laverie.',
         astronomer: "Relisez la note : quelqu'un en banlieue a sorti une parabole pleine d'espoir.",
         saucer_photo: 'La note signale un cliché peu flatteur de Mme Pruitt affiché en centre-ville.',
@@ -1883,6 +2055,13 @@ export const fr: Strings = {
       },
     },
     descriptions: {
+      // v4 L9 1955
+      "spare flex capacitor": "Trois tubes lumineux câblés dans une boîte en fer. Rend le voyage temporel possible et annule toute garantie galactique.",
+      "yellow hazmat suit": "Vinyle jaune canari avec étui à sèche-cheveux. Officiellement classé par les humains comme « tenue de soirée martienne ».",
+      "red puffy vest": "Doudoune rouge venue de trente ans dans le futur. Tout Crest Valley en 1955 croit son propriétaire tombé d’un bateau.",
+      "retro skateboard": "Planche violette et jaune démontée d’une caisse à savon. Quatre roulettes en acier, zéro frein, traces de fumier d’époque.",
+      "cherry electric guitar": "Demi-caisse rouge cerise au micro roussi. Jouée si fort au bal qu’elle a brièvement fissuré le continuum espace-temps.",
+      "clock-tower flyer": "Affiche « SAUVEZ L’HORLOGE ! » en gras de 1955. Quelqu’un a griffonné « 22 h 04 » et un numéro paniqué au verso.",
       // L1 Ferme Doyle
       slipper: 'Pied gauche uniquement. Quelque part à Grimsby, un fermier têtu saute à cloche-pied vers la grange.',
       'prize marrow': "Cinq kilos de fierté rurale. Doyle lui murmure des mots doux ; le labo 4 refuse d'y toucher.",

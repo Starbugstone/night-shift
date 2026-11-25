@@ -198,7 +198,10 @@ class MemoView implements SceneView {
     const pitch = goals > 3 ? 30 : 38;
     const gy = PAPER_Y + PAPER_H - (goals > 3 ? 166 : 160);
     this.paper.addChild(new Label({ size: 15, color: '#6a3fbf', align: 'left', weight: 900 }).set(m.goals, PX + 28, gy));
-    const lines = [...(lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : lv.kind === 'deep' ? m.deepGoals : m.tutorialGoals), m.pickupGoal];
+    const words = tr().crestValley;
+    const deepGoals = lv.id === 'level9' ? [words.deliverGoal, m.deepGoals[1]!, words.owlGoal]
+      : lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : m.deepGoals;
+    const lines = [...(lv.kind === 'deep' ? deepGoals : m.tutorialGoals), lv.id === 'level9' ? words.carGoal : m.pickupGoal];
     const times = lv.kind === 'deep' ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec), ''] : ['', '', fmtTime(lv.parSec), ''];
     const best = save.levels[lv.id].stars;
     const goalLook = { size: goals > 3 ? 16 : 17, color: C.paperInk, align: 'left', weight: 700 } as const;

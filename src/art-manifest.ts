@@ -596,7 +596,6 @@ export const ART: Record<string, ArtSpec> = {
   'flight/gullwing_car': { w: 144, h: 80 }, // L2 back lot: unbadged stainless two-seater from above at map-car scale, nose east (right), one gull-wing door raised, round rear lamps, no logo/plate/grille; car only, transparent bg (code draws the scorch streaks behind and the soft cockpit glow at 52% across)
   'flight/iceberg': { w: 120, h: 90 }, // L7 off the port bow: a small, chunky iceberg from above, pale cyan facets on dark sea, a paper napkin frozen to one edge; no wreck, no flags, soft foam ring baked in
   'room/blue_heart_pendant': { w: 40, h: 40 }, // L7 Captain (mast route) souvenir, side view resting on its bottom edge: squat blue enamel heart on a gold chain coiled behind it, tiny PREMIUM DECK PASS stamp; no diamond facets or halo
-
   // ---- v4 map pickups (docs/GDD-8-map-collectibles.md): the optional town pickup of each map, drawn
   // three-quarter from the south (a standing prop or person, soft ground shadow baked in), about the
   // saucer's size so it reads on a phone. One key per MapCollectibleId: `flight/pickup_<id>` is the
@@ -620,6 +619,79 @@ export const ART: Record<string, ArtSpec> = {
   'flight/pickup_krix_head': { w: 80, h: 68 }, // antennae, head, eye whites, spectacles (no pupils or mouth)
   'flight/pickup_krix_toast': { w: 36, h: 32 }, // two slices; they rise behind the toaster
   'flight/pickup_krix_front': { w: 68, h: 42 }, // toaster, sleeves and both hands
+
+  // v4 L9 1955 (docs/l9/art-direction.md)
+  'flight/ground_storm55': { w: 540, h: 540 },
+  'flight/courthouse_square55': { w: 400, h: 300 },
+  'flight/courthouse55_top': { w: 360, h: 300 },
+  'flight/contact_lamp55_top': { w: 64, h: 80 },
+  'flight/streetlamp55_top': { w: 38, h: 52 },
+  'flight/cafe55_top': { w: 272, h: 210 },
+  'flight/picture_house55_top': { w: 236, h: 190 },
+  'flight/dress_shop55_top': { w: 196, h: 168 },
+  'flight/school55_top': { w: 312, h: 224 },
+  'flight/dance_gym55_top': { w: 320, h: 232 },
+  'flight/dance_banner55': { w: 224, h: 48 },
+  'flight/sedan55_top': { w: 80, h: 150 },
+  'flight/wagon55_top': { w: 80, h: 150 },
+  'flight/police55_top': { w: 80, h: 150 },
+  'flight/trunk_sedan55_top': { w: 92, h: 160 },
+  'flight/pickup_time_car': { w: 96, h: 172 },
+  'flight/pickup_time_car_coils': { w: 96, h: 172 },
+  'flight/time_car_display': { w: 320, h: 200 },
+  'flight/usher55_body': { w: 66, h: 78 },
+  'flight/dancer55_body': { w: 66, h: 78 },
+  'flight/usher55_head': { w: 42, h: 40 },
+  'flight/dancer55_head': { w: 42, h: 40 },
+  'flight/marshal55_torch': { w: 32, h: 24 },
+  'flight/dance_spot55': { w: 52, h: 60 },
+  'flight/worklamp55': { w: 52, h: 60 },
+  'flight/storm_cloud55': { w: 540, h: 200 },
+  'flight/rain_stitch55': { w: 144, h: 144 },
+  'flight/tower_bolt55': { w: 96, h: 224 },
+  'flight/tyre_fire55': { w: 24, h: 96 },
+  'room/bg_tower55': { w: 540, h: 720 },
+  'room/bg_cafe55': { w: 540, h: 720 },
+  'room/bg_dance_lot55': { w: 540, h: 720 },
+  'room/tower_ledge55': { w: 322, h: 72 },
+  'room/tower_cable55': { w: 426, h: 56 },
+  'room/booth55': { w: 300, h: 192 },
+  'room/counter55': { w: 178, h: 120 },
+  'room/stool55': { w: 56, h: 80 },
+  'room/jukebox55': { w: 92, h: 160 },
+  'room/pie_case55': { w: 84, h: 64 },
+  'room/trunk_body55': { w: 336, h: 194 },
+  'room/trunk_lid55': { w: 88, h: 160 },
+  'room/gym_doors55': { w: 180, h: 196 },
+  'room/amp_case55': { w: 122, h: 84 },
+  'room/retro_skateboard': { w: 58, h: 26 },
+  'room/cherry_guitar': { w: 62, h: 34 },
+  'room/flex_capacitor': { w: 42, h: 38 },
+  'room/hazmat_suit': { w: 46, h: 40 },
+  'room/puffy_vest': { w: 46, h: 38 },
+  'room/clock_flyer': { w: 40, h: 44 },
+  'room/clock_hand': { w: 54, h: 26 },
+  'human/doc_head': { w: 70, h: 80 },
+  'human/doc_head_awake': { w: 70, h: 80 },
+  'human/doc_torso': { w: 80, h: 120 },
+  'human/doc_upper_arm': { w: 26, h: 60 },
+  'human/doc_lower_arm': { w: 24, h: 60 },
+  'human/doc_upper_leg': { w: 32, h: 70 },
+  'human/doc_lower_leg': { w: 30, h: 72 },
+  'human/buff_head': { w: 70, h: 80 },
+  'human/buff_head_awake': { w: 70, h: 80 },
+  'human/buff_torso': { w: 80, h: 120 },
+  'human/buff_upper_arm': { w: 26, h: 60 },
+  'human/buff_lower_arm': { w: 24, h: 60 },
+  'human/buff_upper_leg': { w: 32, h: 70 },
+  'human/buff_lower_leg': { w: 30, h: 72 },
+  'human/marvin_head': { w: 70, h: 80 },
+  'human/marvin_head_awake': { w: 70, h: 80 },
+  'human/marvin_torso': { w: 80, h: 120 },
+  'human/marvin_upper_arm': { w: 26, h: 60 },
+  'human/marvin_lower_arm': { w: 24, h: 60 },
+  'human/marvin_upper_leg': { w: 32, h: 70 },
+  'human/marvin_lower_leg': { w: 30, h: 72 },
 };
 
 /**

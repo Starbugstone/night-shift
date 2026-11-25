@@ -43,7 +43,7 @@ describe('levels and routes', () => {
 describe('progression', () => {
   it('opens only Doyle on a fresh save', () => {
     const s = defaultSave();
-    expect(LEVELS.map((_, i) => isLevelUnlocked(s, i))).toEqual([true, false, false, false, false, false, false, false]);
+    expect(LEVELS.map((_, i) => isLevelUnlocked(s, i))).toEqual(LEVELS.map((level) => level.id === 'level1'));
     expect(isLevelUnlocked(s, LEVELS.length)).toBe(false);
   });
 
