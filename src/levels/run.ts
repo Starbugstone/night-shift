@@ -10,7 +10,7 @@
 import type { AbductFailReason, AbductResult, RoomId, Vec2 } from '../contracts';
 import { MapCollectible } from '../flight/collectible';
 import { troopTallies, type TroopTally } from '../flight/roam';
-import type { DeepSummary } from './progress';
+import type { DeepSummary, TrophyFind } from './progress';
 import type { DeepLevelDef } from './types';
 
 export type RunPhase = 'flight' | 'abduct' | 'choice' | 'done' | 'sunrise';
@@ -55,6 +55,8 @@ export class DeepRun {
   /** Abduction in progress or just failed. */
   current: { target: number; entry: number; roomId: RoomId } | null = null;
   lastFail: RunFail | null = null;
+  /** v4 trophy room: each souvenir taken home this shift, with the route it came from. */
+  readonly trophies: TrophyFind[] = [];
   readonly totals: RunTotals = { bonks: 0, snores: 0, items: [], rooms: [], dignity: 0, beamSec: 0 };
   /** Flight legs started (for Zib's lines). */
   legs = 0;
@@ -174,6 +176,7 @@ export class DeepRun {
       this.totals.dignity += res.dignity;
       this.totals.items.push(...res.itemsStolen);
       this.totals.rooms.push(cur.roomId);
+      for (const item of res.itemsStolen) this.trophies.push({ item, room: cur.roomId }); // v4 trophy room
       if (res.probeReadings) this.probeReadings.push(...res.probeReadings);
       this.checkpoint = this.ringPos(cur.target, cur.entry);
       this.spawn = { ...this.checkpoint };
@@ -209,6 +212,7 @@ export class DeepRun {
   summary(): DeepSummary {
     const mapCollectible = this.collectible?.collectedId;
     return {
+      trophies: [...this.trophies],
       delivered: this.deliveredCount,
       elapsedSec: this.elapsed,
       spotted: this.spotted,

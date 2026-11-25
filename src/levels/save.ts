@@ -1,5 +1,6 @@
 // Save data: load, validate, migrate. DOM-free (storage is injected).
-import type { MapCollectibleId, UpgradeId } from '../contracts';
+import type { MapCollectibleId, RoomId, UpgradeId } from '../contracts';
+import { isRoomId } from './levels';
 import { isLangPref, type LangPref } from '../i18n';
 import { en } from '../i18n/en';
 
@@ -53,6 +54,18 @@ export interface SaveData {
   reports: number;
   /** Display language; `auto` follows the browser. Older saves have none: auto. */
   lang: LangPref;
+  /** v4 trophy room: every souvenir taken home, by item id (its English name, a key of `tr().items`). */
+  trophies: Record<string, TrophyEntry>;
+}
+
+/** One souvenir on the trophy shelf. */
+export interface TrophyEntry {
+  /** Times it was taken home (delivered with its specimen). */
+  count: number;
+  /** The route it was first taken from. */
+  room: RoomId;
+  /** Reports filed before it was first taken (`SaveData.reports` then): orders the shelf by find. */
+  first: number;
 }
 
 export interface KeyValueStore {
@@ -80,6 +93,7 @@ export function defaultSave(): SaveData {
     fieldCheckSeen: false,
     reports: 0,
     lang: 'auto',
+    trophies: {},
   };
 }
 
@@ -109,6 +123,19 @@ function readLevel(raw: unknown): LevelProgress {
   const collectible = raw.mapCollectible;
   if (isMapCollectibleId(collectible)) lv.mapCollectible = collectible;
   return lv;
+}
+
+/** Keep only well-formed entries for known souvenirs (unknown or retired items drop out). */
+function readTrophies(raw: unknown): Record<string, TrophyEntry> {
+  const out: Record<string, TrophyEntry> = {};
+  if (!isObj(raw)) return out;
+  for (const [item, e] of Object.entries(raw)) {
+    if (!Object.hasOwn(en.items, item) || !isObj(e)) continue;
+    const count = Math.floor(finiteNonNeg(e.count, 0, 1e6));
+    if (count < 1 || typeof e.room !== 'string' || !isRoomId(e.room)) continue;
+    out[item] = { count, room: e.room, first: Math.floor(finiteNonNeg(e.first, 0, 1e9)) };
+  }
+  return out;
 }
 
 function isMapCollectibleId(value: unknown): value is MapCollectibleId {
@@ -145,6 +172,7 @@ export function validateSave(raw: unknown): SaveData {
   out.legacyDispatch = raw.legacyDispatch === true || (oldDispatch && played);
   out.fieldCheckSeen = raw.fieldCheckSeen === true || (oldDispatch && out.levels.level2.delivered);
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
+  out.trophies = readTrophies(raw.trophies);
   return out;
 }
 

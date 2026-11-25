@@ -1,5 +1,5 @@
 // Stars, Glorbs, ranks, unlocks and upgrades. Pure functions over SaveData.
-import type { AbductResult, FlightResult, MapCollectibleId, UpgradeId } from '../contracts';
+import type { AbductResult, FlightResult, MapCollectibleId, RoomId, UpgradeId } from '../contracts';
 import { LEVELS, isDeep } from './levels';
 import { cloneSave, type LevelId, type SaveData, type Stars } from './save';
 import type { LevelDef } from './types';
@@ -87,11 +87,29 @@ export interface DeepSummary {
   failedAbductions: number;
   sunrise: boolean;
   mapCollectible?: MapCollectibleId;
+  /** v4 trophy room: souvenirs taken home this shift. */
+  trophies?: readonly TrophyFind[];
+}
+
+/** A souvenir taken home: the item id (its English name) and the route it came from. */
+export interface TrophyFind {
+  item: string;
+  room: RoomId;
 }
 
 export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary, levelId?: LevelId): Stars {
   const all = r.delivered >= 3 && !r.sunrise;
   return [all, all && r.spotted === 0 && (levelId === 'level8' || r.failedAbductions === 0), all && budgetSec - r.elapsedSec >= parMarginSec];
+}
+
+/** v4 trophy room: put this run's souvenirs on the shelf (first find keeps its route and report number). */
+export function recordTrophies(save: SaveData, finds: readonly TrophyFind[]): void {
+  for (const { item, room } of finds) {
+    if (!Object.hasOwn(en.items, item)) continue;
+    const entry = save.trophies[item];
+    if (entry) entry.count += 1;
+    else save.trophies[item] = { count: 1, room, first: save.reports };
+  }
 }
 
 export function isLevelUnlocked(save: SaveData, index: number): boolean {
@@ -123,7 +141,8 @@ export interface RunOutcome {
 export function applyRun(save: SaveData, levelId: LevelId, abduct: AbductResult, flight: FlightResult): RunOutcome {
   const level = LEVELS.find((l) => l.id === levelId)!;
   const par = isDeep(level) ? level.budgetSec : level.parSec;
-  return applyStars(save, levelId, computeStars(par, abduct, flight), flight.timeSec + abduct.timeSec, 1, flight.mapCollectible);
+  const finds = abduct.delivered && !abduct.aborted ? abduct.itemsStolen.map(item => ({ item, room: flight.roomId })) : [];
+  return applyStars(save, levelId, computeStars(par, abduct, flight), flight.timeSec + abduct.timeSec, 1, flight.mapCollectible, finds);
 }
 
 /** Apply a finished deep shift (delivered all, or sunrise) to a copy of the save. */
@@ -131,12 +150,13 @@ export function applyDeepRun(save: SaveData, levelId: LevelId, r: DeepSummary): 
   const level = LEVELS.find((l) => l.id === levelId)!;
   const budget = isDeep(level) ? level.budgetSec : 300;
   const margin = isDeep(level) ? level.parMarginSec : 0;
-  return applyStars(save, levelId, computeDeepStars(budget, margin, r, levelId), r.elapsedSec, DEEP_PAY_MULT, r.mapCollectible);
+  return applyStars(save, levelId, computeDeepStars(budget, margin, r, levelId), r.elapsedSec, DEEP_PAY_MULT, r.mapCollectible, r.trophies ?? []);
 }
 
-function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: number, payMult: number, mapCollectible?: MapCollectibleId): RunOutcome {
+function applyStars(save: SaveData, levelId: LevelId, stars: Stars, timeSec: number, payMult: number, mapCollectible?: MapCollectibleId, finds: readonly TrophyFind[] = []): RunOutcome {
   const idx = LEVELS.findIndex((l) => l.id === levelId);
   const next = cloneSave(save);
+  recordTrophies(next, finds);
   const lv = next.levels[levelId];
   if (mapCollectible && LEVELS[idx]?.map.collectible?.id === mapCollectible) lv.mapCollectible = mapCollectible;
   const prev: Stars = [...lv.stars];
