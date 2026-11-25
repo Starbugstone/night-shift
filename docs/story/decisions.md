@@ -33,3 +33,6 @@ running-joke cap, era levels built on one film, Grimsby levels generic). These s
   Gazette headlines that remember past nights. In era levels these can be ancestors, an heirloom, or the same object in another age,
   as long as the level's film still leads. Each callback must make sense cold (setup visible on the screen, or a joke that works
   without it), and they count towards the 2–3 running-joke cap only if they repeat across levels.
+  Keep them **subtle, never forced** (user: "Subtile but not forced or create a new arc if lacking ideas"): one or two per level, where they fit
+  naturally. If no callback fits a level, don't shoehorn one; start a small new arc instead (a fresh recurring person or object set up
+  clearly there and paid off later).
