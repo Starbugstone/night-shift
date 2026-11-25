@@ -622,6 +622,7 @@ export const ART: Record<string, ArtSpec> = {
 
   // v4 L9 1955 (docs/l9/art-direction.md)
   'flight/ground_storm55': { w: 540, h: 540 },
+  'flight/house55_top': { w: 200, h: 180 }, // residential roofs (Fable)
   'flight/courthouse_square55': { w: 400, h: 300 },
   'flight/courthouse55_top': { w: 360, h: 300 },
   'flight/contact_lamp55_top': { w: 64, h: 80 },
