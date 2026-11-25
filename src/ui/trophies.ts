@@ -5,10 +5,10 @@
 // Room 3 (Specimen Archive): every abducted specimen (humans, dolphin & apes) with animated bust
 // portraits, stats, descriptions, and cosmetic Bureau probe status. See docs/GDD-9-trophy-room.md.
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
-import type { Assets, MapCollectibleId, Scene } from '../contracts';
+import type { Assets, MapCollectibleId, PointerState, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
-import { easeOutBack, easeOutCubic } from '../core/fx';
+import { easeInCubic, easeOutBack, easeOutCubic } from '../core/fx';
 import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Shape, keyOf, roundRect } from '../core/gfx/shapes';
@@ -105,6 +105,71 @@ const MODAL_W = VIEW_W - MODAL_X * 2; // 476
 const MODAL_H = 628;
 const UNKNOWN_TAG = '???';
 
+// v4 trophy swipe: browse the open exhibit's neighbours in the grid's reading order.
+/** Movement (logical px) before a modal gesture picks an axis. */
+export const SWIPE_SLOP = 12;
+/** A swipe must be this much more horizontal than vertical: |dx| > ratio * |dy|. */
+export const SWIPE_RATIO = 1.5;
+/** Horizontal distance (logical px) that always counts as a swipe. */
+export const SWIPE_MIN = 60;
+/** A shorter flick still counts when the finger leaves this fast (logical px per s)... */
+export const SWIPE_FLICK_SPEED = 700;
+/** ...and has moved at least this far. */
+export const SWIPE_FLICK_MIN = 24;
+const SWIPE_FOLLOW = 0.45;
+const SWIPE_FOLLOW_END = 0.15;
+const SWIPE_FOLLOW_MAX = 110;
+const NAV_OUT = 0.075;
+const NAV_IN = 0.105;
+const NAV_SLIDE = 120;
+const BUMP_DUR = 0.22;
+const BUMP_PX = 18;
+const CHEVRON_W = 56;
+const CHEVRON_H = 96;
+
+/** One exhibit in a room's reading order (wing by wing, case by case, row by row). */
+export interface ExhibitStop {
+  readonly sel: SelectedExhibit;
+  /** Wing (page) index for souvenirs and specimens; 0 for town. */
+  readonly page: number;
+  /** Slot rect in its page's list content space, for scrolling it into view. */
+  readonly y: number;
+  readonly h: number;
+  /** "12 / 41", built once. */
+  readonly counter: string;
+}
+
+export type ExhibitNav = Readonly<Record<TrophyRoomTab, readonly ExhibitStop[]>>;
+
+/** Every slot of every room in the order the player reads the grid, found or not. */
+export function buildExhibitNav(
+  layouts: readonly PageLayout[],
+  townLayout: TownPageLayout,
+  specimenLayouts: readonly SpecimenPageLayout[],
+): ExhibitNav {
+  const souvenirs: Omit<ExhibitStop, 'counter'>[] = [];
+  layouts.forEach((pl, page) => {
+    for (const sec of pl.sections) for (const r of sec.slots) souvenirs.push({ sel: { kind: 'souvenir', item: r.slot }, page, y: r.y, h: r.h });
+  });
+  const town: Omit<ExhibitStop, 'counter'>[] = townLayout.slots.map((r) => ({ sel: { kind: 'town', item: r.slot }, page: 0, y: r.y, h: r.h }));
+  const specimens: Omit<ExhibitStop, 'counter'>[] = [];
+  specimenLayouts.forEach((pl, page) => {
+    for (const sec of pl.sections) for (const r of sec.slots) specimens.push({ sel: { kind: 'specimen', item: r.slot }, page, y: r.y, h: r.h });
+  });
+  const count = (list: Omit<ExhibitStop, 'counter'>[]): readonly ExhibitStop[] =>
+    list.map((st, i) => ({ ...st, counter: `${i + 1} / ${list.length}` }));
+  return { souvenirs: count(souvenirs), town: count(town), specimens: count(specimens) };
+}
+
+/** What the detail modal reads to slide, fade and label itself. */
+interface ModalNavLook {
+  readonly cardShiftX: number;
+  readonly cardFade: number;
+  readonly counterText: string;
+  readonly hasPrev: boolean;
+  readonly hasNext: boolean;
+}
+
 export interface TrophiesDebug {
   readonly room: TrophyRoomTab;
   readonly foundCount: number;
@@ -116,6 +181,9 @@ export interface TrophiesDebug {
   readonly pageIndex: number;
   readonly pageCount: number;
   readonly selectedId: string | null;
+  /** v4 trophy swipe: position of the open exhibit in its room's reading order (-1 when closed). */
+  readonly exhibitIndex: number;
+  readonly exhibitCount: number;
   setRoom(room: TrophyRoomTab): void;
   select(itemId: string): boolean;
   selectTown(id: MapCollectibleId): boolean;
@@ -124,7 +192,7 @@ export interface TrophiesDebug {
   scrollTo(y: number): void;
 }
 
-export class TrophiesScene implements Scene {
+export class TrophiesScene implements Scene, ModalNavLook {
   t = 0;
   activeRoom: TrophyRoomTab = 'souvenirs';
   scroll = 0;
@@ -153,6 +221,26 @@ export class TrophiesScene implements Scene {
   modalY = MODAL_Y;
   modalH = MODAL_H;
 
+  // v4 trophy swipe
+  readonly nav: ExhibitNav;
+  selectedIndex = -1;
+  cardShiftX = 0;
+  cardFade = 1;
+  private swTracking = false;
+  private swLock: 'none' | 'h' | 'v' = 'none';
+  private swPressX = 0;
+  private swPressY = 0;
+  private swLastX = 0;
+  private swVel = 0;
+  private swipeX = 0;
+  private navPhase: 'idle' | 'out' | 'in' = 'idle';
+  private navT = 0;
+  private navDir: 1 | -1 = 1;
+  private navFrom = 0;
+  private navTarget = -1;
+  private bumpT = 0;
+  private bumpDir: 1 | -1 = 1;
+
   readonly back = new Button(16, 16, 64, 58, '‹', 'ghost', 40);
   readonly tabSouvenirs = new Button(24, 88, 158, 48, '', 'primary', 14.5);
   readonly tabTown = new Button(191, 88, 158, 48, '', 'ghost', 14.5);
@@ -162,6 +250,9 @@ export class TrophiesScene implements Scene {
   /** Preprod only: preview every exhibit as found (display only, never saved). */
   readonly previewBtn = new Button(VIEW_W - 24 - 196, VIEW_H - 24 - 52, 196, 52, '', 'ghost', 16);
   readonly closeBtn = new Button(MODAL_X + (MODAL_W - 220) / 2, MODAL_Y + MODAL_H - 74, 220, 56, '', 'primary', 24);
+  /** Previous / next exhibit chevrons on the modal's edges (the card is always centred on the screen). */
+  readonly prevExhibit = new Button(0, (VIEW_H - CHEVRON_H) / 2, CHEVRON_W, CHEVRON_H, '', 'ghost');
+  readonly nextExhibit = new Button(VIEW_W - CHEVRON_W, (VIEW_H - CHEVRON_H) / 2, CHEVRON_W, CHEVRON_H, '', 'ghost');
 
   /** Showing preprod's everything-found preview instead of the player's save. */
   readonly preview: boolean;
@@ -183,6 +274,7 @@ export class TrophiesScene implements Scene {
     this.specimenLayouts = this.specimenShelf.pages.map((p) => layoutSpecimenPage(p));
     this.souvenirListTop = this.shelf.pages.length > 1 ? HEADER_BASE_H + WING_BAR_H : HEADER_BASE_H;
     this.specimenListTop = this.specimenShelf.pages.length > 1 ? HEADER_BASE_H + WING_BAR_H : HEADER_BASE_H;
+    this.nav = buildExhibitNav(this.layouts, this.townLayout, this.specimenLayouts);
 
     const strings = tr().trophies;
     this.tabSouvenirs.label = fmt(strings.tabSouvenirs, { n: this.shelf.foundCount, max: this.shelf.totalCount });
@@ -211,46 +303,34 @@ export class TrophiesScene implements Scene {
         if (self.selected.kind === 'souvenir') return self.selected.item.slot.itemId;
         return self.selected.item.slot.id;
       },
+      get exhibitIndex() { return self.selected ? self.selectedIndex : -1; },
+      get exhibitCount() { return self.nav[self.activeRoom].length; },
       setRoom(room: TrophyRoomTab): void {
         self.switchRoom(room);
       },
       select(itemId: string): boolean {
-        for (let pi = 0; pi < self.shelf.pages.length; pi++) {
-          const hit = self.shelf.pages[pi]!.sections.flatMap((s) => s.slots).find((s) => s.slot.itemId === itemId);
-          if (hit) {
-            self.switchRoom('souvenirs');
-            self.pageIndex = pi;
-            self.selected = { kind: 'souvenir', item: hit };
-            self.modalT = 1;
-            return true;
-          }
-        }
-        return false;
+        const i = self.nav.souvenirs.findIndex((st) => st.sel.kind === 'souvenir' && st.sel.item.slot.itemId === itemId);
+        if (i < 0) return false;
+        self.switchRoom('souvenirs');
+        self.openStop(i, true);
+        return true;
       },
       selectTown(id: MapCollectibleId): boolean {
-        const hit = self.townShelf.slots.find((s) => s.slot.id === id);
-        if (!hit) return false;
+        const i = self.nav.town.findIndex((st) => st.sel.kind === 'town' && st.sel.item.slot.id === id);
+        if (i < 0) return false;
         self.switchRoom('town');
-        self.selected = { kind: 'town', item: hit };
-        self.modalT = 1;
+        self.openStop(i, true);
         return true;
       },
       selectSpecimen(id: string): boolean {
-        for (let pi = 0; pi < self.specimenShelf.pages.length; pi++) {
-          const hit = self.specimenShelf.pages[pi]!.sections.flatMap((s) => s.slots).find((s) => s.slot.id === id);
-          if (hit) {
-            self.switchRoom('specimens');
-            self.specimenPageIndex = pi;
-            self.selected = { kind: 'specimen', item: hit };
-            self.modalT = 1;
-            return true;
-          }
-        }
-        return false;
+        const i = self.nav.specimens.findIndex((st) => st.sel.kind === 'specimen' && st.sel.item.slot.id === id);
+        if (i < 0) return false;
+        self.switchRoom('specimens');
+        self.openStop(i, true);
+        return true;
       },
       close(): void {
-        self.selected = null;
-        self.modalT = 0;
+        self.closeModal();
       },
       scrollTo(y: number): void {
         self.scroll = clamp(y, 0, self.maxScroll);
@@ -312,10 +392,191 @@ export class TrophiesScene implements Scene {
   }
 
   private closeModal(): void {
+    if (this.navPhase === 'out' && this.navTarget >= 0) this.showStop(this.navTarget);
+    const stop = this.nav[this.activeRoom][this.selectedIndex];
+    if (this.selected && stop) this.revealStop(stop);
     this.selected = null;
+    this.selectedIndex = -1;
     this.modalT = 0;
     this.scrimArmed = false;
     this.closeBtn.cancel();
+    this.prevExhibit.cancel();
+    this.nextExhibit.cancel();
+    this.resetSwipe();
+  }
+
+  // ------------------------------------------------------------ v4 trophy swipe
+
+  get counterText(): string {
+    return this.nav[this.activeRoom][this.selectedIndex]?.counter ?? '';
+  }
+
+  get hasPrev(): boolean {
+    return this.selectedIndex > 0;
+  }
+
+  get hasNext(): boolean {
+    return this.selectedIndex >= 0 && this.selectedIndex < this.nav[this.activeRoom].length - 1;
+  }
+
+  /** Opens the active room's exhibit `index` from the shelf (pops in unless `instant`). */
+  openStop(index: number, instant: boolean): void {
+    this.resetSwipe();
+    this.showStop(index);
+    this.modalT = instant || this.shell.ctx.reducedMotion ? 1 : 0;
+  }
+
+  private openHit(item: SelectedExhibit['item']): void {
+    const stops = this.nav[this.activeRoom];
+    for (let i = 0; i < stops.length; i++) {
+      if (stops[i]!.sel.item === item) {
+        this.openStop(i, false);
+        this.shell.audio.sfx('click');
+        return;
+      }
+    }
+  }
+
+  /** Shows exhibit `index` in the open modal and moves the shelf behind it to that wing. */
+  private showStop(index: number): void {
+    const stop = this.nav[this.activeRoom][index];
+    if (!stop) return;
+    this.selected = stop.sel;
+    this.selectedIndex = index;
+    if (this.activeRoom === 'souvenirs') this.pageIndex = stop.page;
+    else if (this.activeRoom === 'specimens') this.specimenPageIndex = stop.page;
+    this.revealStop(stop);
+  }
+
+  /** Scrolls the shelf so this exhibit's slot is on screen. */
+  private revealStop(stop: ExhibitStop): void {
+    const viewH = VIEW_H - this.listTop;
+    let y = this.scroll;
+    if (stop.y - 12 < y) y = stop.y - 12;
+    else if (stop.y + stop.h + 12 > y + viewH) y = stop.y + stop.h + 12 - viewH;
+    this.scroll = clamp(y, 0, this.maxScroll);
+    this.scrollByRoom[this.activeRoom] = this.scroll;
+    this.vel = 0;
+  }
+
+  private resetSwipe(): void {
+    this.swTracking = false;
+    this.swLock = 'none';
+    this.swipeX = 0;
+    this.navPhase = 'idle';
+    this.navTarget = -1;
+    this.bumpT = 0;
+    this.cardShiftX = 0;
+    this.cardFade = 1;
+  }
+
+  /** Previous (-1) or next (+1) exhibit. Returns false (and nudges the card) at either end. */
+  step(dir: 1 | -1): boolean {
+    if (!this.selected) return false;
+    if (this.navPhase === 'out' && this.navTarget >= 0) this.showStop(this.navTarget);
+    const reduced = this.shell.ctx.reducedMotion;
+    const target = this.selectedIndex + dir;
+    if (target < 0 || target >= this.nav[this.activeRoom].length) {
+      this.navPhase = 'idle';
+      this.navTarget = -1;
+      if (!reduced) {
+        this.bumpT = BUMP_DUR;
+        this.bumpDir = dir;
+      }
+      return false;
+    }
+    this.bumpT = 0;
+    if (reduced) {
+      this.showStop(target);
+      this.swipeX = 0;
+      this.navPhase = 'idle';
+      return true;
+    }
+    this.navFrom = this.navPhase === 'idle' ? this.swipeX : this.cardShiftX;
+    this.swipeX = 0;
+    this.navPhase = 'out';
+    this.navT = 0;
+    this.navDir = dir;
+    this.navTarget = target;
+    return true;
+  }
+
+  /** Reads the pointer while the modal is open. Returns true when a horizontal swipe used it. */
+  private trackSwipe(p: PointerState, dt: number): boolean {
+    if (p.pressed) {
+      this.swTracking = true;
+      this.swLock = 'none';
+      this.swPressX = p.x;
+      this.swPressY = p.y;
+      this.swLastX = p.x;
+      this.swVel = 0;
+    }
+    if (!this.swTracking) return false;
+    const dx = p.x - this.swPressX;
+    const dy = p.y - this.swPressY;
+    // The lift-off frame repeats the last position, so it keeps the speed the finger had while moving
+    if (dt > 0 && p.down && !p.pressed) this.swVel = this.swVel * 0.4 + ((p.x - this.swLastX) / dt) * 0.6;
+    this.swLastX = p.x;
+    if (this.swLock === 'none' && Math.max(Math.abs(dx), Math.abs(dy)) > SWIPE_SLOP) {
+      this.swLock = Math.abs(dx) > SWIPE_RATIO * Math.abs(dy) ? 'h' : 'v';
+    }
+    if (this.swLock !== 'h') {
+      if (p.released) this.swTracking = false;
+      return false;
+    }
+    // A horizontal drag is never a tap: disarm Close, the chevrons and the scrim.
+    this.closeBtn.cancel();
+    this.prevExhibit.cancel();
+    this.nextExhibit.cancel();
+    this.scrimArmed = false;
+    if (p.down && !this.shell.ctx.reducedMotion && this.navPhase === 'idle') {
+      const open = dx < 0 ? this.hasNext : this.hasPrev;
+      this.swipeX = clamp(dx * (open ? SWIPE_FOLLOW : SWIPE_FOLLOW_END), -SWIPE_FOLLOW_MAX, SWIPE_FOLLOW_MAX);
+    }
+    if (p.released) {
+      this.swTracking = false;
+      this.swLock = 'none';
+      const ax = Math.abs(dx);
+      const horizontal = ax > SWIPE_RATIO * Math.abs(dy);
+      const flick = ax >= SWIPE_FLICK_MIN && Math.abs(this.swVel) >= SWIPE_FLICK_SPEED && Math.sign(this.swVel) === Math.sign(dx);
+      if (horizontal && (ax >= SWIPE_MIN || flick)) {
+        if (this.step(dx < 0 ? 1 : -1)) this.shell.audio.sfx('click');
+      }
+    }
+    return true;
+  }
+
+  /** Advances the slide-out / slide-in, the snap back and the end-of-room nudge. */
+  private animateSwipe(dt: number): void {
+    if (this.navPhase === 'out') {
+      this.navT += dt;
+      const k = Math.min(1, this.navT / NAV_OUT);
+      this.cardShiftX = this.navFrom + (-this.navDir * NAV_SLIDE - this.navFrom) * easeInCubic(k);
+      this.cardFade = 1 - k;
+      if (k >= 1) {
+        this.showStop(this.navTarget);
+        this.navTarget = -1;
+        this.navPhase = 'in';
+        this.navT = 0;
+      }
+    } else if (this.navPhase === 'in') {
+      this.navT += dt;
+      const k = Math.min(1, this.navT / NAV_IN);
+      this.cardShiftX = this.navDir * NAV_SLIDE * (1 - easeOutCubic(k));
+      this.cardFade = k;
+      if (k >= 1) this.navPhase = 'idle';
+    } else {
+      if (!this.swTracking || this.swLock !== 'h') {
+        this.swipeX *= Math.exp(-18 * dt);
+        if (Math.abs(this.swipeX) < 0.5) this.swipeX = 0;
+      }
+      this.cardShiftX = this.swipeX;
+      this.cardFade = 1;
+    }
+    if (this.bumpT > 0) {
+      this.bumpT = Math.max(0, this.bumpT - dt);
+      this.cardShiftX -= this.bumpDir * BUMP_PX * Math.sin(Math.PI * (1 - this.bumpT / BUMP_DUR));
+    }
   }
 
   update(dt: number): void {
@@ -326,11 +587,25 @@ export class TrophiesScene implements Scene {
     // Modal intercepts all input while open
     if (this.selected) {
       this.modalT = Math.min(1, this.modalT + dt * 4.5);
+      const swiped = this.trackSwipe(p, dt);
+      this.animateSwipe(dt);
+      if (swiped) return;
       if (this.closeBtn.update(p, dt, audio)) {
         this.closeModal();
         return;
       }
-      const inCard = p.x >= MODAL_X && p.x <= MODAL_X + MODAL_W && p.y >= this.modalY && p.y <= this.modalY + this.modalH;
+      if (this.prevExhibit.update(p, dt, audio)) {
+        this.scrimArmed = false;
+        this.step(-1);
+        return;
+      }
+      if (this.nextExhibit.update(p, dt, audio)) {
+        this.scrimArmed = false;
+        this.step(1);
+        return;
+      }
+      const inCard = (p.x >= MODAL_X && p.x <= MODAL_X + MODAL_W && p.y >= this.modalY && p.y <= this.modalY + this.modalH)
+        || this.prevExhibit.contains(p.x, p.y) || this.nextExhibit.contains(p.x, p.y);
       if (p.pressed && !inCard) this.scrimArmed = true;
       if (p.released) {
         if (this.scrimArmed && !inCard) {
@@ -415,25 +690,13 @@ export class TrophiesScene implements Scene {
         const contentY = p.y + this.scroll - top;
         if (this.activeRoom === 'souvenirs') {
           const hit = hitTestTrophyPage(this.currentLayout, p.x, contentY);
-          if (hit) {
-            this.selected = { kind: 'souvenir', item: hit };
-            this.modalT = this.shell.ctx.reducedMotion ? 1 : 0;
-            audio.sfx('click');
-          }
+          if (hit) this.openHit(hit);
         } else if (this.activeRoom === 'specimens') {
           const hit = hitTestSpecimenPage(this.currentSpecimenLayout, p.x, contentY);
-          if (hit) {
-            this.selected = { kind: 'specimen', item: hit };
-            this.modalT = this.shell.ctx.reducedMotion ? 1 : 0;
-            audio.sfx('click');
-          }
+          if (hit) this.openHit(hit);
         } else {
           const hit = hitTestTownRoom(this.townLayout, p.x, contentY);
-          if (hit) {
-            this.selected = { kind: 'town', item: hit };
-            this.modalT = this.shell.ctx.reducedMotion ? 1 : 0;
-            audio.sfx('click');
-          }
+          if (hit) this.openHit(hit);
         }
       }
       this.dragging = false;
@@ -604,7 +867,7 @@ class TrophiesView implements SceneView {
       this.wingLabel = null;
     }
 
-    this.modal = new DetailModalView(assets, s.closeBtn, (y, h) => s.setModalBox(y, h));
+    this.modal = new DetailModalView(assets, s.closeBtn, s.prevExhibit, s.nextExhibit, (y, h) => s.setModalBox(y, h));
     this.root.addChild(this.modal.root);
   }
 
@@ -792,7 +1055,7 @@ class TrophiesView implements SceneView {
       this.townRoom.sync(this.townRoom.root.y, s.listTop, s.t, reduced);
     }
 
-    this.modal.sync(s.selected, s.modalT, s.t, reduced);
+    this.modal.sync(s.selected, s.modalT, s.t, reduced, s);
   }
 }
 
@@ -1235,6 +1498,29 @@ const PROBE_TAG_RED = { size: 12.5, color: '#fff6ec', weight: 900 } as const;
 const PROBE_TAG_MINT = { size: 12, color: C.mint, weight: 800 } as const;
 const PROBE_NOTE_RED = { size: 13.5, color: '#ffb3bf', align: 'left', italic: true, weight: 600 } as const;
 const PROBE_NOTE_MINT = { size: 13.5, color: '#b7f5de', align: 'left', italic: true, weight: 600 } as const;
+const NAV_COUNTER = { size: 15, color: C.muted, weight: 800 } as const;
+const NAV_CHEVRON = { size: 34, color: C.mint, weight: 900 } as const;
+/** Centre of the free corner right of the 220-wide Close button (card-local x 348..476). */
+const NAV_COUNTER_X = MODAL_W - (MODAL_W - 220) / 4;
+
+/** v4 trophy swipe: a ‹ or › tab on the modal's edge, dimmed at the end of the room. */
+class ExhibitChevron {
+  readonly root = new Container();
+
+  constructor(private readonly b: Button, glyph: string, cx: number) {
+    const pill = new Graphics();
+    roundRect(pill, -17, -32, 34, 64, 17)
+      .fill('rgba(18,13,46,0.94)')
+      .stroke({ color: 'rgba(124,255,203,0.6)', width: 2 });
+    this.root.addChild(pill, new Label(NAV_CHEVRON).set(glyph, 0, -3));
+    this.root.position.set(cx, VIEW_H / 2);
+  }
+
+  sync(alpha: number, open: boolean): void {
+    this.root.alpha = alpha * (open ? 1 : 0.3);
+    this.root.scale.set(this.b.pressedDown && open ? 0.9 : 1);
+  }
+}
 
 type ModalMode = 'souvenir' | 'town' | 'specimen';
 
@@ -1286,6 +1572,10 @@ class DetailModalView {
   private readonly row3Key = new Label(PROV_KEY);
   private readonly row3Val = new Label(PROV_VAL);
   private readonly closeView: ButtonView;
+  private readonly counterLabel = new Label(NAV_COUNTER);
+  private readonly prevChevron: ExhibitChevron;
+  private readonly nextChevron: ExhibitChevron;
+  private shownCounter = '';
 
   private shownKey = '';
   private artBaseY = 128;
@@ -1294,6 +1584,8 @@ class DetailModalView {
   constructor(
     private readonly assets: Assets,
     closeBtn: Button,
+    prevBtn: Button,
+    nextBtn: Button,
     private readonly onResize: (y: number, h: number) => void,
   ) {
     this.root.visible = false;
@@ -1405,9 +1697,14 @@ class DetailModalView {
       this.row3Key,
       this.row3Val,
       this.closeView,
+      this.counterLabel,
     );
 
-    this.root.addChild(scrim, this.card);
+    // Chevrons stay put on the card's edges while the card slides (the card is always centred on screen)
+    this.prevChevron = new ExhibitChevron(prevBtn, '‹', MODAL_X);
+    this.nextChevron = new ExhibitChevron(nextBtn, '›', MODAL_X + MODAL_W);
+
+    this.root.addChild(scrim, this.card, this.prevChevron.root, this.nextChevron.root);
   }
 
   private applyModalHeight(h: number): void {
@@ -1418,6 +1715,9 @@ class DetailModalView {
     this.card.position.set(MODAL_X + MODAL_W / 2, my + clampedH / 2);
     this.onResize(my, clampedH);
     this.closeView.position.set(-MODAL_X, -my);
+    // Counter in the free corner right of Close, on the Close button's centre line
+    this.counterLabel.position.y = clampedH - 46;
+    this.shownCounter = '';
   }
 
   private drawModalChrome(
@@ -1813,7 +2113,7 @@ class DetailModalView {
     }
   }
 
-  sync(selected: SelectedExhibit | null, modalT: number, t: number, reduced: boolean): void {
+  sync(selected: SelectedExhibit | null, modalT: number, t: number, reduced: boolean, nav: ModalNavLook): void {
     const show = selected !== null;
     if (this.root.visible !== show) this.root.visible = show;
     if (!show || !selected) {
@@ -1835,9 +2135,18 @@ class DetailModalView {
       else this.populateTown(selected.item);
     }
 
+    if (nav.counterText !== this.shownCounter) {
+      this.shownCounter = nav.counterText;
+      this.counterLabel.set(nav.counterText, NAV_COUNTER_X, this.counterLabel.position.y, 96);
+    }
+
     const k = reduced ? 1 : easeOutBack(modalT, 1.3);
     this.card.scale.set(0.86 + 0.14 * k);
-    this.card.alpha = reduced ? 1 : easeOutCubic(Math.min(1, modalT * 2.2));
+    const popAlpha = reduced ? 1 : easeOutCubic(Math.min(1, modalT * 2.2));
+    this.card.alpha = popAlpha * nav.cardFade;
+    this.card.x = MODAL_X + MODAL_W / 2 + nav.cardShiftX;
+    this.prevChevron.sync(popAlpha, nav.hasPrev);
+    this.nextChevron.sync(popAlpha, nav.hasNext);
     if (selected.kind === 'souvenir') {
       this.artSprite.y = this.artBaseY + (selected.item.found && !reduced ? Math.sin(t * 2.6) * 3.5 : 0);
     } else if (selected.kind === 'specimen') {
