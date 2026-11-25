@@ -112,6 +112,14 @@ whatever the bands say.
   furniture near the spawn, or a hazard that reaches it, run that test. To fix a failure, start the
   sleeper in its settled pose or move it clear: change the spawn pose or position, not the wake
   rules. Then rerun the route autopilots and `npm run difficulty`.
+- **Tutorial rooms work without the route.** The human model follows the planned route, so a
+  100% band does not show that a first-time player gets through. A plain drag (lift, move over
+  the obstacle, head for the exit you can see, hold, release) must deliver with mouse and touch at
+  200 and 350 px/s. `tests/abduct-tutorial-plain.test.ts` enforces this for Doyle's chimney and
+  the laundry loading door. Add a plain path there when you add or change a tutorial room. Keep
+  the challenge on the way in (mantel corner, fan, cart, washers), never as a snag inside the last
+  shaft or doorway. A v4 ledge inside Doyle's flue scored 100% in the model, yet stopped a real
+  player.
 
 ## Too-easy checks
 

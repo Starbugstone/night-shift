@@ -80,7 +80,8 @@ describe('decor only: same detection and collision with and without the eggs', (
       const last = wp === route.length - 1;
       if (!last && d < 40) wp++;
       const p = ctx.pointer;
-      const down = scene.state === 'fly' && (!last || d > 18);
+      // the SPOTTED card waits for a tap
+      const down = (scene.state === 'fly' && (!last || d > 18)) || (scene.state === 'spotted' && scene.st > 3.4);
       p.pressed = down && !p.down;
       p.released = !down && p.down;
       p.down = down;

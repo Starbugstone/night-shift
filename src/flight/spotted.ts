@@ -30,7 +30,7 @@ const SHOUT = { size: 26, color: C.red, weight: 900 } as const;
 const STAMP = { size: 80, color: C.amberHi, outline: C.ink, weight: 900 } as const;
 const CAPTION = { size: 18, color: C.paperInk, weight: 700, italic: true, align: 'center', lineHeight: 24 } as const;
 const EXCUSE = { size: 16, color: C.mint, weight: 700, align: 'left', lineHeight: 21 } as const;
-const BACK = { size: 13, color: C.muted, weight: 700 } as const;
+const BACK = { size: 15, color: C.mint, weight: 800 } as const;
 
 function photoLabel(cause: SpotCause): string {
   return (tr().flight.photo.labels as Record<string, string>)[cause] ?? '';
@@ -241,6 +241,7 @@ export class DeepSpottedView {
   private readonly excuseText = new Paragraph(EXCUSE);
   private readonly meter = new Graphics().rect(58, 921, VIEW_W - 116, 3).fill(C.mint);
   private readonly flash = plate('#ffffff');
+  private readonly back = new Label(BACK);
   private oldCaption = '';
   private oldExcuse = '';
 
@@ -259,7 +260,7 @@ export class DeepSpottedView {
       { fill: C.ink, r: 18, stroke: C.mint, lineW: 2, shadow: 0 }), this.excuseText,
       new Graphics().rect(58, 921, VIEW_W - 116, 3).fill({ color: C.mint, alpha: 0.25 }), this.meter);
     this.root.addChild(shade, this.photo.root, this.stamp, this.witness.root, this.caption, this.excuse,
-      new Label(BACK).set(tr().flight.backToCheckpoint, VIEW_W / 2, 944), this.flash);
+      this.back.set(tr().flight.backToCheckpoint, VIEW_W / 2, 944, VIEW_W - 40), this.flash);
   }
 
   sync(st: number, t: number, rm: boolean, cause: SpotCause, shout: string, caption: string, excuse: string, clock: string, hold: number): void {
@@ -280,6 +281,9 @@ export class DeepSpottedView {
       this.excuseText.setBlock(excuse, 58, 866, VIEW_W - 116);
     }
     this.meter.scale.x = clamp(st / hold, 0, 1);
+    // the card waits for a tap: the prompt appears with the excuse and pulses once the penalty is served
+    this.back.visible = st > 0.35;
+    this.back.alpha = rm || st < hold ? 1 : 0.6 + 0.4 * Math.cos((st - hold) * 4);
     this.flash.strength = (1 - st / 0.22) * (rm ? 0.25 : 1);
   }
 }
