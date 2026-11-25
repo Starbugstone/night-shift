@@ -2452,7 +2452,7 @@ export const fr: Strings = {
       'petty cash tin': 'Quatorze euros, deux trombones et une reconnaissance de dette signée de la patte de Kipper, le chat du port.',
       // L6 Hôpital Sainte-Mildred
       'jug of prep drink': "Quatre litres de purge médicale au citron. La Propulsion l'a reclassée en carburant de fusée.",
-      'silver butt plug': "Saisi aux Affaires internes. Base évasée, poli miroir — mais recalé à l'homologation Cerfa 7-B.",
+      'silver butt plug': "Saisi aux Affaires internes. Base évasée, finition miroir… et pourtant pas aux normes de sondage du Bureau.",
       'on-call coffee': 'Plus noir que le vide spatial, assez épais pour tenir une cuillère debout. Gants de plomb requis.',
       'inflated rubber glove': 'Mascotte de garde à cinq doigts et sourire au marqueur. Le moral en soute a bondi de 14 %.',
       'hospital sock': 'Picots antidérapants recto-verso. Adhérence maximale, dignité en chute libre.',

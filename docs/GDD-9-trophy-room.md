@@ -228,7 +228,7 @@ Enforced automatically by **`tests/ui-trophies.test.ts`**:
 | 21 | L5 · Barnacle Bay | `sal_loft` | `accounts mug` | `room/coffee_mug` | Double-entry ceramic. Sal already billed the Bureau for depreciation and emotional distress. |
 | 22 | L5 · Barnacle Bay | `sal_dock` | `petty cash tin` | `room/cash_tin` | Fourteen quid, two paperclips, and a stern IOU signed with a paw print by Kipper. |
 | 23 | L6 · St. Mildred's | `hank_front` | `jug of prep drink` | `room/prep_jug` | Four litres of lemon-flavoured hubris. Classified as rocket propellant by Propulsion. |
-| 24 | L6 · St. Mildred's | `hank_rear` | `silver butt plug` | `room/silver_plug` | Seized in Internal Affairs. Flared base, mirror polish—still failed Form 7-B probe certification. |
+| 24 | L6 · St. Mildred's | `hank_rear` | `silver butt plug` | `room/silver_plug` | Seized in Internal Affairs. Flared base, mirror polish, and it still didn't pass our probe standards. |
 | 25 | L6 · St. Mildred's | `osei_helipad` | `on-call coffee` | `room/coffee_mug` | Darker than deep space, thick enough to hold a spoon upright. Handle with lead gloves. |
 | 26 | L6 · St. Mildred's | `osei_pharmacy` | `inflated rubber glove` | `room/glove_balloon` | Five-fingered night-shift mascot with a Sharpie grin. Morale in the hold jumped 14%. |
 | 27 | L6 · St. Mildred's | `pemberton_window` | `hospital sock` | `room/slipper` | Treaded on both sides for peak hallway traction. Zero style, maximum dignity loss. |

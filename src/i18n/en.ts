@@ -2513,7 +2513,7 @@ export const en = {
       'petty cash tin': 'Fourteen quid, two paperclips and a stern IOU signed with a paw print by Kipper the dock cat.',
       // L6 St. Mildred's General
       'jug of prep drink': 'Four litres of lemon-flavoured clinic prep juice. Propulsion reclassified it as rocket fuel.',
-      'silver butt plug': 'Seized in Internal Affairs. Flared base, mirror polish—still failed Form 7-B probe certification.',
+      'silver butt plug': "Seized in Internal Affairs. Flared base, mirror polish, and it still didn't pass our probe standards.",
       'on-call coffee': 'Darker than deep space, thick enough to hold a spoon upright. Handle with lead gloves.',
       'inflated rubber glove': 'Five-fingered night-shift mascot with a Sharpie grin. Morale in the hold jumped 14%.',
       'hospital sock': 'Treaded on both sides for peak hallway traction. Zero style, maximum dignity loss.',
