@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960" viewBox="0 0 540 960" role="img" aria-labelledby="title desc">
+<title id="title">The corner booth</title><desc id="desc">Cushion at y = 726   ·   counter at y = 622. Upper transom and kitchen gallery are the two route choices..</desc>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="0" y="0" width="540" height="960" rx="0" fill="#202333" stroke="none" stroke-width="4"/>
+<text x="22" y="44" text-anchor="start" fill="#B6BAB8" font-family="sans-serif" font-size="13" font-weight="bold">CREST VALLEY   /   12 NOV 1955</text>
+<text x="20" y="90" text-anchor="start" fill="#FFF0D4" font-family="sans-serif" font-size="34" font-weight="bold">The corner booth</text>
+<rect x="20" y="133" width="500" height="713" rx="3" fill="#8B7973" stroke="#1B1433" stroke-width="4"/>
+<rect x="23" y="478" width="494" height="364" rx="0" fill="#597073" stroke="none" stroke-width="4"/>
+<rect x="23" y="465" width="494" height="14" rx="0" fill="#C1AC8E" stroke="none" stroke-width="4"/>
+<path d="M246 146v-10h200v10" fill="none" stroke="#9CD9C4" stroke-width="4"/><text x="346.0" y="167" text-anchor="middle" fill="#9CD9C4" font-family="sans-serif" font-size="13" font-weight="bold">AWNING TRANSOM</text>
+<rect x="455" y="284" width="61" height="220" rx="6" fill="#373A49" stroke="#1B1433" stroke-width="4"/>
+<path d="M518 284 h-53 v220 h53" fill="none" stroke="#9CD9C4" stroke-width="4"/>
+<text x="482" y="389" text-anchor="middle" fill="#9CD9C4" font-family="sans-serif" font-size="12" font-weight="bold">KITCHEN</text>
+<rect x="40" y="420" width="92" height="160" rx="39" fill="#594853" stroke="#1B1433" stroke-width="4"/>
+<rect x="52" y="434" width="68" height="130" rx="30" fill="#C7A787" stroke="#1B1433" stroke-width="4"/>
+<rect x="62" y="448" width="48" height="106" rx="22" fill="#647D7E" stroke="#1B1433" stroke-width="4"/>
+<circle cx="86" cy="482" r="15" fill="#C9B594" stroke="#1B1433" stroke-width="4"/>
+<path d="M66 516 h39" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M66 527 h39" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M66 538 h39" fill="none" stroke="#1B1433" stroke-width="3"/>
+<rect x="29" y="642" width="298" height="170" rx="18" fill="#954F59" stroke="#1B1433" stroke-width="4"/>
+<rect x="42" y="654" width="272" height="86" rx="12" fill="#B16A71" stroke="#1B1433" stroke-width="4"/>
+<path d="M78 661 v50" fill="none" stroke="#925661" stroke-width="3"/>
+<path d="M129 661 v50" fill="none" stroke="#925661" stroke-width="3"/>
+<path d="M180 661 v50" fill="none" stroke="#925661" stroke-width="3"/>
+<path d="M231 661 v50" fill="none" stroke="#925661" stroke-width="3"/>
+<path d="M282 661 v50" fill="none" stroke="#925661" stroke-width="3"/>
+<rect x="30" y="726" width="298" height="26" rx="9" fill="#D1AA89" stroke="#1B1433" stroke-width="4"/>
+<rect x="30" y="750" width="298" height="78" rx="7" fill="#7D555A" stroke="#1B1433" stroke-width="4"/>
+<g transform="translate(103 699)"><path d="M109 4 L157 -20 L210 14" fill="none" stroke="#272739" stroke-width="24"/><path d="M106 11 L166 2 L209 16" fill="none" stroke="#393648" stroke-width="26"/><path d="M199 15 l24 1" fill="none" stroke="#332939" stroke-width="15"/><path d="M-7 -18 Q11 -26 42 -19 L109 -7 L116 15 Q90 26 44 25 L7 17Z" fill="#544658" stroke="#1B1433" stroke-width="4"/><path d="M4 -16 L19 -19 L34 1 L16 -2Z" fill="#FFF0D4" stroke="#1B1433" stroke-width="4"/><path d="M20 4 Q37 24 54 12 L76 5" fill="none" stroke="#1B1433" stroke-width="18"/><path d="M20 4 Q37 24 54 12 L76 5" fill="none" stroke="#544658" stroke-width="12"/><path d="M72 6 l10 -2" fill="none" stroke="#C58A70" stroke-width="9"/><path d="M-42 -39 Q-33 -53 -15 -47 Q2 -46 7 -35 L10 -26 L16 -21 L9 -17 Q13 -5 2 -3 L-23 -3 Q-43 -6 -43 -24Z" fill="#C58A70" stroke="#1B1433" stroke-width="4"/><path d="M-42 -12 Q-53 -41 -33 -50 Q-19 -57 0 -64 Q19 -69 16 -51 Q13 -40 -4 -40 L-28 -36 L-30 -15Z" fill="#282134" stroke="#1B1433" stroke-width="4"/><path d="M3 5 L14 -17 L32 -8 L22 11Z" fill="#282134" stroke="#1B1433" stroke-width="4"/><path d="M-7 -27 q5 4 10 0" fill="none" stroke="#1B1433" stroke-width="2.6"/></g>
+<rect x="332" y="622" width="178" height="120" rx="8" fill="#537175" stroke="#1B1433" stroke-width="4"/>
+<rect x="332" y="622" width="178" height="13" rx="3" fill="#CDD1BF" stroke="#1B1433" stroke-width="4"/>
+<path d="M420 621 L431 562 H494 L504 621Z" fill="#98A7A2" stroke="#1B1433" stroke-width="4"/>
+<path d="M430 612 L457 588 L485 608 L485 614Z" fill="#BC8C64" stroke="#1B1433" stroke-width="4"/>
+<path d="M345 608 q20 11 53 -1" fill="none" stroke="#EDD073" stroke-width="8"/>
+<path d="M345 605 q22 10 53 -2" fill="none" stroke="#8C659E" stroke-width="6"/>
+<circle cx="353" cy="618" r="3" fill="#D7CABE" stroke="#1B1433" stroke-width="4"/>
+<circle cx="389" cy="618" r="3" fill="#D7CABE" stroke="#1B1433" stroke-width="4"/>
+<rect x="372" y="773" width="12" height="57" rx="4" fill="#A8B4AE" stroke="#1B1433" stroke-width="4"/>
+<rect x="358" y="829" width="40" height="7" rx="3" fill="#839496" stroke="#1B1433" stroke-width="4"/>
+<rect x="350" y="758" width="56" height="20" rx="9" fill="#B77978" stroke="#1B1433" stroke-width="4"/>
+<rect x="460" y="773" width="12" height="57" rx="4" fill="#A8B4AE" stroke="#1B1433" stroke-width="4"/>
+<rect x="446" y="829" width="40" height="7" rx="3" fill="#839496" stroke="#1B1433" stroke-width="4"/>
+<rect x="438" y="758" width="56" height="20" rx="9" fill="#B77978" stroke="#1B1433" stroke-width="4"/>
+<path d="M20 846 H520" fill="none" stroke="#B6A79D" stroke-width="3"/>
+<text x="22" y="885" text-anchor="start" fill="#FFF0D4" font-family="sans-serif" font-size="16" font-weight="bold">Cushion at y = 726   ·   counter at y = 622</text>
+<text x="22" y="917" text-anchor="start" fill="#C1C4C0" font-family="sans-serif" font-size="13" font-weight="bold">Upper transom and kitchen gallery are the two route choices.</text>
+</g></svg>

@@ -1,17 +1,19 @@
 import { Container, Graphics } from 'pixi.js';
-import { VIEW_W, type MapCollectibleId } from '../../contracts';
+import { VIEW_W, type Assets, type MapCollectibleId } from '../../contracts';
 import { batched, panelPath } from '../../core/gfx/shapes';
-import { Label, measure } from '../../core/gfx/text';
+import { Label, measure, type LabelStyle } from '../../core/gfx/text';
 import { fmt, tr } from '../../i18n';
 import { C } from '../../ui/theme';
+import { artSprite } from '../../ui/views/art';
 import { HudPanel } from '../../ui/views/hud';
 import type { MapCollectible } from '../collectible';
-import { RING_R } from '../sim';
+import { figurePose, figureSeed, newFigurePose } from '../pickup-pose';
+import { PERSON_RIGS, PICKUP_SIZE, pickupKey, type PartMove, type PersonRig, type RigPart } from '../pickup-rig';
+import type { Box } from './clear-of';
 import { arc } from './tells';
 import type { CameraView } from './world';
 
 const TOAST = { size: 20, color: C.mint, weight: 800 } as const;
-export const PICKUP_VIEW_R = RING_R + 16;
 const SEGMENTS = 12;
 
 function sparkle(r: number): Graphics {
@@ -19,10 +21,11 @@ function sparkle(r: number): Graphics {
     0, r, -r * 0.28, r * 0.28, -r, 0, -r * 0.28, -r * 0.28]).fill(C.mint);
 }
 
-const FLYER_HDR = { size: 9, color: '#fff8e8', weight: 900 } as const;
+// ---------------------------------------------------------------- primitive fallbacks
+// Drawn when the art is missing: small top-down sketches in their own px (about 48 across, centre
+// at the origin). `pickupFallback` scales one up to the art's footprint.
 
-function slipperFlyer(): Container {
-  const root = new Container();
+function slipperFlyer(): Graphics {
   const g = batched(new Graphics());
   const frame = { color: C.ink, width: 2.5 } as const;
   // Soft drop shadow on the dark pavement
@@ -50,17 +53,11 @@ function slipperFlyer(): Container {
   // Red thumbtack pinning the flyer at the top centre
   g.circle(0, -23, 4.5).fill('#e6485c').stroke({ color: C.ink, width: 2 });
   g.circle(-1.2, -24.2, 1.3).fill('#ffd8de');
-  const header = new Label(FLYER_HDR).set(tr().mapCollectibles.flyerHeader, 0, -12.5, 32);
-  root.addChild(g, header);
-  root.rotation = -0.14;
-  return root;
+  return g;
 }
 
-const CRATE_MARK = { size: 9, color: '#fff4d8', weight: 900 } as const;
-
 /** L3: volunteer astronomer camped on Birch Lane with a portable SETI dish, chair, thermos & sign. */
-function volunteerAstronomer(): Container {
-  const root = new Container();
+function volunteerAstronomer(): Graphics {
   const g = batched(new Graphics());
   const outline = { color: C.ink, width: 2.2 } as const;
   // Soft ground shadow under the camp spot
@@ -88,13 +85,11 @@ function volunteerAstronomer(): Container {
   // Contact headphones band across the beanie
   g.moveTo(4.5, -1).quadraticCurveTo(11, -6, 17.5, -1).stroke({ color: '#1b1433', width: 2.4, cap: 'round' });
   g.circle(11, 2.5, 2.1).fill('#fff4d8');
-  root.addChild(g);
-  return root;
+  return g;
 }
 
 /** L4: Mrs. Pruitt's blurry saucer photo pinned on City Hall's exterior municipal noticeboard. */
-function saucerPhoto(): Container {
-  const root = new Container();
+function saucerPhoto(): Graphics {
   const g = batched(new Graphics());
   const outline = { color: C.ink, width: 2.4 } as const;
   // Drop shadow on the plaza pavement
@@ -117,14 +112,11 @@ function saucerPhoto(): Container {
   g.moveTo(0, 8).lineTo(13, 8).stroke({ color: '#7a6c8e', width: 1.5, cap: 'round' });
   g.circle(6.5, -12.5, 3.2).fill('#e6485c').stroke({ color: C.ink, width: 1.6 });
   g.circle(5.6, -13.4, 0.9).fill('#ffd8de');
-  root.addChild(g);
-  root.rotation = 0.08;
-  return root;
+  return g;
 }
 
 /** L5: the unaccounted OBELISK™ shipping crate on the fish-market boardwalk slip. */
-function obeliskCrate(): Container {
-  const root = new Container();
+function obeliskCrate(): Graphics {
   const g = batched(new Graphics());
   const outline = { color: C.ink, width: 2.5 } as const;
   // Shadow on the boardwalk decking
@@ -145,15 +137,11 @@ function obeliskCrate(): Container {
   }
   // Red customs tag / undeclared stripe across the lower left
   g.roundRect(-19, 3, 24, 11, 2).fill('#d93f56').stroke({ color: C.ink, width: 1.6 });
-  const mark = new Label(CRATE_MARK).set('O™', -7, 8.5, 22);
-  root.addChild(g, mark);
-  root.rotation = -0.1;
-  return root;
+  return g;
 }
 
 /** L6: stray hospital defibrillator trolley marked FOR THE MACHINE (Frankenstein nod). */
-function strayDefibrillator(): Container {
-  const root = new Container();
+function strayDefibrillator(): Graphics {
   const g = batched(new Graphics());
   const outline = { color: C.ink, width: 2.3 } as const;
   // Shadow on the campus lawn
@@ -178,14 +166,11 @@ function strayDefibrillator(): Container {
     .stroke({ color: C.ink, width: 1.8 });
   g.roundRect(10, -11, 8, 9, 2.5).fill('#e6485c').stroke({ color: C.ink, width: 1.8 });
   g.roundRect(10, 2, 8, 9, 2.5).fill('#e6485c').stroke({ color: C.ink, width: 1.8 });
-  root.addChild(g);
-  root.rotation = 0.06;
-  return root;
+  return g;
 }
 
 /** L7: the shrimp tower on an aft promenade buffet cart (deep plum cloth frames silver + coral shrimp). */
-function shrimpTower(): Container {
-  const root = new Container();
+function shrimpTower(): Graphics {
   const g = batched(new Graphics());
   const outline = { color: C.ink, width: 2.3 } as const;
   // Crisp dark shadow so the cart stands out cleanly on the pale ship planks
@@ -208,13 +193,11 @@ function shrimpTower(): Container {
   g.circle(0, -1, 8.5).fill('#cfdbe8').stroke({ color: C.ink, width: 1.8 });
   g.circle(0, -1, 5).fill('#d92d46').stroke({ color: C.ink, width: 1.4 });
   g.poly([1, -2, 7, -6, 6, 1]).fill('#ffe066').stroke({ color: C.ink, width: 1.2 });
-  root.addChild(g);
-  return root;
+  return g;
 }
 
 /** L8: Krix, the ex-intern in a black turtleneck clutching his gleaming toaster, on the east ridge. */
-function krixIntern(): Container {
-  const root = new Container();
+function krixIntern(): Graphics {
   const g = batched(new Graphics());
   const outline = { color: C.ink, width: 2.3 } as const;
   // Ground shadow on the badlands rock
@@ -237,20 +220,306 @@ function krixIntern(): Container {
   // Mint alien head + tiny round spectacles rim
   g.circle(0, 0, 8.8).fill(C.mint).stroke(outline);
   g.circle(-3.2, -5.5, 2.3).circle(3.2, -5.5, 2.3).fill('#1b1433').stroke({ color: '#eef4ff', width: 1 });
-  root.addChild(g);
-  root.rotation = -0.35;
-  return root;
+  return g;
 }
 
-const makeProp: Record<MapCollectibleId, () => Container> = {
-  slipper_flyer: slipperFlyer,
-  astronomer: volunteerAstronomer,
-  saucer_photo: saucerPhoto,
-  obelisk_crate: obeliskCrate,
-  defibrillator: strayDefibrillator,
-  shrimp_tower: shrimpTower,
-  krix: krixIntern,
+/** Each sketch, its own bounding box and its tilt. */
+const FALLBACK: Record<MapCollectibleId, { draw: () => Graphics; w: number; h: number; rot: number }> = {
+  slipper_flyer: { draw: slipperFlyer, w: 46, h: 58, rot: -0.14 },
+  astronomer: { draw: volunteerAstronomer, w: 56, h: 46, rot: 0 },
+  saucer_photo: { draw: saucerPhoto, w: 50, h: 44, rot: 0.08 },
+  obelisk_crate: { draw: obeliskCrate, w: 48, h: 42, rot: -0.1 },
+  defibrillator: { draw: strayDefibrillator, w: 50, h: 38, rot: 0.06 },
+  shrimp_tower: { draw: shrimpTower, w: 50, h: 42, rot: 0 },
+  krix: { draw: krixIntern, w: 42, h: 46, rot: -0.35 },
 };
+
+function fallbackScale(id: MapCollectibleId): number {
+  const [w, h] = PICKUP_SIZE[id];
+  const f = FALLBACK[id];
+  return Math.min(w / f.w, h / f.h);
+}
+
+/**
+ * The primitive drawing of a pickup, scaled up to the footprint of its art (`PICKUP_SIZE`) and
+ * centred on the origin: what the map and the trophy room show when `flight/pickup_<id>` is missing.
+ */
+export function pickupFallback(id: MapCollectibleId): Graphics {
+  const g = FALLBACK[id].draw();
+  g.scale.set(fallbackScale(id));
+  g.rotation = FALLBACK[id].rot;
+  return g;
+}
+
+// ---------------------------------------------------------------- the figure
+
+/**
+ * Words written on a pickup by code (art carries no text): where they sit on the art, in the art's
+ * px from its centre, and on the fallback sketch, in the sketch's own px.
+ */
+interface Caption {
+  text: () => string;
+  color: string;
+  art: { x: number; y: number; size: number; maxW: number; rot: number };
+  sketch: { x: number; y: number; size: number; maxW: number };
+}
+
+const CAPTIONS: Partial<Record<MapCollectibleId, Caption>> = {
+  // the header is LOST or PERDU
+  slipper_flyer: {
+    text: () => tr().mapCollectibles.flyerHeader,
+    color: '#fff8e8',
+    art: { x: -1, y: -20, size: 11, maxW: 33, rot: 0 },
+    sketch: { x: 0, y: -12.5, size: 9, maxW: 32 },
+  },
+  obelisk_crate: {
+    text: () => 'O™',
+    color: '#fff4d8',
+    art: { x: -6, y: 19, size: 15, maxW: 34, rot: -0.087 },
+    sketch: { x: -7, y: 8.5, size: 9, maxW: 22 },
+  },
+};
+
+/** The whole art is drawn upright; these pickups sit at a tilt on the map. */
+const ART_TILT: Partial<Record<MapCollectibleId, number>> = { slipper_flyer: -0.1 };
+
+const MOUTH = '#3a1830';
+const TONGUE = '#d3827c';
+
+function clamp01(v: number): number {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+/** Eyes, lids and mouth of a person, drawn by code on the head layer so they can move. */
+class Face {
+  private readonly eyes: Graphics[] = [];
+  private readonly lids: Graphics[] = [];
+  private readonly shut: Graphics[] = [];
+  private readonly smile: Graphics;
+  private readonly open: Graphics;
+  private readonly ex: number[] = [];
+  private readonly ey: number[] = [];
+
+  /** `head` is the layer the face rides on; `k` the figure's scale. */
+  constructor(private readonly rig: PersonRig, head: RigPart, into: Container, private readonly k: number) {
+    const ink = { color: C.ink, width: 2.2 * k, cap: 'round' } as const;
+    for (const e of rig.eyes) {
+      const x = (e.x - head.px) * k;
+      const y = (e.y - head.py) * k;
+      this.ex.push(x);
+      this.ey.push(y);
+      const p = rig.pupil;
+      const eye = batched(new Graphics());
+      if (p) eye.ellipse(0, 0, p.rx * k, p.ry * k).fill(C.ink).circle(-p.rx * 0.3 * k, -p.ry * 0.38 * k, 1.5 * k).fill('#d8ffdf');
+      else eye.ellipse(0, 0, e.rx * k, e.ry * k).fill(C.ink);
+      eye.position.set(x, y);
+      this.eyes.push(eye);
+      into.addChild(eye);
+      if (!p) continue;
+      // a lid that comes down from the top of the eye, and the line of a shut eye
+      const lid = batched(new Graphics()).ellipse(0, e.ry * k, (e.rx + 0.4) * k, (e.ry + 0.4) * k).fill(rig.lid).stroke({ color: C.ink, width: 2.4 * k });
+      lid.position.set(x, y - e.ry * k);
+      const line = batched(new Graphics()).moveTo(-e.rx * 0.7 * k, 0).quadraticCurveTo(0, e.ry * 0.45 * k, e.rx * 0.7 * k, 0).stroke(ink);
+      line.position.set(x, y + e.ry * 0.1 * k);
+      this.lids.push(lid);
+      this.shut.push(line);
+      into.addChild(lid, line);
+    }
+    const m = rig.mouth;
+    const half = (m.w / 2) * k;
+    this.smile = batched(new Graphics()).moveTo(-half, -0.5 * k).quadraticCurveTo(0, half * 0.75, half, -0.5 * k).stroke(ink);
+    this.open = batched(new Graphics())
+      .ellipse(0, 0, m.w * 0.36 * k, m.w * 0.5 * k).fill(MOUTH).stroke({ color: C.ink, width: 2 * k })
+      .ellipse(0, m.w * 0.24 * k, m.w * 0.2 * k, m.w * 0.16 * k).fill(TONGUE);
+    this.smile.position.set((m.x - head.px) * k, (m.y - head.py) * k);
+    this.open.position.set(this.smile.x, this.smile.y + m.w * 0.12 * k);
+    this.open.alpha = 0;
+    into.addChild(this.smile, this.open);
+    this.sync(0, 0, 0, 0);
+  }
+
+  sync(lookX: number, lookY: number, lid: number, yawn: number): void {
+    const { rig, k } = this;
+    const p = rig.pupil;
+    for (let i = 0; i < this.eyes.length; i++) {
+      const eye = this.eyes[i]!;
+      if (p) {
+        eye.position.set(this.ex[i]! + lookX * p.travelX * k, this.ey[i]! + lookY * p.travelY * k);
+        const cover = this.lids[i]!;
+        cover.scale.y = lid;
+        cover.alpha = lid > 0.03 ? 1 : 0;
+        this.shut[i]!.alpha = clamp01((lid - 0.6) / 0.3);
+      } else {
+        // dot eyes: the dot itself glances and squashes shut
+        eye.position.set(this.ex[i]! + lookX * 1.5 * k, this.ey[i]! + lookY * k);
+        eye.scale.y = 1 - 0.8 * lid;
+      }
+    }
+    const gape = clamp01(yawn * 2.5);
+    this.smile.alpha = 1 - gape;
+    this.open.alpha = gape;
+    this.open.scale.set(0.45 + 0.55 * yawn);
+  }
+}
+
+function part(m: PartMove | undefined, f: keyof PartMove): number {
+  return m?.[f] ?? 0;
+}
+
+/**
+ * A town pickup as it stands on the map, centred on `root`'s origin and `PICKUP_SIZE[id] × scale`
+ * big: its art (or the primitive sketch when the art is missing) and the words written on it.
+ * People (`PERSON_RIGS`) are built from layers and idle: they blink, glance sideways, yawn and have
+ * two beats of their own (`figurePose`). Objects stand still. Built once; `sync` only moves, turns,
+ * scales and fades. The trophy room reuses it at a larger `scale`.
+ */
+export class PickupFigure {
+  readonly root = new Container();
+  /** Footprint in px at this scale. */
+  readonly w: number;
+  readonly h: number;
+  /** True when the figure has moving layers (a person whose art loaded). */
+  readonly alive: boolean;
+  private readonly rig: PersonRig | null = null;
+  private readonly layers: Container[] = [];
+  private readonly baseX: number[] = [];
+  private readonly baseY: number[] = [];
+  private readonly face: Face | null = null;
+  private readonly pose = newFigurePose();
+  private readonly seed: number;
+  private readonly caption: LabelStyle | null = null;
+
+  constructor(assets: Assets, id: MapCollectibleId, private readonly k = 1) {
+    const [w, h] = PICKUP_SIZE[id];
+    this.w = w * k;
+    this.h = h * k;
+    this.seed = figureSeed(id);
+    const rig = PERSON_RIGS[id];
+    const words = CAPTIONS[id];
+    if (rig && rig.parts.every((p) => assets.get(p.key))) {
+      this.rig = rig;
+      for (const p of rig.parts) {
+        const layer = new Container();
+        const sprite = artSprite(assets, p.key, p.w * k, p.h * k)!;
+        sprite.position.set((p.x + p.w / 2 - p.px) * k, (p.y + p.h / 2 - p.py) * k);
+        layer.addChild(sprite);
+        layer.position.set((p.px - w / 2) * k, (p.py - h / 2) * k);
+        this.layers.push(layer);
+        this.baseX.push(layer.x);
+        this.baseY.push(layer.y);
+        if (p.face) this.face = new Face(rig, p, layer, k);
+        this.root.addChild(layer);
+      }
+    } else {
+      const sprite = artSprite(assets, pickupKey(id), this.w, this.h);
+      if (sprite) {
+        this.root.addChild(sprite);
+        this.root.rotation = ART_TILT[id] ?? 0;
+        if (words) {
+          this.caption = { size: words.art.size * k, color: words.color, weight: 900 };
+          const label = new Label(this.caption).set(words.text(), words.art.x * k, words.art.y * k, words.art.maxW * k);
+          label.rotation = words.art.rot;
+          this.root.addChild(label);
+        }
+      } else {
+        const sketch = pickupFallback(id);
+        const f = sketch.scale.x * k;
+        sketch.scale.set(f);
+        this.root.addChild(sketch);
+        if (words) {
+          // the sketch is tilted as a whole: turn the words with it
+          const cos = Math.cos(sketch.rotation);
+          const sin = Math.sin(sketch.rotation);
+          const { x, y } = words.sketch;
+          this.caption = { size: words.sketch.size * f, color: words.color, weight: 900 };
+          const label = new Label(this.caption).set(words.text(), (x * cos - y * sin) * f, (x * sin + y * cos) * f, words.sketch.maxW * f);
+          label.rotation = sketch.rotation;
+          this.root.addChild(label);
+        }
+      }
+    }
+    this.alive = !!this.rig;
+  }
+
+  /** `t` is any clock in seconds that only runs forward (the game's `ctx.time`). */
+  sync(t: number, reducedMotion: boolean): void {
+    const rig = this.rig;
+    if (!rig) return;
+    const k = this.k;
+    const pose = figurePose(t, this.seed, reducedMotion, this.pose, rig.pattern);
+    const lookX = Math.max(-1, Math.min(1, pose.lookX + rig.actBLook.x * pose.actB));
+    const lookY = rig.actBLook.y * pose.actB;
+    const { yawn, actA, actB, wobble } = pose;
+    for (let i = 0; i < this.layers.length; i++) {
+      const p = rig.parts[i]!;
+      const layer = this.layers[i]!;
+      layer.x = this.baseX[i]! + k * (part(p.look, 'dx') * lookX + part(p.yawn, 'dx') * yawn + part(p.actA, 'dx') * actA + part(p.actB, 'dx') * actB + part(p.wobble, 'dx') * wobble);
+      layer.y = this.baseY[i]! + k * (part(p.look, 'dy') * lookX + part(p.yawn, 'dy') * yawn + part(p.actA, 'dy') * actA + part(p.actB, 'dy') * actB + part(p.wobble, 'dy') * wobble);
+      layer.rotation = part(p.look, 'rot') * lookX + part(p.yawn, 'rot') * yawn + part(p.actA, 'rot') * actA + part(p.actB, 'rot') * actB + part(p.wobble, 'rot') * wobble;
+      layer.scale.set(1 + part(p.yawn, 'scale') * yawn + part(p.actA, 'scale') * actA + part(p.actB, 'scale') * actB + part(p.wobble, 'scale') * wobble);
+    }
+    this.face?.sync(lookX, lookY, Math.max(pose.lid, rig.actALid * actA), yawn);
+  }
+}
+
+// ---------------------------------------------------------------- on the map
+
+const TAG = { size: 14, color: C.paperInk, weight: 800, align: 'left' } as const;
+const TAG_H = 26;
+/** The name tag shows within this distance of the saucer, fading in over the last `TAG_FADE` px. */
+const TAG_NEAR = 260;
+const TAG_FADE = 40;
+
+/**
+ * What a pickup is called: a small paper tag under it while the saucer is near. The flight view
+ * puts it in its FLIGHT_BUBBLES layer (above the map, under the saucer).
+ */
+class NameTag {
+  readonly root = new Container();
+  readonly w: number;
+  readonly h = TAG_H + 8;
+  /** The pill and its words: slid sideways when the pickup is near the edge of the screen. */
+  private readonly plate = new Container();
+
+  constructor(private readonly x: number, y: number, name: string) {
+    const text = Math.min(190, measure(name, TAG.size, TAG.weight));
+    const w = this.w = text + 40;
+    this.root.position.set(x, y);
+    this.plate.addChild(
+      panelPath(batched(new Graphics()), -w / 2, 8, w, TAG_H, { fill: C.paper, r: TAG_H / 2, lineW: 2.5, shadow: 3 })
+        // the mint diamond of the minimap mark
+        .poly([-w / 2 + 16, 14.5, -w / 2 + 22.5, 21, -w / 2 + 16, 27.5, -w / 2 + 9.5, 21]).fill(C.mintDeep).stroke({ color: C.ink, width: 1.5 }),
+      new Label(TAG).set(name, -w / 2 + 28, 8 + TAG_H / 2, text),
+    );
+    // a notch pointing up at the pickup
+    this.root.addChild(this.plate, batched(new Graphics()).poly([-6, 9.5, 0, 1, 6, 9.5]).fill(C.paper));
+    this.root.alpha = 0;
+    this.root.visible = false;
+  }
+
+  /** How far the pill is slid from under the pickup. */
+  get shift(): number {
+    return this.plate.x;
+  }
+
+  /**
+   * `d` is how far the saucer is; `lock` the hover progress (the tag gives way to the lock ring);
+   * `camX` the left edge of the view, so the pill stays on screen.
+   */
+  sync(present: boolean, d: number, lock: number, reduced: boolean, camX: number): void {
+    const near = reduced ? Number(d < TAG_NEAR - TAG_FADE / 2) : clamp01((TAG_NEAR - d) / TAG_FADE);
+    const a = present ? near * clamp01(1 - lock * 4) : 0;
+    const on = a > 0.01;
+    // shown or not is a real state change; the fade is alpha
+    if (this.root.visible !== on) this.root.visible = on;
+    if (!on) return;
+    this.root.alpha = a;
+    const half = this.w / 2 + 6;
+    const free = this.w / 2 - 16; // the notch stays on the pill
+    const want = Math.max(camX + half, Math.min(camX + VIEW_W - half, this.x)) - this.x;
+    this.plate.x = Math.max(-free, Math.min(free, want));
+  }
+}
 
 const SHOUT = { size: 16, color: C.paperInk, weight: 900, italic: true } as const;
 
@@ -284,46 +553,84 @@ class PickupShout {
 
 export class MapCollectibleView {
   readonly root = new Container();
-  /** The window shout (see PickupShout), for the flight's bubble layer; null when the pickup has none. */
-  readonly shout: Container | null;
+  /** The window shout (see PickupShout) and the name tag, for the flight's bubble layer. */
+  readonly bubbles = new Container();
+  private readonly figure: PickupFigure;
   private readonly shouter: PickupShout | null;
+  private readonly tag: NameTag;
   private readonly glint = sparkle(15);
   private readonly lock = new Container();
   private readonly progress: Graphics[] = [];
+  /** How far the prop, its lock ring and its tag reach from the pickup's centre (culling). */
+  private readonly reach: number;
 
-  constructor(private readonly pickup: MapCollectible) {
+  constructor(assets: Assets, private readonly pickup: MapCollectible) {
     const { id, x, y } = pickup.def;
-    const line = (tr().mapCollectibles.items[id] as { shout?: string }).shout;
+    const words = tr().mapCollectibles.items[id];
+    const line = (words as { shout?: string }).shout;
     this.shouter = pickup.def.shout && line ? new PickupShout(pickup.def.shout, line) : null;
-    this.shout = this.shouter?.root ?? null;
+    this.figure = new PickupFigure(assets, id);
+    const { w, h } = this.figure;
+    this.tag = new NameTag(x, y + h / 2 + 2, words.name);
+    if (this.shouter) this.bubbles.addChild(this.shouter.root);
+    this.bubbles.addChild(this.tag.root);
+    // the lock ring goes round the whole prop
+    const ringR = Math.max(56, Math.max(w, h) / 2 + 8);
+    this.reach = Math.max(ringR + 8, h / 2 + 2 + this.tag.h, this.tag.w / 2);
     this.root.position.set(x, y);
-    this.glint.position.set(29, -30);
-    this.root.addChild(makeProp[id](), this.glint, this.lock);
+    this.glint.position.set(w / 2 - 6, -h / 2 + 8);
+    this.root.addChild(this.figure.root, this.glint, this.lock);
     for (let i = 0; i < SEGMENTS; i++) {
       const angle = -Math.PI / 2 + i * Math.PI * 2 / SEGMENTS;
       const end = angle + 0.39;
-      const slot = arc(batched(new Graphics()), PICKUP_VIEW_R - 4, angle, end)
+      const slot = arc(batched(new Graphics()), ringR, angle, end)
         .stroke({ color: C.ink, width: 8, cap: 'round' });
-      const fill = arc(batched(new Graphics()), PICKUP_VIEW_R - 4, angle, end)
+      const fill = arc(batched(new Graphics()), ringR, angle, end)
         .stroke({ color: C.mint, width: 4, cap: 'round' });
       this.progress.push(fill);
       this.lock.addChild(slot, fill);
     }
   }
 
-  sync(cam: CameraView, t: number, reduced: boolean): void {
+  /** `sx`, `sy`: where the saucer is (the name tag shows when it is near). */
+  sync(cam: CameraView, t: number, reduced: boolean, sx: number, sy: number): void {
     const { x, y } = this.pickup.def;
-    this.shouter?.sync(cam, t, reduced, !this.pickup.collected);
+    const present = !this.pickup.collected;
+    this.shouter?.sync(cam, t, reduced, present);
     // collected or off-screen is a real state change: `visible` (alpha 0 would still batch and draw)
-    const show = !this.pickup.collected && cam.sees(x, y, PICKUP_VIEW_R);
+    const show = present && cam.sees(x, y, this.reach);
     if (this.root.visible !== show) this.root.visible = show;
+    this.tag.sync(show, Math.hypot(sx - x, sy - y), this.pickup.progress, reduced, cam.x);
     if (!show) return;
+    this.figure.sync(t, reduced);
     this.glint.alpha = reduced ? 0.85 : 0.72 + 0.22 * Math.sin(t * 4);
     const filled = this.pickup.progress * SEGMENTS;
     this.lock.alpha = Math.min(1, filled);
     for (let i = 0; i < SEGMENTS; i++) {
       this.progress[i]!.alpha = 0.25 + 0.75 * Math.max(0, Math.min(1, filled - i));
     }
+  }
+
+  /**
+   * The screen box route pills keep out of: the prop and, while it shows, its name tag. False when
+   * the pickup is not on screen.
+   */
+  avoid(b: Box, camX: number, camY: number): boolean {
+    if (!this.root.visible) return false;
+    const { w, h } = this.figure;
+    b.x = this.root.x - camX - w / 2 - 8;
+    b.y = this.root.y - camY - h / 2 - 8;
+    b.w = w + 16;
+    b.h = h + 16;
+    if (this.tag.root.visible) {
+      // widen to the pill, wherever it slid
+      const left = Math.min(b.x, this.root.x + this.tag.shift - camX - this.tag.w / 2 - 4);
+      const right = Math.max(b.x + b.w, this.root.x + this.tag.shift - camX + this.tag.w / 2 + 4);
+      b.x = left;
+      b.w = right - left;
+      b.h += this.tag.h;
+    }
+    return true;
   }
 }
 

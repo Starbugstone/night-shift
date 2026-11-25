@@ -1,30 +1,38 @@
 # Night Shift · Trophy Room (Evidence Locker)
 
-The **Trophy Room** (*Bureau Evidence Locker · Warehouse 4* / *Scellés du Bureau · Entrepôt 4*) displays every abduction souvenir the player has hauled back to the saucer across all shifts. It turns the funny loose props scattered through rooms into a browseable collection with Bureau catalogue notes.
+The **Trophy Room** (*Bureau Evidence Locker · Warehouse 4* / *Scellés du Bureau · Entrepôt 4*) has two wings switched by a one-thumb tab bar at the top:
+
+1. **Room 1 — Souvenirs** (*Warehouse 4* / *Entrepôt 4*): every abduction souvenir hauled back to the saucer from building interiors (35 exhibits across L1–L8).
+2. **Room 2 — Field finds** (*Field Detours Annex · Warehouse 4B* / *Annexe Terrain · Entrepôt 4B*): every optional town object or cameo character picked up outdoors on flight maps (7 exhibits across L2–L8, iterated dynamically from `LEVELS`).
 
 ## Design goals
 
-- **Phone first (540×960 logical, tuned for 375×690 CSS px):** one-thumb vertical scrolling with momentum, big tap targets (`148 × 120` logical px ≈ `103 × 82` CSS px), and a single-tap exhibit card with no awkward tiny close icons.
-- **Bureau tone (v4 PG-13 leaning 16):** every exhibit carries a dry, cheeky Bureau catalogue description in English and idiomatic French (adapting puns and international pop-culture nods rather than translating literally).
-- **Honest collection progress:** unfound items display a crisp dark silhouette of the real prop, `???`, and the shift location they come from, so players can hunt missing souvenirs by trying the alternate entry route into each building.
-- **Zero-friction scaling:** one room for now (35 exhibits across L1–L8); automatic wing paging once the catalogue exceeds `ROOM_CAPACITY = 48`.
+- **Phone first (540×960 logical, tuned for 375×690 CSS px):** one-thumb vertical scrolling with momentum, a top two-tab room switcher (`Souvenirs · N/35` | `Field finds · N/7`), big tap targets (`148 × 120` logical px in Room 1, `492 × 118` full-width showcase cards in Room 2), and a single-tap exhibit card with no awkward tiny close icons.
+- **Bureau tone (v4 PG-13 leaning 16):** every exhibit carries a dry, cheeky Bureau catalogue description in English and idiomatic French (distinct from Vrell's shift-report comments, adapting puns and international pop-culture nods rather than translating literally).
+- **Honest collection progress:** unfound items display a crisp dark silhouette of the real prop, `???`, and a non-spoiling location/memo hint.
+- **Living cameos in Room 2:** found town pickups render through `PickupFigure`, so people (the volunteer astronomer, Krix & his toaster) stay animated in their display vitrines and detail cards (blinking, glancing sideways, yawning — disabled cleanly under `reducedMotion`); unfound silhouettes remain still.
+- **Zero-friction scaling:** Room 1 fits all 35 souvenirs in one wing (`ROOM_CAPACITY = 48` before automatic wing paging). Room 2 iterates `LEVELS` and `map.collectible`, so future levels' pickups appear automatically.
 
 ## Navigation & entry points
 
-- **Title screen (`src/ui/title.ts`):** a secondary `Trophy room · N/35` button sits directly beneath `Clock in`, clear of the bottom utility bar.
-- **Work Orders (`src/ui/workorders.ts`):** a compact trophy-cup icon button sits top-right (symmetrical with the top-left `‹` back button) so players can check newly filed souvenirs immediately after a shift.
+- **Title screen (`src/ui/title.ts`):** a secondary `Trophy room · N/42` button (combined souvenirs + town finds) sits directly beneath `Clock in`, clear of the bottom utility bar.
+- **Work Orders (`src/ui/workorders.ts`):** a compact trophy-cup icon button sits top-right (symmetrical with the top-left `‹` back button) so players can check newly filed souvenirs and field finds immediately after a shift.
 - **Back button:** returns to whichever screen opened the Trophy Room (`title` or `workorders`).
-- **Debug hook:** `window.__nightShift.goto('trophies')` opens the room directly for automated checks and evidence capture.
+- **Debug hook:** `window.__nightShift.goto('trophies')` opens the room directly; `debug.setRoom('town')` and `debug.selectTown(id)` inspect Room 2 for automated checks and evidence capture.
 
 ## Layout & visual hierarchy
 
-### 1. Fixed header (`y = 0..176`)
+### 1. Fixed header (`y = 0..216`)
 
-- Top-left: `‹` back button (`16, 18, 64, 60`).
-- Title (`TROPHY ROOM` / `SALLE DES TROPHÉES`) and subtitle (`Bureau Evidence Locker · Warehouse 4` / `Scellés du Bureau · Entrepôt 4`).
-- Summary bar (`x = 24, y = 102, w = 492, h = 58`):
-  - Left: collection counter (`12 / 35 FILED`, switching to amber gold `35 / 35 COMPLETE!` at 100%).
-  - Right: progress bar (mint fill, gold at 100%) and secondary caption showing total items hauled across runs (`29 hauls total`) or a tap/hunt prompt when empty.
+- Top-left: `‹` back button (`16, 16, 64, 58`).
+- Title (`TROPHY ROOM` / `SALLE DES TROPHÉES`) and room-aware subtitle (`Bureau Evidence Locker · Warehouse 4` in Room 1; `Field Detours Annex · Warehouse 4B` in Room 2).
+- **Room switcher (`y = 88..136`, two `240 × 48` pill tabs):**
+  - Left: `Souvenirs · N/35` / `Scellés · N/35`
+  - Right: `Field finds · N/7` / `Trouvailles · N/7`
+  - Active tab uses the bright mint `'primary'` pill; inactive tab uses dark `'ghost'`.
+- **Summary bar (`x = 24, y = 146, w = 492, h = 58`):**
+  - Room 1: trophy-cup icon, `N / 35 FILED` (gold `35 / 35 COMPLETE!` at 100%), progress bar, total hauls or empty hint + tap hint.
+  - Room 2: 4-point mint glint badge, `N / 7 LOGGED` (gold `7 / 7 COMPLETE!` at 100%), progress bar, remaining count / empty hint / completion line + tap hint.
 
 ### 2. Scrollable display cases (`y = 180..960`, masked)
 
@@ -55,26 +63,60 @@ Tapping any slot freezes background scroll and opens a Bureau Exhibit Tag modal 
 
 ## Save data & Town pickups
 
-The Trophy Room reads `SaveData.trophies` (`Record<string, TrophyEntry>` in `src/levels/save.ts`, populated by `recordTrophies` in `src/levels/progress.ts`). Unknown or retired item ids are already stripped by `validateSave`.
+- **Room 1 (Souvenirs)** reads `SaveData.trophies` (`Record<string, TrophyEntry>` in `src/levels/save.ts`, populated by `recordTrophies` in `src/levels/progress.ts`). Unknown or retired item ids are already stripped by `validateSave`.
+- **Room 2 (Field finds)** reads `SaveData.levels[levelId].mapCollectible` (`docs/GDD-8-map-collectibles.md`) read-only: a town pickup counts as found when `save.levels[levelId].mapCollectible === pickup.id`.
+- **Title screen counter:** `trophyProgress(save)` sums both rooms (`souvenirs + town finds`, e.g. `N/42`), while the top room switcher inside the Trophy Room breaks them out per wing (`Souvenirs · N/35` | `Field finds · N/7`).
 
-Town pickups (`LevelProgress.mapCollectible`, `docs/GDD-8-map-collectibles.md`) remain a separate system reported on the shift form; keeping Warehouse 4 focused on abduction souvenirs keeps the `N/35` locker count 1-to-1 with `SaveData.trophies`. A future "Field Detours" annex shelf can be added beneath L8 if wanted.
+## Room 2 — Field Finds Annex (`Warehouse 4B`)
+
+Displays every level's optional map collectible (`LEVELS` iterated dynamically, ordered by level L2–L8; L1 has none):
+
+- **Full-width display cards (`x = 24, w = 492, h = 118`, `12 px` gap):**
+  - Left illuminated vitrine (`114 × 94` px): found pickups render through `PickupFigure` (people such as Krix and the volunteer astronomer stay animated — blinking, looking sideways, yawning; objects stay still or have a subtle effect; `reducedMotion` keeps everything still). Unfound pickups render as a still dark-lavender silhouette.
+  - Right info column:
+    - Found: `#0N · <location>`, localized pickup name (`tr().mapCollectibles.items[id].name`), and the funny Bureau status line (`tr().trophies.town.statuses[id]`).
+    - Unfound: `#0N · <location>`, `???`, and a vague, non-spoiling memo hint (`tr().trophies.town.hints[id]`).
+- **Detail card (on tap):**
+  - Enlarged illuminated vitrine (`284 × 166` px) showcasing the larger animated `PickupFigure` (or still silhouette when unfound).
+  - Header badge (`FIELD FIND #01`..`#07` / `UNFILED FIND`) + level title.
+  - Localized name (or `???`) and catchy EN + FR Bureau catalogue description (distinct from Vrell's shift-report comments).
+  - Two-row provenance inset (no star status shown):
+    - **Found in:** `#0N · <location>`
+    - **Status:** funny Bureau status line (or *Still out in town — hover to collect* when unfound).
+
+### Complete Field Finds catalogue (L2–L8 · 7 items)
+
+| # | Level | ID | Art key | Bureau status (EN) | EN catalogue note |
+| --- | --- | --- | --- | --- | --- |
+| 01 | L2 · Spin City | `slipper_flyer` | `flight/pickup_slipper_flyer` | Pinned to Vrell's corkboard | Photocopied in frantic Comic Sans with one tear-off tab already missing. Whoever took that number is about to be very disappointed. |
+| 02 | L3 · Maple Court | `astronomer` | `flight/pickup_astronomer` | Debriefed; refuses to leave | Spent twelve years waiting for a cosmic signal; got beamed up mid-sip of lukewarm cocoa. Still insists we check out Vega next. |
+| 03 | L4 · Grimsby Centre | `saucer_photo` | `flight/pickup_saucer_photo` | Redacted · Eyes Only | Out of focus, tilted twenty degrees, and somehow still clearer than every UFO tabloid since 1947. Legal paid cash to bury the negatives. |
+| 04 | L5 · Barnacle Bay | `obelisk_crate` | `flight/pickup_obelisk_crate` | Impounded · Mildly humming | Stencilled "FRAGILE — DO NOT EVOLVE NEAR". Emits a faint choir hum whenever anyone walks past with a crowbar or a bone. |
+| 05 | L6 · St. Mildred's | `defibrillator` | `flight/pickup_defibrillator` | Charged · Rubber gloves only | Stolen off a crash cart and relabelled "FOR THE MACHINE" in red marker. Propulsion swears it jump-started a dead saucer battery. |
+| 06 | L7 · SS Buffet Royale | `shrimp_tower` | `flight/pickup_shrimp_tower` | Refrigerated, under protest | Three tiers of all-you-can-eat crustacean arrogance on crushed ice. Zib claims it jumped into the tractor beam of its own free will. |
+| 07 | L8 · Patent Valley | `krix` | `flight/pickup_krix` | Under HR review | Turned an unpaid Bureau internship into a three-million-year tech monopoly. Still insists the toaster is a "paradigm-shifting monolith". |
 
 ## Scaling & multi-room threshold
 
-- **Threshold: `ROOM_CAPACITY = 48` exhibits per room** (up to 16 rows of 3, ~3.4 portrait screens of scroll).
-- At **35** souvenirs (L1–L8), everything fits comfortably in **1 room** (~2.75 screens of scroll) with no pagination clutter.
-- `buildTrophyPages(sections, ROOM_CAPACITY)` packs whole level cases sequentially into wings so a level is never split across two rooms. As soon as future levels push the total past **48**, the Trophy Room automatically reveals a compact `‹ Wing 1/2 ›` switcher bar in the header (`LIST_TOP` shifts from `180` to `224`) and keeps every wing within the single-room scroll budget.
+- **Threshold: `ROOM_CAPACITY = 48` exhibits per Souvenirs wing** (up to 16 rows of 3, ~3.4 portrait screens of scroll).
+- At **35** souvenirs (L1–L8), Room 1 fits comfortably in **1 wing** (~2.75 screens of scroll) with no pagination clutter.
+- `buildTrophyPages(sections, ROOM_CAPACITY)` packs whole level cases sequentially into wings so a level is never split across two pages. As soon as future levels push Souvenirs past **48**, Room 1 automatically reveals a compact `‹ Wing 1/2 ›` switcher bar under the summary bar (`souvenirListTop` shifts from `216` to `260`).
 
 ## Hard rule for new levels and items
 
 Enforced automatically by **`tests/ui-trophies.test.ts`**:
 
 1. **Every souvenir any room can yield** — iterating `ROOMS` (with `SOUVENIR_SWAPS` applied) and `FIELD_CHECK_ROOM`, never a hard-coded list — **must have:**
-   - a slot in the Trophy Room catalogue (`buildTrophyCatalog()`),
+   - a slot in the Room 1 catalogue (`buildTrophyCatalog()`),
    - a non-empty singular/plural entry in `tr().items` (EN & FR),
-   - a non-empty catchy description in `tr().trophies.descriptions` (EN & FR, distinct in FR and short enough to fit the detail card cleanly),
+   - a non-empty catchy description in `tr().trophies.descriptions` (EN & FR, short enough to fit the detail card cleanly),
    - a valid art key in `ART` (with a primitive/painted fallback in `src/ui/views/trophy-art.ts`).
-2. **Room capacity & geometry:** every page produced by `buildTrophyPages` respects `ROOM_CAPACITY`, stays within one room while `total <= 48`, has zero overlapping slots, and keeps every slot inside the 540 px portrait width.
+2. **Every level's map collectible** — iterating `LEVELS`, never a hard-coded list — **must have:**
+   - a slot in the Room 2 catalogue (`buildTownCatalog()`),
+   - a non-empty EN & FR name in `tr().mapCollectibles.items[id]`,
+   - a non-empty catchy EN & FR description in `tr().trophies.town.descriptions[id]` (distinct from shift-report comments and fitting cleanly in the detail card),
+   - a non-empty funny Bureau status line in `tr().trophies.town.statuses[id]` and a vague non-spoiling hint in `tr().trophies.town.hints[id]`.
+3. **Room capacity & geometry:** every page produced by `buildTrophyPages` respects `ROOM_CAPACITY`, stays within one wing while `total <= 48`, and both Room 1 and Room 2 have zero overlapping slots and keep every slot inside the 540 px portrait width.
 
 ## Complete exhibit catalogue (L1–L8 · 35 items)
 

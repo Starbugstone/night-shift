@@ -83,7 +83,7 @@ export class TutorialFlightView implements SceneView {
     this.props = new PropLayer(assets, m.props);
     this.shadows = new ShadowsView(assets, [m.target, ...m.props], SHADOW_OFF);
     this.eggs = new EggView(m.props); // v4 easter eggs
-    this.collectible = s.collectible ? new MapCollectibleView(s.collectible) : null;
+    this.collectible = s.collectible ? new MapCollectibleView(assets, s.collectible) : null;
     this.pickupToast = s.collectible ? new MapCollectibleToast(s.collectible.def.id) : null;
     this.target = new TargetBuilding(assets, m.target);
     this.saucer = new SaucerView(assets);
@@ -130,7 +130,7 @@ export class TutorialFlightView implements SceneView {
     const bubbles = new Container();
     bubbles.label = FLIGHT_BUBBLES;
     for (const d of this.dogs) bubbles.addChild(d.bark, d.question, d.sleep);
-    if (this.collectible?.shout) bubbles.addChild(this.collectible.shout);
+    if (this.collectible) bubbles.addChild(this.collectible.bubbles);
     this.upperWorld.addChild(bubbles, abovePlayer(this.saucer.root), abovePlayer(this.fx));
 
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
@@ -168,7 +168,7 @@ export class TutorialFlightView implements SceneView {
     this.groundProps.sync(cam);
     this.props.sync(cam);
     this.eggs.sync(cam, t, rm); // v4 easter eggs
-    this.collectible?.sync(cam, t, rm);
+    this.collectible?.sync(cam, t, rm, s.saucer.x, s.saucer.y);
     this.pickupToast?.sync(s.collectibleToastT, rm);
     this.shadows.sync(cam, 0);
     this.target.sync(false, t, rm);

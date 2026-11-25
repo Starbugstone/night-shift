@@ -1,12 +1,15 @@
 // v4 trophy room: cached Pixi textures for souvenir exhibits (full-colour art or painted fallback),
-// crisp dark-lavender silhouettes for unfound slots, and the Work Orders trophy-cup icon.
+// animated town pickup figures via Fable's `PickupFigure` (`src/flight/views/collectible.ts`),
+// crisp dark-lavender silhouettes for unfound slots, and the Work Orders trophy-cup / Field Finds icons.
 // Canvas 2D runs only inside `paintedTexture` painters (never per frame).
-import type { Texture } from 'pixi.js';
-import type { Assets } from '../../contracts';
+import type { Container, Texture } from 'pixi.js';
+import type { Assets, MapCollectibleId } from '../../contracts';
 import { paintCaveProp } from '../../abduct/monolith-art';
 import { paintSouvenir } from '../../abduct/souvenir-art';
 import { INK } from '../../abduct/views/pieces';
 import { artTexture, paintedTexture } from '../../core/gfx/textures';
+import { PICKUP_SIZE, pickupKey } from '../../flight/pickup-rig';
+import { PickupFigure } from '../../flight/views/collectible';
 import { C } from '../theme';
 
 const TAU = Math.PI * 2;
@@ -167,6 +170,136 @@ export function trophySilhouetteTexture(assets: Assets, key: string, w: number, 
   });
 }
 
+// ---------------------------------------------------------------- Room 2 (Field finds) figures & silhouettes
+
+/** Contract implemented by `PickupFigure` in `src/flight/views/collectible.ts`. */
+export interface PickupFigureHandle {
+  readonly root: Container;
+  sync(t: number, reducedMotion: boolean): void;
+}
+
+/** Compute uniform scale for a `PickupFigure` to fit cleanly inside `maxW × maxH`. */
+export function townPickupScale(id: MapCollectibleId, maxW: number, maxH: number, maxScale: number): number {
+  const [aw, ah] = PICKUP_SIZE[id];
+  return Math.min(maxW / Math.max(1, aw), maxH / Math.max(1, ah), maxScale);
+}
+
+/** Fit a town pickup's footprint proportionally into `maxW × maxH` (for still silhouettes). */
+export function townPickupFitSize(id: MapCollectibleId, maxW: number, maxH: number, maxScale: number): { w: number; h: number } {
+  const [aw, ah] = PICKUP_SIZE[id];
+  return fitArtSize(aw, ah, maxW, maxH, maxScale);
+}
+
+/** Paint a crisp Canvas 2D fallback shape for an unfound town pickup silhouette when SVG art is missing. */
+function paintTownPickupShape(g: CanvasRenderingContext2D, id: MapCollectibleId, w: number, h: number): void {
+  const s = Math.min(w, h) / 60;
+  g.save();
+  g.translate(w / 2, h / 2);
+  g.scale(s, s);
+  g.fillStyle = SILHOUETTE_COLOR;
+
+  switch (id) {
+    case 'slipper_flyer': {
+      g.rotate(-0.12);
+      g.beginPath();
+      g.roundRect(-20, -24, 40, 48, 3);
+      g.fill();
+      g.beginPath();
+      g.arc(0, -23, 5, 0, TAU);
+      g.fill();
+      break;
+    }
+    case 'astronomer': {
+      g.beginPath();
+      g.roundRect(-25, -18, 50, 36, 7);
+      g.fill();
+      g.beginPath();
+      g.ellipse(-11, -8, 14, 11, 0, 0, TAU);
+      g.fill();
+      g.beginPath();
+      g.arc(11, -5, 9, 0, TAU);
+      g.fill();
+      break;
+    }
+    case 'saucer_photo': {
+      g.rotate(0.08);
+      g.beginPath();
+      g.roundRect(-24, -20, 48, 40, 4);
+      g.fill();
+      break;
+    }
+    case 'obelisk_crate': {
+      g.rotate(-0.08);
+      g.beginPath();
+      g.roundRect(-22, -18, 44, 36, 3);
+      g.fill();
+      break;
+    }
+    case 'defibrillator': {
+      g.rotate(0.06);
+      g.beginPath();
+      g.roundRect(-22, -16, 44, 32, 6);
+      g.fill();
+      break;
+    }
+    case 'shrimp_tower': {
+      g.beginPath();
+      g.roundRect(-23, -19, 46, 38, 7);
+      g.fill();
+      g.beginPath();
+      g.arc(0, 0, 18, 0, TAU);
+      g.fill();
+      break;
+    }
+    case 'krix': {
+      g.beginPath();
+      g.roundRect(-16, 2, 32, 22, 8);
+      g.fill();
+      g.beginPath();
+      g.ellipse(0, -8, 13, 12, 0, 0, TAU);
+      g.fill();
+      g.lineWidth = 5;
+      g.strokeStyle = SILHOUETTE_COLOR;
+      g.lineCap = 'round';
+      g.beginPath();
+      g.moveTo(-6, -15);
+      g.lineTo(-14, -24);
+      g.moveTo(6, -15);
+      g.lineTo(14, -24);
+      g.stroke();
+      break;
+    }
+  }
+  g.restore();
+}
+
+/** Crisp dark-lavender silhouette texture for an unfound town pickup (still, never animated). */
+export function townPickupSilhouetteTexture(assets: Assets, id: MapCollectibleId, w: number, h: number): Texture {
+  const key = pickupKey(id);
+  const img = assets.get(key);
+  const hasImg = !!img && img.complete && (img.naturalWidth > 0 || img.width > 0);
+  return paintedTexture(`trophy|town-sil|${hasImg ? 1 : 0}|${id}|${w}x${h}`, w, h, (g, ww, hh) => {
+    if (hasImg && img) {
+      try {
+        g.drawImage(img, 0, 0, ww, hh);
+      } catch {
+        paintTownPickupShape(g, id, ww, hh);
+      }
+    } else {
+      paintTownPickupShape(g, id, ww, hh);
+    }
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = SILHOUETTE_COLOR;
+    g.fillRect(0, 0, ww, hh);
+    g.globalCompositeOperation = 'source-over';
+  });
+}
+
+/** Create an animated `PickupFigure` for a found town pickup in the Trophy Room. */
+export function createTownPickupFigure(assets: Assets, id: MapCollectibleId, scale: number): PickupFigureHandle {
+  return new PickupFigure(assets, id, scale);
+}
+
 /** Crisp Bureau trophy-cup icon (for Work Orders header button & Trophy Room badges). */
 export function trophyCupTexture(size: number, color: string = C.amberHi): Texture {
   return paintedTexture(`icon|trophy-cup|${size}|${color}`, size, size, (g, w, h) => {
@@ -216,6 +349,39 @@ export function trophyCupTexture(size: number, color: string = C.amberHi): Textu
     g.moveTo(s * 0.34, s * 0.25);
     g.quadraticCurveTo(s * 0.35, s * 0.44, s * 0.42, s * 0.52);
     g.stroke();
+    g.restore();
+  });
+}
+
+/** Crisp 4-point mint glint / compass-diamond badge icon for the Field Finds annex summary bar. */
+export function fieldFindBadgeTexture(size: number, color: string = C.mint): Texture {
+  return paintedTexture(`icon|field-find|${size}|${color}`, size, size, (g, w, h) => {
+    const cx = w / 2;
+    const cy = h / 2;
+    const r = Math.min(w, h) * 0.42;
+    g.save();
+    g.lineJoin = 'round';
+    g.lineWidth = Math.max(2, size * 0.075);
+    g.strokeStyle = C.ink;
+    g.fillStyle = color;
+    // Outer Bureau compass diamond
+    g.beginPath();
+    g.moveTo(cx, cy - r);
+    g.lineTo(cx + r * 0.34, cy - r * 0.34);
+    g.lineTo(cx + r, cy);
+    g.lineTo(cx + r * 0.34, cy + r * 0.34);
+    g.lineTo(cx, cy + r);
+    g.lineTo(cx - r * 0.34, cy + r * 0.34);
+    g.lineTo(cx - r, cy);
+    g.lineTo(cx - r * 0.34, cy - r * 0.34);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    // Bright centre dot
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(cx, cy, r * 0.18, 0, TAU);
+    g.fill();
     g.restore();
   });
 }

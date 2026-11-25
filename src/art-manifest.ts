@@ -596,6 +596,30 @@ export const ART: Record<string, ArtSpec> = {
   'flight/gullwing_car': { w: 144, h: 80 }, // L2 back lot: unbadged stainless two-seater from above at map-car scale, nose east (right), one gull-wing door raised, round rear lamps, no logo/plate/grille; car only, transparent bg (code draws the scorch streaks behind and the soft cockpit glow at 52% across)
   'flight/iceberg': { w: 120, h: 90 }, // L7 off the port bow: a small, chunky iceberg from above, pale cyan facets on dark sea, a paper napkin frozen to one edge; no wreck, no flags, soft foam ring baked in
   'room/blue_heart_pendant': { w: 40, h: 40 }, // L7 Captain (mast route) souvenir, side view resting on its bottom edge: squat blue enamel heart on a gold chain coiled behind it, tiny PREMIUM DECK PASS stamp; no diamond facets or halo
+
+  // ---- v4 map pickups (docs/GDD-8-map-collectibles.md): the optional town pickup of each map, drawn
+  // three-quarter from the south (a standing prop or person, soft ground shadow baked in), about the
+  // saucer's size so it reads on a phone. One key per MapCollectibleId: `flight/pickup_<id>` is the
+  // whole picture, standing still (the trophy room shows it too). No text in the art: code writes the
+  // flyer header and the crate mark. Sizes are PICKUP_SIZE in src/flight/pickup-rig.ts; a missing
+  // file falls back to `pickupFallback` (src/flight/views/collectible.ts).
+  'flight/pickup_slipper_flyer': { w: 58, h: 86 }, // L2: Doyle's missing-slipper flyer, upright (code tilts it): cream sheet, blank red header band (code writes LOST / PERDU), coral slipper drawing, tear-off tabs with one gone, red pin
+  'flight/pickup_astronomer': { w: 128, h: 112 }, // L3: volunteer astronomer on a camping chair (teal beanie, headphones, orange parka, thermos cup) beside a white dish on a tripod, thermos on the grass
+  'flight/pickup_saucer_photo': { w: 100, h: 108 }, // L4: municipal noticeboard on two posts with a little roof; Mrs. Pruitt's blurry mint saucer photo pinned large, a missing-cat slip beside it
+  'flight/pickup_obelisk_crate': { w: 112, h: 108 }, // L5: open timber crate, black basalt slab with a lilac edge sticking out of the straw, blank red customs label (code writes O™), crowbar
+  'flight/pickup_defibrillator': { w: 116, h: 84 }, // L6: steel trolley with a yellow defibrillator (mint heartbeat trace, red bolt), one paddle on the deck and one dangling, a tag on the handle
+  'flight/pickup_shrimp_tower': { w: 104, h: 116 }, // L7: three silver tiers of coral shrimp on a plum-draped buffet cart, sauce bowl and lemon on top (scripts/art-pickups.mjs)
+  'flight/pickup_krix': { w: 92, h: 116 }, // L8: Krix, Zib's species (jade, two antennae, big eyes) in round spectacles and a black turtleneck, both hands on a chrome toaster
+  // The people's moving layers, cut from the same drawing by scripts/art-pickups.mjs with the boxes
+  // in PERSON_RIGS (src/flight/pickup-rig.ts). The face (eyes, lids, mouth) is drawn by code.
+  'flight/pickup_astronomer_body': { w: 128, h: 112 }, // tripod, chair, legs, parka, far arm, thermos (no head, dish or cup arm)
+  'flight/pickup_astronomer_dish': { w: 82, h: 68 }, // the dish with its feed and signal arcs; turns about the tripod mount
+  'flight/pickup_astronomer_head': { w: 48, h: 48 }, // head, beanie and headphones, no face
+  'flight/pickup_astronomer_arm': { w: 36, h: 36 }, // forearm, hand and steaming thermos cup
+  'flight/pickup_krix_body': { w: 92, h: 60 }, // shadow, turtleneck, feet
+  'flight/pickup_krix_head': { w: 80, h: 68 }, // antennae, head, eye whites, spectacles (no pupils or mouth)
+  'flight/pickup_krix_toast': { w: 36, h: 32 }, // two slices; they rise behind the toaster
+  'flight/pickup_krix_front': { w: 68, h: 42 }, // toaster, sleeves and both hands
 };
 
 /**

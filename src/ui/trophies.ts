@@ -1,8 +1,9 @@
 // v4 trophy room: Bureau Evidence Locker scene + retained PixiJS 8 view.
-// Displays all abduction souvenirs grouped by level/town, with silhouettes for unfound items and
-// a tap-to-inspect Exhibit Tag modal. See docs/GDD-9-trophy-room.md.
+// Room 1 (Souvenirs): abduction souvenirs grouped by level/town.
+// Room 2 (Field finds): town map collectibles ordered by level, with animated figures when found
+// and still silhouettes + vague memo hints when unfound. See docs/GDD-9-trophy-room.md.
 import { Container, Graphics, Sprite, Texture } from 'pixi.js';
-import type { Assets, Scene } from '../contracts';
+import type { Assets, MapCollectibleId, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { easeOutBack, easeOutCubic } from '../core/fx';
@@ -17,22 +18,48 @@ import { Button } from './widgets';
 import { NightSky } from './views/backdrop';
 import { ButtonView } from './views/button';
 import { highlightedPanel } from './views/menu-decor';
-import { fitArtSize, trophyArtTexture, trophyCupTexture, trophySilhouetteTexture } from './views/trophy-art';
+import {
+  createTownPickupFigure,
+  fieldFindBadgeTexture,
+  fitArtSize,
+  townPickupFitSize,
+  townPickupScale,
+  townPickupSilhouetteTexture,
+  trophyArtTexture,
+  trophyCupTexture,
+  trophySilhouetteTexture,
+  type PickupFigureHandle,
+} from './views/trophy-art';
 import {
   CASE_HDR_H,
   CASE_W,
   SLOT_H,
   SLOT_W,
+  TOWN_CARD_H,
+  TOWN_CARD_W,
   buildShelfState,
+  buildTownShelfState,
+  hitTestTownRoom,
   hitTestTrophyPage,
   itemTitle,
+  layoutTownRoom,
   layoutTrophyPage,
   provenanceText,
   shortLocation,
+  townCatalog,
+  townDescription,
+  townHint,
+  townItemTitle,
+  townStatus,
   trophyDescription,
   type PageLayout,
   type SectionLayout,
   type SlotRect,
+  type TownPageLayout,
+  type TownShelfState,
+  type TownSlotRect,
+  type TownTrophySlotState,
+  type TrophyRoomTab,
   type TrophyShelfState,
   type TrophySlotState,
 } from './trophy-data';
@@ -40,7 +67,11 @@ import { fmt, plural, tr } from '../i18n';
 
 export type TrophyReturnTarget = 'title' | 'workorders';
 
-const HEADER_BASE_H = 176;
+export type SelectedExhibit =
+  | { readonly kind: 'souvenir'; readonly item: TrophySlotState }
+  | { readonly kind: 'town'; readonly item: TownTrophySlotState };
+
+const HEADER_BASE_H = 216;
 const WING_BAR_H = 44;
 const MODAL_X = 32;
 const MODAL_Y = 166;
@@ -49,19 +80,26 @@ const MODAL_H = 608;
 const UNKNOWN_TAG = '???';
 
 export interface TrophiesDebug {
+  readonly room: TrophyRoomTab;
   readonly foundCount: number;
   readonly totalCount: number;
+  readonly townFoundCount: number;
+  readonly townTotalCount: number;
   readonly pageIndex: number;
   readonly pageCount: number;
   readonly selectedId: string | null;
+  setRoom(room: TrophyRoomTab): void;
   select(itemId: string): boolean;
+  selectTown(id: MapCollectibleId): boolean;
   close(): void;
   scrollTo(y: number): void;
 }
 
 export class TrophiesScene implements Scene {
   t = 0;
+  activeRoom: TrophyRoomTab = 'souvenirs';
   scroll = 0;
+  private readonly scrollByRoom: Record<TrophyRoomTab, number> = { souvenirs: 0, town: 0 };
   private vel = 0;
   private dragging = false;
   private tracking = false;
@@ -72,12 +110,17 @@ export class TrophiesScene implements Scene {
 
   readonly shelf: TrophyShelfState;
   readonly layouts: readonly PageLayout[];
-  readonly listTop: number;
+  readonly townShelf: TownShelfState;
+  readonly townLayout: TownPageLayout;
+  readonly souvenirListTop: number;
+  readonly townListTop = HEADER_BASE_H;
   pageIndex = 0;
-  selected: TrophySlotState | null = null;
+  selected: SelectedExhibit | null = null;
   modalT = 0;
 
-  readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
+  readonly back = new Button(16, 16, 64, 58, '‹', 'ghost', 40);
+  readonly tabSouvenirs = new Button(24, 88, 240, 48, '', 'primary', 17);
+  readonly tabTown = new Button(276, 88, 240, 48, '', 'ghost', 17);
   readonly prevWing = new Button(24, HEADER_BASE_H + 4, 88, 36, '‹', 'ghost', 26);
   readonly nextWing = new Button(VIEW_W - 24 - 88, HEADER_BASE_H + 4, 88, 36, '›', 'ghost', 26);
   readonly closeBtn = new Button(MODAL_X + (MODAL_W - 220) / 2, MODAL_Y + MODAL_H - 74, 220, 56, '', 'primary', 24);
@@ -91,27 +134,52 @@ export class TrophiesScene implements Scene {
   ) {
     this.shelf = buildShelfState(shell.save);
     this.layouts = this.shelf.pages.map((p) => layoutTrophyPage(p));
-    this.listTop = this.shelf.pages.length > 1 ? HEADER_BASE_H + WING_BAR_H : HEADER_BASE_H;
-    this.closeBtn.label = tr().trophies.close;
+    this.townShelf = buildTownShelfState(shell.save);
+    this.townLayout = layoutTownRoom(this.townShelf);
+    this.souvenirListTop = this.shelf.pages.length > 1 ? HEADER_BASE_H + WING_BAR_H : HEADER_BASE_H;
+
+    const strings = tr().trophies;
+    this.tabSouvenirs.label = fmt(strings.tabSouvenirs, { n: this.shelf.foundCount, max: this.shelf.totalCount });
+    this.tabTown.label = fmt(strings.tabTown, { n: this.townShelf.foundCount, max: this.townShelf.totalCount });
+    this.closeBtn.label = strings.close;
+    this.syncTabStyles();
 
     const self = this;
     this.debug = {
+      get room() { return self.activeRoom; },
       get foundCount() { return self.shelf.foundCount; },
       get totalCount() { return self.shelf.totalCount; },
+      get townFoundCount() { return self.townShelf.foundCount; },
+      get townTotalCount() { return self.townShelf.totalCount; },
       get pageIndex() { return self.pageIndex; },
       get pageCount() { return self.shelf.pages.length; },
-      get selectedId() { return self.selected?.slot.itemId ?? null; },
+      get selectedId() {
+        if (!self.selected) return null;
+        return self.selected.kind === 'souvenir' ? self.selected.item.slot.itemId : self.selected.item.slot.id;
+      },
+      setRoom(room: TrophyRoomTab): void {
+        self.switchRoom(room);
+      },
       select(itemId: string): boolean {
         for (let pi = 0; pi < self.shelf.pages.length; pi++) {
           const hit = self.shelf.pages[pi]!.sections.flatMap((s) => s.slots).find((s) => s.slot.itemId === itemId);
           if (hit) {
+            self.switchRoom('souvenirs');
             self.pageIndex = pi;
-            self.selected = hit;
+            self.selected = { kind: 'souvenir', item: hit };
             self.modalT = 1;
             return true;
           }
         }
         return false;
+      },
+      selectTown(id: MapCollectibleId): boolean {
+        const hit = self.townShelf.slots.find((s) => s.slot.id === id);
+        if (!hit) return false;
+        self.switchRoom('town');
+        self.selected = { kind: 'town', item: hit };
+        self.modalT = 1;
+        return true;
       },
       close(): void {
         self.selected = null;
@@ -119,9 +187,14 @@ export class TrophiesScene implements Scene {
       },
       scrollTo(y: number): void {
         self.scroll = clamp(y, 0, self.maxScroll);
+        self.scrollByRoom[self.activeRoom] = self.scroll;
         self.vel = 0;
       },
     };
+  }
+
+  get listTop(): number {
+    return this.activeRoom === 'souvenirs' ? this.souvenirListTop : this.townListTop;
   }
 
   get currentLayout(): PageLayout {
@@ -129,7 +202,26 @@ export class TrophiesScene implements Scene {
   }
 
   private get maxScroll(): number {
-    return Math.max(0, this.currentLayout.contentHeight - (VIEW_H - this.listTop));
+    const contentHeight = this.activeRoom === 'souvenirs'
+      ? this.currentLayout.contentHeight
+      : this.townLayout.contentHeight;
+    return Math.max(0, contentHeight - (VIEW_H - this.listTop));
+  }
+
+  private syncTabStyles(): void {
+    this.tabSouvenirs.kind = this.activeRoom === 'souvenirs' ? 'primary' : 'ghost';
+    this.tabTown.kind = this.activeRoom === 'town' ? 'primary' : 'ghost';
+  }
+
+  switchRoom(room: TrophyRoomTab): void {
+    if (this.activeRoom === room) return;
+    this.scrollByRoom[this.activeRoom] = this.scroll;
+    this.activeRoom = room;
+    this.scroll = clamp(this.scrollByRoom[room], 0, this.maxScroll);
+    this.vel = 0;
+    this.tracking = false;
+    this.dragging = false;
+    this.syncTabStyles();
   }
 
   private goBack(): void {
@@ -169,8 +261,17 @@ export class TrophiesScene implements Scene {
     }
 
     if (this.back.update(p, dt, audio)) return this.goBack();
+    if (this.tabSouvenirs.update(p, dt, audio)) {
+      this.switchRoom('souvenirs');
+      return;
+    }
+    if (this.tabTown.update(p, dt, audio)) {
+      this.switchRoom('town');
+      return;
+    }
 
-    if (this.shelf.pages.length > 1) {
+    const showWings = this.activeRoom === 'souvenirs' && this.shelf.pages.length > 1;
+    if (showWings) {
       this.prevWing.visible = true;
       this.nextWing.visible = true;
       this.prevWing.enabled = this.pageIndex > 0;
@@ -192,8 +293,9 @@ export class TrophiesScene implements Scene {
       this.nextWing.visible = false;
     }
 
-    // Touch drag + momentum scroll over the locker shelves
-    if (p.pressed && p.y >= this.listTop) {
+    // Touch drag + momentum scroll over the active room's shelves
+    const top = this.listTop;
+    if (p.pressed && p.y >= top) {
       this.tracking = true;
       this.dragging = false;
       this.pressY = p.y;
@@ -211,12 +313,22 @@ export class TrophiesScene implements Scene {
     }
     if (this.tracking && p.released) {
       this.tracking = false;
-      if (!this.dragging && p.y >= this.listTop) {
-        const hit = hitTestTrophyPage(this.currentLayout, p.x, p.y + this.scroll - this.listTop);
-        if (hit) {
-          this.selected = hit;
-          this.modalT = this.shell.ctx.reducedMotion ? 1 : 0;
-          audio.sfx('click');
+      if (!this.dragging && p.y >= top) {
+        const contentY = p.y + this.scroll - top;
+        if (this.activeRoom === 'souvenirs') {
+          const hit = hitTestTrophyPage(this.currentLayout, p.x, contentY);
+          if (hit) {
+            this.selected = { kind: 'souvenir', item: hit };
+            this.modalT = this.shell.ctx.reducedMotion ? 1 : 0;
+            audio.sfx('click');
+          }
+        } else {
+          const hit = hitTestTownRoom(this.townLayout, p.x, contentY);
+          if (hit) {
+            this.selected = { kind: 'town', item: hit };
+            this.modalT = this.shell.ctx.reducedMotion ? 1 : 0;
+            audio.sfx('click');
+          }
         }
       }
       this.dragging = false;
@@ -233,6 +345,7 @@ export class TrophiesScene implements Scene {
       if (this.scroll > max) this.scroll += (max - this.scroll) * Math.min(1, dt * 12);
     }
     this.scroll = clamp(this.scroll, -120, max + 120);
+    this.scrollByRoom[this.activeRoom] = this.scroll;
   }
 
   get view(): Container {
@@ -250,11 +363,12 @@ export class TrophiesScene implements Scene {
 
 // ---------------------------------------------------------------- retained Pixi view
 
-const HDR_TITLE = { size: 36, color: C.mint, weight: 900, outline: C.ink } as const;
+const HDR_TITLE = { size: 34, color: C.mint, weight: 900, outline: C.ink } as const;
 const HDR_SUB = { size: 15, color: C.muted, italic: true } as const;
-const SUM_COUNT = { size: 22, color: C.mint, align: 'left', weight: 900 } as const;
-const SUM_COMPLETE = { size: 22, color: C.amberHi, align: 'left', weight: 900 } as const;
+const SUM_COUNT = { size: 21, color: C.mint, align: 'left', weight: 900 } as const;
+const SUM_COMPLETE = { size: 21, color: C.amberHi, align: 'left', weight: 900 } as const;
 const SUM_HINT = { size: 13, color: C.muted, align: 'right', weight: 600 } as const;
+const SUM_HINT_GOLD = { size: 13, color: C.amberHi, align: 'right', weight: 800 } as const;
 const CASE_TITLE = { size: 15, color: C.text, align: 'left', weight: 800 } as const;
 const CASE_COUNT_DONE = { size: 13, color: C.mint, align: 'right', weight: 900 } as const;
 const CASE_COUNT_OPEN = { size: 13, color: C.muted, align: 'right', weight: 800 } as const;
@@ -264,97 +378,90 @@ const SLOT_LOC = { size: 11, color: 'rgba(169,162,214,0.65)', weight: 600 } as c
 const SLOT_MULT = { size: 12, color: C.ink, weight: 900 } as const;
 const WING_LABEL = { size: 16, color: C.text, weight: 800 } as const;
 
+const TOWN_LOC_FOUND = { size: 13.5, color: C.mint, align: 'left', weight: 800 } as const;
+const TOWN_LOC_MISS = { size: 13.5, color: C.muted, align: 'left', weight: 700 } as const;
+const TOWN_NAME_FOUND = { size: 21, color: C.text, align: 'left', weight: 900 } as const;
+const TOWN_NAME_MISS = { size: 21, color: 'rgba(169,162,214,0.85)', align: 'left', weight: 900 } as const;
+const TOWN_STATUS = { size: 14, color: C.amberHi, align: 'left', italic: true, weight: 700 } as const;
+const TOWN_HINT = { size: 13, color: 'rgba(169,162,214,0.75)', align: 'left', italic: true, weight: 600 } as const;
+
 class TrophiesView implements SceneView {
   readonly root = new Container();
   private readonly sky = new NightSky();
-  private readonly list = new Container();
+  private readonly listMask = new Shape();
+  private readonly souvenirList = new Container();
   private readonly pages: PageView[] = [];
+  private readonly townRoom: TownRoomView;
+  private readonly headerBg = new Sprite(Texture.EMPTY);
+  private readonly headerRule = new Graphics();
+  private readonly subtitleLabel = new Label(HDR_SUB);
+  private readonly souvenirSummary = new Container();
+  private readonly townSummary = new Container();
   private readonly back: ButtonView;
+  private readonly tabSouvenirs: ButtonView;
+  private readonly tabTown: ButtonView;
   private readonly prevWing: ButtonView;
   private readonly nextWing: ButtonView;
   private readonly wingLabel: Label | null;
   private readonly modal: DetailModalView;
   private lastPage = -1;
+  private lastRoom: TrophyRoomTab | '' = '';
 
   constructor(private readonly s: TrophiesScene) {
     const { assets } = s.shell;
     const strings = tr().trophies;
-    const { foundCount, totalCount, totalHauls } = s.shelf;
-    const allFound = totalCount > 0 && foundCount >= totalCount;
 
-    // Mask for the scrollable locker area
-    const mask = new Graphics().rect(0, s.listTop - 4, VIEW_W, VIEW_H - s.listTop + 4).fill('#ffffff');
-    this.list.mask = mask;
+    // Room 1 (Souvenirs) scrollable pages
+    this.souvenirList.mask = this.listMask;
     for (let i = 0; i < s.layouts.length; i++) {
       const pv = new PageView(assets, s.layouts[i]!);
       pv.root.visible = i === s.pageIndex;
       this.pages.push(pv);
-      this.list.addChild(pv.root);
+      this.souvenirList.addChild(pv.root);
     }
 
+    // Room 2 (Field finds) scrollable display gallery
+    this.townRoom = new TownRoomView(assets, s.townLayout);
+    this.townRoom.root.mask = this.listMask;
+    this.townRoom.root.visible = false;
+
     // Header gradient backdrop (stays above scrolling shelves)
-    const header = new Sprite(paintedTexture(`trophies|header|${s.listTop}`, 2, s.listTop - 2, (g, w, h) => {
-      const grad = g.createLinearGradient(0, 0, 0, s.listTop);
+    const maxHeaderH = Math.max(s.souvenirListTop, s.townListTop);
+    this.headerBg.texture = paintedTexture(`trophies|header|${maxHeaderH}`, 2, maxHeaderH - 2, (g, w, h) => {
+      const grad = g.createLinearGradient(0, 0, 0, maxHeaderH);
       grad.addColorStop(0, '#0d0924');
       grad.addColorStop(1, '#171038');
       g.fillStyle = grad;
       g.fillRect(0, 0, w, h);
-    }, 1));
-    header.width = VIEW_W;
-    const rule = new Graphics().rect(0, s.listTop - 4, VIEW_W, 2).fill('rgba(124,255,203,0.28)');
+    }, 1);
+    this.headerBg.width = VIEW_W;
+    this.headerRule.rect(0, 0, VIEW_W, 2).fill('rgba(124,255,203,0.28)');
 
     this.back = new ButtonView(s.back);
+    this.tabSouvenirs = new ButtonView(s.tabSouvenirs);
+    this.tabTown = new ButtonView(s.tabTown);
     this.prevWing = new ButtonView(s.prevWing);
     this.nextWing = new ButtonView(s.nextWing);
 
-    // Summary panel: trophy icon + counter + progress bar + hauls/hint
-    const summaryPanel = highlightedPanel(new Graphics(), 24, 100, VIEW_W - 48, 60, {
-      fill: allFound ? '#22404a' : C.panel,
-      r: 18,
-      stroke: allFound ? C.amberHi : C.ink,
-      lineW: 3,
-      shadow: 4,
-    });
-    const cup = new Sprite(trophyCupTexture(34, allFound ? C.amberHi : C.mint));
-    cup.anchor.set(0.5);
-    cup.position.set(52, 130);
-
-    const counterText = fmt(allFound ? strings.complete : strings.filed, { n: foundCount, max: totalCount });
-    const counterLabel = new Label(allFound ? SUM_COMPLETE : SUM_COUNT).set(counterText, 76, 121, 224);
-
-    // Progress bar inside summary panel
-    const barX = 76;
-    const barY = 138;
-    const barW = 216;
-    const barH = 10;
-    const frac = totalCount > 0 ? Math.min(1, foundCount / totalCount) : 0;
-    const bar = new Graphics();
-    roundRect(bar, barX, barY, barW, barH, 5).fill('rgba(14,10,36,0.75)').stroke({ color: 'rgba(169,162,214,0.35)', width: 1.5 });
-    if (frac > 0) {
-      roundRect(bar, barX + 1, barY + 1, Math.max(8, (barW - 2) * frac), barH - 2, 4).fill(allFound ? C.amberHi : C.mint);
-    }
-
-    const rightHint = totalHauls > 0
-      ? plural(totalHauls, strings.hauled)
-      : strings.emptyHint;
-    const subHint = new Label(SUM_HINT).set(rightHint, VIEW_W - 40, 121, 178);
-    const tapHint = new Label(SUM_HINT).set(strings.tapHint, VIEW_W - 40, 142, 178);
+    // Room 1 summary panel (built once)
+    this.buildSouvenirSummary();
+    // Room 2 summary panel (built once)
+    this.buildTownSummary();
 
     this.root.addChild(
       this.sky,
-      mask,
-      this.list,
-      header,
-      rule,
+      this.listMask,
+      this.souvenirList,
+      this.townRoom.root,
+      this.headerBg,
+      this.headerRule,
       this.back,
-      new Label(HDR_TITLE).set(strings.title, VIEW_W / 2 + 18, 44, VIEW_W - 140),
-      new Label(HDR_SUB).set(strings.subtitle, VIEW_W / 2 + 18, 76, VIEW_W - 140),
-      summaryPanel,
-      cup,
-      counterLabel,
-      bar,
-      subHint,
-      tapHint,
+      new Label(HDR_TITLE).set(strings.title, VIEW_W / 2 + 18, 40, VIEW_W - 140),
+      this.subtitleLabel,
+      this.tabSouvenirs,
+      this.tabTown,
+      this.souvenirSummary,
+      this.townSummary,
     );
 
     if (s.shelf.pages.length > 1) {
@@ -368,11 +475,108 @@ class TrophiesView implements SceneView {
     this.root.addChild(this.modal.root);
   }
 
+  private buildSouvenirSummary(): void {
+    const strings = tr().trophies;
+    const { foundCount, totalCount, totalHauls } = this.s.shelf;
+    const allFound = totalCount > 0 && foundCount >= totalCount;
+
+    const panel = highlightedPanel(new Graphics(), 24, 146, VIEW_W - 48, 58, {
+      fill: allFound ? '#22404a' : C.panel,
+      r: 18,
+      stroke: allFound ? C.amberHi : C.ink,
+      lineW: 3,
+      shadow: 4,
+    });
+    const cup = new Sprite(trophyCupTexture(32, allFound ? C.amberHi : C.mint));
+    cup.anchor.set(0.5);
+    cup.position.set(52, 175);
+
+    const counterText = fmt(allFound ? strings.complete : strings.filed, { n: foundCount, max: totalCount });
+    const counterLabel = new Label(allFound ? SUM_COMPLETE : SUM_COUNT).set(counterText, 76, 166, 224);
+
+    const barX = 76;
+    const barY = 183;
+    const barW = 216;
+    const barH = 10;
+    const frac = totalCount > 0 ? Math.min(1, foundCount / totalCount) : 0;
+    const bar = new Graphics();
+    roundRect(bar, barX, barY, barW, barH, 5).fill('rgba(14,10,36,0.75)').stroke({ color: 'rgba(169,162,214,0.35)', width: 1.5 });
+    if (frac > 0) {
+      roundRect(bar, barX + 1, barY + 1, Math.max(8, (barW - 2) * frac), barH - 2, 4).fill(allFound ? C.amberHi : C.mint);
+    }
+
+    const rightHint = totalHauls > 0 ? plural(totalHauls, strings.hauled) : strings.emptyHint;
+    const subHint = new Label(SUM_HINT).set(rightHint, VIEW_W - 40, 166, 178);
+    const tapHint = new Label(SUM_HINT).set(strings.tapHint, VIEW_W - 40, 187, 178);
+
+    this.souvenirSummary.addChild(panel, cup, counterLabel, bar, subHint, tapHint);
+  }
+
+  private buildTownSummary(): void {
+    const townStr = tr().trophies.town;
+    const { foundCount, totalCount } = this.s.townShelf;
+    const allFound = totalCount > 0 && foundCount >= totalCount;
+
+    const panel = highlightedPanel(new Graphics(), 24, 146, VIEW_W - 48, 58, {
+      fill: allFound ? '#22404a' : C.panel,
+      r: 18,
+      stroke: allFound ? C.amberHi : C.ink,
+      lineW: 3,
+      shadow: 4,
+    });
+    const badge = new Sprite(fieldFindBadgeTexture(32, allFound ? C.amberHi : C.mint));
+    badge.anchor.set(0.5);
+    badge.position.set(52, 175);
+
+    const counterText = fmt(allFound ? townStr.complete : townStr.logged, { n: foundCount, max: totalCount });
+    const counterLabel = new Label(allFound ? SUM_COMPLETE : SUM_COUNT).set(counterText, 76, 166, 224);
+
+    const barX = 76;
+    const barY = 183;
+    const barW = 216;
+    const barH = 10;
+    const frac = totalCount > 0 ? Math.min(1, foundCount / totalCount) : 0;
+    const bar = new Graphics();
+    roundRect(bar, barX, barY, barW, barH, 5).fill('rgba(14,10,36,0.75)').stroke({ color: 'rgba(169,162,214,0.35)', width: 1.5 });
+    if (frac > 0) {
+      roundRect(bar, barX + 1, barY + 1, Math.max(8, (barW - 2) * frac), barH - 2, 4).fill(allFound ? C.amberHi : C.mint);
+    }
+
+    const left = Math.max(0, totalCount - foundCount);
+    const rightHint = allFound
+      ? townStr.allLogged
+      : foundCount === 0
+        ? townStr.emptyHint
+        : plural(left, townStr.remaining);
+    const subHint = new Label(allFound ? SUM_HINT_GOLD : SUM_HINT).set(rightHint, VIEW_W - 40, 166, 184);
+    const tapHint = new Label(SUM_HINT).set(townStr.tapHint, VIEW_W - 40, 187, 184);
+
+    this.townSummary.addChild(panel, badge, counterLabel, bar, subHint, tapHint);
+  }
+
   sync(): void {
     const s = this.s;
     const reduced = s.shell.ctx.reducedMotion;
     this.sky.sync(s.t, reduced);
     this.back.sync();
+    this.tabSouvenirs.sync();
+    this.tabTown.sync();
+
+    if (this.lastRoom !== s.activeRoom) {
+      this.lastRoom = s.activeRoom;
+      const isSouvenirs = s.activeRoom === 'souvenirs';
+      const top = s.listTop;
+      this.listMask.draw(top, (g) => g.rect(0, top - 4, VIEW_W, VIEW_H - top + 4).fill('#ffffff'));
+      this.headerBg.height = top - 2;
+      this.headerRule.y = top - 4;
+      const strings = tr().trophies;
+      this.subtitleLabel.set(isSouvenirs ? strings.subtitle : strings.town.subtitle, VIEW_W / 2 + 18, 70, VIEW_W - 140);
+      this.souvenirSummary.visible = isSouvenirs;
+      this.townSummary.visible = !isSouvenirs;
+      this.souvenirList.visible = isSouvenirs;
+      this.townRoom.root.visible = !isSouvenirs;
+      if (this.wingLabel) this.wingLabel.visible = isSouvenirs;
+    }
 
     if (this.wingLabel) {
       this.prevWing.sync();
@@ -387,11 +591,19 @@ class TrophiesView implements SceneView {
       for (let i = 0; i < this.pages.length; i++) this.pages[i]!.root.visible = i === s.pageIndex;
     }
 
-    this.list.y = s.listTop - s.scroll;
-    this.pages[s.pageIndex]?.sync(this.list.y, s.listTop, s.t, reduced);
+    if (s.activeRoom === 'souvenirs') {
+      this.souvenirList.y = s.listTop - s.scroll;
+      this.pages[s.pageIndex]?.sync(this.souvenirList.y, s.listTop, s.t, reduced);
+    } else {
+      this.townRoom.root.y = s.listTop - s.scroll;
+      this.townRoom.sync(this.townRoom.root.y, s.listTop, s.t, reduced);
+    }
+
     this.modal.sync(s.selected, s.modalT, s.t, reduced);
   }
 }
+
+// ---------------------------------------------------------------- Room 1 (Souvenirs) views
 
 class PageView {
   readonly root = new Container();
@@ -542,6 +754,114 @@ function buildSlotCard(assets: Assets, softGlow: Texture, sr: SlotRect, lx: numb
   return card;
 }
 
+// ---------------------------------------------------------------- Room 2 (Field finds) views
+
+class TownRoomView {
+  readonly root = new Container();
+  private readonly cards: TownSlotCardView[];
+
+  constructor(assets: Assets, layout: TownPageLayout) {
+    const softGlow = glowTexture(GLOW.mint);
+    this.cards = layout.slots.map((sr) => new TownSlotCardView(assets, softGlow, sr));
+    for (const card of this.cards) this.root.addChild(card.root);
+  }
+
+  sync(listY: number, listTop: number, t: number, reduced: boolean): void {
+    for (let i = 0; i < this.cards.length; i++) {
+      const card = this.cards[i]!;
+      const top = card.y + listY;
+      const onScreen = top <= VIEW_H + 20 && top + card.h >= listTop - 20;
+      if (card.root.visible !== onScreen) card.root.visible = onScreen;
+      if (onScreen) card.sync(t, reduced);
+    }
+  }
+}
+
+class TownSlotCardView {
+  readonly root = new Container();
+  readonly y: number;
+  readonly h: number;
+  private readonly figure: PickupFigureHandle | null = null;
+
+  constructor(assets: Assets, softGlow: Texture, sr: TownSlotRect) {
+    this.y = sr.y;
+    this.h = sr.h;
+    this.root.position.set(sr.x, sr.y);
+
+    const { slot, found } = sr.slot;
+    const lvText = tr().levels[slot.levelId];
+
+    // Showcase plinth frame
+    const frame = highlightedPanel(new Graphics(), 0, 0, TOWN_CARD_W, TOWN_CARD_H, {
+      fill: found ? '#1d244e' : '#19143d',
+      r: 18,
+      stroke: found ? 'rgba(124,255,203,0.5)' : 'rgba(110,102,160,0.34)',
+      lineW: found ? 2.5 : 2,
+      shadow: 4,
+    }, found ? 0.14 : 0.08);
+    this.root.addChild(frame);
+
+    // Left illuminated vitrine recess (114 × 94)
+    const vit = new Graphics();
+    roundRect(vit, 12, 12, 114, 94, 14)
+      .fill(found ? '#131d3e' : '#120e2c')
+      .stroke({ color: found ? 'rgba(124,255,203,0.38)' : 'rgba(110,102,160,0.28)', width: 1.8 });
+    // Shelf ledge inside vitrine
+    roundRect(vit, 24, 92, 90, 4, 2).fill('rgba(169,162,214,0.18)');
+    this.root.addChild(vit);
+
+    const artX = 69;
+    const artY = 55;
+    if (found) {
+      this.root.addChild(new Glow(softGlow, false).place(artX, artY, 50, 40, 0.22));
+      const scale = townPickupScale(slot.id, 94, 78, 1.0);
+      this.figure = createTownPickupFigure(assets, slot.id, scale);
+      this.figure.root.position.set(artX, artY);
+      this.root.addChild(this.figure.root);
+    } else {
+      const fit = townPickupFitSize(slot.id, 90, 74, 1.0);
+      const sil = new Sprite(townPickupSilhouetteTexture(assets, slot.id, fit.w, fit.h));
+      sil.anchor.set(0.5);
+      sil.width = fit.w;
+      sil.height = fit.h;
+      sil.position.set(artX, artY);
+      sil.alpha = 0.88;
+      this.root.addChild(sil);
+    }
+
+    // Right info column (x = 140 .. 476, width = 336)
+    const textX = 140;
+    const textW = TOWN_CARD_W - textX - 16;
+    const locLine = `#0${slot.levelNum} · ${lvText.location}`;
+    this.root.addChild(new Label(found ? TOWN_LOC_FOUND : TOWN_LOC_MISS).set(locLine, textX, 25, textW));
+
+    if (found) {
+      this.root.addChild(
+        new Label(TOWN_NAME_FOUND).set(townItemTitle(slot.id), textX, 55, textW),
+        new Label(TOWN_STATUS).set(townStatus(slot.id), textX, 86, textW),
+      );
+    } else {
+      this.root.addChild(new Label(TOWN_NAME_MISS).set(UNKNOWN_TAG, textX, 52, textW));
+      const hint = townHint(slot.id);
+      const lines = wrapLines(hint, textW, TOWN_HINT.size, TOWN_HINT.weight, true);
+      if (lines.length <= 1) {
+        this.root.addChild(new Label(TOWN_HINT).set(hint, textX, 84, textW));
+      } else {
+        const l1 = lines[0]!;
+        const l2 = lines.slice(1).join(' ');
+        this.root.addChild(
+          new Label(TOWN_HINT).set(l1, textX, 78, textW),
+          new Label(TOWN_HINT).set(l2, textX, 96, textW),
+        );
+      }
+    }
+  }
+
+  sync(t: number, reduced: boolean): void {
+    this.figure?.sync(t, reduced);
+  }
+}
+
 // ---------------------------------------------------------------- Exhibit Tag detail modal
 
 const TAG_BADGE_FOUND = { size: 13, color: C.ink, weight: 900 } as const;
@@ -551,7 +871,7 @@ const MODAL_TITLE = { size: 26, color: C.text, weight: 900, outline: C.ink } as 
 const MODAL_DESC = { size: 17, color: '#e6e0ff', italic: true, weight: 500, lineHeight: 23 } as const;
 const PROV_KEY = { size: 14, color: C.muted, align: 'left', weight: 700 } as const;
 const PROV_VAL = { size: 15, color: C.mint, align: 'right', weight: 800 } as const;
-const PROV_VAL_WARN = { size: 14, color: C.amberHi, align: 'right', weight: 700 } as const;
+const PROV_VAL_WARN = { size: 14.5, color: C.amberHi, align: 'right', weight: 700 } as const;
 
 class DetailModalView {
   readonly root = new Container();
@@ -560,10 +880,16 @@ class DetailModalView {
   private readonly badgeBg = new Shape();
   private readonly badgeLabel = new Label(TAG_BADGE_FOUND);
   private readonly locLabel = new Label(TAG_LOC);
+  private readonly vitrine = new Shape();
   private readonly stageGlow = new Glow(glowTexture(GLOW.mint), false);
   private readonly artSprite = new Sprite(Texture.EMPTY);
+  private readonly townStage = new Container();
+  private readonly townFigures = new Map<MapCollectibleId, PickupFigureHandle>();
+  private activeTownFig: PickupFigureHandle | null = null;
   private readonly titleLabel = new Label(MODAL_TITLE);
   private readonly descPara = new Paragraph(MODAL_DESC);
+  private readonly divider = new Shape();
+  private readonly provBox = new Shape();
   private readonly row1Key = new Label(PROV_KEY);
   private readonly row1Val = new Label(PROV_VAL);
   private readonly row2Key = new Label(PROV_KEY);
@@ -584,24 +910,20 @@ class DetailModalView {
     this.card.pivot.set(MODAL_W / 2, MODAL_H / 2);
     this.card.position.set(MODAL_X + MODAL_W / 2, MODAL_Y + MODAL_H / 2);
 
-    // Showcase vitrine inside the card
-    const vitrine = new Graphics();
-    roundRect(vitrine, 118, 58, 240, 140, 18)
-      .fill('#131130')
-      .stroke({ color: 'rgba(124,255,203,0.38)', width: 2 });
-    // subtle glass shelf line inside vitrine
-    roundRect(vitrine, 142, 174, 192, 6, 3).fill('rgba(169,162,214,0.22)');
-
     this.stageGlow.place(MODAL_W / 2, 128, 92, 60, 0.25);
     this.artSprite.anchor.set(0.5);
     this.artSprite.position.set(MODAL_W / 2, this.artBaseY);
 
-    const divider = new Graphics().rect(28, 366, MODAL_W - 56, 2).fill('rgba(169,162,214,0.2)');
-
-    // Provenance inset panel
-    const provBox = roundRect(new Graphics(), 24, 382, MODAL_W - 48, 134, 16)
-      .fill(C.night2)
-      .stroke({ color: 'rgba(169,162,214,0.24)', width: 2 });
+    // Pre-build one animated PickupFigure per town pickup so sync() allocates zero display objects
+    this.townStage.position.set(MODAL_W / 2, 134);
+    this.townStage.visible = false;
+    for (const slot of townCatalog()) {
+      const scale = townPickupScale(slot.id, 210, 134, 1.55);
+      const fig = createTownPickupFigure(assets, slot.id, scale);
+      fig.root.visible = false;
+      this.townFigures.set(slot.id, fig);
+      this.townStage.addChild(fig.root);
+    }
 
     this.closeView = new ButtonView(closeBtn);
     // closeBtn uses screen-space coords; shift into card-local space
@@ -612,13 +934,14 @@ class DetailModalView {
       this.badgeBg,
       this.badgeLabel,
       this.locLabel,
-      vitrine,
+      this.vitrine,
       this.stageGlow,
       this.artSprite,
+      this.townStage,
       this.titleLabel,
       this.descPara,
-      divider,
-      provBox,
+      this.divider,
+      this.provBox,
       this.row1Key,
       this.row1Val,
       this.row2Key,
@@ -631,12 +954,7 @@ class DetailModalView {
     this.root.addChild(scrim, this.card);
   }
 
-  private populate(item: TrophySlotState): void {
-    const { slot, entry, found } = item;
-    const strings = tr().trophies;
-    const lvText = tr().levels[slot.levelId];
-
-    // Card frame tint (mint accent when found, amber/muted when unfound)
+  private drawModalChrome(found: boolean, isTown: boolean): void {
     this.cardFrame.draw(keyOf(Number(found)), (g) => {
       highlightedPanel(g, 0, 0, MODAL_W, MODAL_H, {
         fill: C.panel,
@@ -646,6 +964,46 @@ class DetailModalView {
         shadow: 10,
       }, 0.16);
     });
+
+    // Town modal gives extra height to the animated figure vitrine + description (2 provenance rows instead of 3)
+    this.vitrine.draw(keyOf(Number(isTown)), (g) => {
+      if (isTown) {
+        roundRect(g, 96, 56, 284, 166, 18)
+          .fill('#131130')
+          .stroke({ color: 'rgba(124,255,203,0.38)', width: 2 });
+        roundRect(g, 126, 204, 224, 6, 3).fill('rgba(169,162,214,0.22)');
+      } else {
+        roundRect(g, 118, 58, 240, 140, 18)
+          .fill('#131130')
+          .stroke({ color: 'rgba(124,255,203,0.38)', width: 2 });
+        roundRect(g, 142, 174, 192, 6, 3).fill('rgba(169,162,214,0.22)');
+      }
+    });
+
+    this.divider.draw(keyOf(Number(isTown)), (g) => {
+      const dy = isTown ? 404 : 366;
+      g.rect(28, dy, MODAL_W - 56, 2).fill('rgba(169,162,214,0.2)');
+    });
+
+    this.provBox.draw(keyOf(Number(isTown)), (g) => {
+      const py = isTown ? 418 : 382;
+      const ph = isTown ? 98 : 134;
+      roundRect(g, 24, py, MODAL_W - 48, ph, 16)
+        .fill(C.night2)
+        .stroke({ color: 'rgba(169,162,214,0.24)', width: 2 });
+    });
+  }
+
+  private populateSouvenir(item: TrophySlotState): void {
+    const { slot, entry, found } = item;
+    const strings = tr().trophies;
+    const lvText = tr().levels[slot.levelId];
+
+    this.drawModalChrome(found, false);
+    this.townStage.visible = false;
+    this.activeTownFig = null;
+    this.artSprite.visible = true;
+    this.artBaseY = 128;
 
     // Top-left badge
     const badgeText = found
@@ -667,8 +1025,9 @@ class DetailModalView {
     this.artSprite.texture = tex;
     this.artSprite.width = fit.w;
     this.artSprite.height = fit.h;
+    this.artSprite.position.set(MODAL_W / 2, this.artBaseY);
     this.artSprite.alpha = found ? 1 : 0.85;
-    this.stageGlow.alpha = found ? 0.28 : 0.06;
+    this.stageGlow.place(MODAL_W / 2, 128, 92, 60, found ? 0.28 : 0.06);
 
     // Title & catchy catalogue description
     const title = found ? itemTitle(slot.itemId) : UNKNOWN_TAG;
@@ -701,24 +1060,95 @@ class DetailModalView {
     }
   }
 
-  sync(selected: TrophySlotState | null, modalT: number, t: number, reduced: boolean): void {
+  private populateTown(item: TownTrophySlotState): void {
+    const { slot, found } = item;
+    const strings = tr().trophies;
+    const townStr = strings.town;
+    const lvText = tr().levels[slot.levelId];
+
+    this.drawModalChrome(found, true);
+
+    // Top-left badge
+    const badgeText = found
+      ? fmt(townStr.exhibitNo, { num: String(slot.index).padStart(2, '0') })
+      : townStr.unfiledBadge;
+    const bw = found ? 148 : 148;
+    this.badgeBg.draw(keyOf(Number(found), bw, 1), (g) => {
+      if (found) roundRect(g, 24, 18, bw, 28, 14).fill(C.mint).stroke({ color: C.ink, width: 2 });
+      else roundRect(g, 24, 18, bw, 28, 14).fill('rgba(255,179,71,0.16)').stroke({ color: C.amber, width: 1.8 });
+    });
+    this.badgeLabel.restyle(found ? TAG_BADGE_FOUND : TAG_BADGE_MISS).set(badgeText, 24 + bw / 2, 33, bw - 12);
+    this.locLabel.set(`#0${slot.levelNum} · ${lvText.title}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
+
+    // Showcase figure: animated PickupFigure when found; still silhouette when unfound
+    this.stageGlow.place(MODAL_W / 2, 134, 108, 72, found ? 0.3 : 0.06);
+    if (found) {
+      this.artSprite.visible = false;
+      this.townStage.visible = true;
+      for (const [id, fig] of this.townFigures) {
+        const match = id === slot.id;
+        fig.root.visible = match;
+        if (match) this.activeTownFig = fig;
+      }
+    } else {
+      this.townStage.visible = false;
+      this.activeTownFig = null;
+      this.artSprite.visible = true;
+      this.artBaseY = 136;
+      const fit = townPickupFitSize(slot.id, 198, 128, 1.5);
+      this.artSprite.texture = townPickupSilhouetteTexture(this.assets, slot.id, fit.w, fit.h);
+      this.artSprite.width = fit.w;
+      this.artSprite.height = fit.h;
+      this.artSprite.position.set(MODAL_W / 2, this.artBaseY);
+      this.artSprite.alpha = 0.85;
+    }
+
+    // Title & spacious description block
+    const title = found ? townItemTitle(slot.id) : UNKNOWN_TAG;
+    this.titleLabel.set(title, MODAL_W / 2, 248, MODAL_W - 48);
+
+    const desc = found
+      ? townDescription(slot.id)
+      : fmt(townStr.unfiledDetail, { hint: townHint(slot.id), num: slot.levelNum });
+    this.descPara.setBlock(desc, 30, 276, MODAL_W - 60);
+
+    // Two-row provenance inset (where it was found + Bureau status; no star line)
+    const leftX = 42;
+    const rightX = MODAL_W - 42;
+    this.row1Key.set(townStr.foundIn, leftX, 448, 120);
+    this.row1Val.restyle(PROV_VAL).set(`#0${slot.levelNum} · ${lvText.location}`, rightX, 448, 286);
+    this.row2Key.set(strings.statusLabel, leftX, 488, 120);
+    this.row2Val.restyle(PROV_VAL_WARN).set(found ? townStatus(slot.id) : townStr.stillInTown, rightX, 488, 286);
+    this.row3Key.visible = false;
+    this.row3Val.visible = false;
+  }
+
+  sync(selected: SelectedExhibit | null, modalT: number, t: number, reduced: boolean): void {
     const show = selected !== null;
     if (this.root.visible !== show) this.root.visible = show;
     if (!show || !selected) {
       this.shownKey = '';
+      this.activeTownFig = null;
       return;
     }
 
-    const key = `${selected.slot.itemId}|${selected.found ? selected.entry?.count ?? 0 : -1}`;
+    const key = selected.kind === 'souvenir'
+      ? `s|${selected.item.slot.itemId}|${selected.item.found ? selected.item.entry?.count ?? 0 : -1}`
+      : `t|${selected.item.slot.id}|${selected.item.found ? 1 : 0}`;
     if (key !== this.shownKey) {
       this.shownKey = key;
-      this.populate(selected);
+      if (selected.kind === 'souvenir') this.populateSouvenir(selected.item);
+      else this.populateTown(selected.item);
     }
 
     const k = reduced ? 1 : easeOutBack(modalT, 1.3);
     this.card.scale.set(0.86 + 0.14 * k);
     this.card.alpha = reduced ? 1 : easeOutCubic(Math.min(1, modalT * 2.2));
-    this.artSprite.y = this.artBaseY + (selected.found && !reduced ? Math.sin(t * 2.6) * 3.5 : 0);
+    if (selected.kind === 'souvenir') {
+      this.artSprite.y = this.artBaseY + (selected.item.found && !reduced ? Math.sin(t * 2.6) * 3.5 : 0);
+    } else if (selected.item.found && this.activeTownFig) {
+      this.activeTownFig.sync(t, reduced);
+    }
     this.closeView.sync();
   }
 }

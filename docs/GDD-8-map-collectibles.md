@@ -32,6 +32,17 @@ Doyle's **missing-slipper flyer** (`slipper_flyer`) is pinned up beside Spin Cit
 
 The row appears on every filed report for a map with a pickup. It describes this run, even if a prior report recorded the find. A collected pickup supplies Vrell's line on a successful repeat delivery; a missed pickup chimes in on one repeat report in three so room souvenir and shift comments still rotate. First-clear sign-offs, failure comments and the sunrise memo keep priority.
 
+## Art, idle animation and name tag (built 2026-11-25)
+
+The first pickups were 40 px sketches drawn from above, and nobody could tell what they were. Each pickup now has its own art, drawn three-quarter from the south like a standing prop, about the saucer's size (84–130 logical px on its long side, sizes in `PICKUP_SIZE`, `src/flight/pickup-rig.ts`).
+
+- **Keys.** `flight/pickup_<id>` (the `MapCollectibleId`) is the whole picture standing still. The trophy room shows the same key. The art carries no text: code writes the flyer's `LOST` / `PERDU` header and the crate's `O™`.
+- **People move.** A pickup that is a person (`PERSON_RIGS`: the astronomer and Krix) is cut into layers by `scripts/art-pickups.mjs` and idles: blinks, glances sideways, yawns, and has two beats of its own (the astronomer sips from the thermos cup and fiddles with the dish; Krix hugs the toaster and the toast pops). A beat starts every 2–4 s and blinks come more often, on a timeline seeded per pickup (`figurePose`, `src/flight/pickup-pose.ts`), so two people never move in step. Reduced motion keeps only a slow blink. Objects stand still. A new person pickup needs a rig entry, its layer keys and a drawing in the script.
+- **One class.** `PickupFigure` (`src/flight/views/collectible.ts`) builds any pickup at any scale: layers when it is a person and they all loaded, else the whole art, else the primitive sketch (`pickupFallback`), scaled to the same footprint.
+- **Name tag.** Within 260 px of the saucer an uncollected pickup shows a small paper tag with its name under it (in the flight's speech-bubble layer). It fades in over the last 40 px, gives way to the lock ring while the hover fills, and route pills keep clear of it. Under reduced motion it appears without the fade.
+- **Lock ring.** The segmented mint ring goes round the whole prop (radius 56–72 px). The hover catchment is unchanged (48 px, one second).
+- **Placement.** The art's box stays off the lanes of every road, off buildings and off entry rings (`tests/flight-pickup-figure.test.ts`). No pickup had to move: the L2 flyer sits against the laundromat wall with its edge on the kerb, and the L6 trolley is drawn low (84 px) to fit its grass island.
+
 ## Filing and replay
 
 Keep one optional pickup ID on each level's progress in `night-shift-save-v2`. A report that logs a new pickup records it even on a failed delivery or at sunrise. Quitting before filing clears the current shift's cargo. Older saves load with no pickup recorded (and retired preprod IDs such as `seti_dish` are safely dropped on load), and a later missed pickup leaves the earlier record intact. A new shift has the pickup available again. A future Bureau cabinet could use the recorded IDs to show finds by level. The report is the only collection screen in this release.

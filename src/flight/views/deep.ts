@@ -29,7 +29,7 @@ import { RoamView } from '../roam-view';
 import { paintBadlands } from './monolith';
 import { CameraView, GroundView, PropLayer, ShadowsView, TAU, TargetBuilding, basicGround, mapLamp } from './world';
 import { EggView } from './eggs'; // v4 easter eggs
-import { MapCollectibleToast, MapCollectibleView, PICKUP_VIEW_R } from './collectible';
+import { MapCollectibleToast, MapCollectibleView } from './collectible';
 
 const SHADOW_OFF: Partial<Record<PropKind, number>> = {
   suburb_house: 13, highrise: 16, civic: 15, tree: 13, hedge: 5, trampoline: 4,
@@ -352,7 +352,7 @@ export class DeepFlightView implements SceneView {
     this.props = new PropLayer(assets, m.props);
     this.shadows = new ShadowsView(assets, [...m.props, ...m.targets.map((tg) => tg.building)], SHADOW_OFF);
     this.eggs = new EggView(m.props); // v4 easter eggs
-    this.collectible = s.sim.collectible ? new MapCollectibleView(s.sim.collectible) : null;
+    this.collectible = s.sim.collectible ? new MapCollectibleView(assets, s.sim.collectible) : null;
     this.pickupToast = s.sim.collectible ? new MapCollectibleToast(s.sim.collectible.def.id) : null;
     this.targets = m.targets.map((tg) => new DeepTargetView(assets, tg));
     this.ambient = new AmbientView(s.ambient);
@@ -377,7 +377,7 @@ export class DeepFlightView implements SceneView {
     bubbles.label = FLIGHT_BUBBLES;
     for (const target of this.targets) bubbles.addChild(target.bubble);
     bubbles.addChild(this.hazards.bubbles);
-    if (this.collectible?.shout) bubbles.addChild(this.collectible.shout);
+    if (this.collectible) bubbles.addChild(this.collectible.bubbles);
     this.upperWorld.addChild(bubbles);
     this.clear = Array.from({ length: this.rings.length * 2 + 6 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
     this.moved = new Uint8Array(this.rings.length);
@@ -415,7 +415,7 @@ export class DeepFlightView implements SceneView {
     this.ambient.sync(cam, t, rm, dawn, saucer.x, saucer.y);
     this.props.sync(cam);
     this.eggs.sync(cam, t, rm); // v4 easter eggs
-    this.collectible?.sync(cam, t, rm);
+    this.collectible?.sync(cam, t, rm, saucer.x, saucer.y);
     this.pickupToast?.sync(s.collectibleToastT, rm);
     this.shadows.sync(cam, dawn);
     for (let i = 0; i < this.targets.length; i++) this.targets[i]!.sync(cam, sim.delivered[i]!, i, t, rm);
@@ -436,12 +436,8 @@ export class DeepFlightView implements SceneView {
       b.w = a.w + 8;
       b.h = a.h + 8;
     }
-    if (this.collectible && this.collectible.root.visible) {
-      const b = this.clear[n++]!;
-      b.x = this.collectible.root.x - cam.x - PICKUP_VIEW_R;
-      b.y = this.collectible.root.y - cam.y - PICKUP_VIEW_R;
-      b.w = b.h = PICKUP_VIEW_R * 2;
-    }
+    // the pickup and, while it shows, its name tag
+    if (this.collectible?.avoid(this.clear[n]!, cam.x, cam.y)) n++;
     if (this.pickupToast && s.collectibleToastT > 0) {
       const b = this.clear[n++]!;
       b.x = VIEW_W / 2 - 162;

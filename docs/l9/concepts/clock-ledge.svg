@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960" viewBox="0 0 540 960" role="img" aria-labelledby="title desc">
+<title id="title">The clock ledge</title><desc id="desc">Stone lip at y = 664   ·   service shelf at y = 724. Upper hatch to balcony. Right passage to service gallery..</desc>
+<g stroke-linecap="round" stroke-linejoin="round">
+<rect x="0" y="0" width="540" height="960" rx="0" fill="#202333" stroke="none" stroke-width="4"/>
+<text x="22" y="44" text-anchor="start" fill="#B6BAB8" font-family="sans-serif" font-size="13" font-weight="bold">CREST VALLEY   /   12 NOV 1955</text>
+<text x="20" y="90" text-anchor="start" fill="#FFF0D4" font-family="sans-serif" font-size="34" font-weight="bold">The clock ledge</text>
+<rect x="20" y="133" width="500" height="713" rx="3" fill="#575260" stroke="#1B1433" stroke-width="4"/>
+<rect x="25" y="493" width="490" height="350" rx="0" fill="#4E4852" stroke="none" stroke-width="4"/>
+<path d="M22 235 H518" fill="none" stroke="#665B60" stroke-width="3"/>
+<path d="M22 555 H518" fill="none" stroke="#665B60" stroke-width="3"/>
+<path d="M22 757 H518" fill="none" stroke="#665B60" stroke-width="3"/>
+<path d="M304 146v-10h160v10" fill="none" stroke="#9CD9C4" stroke-width="4"/><text x="384.0" y="167" text-anchor="middle" fill="#9CD9C4" font-family="sans-serif" font-size="13" font-weight="bold">CLOCK BALCONY</text>
+<path d="M44 187 Q241 254 462 224" fill="none" stroke="#1B1433" stroke-width="8"/>
+<circle cx="44" cy="187" r="8" fill="#D3BC9D" stroke="#1B1433" stroke-width="4"/>
+<circle cx="462" cy="224" r="8" fill="#D3BC9D" stroke="#1B1433" stroke-width="4"/>
+<path d="M408 228 q14 2 29 22 l-21 -4 -11 -17Z" fill="#9C8383" stroke="#1B1433" stroke-width="4"/>
+<circle cx="166" cy="378" r="130" fill="#A48C73" stroke="#1B1433" stroke-width="4"/>
+<circle cx="166" cy="378" r="112" fill="#DDCAAA" stroke="#1B1433" stroke-width="4"/>
+<path d="M166.0 288.0 L166.0 277.0" fill="none" stroke="#1B1433" stroke-width="6"/>
+<path d="M211.0 300.1 L216.5 290.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M243.9 333.0 L253.5 327.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M256.0 378.0 L267.0 378.0" fill="none" stroke="#1B1433" stroke-width="6"/>
+<path d="M243.9 423.0 L253.5 428.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M211.0 455.9 L216.5 465.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M166.0 468.0 L166.0 479.0" fill="none" stroke="#1B1433" stroke-width="6"/>
+<path d="M121.0 455.9 L115.5 465.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M88.1 423.0 L78.5 428.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M76.0 378.0 L65.0 378.0" fill="none" stroke="#1B1433" stroke-width="6"/>
+<path d="M88.1 333.0 L78.5 327.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M121.0 300.1 L115.5 290.5" fill="none" stroke="#1B1433" stroke-width="3"/>
+<path d="M116 348 L166 378 L199 306" fill="none" stroke="#1B1433" stroke-width="9"/>
+<circle cx="166" cy="378" r="8" fill="#97735D" stroke="#1B1433" stroke-width="4"/>
+<path d="M380.2 370.0 L390.9 373.8 L388.8 386.1 L377.3 386.7 L373.6 394.6 L381.0 403.2 L373.0 412.9 L362.8 407.6 L355.6 412.6 L357.7 423.7 L345.9 428.1 L339.7 418.4 L331.0 419.2 L327.2 429.9 L314.9 427.8 L314.3 416.3 L306.4 412.6 L297.8 420.0 L288.1 412.0 L293.4 401.8 L288.4 394.6 L277.3 396.7 L272.9 384.9 L282.6 378.7 L281.8 370.0 L271.1 366.2 L273.2 353.9 L284.7 353.3 L288.4 345.4 L281.0 336.8 L289.0 327.1 L299.2 332.4 L306.4 327.4 L304.3 316.3 L316.1 311.9 L322.3 321.6 L331.0 320.8 L334.8 310.1 L347.1 312.2 L347.7 323.7 L355.6 327.4 L364.2 320.0 L373.9 328.0 L368.6 338.2 L373.6 345.4 L384.7 343.3 L389.1 355.1 L379.4 361.3 Z" fill="#997C64" stroke="#1B1433" stroke-width="4"/><circle cx="331" cy="370" r="34.8" fill="#56485A" stroke="#1B1433" stroke-width="4"/><circle cx="331" cy="370" r="10.799999999999999" fill="#C9A47D" stroke="#1B1433" stroke-width="4"/>
+<path d="M429.1 426.0 L434.9 428.8 L432.8 437.7 L426.2 438.0 L422.7 443.4 L425.4 449.3 L418.1 454.8 L412.8 450.8 L406.7 452.6 L405.0 458.9 L395.8 458.4 L394.4 452.0 L388.5 449.4 L383.2 453.1 L376.4 446.9 L379.5 441.0 L376.6 435.3 L370.2 434.7 L369.0 425.5 L375.1 423.0 L376.6 416.7 L372.0 412.2 L377.0 404.4 L383.3 406.4 L388.5 402.6 L387.9 396.1 L396.7 393.4 L400.3 399.0 L406.7 399.4 L410.4 394.1 L418.9 397.7 L418.1 404.2 L422.7 408.6 L429.0 407.0 L433.2 415.1 L428.3 419.6 Z" fill="#997C64" stroke="#1B1433" stroke-width="4"/><circle cx="402" cy="426" r="19.139999999999997" fill="#56485A" stroke="#1B1433" stroke-width="4"/><circle cx="402" cy="426" r="5.9399999999999995" fill="#C9A47D" stroke="#1B1433" stroke-width="4"/>
+<text x="166" y="466" text-anchor="middle" fill="#1B1433" font-family="sans-serif" font-size="11" font-weight="bold"></text>
+<path d="M518 455 h-8 v200 h8" fill="none" stroke="#9CD9C4" stroke-width="4"/>
+<path d="M30 666 H345 L345 702 L288 709 L273 733 H67 L55 706 L30 702Z" fill="#A48B78" stroke="#1B1433" stroke-width="4"/>
+<rect x="28" y="664" width="322" height="15" rx="3" fill="#D8BE9C" stroke="#1B1433" stroke-width="4"/>
+<rect x="362" y="724" width="148" height="24" rx="4" fill="#937A67" stroke="#1B1433" stroke-width="4"/>
+<rect x="416" y="688" width="40" height="35" rx="5" fill="#75929A" stroke="#1B1433" stroke-width="4"/>
+<path d="M422 695 l14 12 14 -12 m-14 12 v10" fill="none" stroke="#FFF0BF" stroke-width="4"/>
+<g transform="translate(104 636)"><path d="M109 4 L157 -20 L210 14" fill="none" stroke="#272739" stroke-width="24"/><path d="M106 11 L166 2 L209 16" fill="none" stroke="#393648" stroke-width="26"/><path d="M199 15 l24 1" fill="none" stroke="#332939" stroke-width="15"/><path d="M-7 -18 Q11 -26 42 -19 L109 -7 L116 15 Q90 26 44 25 L7 17Z" fill="#EEE4CD" stroke="#1B1433" stroke-width="4"/><path d="M4 -16 L19 -19 L34 1 L16 -2Z" fill="#FFF0D4" stroke="#1B1433" stroke-width="4"/><path d="M20 4 Q37 24 54 12 L76 5" fill="none" stroke="#1B1433" stroke-width="18"/><path d="M20 4 Q37 24 54 12 L76 5" fill="none" stroke="#EEE4CD" stroke-width="12"/><path d="M72 6 l10 -2" fill="none" stroke="#DFA689" stroke-width="9"/><path d="M-42 -39 Q-33 -53 -15 -47 Q2 -46 7 -35 L10 -26 L16 -21 L9 -17 Q13 -5 2 -3 L-23 -3 Q-43 -6 -43 -24Z" fill="#DFA689" stroke="#1B1433" stroke-width="4"/><path d="M-41 -13 L-60 -22 L-51 -31 L-64 -44 L-45 -42 L-52 -59 L-33 -49 L-29 -68 L-14 -47 L-2 -54 L1 -41 Q-26 -40 -29 -20Z" fill="#F6EED0" stroke="#1B1433" stroke-width="4"/><path d="M-7 -27 q5 4 10 0" fill="none" stroke="#1B1433" stroke-width="2.6"/></g>
+<path d="M20 846 H520" fill="none" stroke="#B6A79D" stroke-width="3"/>
+<text x="22" y="885" text-anchor="start" fill="#FFF0D4" font-family="sans-serif" font-size="16" font-weight="bold">Stone lip at y = 664   ·   service shelf at y = 724</text>
+<text x="22" y="917" text-anchor="start" fill="#C1C4C0" font-family="sans-serif" font-size="13" font-weight="bold">Upper hatch to balcony. Right passage to service gallery.</text>
+<text x="491" y="556" text-anchor="end" fill="#9CD9C4" font-family="sans-serif" font-weight="bold" font-size="13">SERVICE DOOR</text>
+</g></svg>

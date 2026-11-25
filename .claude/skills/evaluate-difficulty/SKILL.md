@@ -130,8 +130,8 @@ whatever the bands say.
 
 - **Every souvenir has a place in the trophy room.** A new room or route brings its souvenir to the
   trophy room: a slot, a name in `tr().items` and a catchy EN and FR description.
-  `tests/ui-trophies*.test.ts` checks every room. One room for now; a second room opens when the shelves
-  outgrow the first (docs/GDD-9-trophy-room.md).
+  `tests/ui-trophies*.test.ts` checks every room. A level's town pickup also gets a slot in the trophy
+  room's town room, with an EN and FR name and description (docs/GDD-9-trophy-room.md).
 
 ## Too-easy checks
 

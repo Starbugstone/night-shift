@@ -1,15 +1,18 @@
 // v4 trophy room: pure, DOM-free catalogue, shelf state, pagination and layout maths.
-// Iterates LEVELS + ROOMS (with SOUVENIR_SWAPS already applied) so new levels and items appear
-// automatically. Tested by tests/ui-trophies.test.ts.
-import { VIEW_W, type RoomId } from '../contracts';
+// Room 1 (Souvenirs): iterates LEVELS + ROOMS (with SOUVENIR_SWAPS already applied).
+// Room 2 (Field finds): iterates LEVELS and each level's `map.collectible`.
+// Tested by tests/ui-trophies.test.ts.
+import { VIEW_W, type MapCollectibleId, type RoomId } from '../contracts';
 import { ROOMS } from '../abduct/rooms';
 import { LEVELS, isDeep, levelRooms } from '../levels/levels';
 import type { LevelId, SaveData, TrophyEntry } from '../levels/save';
-import { gt, tr } from '../i18n';
+import { fmt, gt, tr } from '../i18n';
+
+export type TrophyRoomTab = 'souvenirs' | 'town';
 
 /**
- * Maximum exhibits in a single Trophy Room wing before splitting into Room 2 / Wing 2.
- * 48 = 16 rows of 3 (~3.4 portrait screens of scroll on 375×690). Current catalogue is 35 (1 room).
+ * Maximum exhibits in a single Souvenirs wing before splitting into Wing 2.
+ * 48 = 16 rows of 3 (~3.4 portrait screens of scroll on 375×690). Current catalogue is 35 (1 wing).
  */
 export const ROOM_CAPACITY = 48;
 
@@ -25,8 +28,14 @@ export const CASE_HDR_H = 38;
 export const CASE_BOT_PAD = 14;
 export const CASE_GAP = 16;
 
+// Room 2 (Field finds) full-width showcase cards
+export const TOWN_CARD_X = CASE_X; // 24
+export const TOWN_CARD_W = CASE_W; // 492
+export const TOWN_CARD_H = 118;
+export const TOWN_CARD_GAP = 12;
+
 export interface TrophySlot {
-  /** 1-based Bureau exhibit number across the full catalogue. */
+  /** 1-based Bureau exhibit number across the full souvenir catalogue. */
   readonly index: number;
   /** Item id: its English name (key in `tr().items` and `tr().trophies.descriptions`). */
   readonly itemId: string;
@@ -79,6 +88,38 @@ export interface TrophyShelfState {
   readonly foundCount: number;
   readonly totalCount: number;
   readonly totalHauls: number;
+}
+
+export interface TownTrophySlot {
+  /** 1-based exhibit index in the Field Finds annex (ordered by level). */
+  readonly index: number;
+  readonly id: MapCollectibleId;
+  readonly artKey: string;
+  readonly levelId: LevelId;
+  readonly levelNum: number;
+}
+
+export interface TownTrophySlotState {
+  readonly slot: TownTrophySlot;
+  /** True when `save.levels[levelId].mapCollectible === slot.id`. */
+  readonly found: boolean;
+}
+
+export interface TownShelfState {
+  readonly slots: readonly TownTrophySlotState[];
+  readonly foundCount: number;
+  readonly totalCount: number;
+}
+
+export interface TrophyProgress {
+  /** Combined found exhibits across both rooms (souvenirs + town finds). */
+  readonly found: number;
+  /** Combined total exhibits across both rooms. */
+  readonly total: number;
+  readonly souvenirsFound: number;
+  readonly souvenirsTotal: number;
+  readonly townFound: number;
+  readonly townTotal: number;
 }
 
 /** Specimen display name (English source key for `gt()`) that owns `roomId`. */
@@ -134,11 +175,36 @@ export function buildTrophyCatalog(): readonly TrophySection[] {
   return sections;
 }
 
-/** Cached catalogue (room data is immutable after boot). */
+/** Cached souvenir catalogue (room data is immutable after boot). */
 let cachedCatalog: readonly TrophySection[] | null = null;
 export function trophyCatalog(): readonly TrophySection[] {
   if (!cachedCatalog) cachedCatalog = buildTrophyCatalog();
   return cachedCatalog;
+}
+
+/** Build the ordered catalogue of town pickups by iterating `LEVELS` (never hard-coded). */
+export function buildTownCatalog(): readonly TownTrophySlot[] {
+  const slots: TownTrophySlot[] = [];
+  let nextIndex = 1;
+  for (const lv of LEVELS) {
+    const pickup = lv.map.collectible;
+    if (!pickup) continue;
+    slots.push({
+      index: nextIndex++,
+      id: pickup.id,
+      artKey: `flight/pickup_${pickup.id}`,
+      levelId: lv.id,
+      levelNum: lv.num,
+    });
+  }
+  return slots;
+}
+
+/** Cached town pickup catalogue (level map data is immutable after boot). */
+let cachedTownCatalog: readonly TownTrophySlot[] | null = null;
+export function townCatalog(): readonly TownTrophySlot[] {
+  if (!cachedTownCatalog) cachedTownCatalog = buildTownCatalog();
+  return cachedTownCatalog;
 }
 
 /**
@@ -166,7 +232,7 @@ export function buildTrophyPages(
   return pages;
 }
 
-/** Resolve the full shelf state (found vs unfound, counts, totals, pages) from a SaveData. */
+/** Resolve the full Room 1 (Souvenirs) shelf state from a SaveData. */
 export function buildShelfState(save: SaveData, capacity = ROOM_CAPACITY): TrophyShelfState {
   const sections = trophyCatalog();
   const rawPages = buildTrophyPages(sections, capacity);
@@ -203,19 +269,44 @@ export function buildShelfState(save: SaveData, capacity = ROOM_CAPACITY): Troph
   return { pages, slots: allSlots, foundCount, totalCount, totalHauls };
 }
 
-/** Quick counter for the Title / Work Orders entry buttons. */
-export function trophyProgress(save: SaveData): { found: number; total: number } {
+/** Resolve the full Room 2 (Field finds) shelf state from a SaveData (read-only). */
+export function buildTownShelfState(save: SaveData): TownShelfState {
+  const catalog = townCatalog();
+  let foundCount = 0;
+  const slots: TownTrophySlotState[] = catalog.map((slot) => {
+    const found = save.levels[slot.levelId]?.mapCollectible === slot.id;
+    if (found) foundCount++;
+    return { slot, found };
+  });
+  return { slots, foundCount, totalCount: slots.length };
+}
+
+/** Combined progress counter for the Title / Work Orders entry buttons (souvenirs + town finds). */
+export function trophyProgress(save: SaveData): TrophyProgress {
   const sections = trophyCatalog();
-  let found = 0;
-  let total = 0;
+  let souvenirsFound = 0;
+  let souvenirsTotal = 0;
   for (const sec of sections) {
     for (const slot of sec.slots) {
-      total++;
+      souvenirsTotal++;
       const e = save.trophies[slot.itemId];
-      if (e && e.count > 0) found++;
+      if (e && e.count > 0) souvenirsFound++;
     }
   }
-  return { found, total };
+  const town = townCatalog();
+  let townFound = 0;
+  for (const slot of town) {
+    if (save.levels[slot.levelId]?.mapCollectible === slot.id) townFound++;
+  }
+  const townTotal = town.length;
+  return {
+    found: souvenirsFound + townFound,
+    total: souvenirsTotal + townTotal,
+    souvenirsFound,
+    souvenirsTotal,
+    townFound,
+    townTotal,
+  };
 }
 
 /** Capitalized singular item title in the active language, derived automatically from `tr().items`. */
@@ -240,10 +331,36 @@ export function provenanceText(entry: TrophyEntry): string {
   return who ? `${gt(who)} · ${route}` : route;
 }
 
-/** Catchy Bureau catalogue description for `itemId` in the current language. */
+/** Catchy Bureau catalogue description for souvenir `itemId` in the current language. */
 export function trophyDescription(itemId: string): string {
   const map = tr().trophies.descriptions as Readonly<Record<string, string>>;
   return map[itemId] ?? '';
+}
+
+/** Localized display name for a town pickup, derived from `tr().mapCollectibles.items[id].name`. */
+export function townItemTitle(id: MapCollectibleId): string {
+  return tr().mapCollectibles.items[id]?.name ?? id;
+}
+
+/** Catchy Bureau catalogue description for a town pickup (distinct from report comments). */
+export function townDescription(id: MapCollectibleId): string {
+  const map = tr().trophies.town.descriptions as Readonly<Record<string, string>>;
+  return map[id] ?? '';
+}
+
+/** Funny Bureau status line for a found town pickup (e.g. "Under HR review"). */
+export function townStatus(id: MapCollectibleId): string {
+  const map = tr().trophies.town.statuses as Readonly<Record<string, string>>;
+  return map[id] ?? '';
+}
+
+/** Vague, non-spoiling memo hint for an unfound town pickup. */
+export function townHint(id: MapCollectibleId): string {
+  const map = tr().trophies.town.hints as Readonly<Record<string, string>>;
+  const custom = map[id];
+  if (custom) return custom;
+  const memoHint = tr().mapCollectibles.items[id]?.memoHint;
+  return memoHint ? fmt(tr().trophies.town.memoHintFallback, { hint: memoHint }) : '';
 }
 
 // ---------------------------------------------------------------- layout maths (shared by scene, view & tests)
@@ -301,13 +418,45 @@ export function layoutTrophyPage(page: TrophyPageState): PageLayout {
   return { sections, contentHeight: y + 24 };
 }
 
-/** Hit-test a point in list content coordinates against a page layout. */
+/** Hit-test a point in list content coordinates against a Room 1 page layout. */
 export function hitTestTrophyPage(layout: PageLayout, x: number, contentY: number): TrophySlotState | null {
   for (const sec of layout.sections) {
     if (contentY < sec.y || contentY > sec.y + sec.h) continue;
     for (const r of sec.slots) {
       if (x >= r.x && x <= r.x + r.w && contentY >= r.y && contentY <= r.y + r.h) return r.slot;
     }
+  }
+  return null;
+}
+
+export interface TownSlotRect {
+  readonly slot: TownTrophySlotState;
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+export interface TownPageLayout {
+  readonly slots: readonly TownSlotRect[];
+  readonly contentHeight: number;
+}
+
+/** Compute deterministic pixel rects (relative to list origin y=0) for every Field Find display card. */
+export function layoutTownRoom(shelf: TownShelfState): TownPageLayout {
+  let y = 12;
+  const slots: TownSlotRect[] = shelf.slots.map((slot) => {
+    const r: TownSlotRect = { slot, x: TOWN_CARD_X, y, w: TOWN_CARD_W, h: TOWN_CARD_H };
+    y += TOWN_CARD_H + TOWN_CARD_GAP;
+    return r;
+  });
+  return { slots, contentHeight: y + 24 };
+}
+
+/** Hit-test a point in list content coordinates against the Room 2 Field Finds layout. */
+export function hitTestTownRoom(layout: TownPageLayout, x: number, contentY: number): TownTrophySlotState | null {
+  for (const r of layout.slots) {
+    if (x >= r.x && x <= r.x + r.w && contentY >= r.y && contentY <= r.y + r.h) return r.slot;
   }
   return null;
 }
