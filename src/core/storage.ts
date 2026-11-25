@@ -1,4 +1,4 @@
-import type { KeyValueStore } from '../levels/save';
+import { SAVE_KEY, type KeyValueStore } from '../levels/save';
 
 /** localStorage, or null when blocked (private mode, sandboxed iframe…). */
 export function browserStorage(): KeyValueStore | null {
@@ -21,4 +21,26 @@ export function watchReducedMotion(onChange: (reduced: boolean) => void): boolea
   } catch {
     return false;
   }
+}
+
+/** Preprod keeps its own save so testing there never writes the save production reads. */
+export const PREPROD_SAVE_KEY = 'night-shift-save-preprod';
+
+/** True on the preprod deploy (/night-shift/preprod/), never on production. */
+export function isPreprodPath(pathname: string): boolean {
+  return /\/preprod\//.test(pathname);
+}
+
+/**
+ * Preprod's view of storage: the save lives under its own key. The first load starts from a copy
+ * of the shared save (read only), and every write goes to the preprod key.
+ */
+export function preprodStorage(inner: KeyValueStore | null): KeyValueStore | null {
+  if (!inner) return null;
+  const map = (key: string): string => (key === SAVE_KEY ? PREPROD_SAVE_KEY : key);
+  return {
+    getItem: (key) => (key === SAVE_KEY ? inner.getItem(PREPROD_SAVE_KEY) ?? inner.getItem(SAVE_KEY) : inner.getItem(key)),
+    setItem: (key, value) => inner.setItem(map(key), value),
+    removeItem: (key) => inner.removeItem(map(key)),
+  };
 }

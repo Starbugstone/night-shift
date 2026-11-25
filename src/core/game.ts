@@ -6,7 +6,7 @@ import { DeepFlightScene } from '../flight/deep-scene';
 import { FlightScene } from '../flight/scene';
 import { FIELD_CHECK, FIELD_CHECK_INDEX, FIELD_CHECK_ROOM, FIELD_CHECK_RULES } from '../levels/field-check';
 import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom, levelRooms } from '../levels/levels';
-import { applyDeepRun, applyRun, backfillSpecimens, isLevelUnlocked } from '../levels/progress';
+import { applyDeepRun, applyRun, backfillSpecimens, isLevelUnlocked, setUnlockEverything } from '../levels/progress';
 import { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
 import { clearSave, loadSave, writeSave, type KeyValueStore, type SaveData } from '../levels/save';
@@ -29,7 +29,7 @@ import { PointerInput } from './input';
 import { startLoop } from './loop';
 import { SceneManager, type Transition } from './scenes';
 import type { MutableContext, Shell } from './shell';
-import { browserStorage, watchReducedMotion } from './storage';
+import { browserStorage, isPreprodPath, preprodStorage, watchReducedMotion } from './storage';
 import { viewUploader } from './gfx/prepare';
 
 export type SceneName =
@@ -121,7 +121,10 @@ export class Game implements Shell {
     viewport: Viewport,
   ) {
     this.input = new PointerInput(gfx.canvas, viewport);
-    this.storage = browserStorage();
+    // Preprod: its own save and every level open; production keeps the player's save and unlocks.
+    const preprod = isPreprodPath(window.location.pathname);
+    setUnlockEverything(preprod);
+    this.storage = preprod ? preprodStorage(browserStorage()) : browserStorage();
     this._save = loadSave(this.storage);
     backfillSpecimens(this._save); // v4 specimens: older saves get their archive from past deliveries
     this.audio.setMuted(this._save.muted);

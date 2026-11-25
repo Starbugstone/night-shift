@@ -196,10 +196,19 @@ export function backfillSpecimens(save: SaveData): void {
   }
 }
 
+/**
+ * Preprod testing: every level playable. A runtime switch, never stored in the save, so a
+ * production build (which never sets it) sees the player's own unlocks.
+ */
+let unlockEverything = false;
+export function setUnlockEverything(on: boolean): void {
+  unlockEverything = on;
+}
+
 export function isLevelUnlocked(save: SaveData, index: number): boolean {
   const level = LEVELS[index];
   if (!level) return false;
-  if (index === 0 || save.allUnlocked || save.levels[level.id].delivered) return true;
+  if (index === 0 || unlockEverything || save.allUnlocked || save.levels[level.id].delivered) return true;
   if (save.legacyDispatch && isDeep(level) && level.num <= 7) return true;
   const prev = LEVELS[index - 1]!;
   return save.levels[prev.id].delivered;
