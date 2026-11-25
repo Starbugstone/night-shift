@@ -20,6 +20,7 @@ import { MemoScene } from '../ui/memo';
 import { ReportScene, deepReport, tutorialReport } from '../ui/report';
 import { TitleScene } from '../ui/title';
 import { TrophiesScene, type TrophyReturnTarget } from '../ui/trophies';
+import type { TrophyRoomTab } from '../ui/trophy-data';
 import { UpgradesScene } from '../ui/upgrades';
 import { WorkOrdersScene } from '../ui/workorders';
 import { AssetLoader } from './assets';
@@ -107,6 +108,7 @@ export class Game implements Shell {
   readonly assets = new AssetLoader();
   readonly scenes: SceneManager;
   private storage: KeyValueStore | null;
+  readonly preprod: boolean;
   private _save: SaveData;
   /** Live flight scene (for debug/tests). */
   flight: FlightScene | DeepFlightScene | null = null;
@@ -123,9 +125,9 @@ export class Game implements Shell {
   ) {
     this.input = new PointerInput(gfx.canvas, viewport);
     // Preprod: its own save and every level open; production keeps the player's save and unlocks.
-    const preprod = isPreprodPath(window.location.pathname);
-    setUnlockEverything(preprod);
-    this.storage = preprod ? preprodStorage(browserStorage()) : browserStorage();
+    this.preprod = isPreprodPath(window.location.pathname);
+    setUnlockEverything(this.preprod);
+    this.storage = this.preprod ? preprodStorage(browserStorage()) : browserStorage();
     this._save = loadSave(this.storage);
     backfillSpecimens(this._save); // v4 specimens: older saves get their archive from past deliveries
     this.audio.setMuted(this._save.muted);
@@ -270,8 +272,8 @@ export class Game implements Shell {
     this.scenes.go('upgrades', () => new UpgradesScene(this));
   }
 
-  toTrophies(from: TrophyReturnTarget = 'title'): void {
-    this.scenes.go('trophies', () => new TrophiesScene(this, from));
+  toTrophies(from: TrophyReturnTarget = 'title', view?: { preview: boolean; room: TrophyRoomTab }): void {
+    this.scenes.go('trophies', () => new TrophiesScene(this, from, view), view !== undefined);
   }
 
   toMemo(levelIndex: number): void {

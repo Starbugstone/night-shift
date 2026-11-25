@@ -6,7 +6,7 @@
 import { VIEW_W, type MapCollectibleId, type RoomId } from '../contracts';
 import { ROOMS } from '../abduct/rooms';
 import { LEVELS, isDeep, levelRooms } from '../levels/levels';
-import type { LevelId, SaveData, SpecimenEntry, TrophyEntry } from '../levels/save';
+import { cloneSave, type LevelId, type SaveData, type SpecimenEntry, type TrophyEntry } from '../levels/save';
 import { fmt, gt, tr } from '../i18n';
 
 export type TrophyRoomTab = 'souvenirs' | 'town' | 'specimens';
@@ -835,4 +835,32 @@ export function hitTestSpecimenPage(layout: SpecimenPageLayout, x: number, conte
     }
   }
   return null;
+}
+
+/**
+ * Preprod preview: a copy of the save with every exhibit found, so testers can inspect all three
+ * rooms. Specimens cycle through 1, 3 and 10 visits (to show both addenda) and 0, 1 and 4 probes.
+ * Display only: the scene never writes it back.
+ */
+export function previewSave(save: SaveData): SaveData {
+  const out = cloneSave(save);
+  for (const sec of trophyCatalog()) {
+    for (const slot of sec.slots) {
+      const room = slot.rooms[0];
+      if (room && !out.trophies[slot.itemId]) out.trophies[slot.itemId] = { count: 1, room, first: 0 };
+    }
+  }
+  for (const slot of townCatalog()) out.levels[slot.levelId].mapCollectible = slot.id;
+  const visits = [1, 3, 10];
+  const probes = [0, 1, 4];
+  let i = 0;
+  for (const sec of specimenCatalog()) {
+    for (const slot of sec.slots) {
+      const room = slot.rooms[0];
+      const n = probes[i % 3]!;
+      out.specimens[slot.id] = { count: visits[i % 3]!, ...(room ? { room } : {}), first: i, probes: n, probed: n > 0 };
+      i++;
+    }
+  }
+  return out;
 }

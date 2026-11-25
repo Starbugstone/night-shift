@@ -1,3 +1,4 @@
+import type { TrophyRoomTab } from '../ui/trophy-data';
 import type { AbductResult, FlightResult, GameContext, RoomId, UpgradeId } from '../contracts';
 import type { SaveData } from '../levels/save';
 import type { Lang } from '../i18n';
@@ -16,6 +17,8 @@ export interface Shell {
   readonly audio: SynthAudio;
   readonly input: PointerInput;
   readonly assets: AssetLoader;
+  /** Running on the preprod deploy (/night-shift/preprod/): testing tools show. */
+  readonly preprod: boolean;
   /** Replace the save (and persist). */
   setSave(s: SaveData): void;
   toggleMute(): void;
@@ -27,7 +30,8 @@ export interface Shell {
   toTitle(): void;
   toWorkOrders(): void;
   toUpgrades(): void;
-  toTrophies(from?: 'title' | 'workorders'): void;
+  /** `view`: preprod's preview of every exhibit, and the room to open on. */
+  toTrophies(from?: 'title' | 'workorders', view?: { preview: boolean; room: TrophyRoomTab }): void;
   toMemo(levelIndex: number): void;
   toFlight(levelIndex: number, spotted?: number): void;
   toAbduct(levelIndex: number, room: RoomId, flight: FlightResult): void;

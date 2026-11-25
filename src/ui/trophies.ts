@@ -50,6 +50,7 @@ import {
   TOWN_CARD_H,
   TOWN_CARD_W,
   buildShelfState,
+  previewSave,
   buildSpecimenShelfState,
   buildTownShelfState,
   hitTestSpecimenPage,
@@ -158,20 +159,27 @@ export class TrophiesScene implements Scene {
   readonly tabSpecimens = new Button(358, 88, 158, 48, '', 'ghost', 14.5);
   readonly prevWing = new Button(24, HEADER_BASE_H + 4, 88, 36, '‹', 'ghost', 26);
   readonly nextWing = new Button(VIEW_W - 24 - 88, HEADER_BASE_H + 4, 88, 36, '›', 'ghost', 26);
+  /** Preprod only: preview every exhibit as found (display only, never saved). */
+  readonly previewBtn = new Button(VIEW_W - 24 - 196, VIEW_H - 24 - 52, 196, 52, '', 'ghost', 16);
   readonly closeBtn = new Button(MODAL_X + (MODAL_W - 220) / 2, MODAL_Y + MODAL_H - 74, 220, 56, '', 'primary', 24);
 
+  /** Showing preprod's everything-found preview instead of the player's save. */
+  readonly preview: boolean;
   readonly debug: TrophiesDebug;
   private readonly look = new ViewSlot(() => new TrophiesView(this));
 
   constructor(
     readonly shell: Shell,
     readonly returnTo: TrophyReturnTarget = 'title',
+    view?: { preview: boolean; room: TrophyRoomTab },
   ) {
-    this.shelf = buildShelfState(shell.save);
+    this.preview = shell.preprod && view?.preview === true;
+    const save = this.preview ? previewSave(shell.save) : shell.save;
+    this.shelf = buildShelfState(save);
     this.layouts = this.shelf.pages.map((p) => layoutTrophyPage(p));
-    this.townShelf = buildTownShelfState(shell.save);
+    this.townShelf = buildTownShelfState(save);
     this.townLayout = layoutTownRoom(this.townShelf);
-    this.specimenShelf = buildSpecimenShelfState(shell.save);
+    this.specimenShelf = buildSpecimenShelfState(save);
     this.specimenLayouts = this.specimenShelf.pages.map((p) => layoutSpecimenPage(p));
     this.souvenirListTop = this.shelf.pages.length > 1 ? HEADER_BASE_H + WING_BAR_H : HEADER_BASE_H;
     this.specimenListTop = this.specimenShelf.pages.length > 1 ? HEADER_BASE_H + WING_BAR_H : HEADER_BASE_H;
@@ -181,6 +189,10 @@ export class TrophiesScene implements Scene {
     this.tabTown.label = fmt(strings.tabTown, { n: this.townShelf.foundCount, max: this.townShelf.totalCount });
     this.tabSpecimens.label = fmt(strings.tabSpecimens, { n: this.specimenShelf.foundCount, max: this.specimenShelf.totalCount });
     this.closeBtn.label = strings.close;
+    this.previewBtn.visible = shell.preprod;
+    this.previewBtn.label = this.preview ? 'Preprod · my save' : 'Preprod · show all';
+    this.previewBtn.kind = this.preview ? 'secondary' : 'ghost';
+    if (view) this.switchRoom(view.room);
     this.syncTabStyles();
 
     const self = this;
@@ -331,6 +343,10 @@ export class TrophiesScene implements Scene {
     }
 
     if (this.back.update(p, dt, audio)) return this.goBack();
+    if (this.shell.preprod && this.previewBtn.update(p, dt, audio)) {
+      this.shell.toTrophies(this.returnTo, { preview: !this.preview, room: this.activeRoom });
+      return;
+    }
     if (this.tabSouvenirs.update(p, dt, audio)) {
       this.switchRoom('souvenirs');
       return;
@@ -495,6 +511,7 @@ class TrophiesView implements SceneView {
   private readonly townSummary = new Container();
   private readonly specimenSummary = new Container();
   private readonly back: ButtonView;
+  private readonly previewBtn: ButtonView;
   private readonly tabSouvenirs: ButtonView;
   private readonly tabTown: ButtonView;
   private readonly tabSpecimens: ButtonView;
@@ -548,6 +565,7 @@ class TrophiesView implements SceneView {
     this.headerRule.rect(0, 0, VIEW_W, 2).fill('rgba(124,255,203,0.28)');
 
     this.back = new ButtonView(s.back);
+    this.previewBtn = new ButtonView(s.previewBtn);
     this.tabSouvenirs = new ButtonView(s.tabSouvenirs);
     this.tabTown = new ButtonView(s.tabTown);
     this.tabSpecimens = new ButtonView(s.tabSpecimens);
@@ -577,6 +595,7 @@ class TrophiesView implements SceneView {
       this.townSummary,
       this.specimenSummary,
     );
+    if (s.shell.preprod) this.root.addChild(this.previewBtn);
 
     if (s.shelf.pages.length > 1 || s.specimenShelf.pages.length > 1) {
       this.wingLabel = new Label(WING_LABEL);
@@ -712,6 +731,7 @@ class TrophiesView implements SceneView {
     const reduced = s.shell.ctx.reducedMotion;
     this.sky.sync(s.t, reduced);
     this.back.sync();
+    this.previewBtn.sync();
     this.tabSouvenirs.sync();
     this.tabTown.sync();
     this.tabSpecimens.sync();
