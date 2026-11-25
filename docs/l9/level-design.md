@@ -31,7 +31,7 @@ for the naming pass. [Story and names](story-and-names.md)
 | Clock and recovery | Flight, room play, lock animations and the usual spotted interval spend time. Memo, pause and room retry choice follow the existing pause behavior. A sighting returns to the normal last-delivery checkpoint. Room retry keeps the chosen entry and the clock already spent. |
 | Delivered | All three specimens out before the deadline. The last extraction immediately files the report. |
 | Ghost | Delivered with zero full flight sightings and zero failed room attempts, using ordinary deep-shift failure accounting. Partial Suspicion is allowed. |
-| Night owl | Delivered with **120 s left** (elapsed **≤260 s**, 10:08:00 p.m.). The detour, sightings and retries spend their usual time. |
+| Night owl | Delivered with **255 s left** (elapsed **≤125 s**, 10:05:45 p.m.). The detour, sightings and retries spend their usual time. |
 | Fourth star | Delivered with the **time car** picked up in the same shift. Room souvenirs belong to the trophy room and leave scoring unchanged. |
 
 A 20-second strike deadline offers the car a distinct opening window. A further
@@ -93,10 +93,10 @@ fixed source an era-appropriate silhouette and a source name for spotting.
 | Source | Starting placement and behavior |
 | --- | --- |
 | Lot marshal's flashlight | At (1030, 1940), range 440 px, base −2.25 rad, half-angle 0.49 rad, gentle sweep ±0.06 rad. Reuse the camera cone geometry with a flashlight source. It covers the straight line to the parked car. The spawn verge and the west turnout are outside the cone. |
-| Dance spotlight | At (1400, 1550), range 465 px, base 2.32 rad, half-angle 0.37 rad, gentle sweep ±0.05 rad. Reuse the fixed camera cone with a dance lamp skin. It crosses the diagonal from spawn to the Bandstand Hatch. Both rings have safe hover pockets. |
+| Dance spotlight | At (1400, 1480), range 585 px, base 2.145 rad, half-angle 0.5 rad, sweep ±0.18 rad. Reuse the fixed camera cone with a dance lamp skin. It crosses the diagonal from spawn to the Bandstand Hatch. Both rings have safe hover pockets. |
 | Courthouse work lamp | At (820, 694), facing south, range 540 px, half-angle 0.52 rad. The cone points across Courthouse Row and down Main Street, so the west turnout intercept catches the car before the late approach to the cable. |
 | Police cruiser | Single era sedan, 150 px/s, 240 px headlights, 0.32 rad half-angle, no siren or beacon radius. Loop around the theatre on (1135, 755) → (1640, 755) → (1640, 1030) → (1135, 1030). Start 450 px into the loop so the cruiser is beyond the fire trails at 10:04. Put the east crossing's holding point below y1140. |
-| Café watcher | Counter regular at (555, 1100), range 190 px, cone half-angle 0.32 rad, turns between south-southwest and east every 3.2 s with the standard 0.45 s amber preview. The window source and broad sidewalk give the player a place to read the turn. |
+| Café watcher | Counter regular at (555, 1100), range 225 px, cone half-angle 0.35 rad, turns between southwest and east every 3.2 s with the standard amber preview. The window source and broad sidewalk give the player a place to read the turn. |
 | Lightning cable | The tower feed runs to (903, 610) on the square side. The wire capsule crosses the row at x903 and ends at the lamp spool (903, 898). It stuns on collision. At 10:04 the car centre reaches (985, 755) with its trailing hook at (903, 755). |
 
 Use the normal soft ambient lamps around the square, marquee, café windows
@@ -235,7 +235,8 @@ eastward drag. Hold at **(300, 285)** to see the wind ribbons and cable
 motion through the branch opening.
 
 - **Clock Balcony.** Open the room ceiling at x488–708 into the riser
-  (x390–740, y−620–0). A bounded side draft in the first section
+  (x390–740, y−620–0). A shutter at y−79 opens for 4.6 s on a 20 s
+  cycle. A bounded side draft in the first section
   (x468–705, y−235 to −35) nudges the body east at about 105 px/s². The
   lightning cable end is a slow swing, about ±0.35 rad at 1.2 rad/s, with
   its effective tip around y−265 beyond the draft. Teach the draft first
@@ -243,14 +244,14 @@ motion through the branch opening.
   110 px diameter sits left of the line near (500, −410). Leave a rest
   pocket at about (606, −345) and a 200 px clear balcony aperture across
   x500–700 at the top. No timed live electricity in the cutaway. The
-  **spare flux capacitor** sits on an insulated shelf near x460, resting
+  **spare flex capacitor** sits on an insulated shelf near x460, resting
   at y−325. Collect it by dipping to the left from the pocket, then
   returning to the climb.
 - **Service Door.** Continue into the winch gallery (x740–1500,
   y0–700) through y245–515. A drip tray sits low under the preferred
   lift. One rolling counterweight crosses high and low on its track,
   visible from a pocket near (905, 320). Time a service swing gate
-  near x1140 with a 6.5 s cycle and about 3.8 s open. Leave at least
+  near x1140 with a 16 s cycle and 4.2 s open. Leave at least
   200 px between the weight track and gate, and clean space at the
   exit on the east wall (y335–545). The **yellow hazmat suit** rests
   folded on a dry bench at x910, bottom y510. Lower off the high line
@@ -272,15 +273,17 @@ counter before either branch. Use the existing bass-stack rule.
 
 - **Awning Transom.** Climb through x465–685 at y0 into a shallow transom
   gallery (x355–740, y−455–0). A hinged sash near y−210 opens for
-  3.2 s on a 5.8 s cycle. Stage at about (565, −100), then lift
+  4.4 s on a 20 s cycle. Stage at about (565, −100), then lift
   through the opening and turn toward the high awning exit. Keep the
   last 140 px free of trim, sockets and signs. The **purple-and-yellow
   skateboard** lies on a low display rack near x405, bottom y365.
   Dip off the counter lift to take it before climbing to the sash.
-- **Kitchen Door.** Continue east into x740–1510 through y230–530.
+- **Kitchen Door.** Time the kitchen swing door at x740, which opens for
+  4.3 s on a 16 s cycle. Continue east into x740–1510 through y230–530.
   Pass a rolling bus cart and fragile glassware on different stretches
-  of the room. The owner naps in a pantry chair at about (1280, 575),
-  nominal hearing radius **155 px**. The route stays high and has a
+  of the room. Lyle naps behind the counter at about (1280, 513),
+  with a **365 px** hearing radius. Loose kitchen tiles creak when
+  crossed too fast. The route stays high and has a
   clear place to settle at (1060, 290). Pass the owner slowly or go above
   the hearing radius. The **clock-tower fundraiser flyer** rests on a
   tray at x1180, bottom y490, below the high line and close enough to
@@ -307,22 +310,23 @@ no moving car, terrain physics or new beam control.
   quarter panel, and go up through x480–700 at y0 into a rigging bay
   (x390–740, y−520–0). The direct diagonal meets the edge of a raised
   bandstand and a swinging mic stand. From the parking bay the player
-  can see its first swing; leave a rest pocket near (590, −100) and
+  can see its first swing. The stage hatch opens for 4.5 s on a 20 s
+  cycle. Leave a rest pocket beyond it and
   about 215 px of clearance in the final opening. The **guitar** rests
   in an open case on the stage edge near x440, bottom y410, to one
   side of the lift. Approach its glint before taking the high hatch.
-- **Loading Canopy.** Continue east through y255–535 into a covered
-  service bay (x740–1520). One rolling amplifier trolley crosses the
+- **Loading Canopy.** Time the loading door's 4.3 s opening on a 16 s
+  cycle, then continue east through y255–535 into a covered service
+  bay (x740–1520). One rolling amplifier trolley crosses the
   path near x1030. Teach the crossing from **(865, 315)**, outside the
   trolley's sweep. Floorboards near the service door creak with fast
-  movement (roughly x1200–1350, y380–600). One couple asleep in a nearby
-  sedan can serve as a single second-sleeper meter, nominal 150 px
-  hearing radius, at about (1280, 565). Put the **red puffy vest** on a
+  movement (x1050–1425, y265–600). The prom chaperone sleeps by the
+  dock with a **350 px** hearing radius centred at (1295, 521). Put the **red puffy vest** on a
   prop crate at x1170, bottom y520, as a low detour before the creak
   patch. Leave the service opening at x1520, y290–505 clear.
 
 Reuse L7 castor or patrol movement, L3 creak noise and the existing
-second-sleeper rule. A warm glow on the couple's car can stay purely
+second-sleeper rule. A warm glow by the dock can stay purely
 decorative. Draw the trunk sill and the rolling obstacles as individual
 sprites with matching colliders.
 
@@ -342,14 +346,14 @@ shared route builder requires it.
 
 ## Difficulty gates
 
-Treat L9 as a **chapter opener** for room delivery. Use the current late
-deep star bands for the mandatory loop.
+Use the late deep-shift star bands with a Night owl ceiling and room
+timing targets for the standard shift.
 
 | Mode, zero upgrades | Skilled | Casual |
 | --- | --- | --- |
 | Standard shift · Delivered | ≥5/6 | ≥2/3 |
 | Standard shift · Ghost | 50–100% | 33–90% |
-| Standard shift · Night owl | ≥2/3 | ≥1/2 |
+| Standard shift · Night owl | 2/3–90% | 50–90% |
 | Per route · delivery | ≥80% on each of six | ≥50% on each, one route per specimen ≥80% |
 | Independent flight | ≥80% finish, median ≤1 full sighting | ≥80% finish, median ≤2 full sightings |
 | Car-first · actual catches per attempt, six-seed gate | ≥5/6 | 4–5/6 |
@@ -358,8 +362,9 @@ deep star bands for the mandatory loop.
 Use six seeds for the release gate and at least 20 matched seeds for
 greybox tuning. Aim for 90–100% skilled and 85–100% casual delivery in the
 standard mode over 20 seeds. Require skilled Ghost above casual Ghost
-and preserve the casual median estimates already used in the evaluator:
-shift ≤208 s, ≥55.5 s median par used by successful runs, ≥5% peak
+and target a **90–110 s** casual shift estimate. Casual room medians
+should run **19–27 s** across 20 seeds (18–28 s in the six-seed gate).
+Keep ≥30% median par used by successful runs, ≥5% peak
 Suspicion, ≥20 average across room median peak wake, and an obstacle
 within 80 px or an active mechanic witnessed on at least one casual run
 per route. Keep the standard loop coverage independent of the detour.

@@ -425,7 +425,7 @@ export class DeepFlightView implements SceneView {
     const lock = locking ? Math.min(1, s.st / (rm ? 0.5 : LOCK_ANIM)) : 0;
     const strike = this.crestValley?.strike;
     const reveal = strike && !rm && s.state === 'fly' && sim.lock.fraction === 0
-      ? strike.revealScale(sim.camX, sim.camY, saucer.x, saucer.y) : 1;
+      ? strike.revealScale(sim.camX, sim.camY, saucer.x, saucer.y, sim.field) : 1;
     if (strike) strike.sky.visible = reveal < 1;
     cam.sync(sim.camX, sim.camY, saucer.x, saucer.y, s.shake, lock, t, rm, reveal);
     this.tints.placeWorldWash(cam.world);

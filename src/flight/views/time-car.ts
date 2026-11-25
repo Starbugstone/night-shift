@@ -10,7 +10,7 @@ import { CrestValleyClockHands } from '../../ui/views/crest-valley-clock';
 import { HudPanel } from '../../ui/views/hud';
 import { TIME_CAR, type TimeCar } from '../time-car';
 import { CrestValleyPerson } from './crest-valley-person';
-import { CrestValleyStrike, TOWER_CLOCK } from './crest-valley-strike';
+import { CrestValleyStrike, TOWER_CLOCK, TOWER_ROD } from './crest-valley-strike';
 import { arc } from './tells';
 import type { CameraView } from './world';
 
@@ -86,7 +86,7 @@ class TimeCarView {
   private readonly lift = new Container();
   private readonly body = new Container();
   private readonly light = new Glow(glowTexture(GLOW.lamp)).place(0, -86, 48, 72, 0.55);
-  private readonly beam = new Glow(glowTexture(GLOW.mint)).place(0, 0, 100, 115, 0);
+  private readonly beam = new Glow(glowTexture(GLOW.mint));
   private readonly coils: Container;
   private readonly arcs = new CarArcs();
   private readonly ring = new Container();
@@ -132,7 +132,7 @@ class TimeCarView {
     this.lift.scale.set(rm ? 1 : 1 - amount * 0.56);
     this.lift.y = rm ? 0 : -75 * amount;
     this.lift.alpha = dissolving ? 1 - Math.max(0, (missAge - 0.035) / 0.125) : pulling ? 1 - amount : 1;
-    this.beam.alpha = pulling ? 0.85 : 0;
+    this.beam.place(0, 0, 100, 115, pulling ? 0.85 : 0);
     this.coils.alpha = speed === 0 ? Math.min(0.35, Math.max(0, (elapsed - 9) * 0.1)) : 0.22 + Math.min(0.72, speed / 360);
     this.arcs.sync(phase === 'rolling' || phase === 'open' || dissolving, this.car.charge, elapsed, rm);
     this.chip.visible = this.car.visible;
@@ -157,8 +157,8 @@ export class CrestValleyView {
   readonly car: TimeCarView;
   readonly strike: CrestValleyStrike;
   private readonly clockHands = new CrestValleyClockHands(0, 0);
-  private readonly warning = new Glow(glowTexture(GLOW.lamp)).place(826, 178, 95, 110, 0);
-  private readonly contact = new Glow(glowTexture(GLOW.lamp)).place(TIME_CAR.cable.x, TIME_CAR.cable.south, 66, 60, 0);
+  private readonly warning = new Glow(glowTexture(GLOW.lamp));
+  private readonly contact = new Glow(glowTexture(GLOW.lamp));
   private readonly rain: TilingSprite;
   private readonly people: CrestValleyPerson[];
 
@@ -176,7 +176,7 @@ export class CrestValleyView {
       clock.addChild(face);
     }
     clock.addChild(this.strike.dial, this.clockHands);
-    const line = new Graphics().moveTo(826, 178).quadraticCurveTo(858, 204, 872, 232)
+    const line = new Graphics().moveTo(TOWER_ROD.x, TOWER_ROD.y).quadraticCurveTo(858, 204, 872, 232)
       .quadraticCurveTo(897, 370, TIME_CAR.cable.x, TIME_CAR.cable.north)
       .stroke({ color: INK, width: 4 });
     const words = tr().crestValley;
@@ -229,9 +229,9 @@ export class CrestValleyView {
     this.clockHands.sync(elapsed);
     for (const person of this.people) person.sync(cam, time, rm);
     const age = this.strike.age;
-    this.warning.visible = this.contact.visible = age >= -2 && age < 0;
-    this.warning.alpha = rm ? 0.48 : 0.42 + 0.18 * Math.sin(elapsed * 12);
-    this.contact.alpha = this.warning.alpha;
+    const warning = age >= -2 && age < 0 ? (rm ? 0.48 : 0.42 + 0.18 * Math.sin(elapsed * 12)) : 0;
+    this.warning.place(TOWER_ROD.x, TOWER_ROD.y, 95, 110, warning);
+    this.contact.place(TIME_CAR.cable.x, TIME_CAR.cable.south, 66, 60, warning);
     this.strike.sync(cam, rm);
     this.rain.alpha = Math.min(0.35, 0.1 + Math.max(0, elapsed - 8) * 0.04);
     this.rain.tilePosition.set(rm ? 0 : -elapsed * 36, rm ? 0 : elapsed * 195);

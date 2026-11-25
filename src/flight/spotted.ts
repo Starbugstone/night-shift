@@ -11,7 +11,7 @@ import { fmt, getLang, localArt, tr, type Strings } from '../i18n';
 import { clamp, roundRectPath, text } from '../ui/draw';
 import { C } from '../ui/theme';
 import { artSprite } from '../ui/views/art';
-import type { SpotCause } from './hazards';
+import { SPOT_CAUSES, type SpotCause } from './hazards';
 import { paintedSprite, plate, TAU } from './views/world';
 
 const INK = '#1b1433';
@@ -21,8 +21,7 @@ const PH = 240;
 const SRC_W = 288;
 const SRC_H = 192;
 
-const CAUSES: readonly SpotCause[] = ['police', 'patrol', 'traffic', 'porch', 'watcher', 'dog', 'heli',
-  'camera', 'window', 'lighthouse', 'ambulance', 'photographer', 'steward', 'hum'];
+const FALLBACK_CAUSE = 'watcher';
 const PHOTO_LABEL = { size: 19, color: C.paperInk, weight: 800, italic: true } as const;
 const CLOCK = { size: 13, color: 'rgba(255,255,255,0.9)', align: 'right', weight: 800 } as const;
 const QUESTION = { size: 34, color: '#e0304e', weight: 900, italic: true } as const;
@@ -31,10 +30,6 @@ const STAMP = { size: 80, color: C.amberHi, outline: C.ink, weight: 900 } as con
 const CAPTION = { size: 18, color: C.paperInk, weight: 700, italic: true, align: 'center', lineHeight: 24 } as const;
 const EXCUSE = { size: 16, color: C.mint, weight: 700, align: 'left', lineHeight: 21 } as const;
 const BACK = { size: 15, color: C.mint, weight: 800 } as const;
-
-function photoLabel(cause: SpotCause): string {
-  return (tr().flight.photo.labels as Record<string, string>)[cause] ?? '';
-}
 
 export class SpottedPhoto {
   readonly root = new Container();
@@ -64,6 +59,7 @@ export class SpottedPhoto {
     this.grade.alpha = 0.5;
     this.image.filters = [this.grade];
     const imagePlane = new Container();
+    imagePlane.label = 'photo image';
     imagePlane.position.set(-PW / 2, -PH / 2);
     const clip = new Graphics().rect(0, 0, PW, PH).fill(0xffffff);
     imagePlane.mask = clip;
@@ -76,11 +72,12 @@ export class SpottedPhoto {
     }
     const lang = getLang();
     const lensText = tr().flight.photo;
-    for (const cause of CAUSES) {
+    for (const cause of SPOT_CAUSES) {
       const layer = paintedSprite(`camera-lens|${cause}|${lang}`, PW, PH, (g) => {
         g.translate(-PW / 2, -PH / 2);
         paintLens(g, cause, lensText);
       });
+      layer.label = `lens ${cause}`;
       layer.position.set(PW / 2, PH / 2);
       this.lens.set(cause, layer);
       imagePlane.addChild(layer);
@@ -93,6 +90,8 @@ export class SpottedPhoto {
       imagePlane.addChild(h);
     }
     imagePlane.addChild(this.reticle, this.rec, this.lensClock);
+    this.rec.label = 'recording light';
+    this.caption.label = 'exhibit caption';
     this.root.position.set(VIEW_W / 2, 420);
     this.root.addChild(card, imagePlane, this.mark, this.arrow, this.question, this.caption);
   }
@@ -140,6 +139,7 @@ export class SpottedPhoto {
     const land = rm ? 1 : easeOutBack((st - 0.06) / 0.32, 1.2);
     this.root.visible = land > 0;
     if (!this.root.visible) return;
+    if (!this.lens.has(cause)) cause = FALLBACK_CAUSE;
     this.root.rotation = (cause === 'dog' ? -0.13 : -0.045) + (rm ? 0 : (1 - Math.min(1, st / 0.4)) * 0.2);
     this.root.scale.set(rm ? 1 : 1.5 - 0.5 * land);
     this.root.alpha = Math.min(1, st / 0.12);
@@ -147,7 +147,7 @@ export class SpottedPhoto {
     if (changed) {
       this.lastCause = cause;
       for (const [key, lens] of this.lens) lens.visible = key === cause;
-      this.caption.set(photoLabel(cause), 0, PH / 2 + 38, PW);
+      this.caption.set(tr().flight.photo.labels[cause], 0, PH / 2 + 38, PW);
       this.rec.position.set(cause === 'camera' ? 28 : 18, cause === 'camera' ? 28 : 18);
       this.reticle.visible = cause === 'heli';
     }
@@ -156,7 +156,8 @@ export class SpottedPhoto {
       this.lensClock.set(fmt(this.pm ? tr().flight.photo.clockPm : tr().flight.photo.clock, { clock }), PW - (cause === 'window' ? 108 : 12), 20);
     }
     this.rec.visible = (rm || Math.floor(t * 2) % 2 === 0) &&
-      (cause === 'camera' || cause === 'police' || cause === 'patrol' || cause === 'traffic');
+      (cause === 'camera' || cause === 'police' || cause === 'patrol' || cause === 'traffic' ||
+        cause === 'eraLight' || cause === 'eraPolice');
     for (let i = 0; i < this.hearts.length; i++) {
       const h = this.hearts[i]!;
       h.visible = cause === 'window';
@@ -181,7 +182,7 @@ export class SpottedPhoto {
   }
 }
 
-class WitnessView {
+export class WitnessView {
   readonly root = new Container();
   private readonly person = new Container();
   private readonly bubble = new Container();
@@ -190,7 +191,8 @@ class WitnessView {
   private cause: SpotCause | null = null;
 
   constructor() {
-    for (const cause of CAUSES) {
+    this.person.label = 'witness art';
+    for (const cause of SPOT_CAUSES) {
       const sprite = paintedSprite(`witness|${cause}`, 240, 260, (g) => {
         g.translate(0, -28);
         g.lineJoin = 'round';
@@ -201,6 +203,7 @@ class WitnessView {
         else if (cause === 'dog') dogHead(g, 0, true);
         else person(g, cause, 0, true);
       });
+      sprite.label = `witness ${cause}`;
       sprite.y = 28;
       this.people.set(cause, sprite);
       this.person.addChild(sprite);
@@ -215,8 +218,8 @@ class WitnessView {
   }
 
   sync(cause: SpotCause, k: number, t: number, rm: boolean, words: string): void {
+    if (!this.people.has(cause)) cause = FALLBACK_CAUSE;
     if (this.cause !== cause) {
-      if (this.cause) this.people.get(this.cause)!.visible = false;
       this.cause = cause;
       for (const [key, sprite] of this.people) sprite.visible = key === cause;
     }
@@ -293,6 +296,63 @@ export class DeepSpottedView {
 /** Static frame of the witness's lens, in photo coordinates. */
 function paintLens(g: CanvasRenderingContext2D, cause: SpotCause, words: Strings['flight']['photo']): void {
   switch (cause) {
+    case 'eraLight':
+      // A flashbulb and the pale corners of a press camera's finder.
+      g.fillStyle = 'rgba(255,213,145,0.11)';
+      g.fillRect(0, 0, PW, PH);
+      g.lineWidth = 2;
+      g.strokeStyle = '#fff0c9';
+      g.strokeRect(10, 8, PW - 20, PH - 16);
+      text(g, words.rec, 30, 19, 13, '#fff0c9', 'left', 900);
+      break;
+    case 'eraWatcher':
+      // Looking out through a café window, over a tiled sill.
+      g.fillStyle = '#293842';
+      g.fillRect(0, 0, 15, PH);
+      g.fillRect(PW - 15, 0, 15, PH);
+      g.fillRect(0, 0, PW, 8);
+      g.fillRect(0, PH - 26, PW, 26);
+      g.fillStyle = '#a85f57';
+      g.fillRect(0, PH - 26, PW, 5);
+      for (let i = 0; i < PW / 16; i++) {
+        g.fillStyle = i % 2 === 0 ? '#e4c994' : '#a85f57';
+        g.fillRect(i * 16, PH - 17, 16, 8);
+      }
+      g.strokeStyle = 'rgba(255,222,165,0.4)';
+      g.lineWidth = 3;
+      g.strokeRect(15, 8, PW - 30, PH - 34);
+      break;
+    case 'eraPolice':
+      // Two-tone steel dashboard with a thin ivory steering wheel.
+      g.fillStyle = '#285356';
+      g.beginPath();
+      g.moveTo(0, PH);
+      g.lineTo(0, PH - 46);
+      g.quadraticCurveTo(PW / 2, PH - 24, PW, PH - 46);
+      g.lineTo(PW, PH);
+      g.fill();
+      g.fillStyle = '#132a37';
+      g.fillRect(0, PH - 20, PW, 20);
+      g.strokeStyle = '#ebd9b0';
+      g.lineWidth = 6;
+      g.beginPath();
+      g.arc(82, PH + 21, 60, Math.PI, TAU);
+      g.moveTo(24, PH - 9);
+      g.lineTo(140, PH - 9);
+      g.stroke();
+      g.fillStyle = '#e1c28c';
+      roundRectPath(g, 197, PH - 32, 84, 20, 8);
+      g.fill();
+      g.strokeStyle = '#69473c';
+      g.lineWidth = 2;
+      g.beginPath();
+      for (let x = 212; x <= 266; x += 9) {
+        g.moveTo(x, PH - 28);
+        g.lineTo(x, PH - 23);
+      }
+      g.stroke();
+      text(g, words.rec, 30, 19, 13, '#fff0c9', 'left', 900);
+      break;
     case 'police':
     case 'patrol':
     case 'traffic': {
@@ -479,8 +539,10 @@ function person(g: CanvasRenderingContext2D, cause: SpotCause, t: number, rm: bo
       g.fillRect(26, -60, 4, 146);
       break;
     case 'police':
-    case 'patrol': {
-      shoulders(g, '#2a3566');
+    case 'patrol':
+    case 'eraPolice': {
+      const era = cause === 'eraPolice';
+      shoulders(g, era ? '#526660' : '#2a3566');
       g.fillStyle = '#ffd27a';
       g.beginPath();
       g.arc(-30, 70, 9, 0, TAU);
@@ -501,7 +563,7 @@ function person(g: CanvasRenderingContext2D, cause: SpotCause, t: number, rm: bo
       g.quadraticCurveTo(-46, -60, 0, -62);
       g.quadraticCurveTo(46, -60, 44, -18);
       g.closePath();
-      g.fillStyle = '#1e2750';
+      g.fillStyle = era ? '#35463f' : '#1e2750';
       g.fill();
       g.stroke();
       g.beginPath();
@@ -513,6 +575,70 @@ function person(g: CanvasRenderingContext2D, cause: SpotCause, t: number, rm: bo
       g.arc(0, -40, 8, 0, TAU);
       g.fillStyle = '#ffd27a';
       g.fill();
+      g.stroke();
+      break;
+    }
+    case 'eraLight': {
+      shoulders(g, '#9e724a');
+      face(g, true);
+      g.fillStyle = '#715240';
+      roundRectPath(g, -35, -60, 68, 41, 9);
+      g.fill();
+      g.stroke();
+      g.fillStyle = '#3a3029';
+      g.fillRect(-34, -32, 66, 10);
+      g.beginPath();
+      g.ellipse(-3, -20, 54, 8, 0, 0, TAU);
+      g.fill();
+      g.stroke();
+      // Box camera and reflector held beside the lookout's face.
+      g.fillStyle = '#2e3b47';
+      roundRectPath(g, -82, 20, 47, 31, 4);
+      g.fill();
+      g.stroke();
+      g.beginPath();
+      g.arc(-61, 35, 8, 0, TAU);
+      g.fillStyle = '#86abc0';
+      g.fill();
+      g.stroke();
+      g.beginPath();
+      g.arc(-66, 2, 15, 0, TAU);
+      g.fillStyle = '#fbe0a6';
+      g.fill();
+      g.stroke();
+      break;
+    }
+    case 'eraWatcher': {
+      shoulders(g, '#bb6763');
+      face(g, true);
+      // Pompadour, open collar and a soda at the window.
+      g.fillStyle = '#3b2a28';
+      g.beginPath();
+      g.moveTo(-43, -4);
+      g.bezierCurveTo(-59, -55, -28, -51, 7, -57);
+      g.quadraticCurveTo(55, -63, 42, -22);
+      g.quadraticCurveTo(3, -34, -29, -16);
+      g.closePath();
+      g.fill();
+      g.stroke();
+      g.fillStyle = '#f6dfbc';
+      g.beginPath();
+      g.moveTo(-27, 38);
+      g.lineTo(26, 38);
+      g.lineTo(-2, 70);
+      g.closePath();
+      g.fill();
+      g.stroke();
+      roundRectPath(g, 47, 32, 32, 48, 6);
+      g.fill();
+      g.stroke();
+      g.fillStyle = '#f2a9a0';
+      g.fillRect(52, 48, 22, 23);
+      g.strokeStyle = '#a04143';
+      g.beginPath();
+      g.moveTo(61, 37);
+      g.lineTo(66, 19);
+      g.lineTo(78, 17);
       g.stroke();
       break;
     }

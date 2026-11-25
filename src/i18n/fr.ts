@@ -145,6 +145,8 @@ export const fr: Strings = {
     recommended: 'Conseil : {route} · {tip}',
     incoming: 'NOTE DE SERVICE',
     to: 'À : Stagiaire Zib',
+    // v4 L9 1955
+    toAgent: 'À : Agent Zib (junior)',
     from: 'DE : Superviseur Vrell',
     re: 'OBJET : {re}',
     goals: 'OBJECTIFS DE PERFORMANCE',
@@ -269,11 +271,11 @@ export const fr: Strings = {
   routes: {
     // v4 L9 1955
     inventor_balcony: { route: "Balcon de l'horloge", difficulty: "engrenages et câble" },
-    inventor_service: { route: "Porte de service", difficulty: "cloche et courant d'air" },
-    bully_transom: { route: "Imposte de l'auvent", difficulty: "jukebox et ventilos" },
-    bully_kitchen: { route: "Porte de la cuisine", difficulty: "fumier et caisses" },
-    band_hatch: { route: "Trappe de l'estrade", difficulty: "orchestre et ballons" },
-    band_canopy: { route: "Auvent de livraison", difficulty: "phares et coffres" },
+    inventor_service: { route: "Porte de service", difficulty: "cloche et grille" },
+    bully_transom: { route: "Imposte de l'auvent", difficulty: "jukebox et ventilo" },
+    bully_kitchen: { route: "Porte de la cuisine", difficulty: "chariot et Lyle endormi" },
+    band_hatch: { route: "Trappe de l'estrade", difficulty: "pied de micro et ballons" },
+    band_canopy: { route: "Auvent de livraison", difficulty: "chariot d'amplis et plancher" },
     farm_window: { route: 'Fenêtre', difficulty: 'facile' },
     farm_chimney: { route: 'Cheminée', difficulty: 'rapide et risqué' },
     laundry_skylight: { route: 'Lucarne', difficulty: 'court et risqué' },
@@ -339,7 +341,7 @@ export const fr: Strings = {
     stamp: 'PASS EXPIRÉ',
     launch: 'Départ dans {n} s',
     strike: 'Foudre dans {n} s',
-    match: 'Suivez sa vitesse',
+    match: 'Même allure !',
     dance: 'Féerie sous les flots',
     marquee: 'DOUBLE PROGRAMME',
     flyerHeadline: ["SAUVEZ", "L'HORLOGE !"],
@@ -419,6 +421,8 @@ export const fr: Strings = {
     retry: 'Réessayer ({name})',
     abandon: 'Abandonner la nuit',
     sunriseIn: 'Aube dans {time}',
+    // v4 L9 1955
+    stormIn: "Fin de l'orage dans {time}",
   },
 
   report: {
@@ -579,6 +583,10 @@ export const fr: Strings = {
         hum: "Scellé A · vibration fossilisée",
         photographer: 'Scellé A · photo officielle de croisière, 14,99 €',
         steward: 'Scellé A · téléphone du steward, pont 9',
+        // v4 L9 1955
+        eraLight: 'Scellé A · photo du guetteur',
+        eraWatcher: 'Scellé A · depuis la vitre du café',
+        eraPolice: 'Scellé A · depuis la voiture du shérif',
       },
       fare: 'COURSE 12,40',
       unit4: 'UNITÉ 4',
@@ -975,7 +983,7 @@ export const fr: Strings = {
 
   items: {
     // v4 L9 1955
-    "spare flex capacitor": { one: "{n} convecteur de flou", other: "{n} convecteurs de flou" },
+    "spare flex capacitor": { one: "{n} convecteur temporaire", other: "{n} convecteurs temporaires" },
     "yellow hazmat suit": { one: "{n} combinaison jaune", other: "{n} combinaisons jaunes" },
     "red puffy vest": { one: "{n} doudoune rouge", other: "{n} doudounes rouges" },
     "retro skateboard": { one: "{n} skate rétro", other: "{n} skates rétro" },
@@ -1031,8 +1039,8 @@ export const fr: Strings = {
     items: {
       // v4 L9 1955
       "spare flex capacitor": {
-        got: ["Un convecteur de flou de rechange, qui clignote dans une boîte à biscuits. La Propulsion dit que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur de flou enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
-        missed: ["Vous avez laissé le convecteur sur le rebord. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur de flou. Dommage, la Propulsion voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
+        got: ["Un convecteur temporaire de rechange, qui clignote dans une boîte à biscuits. La Propulsion dit que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur temporaire enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
+        missed: ["Vous avez laissé le convecteur temporaire sur le rebord. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur temporaire. Dommage, la Propulsion voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
       },
       "yellow hazmat suit": {
         got: ["Une combinaison jaune fluo, avec un sèche-cheveux à la ceinture. Les humains croient qu'on s'habille comme ça. C'est presque flatteur.", "Combinaison jaune enregistrée. Zib l'a mise à la compta en se prétendant envoyé de la planète Vulcain. Ils y ont cru.", "Tenue antiradiation de 1955. Sent légèrement l'ozone et les cassettes de hard rock mal rembobinées."],
@@ -1559,6 +1567,11 @@ export const fr: Strings = {
     "Party balloons": "Ballons du bal",
     "Amp trolley": "Chariot d'ampli",
     "Canopy floorboards": "Plancher de l'auvent",
+    "Lightning shutter": "Trappe du paratonnerre",
+    "Kitchen swing door": "Porte battante de la cuisine",
+    "Loose kitchen tiles": "Carrelage mal fixé",
+    "Stage hatch": "Trappe des cintres",
+    "Loading door": "Porte de livraison",
     "Chaperone": "Chaperon",
     "Café watcher": "Client du café",
     "CLOCK BALCONY": "BALCON DE L'HORLOGE",
@@ -1967,7 +1980,7 @@ export const fr: Strings = {
   mapCollectibles: {
     row: 'Trouvaille en ville',
     found: '{name} · en soute',
-    missed: '{name} · pas embarqué',
+    missed: '{name} · sur place',
     toast: 'En soute : {name} !',
     flyerHeader: 'PERDU',
     items: {

@@ -12,14 +12,14 @@ const section = (name: string, backdrop: string, area: Area, supports: Furniture
   ({ ...area, name, backdrop: 'room/bg_' + backdrop + '55', supports, decor, furniture: [], mounts: [] });
 const swing = (name: string, sprite: Sprite, amplitude: number, speed: number, mountY: number): Hazard =>
   ({ kind: 'swing', name, sprite, amplitude, speed, mountY, phase: 0.6 });
-const gate = (name: string, area: Area, axis: 'x' | 'y', period: number, open: number): Hazard =>
-  ({ kind: 'gate', name, area, axis, cycle: { period, open, phase: 0.8 } });
+const gate = (name: string, area: Area, axis: 'x' | 'y', period: number, open: number, phase = 0.8): Hazard =>
+  ({ kind: 'gate', name, area, axis, cycle: { period, open, phase } });
 const patrol = (name: string, sprite: Sprite, dx: number, dy: number): Hazard =>
   ({ kind: 'patrol', name, sprite, dx, dy, speed: 1.1, phase: 0.6 });
-const sleeper = (name: string, x: number, y: number, radius: number): Sleeper => ({
+const sleeper = (name: string, key: string, x: number, y: number, radius: number): Sleeper => ({
   name, radius,
-  asleep: fit('tiny_asleep', x, y, 90, 122),
-  awake: fit('tiny_awake', x, y - 8, 90, 130),
+  asleep: fit(key + '_asleep', x, y, 90, 122),
+  awake: fit(key + '_awake', x, y - 8, 90, 130),
 });
 const floor = (key: string, x: number, y: number, w: number, depth = 24): Furniture =>
   prop(art(key, x, y), [box(x, y, w, depth)]);
@@ -61,6 +61,7 @@ const towerUpper = building([
   clockBay,
   section('Clock riser', 'tower', box(390, -620, 350, 620), [shelf(408, -325, 108)], [balcony]),
 ], [hatch(0, 488, 708), hatch(-620, 500, 700)], [
+  gate('Lightning shutter', box(390, -79, 350, 23), 'x', 20, 4.6, 16),
   { kind: 'draft', name: 'Tower draft', area: box(468, -235, 237, 200), ax: 105, ay: 0 },
   swing('Lightning cable', fit('pendulum', 528, -320, 36, 94), 0.35, 1.2, -358),
   { kind: 'gear', name: 'Clock gear', sprite: fit('gear_small', 430, -510, 110, 110), speed: 0.9 },
@@ -72,7 +73,7 @@ const towerSide = building([
   section('Winch gallery', 'tower', box(740, 0, 760, 700), [shelf(850, 510, 120)], [service]),
 ], [door(740, 217, 545), door(1500, 335, 545)], [
   patrol('Counterweight', fit('gear_small', 969, 519, 65, 68), 0, 50),
-  gate('Service gate', box(1130, 150, 32, 536), 'y', 6.5, 4.7),
+  gate('Service gate', box(1130, 150, 32, 536), 'y', 16, 4.2, 7),
   swing('Service bell', fit('pendulum', 1010, 99, 44, 115), 0.4, 1.45, 40),
 ]);
 
@@ -89,18 +90,20 @@ const cafeUpper = building([
 ], [hatch(0, 465, 685), hatch(-455, 465, 685)], [
   jukebox,
   { kind: 'fan', name: 'Ceiling fan', x: 693, y: 155, length: 46, speed: 1.9, phase: 0.6, duct: false, mountY: 28 },
-  gate('Hinged sash', box(369, -210, 357, 25), 'x', 5.8, 3.55),
+  gate('Hinged sash', box(369, -210, 357, 25), 'x', 20, 4.4, 16),
 ]);
 
 const kitchen = fit('door_frame', 1380, 260, 120, 210);
 const cafeSide = building([
   boothBay,
-  section('Back kitchen', 'cafe', box(740, 0, 770, 700), [shelf(1115, 490, 130)], [kitchen, art('counter55', 1290, 566)]),
+  section('Back kitchen', 'cafe', box(740, 0, 770, 700), [shelf(1115, 490, 130)], [kitchen, art('counter55', 1191, 566)]),
 ], [door(740, 230, 530), door(1510, 260, 470)], [
   jukebox,
+  gate('Kitchen swing door', box(740, 230, 24, 300), 'y', 16, 4.3, 10),
   patrol('Bus cart', fit('laundry_cart', 880, 425, 110, 94), 68, 65),
   { kind: 'fragile', name: 'Pie case', sprite: art('pie_case55', 1030, 520) },
-], [sleeper('Lyle', 1235, 452, 155)]);
+  { kind: 'creak', name: 'Loose kitchen tiles', area: box(1040, 328, 348, 334) },
+], [sleeper('Lyle', 'lyle55', 1235, 452, 365)]);
 
 const trunkBay = section('Trunk bay', 'dance_lot', box(0, 0, 740, 700), [
   prop(TRUNK_55, [box(64, 590, 267, 44), box(331, 563, 39, 77)]),
@@ -112,6 +115,7 @@ const danceUpper = building([
   { ...trunkBay, supports: [...trunkBay.supports, shelf(389, 410, 110)] },
   section('Stage rigging', 'dance_lot', box(390, -520, 350, 520), [], [bandstand]),
 ], [hatch(0, 480, 700), hatch(-520, 480, 700)], [
+  gate('Stage hatch', box(480, 0, 220, 24), 'x', 20, 4.5, 16),
   swing('Microphone stand', fit('pendulum', 494, -240, 45, 120), 0.35, 1.32, -290),
   { kind: 'pop', name: 'Party balloons', area: box(659, -408, 66, 104), cycle: { period: 5.2, open: 3.3, phase: 1.3 } },
 ]);
@@ -119,15 +123,17 @@ const danceUpper = building([
 const canopy = fit('door_frame', 1390, 290, 120, 215);
 const danceSide = building([
   trunkBay,
-  section('Loading bay', 'dance_lot', box(740, 0, 780, 700), [shelf(1118, 520, 116)], [canopy]),
+  section('Loading bay', 'dance_lot', box(740, 0, 780, 700), [shelf(1118, 520, 116)], [canopy, art('dock55', 1194, 580)]),
 ], [door(740, 255, 535), door(1520, 290, 505)], [
+  gate('Loading door', box(740, 255, 24, 280), 'y', 16, 4.3, 9),
   patrol('Amp trolley', art('amp_case55', 987, 460), 65, 66),
-  { kind: 'creak', name: 'Canopy floorboards', area: box(1200, 380, 150, 220) },
-], [sleeper('Chaperone', 1250, 460, 150)]);
+  { kind: 'creak', name: 'Canopy floorboards', area: box(1050, 265, 375, 335) },
+], [sleeper('Chaperone', 'chaperone55', 1250, 460, 350)]);
 
 export const ROOMS_1955 = {
   inventor_balcony: route(towerUpper, 'doc', 'CLOCK BALCONY', balcony, box(519, -594, 161, 66), [
-    point(194, 300), point(315, 283), point(600, 279), point(599, -120), point(601, -343), point(601, -566),
+    point(194, 300), point(315, 283), point(600, 279), point(599, 150),
+    point(599, -227, 'Lightning shutter', 190), point(601, -343), point(601, -566),
   ], 'flex_capacitor', 'spare flex capacitor', 460, -325, true),
   inventor_service: route(towerSide, 'doc', 'SERVICE DOOR', service, box(1392, 367, 92, 133), [
     point(184, 254), point(326, 234), point(597, 229), point(657, 317), point(863, 312), point(1030, 304),
@@ -138,15 +144,16 @@ export const ROOMS_1955 = {
     point(572, -349, 'Hinged sash', 200), point(573, -387),
   ], 'retro_skateboard', 'retro skateboard', 405, 365, true),
   bully_kitchen: route(cafeSide, 'buff', 'KITCHEN DOOR', kitchen, box(1405, 278, 90, 135), [
-    point(175, 270), point(320, 218), point(580, 223), point(660, 290), point(855, 296), point(1060, 280),
-    point(1298, 271, undefined, 110), point(1450, 341),
+    point(175, 270), point(320, 218), point(580, 223), point(650, 290),
+    point(885, 296, 'Kitchen swing door', 190), point(1060, 280),
+    point(1298, 271, undefined, 33), point(1450, 341),
   ], 'clock_flyer', 'clock-tower flyer', 1180, 490),
   band_hatch: route(danceUpper, 'marvin', 'BANDSTAND HATCH', bandstand, box(510, -485, 160, 65), [
-    point(216, 316), point(365, 247), point(594, 235), point(600, -93),
+    point(216, 316), point(365, 247), point(594, 235), point(600, -168, 'Stage hatch', 190),
     point(603, -330, 'Microphone stand', 160), point(590, -451),
   ], 'cherry_guitar', 'cherry electric guitar', 440, 410, true),
   band_canopy: route(danceSide, 'marvin', 'LOADING CANOPY', canopy, box(1413, 312, 98, 133), [
-    point(214, 310), point(365, 234), point(596, 228), point(667, 304), point(879, 311),
-    point(1110, 305), point(1320, 284, undefined, 115), point(1460, 373),
+    point(214, 310), point(365, 234), point(596, 228), point(650, 304), point(885, 311, 'Loading door', 190),
+    point(1110, 305), point(1320, 284, undefined, 33), point(1460, 373),
   ], 'puffy_vest', 'red puffy vest', 1170, 520),
 } satisfies Record<string, Room>;

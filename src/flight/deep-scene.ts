@@ -92,7 +92,6 @@ export class DeepFlightScene implements Scene {
   private flashT = 0;
   private exposedT = 0;
   private wasExposed = false;
-  private wasDawn = false;
   caption = '';
   shout = '';
   spotLine = '';
@@ -237,18 +236,17 @@ export class DeepFlightScene implements Scene {
     const car = this.sim.collectible?.timeCar;
     const beforeCarTime = car?.elapsed ?? 0;
     const charged = this.state !== 'spotted' || this.st < SPOT_HOLD;
+    const wasWarning = this.run.deadlineWarning > 0;
     if (!this.practice && charged && this.run.tick(dt)) {
       this.done = true;
       audio.sfx('sunrise');
       this.opts.onSunrise();
       return;
     }
-    const warning = this.run.deadlineWarning > 0;
-    if (warning && !this.wasDawn) {
+    if (!wasWarning && this.run.deadlineWarning > 0) {
       this.say(this.level.id === 'level9' ? 'stormClosing' : 'dawn', true, true);
       audio.sfx('sunrise', 0.6);
     }
-    this.wasDawn = warning;
     if (car) {
       if (beforeCarTime < TIME_CAR.strike && car.elapsed >= TIME_CAR.strike) {
         audio.sfx('stamp', 1.1);

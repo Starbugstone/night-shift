@@ -21,6 +21,8 @@ const STAR_FLOORS = {
 const CASUAL_GHOST_CAP = 0.9;
 const MIN_CASUAL_PAR_SHARE = 0.30;
 const MIN_CASUAL_PEAK_SUSPICION = 0.05;
+const L9_OWL_CAP = 0.9;
+const L9_SHIFT_SEC = { min: 90, max: 110 } as const;
 
 /** What "fair but not trivial" means for one level. Rates are 0..1. */
 export interface Band {
@@ -105,10 +107,10 @@ export const BANDS: Record<string, Band | undefined> = {
     skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.6, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: 0.8, tension: 20,
   },
-  // v4 L9 1955: chapter-opener room delivery, late-tier stars (docs/GDD-10-1955.md).
+  // v4 L9 1955: late-tier stars and a tighter standard-shift estimate.
   level9: {
     skilledRoute: 0.8, casualRoute: 0.5, casualBuilding: 0.8, skilledSpots: 1, casualSpots: 2,
-    flightDone: 0.8, casualBudgetShare: 208 / 380, tension: 20,
+    flightDone: 0.8, casualBudgetShare: L9_SHIFT_SEC.max / 380, tension: 20,
   },
 };
 
@@ -303,6 +305,23 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
   };
   report.violations.push(...check(report, band));
   if (level.id === 'level9') {
+    if (seeds >= 6) {
+      for (const row of stars) {
+        if (row.profile !== 'skilled' && row.profile !== 'casual') continue;
+        const rate = row.earned[2] / row.attempts;
+        if (rate > L9_OWL_CAP) report.violations.push(`Night owl (${row.profile}) earns ${pct(rate)}, band allows ≤ ${pct(L9_OWL_CAP)}`);
+      }
+      if (shiftEstimate.casual !== undefined && shiftEstimate.casual < L9_SHIFT_SEC.min)
+        report.violations.push(`casual shift estimate ${shiftEstimate.casual} s, band wants ≥ ${L9_SHIFT_SEC.min} s`);
+      // The six-seed gate allows a second either way around the 20-seed room medians.
+      const [min, max] = seeds >= 20 ? [19, 27] : [18, 28];
+      for (const room of casual) {
+        if (room.medianSec < min || room.medianSec > max)
+          report.violations.push(`${room.roomId} (casual) median ${room.medianSec.toFixed(1)} s, band wants ${min}–${max} s`);
+        if ((room.roomId === 'bully_kitchen' || room.roomId === 'band_canopy') && room.medianPeakSleeper <= 0)
+          report.violations.push(`${room.roomId} (casual) median second-sleeper wake is zero`);
+      }
+    }
     report.carFirst = profiles.map(profile => evaluateCarFirst(level, profile, seeds, play));
     report.carBeelines = naiveCarCatches(level);
     if (report.carBeelines.some(attempt => attempt.caught)) report.violations.push('A naive time-car approach catches the car');

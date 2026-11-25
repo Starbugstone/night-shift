@@ -160,7 +160,7 @@ class MemoView implements SceneView {
     this.paper.pivot.set(VIEW_W / 2, PAPER_Y + PAPER_H / 2);
     this.paper.addChild(
       page, this.portrait.root,
-      new Label(address).set(m.to, PX + 148, PAPER_Y + 46, PW - 168),
+      new Label(address).set(lv.num >= 9 ? m.toAgent : m.to, PX + 148, PAPER_Y + 46, PW - 168),
       new Label(address).set(m.from, PX + 148, PAPER_Y + 72, PW - 168),
       new Label({ size: 21, color: C.paperInk, align: 'left', weight: 900 }).set(lt.title, PX + 28, PAPER_Y + 182, PW - 56),
     );

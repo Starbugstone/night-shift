@@ -315,16 +315,20 @@ export class Route {
 // ------------------------------------------------------------------ runtime
 
 /** Reasons the saucer can be detected (for Zib's lines and the spotted caption). */
-export type SpotCause = 'eraLight' | 'eraWatcher' | 'eraPolice' | 'police' | 'patrol' | 'traffic' | 'porch' | 'watcher' | 'dog' | 'heli' | 'camera' | 'window'
+export const SPOT_CAUSES = [
+  'police', 'patrol', 'traffic', 'porch', 'watcher', 'dog', 'heli', 'camera', 'window',
   // L5 pier code
-  | 'lighthouse'
+  'lighthouse',
   // L6 clinic code
-  | 'ambulance'
-  // v4 L8
-  | 'hum'
+  'ambulance',
   // L7 cruise code
-  | 'photographer'
-  | 'steward';
+  'photographer', 'steward',
+  // v4 L8
+  'hum',
+  // v4 L9 1955
+  'eraLight', 'eraWatcher', 'eraPolice',
+] as const;
+export type SpotCause = (typeof SPOT_CAUSES)[number];
 
 /** Things that bump the saucer. */
 export type BumpCause = 'wire' | 'tram' | 'bat' | 'pigeon' | 'crane'

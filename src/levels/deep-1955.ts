@@ -17,7 +17,7 @@ const { cable, turnout } = TIME_CAR;
 export const LEVEL9: DeepLevelDef = {
   kind: 'deep', id: 'level9', num: 9, title: copy.title, location: copy.location, blurb: copy.blurb,
   human: copy.human, mugshot: 'human/doc_head', memo: { re: copy.re, body: copy.body, joke: copy.joke },
-  hours: [22, 22], budgetSec: 380, parMarginSec: 120,
+  hours: [22, 22], budgetSec: 380, parMarginSec: 255,
   map: {
     theme: 'storm55', w: 1760, h: 2240, start: { x: 1050, y: 2010 }, fuseSec: 0.86,
     collectible: { id: 'time_car', ...TIME_CAR.bay },
@@ -61,13 +61,13 @@ export const LEVEL9: DeepLevelDef = {
     ],
     hazards: [
       spot('marshal55_torch', 1030, 1940, 440, 0.49, -2.25, 0.06),
-      spot('dance_spot55', 1400, 1480, 555, 0.425, 2.145, 0.025),
+      spot('dance_spot55', 1400, 1480, 585, 0.5, 2.145, 0.18),
       spot('worklamp55', 820, 694, 540, 0.52, Math.PI / 2),
       { type: 'car', key: 'flight/police55_top', role: 'police', path: [
         { x: 1135, y: 755 }, { x: 1640, y: 755 }, { x: 1640, y: 1030 }, { x: 1135, y: 1030 },
       ], loop: true, speed: 150, dwell: 0, phase: 450, coneRange: 240, coneHalf: 0.32, sweepAmp: 0, sweepRate: 0, barR: 0 },
-      { type: 'watcher', skin: 'cafe55', name: 'Café watcher', x: 555, y: 1100, range: 190, half: 0.32,
-        angles: [1.95, 0], hold: 3.2, sweepAmp: 0.04, sweepRate: 0.8 },
+      { type: 'watcher', skin: 'cafe55', name: 'Café watcher', x: 555, y: 1100, range: 225, half: 0.35,
+        angles: [2.12, 0], hold: 3.2, sweepAmp: 0.08, sweepRate: 0.8 },
       { type: 'wire', kind: 'power', ax: cable.x, ay: cable.north, bx: cable.x, by: cable.south },
     ],
     lamps: [

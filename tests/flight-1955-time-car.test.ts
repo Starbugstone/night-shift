@@ -139,20 +139,23 @@ describe('1955 time car', () => {
     expect(laterMiss.save.levels.level9.mapCollectible).toBe('time_car');
   });
 
-  it('unlocks after any L8 clear and uses 10:08 as the exact Night owl par', () => {
+  it('unlocks after any L8 clear and uses 10:05:45 as the exact Night owl par', () => {
     const legacy = validateSave({ version: 1, reports: 1 });
     expect(isLevelUnlocked(legacy, 6)).toBe(true);
     expect(isLevelUnlocked(legacy, 8)).toBe(false);
     const old = validateSave({ version: 2, levels: { level8: { stars: [true, false, false, false] } } });
     expect(old.levels.level9).toEqual(defaultSave().levels.level9);
     expect(isLevelUnlocked(old, 8)).toBe(true);
+    const run = new DeepRun(LEVEL9, 8);
+    run.tick(125);
+    expect(run.clockText()).toBe('10:05:45');
     const summary = { delivered: 3, spotted: 0, failedAbductions: 0, sunrise: false, mapCollectible: 'time_car' as const };
-    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 260 }, 'level9')).toEqual([true, true, true, true]);
-    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 260.01 }, 'level9')).toEqual([true, true, false, true]);
+    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 125 }, 'level9')).toEqual([true, true, true, true]);
+    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 125.01 }, 'level9')).toEqual([true, true, false, true]);
   });
 
-  it('the bot impounds the car and earns all four stars in the same shift', () => {
-    const result = evaluateCarFirst(LEVEL9, PROFILES.bot, 1, playAbduction);
+  it('a clean pilot at skilled drag speed impounds the car and earns all four stars', () => {
+    const result = evaluateCarFirst(LEVEL9, { ...PROFILES.bot, pace: PROFILES.skilled.pace }, 1, playAbduction);
     expect(result, JSON.stringify(result.runs[0])).toMatchObject({ catches: 1, delivered: 1, allFour: 1 });
   }, 20_000);
 });

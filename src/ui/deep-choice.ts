@@ -59,7 +59,7 @@ export class DeepChoiceScene implements Scene {
     const left = run.remaining;
     const m = Math.floor(left / 60);
     const sec = Math.floor(left % 60);
-    this.status = fmt(d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
+    this.status = fmt(run.level.id === 'level9' ? d.stormIn : d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
   }
 
   update(dt: number): void {
@@ -96,12 +96,13 @@ class DeepChoiceView implements SceneView {
   private readonly sky = new NightSky();
   private readonly title: Label;
   private readonly portrait: VrellPortrait;
-  private readonly sun = new SunIcon(9, 12, 16);
+  private readonly sun: SunIcon | null;
   private readonly alarm = ScreenTint.edge(GLOW.red);
   private readonly buttons: ButtonView[];
   private readonly failedFace: Container | Graphics | null;
 
   constructor(private readonly s: DeepChoiceScene) {
+    this.sun = s.run.level.id === 'level9' ? null : new SunIcon(9, 12, 16);
     this.title = new Label({ size: s.title.length > 13 ? 42 : 50, color: C.red, weight: 900, outline: C.ink });
     this.title.set(s.title, VIEW_W / 2, 120, VIEW_W - 60);
     this.title.rotation = -0.05;
@@ -153,11 +154,13 @@ class DeepChoiceView implements SceneView {
     const x = 228;
     const w = VIEW_W - 120 - 168 - 26;
     const used = w * Math.min(1, run.elapsed / run.budget);
-    const hot = run.dawn > 0;
+    const hot = run.deadlineWarning > 0;
     const bar = roundRect(new Graphics(), x, 426, w, 14, 7).fill('#16102e');
     if (used < w) roundRect(bar, x + used, 426, w - used, 14, 7).fill(hot ? C.amber : C.mint);
-    this.sun.root.position.set(x + w + 12, 433);
-    this.root.addChild(new Label({ size: 15, color: hot ? C.amberHi : C.muted, weight: 800, align: 'left' }).set(status, x, 410, w), bar, this.sun.root);
+    const deadline = this.sun?.root ?? new Graphics().poly([1, -14, -9, 1, -2, 1, -5, 14, 9, -4, 2, -4])
+      .fill(hot ? C.amberHi : C.muted);
+    deadline.position.set(x + w + 12, 433);
+    this.root.addChild(new Label({ size: 15, color: hot ? C.amberHi : C.muted, weight: 800, align: 'left' }).set(status, x, 410, w), bar, deadline);
     return failedFace;
   }
 
@@ -169,7 +172,7 @@ class DeepChoiceView implements SceneView {
     this.title.scale.set(pop * this.titleSqueeze, pop);
     this.portrait.sync(t, reduced);
     if (this.failedFace) this.failedFace.x = reduced ? 0 : Math.sin(t * 9) * 2;
-    this.sun.sync(reduced ? 0 : t * 0.8);
+    this.sun?.sync(reduced ? 0 : t * 0.8);
     this.alarm.strength = t < 0.6 ? (1 - t / 0.6) * 0.8 : 0;
     for (const button of this.buttons) button.sync();
   }

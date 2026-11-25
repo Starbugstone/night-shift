@@ -211,6 +211,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
           drv.flight = { down: it.down, x: it.x, y: it.y };
         } else drv.flight = null;
         if (ns && ns.scene === 'abduct' && a && a.debug && typeof a.debug.autopilot === 'function' && drv.on && p && p.down) {
+          // The four-star chase uses the skilled drag pace from the difficulty evaluator.
+          if (carFirst) a.debug.pilot.pace = 2.2;
           const f = a.debug.autopilotFinger(1 / 60);
           drv.fx = f.x;
           drv.fy = f.y;

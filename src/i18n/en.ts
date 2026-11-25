@@ -10,11 +10,11 @@ type Plural = { one: string; other: string };
 const routes = {
   // v4 L9 1955
   inventor_balcony: { route: "Clock balcony", difficulty: "gears & cable" },
-  inventor_service: { route: "Service door", difficulty: "bell & draft" },
-  bully_transom: { route: "Awning transom", difficulty: "jukebox & fans" },
-  bully_kitchen: { route: "Kitchen door", difficulty: "manure & crates" },
-  band_hatch: { route: "Bandstand hatch", difficulty: "band & balloons" },
-  band_canopy: { route: "Loading canopy", difficulty: "headlights & trunks" },
+  inventor_service: { route: "Service door", difficulty: "bell & gate" },
+  bully_transom: { route: "Awning transom", difficulty: "jukebox & fan" },
+  bully_kitchen: { route: "Kitchen door", difficulty: "cart & sleeping Lyle" },
+  band_hatch: { route: "Bandstand hatch", difficulty: "mic stand & balloons" },
+  band_canopy: { route: "Loading canopy", difficulty: "amp trolley & floorboards" },
   farm_window: { route: 'Window', difficulty: 'easy' },
   farm_chimney: { route: 'Chimney', difficulty: 'fast & risky' },
   laundry_skylight: { route: 'Skylight', difficulty: 'short & risky' },
@@ -374,6 +374,8 @@ export const en = {
     recommended: 'Start with {route} · {tip}',
     incoming: 'INCOMING MEMO',
     to: 'TO: Intern Zib',
+    // v4 L9 1955
+    toAgent: 'TO: Agent Zib (junior)',
     from: 'FROM: Supervisor Vrell',
     re: 'RE: {re}',
     goals: 'PERFORMANCE GOALS',
@@ -588,6 +590,8 @@ export const en = {
     retry: 'Retry ({name})',
     abandon: 'Abandon shift',
     sunriseIn: 'Sunrise in {time}',
+    // v4 L9 1955
+    stormIn: 'Storm passes in {time}',
   },
 
   report: {
@@ -755,6 +759,10 @@ export const en = {
         hum: "Exhibit A · fossilised vibration",
         photographer: 'Exhibit A · official cruise photo, £14.99',
         steward: "Exhibit A · steward's phone, deck 9",
+        // v4 L9 1955
+        eraLight: "Exhibit A · searchlight lookout",
+        eraWatcher: 'Exhibit A · through the café window',
+        eraPolice: "Exhibit A · from the sheriff's cruiser",
       },
       fare: 'FARE 12.40',
       unit4: 'UNIT 4',
@@ -1091,7 +1099,7 @@ export const en = {
         missed: ["You left the skateboard by the counter. Buff will trip over it in the morning and blame the sky anyway.", "No skateboard. Good. Our medical plan does not cover alien ankle sprains."],
       },
       "cherry electric guitar": {
-        got: ["A cherry-red hollow-body guitar, still warm from a solo that shouldn't exist for another twenty years. Accounting has confiscated the amp.", "Electric guitar, logged. Zib played one power chord in the hangar and shattered four specimen jars. Their kids are gonna love it.", "Marvin's cherry guitar. Half the gym fainted; the other half is still trying to figure out what happened to the prom playlist."],
+        got: ["A cherry-red hollow-body guitar, still warm from a solo that shouldn't exist for another twenty years. Accounting has confiscated the amp.", "Electric guitar, logged. Zib played one power chord in the hangar and shattered four specimen jars. Your kids are gonna love it.", "Marvin's cherry guitar. Half the gym fainted; the other half is still trying to figure out what happened to the prom playlist."],
         missed: ["You left the cherry guitar by the stage. Good—Zib would have started a band, and I cannot survive an intern tour.", "No guitar. Marvin keeps his axe, and the timeline keeps rock and roll. Call it a draw."],
       },
       "clock-tower flyer": {
@@ -1610,6 +1618,11 @@ export const en = {
     "Party balloons": "Party balloons",
     "Amp trolley": "Amp trolley",
     "Canopy floorboards": "Canopy floorboards",
+    "Lightning shutter": "Lightning shutter",
+    "Kitchen swing door": "Kitchen swing door",
+    "Loose kitchen tiles": "Loose kitchen tiles",
+    "Stage hatch": "Stage hatch",
+    "Loading door": "Loading door",
     "Chaperone": "Chaperone",
     "Café watcher": "Café watcher",
     "CLOCK BALCONY": "CLOCK BALCONY",

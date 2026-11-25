@@ -7,11 +7,13 @@ import { getLang } from '../../i18n';
 import { clamp } from '../../ui/draw';
 import { artSprite, artTex } from '../../ui/views/art';
 import { HudPanel } from '../../ui/views/hud';
+import { wrapAngle } from '../geometry';
+import type { HazardField } from '../hazards';
 import { TIME_CAR, type TimeCar } from '../time-car';
 import type { CameraView } from './world';
 
 export const TOWER_CLOCK = { x: 824, y: 272 } as const;
-const ROD = { x: 826, y: 178 } as const;
+export const TOWER_ROD = { x: 826, y: 178 } as const;
 const AXLE = { x: 31, y: 45 } as const;
 const TRACK_LENGTH = 324;
 const REVEAL_BEFORE = 0.48;
@@ -27,6 +29,37 @@ function unit(n: number): number {
 function ease(n: number): number {
   const p = unit(n);
   return p * p * (3 - 2 * p);
+}
+
+/** Distance to the actual detector sector, including its two rays and its far rim. */
+function coneClearance(x: number, y: number, angle: number, half: number, range: number): number {
+  const distance = Math.hypot(x, y);
+  const outside = Math.abs(wrapAngle(Math.atan2(y, x) - angle)) - half;
+  if (outside <= 0) return Math.max(0, distance - range);
+  const along = distance * Math.cos(outside);
+  return Math.hypot(distance * Math.sin(outside), along - clamp(along, 0, range));
+}
+
+/** Keep detectors at full scale for nearby steering and ease out of the reveal on approach. */
+function detectorReveal(field: HazardField, x: number, y: number): number {
+  let clearance = 100;
+  for (let i = 0; i < field.defs.length; i++) {
+    const d = field.defs[i]!;
+    switch (d.type) {
+      case 'camera':
+      case 'watcher':
+        clearance = Math.min(clearance, coneClearance(x - d.x, y - d.y, field.a[i]!, d.half, d.range));
+        break;
+      case 'car': {
+        const car = field.cars[i]?.[0];
+        if (!car) break;
+        clearance = Math.min(clearance, coneClearance(x - car.ox, y - car.oy, car.cone, d.coneHalf, d.coneRange));
+        if (d.barR > 0) clearance = Math.min(clearance, Math.hypot(x - car.x, y - car.y) - d.barR);
+        break;
+      }
+    }
+  }
+  return ease((clearance - 56) / (100 - 56));
 }
 
 function sparkle(x: number, y: number, r: number): Graphics {
@@ -82,7 +115,7 @@ export class CrestValleyStrike {
       .stroke({ color: '#f5fbff', width: 7, join: 'round' });
     // Both the sprite and the fallback end at y=112 in their centred coordinates.
     this.bolt.pivot.y = 112;
-    this.bolt.position.set(ROD.x, ROD.y);
+    this.bolt.position.set(TOWER_ROD.x, TOWER_ROD.y);
     this.bolt.scale.set(1.45, 1.75);
     this.bolt.rotation = -0.38;
     this.world.addChild(this.bolt, this.rodFlash);
@@ -125,35 +158,35 @@ export class CrestValleyStrike {
   get age(): number { return this.car.elapsed - TIME_CAR.strike; }
 
   /** Pull back only if the tower can be exposed in a modest reveal. Screen-space input stays anchored. */
-  revealScale(camX: number, camY: number, saucerX: number, saucerY: number): number {
+  revealScale(camX: number, camY: number, saucerX: number, saucerY: number, field: HazardField): number {
     const age = this.age;
     const holdingCar = this.car.phase === 'open' && this.car.matching;
     if (!this.canWitness || age < -REVEAL_BEFORE || age >= REVEAL_END || holdingCar) return 1;
     const sx = saucerX - camX, sy = saucerY - camY;
-    const rx = ROD.x - camX, ry = ROD.y - camY;
+    const rx = TOWER_ROD.x - camX, ry = TOWER_ROD.y - camY;
     let target = 1;
     if (ry < 240 && sy > 240) target = Math.min(target, (sy - 240) / (sy - ry));
     if (rx < 112 && sx > 112) target = Math.min(target, (sx - 112) / (sx - rx));
     if (rx > 426 && sx < 426) target = Math.min(target, (426 - sx) / (rx - sx));
-    if (target < 0.55) return 1;
+    if (target < 0.55 || target === 1) return 1;
     const amount = ease((age + REVEAL_BEFORE) / REVEAL_BEFORE) * (1 - ease((age - 0.58) / (REVEAL_END - 0.58)));
-    return 1 - (1 - target) * amount;
+    return 1 - (1 - target) * amount * detectorReveal(field, saucerX, saucerY);
   }
 
   sync(cam: CameraView, reduced: boolean): void {
     const age = this.age;
     const active = this.canWitness && age >= 0;
     const pulse = active ? 1 - unit(age / 0.92) : 0;
-    this.bolt.visible = active && age < (reduced ? 0.56 : 0.53) && cam.sees(ROD.x, ROD.y, 260);
+    this.bolt.visible = active && age < (reduced ? 0.56 : 0.53) && cam.sees(TOWER_ROD.x, TOWER_ROD.y, 260);
     this.bolt.alpha = reduced ? 0.44 : 1 - unit((age - 0.16) / 0.37);
     this.dial.place(0, 0, 62, 57, pulse * (reduced ? 0.38 : 0.98));
-    this.rodFlash.place(ROD.x, ROD.y, 39, 42, this.bolt.visible ? this.bolt.alpha * 0.86 : 0);
+    this.rodFlash.place(TOWER_ROD.x, TOWER_ROD.y, 39, 42, this.bolt.visible ? this.bolt.alpha * 0.86 : 0);
     if (active && age < 0.38 && this.flashAt < 0) this.flashAt = age;
     this.wash.strength = !active ? 0 : reduced ? 0.11 * (1 - ease(age / 0.56)) :
       age === this.flashAt ? 0.72 : 0.37 * (1 - ease(age / 0.37));
 
     // The same edge marker covers distant play and a tower that reduced motion leaves under the HUD.
-    const rx = cam.screenX(ROD.x), ry = cam.screenY(ROD.y);
+    const rx = cam.screenX(TOWER_ROD.x), ry = cam.screenY(TOWER_ROD.y);
     const clockInView = rx >= 66 && rx <= 463 && ry >= 197 && cam.screenY(TOWER_CLOCK.y) < VIEW_H - 70;
     this.edge.visible = active && age < REVEAL_END && !clockInView;
     if (this.edge.visible) {

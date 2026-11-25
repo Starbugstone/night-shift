@@ -4,10 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { GameContext } from '../src/contracts';
 import { DeepFlightScene, SPOT_HOLD } from '../src/flight/deep-scene';
 import { FlightScene } from '../src/flight/scene';
+import { tr } from '../src/i18n';
+import { LEVEL9 } from '../src/levels/deep-1955';
 import { LEVEL3 } from '../src/levels/deep-levels';
 import { LEVELS } from '../src/levels/levels';
 import type { TutorialLevelDef } from '../src/levels/types';
-import { DeepRun } from '../src/levels/run';
+import { DeepRun, SUNRISE_WARN } from '../src/levels/run';
 
 const DT = 1 / 60;
 function context(): GameContext {
@@ -54,4 +56,26 @@ describe('SPOTTED card', () => {
     expect(scene.state).toBe('fly');
     expect(scene.spotted).toBe(1);
   });
+});
+
+it.each([
+  [LEVEL3, 'dawn'],
+  [LEVEL9, 'stormClosing'],
+] as const)('$0.id only announces its deadline when the clock crosses the warning', (level, key) => {
+  const base = context();
+  const speak = vi.fn();
+  const ctx = { ...base, audio: { ...base.audio, speak } };
+  const run = new DeepRun(level, level.num - 1);
+  const start = () => new DeepFlightScene({ run, level, ctx, onLocked: vi.fn(), onSunrise: vi.fn(), onQuit: vi.fn() });
+  const saysWarning = () => speak.mock.calls.filter(([text]) =>
+    (tr().humor.deepZib[key] as readonly string[]).includes(text));
+
+  const flight = start();
+  run.elapsed = run.budget - SUNRISE_WARN - DT / 2;
+  flight.update(DT);
+  flight.update(DT);
+  expect(saysWarning()).toHaveLength(1);
+  run.elapsed = run.budget - 5;
+  start().update(DT);
+  expect(saysWarning()).toHaveLength(1);
 });
