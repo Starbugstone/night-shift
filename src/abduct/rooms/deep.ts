@@ -99,7 +99,7 @@ const SUBJECTS = {
     // v4 items: on the first display case in the Laser vault, before the grid
     item: { sprite: art('coffee_mug', 1882, 496), name: 'fossilized coffee' },
     caption: 'The museum has added you to its Incident Collection.',
-    mumbles: ['The mummy has a parking pass.', 'Stop feeding the fossils.', 'The T. rex owes me a tenner.', 'Please don’t tap on the sarcophagus.', "Don't panic. Where's my towel?"],
+    mumbles: ['The mummy has a parking pass.', 'Stop feeding the fossils.', 'The T. rex owes me a tenner.', 'Please don’t tap on the sarcophagus.', "Lost property. One umbrella. Still wet."],
   },
   kev: {
     pose: { ...CHAIR_POSE, neckX: 135, neckY: 500 },
@@ -235,7 +235,7 @@ export const garyGaragedoor = route(garyHome, 'gary', 'GARAGE DOOR', EXITS.garyG
 const nigelSkull = art('dino_skull', 938, 345);
 const nigelHome = building([
   room('Security office', 'office', box(0, 0, 760, 700),
-    [art('towel_42', 221, 230)], [], [officeChair(93), nigelDesk]),
+    [art('lost_umbrella', 221, 230)], [], [officeChair(93), nigelDesk]),
   room('Dinosaur hall', 'museum', box(760, 0, 940, 700),
     [], [nigelSkull, art('dino_ribs', 1138, 486), fit('dino_legs', 1398, 471, 160, 215)], [], [nigelSkull]),
   room('Laser vault', 'vault', box(1700, 0, 930, 700),

@@ -19,7 +19,7 @@ const lamps = [
 ];
 
 export const LEVEL9: DeepLevelDef = {
-  kind: 'deep', id: 'level9', num: 9, title: copy.title, location: copy.location, blurb: copy.blurb,
+  kind: 'deep', id: 'level9', title: copy.title, location: copy.location, blurb: copy.blurb,
   human: copy.human, mugshot: 'human/doc_head', memo: { re: copy.re, body: copy.body, joke: copy.joke },
   hours: [22, 22], budgetSec: 380, parMarginSec: 255,
   map: {

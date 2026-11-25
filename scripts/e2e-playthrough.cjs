@@ -223,10 +223,9 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     }, carFirst);
   }
 
-  async function deepShift(level, name) {
-    const carFirst = level === 9 && process.env.CAR_FIRST === '1';
-    await openFixture(level === 9 ? '?unlock=1&flight=9' : '?unlock=1');
-    if (level !== 9) await page.evaluate((l) => window.__nightShift.goto('flight', l), level);
+  async function deepShift({ id, num }, name) {
+    const carFirst = id === 'level9' && process.env.CAR_FIRST === '1';
+    await openFixture('?unlock=1&flight=' + num);
     await waitScene('flight');
     await installDriver(carFirst);
     const log = [];
@@ -324,7 +323,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     await up();
     await abd.reset();
     const end = await page.evaluate(() => ({ scene: window.__nightShift.scene, level: JSON.parse(JSON.stringify(window.__nightShift.save.levels)) }));
-    if (level === 8) {
+    if (id === 'level8') {
       if (!lifted || !caveShot || end.scene !== 'report' || !end.level.level8.delivered) {
         throw new Error('Time trial did not deliver its witnesses: ' + JSON.stringify({ end, log }));
       }
@@ -333,7 +332,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       if (JSON.stringify(reloaded) !== JSON.stringify(end.level.level8)) throw new Error('Time-trial save changed on reload');
       log.push({ reloaded });
     }
-    if (level === 9) {
+    if (id === 'level9') {
       const result = end.level.level9;
       if (end.scene !== 'report' || !result.delivered || carFirst && (!carShot || !result.stars.every(Boolean))) {
         throw new Error('Crest Valley did not finish with the requested outcome: ' + JSON.stringify({ result, log }));
@@ -359,9 +358,13 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     await browser.close();
     return;
   }
-  const DEEP_LEVELS = [3, 4, 5, 6, 7, 8, 9];
-  if (ONLY === 'deep' || /^L[3-9]$/.test(ONLY ?? '')) {
-    for (const n of DEEP_LEVELS) if (ONLY === 'deep' || ONLY === `L${n}`) results[`L${n}`] = await deepShift(n, `L${n}`);
+  const deepOrders = await page.evaluate(() => window.__nightShift.workOrders.filter(order => order.kind === 'deep'));
+  const runName = id => id.replace(/^level(\d+)$/, 'L$1');
+  if (ONLY === 'deep' || deepOrders.some(order => runName(order.id) === ONLY)) {
+    for (const order of deepOrders) {
+      const name = runName(order.id);
+      if (ONLY === 'deep' || ONLY === name) results[name] = await deepShift(order, name);
+    }
     console.log(JSON.stringify({ results, errors }, null, 1));
     await browser.close();
     return;
@@ -385,9 +388,10 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     console.error('RESULT', r.name, results[r.name].scene);
   }
   if (ONLY !== 'tutorial') {
-    for (const n of DEEP_LEVELS) {
-      results[`L${n}`] = await deepShift(n, `L${n}`);
-      console.error(`RESULT L${n}`, results[`L${n}`].end.scene, results[`L${n}`].wallSec);
+    for (const order of deepOrders) {
+      const name = runName(order.id);
+      results[name] = await deepShift(order, name);
+      console.error('RESULT', name, results[name].end.scene, results[name].wallSec);
     }
   }
   console.log(JSON.stringify({ results, errors }, null, 1));

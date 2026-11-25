@@ -19,7 +19,6 @@ export const LEVELS: readonly LevelDef[] = [
     kind: 'tutorial',
     mugshot: 'human/doyle_head',
     id: 'level1',
-    num: 1,
     title: en.levels.level1.title,
     location: en.levels.level1.location,
     blurb: en.levels.level1.blurb,
@@ -101,7 +100,6 @@ export const LEVELS: readonly LevelDef[] = [
     kind: 'tutorial',
     mugshot: 'human/larry_head',
     id: 'level2',
-    num: 2,
     title: en.levels.level2.title,
     location: en.levels.level2.location,
     blurb: en.levels.level2.blurb,
@@ -203,6 +201,14 @@ export const LEVELS: readonly LevelDef[] = [
   // v4 L9 1955
   LEVEL9,
 ];
+
+export function workOrderNumber(id: string, order: readonly { id: string }[] = LEVELS): number {
+  return order.findIndex(level => level.id === id) + 1;
+}
+
+export function formatOrderNumber(num: number): string {
+  return String(num).padStart(4, '0');
+}
 
 export function isDeep(l: LevelDef): l is DeepLevelDef {
   return l.kind === 'deep';

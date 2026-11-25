@@ -4,8 +4,8 @@ import { Container, Graphics, Sprite } from 'pixi.js';
 import type { Assets, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
-import { LEVELS } from '../levels/levels';
-import { MAX_STARS, RANKS, isLevelUnlocked, levelStarCount, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
+import { LEVELS, formatOrderNumber } from '../levels/levels';
+import { MAX_STARS, RANKS, dispatchRequirements, isLevelUnlocked, levelStarCount, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, tr } from '../i18n';
 import { easeOutCubic } from '../core/fx';
 import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
@@ -296,7 +296,7 @@ class LevelCard {
     } else this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 62, 58, unlocked, index, 38));
     for (const photo of this.photos) this.root.addChild(photo.root);
 
-    const order = fmt(strings.orderNo, { num: lv.num });
+    const order = fmt(strings.orderNo, { num: formatOrderNumber(index + 1) });
     const tagX = 44 + measure(order, 14, 800);
     const learner = training && !recommended;
     const mint = training || recommended;
@@ -322,11 +322,11 @@ class LevelCard {
     this.sun = unlocked && lv.kind === 'deep' && lv.id !== 'level9' ? new SunIcon(5.5, 8, 11.5) : null;
     this.arrow = unlocked ? this.openBadge(training) : null;
     if (!unlocked) {
-      const prev = LEVELS[index - 1];
+      const missing = dispatchRequirements(LEVELS, index).filter(id => !save.levels[id].delivered);
       this.root.addChild(
         padlock(CARD_W - 34, 84),
         new Label({ size: 17, color: C.amberHi, align: 'left', weight: 700 })
-          .set(fmt(strings.deliverToUnlock, { name: prev ? levels[prev.id].human : '…' }), 34, CARD_H - 30, CARD_W - 110),
+          .set(fmt(strings.deliverToUnlock, { name: missing.map(id => levels[id].human).join(tr().report.listSep) }), 34, CARD_H - 30, CARD_W - 110),
       );
       return;
     }

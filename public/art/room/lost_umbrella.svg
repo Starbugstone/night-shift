@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="84" height="108" viewBox="0 0 84 108" stroke="#241c38" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <title>Nigel's unclaimed umbrella</title>
+  <g transform="rotate(-12 42 54)">
+    <path d="M28 19v-5a9 9 0 0 1 18 0v86" fill="none" stroke-width="8"/>
+    <path d="M28 19v-5a9 9 0 0 1 18 0v19" fill="none" stroke="#dba56c" stroke-width="4"/>
+    <path d="M24 34l9 3 7-8 10 6 9-6-12 68h-4z" fill="#4b878b"/>
+    <path d="M33 37l11 55-4-63m10 6-5 58" fill="none" stroke="#36515f" stroke-width="2"/>
+    <path d="M32 58l22-3-1 7-20 3z" fill="#d4aa76"/>
+    <path d="M46 24q17 5 15 18" fill="none" stroke="#dabe8a" stroke-width="2"/>
+    <path d="M56 41l8-2 6 17-13 4-5-14z" fill="#f1d49b"/>
+    <circle cx="59" cy="44" r="1" fill="#624553" stroke="none"/>
+  </g>
+</svg>

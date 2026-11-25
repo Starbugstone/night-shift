@@ -155,7 +155,6 @@ const L7_HAZARDS: HazardDef[] = [
 export const LEVEL7: DeepLevelDef = {
   kind: 'deep',
   id: 'level7',
-  num: 7,
   title: L7.title,
   location: L7.location,
   blurb: L7.blurb,

@@ -211,7 +211,6 @@ const L3_HAZARDS: HazardDef[] = [
 export const LEVEL3 = {
   kind: 'deep',
   id: 'level3',
-  num: 3,
   title: 'Cul-de-Sac Sweep',
   location: 'Maple Court · suburbia',
   blurb: 'Three specimens. One cruiser. One Mrs. Pruitt.',
@@ -222,7 +221,7 @@ export const LEVEL3 = {
   parMarginSec: 160,
   hours: [2, 6],
   memo: {
-    re: 'Work Order #0003 — Maple Court (bulk order)',
+    re: 'Work Order #{num} — Maple Court (bulk order)',
     body:
       "Training is over. Maple Court has three targets before dawn: Dentist Dave, Coach Barb, and Gary from Neighbourhood Watch. Dodge the cruiser and Mrs. Pruitt's binoculars—she hasn't slept since 1994 and logs everything in a binder.",
     joke:
@@ -448,7 +447,7 @@ const L4_HAZARDS: HazardDef[] = [
   { type: 'camera', x: 700, y: HR_MID.y - 108, range: 280, half: 0.3, base: PI / 2, amp: 0.8, rate: 1.0, phase: 0.5 },
   // billboards: neon scrambles steering
   { type: 'neon', x: 1080, y: 2700, r: 150, text: 'BURGERS', billboard: true },
-  { type: 'neon', x: 1260, y: 1250, r: 140, text: "DON'T PANIC", billboard: true },
+  { type: 'neon', x: 1260, y: 1250, r: 140, text: "OPEN 24 HRS", billboard: true },
   // the crane: rotating boom, solid
   { type: 'crane', x: 390, y: 1790, len: 380, rate: 0.6, a0: 0, width: 26 },
   // pigeons
@@ -507,7 +506,6 @@ const L4_LAMPS = [
 export const LEVEL4 = {
   kind: 'deep',
   id: 'level4',
-  num: 4,
   title: 'Downtown Graveyard Shift',
   location: 'Grimsby city centre',
   blurb: 'A museum, a nightclub and City Hall. A helicopter.',
@@ -518,7 +516,7 @@ export const LEVEL4 = {
   parMarginSec: 170,
   hours: [1, 6],
   memo: {
-    re: 'Work Order #0004 — Grimsby Centre (containment)',
+    re: 'Work Order #{num} — Grimsby Centre (containment)',
     body:
       "Thanks to Gary's CCTV complaint and Mrs. Pruitt's photo on City Hall's board, Head Office wants a civic audit: Night Guard Nigel at the museum, DJ Kev at the Bassment, and Mayor Whitlock. Watch the police chopper, traffic, and neon.",
     joke:

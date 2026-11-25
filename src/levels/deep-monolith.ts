@@ -9,7 +9,7 @@ const trail = (x: number, y: number, toX: number, toY: number) =>
 
 const copy = en.levels.level8;
 export const LEVEL8: DeepLevelDef = {
-  kind: 'deep', id: 'level8', num: 8, title: copy.title, location: copy.location, blurb: copy.blurb,
+  kind: 'deep', id: 'level8', title: copy.title, location: copy.location, blurb: copy.blurb,
   human: copy.human, mugshot: 'human/flint_head', memo: { re: copy.re, body: copy.body, joke: copy.joke },
   hours: [5, 6], budgetSec: 100, parMarginSec: 25,
   map: {

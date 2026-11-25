@@ -3,9 +3,10 @@ import { sprite, type Room } from '../abduct/rooms/layout';
 import { building, type InteriorRoom } from '../abduct/rooms/interior';
 import { davePatio } from '../abduct/rooms/deep';
 import { LEVEL3 } from './deep-levels';
+import { LEVELS } from './levels';
 import type { DeepLevelDef } from './types';
 
-export const FIELD_CHECK_INDEX = 2;
+export const FIELD_CHECK_INDEX = LEVELS.findIndex(level => level.id === 'level2') + 1;
 export const FIELD_CHECK_RULES: AbductRules = { hard: true, wakeFails: false };
 
 const dave = LEVEL3.map.targets[0];

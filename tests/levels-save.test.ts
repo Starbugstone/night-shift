@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { isLevelUnlocked, nextDispatchIndex, rankFor, totalStars } from '../src/levels/progress';
-import { LEGACY_SAVE_KEY, LEVEL_IDS, SAVE_KEY, SAVE_VERSION, defaultSave, loadSave, validateSave, writeSave, clearSave, type KeyValueStore } from '../src/levels/save';
+import { LEGACY_SAVE_KEY, LEVEL_IDS, V2_SAVE_KEY, SAVE_KEY, SAVE_VERSION, defaultSave, loadSave, validateSave, writeSave, clearSave, type KeyValueStore } from '../src/levels/save';
+
+const oldIds = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9'] as const;
+const oldOrder = oldIds.map(id => ({ id }));
 
 function memStore(init: Record<string, string> = {}): KeyValueStore & { data: Record<string, string> } {
   const data = { ...init };
@@ -18,7 +21,7 @@ describe('save', () => {
     expect(loadSave(memStore())).toEqual(defaultSave());
   });
 
-  it('round-trips through storage under the v2 key', () => {
+  it('round-trips through storage under the current key', () => {
     const s = memStore();
     const save = defaultSave();
     save.glorbs = 42;
@@ -48,7 +51,40 @@ describe('save', () => {
     expect(s.data[LEGACY_SAVE_KEY]).toBe(v1);
   });
 
-  it('a v1 build writing after the v2 save does not wipe it (production and preprod share an origin)', () => {
+  it('imports the most recent valid format once and keeps progress across old-build writes and reset', () => {
+    const source = defaultSave();
+    source.levels.level3 = { stars: [true, false, true, true], delivered: true, attempts: 2, bestTimeSec: 56, mapCollectible: 'astronomer' };
+    source.glorbs = 98;
+    source.reports = 7;
+    source.upgrades = ['hush_drive'];
+    source.specimens = { dave: { room: 'dave_roof', count: 3, first: 2, probed: true, probes: 2 } };
+    source.trophies = { 'demo dentures': { room: 'dave_roof', count: 1, first: 4 } };
+    source.muted = source.allUnlocked = source.legacyDispatch = source.fieldCheckSeen = true;
+    source.lang = 'fr';
+    const v2 = JSON.stringify({ ...source, version: 2 });
+    const v1 = JSON.stringify({ version: 1, glorbs: 3 });
+    const store = memStore({ [V2_SAVE_KEY]: v2, [LEGACY_SAVE_KEY]: v1 });
+    expect(loadSave(store)).toEqual({ ...source, bridgeAccess: true });
+    expect(store.data[V2_SAVE_KEY]).toBe(v2);
+    expect(store.data[LEGACY_SAVE_KEY]).toBe(v1);
+    store.data[V2_SAVE_KEY] = '{}';
+    expect(loadSave(store)).toEqual({ ...source, bridgeAccess: true });
+    clearSave(store);
+    expect(loadSave(store)).toEqual(defaultSave());
+    expect(store.data[V2_SAVE_KEY]).toBe('{}');
+    expect(loadSave(memStore({ [V2_SAVE_KEY]: '{', [LEGACY_SAVE_KEY]: v1 })).glorbs).toBe(3);
+  });
+
+  it('round-trips a future level and its pickup through an older build', () => {
+    const future = { stars: [true, false, true, true], delivered: true, attempts: 2, bestTimeSec: 56, mapCollectible: 'future_pickup' };
+    const store = memStore({ [SAVE_KEY]: JSON.stringify({ version: SAVE_VERSION, levels: { future } }) });
+    const save = loadSave(store);
+    expect(save.levels.future).toEqual(future);
+    writeSave(store, save);
+    expect(loadSave(store).levels.future).toEqual(future);
+  });
+
+  it('a v1 build writing after the current save does not wipe it (production and preprod share an origin)', () => {
     const s = memStore();
     const save = defaultSave();
     save.glorbs = 88;
@@ -58,7 +94,7 @@ describe('save', () => {
     save.lang = 'fr';
     expect(writeSave(s, save)).toBe(true);
     // what the production build writes on its next save: the v1 format, without L8 or the Field Check
-    const v1Levels = Object.fromEntries(LEVEL_IDS.slice(0, 7).map((id) => [id, { stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 }]));
+    const v1Levels = Object.fromEntries(oldIds.slice(0, 7).map((id) => [id, { stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 }]));
     s.data[LEGACY_SAVE_KEY] = JSON.stringify({ version: 1, glorbs: 88, levels: v1Levels, upgrades: [], muted: false, allUnlocked: false });
     const back = loadSave(s);
     expect(back).toEqual(save);
@@ -68,7 +104,7 @@ describe('save', () => {
 
   it('persists a v1 import at once, so a later v1 write cannot drop it (same origin, no setting changed)', () => {
     // the v1 key as an older preprod build left it: v1 key, but holding L8 and the Field Check
-    const v1Levels = Object.fromEntries(LEVEL_IDS.slice(0, 7).map((id) => [id, { stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 }]));
+    const v1Levels = Object.fromEntries(oldIds.slice(0, 7).map((id) => [id, { stars: [false, false, false], delivered: false, bestTimeSec: null, attempts: 0 }]));
     const legacy = { version: 2, glorbs: 88, reports: 8, lang: 'en', fieldCheckSeen: true, muted: false,
       levels: { ...v1Levels, level8: { stars: [true, true, true], delivered: true, bestTimeSec: 44, attempts: 0 } } };
     const s = memStore({ [LEGACY_SAVE_KEY]: JSON.stringify(legacy) });
@@ -134,7 +170,7 @@ describe('save', () => {
   });
 
   it.each([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])('migrates a v1 save with %s deliveries and retains its access', (clears) => {
-    const completed = LEVEL_IDS.slice(0, clears);
+    const completed = oldIds.slice(0, clears);
     const record = { stars: [true, false, true], bestTimeSec: 40, attempts: 3 };
     const levels = Object.fromEntries(completed.map(id => [id, record]));
     const storage = memStore({ [LEGACY_SAVE_KEY]: JSON.stringify({ version: 1, levels, glorbs: clears * 15, reports: clears }) });
@@ -144,10 +180,10 @@ describe('save', () => {
     expect(totalStars(save)).toBe(clears * 2);
     expect(rankFor(totalStars(save))).toBe(rankFor(clears * 2));
     for (const id of completed) expect(save.levels[id]).toEqual({ ...record, stars: [...record.stars, false], delivered: true });
-    expect(LEVEL_IDS.map((_, i) => isLevelUnlocked(save, i))).toEqual([
+    expect(oldIds.map((_, i) => isLevelUnlocked(save, i, oldOrder))).toEqual([
       true, clears >= 1, clears > 0, clears > 0, clears > 0, clears > 0, clears > 0, clears >= 7, clears >= 8,
     ]);
-    expect(nextDispatchIndex(save)).toBe(clears === LEVEL_IDS.length ? -1 : clears);
+    expect(nextDispatchIndex(save, oldOrder)).toBe(clears === oldIds.length ? -1 : clears);
     expect(save.fieldCheckSeen).toBe(clears >= 2);
     expect(writeSave(storage, save)).toBe(true);
     expect(loadSave(storage)).toEqual(save);
@@ -155,12 +191,12 @@ describe('save', () => {
 
   it('preserves out-of-order progress and keeps L8 after a delivered cruise', () => {
     const old = validateSave({ version: 1, level: 'ignored', glorbs: 81, levels: { level5: { attempts: 2 }, level7: { stars: 2, bestTime: 170 } } });
-    expect(isLevelUnlocked(old, 1)).toBe(false);
-    expect(isLevelUnlocked(old, 4)).toBe(true);
-    expect(isLevelUnlocked(old, 7)).toBe(true);
+    expect(isLevelUnlocked(old, 1, oldOrder)).toBe(false);
+    expect(isLevelUnlocked(old, 4, oldOrder)).toBe(true);
+    expect(isLevelUnlocked(old, 7, oldOrder)).toBe(true);
     expect(old.levels.level7).toMatchObject({ stars: [true, true, false, false], bestTimeSec: 170 });
     expect(old.levels.level5.attempts).toBe(2);
-    expect(nextDispatchIndex(old)).toBe(0);
+    expect(nextDispatchIndex(old, oldOrder)).toBe(0);
   });
 
   it('retains an old debug unlock and keeps an unplayed preference-only save on the new route', () => {

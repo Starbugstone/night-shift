@@ -2,7 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
-import { LEVELS } from '../levels/levels';
+import { LEVELS, formatOrderNumber, workOrderNumber } from '../levels/levels';
 import { routeAdvice } from '../levels/route-advice';
 import { fmt, tr } from '../i18n';
 import { easeOutBack } from '../core/fx';
@@ -25,6 +25,13 @@ const BODY_LH = 27;
 const JOKE_SIZE = 18;
 const JOKE_LH = 24;
 const CPS = 70;
+
+/** Temporal Dispatch orders written after Zib's promotion at the end of Prior Contact. */
+const STAFF_MEMOS: ReadonlySet<string> = new Set(['level9', 'level10', 'level11', 'level12']);
+
+export function memoAddressee(id: string): string {
+  return STAFF_MEMOS.has(id) ? tr().memo.toAgent : tr().memo.to;
+}
 
 export class MemoScene implements Scene {
   t = 0;
@@ -156,11 +163,11 @@ class MemoView implements SceneView {
     this.portrait = new VrellPortrait(assets, PX + 76, PAPER_Y + 86, 112);
     const address = { size: 17, color: C.paperInk, align: 'left', weight: 700 } as const;
     const subject = { size: 17, color: '#6a3fbf', align: 'left', weight: 800 } as const;
-    const reLines = wrapLines(fmt(m.re, { re: lt.re }), PW - 168, 17, 800);
+    const reLines = wrapLines(fmt(m.re, { re: fmt(lt.re, { num: formatOrderNumber(workOrderNumber(lv.id)) }) }), PW - 168, 17, 800);
     this.paper.pivot.set(VIEW_W / 2, PAPER_Y + PAPER_H / 2);
     this.paper.addChild(
       page, this.portrait.root,
-      new Label(address).set(lv.num >= 9 ? m.toAgent : m.to, PX + 148, PAPER_Y + 46, PW - 168),
+      new Label(address).set(memoAddressee(lv.id), PX + 148, PAPER_Y + 46, PW - 168),
       new Label(address).set(m.from, PX + 148, PAPER_Y + 72, PW - 168),
       new Label({ size: 21, color: C.paperInk, align: 'left', weight: 900 }).set(lt.title, PX + 28, PAPER_Y + 182, PW - 56),
     );

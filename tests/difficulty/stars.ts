@@ -3,6 +3,7 @@ import type { FlightAutopilotIntent, FlightResult, GameContext, PointerState, Ro
 import { DeepFlightScene, SPOT_HOLD } from '../../src/flight/deep-scene';
 import { FlightScene } from '../../src/flight/scene';
 import { computeDeepStars, computeStars } from '../../src/levels/progress';
+import { LEVELS } from '../../src/levels/levels';
 import { DeepRun } from '../../src/levels/run';
 import type { Stars } from '../../src/levels/save';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from '../../src/levels/types';
@@ -66,7 +67,7 @@ function steer(pointer: PointerState, hand?: FlightAutopilotIntent): void {
 
 function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, carFirst = false): StarRun {
   const ctx = flightContext();
-  const shift = new DeepRun(level, level.num - 1);
+  const shift = new DeepRun(level, LEVELS.findIndex(l => l.id === level.id));
   shift.tick(rng(seed)() * 9);
   const sightings: Sighting[] = [];
   const rooms: RoomId[] = [];

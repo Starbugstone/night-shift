@@ -11,7 +11,7 @@ import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
 import type { Shell } from '../core/shell';
 import { itemsPhrase, vrellComment } from '../levels/humor';
 import { LEVELS } from '../levels/levels';
-import { countStars, type RunOutcome } from '../levels/progress';
+import { countStars, isLevelUnlocked, type RunOutcome } from '../levels/progress';
 import { fmt, gt, localArt, tr } from '../i18n';
 import { fmtTime } from './draw';
 import { reportContent } from './report-content';
@@ -155,6 +155,7 @@ export class ReportScene implements Scene {
   coinHop = 0;
   private readonly look = new ViewSlot(() => new ReportView(this));
   readonly end: number;
+  private readonly hasNext: boolean;
   private playedExtras = { approved: false, tabloid: false };
   private spoke = false; // v4 voices: Vrell says his comment out loud
 
@@ -166,8 +167,11 @@ export class ReportScene implements Scene {
     private readonly advance?: () => void,
   ) {
     this.end = model.headline ? TABLOID_END : END;
-    const hasNext = levelIndex + 1 < LEVELS.length;
-    this.next.label = advance ? tr().fieldCheckControls.short : model.delivered && hasNext ? tr().common.next : tr().common.workOrders;
+    const successor = levelIndex + 1;
+    const branching = LEVELS[levelIndex]?.requires || LEVELS[successor]?.requires;
+    // At a fork the report returns to Work Orders so the player chooses the date.
+    this.hasNext = !branching && isLevelUnlocked(outcome.save, successor);
+    this.next.label = advance ? tr().fieldCheckControls.short : model.delivered && this.hasNext ? tr().common.next : tr().common.workOrders;
     if (this.next.label.length > 9) this.next.size = 26;
   }
 
@@ -186,8 +190,7 @@ export class ReportScene implements Scene {
     if (this.retry.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
     if (this.next.update(p, dt, audio)) {
       if (this.advance) return this.advance();
-      const n = this.levelIndex + 1;
-      if (this.model.delivered && n < LEVELS.length) return this.shell.toMemo(n);
+      if (this.model.delivered && this.hasNext) return this.shell.toMemo(this.levelIndex + 1);
       return this.shell.toWorkOrders();
     }
     const skipped = p.pressed && !this.retry.contains(p.x, p.y) && !this.next.contains(p.x, p.y) && this.t < this.end;

@@ -190,7 +190,6 @@ const L6_LAMPS = [
 export const LEVEL6: DeepLevelDef = {
   kind: 'deep',
   id: 'level6',
-  num: 6,
   title: 'Probe Compliance',
   location: "St. Mildred's General · Endoscopy Wing",
   blurb: 'Form 7-B. Two readings each. Nobody wakes up.',
@@ -200,7 +199,7 @@ export const LEVEL6: DeepLevelDef = {
   parMarginSec: 140,
   hours: [1, 6],
   memo: {
-    re: 'Work Order #0006 — Mandatory Form 7-B Audit',
+    re: 'Work Order #{num} — Mandatory Form 7-B Audit',
     body:
       "Pete's lighthouse log reached Head Office, and Compliance noticed zero probes logged all quarter. Worse: humans queue voluntarily to be probed here and leave four-star reviews. Collect Hank, Dr. Osei and Mr. Pemberton with Form 7-B ticked en route.",
     joke:

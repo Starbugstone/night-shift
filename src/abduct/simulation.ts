@@ -39,7 +39,7 @@ const PROP_CUES: Readonly<Record<string, string>> = {
   'room/pilot_bobblehead': 'July 4th speech first. Then upload the virus.',
   'room/potato_butte': 'The mash needs more altitude.',
   'room/roswell_pennant': 'Go Saucers! Defence!',
-  'room/towel_42': "Don't panic. Where's my towel?",
+  'room/lost_umbrella': "Lost property. One umbrella. Still wet.",
   'room/tripod_single': 'This one goes out to the Martians.',
   // L6 clinic code
   'room/ticket_sign': 'Now serving… me?',

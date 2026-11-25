@@ -146,7 +146,7 @@ describe('HARD RULE: every level map collectible belongs in Room 2 (Field finds)
       const slot = byId.get(pickup.id);
       expect(slot, `missing Town Room slot for "${pickup.id}" (${lv.id})`).toBeDefined();
       expect(slot!.levelId).toBe(lv.id);
-      expect(slot!.levelNum).toBe(lv.num);
+      expect(slot!.levelNum).toBe(LEVELS.indexOf(lv) + 1);
       expect(slot!.artKey).toBe(`flight/pickup_${pickup.id}`);
       expect(ART[slot!.artKey], `missing ART manifest entry for ${slot!.artKey} (${lv.id})`).toBeDefined();
       expect(townSlots[i]!.id).toBe(pickup.id);

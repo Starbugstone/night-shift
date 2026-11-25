@@ -176,7 +176,6 @@ const LAMPS = [
 export const LEVEL5: DeepLevelDef = {
   kind: 'deep',
   id: 'level5',
-  num: 5,
   title: 'Pier Pressure',
   location: 'Barnacle Bay · seaside',
   blurb: 'A dolphin, a lighthouse and a fish accountant.',
@@ -186,7 +185,7 @@ export const LEVEL5: DeepLevelDef = {
   parMarginSec: 140,
   hours: [1, 6],
   memo: {
-    re: 'Work Order #0005 — Barnacle Bay (species revision)',
+    re: 'Work Order #{num} — Barnacle Bay (species revision)',
     body:
       "The Mayor's desk flagged an unaccounted crate down at Barnacle Bay—and Head Office now doubts humans are even the second-smartest species here. Grab Bubbles the dolphin, Harbourmaster Pete, and Sal. Hide behind tall things from the lighthouse. Keep the mammal damp.",
     joke:

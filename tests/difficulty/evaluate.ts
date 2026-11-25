@@ -3,6 +3,7 @@
 // evaluate-difficulty skill (.claude/skills/evaluate-difficulty/SKILL.md).
 import type { RoomId } from '../../src/contracts';
 import type { LevelDef } from '../../src/levels/types';
+import { workOrderNumber } from '../../src/levels/levels';
 import { starLabels } from '../../src/levels/progress';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
 import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
@@ -221,7 +222,8 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     casualMedianPeakSuspicion: median(casualRuns.map(run => run.peakSuspicion)),
     violations: [],
   };
-  const floors = STAR_FLOORS[level.kind === 'tutorial' ? 'tutorial' : level.num <= 4 ? 'early' : level.num <= 6 ? 'middle' : 'late'];
+  const num = workOrderNumber(level.id);
+  const floors = STAR_FLOORS[level.kind === 'tutorial' ? 'tutorial' : num <= workOrderNumber('level4') ? 'early' : num <= workOrderNumber('level6') ? 'middle' : 'late'];
   for (const row of base.stars) {
     const want = row.profile === 'skilled' ? floors.skilled : row.profile === 'casual' ? floors.casual : [];
     for (const [i, floor] of want.entries()) {

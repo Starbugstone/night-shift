@@ -412,7 +412,7 @@ describe('optional map collectibles', () => {
     const flight: FlightResult = { roomId: 'laundry_skylight', timeSec: 14, spotted: 0 };
     const outcome = applyRun(save, 'level2', delivery, { ...flight, mapCollectible: flyer.id });
     expect(writeSave(store, outcome.save)).toBe(true);
-    expect([...storage.keys()]).toEqual(['night-shift-save-v2']);
+    expect([...storage.keys()]).toEqual([SAVE_KEY]);
     const reloaded = loadSave(store);
     expect(reloaded.levels.level2).toMatchObject({ attempts: 4, mapCollectible: flyer.id });
     expect(applyRun(reloaded, 'level2', delivery, flight).save.levels.level2.mapCollectible).toBe(flyer.id);

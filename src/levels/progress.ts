@@ -2,7 +2,7 @@
 import type { AbductResult, FlightResult, MapCollectibleId, RoomId, UpgradeId } from '../contracts';
 import { ROOMS } from '../abduct/rooms';
 import { LEVELS, isDeep, isRoomId } from './levels';
-import { cloneSave, isSpecimenId, type LevelId, type SaveData, type Stars } from './save';
+import { LEGACY_DISPATCH_IDS, cloneSave, isSpecimenId, type LevelId, type SaveData, type Stars } from './save';
 import type { DeepTarget, EntryDef, LevelDef } from './types';
 import { en } from '../i18n/en';
 
@@ -205,17 +205,43 @@ export function setUnlockEverything(on: boolean): void {
   unlockEverything = on;
 }
 
-export function isLevelUnlocked(save: SaveData, index: number): boolean {
-  const level = LEVELS[index];
-  if (!level) return false;
-  if (index === 0 || unlockEverything || save.allUnlocked || save.levels[level.id].delivered) return true;
-  if (save.legacyDispatch && isDeep(level) && level.num <= 7) return true;
-  const prev = LEVELS[index - 1]!;
-  return save.levels[prev.id].delivered;
+interface DispatchOrder {
+  id: string;
+  requires?: readonly string[];
 }
 
-export function nextDispatchIndex(save: SaveData): number {
-  return LEVELS.findIndex((level, i) => !save.levels[level.id].delivered && isLevelUnlocked(save, i));
+const BRIDGE_ORDERS = new Set(['birch_bakery', 'birch_neighbours']);
+const legacyDispatchIds: ReadonlySet<string> = new Set(LEGACY_DISPATCH_IDS);
+
+export function dispatchRequirements<Id extends string>(
+  order: readonly { id: Id; requires?: readonly Id[] }[], index: number,
+): readonly Id[] {
+  return order[index]?.requires ?? (index > 0 ? [order[index - 1]!.id] : []);
+}
+
+export function isLevelUnlocked(save: SaveData, index: number, order: readonly DispatchOrder[] = LEVELS): boolean {
+  const level = order[index];
+  if (!level) return false;
+  if (unlockEverything || save.allUnlocked || save.levels[level.id]?.delivered) return true;
+  if (save.legacyDispatch && legacyDispatchIds.has(level.id)) return true;
+  if (save.bridgeAccess && (BRIDGE_ORDERS.has(level.id) || level.id === 'level3')) return true;
+  return dispatchRequirements(order, index).every(id => save.levels[id]?.delivered);
+}
+
+export function nextDispatchIndex(save: SaveData, order: readonly DispatchOrder[] = LEVELS): number {
+  const available = (level: DispatchOrder, i: number) => !save.levels[level.id]?.delivered && isLevelUnlocked(save, i, order);
+  // Keep a veteran's forward dispatch ahead of optional catch-up shifts.
+  if (save.bridgeAccess && order.some(level => BRIDGE_ORDERS.has(level.id))) {
+    const lastClear = order.reduce((last, level, i) => save.levels[level.id]?.delivered ? i : last, -1);
+    const maple = order.findIndex(level => level.id === 'level3');
+    if (maple >= 0 && lastClear >= maple) {
+      const forward = order.findIndex((level, i) => i > lastClear && available(level, i));
+      if (forward >= 0) return forward;
+      const branch = order.findIndex((level, i) => level.requires && available(level, i));
+      if (branch >= 0) return branch;
+    }
+  }
+  return order.findIndex(available);
 }
 
 export interface RunOutcome {
@@ -268,7 +294,6 @@ function applyStars(
   if (mapCollectible && LEVELS[idx]?.map.collectible?.id === mapCollectible) lv.mapCollectible = mapCollectible;
   const prev: Stars = [...lv.stars];
   const before = rankFor(totalStars(save));
-  const nextWasUnlocked = isLevelUnlocked(save, idx + 1);
   const reward = runReward(prev, stars, payMult);
   lv.stars = [prev[0] || stars[0], prev[1] || stars[1], prev[2] || stars[2], prev[3] || stars[3]];
   lv.attempts += 1;
@@ -285,7 +310,7 @@ function applyStars(
     glorbs: reward.glorbs,
     rankBefore: before,
     rankAfter: rankFor(totalStars(next)),
-    unlockedNext: !nextWasUnlocked && isLevelUnlocked(next, idx + 1),
+    unlockedNext: stars[0] && LEVELS.some((_, i) => !isLevelUnlocked(save, i) && isLevelUnlocked(next, i)),
   };
 }
 

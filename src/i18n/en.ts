@@ -158,7 +158,7 @@ const deepZib = {
   start3: ['Three houses before dawn. Suburbia: ring doorbells, dogs, and grudges.', "Three specimens before sunrise. That's one more than I've ever done. Total."],
   start4: ['Downtown Grimsby. Mom said cities are where saucers go to get towed.', 'Okay. Downtown. Be cool. Act like a pigeon.'],
   // v4 story
-  start5: ["Barnacle Bay! Wait—I'm abducting a DOLPHIN? Do I need a towel?", 'Seaside shift. Hide from the lighthouse. Keep the mammal damp.'],
+  start5: ["Barnacle Bay! Wait—I'm abducting a DOLPHIN? Do I need a bucket?", 'Seaside shift. Hide from the lighthouse. Keep the mammal damp.'],
   start6: ["St. Mildred's. Humans pay to get probed here? Earth is deeply weird.", 'Form 7-B audit. Brass thermometer ready. Please nobody wake up.'],
   start7: ['A whole cruise ship, off-books. Vrell is definitely getting us both fired.', 'SS Buffet Royale. Grab the captain, dodge the camera, ignore the shrimp.'],
   start8: ["Three million years ago and it's STILL Grimsby. Beat Echo's deadline!", "Roaming apes, black slabs, and a filing clock. Where's Krix?!"],
@@ -298,7 +298,7 @@ export const en = {
       'Tip: "gently" is a beam setting, not a suggestion.',
       "Tip: probe requests need two signatures. A crop circle counts as one.",
       'Tip: if a human starts sculpting mashed potatoes, you hovered too low.',
-      "Tip: don't panic. Panic voids the saucer's third-party insurance.",
+      "Tip: screaming voids the saucer's third-party insurance.",
     ],
     // v4 story: progress-gated loading tips (unlocked by delivered milestones)
     tierTips: {
@@ -365,7 +365,7 @@ export const en = {
     nextRank: 'Next rank at ★{n}',
     deliverFirst: 'Deliver {name} first.',
     lastSpecimen: 'the last specimen',
-    orderNo: 'WORK ORDER #000{num}',
+    orderNo: 'WORK ORDER #{num}',
     training: 'TRAINING',
     learner: 'L',
     deepShift: 'DEEP SHIFT ×3',
@@ -405,8 +405,8 @@ export const en = {
       blurb: "An inventor, a bully, a bandleader. One storm at 10:04.",
       human: "Doc, Buff & Marvin",
       collect: "Doc, Buff & Marvin",
-      re: 'Work Order #0009 — Nov 12, 1955 (10:04)',
-      body: "Basement B-4 tripped a 1.21-gigawatt alarm in 1955. Someone built a time machine without Form 88-MPH. Grab Doc off the clock tower, Buff from Lyle's Coffee Shop and Marvin Cherry behind the school dance. Be out by 10:10, when the storm passes.",
+      re: 'Work Order #{num} — Nov 12, 1955 (10:04)',
+      body: "Basement B-4 tripped a 1.21-gigawatt alarm in 1955. Someone built a time machine without Form 88-MPH. In 1955 the Grimsby Gazette covered the next valley over, Crest Valley. Grab Doc off the clock tower, Buff from Lyle's Coffee Shop and Marvin Cherry behind the school dance. Be out by 10:10, when the storm passes.",
       joke: "A gull-wing time car is due at the clock tower at 10:04 sharp. Wait at the west turnout, then match its speed to impound it before the lightning hits.",
       signoff: "— Vrell. I told you to leave the dial alone.",
     },
@@ -416,7 +416,7 @@ export const en = {
       blurb: 'Big man. Bigger snore. Light-sleeper dog.',
       human: 'Farmer Doyle',
       collect: 'Farmer Doyle',
-      re: 'Work Order #0001 — Farmer Doyle (Probation)',
+      re: 'Work Order #{num} — Farmer Doyle (Probation)',
       body: "Welcome to the night shift, Zib. Your first specimen is Farmer Doyle, 58: sleeps like a log, snores like a chainsaw. Dodge the pickup's headlights and the yard dog. Pass probation and we might even issue you a lanyard.",
       joke: "Reminder: specimens must arrive undamaged, unbruised and ideally unaware. Last quarter's intern returned a man still clutching his toaster. We do not speak his name.",
       signoff: '— Vrell. Sent from my clipboard.', // v4 story
@@ -427,7 +427,7 @@ export const en = {
       blurb: 'Asleep in a rolling chair. Boxers in the dryer.',
       human: 'Larry',
       collect: 'Laundromat Larry',
-      re: 'Work Order #0002 — Laundromat Larry',
+      re: 'Work Order #{num} — Laundromat Larry',
       body: "Doyle's pickup headed into town, and his missing-slipper flyer is already pinned up at Spin City Laundromat. Grab Larry, the night attendant—six years asleep on duty, a Bureau role model. Watch the van, the diner neon, and the power lines.",
       joke: "Power lines are solid. Last quarter's intern learned that right before the toaster incident. If anything from the dryer comes along—boxers, an odd sock—use tongs.",
       signoff: '— Vrell. Still watching.', // v4 story
@@ -438,7 +438,7 @@ export const en = {
       blurb: 'Three specimens. One cruiser. One Mrs. Pruitt.',
       human: 'Dave, Barb & Gary',
       collect: 'Dave, Barb & Gary',
-      re: 'Work Order #0003 — Maple Court (bulk order)',
+      re: 'Work Order #{num} — Maple Court (bulk order)',
       body: "Training is over. Maple Court has three targets before dawn: Dentist Dave, Coach Barb, and Gary from Neighbourhood Watch. Dodge the cruiser and Mrs. Pruitt's binoculars—she hasn't slept since 1994 and logs everything in a binder.",
       joke: "Gary's garage lasers have caught Gary eleven times—don't become entry twelve. Also, a volunteer astronomer is camped on Birch Lane with a SETI dish, if you fancy a detour.",
       signoff: '— Vrell. Co-signed under mild protest.', // v4 story
@@ -449,7 +449,7 @@ export const en = {
       blurb: 'A museum, a nightclub and City Hall. A helicopter.',
       human: 'Nigel, Kev & the Mayor',
       collect: 'Nigel, Kev & the Mayor',
-      re: 'Work Order #0004 — Grimsby Centre (containment)',
+      re: 'Work Order #{num} — Grimsby Centre (containment)',
       body: "Thanks to Gary's CCTV complaint and Mrs. Pruitt's photo on City Hall's board, Head Office wants a civic audit: Night Guard Nigel at the museum, DJ Kev at the Bassment, and Mayor Whitlock. Watch the police chopper, traffic, and neon.",
       joke: "The Mayor is an elected official, so file Form 9-V (Votes, Alien). Also check Nigel's ledger—someone shipped an unlisted black rock out of that museum last week.",
       signoff: '— Vrell. My eye is twitching.', // v4 story
@@ -460,7 +460,7 @@ export const en = {
       blurb: 'A dolphin, a lighthouse and a fish accountant.',
       human: 'Bubbles, Pete & Sal',
       collect: 'Bubbles, Pete & Sal',
-      re: 'Work Order #0005 — Barnacle Bay (species revision)',
+      re: 'Work Order #{num} — Barnacle Bay (species revision)',
       body: "The Mayor's desk flagged an unaccounted crate down at Barnacle Bay—and Head Office now doubts humans are even the second-smartest species here. Grab Bubbles the dolphin, Harbourmaster Pete, and Sal. Hide behind tall things from the lighthouse. Keep the mammal damp.",
       joke: 'We tried whales once; the paperwork ran four volumes. If Bubbles offers legal advice, ignore her—you are not authorised to lose an argument to a mammal who outranks you.',
       signoff: '— Vrell. Smells like fish in here.', // v4 story
@@ -471,7 +471,7 @@ export const en = {
       blurb: 'Form 7-B. Two readings each. Nobody wakes up.',
       human: 'Hank, Dr. Osei & Mr. Pemberton',
       collect: 'Hank, Dr. Osei & Mr. Pemberton',
-      re: 'Work Order #0006 — Mandatory Form 7-B Audit',
+      re: 'Work Order #{num} — Mandatory Form 7-B Audit',
       body: "Pete's lighthouse log reached Head Office, and Compliance noticed zero probes logged all quarter. Worse: humans queue voluntarily to be probed here and leave four-star reviews. Collect Hank, Dr. Osei and Mr. Pemberton with Form 7-B ticked en route.",
       joke: "Our probe has been a brass thermometer and a clipboard since 1953. Frankly, we're insulted by their other theories. (A stray defibrillator marked IT'S ALIVE! is parked off the drop-off lane—grab it only if you've time.)",
       signoff: '— Vrell. Co-signed in triplicate (send help).', // v4 story
@@ -483,7 +483,7 @@ export const en = {
       blurb: "Four field witnesses and one patent clerk before dawn.",
       human: "Flint, Reed & Echo",
       collect: "Four field witnesses and Echo",
-      re: "Work Order #0008 — Prior Art (Deadline)",
+      re: "Work Order #{num} — Prior Art (Deadline)",
       body: "Temporal Dispatch found Krix—our old toaster intern—three million years upstream. His OBELISK™ slab taught apes to patent our beam. Hover over two apes from Flint's troop and two from Reed's, then lift Echo from the archive before she files at dawn. A slab's centre is quiet.",
       joke: "I broke into Temporal Dispatch for this, Zib. If a bone flies in Echo's cave, duck—Legal says catching it counts as signing their licence.",
       signoff: "— Vrell. Don't tell Head Office. Good luck, kid.", // v4 story
@@ -494,7 +494,7 @@ export const en = {
       blurb: 'The captain, the chef and Greg. The ship rolls.',
       human: 'Captain Sterling, Chef Marco & Greg',
       collect: 'Captain Sterling, Chef Marco & Greg',
-      re: 'Work Order #0007 — SS Buffet Royale (off-books)',
+      re: 'Work Order #{num} — SS Buffet Royale (off-books)',
       body: "Form 7-B flagged a passenger boarding out of Pete's harbour—on the exact ship carrying Grimsby Museum's missing black stone. Grab Captain Sterling, Chef Marco and all-inclusive Greg. The Captain naps with the manifest in his jacket; we'll check his pockets at debrief. Dodge the deck photographer and brace for the swell.",
       joke: "Budget approved by nobody; we're billing this as maritime research. Mrs. Pruitt's sister Doris is on deck with the same binder. Do not beam up the shrimp tower.",
       signoff: '— Vrell. Burn this memo after reading.', // v4 story
@@ -515,7 +515,7 @@ export const en = {
     { title: 'Intern', flavour: 'Unpaid. Zero parking ring.' },
     { title: 'Probationary Abductor', flavour: 'Promising, if bonky. No toasters.' },
     { title: 'Abductor', flavour: 'Lanyard privileges unlocked.' },
-    { title: 'Senior Abductor', flavour: 'Own parking ring. Still behind Bubbles.' },
+    { title: 'Senior Abductor', flavour: 'Parking ring: waitlisted. Behind Bubbles.' },
     { title: 'Abduction Lead', flavour: "Signs other people's forms. Rarely reads them." },
     { title: 'Head of Internal Affairs', flavour: 'Trusted with the 1953 brass thermometer.' },
     { title: 'Fleet Admiral of Naps', flavour: 'Salary pending. Vrell is "looking into it".' },
@@ -525,7 +525,7 @@ export const en = {
   crestValley: {
     left: "PM",
     banner: "Collect all three by 10:10",
-    order: "WORK ORDER #0009 · CREST VALLEY, 1955",
+    order: "WORK ORDER #{num} · CREST VALLEY, 1955",
     duration: "Storm passes in {time}",
     deliverGoal: '{star} — by 10:10',
     owlGoal: '{star} — {time} to spare',
@@ -700,7 +700,7 @@ export const en = {
     woof: 'WOOF!',
     woofQ: 'woof?',
     specimen: 'specimen',
-    orderNo: 'WORK ORDER #000{num}',
+    orderNo: 'WORK ORDER #{num}',
     collect: 'Collect: {name}',
     tutDrag: 'Drag anywhere to fly',
     tutRelease: 'Let go to hover',
@@ -712,7 +712,7 @@ export const en = {
     checkpoint: 'CHECKPOINT',
     collectAll: 'Collect all three before dawn',
     seenRule: 'Seen for {s} s = spotted',
-    banner: 'WORK ORDER #000{num} · SUNRISE AT {h}:00',
+    banner: 'WORK ORDER #{num} · SUNRISE AT {h}:00',
     secured: 'SPECIMEN SECURED',
     backToCheckpoint: 'Tap to go back to the last checkpoint',
     countOf: '{n} of 3',
@@ -948,7 +948,7 @@ export const en = {
       'You ran out of night. Please return the night to the supply cupboard, and fill in the night-return form.',
       'Dawn. I have rescheduled you for tomorrow night. I have rescheduled myself for a lie-down.',
       "It is now morning. The specimens are making toast. We cannot abduct people who are making toast. It's in the treaty.",
-      "Dawn. Still beats the tripod division: one Earth cold and the whole fleet called in sick.",
+      "Dawn. Someone in Payroll has already crossed out the night rate.",
     ],
     deepComments: {
       // v4 L9 1955
@@ -1002,7 +1002,7 @@ export const en = {
     // v4 story: Vrell's scripted arc lines on a level's first delivery
     storyFirstClear: {
       // v4 L9 1955
-      level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Put the dial back, Zib.",
+      level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Why is it blinking two more dates?",
       level1: "Not dead, not fired, and Doyle is in the hold. Take Route 9 into town—Spin City's night clerk is next.",
       level2: 'Larry is logged, and Accounting traced forty missing socks to your saucer. Off training, Zib—Maple Court awaits.',
       level3: "Suburbia cleared, though Gary filed a complaint and Mrs. Pruitt mailed your photo to City Hall. We're going downtown.",
@@ -1323,7 +1323,7 @@ export const en = {
       // L5 Barnacle Bay
       'sardine tin': {
         got: [
-          'An empty sardine tin, fished off the pool floor. So long, and thanks for all the tin.',
+          'An empty sardine tin, fished off the pool floor. Bubbles has already invoiced us for the contents.',
           'A sardine tin. Bubbles ate them in 1997. She still brings it up.',
         ],
         missed: [
@@ -1492,7 +1492,7 @@ export const en = {
         ],
         missed: [
           'You left the towel swan. Greg will complain it was looking at him.',
-          'No swan. Fine. Always know where your towel is: ours is in the hold.',
+          'No swan. Housekeeping left a damp nest on the bed.',
         ],
       },
       'lime mankini': {
@@ -1671,7 +1671,7 @@ export const en = {
     // signs on the flight maps
     EAT: 'EAT',
     BURGERS: 'BURGERS',
-    "DON'T PANIC": "DON'T PANIC",
+    "OPEN 24 HRS": "OPEN 24 HRS",
     // Dave's house
     'Master bedroom': 'Master bedroom',
     'Upstairs hall': 'Upstairs hall',
@@ -1793,7 +1793,7 @@ export const en = {
     'The truth is out there. Lock the back door.': 'The truth is out there. Lock the back door.',
     'The mash needs more altitude.': 'The mash needs more altitude.',
     'Go Saucers! Defence!': 'Go Saucers! Defence!',
-    "Don't panic. Where's my towel?": "Don't panic. Where's my towel?",
+    "Lost property. One umbrella. Still wet.": "Lost property. One umbrella. Still wet.",
     'This one goes out to the Martians.': 'This one goes out to the Martians.',
     'The Hendersons moved the hedge again.': 'The Hendersons moved the hedge again.',
     'July 4th speech first. Then upload the virus.': 'July 4th speech first. Then upload the virus.',
@@ -2030,14 +2030,14 @@ export const en = {
     title: 'Field Check — Off Training',
     location: 'Birch Lane · Maple Court edge',
     blurb: 'One porch light, one door lip, zero clock.',
-    re: 'Field Check #0002-B — Off Training',
+    re: 'Field Check #{num}-B — Off Training',
     body: "The laundromat van turned into Maple Court, and Head Office just dumped a three-specimen shift on my desk. Before sunrise goes live, run one unpaid drill on Birch Lane: trip a porch sensor, clear a door lip, and don't wake the decoy.",
     joke: "No stars, no Glorbs, no permanent record—unless you break the saucer. My pension is eleven weeks away, Zib. Please don't ruin it.",
     signoff: '— Vrell. Unpaid drill, paid expectations.',
     start: 'Run Field Check',
-    skip: 'Skip to Maple Court',
+    skip: 'Skip to Order #{num}',
     replay: 'Replay Field Check',
-    continueToL3: 'Start Maple Court',
+    continueToOrder: 'Start Order #{num}',
     prompts: {
       porch: 'Pass the porch sensor — slide out to cool the fuse.',
       ring: 'Hover in the mint ring to lock on.',
@@ -2085,7 +2085,7 @@ export const en = {
       },
       obelisk_crate: {
         name: 'OBELISK™ crate',
-        comment: "Manifest says 'decorative basalt, do not hum at'. Accounting is furious nobody paid customs.",
+        comment: "Empty decoy. Just straw and a forwarding label for the SS Buffet Royale. Accounting is furious nobody paid customs.",
         missedComment: "Left that unaccounted crate on the pier. Customs cleared it as 'garden ornament'.",
         memoHint: 'unaccounted crate',
       },
@@ -2131,7 +2131,7 @@ export const en = {
     timesCount: { one: '{n} time', other: '{n} times' },
     statusLabel: 'Status',
     stillOnEarth: 'Still on Earth — grab it on shift',
-    unfiledHint: 'Spotted during Work Order #000{num} ({location}). Sweep the specimen past the glinting item before leaving.',
+    unfiledHint: 'Spotted during Work Order #{num} ({location}). Sweep the specimen past the glinting item before leaving.',
     close: 'Close',
     wing: 'Wing {n}/{total}',
     tabSouvenirs: 'Souvenirs · {n}/{max}',
@@ -2148,7 +2148,7 @@ export const en = {
       exhibitNo: 'SPECIMEN #{num}',
       unfiledBadge: 'NOT COLLECTED',
       notCollected: 'Not yet collected',
-      notCollectedDetail: "Not yet collected. Deliver this specimen during Work Order #000{num} ({location}) to open their Bureau dossier.",
+      notCollectedDetail: "Not yet collected. Deliver this specimen during Work Order #{num} ({location}) to open their Bureau dossier.",
       ageLabel: 'AGE',
       heightLabel: 'HEIGHT',
       weightLabel: 'WEIGHT',
@@ -2390,7 +2390,7 @@ export const en = {
         },
         sterling: {
           at3: "Yawns \"Beam me up, Scotty\" from his hammock whenever our green light hits. Zib stopped correcting him.",
-          at10: "Saw three towering tripods wade past the bow and bet Anchovy a cold would beat them by Tuesday.",
+          at10: "Taught Anchovy to ring the ship's bell at the first sign of a saucer. Anchovy now rings it for dinner.",
         },
         marco: {
           at3: "Tucks his giant pepper mill under the duvet now, ready to fix our galley's \"tragic lack of butter\".",
@@ -2440,7 +2440,7 @@ export const en = {
       stillInTown: 'Still out in town — hover to collect',
       // v4 L9 1955: the time car can't be hovered; it has to be caught on its run
       stillRacing: 'Still racing for the clock — catch it before 10:04',
-      unfiledDetail: '{hint} Hover slowly over the mint glint during Work Order #000{num} to bring it aboard.',
+      unfiledDetail: '{hint} Hover slowly over the mint glint during Work Order #{num} to bring it aboard.',
       memoHintFallback: 'Shift memo mentions "{hint}".',
       descriptions: {
         // v4 L9 1955
@@ -2448,7 +2448,7 @@ export const en = {
         slipper_flyer: 'Photocopied in frantic Comic Sans with one tear-off tab already missing. Whoever took that number is about to be very disappointed.',
         astronomer: 'Spent twelve years aiming a dish at deep space; got beamed up mid-sip of cocoa. Asked if we could drop him off at Mars.',
         saucer_photo: 'Out of focus, tilted twenty degrees, and somehow still clearer than every UFO tabloid since 1947. Legal paid cash to bury the negatives.',
-        obelisk_crate: 'Stencilled "FRAGILE — DO NOT EVOLVE NEAR". Plays booming dramatic music whenever anyone walks past holding a tool.',
+        obelisk_crate: 'Forward to SS Buffet Royale. Even the packing straw gets its own theme music.',
         defibrillator: 'Swiped off a hospital crash cart and labelled "IT\'S ALIVE!" in red marker. Propulsion swears it jump-started a dead saucer battery.',
         shrimp_tower: 'Three tiers of all-you-can-eat crustacean arrogance on crushed ice. Zib claims it jumped into the tractor beam of its own free will.',
         krix: "Our infamous ex-intern, still clutching Farmer Doyle's toaster. Insists a shiny black appliance counts as alien technology.",
@@ -2459,7 +2459,7 @@ export const en = {
         slipper_flyer: "Pinned to Vrell's corkboard",
         astronomer: 'Debriefed; refuses to leave',
         saucer_photo: 'Redacted · Eyes Only',
-        obelisk_crate: 'Impounded · Mildly humming',
+        obelisk_crate: 'Impounded · Empty, still humming',
         defibrillator: 'Charged · Rubber gloves only',
         shrimp_tower: 'Refrigerated, under protest',
         krix: 'Under HR review',
@@ -2505,7 +2505,7 @@ export const en = {
       'municipal mug': 'Expensed as "civic infrastructure". Somehow the most productive object in City Hall.',
       'mayoral toupee': 'Aerodynamic auburn weave. Tested in our wind tunnel; refused to budge up to Mach 2.',
       // L5 Barnacle Bay
-      'sardine tin': 'Pried open with suspiciously neat flipper-work. So long, and thanks for all the snacks.',
+      'sardine tin': 'Pried open with suspiciously neat flipper-work. Licked clean, then filed as evidence.',
       'rubber duck': "Bubbles the dolphin's bath-time confidant. Squeaks louder than our hull-breach alarm.",
       'harbourmaster mug': "Salt-crusted stoneware that survives force-nine gales and Pete's industrial-strength tea.",
       'ship in a bottle': 'Nine years of tweezers and swearing. We beamed it out faster than Pete got the mast in.',
@@ -2523,7 +2523,7 @@ export const en = {
       "captain's log": 'A literal timber log with a brass plaque. Stardate classified; splinters very real.',
       'chocolate éclair': 'Stasis-sealed to preserve the glaze. Only two bite marks—Zib blames turbulence.',
       'giant pepper mill': 'Three feet of walnut-turned intimidation. Say when, or spend eternity sneezing.',
-      'complimentary towel swan': 'Origami terrycloth that survived re-entry. Always know where your towel is—ours is labelled.',
+      'complimentary towel swan': 'Origami terrycloth that survived re-entry. Greg has already asked for it back.',
       'lime mankini': 'Radioactive-lime sling stored behind double blast glass. Very nice—from two parsecs away.',
       // L8 Patent Valley
       'first-edition bone': "Humanity's very first tool—a heavy bone picked up by an ape. Bureau Safety immediately filed it as an unlicensed weapon.",

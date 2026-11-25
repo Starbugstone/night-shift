@@ -14,6 +14,7 @@ import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Shape, keyOf, roundRect } from '../core/gfx/shapes';
 import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
+import { formatOrderNumber } from '../levels/levels';
 import { clamp } from './draw';
 import { C } from './theme';
 import { Button } from './widgets';
@@ -1117,7 +1118,7 @@ class CaseSectionView {
       ledges.rect(14, ledgeY, CASE_W - 28, 1.5).fill('rgba(169,162,214,0.16)');
     }
 
-    const numTag = `#0${section.levelNum}`;
+    const numTag = `#${formatOrderNumber(section.levelNum)}`;
     const heading = `${numTag} · ${lvText.location}`;
     const titleLabel = new Label(CASE_TITLE).set(heading, 16, CASE_HDR_H / 2 + 1, CASE_W - 92);
     const countLabel = new Label(allFound ? CASE_COUNT_DONE : CASE_COUNT_OPEN).set(`${foundCount}/${totalCount}`, CASE_W - 16, CASE_HDR_H / 2 + 1);
@@ -1288,7 +1289,7 @@ class TownSlotCardView {
     // Right info column (x = 140 .. 476, width = 336)
     const textX = 140;
     const textW = TOWN_CARD_W - textX - 16;
-    const locLine = `#0${slot.levelNum} · ${lvText.location}`;
+    const locLine = `#${formatOrderNumber(slot.levelNum)} · ${lvText.location}`;
     this.root.addChild(new Label(found ? TOWN_LOC_FOUND : TOWN_LOC_MISS).set(locLine, textX, 25, textW));
 
     if (found) {
@@ -1367,7 +1368,7 @@ class SpecimenSectionView {
     roundRect(hdr, 3, 3, CASE_W - 6, CASE_HDR_H - 4, 15).fill(allFound ? 'rgba(47,191,143,0.16)' : 'rgba(18,13,43,0.45)');
     hdr.rect(12, CASE_HDR_H - 2, CASE_W - 24, 1.5).fill(allFound ? 'rgba(124,255,203,0.35)' : 'rgba(169,162,214,0.18)');
 
-    const numTag = `#0${section.levelNum}`;
+    const numTag = `#${formatOrderNumber(section.levelNum)}`;
     const heading = `${numTag} · ${lvText.location}`;
     const titleLabel = new Label(CASE_TITLE).set(heading, 16, CASE_HDR_H / 2 + 1, CASE_W - 92);
     const countLabel = new Label(allFound ? CASE_COUNT_DONE : CASE_COUNT_OPEN).set(`${foundCount}/${totalCount}`, CASE_W - 16, CASE_HDR_H / 2 + 1);
@@ -1465,7 +1466,7 @@ class SpecimenCardView {
       // Uncollected: "Not yet collected" + level location
       this.root.addChild(
         new Label(SPEC_CARD_MISS).set(specStr.notCollected, SPECIMEN_SLOT_W / 2, 102, SPECIMEN_SLOT_W - 14),
-        new Label(SLOT_LOC).set(`#0${slot.levelNum} · ${shortLocation(slot.levelId)}`, SPECIMEN_SLOT_W / 2, 128, SPECIMEN_SLOT_W - 14),
+        new Label(SLOT_LOC).set(`#${formatOrderNumber(slot.levelNum)} · ${shortLocation(slot.levelId)}`, SPECIMEN_SLOT_W / 2, 128, SPECIMEN_SLOT_W - 14),
       );
     }
   }
@@ -1817,7 +1818,7 @@ class DetailModalView {
       else roundRect(g, 24, 18, bw, 28, 14).fill('rgba(255,179,71,0.16)').stroke({ color: C.amber, width: 1.8 });
     });
     this.badgeLabel.restyle(found ? TAG_BADGE_FOUND : TAG_BADGE_MISS).set(badgeText, 24 + bw / 2, 33, bw - 12);
-    this.locLabel.set(`#0${slot.levelNum} · ${lvText.location}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
+    this.locLabel.set(`#${formatOrderNumber(slot.levelNum)} · ${lvText.location}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
 
     // Exhibit art (reusing cached Texture — zero display-object allocations)
     const clockFlyer = found && slot.artKey === 'room/clock_flyer';
@@ -1839,7 +1840,7 @@ class DetailModalView {
 
     const desc = found
       ? trophyDescription(slot.itemId)
-      : fmt(strings.unfiledHint, { num: slot.levelNum, location: lvText.location });
+      : fmt(strings.unfiledHint, { num: formatOrderNumber(slot.levelNum), location: lvText.location });
     this.descPara.setBlock(desc, 30, 252, MODAL_W - 60);
 
     // Provenance rows
@@ -1884,7 +1885,7 @@ class DetailModalView {
       else roundRect(g, 24, 18, bw, 28, 14).fill('rgba(255,179,71,0.16)').stroke({ color: C.amber, width: 1.8 });
     });
     this.badgeLabel.restyle(found ? TAG_BADGE_FOUND : TAG_BADGE_MISS).set(badgeText, 24 + bw / 2, 33, bw - 12);
-    this.locLabel.set(`#0${slot.levelNum} · ${lvText.title}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
+    this.locLabel.set(`#${formatOrderNumber(slot.levelNum)} · ${lvText.title}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
 
     // Showcase figure: animated PickupFigure when found; still silhouette when unfound
     this.stageGlow.place(MODAL_W / 2, 134, 108, 72, found ? 0.3 : 0.06);
@@ -1915,14 +1916,14 @@ class DetailModalView {
 
     const desc = found
       ? townDescription(slot.id)
-      : fmt(slot.id === 'time_car' ? tr().crestValley.trophyUnfiled : townStr.unfiledDetail, { hint: townHint(slot.id), num: slot.levelNum });
+      : fmt(slot.id === 'time_car' ? tr().crestValley.trophyUnfiled : townStr.unfiledDetail, { hint: townHint(slot.id), num: formatOrderNumber(slot.levelNum) });
     this.descPara.setBlock(desc, 30, 276, MODAL_W - 60);
 
     // Two-row provenance inset (where it was found + Bureau status; no star line)
     const leftX = 42;
     const rightX = MODAL_W - 42;
     this.row1Key.set(townStr.foundIn, leftX, 456, 120);
-    this.row1Val.restyle(PROV_VAL).set(`#0${slot.levelNum} · ${lvText.location}`, rightX, 456, 286);
+    this.row1Val.restyle(PROV_VAL).set(`#${formatOrderNumber(slot.levelNum)} · ${lvText.location}`, rightX, 456, 286);
     this.row2Key.set(strings.statusLabel, leftX, 496, 120);
     this.row2Val.restyle(PROV_VAL_WARN).set(found ? townStatus(slot.id) : slot.id === 'time_car' ? townStr.stillRacing : townStr.stillInTown, rightX, 496, 286);
     this.row3Key.visible = false;
@@ -1951,7 +1952,7 @@ class DetailModalView {
       else roundRect(g, 24, 18, bw, 28, 14).fill('rgba(255,179,71,0.16)').stroke({ color: C.amber, width: 1.8 });
     });
     this.badgeLabel.restyle(found ? TAG_BADGE_FOUND : TAG_BADGE_MISS).set(badgeText, 24 + bw / 2, 33, bw - 12);
-    this.locLabel.set(`#0${slot.levelNum} · ${lvText.location}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
+    this.locLabel.set(`#${formatOrderNumber(slot.levelNum)} · ${lvText.location}`, MODAL_W - 24, 33, MODAL_W - bw - 60);
 
     // Showcase portrait: animated SpecimenFigure when collected, still silhouette when uncollected
     this.stageGlow.place(MODAL_W / 2, 118, 88, 56, found ? 0.28 : 0.06);
@@ -1994,7 +1995,7 @@ class DetailModalView {
     // Funny Bureau bio (or uncollected shift hint)
     const desc = found
       ? info.desc
-      : fmt(specStr.notCollectedDetail, { num: slot.levelNum, location: lvText.location });
+      : fmt(specStr.notCollectedDetail, { num: formatOrderNumber(slot.levelNum), location: lvText.location });
     const descH = this.specDescPara.setBlock(desc, 30, 284, MODAL_W - 60);
     let cursorY = 284 + descH;
 
@@ -2109,7 +2110,7 @@ class DetailModalView {
       this.row1Key.set(strings.statusLabel, leftX, provY + 44, 120);
       this.row1Val.restyle(PROV_VAL_WARN).set(specStr.notCollected, rightX, provY + 44, 286);
       this.row2Key.set(specStr.workOrderLabel, leftX, provY + 92, 120);
-      this.row2Val.restyle(PROV_VAL).set(`#0${slot.levelNum} · ${lvText.title}`, rightX, provY + 92, 286);
+      this.row2Val.restyle(PROV_VAL).set(`#${formatOrderNumber(slot.levelNum)} · ${lvText.title}`, rightX, provY + 92, 286);
     }
   }
 

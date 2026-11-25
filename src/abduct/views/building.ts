@@ -110,23 +110,21 @@ const DECOR_FALLBACKS: Readonly<Record<string, (g: CanvasRenderingContext2D, fre
     label(g, french ? 'LA VÉRITÉ' : 'I WANT TO', 72, 80, 'bold 16px system-ui', INK, 123);
     label(g, french ? 'S’EST TIRÉE' : 'BE LEAVING', 72, 101, 'bold 20px system-ui', INK, 123);
   },
-  'room/towel_42': g => {
-    g.fillStyle = '#bb9161';
+  'room/lost_umbrella': g => {
+    g.strokeStyle = INK;
+    g.lineWidth = 5;
     g.beginPath();
-    g.arc(43, 12, 8, 0, TAU);
-    g.fill();
-    g.fillStyle = '#b86f69';
+    g.arc(39, 16, 10, Math.PI, 0);
+    g.lineTo(49, 101);
+    g.stroke();
+    g.fillStyle = '#578b91';
     g.beginPath();
-    g.moveTo(37, 20);
-    g.quadraticCurveTo(48, 10, 54, 32);
-    g.lineTo(66, 91);
-    g.quadraticCurveTo(42, 103, 12, 92);
+    g.moveTo(22, 38);
+    g.lineTo(54, 31);
+    g.lineTo(48, 97);
     g.closePath();
     g.fill();
     g.stroke();
-    g.fillStyle = '#ffdfac';
-    g.fillRect(17, 84, 44, 4);
-    label(g, '42', 39, 59, 'bold 28px system-ui', '#ffedc9', 38);
   },
   'room/tripod_single': g => {
     g.fillStyle = '#26263f';

@@ -306,7 +306,7 @@ export const ART: Record<string, ArtSpec> = {
   'room/roswell_pennant': { w: 186, h: 88 }, // Barb's felt basketball pennant
   'room/saucer_poster': { w: 144, h: 122 }, // Gary's taped photograph of a flying bin lid
   'room/saucer_poster_fr': { w: 144, h: 122 }, // French slogan pasted over the print
-  'room/towel_42': { w: 84, h: 108 }, // Nigel's embroidered emergency towel
+  'room/lost_umbrella': { w: 84, h: 108 }, // Nigel's lost-property umbrella
   'room/tripod_single': { w: 132, h: 102 }, // Kev's seven-inch with a roller-skating Martian
   'room/pilot_bobblehead': { w: 54, h: 74 }, // the Mayor's spring-necked desk pilot
 

@@ -69,7 +69,7 @@ export const fr: Strings = {
       'Astuce : « doucement » est un réglage du rayon, pas une suggestion.',
       "Astuce : toute demande de sonde exige deux signatures. Un crop circle compte pour une.",
       'Astuce : si un humain sculpte sa purée en montagne, vous avez volé trop bas.',
-      "Astuce : pas de panique. La panique annule l'assurance au tiers de la soucoupe.",
+      "Astuce : un seul cri et vous perdez l'assurance au tiers de la soucoupe.",
     ],
     // v4 story: progress-gated loading tips (unlocked by delivered milestones)
     tierTips: {
@@ -136,7 +136,7 @@ export const fr: Strings = {
     nextRank: 'Grade suivant à ★{n}',
     deliverFirst: "Livrez d'abord {name}.",
     lastSpecimen: 'le spécimen précédent',
-    orderNo: 'ORDRE N°000{num}',
+    orderNo: 'ORDRE N°{num}',
     training: 'FORMATION',
     learner: 'A',
     deepShift: 'GROSSE NUIT ×3',
@@ -175,8 +175,8 @@ export const fr: Strings = {
       blurb: "Un savant, une brute, un guitariste. Orage à 22 h 04.",
       human: "Doc, Buff et Marvin",
       collect: "Doc, Buff et Marvin",
-      re: 'Ordre n°0009 — 12 nov. 1955 (22 h 04)',
-      body: "Le sous-sol B-4 a sonné sur un pic de 2,21 gigowatts en 1955 : quelqu'un bricole le temps sans Cerfa 88-MPH. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, fin de l'orage.",
+      re: 'Ordre n°{num} — 12 nov. 1955 (22 h 04)',
+      body: "Le sous-sol B-4 a sonné sur un pic de 2,21 gigowatts en 1955 : quelqu'un bricole le temps sans Cerfa 88-MPH. En 1955, la Gazette de Grimsby couvrait aussi Crest Valley, la vallée voisine. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, fin de l'orage.",
       joke: "Une voiture temporelle est attendue devant l'horloge à 22 h 04 pile. Guettez-la à la sortie ouest, puis calez-vous sur sa vitesse pour la saisir avant la foudre.",
       signoff: "— Vrell. J'avais dit : pas touche au cadran.",
     },
@@ -186,7 +186,7 @@ export const fr: Strings = {
       blurb: 'Gros gaillard. Ronflement XXL. Chien au sommeil léger.',
       human: 'le fermier Doyle',
       collect: 'le fermier Doyle',
-      re: 'Ordre n°0001 — Le fermier Doyle (Essai)',
+      re: 'Ordre n°{num} — Le fermier Doyle (Essai)',
       body: "Bienvenue dans l'équipe de nuit, Zib. Premier spécimen : le fermier Doyle, 58 ans — dort comme une souche, ronfle comme une tronçonneuse. Évitez les phares du pick-up et le chien. Passez la période d'essai et on vous donnera peut-être un tour de cou.",
       joke: "Rappel : les spécimens doivent arriver intacts, sans bleus et idéalement sans s'être rendu compte de rien. Le stagiaire du trimestre dernier a ramené un homme cramponné à son grille-pain. On ne prononce plus son nom.",
       signoff: '— Vrell. Envoyé depuis mon porte-bloc.', // v4 story
@@ -197,7 +197,7 @@ export const fr: Strings = {
       blurb: 'Endormi sur une chaise à roulettes. Caleçon au sèche-linge.',
       human: 'Larry',
       collect: 'Larry de la laverie',
-      re: 'Ordre n°0002 — Larry de la laverie',
+      re: 'Ordre n°{num} — Larry de la laverie',
       body: "Le pick-up de Doyle est entré en ville, et son avis de chausson perdu est déjà affiché à la laverie Spin City. Embarquez Larry, le veilleur de nuit : six ans qu'il dort à son poste, un modèle pour le Bureau. Gare à la camionnette, au néon et aux câbles.",
       joke: "Les lignes électriques sont solides. L'ancien stagiaire l'a appris juste avant l'incident du grille-pain. Si quelque chose sort du sèche-linge avec lui — un caleçon, une chaussette orpheline —, prenez des pincettes.",
       signoff: '— Vrell. Je garde un œil sur vous.', // v4 story
@@ -208,7 +208,7 @@ export const fr: Strings = {
       blurb: 'Trois spécimens. Une voiture de police. Une Mme Pruitt.',
       human: 'Dave, Barb et Gary',
       collect: 'Dave, Barb et Gary',
-      re: 'Ordre n°0003 — Allée des Érables (commande groupée)',
+      re: 'Ordre n°{num} — Allée des Érables (commande groupée)',
       body: "Fini la formation. L'allée des Érables compte trois cibles avant l'aube : Dave le dentiste, Coach Barb et Gary des Voisins vigilants. Évitez la patrouille et les jumelles de Mme Pruitt — elle n'a pas fermé l'œil depuis 1994 et note tout dans un classeur.",
       joke: "Les lasers de Gary l'ont déjà piégé onze fois : évitez d'être la douzième. Un astronome amateur campe aussi chemin des Bouleaux avec une parabole SETI, si vous avez le temps.",
       signoff: '— Vrell. Contresigné avec réserves.', // v4 story
@@ -219,7 +219,7 @@ export const fr: Strings = {
       blurb: 'Un musée, une boîte de nuit, la mairie. Un hélicoptère.',
       human: 'Nigel, Kévin et le maire',
       collect: 'Nigel, Kévin et le maire',
-      re: 'Ordre n°0004 — Grimsby Centre (confinement)',
+      re: 'Ordre n°{num} — Grimsby Centre (confinement)',
       body: "À cause de la plainte de Gary et de la photo de Mme Pruitt à la mairie, le siège exige un audit civique : Nigel au musée, DJ Kévin au Bass-Fond et le maire Whitlock. Attention à l'hélico de la police, à la circulation et aux néons.",
       joke: "Le maire est un élu : remplissez le Cerfa 9-V (Vote, Extraterrestre). Vérifiez aussi le registre de Nigel : quelqu'un a expédié une pierre noire hors inventaire du musée la semaine dernière.",
       signoff: '— Vrell. Ma paupière tremble.', // v4 story
@@ -230,7 +230,7 @@ export const fr: Strings = {
       blurb: 'Un dauphin, un phare et une comptable de la criée.',
       human: 'Bubulle, Pete et Sal',
       collect: 'Bubulle, Pete et Sal',
-      re: "Ordre n°0005 — Barnacle Bay (révision d'espèce)",
+      re: "Ordre n°{num} — Barnacle Bay (révision d'espèce)",
       body: "Le bureau du maire signale une caisse non déclarée à Barnacle Bay — et le siège doute même que les humains soient la deuxième espèce la plus maligne ici. Embarquez Bubulle le dauphin, Pete au phare et Sal. Cachez-vous du phare derrière tout ce qui dépasse. Gardez le mammifère humide.",
       joke: "On a essayé les baleines une fois : quatre tomes de paperasse. Si Bubulle vous donne des conseils juridiques, ignorez-la : vous n'êtes pas autorisé à perdre un débat contre un mammifère mieux gradé que vous.",
       signoff: '— Vrell. Ça sent la marée ici.', // v4 story
@@ -241,7 +241,7 @@ export const fr: Strings = {
       blurb: 'Cerfa 7-B. Deux relevés chacun. Personne ne se réveille.',
       human: 'Hank, le Dr Osei et M. Pemberton',
       collect: 'Hank, le Dr Osei et M. Pemberton',
-      re: 'Ordre n°0006 — Audit obligatoire Cerfa 7-B',
+      re: 'Ordre n°{num} — Audit obligatoire Cerfa 7-B',
       body: "Le registre du phare de Pete est arrivé au siège, et la Conformité a relevé zéro sondage ce trimestre. Pire : ici, les humains font la queue volontairement et laissent quatre étoiles. Embarquez Hank, le Dr Osei et M. Pemberton avec le Cerfa 7-B coché en chemin.",
       joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. Leurs autres théories sont vexantes. (Un défibrillateur marqué IL EST VIVANT ! traîne près du dépose-minute — à prendre seulement si vous avez le temps.)",
       signoff: '— Vrell. Signé en triple exemplaire (au secours).', // v4 story
@@ -253,7 +253,7 @@ export const fr: Strings = {
       blurb: "Quatre témoins et une greffière à ramener avant l'aube.",
       human: 'Silex, Roseau et Écho',
       collect: 'Quatre témoins et Écho',
-      re: 'Ordre n°0008 — Antériorité (Urgent)',
+      re: 'Ordre n°{num} — Antériorité (Urgent)',
       body: "Le Dispatch temporel a retrouvé Krix — l'ex-stagiaire au grille-pain — trois millions d'années en arrière. Sa dalle OBELISK™ apprend aux singes à breveter notre rayon. Survolez deux singes de Silex et deux de Roseau, puis sortez Écho des archives avant l'aube. Le centre des dalles est calme.",
       joke: "J'ai forcé la porte du Dispatch temporel pour ça, Zib. Si un os vole dans la grotte d'Écho, baissez la tête : pour le juridique, l'attraper vaut signature.",
       signoff: '— Vrell. Pas un mot au siège. Bonne chance, gamin.', // v4 story
@@ -264,7 +264,7 @@ export const fr: Strings = {
       blurb: 'Le commandant, le chef et Greg. Le navire roule.',
       human: 'le commandant Sterling, le chef Marco et Greg',
       collect: 'le commandant Sterling, le chef Marco et Greg',
-      re: 'Ordre n°0007 — SS Buffet Royal (hors budget)',
+      re: 'Ordre n°{num} — SS Buffet Royal (hors budget)',
       body: "Le Cerfa 7-B signale un passager monté à bord au port de Pete — justement sur le paquebot qui transporte la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg, le client tout compris. Le commandant fait la sieste avec le manifeste dans sa veste : on videra ses poches au débriefing. Esquivez le photographe et tenez bon dans la houle.",
       joke: "Budget validé par personne : on facture en recherche maritime. Doris, la sœur de Mme Pruitt, est sur le pont avec le même classeur. Ne téléportez pas la tour de crevettes.",
       signoff: '— Vrell. Détruisez cette note après lecture.', // v4 story
@@ -330,7 +330,7 @@ export const fr: Strings = {
     { title: 'Stagiaire', flavour: 'Non payé. Zéro anneau de parking.' },
     { title: "Ravisseur à l'essai", flavour: 'Prometteur, malgré les bosses. Pas de grille-pain.' },
     { title: 'Ravisseur', flavour: 'Droit au tour de cou débloqué.' },
-    { title: 'Ravisseur confirmé', flavour: 'Anneau de parking. Derrière Bubulle.' },
+    { title: 'Ravisseur confirmé', flavour: "Anneau de parking : sur liste d'attente. Derrière Bubulle." },
     { title: 'Chef ravisseur', flavour: 'Signe les Cerfa des autres. Les lit rarement.' },
     { title: 'Chef des Affaires internes', flavour: 'Habilité au thermomètre en laiton de 1953.' },
     { title: 'Grand amiral de la sieste', flavour: "Salaire à l'étude. Vrell « s'en occupe »." },
@@ -340,7 +340,7 @@ export const fr: Strings = {
   crestValley: {
     left: 'HEURE',
     banner: 'Les trois spécimens avant 22 h 10',
-    order: 'ORDRE N°0009 · CREST VALLEY, 1955',
+    order: 'ORDRE N°{num} · CREST VALLEY, 1955',
     duration: "Fin de l'orage dans {time}",
     deliverGoal: '{star} — avant 22 h 10',
     owlGoal: '{star} — {time} de marge',
@@ -527,7 +527,7 @@ export const fr: Strings = {
     woof: 'OUAF !',
     woofQ: 'ouaf ?',
     specimen: 'spécimen',
-    orderNo: 'ORDRE N°000{num}',
+    orderNo: 'ORDRE N°{num}',
     collect: 'À récupérer : {name}',
     tutDrag: "Glissez n'importe où pour voler",
     tutRelease: 'Lâchez pour faire du surplace',
@@ -539,7 +539,7 @@ export const fr: Strings = {
     checkpoint: 'ÉTAPE',
     collectAll: "Récupérez les trois avant l'aube",
     seenRule: 'Vu pendant {s} s = repéré',
-    banner: 'ORDRE N°000{num} · AUBE À {h} H',
+    banner: 'ORDRE N°{num} · AUBE À {h} H',
     secured: 'SPÉCIMEN EMBARQUÉ',
     backToCheckpoint: 'Touchez pour revenir à la dernière étape',
     countOf: '{n} sur 3',
@@ -766,7 +766,7 @@ export const fr: Strings = {
       start3: ["Trois maisons avant l'aube. La banlieue : sonnettes vidéo, chiens et rancunes.", "Trois spécimens avant le jour. C'est un de plus que mon total à vie."],
       start4: ['Grimsby centre-ville. Maman dit que les villes mettent les soucoupes en fourrière.', 'OK. Le centre-ville. Du calme. Fais le pigeon.'],
       // v4 story
-      start5: ["Barnacle Bay ! Attends — j'enlève un DAUPHIN ? Je prends une serviette ?", 'Service en bord de mer. Cache-toi du phare. Garde le mammifère humide.'],
+      start5: ["Barnacle Bay ! Attends — j'enlève un DAUPHIN ? Je prends un seau ?", 'Service en bord de mer. Cache-toi du phare. Garde le mammifère humide.'],
       start6: ['Sainte-Mildred. Les humains paient pour se faire sonder ? Quelle planète bizarre.', 'Audit Cerfa 7-B. Thermomètre en laiton prêt. Que personne ne se réveille.'],
       start7: ['Un paquebot entier, hors budget. Vrell va finir par nous faire virer tous les deux.', 'SS Buffet Royal. Chope le commandant, évite le flash, oublie les crevettes.'],
       start8: ["Trois millions d'années plus tôt et c'est ENCORE Grimsby. Vite, avant Écho !", 'Des singes en liberté, des dalles noires et un chrono. Il est où, Krix ?!'],
@@ -910,7 +910,7 @@ export const fr: Strings = {
       'Vous êtes à court de nuit. Merci de rapporter la nuit à la réserve et de remplir le formulaire de restitution de nuit.',
       "Le jour. Je vous ai reprogrammé pour demain soir. Je me suis reprogrammé pour une sieste.",
       "C'est le matin. Les spécimens beurrent leurs tartines. On ne peut pas enlever quelqu'un qui beurre une tartine. C'est dans le traité.",
-      "L'aube. Toujours mieux que la division Trépieds : un petit rhume terrien et toute la flotte en arrêt maladie.",
+      "C'est l'aube. À la paie, quelqu'un a déjà rayé votre prime de nuit.",
     ],
     deepComments: {
       // v4 L9 1955
@@ -964,7 +964,7 @@ export const fr: Strings = {
     // v4 story: Vrell's scripted arc lines on a level's first delivery
     storyFirstClear: {
       // v4 L9 1955
-      level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Remettez le cadran à zéro, Zib.",
+      level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
       level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la D9 vers la ville : le veilleur de Spin City vous attend.',
       level2: "Larry est enregistré, et la compta a pisté quarante chaussettes disparues jusqu'à votre soucoupe. Fini l'essai, cap sur l'allée des Érables.",
       level3: 'Banlieue bouclée, mais Gary a porté plainte et Mme Pruitt a envoyé votre photo à la mairie. Direction le centre-ville.',
@@ -1279,7 +1279,7 @@ export const fr: Strings = {
       // L5 Barnacle Bay
       'sardine tin': {
         got: [
-          "Une boîte de sardines vide, repêchée au fond du bassin. Salut, et encore merci pour la boîte.",
+          "Une boîte de sardines vide, repêchée au fond du bassin. Bubulle nous a déjà facturé le contenu.",
           "Une boîte de sardines. Bubulle les a mangées en 1997. Elle en parle encore.",
         ],
         missed: [
@@ -1448,7 +1448,7 @@ export const fr: Strings = {
         ],
         missed: [
           "Le cygne est resté. Greg se plaindra qu'il le regardait de travers.",
-          "Pas de cygne. Peu importe : il faut toujours savoir où est sa serviette, et la nôtre est dans la soute.",
+          "Pas de cygne. La femme de chambre a laissé un nid tout humide sur le lit.",
         ],
       },
       'lime mankini': {
@@ -1618,7 +1618,7 @@ export const fr: Strings = {
     Tiny: 'Minus',
     EAT: 'MIAM',
     BURGERS: 'BURGERS',
-    "DON'T PANIC": 'PAS DE PANIQUE',
+    "OPEN 24 HRS": 'OUVERT 24 H/24',
     'Master bedroom': 'Chambre parentale',
     'Upstairs hall': 'Palier',
     Attic: 'Grenier',
@@ -1732,7 +1732,7 @@ export const fr: Strings = {
     'The truth is out there. Lock the back door.': 'La vérité est ailleurs. Pense à fermer à clé.',
     'The mash needs more altitude.': "La montagne de purée manque d'altitude.",
     'Go Saucers! Defence!': 'Allez les Soucoupes ! Défense !',
-    "Don't panic. Where's my towel?": "Pas de panique. Où est ma serviette ?",
+    "Lost property. One umbrella. Still wet.": "Objets trouvés. Un parapluie. Toujours mouillé.",
     'This one goes out to the Martians.': 'Celle-ci, c’est pour les Martiens.',
     'The Hendersons moved the hedge again.': 'Les Henderson ont encore déplacé la haie.',
     'July 4th speech first. Then upload the virus.': "D'abord le discours du 4 juillet. Ensuite, le virus.",
@@ -1969,14 +1969,14 @@ export const fr: Strings = {
     title: 'Test terrain — Fin de formation',
     location: 'Chemin des Bouleaux · lisière',
     blurb: 'Un détecteur, un cadre de porte, zéro chrono.',
-    re: 'Test terrain n°0002-B — Fin de formation',
+    re: 'Test terrain n°{num}-B — Fin de formation',
     body: "La camionnette de la laverie a tourné vers l'allée des Érables, et le siège m'a collé trois spécimens d'un coup. Avant la vraie course contre l'aube, faites un exercice non payé : frôlez un détecteur, passez le cadre de porte, ne réveillez pas le leurre.",
     joke: "Zéro étoile, zéro Glorb, zéro dossier — sauf si vous cassez la soucoupe. Ma retraite est dans onze semaines, Zib. Ne gâchez pas tout.",
     signoff: '— Vrell. Exercice gratuit, exigences payantes.',
     start: 'Lancer le test terrain',
-    skip: "Passer à l'allée des Érables",
+    skip: "Passer à l'ordre n°{num}",
     replay: 'Rejouer le test terrain',
-    continueToL3: "Ouvrir l'allée des Érables",
+    continueToOrder: "Lancer l'ordre n°{num}",
     prompts: {
       porch: "Passez devant le détecteur — sortez pour calmer l'alerte.",
       ring: "Faites du surplace dans l'anneau vert pour verrouiller.",
@@ -2024,7 +2024,7 @@ export const fr: Strings = {
       },
       obelisk_crate: {
         name: 'Caisse OBELISK™',
-        comment: "Le manifeste indique « basalte décoratif, ne pas fredonner devant ». La compta fulmine : personne n'a payé la douane.",
+        comment: "La caisse était un leurre. Dedans, de la paille et une étiquette de réexpédition pour le SS Buffet Royal. La compta fulmine : personne n'a payé la douane.",
         missedComment: "Vous avez laissé cette caisse non déclarée sur la jetée. La douane l'a classée en « nain de jardin ».",
         memoHint: 'caisse non déclarée',
       },
@@ -2070,7 +2070,7 @@ export const fr: Strings = {
     timesCount: { one: '{n} fois', other: '{n} fois' },
     statusLabel: 'Statut',
     stillOnEarth: 'Encore sur Terre — à choper en mission',
-    unfiledHint: "Repéré sur l'ordre n°000{num} ({location}). Faites passer le spécimen sur l'objet qui brille avant de sortir.",
+    unfiledHint: "Repéré sur l'ordre n°{num} ({location}). Faites passer le spécimen sur l'objet qui brille avant de sortir.",
     close: 'Fermer',
     wing: 'Aile {n}/{total}',
     tabSouvenirs: 'Butin · {n}/{max}',
@@ -2087,7 +2087,7 @@ export const fr: Strings = {
       exhibitNo: 'SPÉCIMEN N°{num}',
       unfiledBadge: 'NON ENLEVÉ',
       notCollected: 'Pas encore enlevé',
-      notCollectedDetail: "Pas encore enlevé. Ramenez ce spécimen lors de l'ordre n°000{num} ({location}) pour ouvrir sa fiche.",
+      notCollectedDetail: "Pas encore enlevé. Ramenez ce spécimen lors de l'ordre n°{num} ({location}) pour ouvrir sa fiche.",
       ageLabel: 'ÂGE',
       heightLabel: 'TAILLE',
       weightLabel: 'POIDS',
@@ -2329,7 +2329,7 @@ export const fr: Strings = {
         },
         sterling: {
           at3: "Bâille « Téléportation, Scotty ! » dans son hamac dès que le rayon brille. Zib ne le corrige plus.",
-          at10: "Il a croisé trois trépieds géants au large et parié avec Anchois qu'un rhume les réglerait avant mardi.",
+          at10: "Il a appris à Anchois à sonner la cloche du bord à la vue d'une soucoupe. Depuis, Anchois sonne pour dîner.",
         },
         marco: {
           at3: "Glisse son moulin à poivre géant sous la couette, prêt à corriger notre « manque tragique de beurre ».",
@@ -2379,7 +2379,7 @@ export const fr: Strings = {
       stillInTown: 'Encore sur place — survolez pour embarquer',
       // v4 L9 1955
       stillRacing: "Fonce vers l'horloge — à choper avant 22 h 04",
-      unfiledDetail: "{hint} Faites du surplace sur la lueur verte pendant l'ordre n°000{num} pour l'embarquer.",
+      unfiledDetail: "{hint} Faites du surplace sur la lueur verte pendant l'ordre n°{num} pour l'embarquer.",
       memoHintFallback: 'La note de service évoque « {hint} ».',
       descriptions: {
         // v4 L9 1955
@@ -2387,7 +2387,7 @@ export const fr: Strings = {
         slipper_flyer: "Photocopié en gros Comic Sans, un numéro déjà arraché en bas. Celui qui l'a pris risque d'être sacrément déçu.",
         astronomer: 'Douze ans à guetter le ciel avec sa parabole, enlevé en pleine gorgée de chocolat chaud. Il a réclamé un crochet par Mars.',
         saucer_photo: "Floue, de travers, mais plus nette que toutes les photos d'OVNI depuis 1947. Le juridique a payé cash pour enterrer les négatifs.",
-        obelisk_crate: "Marquée « FRAGILE — NE PAS ÉVOLUER À PROXIMITÉ ». Balance une musique dramatique dès qu'on passe devant avec un outil.",
+        obelisk_crate: "À réexpédier au SS Buffet Royal. Même la paille a droit à sa musique d'entrée.",
         defibrillator: "Piqué sur un chariot d'urgence et marqué « IL EST VIVANT ! » au feutre rouge. La Propulsion jure qu'il a redémarré une soucoupe à plat.",
         shrimp_tower: "Trois étages d'arrogance crustacée à volonté sur glace pilée. Zib jure qu'elle a sauté de son plein gré dans le rayon.",
         krix: "Notre fameux ex-stagiaire, toujours accroché au grille-pain de Doyle. Jure qu'un appareil noir brillant, c'est de la techno alien.",
@@ -2398,7 +2398,7 @@ export const fr: Strings = {
         slipper_flyer: 'Épinglé sur le tableau de Vrell',
         astronomer: 'Débriefé ; refuse de partir',
         saucer_photo: 'Censurée · Top secret',
-        obelisk_crate: 'En fourrière · Fredonne un peu',
+        obelisk_crate: 'En fourrière · Vide, mais fredonne encore',
         defibrillator: 'Chargé · Gants isolants requis',
         shrimp_tower: 'Au frigo, sous protestation',
         krix: 'Convoqué aux RH',
@@ -2444,7 +2444,7 @@ export const fr: Strings = {
       'municipal mug': "Passé en note de frais « voirie ». L'objet le plus productif de toute la mairie.",
       'mayoral toupee': "Postiche acajou aérodynamique. Testé en soufflerie : ne bouge pas d'un poil jusqu'à Mach 2.",
       // L5 Barnacle Bay
-      'sardine tin': 'Ouverte à la nageoire avec une précision suspecte. Salut, et encore merci pour le poisson.',
+      'sardine tin': 'Ouverte à la nageoire avec une précision suspecte. Léchée jusqu’à la dernière miette, puis classée comme pièce à conviction.',
       'rubber duck': 'Le confident de Bubulle dans son bassin. Couine plus fort que notre alarme de brèche.',
       'harbourmaster mug': 'Grès incrusté de sel : résiste aux tempêtes force 9 et au thé surdosé de Pete.',
       'ship in a bottle': "Neuf ans de pince à épiler et de jurons. On l'a aspiré plus vite que Pete n'a monté le mât.",
@@ -2462,7 +2462,7 @@ export const fr: Strings = {
       "captain's log": 'Une vraie bûche avec plaque en laiton. Date stellaire confidentielle ; échardes bien réelles.',
       'chocolate éclair': 'Mis en stase pour préserver le glaçage. Deux coups de dents — Zib accuse les turbulences.',
       'giant pepper mill': "Un mètre de noyer massif pour intimider les clients. Dites stop, ou éternuez pour l'éternité.",
-      'complimentary towel swan': 'Origami en éponge rescapé de la rentrée atmosphérique. Gardez toujours votre serviette : la nôtre est étiquetée.',
+      'complimentary towel swan': 'Origami en éponge rescapé de la rentrée atmosphérique. Greg le réclame déjà.',
       'lime mankini': "Maillot bretelles vert radioactif sous double vitre blindée. Très joli… vu à deux parsecs.",
       // L8 Vallée des brevets
       'first-edition bone': "Le tout premier outil de l'humanité : un gros fémur ramassé par un singe. La Sécurité l'a aussitôt classé arme illégale.",

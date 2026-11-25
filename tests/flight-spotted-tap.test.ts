@@ -65,7 +65,7 @@ it.each([
   const base = context();
   const speak = vi.fn();
   const ctx = { ...base, audio: { ...base.audio, speak } };
-  const run = new DeepRun(level, level.num - 1);
+  const run = new DeepRun(level, LEVELS.findIndex(l => l.id === level.id));
   const start = () => new DeepFlightScene({ run, level, ctx, onLocked: vi.fn(), onSunrise: vi.fn(), onQuit: vi.fn() });
   const saysWarning = () => speak.mock.calls.filter(([text]) =>
     (tr().humor.deepZib[key] as readonly string[]).includes(text));

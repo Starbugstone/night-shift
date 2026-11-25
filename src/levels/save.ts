@@ -4,18 +4,17 @@ import { isRoomId } from './levels';
 import { isLangPref, type LangPref } from '../i18n';
 import { en } from '../i18n/en';
 
-/**
- * Where this build keeps its save. The production build (/night-shift/) and preprod
- * (/night-shift/preprod/) share one origin, so each save format needs its own key: production still
- * reads and rewrites the v1 key in the v1 format, which drops L8, its stars and the Field Check.
- */
-export const SAVE_KEY = 'night-shift-save-v2';
-/** The v1 save: imported once when there is no v2 save yet, never written or removed. */
+/** Older builds on the same origin keep writing their own keys. */
+export const SAVE_KEY = 'night-shift-save-v3';
+export const V2_SAVE_KEY = 'night-shift-save-v2';
 export const LEGACY_SAVE_KEY = 'night-shift-save-v1';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
+
+export const LEGACY_DISPATCH_IDS = ['level3', 'level4', 'level5', 'level6', 'level7'] as const;
+const ORIGINAL_DEEP_IDS = [...LEGACY_DISPATCH_IDS, 'level8', 'level9'] as const;
 
 export const UPGRADE_IDS: readonly UpgradeId[] = ['beam_dampener', 'hush_drive', 'snooze_ray'];
 
@@ -34,20 +33,20 @@ export type Stars = [boolean, boolean, boolean, boolean];
 /** Index of the town pickup star. */
 export const PICKUP_STAR = 3;
 
-export interface LevelProgress {
+export interface LevelProgress<Pickup extends string = MapCollectibleId> {
   stars: Stars;
   delivered: boolean;
   /** Best combined flight + abduction time of a delivered run (deep: whole-shift time). */
   bestTimeSec: number | null;
   attempts: number;
   /** The map pickup has appeared on a filed report at least once. */
-  mapCollectible?: MapCollectibleId;
+  mapCollectible?: Pickup;
 }
 
 export interface SaveData {
   version: typeof SAVE_VERSION;
   glorbs: number;
-  levels: Record<LevelId, LevelProgress>;
+  levels: Record<LevelId, LevelProgress> & Partial<Record<string, LevelProgress<string>>>;
   upgrades: UpgradeId[];
   muted: boolean;
   /** Debug/cheat flag: every level playable. */
@@ -56,6 +55,8 @@ export interface SaveData {
   legacyDispatch: boolean;
   /** The player finished or skipped the Field Check offer. */
   fieldCheckSeen: boolean;
+  /** Access to the inserted bridge and Maple Court for returning players. */
+  bridgeAccess: boolean;
   /** Reports filed so far; rotates Vrell's comments. */
   reports: number;
   /** Display language; `auto` follows the browser. Older saves have none: auto. */
@@ -104,15 +105,12 @@ export function defaultSave(): SaveData {
   return {
     version: SAVE_VERSION,
     glorbs: 0,
-    levels: {
-      level1: defaultLevel(), level2: defaultLevel(), level3: defaultLevel(), level4: defaultLevel(),
-      level5: defaultLevel(), level6: defaultLevel(), level7: defaultLevel(), level8: defaultLevel(),
-      level9: defaultLevel(),
-    },
+    levels: Object.fromEntries(LEVEL_IDS.map(id => [id, defaultLevel()])) as SaveData['levels'],
     upgrades: [],
     muted: false,
     allUnlocked: false,
     legacyDispatch: false,
+    bridgeAccess: false,
     fieldCheckSeen: false,
     reports: 0,
     lang: 'auto',
@@ -200,12 +198,24 @@ function isMapCollectibleId(value: unknown): value is MapCollectibleId {
 }
 
 /** Turn anything (parsed JSON, garbage, older shapes) into a valid SaveData. */
-export function validateSave(raw: unknown): SaveData {
+export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_IDS): SaveData {
   const out = defaultSave();
+  for (const id of levelIds) out.levels[id] ??= defaultLevel();
   if (!isObj(raw)) return out;
   out.glorbs = Math.floor(finiteNonNeg(raw.glorbs, 0, 999999));
   const levels = isObj(raw.levels) ? raw.levels : {};
-  for (const id of LEVEL_IDS) out.levels[id] = readLevel(levels[id]);
+  // Preserve unregistered level records when an older build reopens this save.
+  for (const [id, record] of Object.entries(levels)) {
+    if (Object.hasOwn(Object.prototype, id) || !isObj(record)) continue;
+    const progress = readLevel(record);
+    out.levels[id] = !LEVEL_IDS.some(known => known === id) && typeof record.mapCollectible === 'string'
+      ? { ...progress, mapCollectible: record.mapCollectible }
+      : progress;
+  }
+  const predatesBridge = !Object.hasOwn(levels, 'birch_bakery') && !Object.hasOwn(levels, 'birch_neighbours');
+  const importing = raw.version !== SAVE_VERSION || levelIds.includes('birch_bakery');
+  out.bridgeAccess = raw.bridgeAccess === true || (importing && predatesBridge &&
+    (out.levels.level3.attempts > 0 || ORIGINAL_DEEP_IDS.some(id => out.levels[id].delivered)));
   if (Array.isArray(raw.upgrades)) {
     const set = new Set<UpgradeId>();
     const refunded = new Set<string>();
@@ -239,15 +249,17 @@ export function loadSave(storage: KeyValueStore | null): SaveData {
   try {
     const own = storage.getItem(SAVE_KEY);
     if (own) return validateSave(JSON.parse(own));
-    // no v2 save yet: start from the v1 one (validateSave migrates it, keeping unlocks and stars)
-    const legacy = storage.getItem(LEGACY_SAVE_KEY);
-    if (!legacy) return defaultSave();
-    const imported = validateSave(JSON.parse(legacy));
-    // Write the import straight away: the v1 build shares this origin and rewrites the v1 key in
-    // its own format (no L8, no Field Check) the next time it saves, so waiting for a setting
-    // change to write v2 would let it drop what the v1 key held now.
-    writeSave(storage, imported);
-    return imported;
+    for (const key of [V2_SAVE_KEY, LEGACY_SAVE_KEY]) {
+      const stored = storage.getItem(key);
+      if (!stored) continue;
+      let raw: unknown;
+      try { raw = JSON.parse(stored); } catch { continue; }
+      if (!isObj(raw)) continue;
+      const imported = validateSave(raw);
+      writeSave(storage, imported);
+      return imported;
+    }
+    return defaultSave();
   } catch {
     return defaultSave();
   }
@@ -263,7 +275,7 @@ export function writeSave(storage: KeyValueStore | null, data: SaveData): boolea
   }
 }
 
-/** Reset progress. Stores an empty v2 save rather than removing it, so the v1 save is not imported again. */
+/** Reset progress. Stores an empty current save so old progress stays cleared. */
 export function clearSave(storage: KeyValueStore | null): void {
   writeSave(storage, defaultSave());
 }

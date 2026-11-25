@@ -49,6 +49,7 @@ export type SceneName =
   | 'choice';
 
 export interface DebugHook {
+  readonly workOrders: readonly { id: string; kind: string; num: number }[];
   readonly scene: string;
   /** A scene transition is running: taps are swallowed until it ends (bots must wait for false). */
   readonly transitioning: boolean;
@@ -544,6 +545,7 @@ export class Game implements Shell {
       aborted: false,
     });
     window.__nightShift = {
+      workOrders: LEVELS.map(({ id, kind }, i) => ({ id, kind, num: i + 1 })),
       get scene() {
         return game.scenes.name;
       },

@@ -3,7 +3,9 @@ import { VIEW_W, type GameContext, type Scene } from '../contracts';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { panelPath } from '../core/gfx/shapes';
 import { Label, Paragraph } from '../core/gfx/text';
-import { tr } from '../i18n';
+import { FIELD_CHECK_INDEX } from '../levels/field-check';
+import { formatOrderNumber } from '../levels/levels';
+import { fmt, tr } from '../i18n';
 import type { AbductSimulation } from '../abduct/simulation';
 import { C } from './theme';
 import { NightSky } from './views/backdrop';
@@ -21,8 +23,9 @@ export class FieldCheckCard implements Scene {
 
   constructor(readonly ctx: GameContext, readonly phase: Phase, private readonly advance: () => void, private readonly leave: () => void) {
     const words = tr().fieldCheck;
-    this.primary = new Button(64, 746, 412, 78, phase === 'memo' ? words.start : phase === 'retry' ? tr().common.retry : words.continueToL3, 'primary', 24);
-    this.skip = new Button(64, 844, 412, 64, words.skip, 'ghost', 22);
+    const num = formatOrderNumber(FIELD_CHECK_INDEX + 1);
+    this.primary = new Button(64, 746, 412, 78, phase === 'memo' ? words.start : phase === 'retry' ? tr().common.retry : fmt(words.continueToOrder, { num }), 'primary', 24);
+    this.skip = new Button(64, 844, 412, 64, fmt(words.skip, { num }), 'ghost', 22);
   }
 
   get view(): Container { return this.look.get().root; }
@@ -51,7 +54,7 @@ class FieldCheckCardView implements SceneView {
     this.skip = new ButtonView(card.skip);
     const paper = new Container();
     const heading = new Paragraph({ size: 30, lineHeight: 38, color: C.paperInk, weight: 900 });
-    heading.setBlock(memo ? words.re : phase === 'retry' ? tr().common.retry : words.completeTitle, 57, 255, 426);
+    heading.setBlock(memo ? fmt(words.re, { num: formatOrderNumber(FIELD_CHECK_INDEX) }) : phase === 'retry' ? tr().common.retry : words.completeTitle, 57, 255, 426);
     const body = new Paragraph({ size: 20, lineHeight: 27, color: C.paperInk, weight: 600 });
     body.setBlock(memo ? words.body : phase === 'retry' ? words.prompts.retry : words.prompts.complete, 60, 350, 420);
     paper.addChild(

@@ -5,7 +5,7 @@
 // Tested by tests/ui-trophies.test.ts and tests/ui-trophies-specimens.test.ts.
 import { VIEW_W, type MapCollectibleId, type RoomId } from '../contracts';
 import { ROOMS } from '../abduct/rooms';
-import { LEVELS, isDeep, levelRooms } from '../levels/levels';
+import { LEVELS, isDeep, levelRooms, workOrderNumber } from '../levels/levels';
 import { cloneSave, type LevelId, type SaveData, type SpecimenEntry, type TrophyEntry } from '../levels/save';
 import { fmt, gt, tr } from '../i18n';
 
@@ -223,7 +223,7 @@ export function buildTrophyCatalog(): readonly TrophySection[] {
         artW: sprite.w,
         artH: sprite.h,
         levelId: lv.id,
-        levelNum: lv.num,
+        levelNum: workOrderNumber(lv.id),
         rooms,
         specimenName: specimenForRoom(roomId),
       };
@@ -231,7 +231,7 @@ export function buildTrophyCatalog(): readonly TrophySection[] {
       slots.push(slot);
     }
     if (slots.length > 0) {
-      sections.push({ levelId: lv.id, levelNum: lv.num, slots });
+      sections.push({ levelId: lv.id, levelNum: workOrderNumber(lv.id), slots });
     }
   }
   return sections;
@@ -256,7 +256,7 @@ export function buildTownCatalog(): readonly TownTrophySlot[] {
       id: pickup.id,
       artKey: `flight/pickup_${pickup.id}`,
       levelId: lv.id,
-      levelNum: lv.num,
+      levelNum: workOrderNumber(lv.id),
     });
   }
   return slots;
@@ -322,27 +322,27 @@ export function buildSpecimenCatalog(): readonly SpecimenSection[] {
           const m = /^human\/(.+)_head$/.exec(head);
           if (m) id = m[1]!;
         }
-        if (id) pushSpecimen(slots, id, lv.id, lv.num, entryRooms);
+        if (id) pushSpecimen(slots, id, lv.id, workOrderNumber(lv.id), entryRooms);
       }
     } else {
       const entryRooms = lv.map.entries.map((e) => e.roomId);
       for (const rId of entryRooms) {
         const room = ROOMS[rId];
-        if (room) pushSpecimen(slots, room.human, lv.id, lv.num, entryRooms);
+        if (room) pushSpecimen(slots, room.human, lv.id, workOrderNumber(lv.id), entryRooms);
       }
     }
-    if (slots.length > 0) sections.push({ levelId: lv.id, levelNum: lv.num, slots });
+    if (slots.length > 0) sections.push({ levelId: lv.id, levelNum: workOrderNumber(lv.id), slots });
   }
 
   // Catch any room in ROOMS whose specimen was not attached to a level entry
   const extraSlots: SpecimenSlot[] = [];
   for (const [roomId, room] of Object.entries(ROOMS) as Array<[RoomId, (typeof ROOMS)[RoomId]]>) {
     if (!seen.has(room.human)) {
-      pushSpecimen(extraSlots, room.human, LEVELS[0]!.id, LEVELS[0]!.num, [roomId]);
+      pushSpecimen(extraSlots, room.human, LEVELS[0]!.id, 1, [roomId]);
     }
   }
   if (extraSlots.length > 0) {
-    sections.push({ levelId: LEVELS[0]!.id, levelNum: LEVELS[0]!.num, slots: extraSlots });
+    sections.push({ levelId: LEVELS[0]!.id, levelNum: 1, slots: extraSlots });
   }
 
   return sections;

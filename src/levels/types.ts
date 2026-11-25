@@ -130,7 +130,8 @@ export interface FlightMap {
 
 interface LevelBase {
   id: LevelId;
-  num: number;
+  /** All listed orders must be delivered. Omit to use the preceding order. */
+  requires?: readonly LevelId[];
   title: string;
   location: string;
   /** Card blurb on Work Orders. */

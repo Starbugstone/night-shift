@@ -1,4 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
+import { formatOrderNumber, workOrderNumber } from '../../levels/levels';
 import type { PropKind } from '../../levels/types';
 import { VIEW_H, VIEW_W } from '../../contracts';
 import { easeOutBack } from '../../core/fx';
@@ -136,7 +137,7 @@ export class TutorialFlightView implements SceneView {
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
     const words = tr().flight;
     this.banner = new FlightBanner(100, 70,
-      new Label(ORDER).set(fmt(words.orderNo, { num: s.level.num }), VIEW_W / 2, 122, VIEW_W - 150),
+      new Label(ORDER).set(fmt(words.orderNo, { num: formatOrderNumber(workOrderNumber(s.level.id)) }), VIEW_W / 2, 122, VIEW_W - 150),
       new Label(COLLECT).set(fmt(words.collect, { name: tr().levels[s.level.id].collect }), VIEW_W / 2, 148, VIEW_W - 150),
     );
     this.arrow = new TargetArrow(assets, words.specimen, false);

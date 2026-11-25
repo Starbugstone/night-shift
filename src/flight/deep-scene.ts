@@ -18,6 +18,7 @@ import { mapPickupFeedback } from './collectible';
 import { TIME_CAR } from './time-car';
 import { TimeCarPilot } from './time-car-pilot';
 import { fmt, tr } from '../i18n'; // v4 voices
+import { formatOrderNumber } from '../levels/levels';
 import type { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
 import { HUD_ROW } from '../ui/hud';
@@ -156,10 +157,12 @@ export class DeepFlightScene implements Scene {
 
   get bannerHeading(): string {
     const words = tr();
-    if (this.level.id === 'level9') return words.crestValley.order;
+    if (this.practice) return fmt(words.fieldCheck.re, { num: formatOrderNumber(this.run.levelIndex) });
+    const num = formatOrderNumber(this.run.levelIndex + 1);
+    if (this.level.id === 'level9') return fmt(words.crestValley.order, { num });
     return this.level.id === 'level8'
-      ? fmt(words.workOrders.orderNo, { num: this.level.num })
-      : fmt(words.flight.banner, { num: this.level.num, h: this.level.hours[1] });
+      ? fmt(words.workOrders.orderNo, { num })
+      : fmt(words.flight.banner, { num, h: this.level.hours[1] });
   }
 
   /** For test scripts: window.__nightShift.active.debug */
