@@ -50,20 +50,58 @@ export function drawRoad(g: CanvasRenderingContext2D, assets: Assets, r: RoadDef
   g.restore();
 }
 
-/** Paint each road crossing / T-junction as plain surface so curbs and markings don't run through it. */
-export function drawJunctions(g: CanvasRenderingContext2D, roads: readonly RoadDef[], theme: GroundTheme): void {
-  g.fillStyle = ROAD_BASE[theme];
+/** The asphalt road art (flight/road_h, road_v): surface, outer edge and kerb line colours and widths. */
+const ART_ASPHALT = '#343756';
+const ART_EDGE = { color: '#222440', w: 8 };
+const ART_KERB = { color: '#495374', at: 9, w: 3 };
+
+/**
+ * Paint each road crossing / T-junction / L-corner as plain surface so curbs and markings don't
+ * run through it. Where no road carries on past a side of the square (the outside of an L-corner,
+ * the closed side of a T), that side gets the road's outer edge and kerb line, so the corner does
+ * not read as a bare patch. With the road art loaded the surface is the art's asphalt colour.
+ */
+/** The road art's asphalt colour (junction surface when the art is loaded). */
+export const JUNCTION_ART_SURFACE = ART_ASPHALT;
+
+export function drawJunctions(g: CanvasRenderingContext2D, roads: readonly RoadDef[], theme: GroundTheme, art = false): void {
+  const kerbs = art && theme !== 'farm';
+  const surface = kerbs ? ART_ASPHALT : ROAD_BASE[theme];
+  const rects = roads.map(roadRect);
   for (const a of roads) {
     if (a.dir !== 'h') continue;
     for (const b of roads) {
       if (b.dir !== 'v') continue;
       const ra = roadRect(a);
       const rb = roadRect(b);
-      const x0 = Math.max(ra.x, rb.x);
-      const y0 = Math.max(ra.y, rb.y);
-      const x1 = Math.min(ra.x + ra.w, rb.x + rb.w);
-      const y1 = Math.min(ra.y + ra.h, rb.y + rb.h);
-      if (x1 > x0 && y1 > y0) g.fillRect(x0, y0, x1 - x0, y1 - y0);
+      if (Math.min(ra.x + ra.w, rb.x + rb.w) <= Math.max(ra.x, rb.x) || Math.min(ra.y + ra.h, rb.y + rb.h) <= Math.max(ra.y, rb.y)) continue;
+      // the whole crossing of the two road strips, even where one road stops at the other's
+      // centre line (a T-junction): a half square leaves a notch and cuts the centre dashes
+      const x0 = rb.x;
+      const x1 = rb.x + rb.w;
+      const y0 = ra.y;
+      const y1 = ra.y + ra.h;
+      g.fillStyle = surface;
+      g.fillRect(x0, y0, x1 - x0, y1 - y0);
+      if (!kerbs) continue;
+      // does any road leave the square through this side?
+      const spansX = (r: { x: number; w: number }) => r.x <= x0 + 1 && r.x + r.w >= x1 - 1;
+      const spansY = (r: { y: number; h: number }) => r.y <= y0 + 1 && r.y + r.h >= y1 - 1;
+      const open = {
+        top: rects.some(r => spansX(r) && r.y < y0 - 1),
+        bottom: rects.some(r => spansX(r) && r.y + r.h > y1 + 1),
+        left: rects.some(r => spansY(r) && r.x < x0 - 1),
+        right: rects.some(r => spansY(r) && r.x + r.w > x1 + 1),
+      };
+      const w = x1 - x0;
+      const h = y1 - y0;
+      for (const [band, inset] of [[ART_EDGE, 0], [ART_KERB, ART_KERB.at]] as const) {
+        g.fillStyle = band.color;
+        if (!open.top) g.fillRect(x0 + (open.left ? 0 : inset), y0 + inset, w - (open.left ? 0 : inset) - (open.right ? 0 : inset), band.w);
+        if (!open.bottom) g.fillRect(x0 + (open.left ? 0 : inset), y1 - inset - band.w, w - (open.left ? 0 : inset) - (open.right ? 0 : inset), band.w);
+        if (!open.left) g.fillRect(x0 + inset, y0 + (open.top ? 0 : inset), band.w, h - (open.top ? 0 : inset) - (open.bottom ? 0 : inset));
+        if (!open.right) g.fillRect(x1 - inset - band.w, y0 + (open.top ? 0 : inset), band.w, h - (open.top ? 0 : inset) - (open.bottom ? 0 : inset));
+      }
     }
   }
 }

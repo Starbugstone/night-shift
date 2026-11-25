@@ -90,7 +90,7 @@ describe('decor only: same detection and collision with and without the eggs', (
       scene.update(DT);
       if (scene.state === 'spotted') wp = 0;
       frames.push(`${s.x.toFixed(2)},${s.y.toFixed(2)} ${scene.state} sus ${scene.suspicion.toFixed(4)} exp ${scene.exposed} spotted ${scene.spotted}`);
-      if (scene.zibT === 2.8) zib.push(scene.zibText);
+      if (scene.zibT === scene.zibFor) zib.push(scene.zibText);
     }
     return { frames, zib, locked };
   }

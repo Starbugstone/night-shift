@@ -292,7 +292,7 @@ export class DeepFlightHud {
     this.banner.root.alpha = clamp(Math.min((3 - s.bannerT) * 4, s.bannerT * 2), 0, 1);
     this.delivered.root.visible = s.level.id !== 'level8' && !this.banner.root.visible && s.deliverT > 0 && flying;
     if (this.delivered.root.visible) this.delivered.sync(s.deliverT, run.deliveredCount, rm);
-    this.zib.sync(s.zibText, spotted ? 0 : s.zibT, t, rm, s.zibPanic);
+    this.zib.sync(s.zibText, spotted ? 0 : s.zibT, t, rm, s.zibPanic, s.zibFor);
     const tip = flightLesson(s, this.tip);
     this.tip = tip;
     this.hint.visible = tip.length > 0;

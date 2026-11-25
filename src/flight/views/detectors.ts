@@ -45,12 +45,13 @@ export class BarkTell {
   readonly root = new Container();
   private readonly disc = new DiscTell(4, 5.5, true);
   private readonly outer: Graphics;
-  private readonly shout = woof();
+  /** The WOOF label: the owner adds it to the flight's bubble layer (above every map object). */
+  readonly shout = woof();
 
   constructor(private readonly d: DogHazard) {
     this.outer = new Graphics().circle(d.x, d.y, d.rMax).stroke({ color: '#ffffff', width: 1.5, alpha: 0.22 });
     this.shout.position.set(d.x, d.y - 50);
-    this.root.addChild(this.disc.root, this.outer, this.shout);
+    this.root.addChild(this.disc.root, this.outer);
   }
 
   sync(r: number, t: number, rm: boolean, hot: number, seen: boolean): void {
@@ -59,7 +60,7 @@ export class BarkTell {
     this.disc.sync(d.x, d.y, r, hot > 0 ? RED : '#ff8c3c', 0.08 + peak * 0.12,
       '#ffaa5a', 0.5 + peak * 0.5, hot > 0, rm ? 0 : t * 30 / r);
     this.outer.tint = hot > 0 ? RED : '#ffaa5a';
-    this.shout.visible = seen;
+    this.shout.visible = seen && this.root.visible;
   }
 }
 

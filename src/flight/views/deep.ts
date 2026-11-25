@@ -23,7 +23,7 @@ import { EntryRingView, RING_CLEAR, SaucerView } from './craft';
 import { placePills, type Box, type PillAsk } from './clear-of';
 import { DeepFlightHud } from './deep-hud';
 import { HazardViews } from './hazards';
-import { FlightTintView, tick } from './overlays';
+import { FLIGHT_BUBBLES, FlightTintView, abovePlayer, tick } from './overlays';
 import { ProgressArc, RED, dashedArc } from './tells';
 import { RoamView } from '../roam-view';
 import { paintBadlands } from './monolith';
@@ -44,6 +44,8 @@ type Target = DeepMap['targets'][number];
 class DeepTargetView {
   readonly root = new Container();
   private readonly building: TargetBuilding;
+  /** The COLLECTED pill and the left-behind quip: stacked in the flight's bubble layer. */
+  readonly bubble = new Container();
   private readonly collected = new Container();
   private readonly missed = new Container();
   private readonly quips: Container[] = [];
@@ -69,27 +71,29 @@ class DeepTargetView {
       this.quips.push(quip);
       this.missed.addChild(quip);
     }
-    this.root.addChild(this.building.root, this.collected, this.missed);
+    this.root.addChild(this.building.root);
+    this.bubble.addChild(this.collected, this.missed);
   }
 
   sync(cam: CameraView, done: boolean, i: number, t: number, rm: boolean): void {
     const b = this.d.building;
-    this.root.visible = cam.sees(b.x, b.y, 300);
+    this.root.visible = this.bubble.visible = cam.sees(b.x, b.y, 300);
     if (!this.root.visible) return;
     this.building.sync(done, t + i / 3, rm);
     this.collected.visible = done;
-    const cycle = (t * 0.16 + i * 0.37) % 1;
+    // each quip stays ~4.5 s (long enough to read), then rests ~4.5 s
+    const cycle = (t * 0.11 + i * 0.37) % 1;
     // the quip comes and goes on a cycle: fade it out with alpha (a visible flip rebuilds the render group)
     this.missed.visible = done && this.quips.length > 0;
     if (!this.missed.visible) return;
-    if (cycle > 0.36) {
+    if (cycle > 0.5) {
       this.missed.alpha = 0;
       return;
     }
-    const k = cycle / 0.36;
+    const k = cycle / 0.5;
     this.missed.alpha = Math.min(1, k * 8, (1 - k) * 6);
     this.missed.y = this.y - (rm ? 0 : Math.sin(k * Math.PI) * 6);
-    const line = Math.floor(t * 0.16 + i * 0.37) % this.quips.length;
+    const line = Math.floor(t * 0.11 + i * 0.37) % this.quips.length;
     for (let q = 0; q < this.quips.length; q++) this.quips[q]!.visible = q === line;
   }
 }
@@ -368,12 +372,18 @@ export class DeepFlightView implements SceneView {
     this.upperWorld.addChild(this.ambient.lights, this.saucer.groundGlow, this.ambient.critters, this.hazards.detectors, this.hazards.sky);
     for (const ring of this.rings) this.upperWorld.addChild(ring.root);
     if (this.collectible) this.upperWorld.addChild(this.collectible.root);
+    // speech bubbles above every map object (houses, dogs, critters, rings), under the saucer
+    const bubbles = new Container();
+    bubbles.label = FLIGHT_BUBBLES;
+    for (const target of this.targets) bubbles.addChild(target.bubble);
+    bubbles.addChild(this.hazards.bubbles);
+    this.upperWorld.addChild(bubbles);
     this.clear = Array.from({ length: this.rings.length * 2 + 4 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
     this.moved = new Uint8Array(this.rings.length);
     this.pillOf = new Uint8Array(this.rings.length);
     this.asks = this.rings.map(() => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
     this.spots = this.rings.map(() => ({ x: 0, y: 0 }));
-    this.upperWorld.addChild(this.checkpoint.arrival, this.saucer.root, this.fuse.root, this.fx);
+    this.upperWorld.addChild(abovePlayer(this.checkpoint.arrival), abovePlayer(this.saucer.root), abovePlayer(this.fuse.root), abovePlayer(this.fx));
     world.addChild(this.tints.worldWash, this.upperWorld);
     this.tints.dawnDecor.addChild(this.dawn.root);
     this.hud = new DeepFlightHud(s);

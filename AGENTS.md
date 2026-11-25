@@ -51,6 +51,11 @@ Rebuilding Pixi geometry every frame is several times dearer than Canvas 2D was.
   `ButtonView`, `NightSky`, `Skyline`, icons, portraits, and the one in-game HUD kit in `hud.ts`
   (`HudPanel`, `HudMeter`, `HudTimer`, `HudButton`, `HudPrompt`, `HudFuse`, `HudSunClock`) on the
   shared `HUD_ROW` from `src/ui/hud.ts`. Both phases use it; don't hand-draw HUD boxes.
+- Flight speech (house quips, barks, pills over the map) goes in the world's `FLIGHT_BUBBLES` layer
+  (`src/flight/views/overlays.ts`): above every map object, under the saucer (`abovePlayer`).
+  `node scripts/pixi/check-bubbles.mjs <e2e build URL>` checks every flight level. Speech timers use
+  `readSeconds()` (`src/core/read-time.ts`), never a fixed duration. Road junctions get their kerbs from
+  `drawJunctions`; `tests/flight-roads.test.ts` checks every level's road corners.
 - Canvas 2D only runs inside texture painters; `tests/shell-pixi-only.test.ts` enforces that no code
   makes its own canvas or draws on one per frame.
 - `SceneManager.go(name, make, instant, transition)` — `fade` (default), `iris`, `flash`.

@@ -9,6 +9,7 @@ import { InteriorSimulation, type InteriorFailure } from './interior';
 import { clamp, Contact, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
+import { readSeconds } from '../core/read-time';
 
 export const BEAM_BOUNDS = { left: 47, top: 146, right: 491, bottom: 800 };
 const FAN_BLADE_RADIUS = 14;
@@ -121,6 +122,8 @@ export class AbductSimulation {
   snoreFx = 0;
   mumble = '';
   mumbleFx = 0;
+  /** How long the current mumble stays up (s): its reading time. */
+  mumbleFor = 0;
   catAwake = 0;
   shake = 0;
   slurp = 0;
@@ -463,7 +466,7 @@ export class AbductSimulation {
   private sleepTalk(line?: string): void {
     const mumbles = this.room.interior?.mumbles ?? MUMBLES;
     this.mumble = line ?? mumbles[Math.floor(this.random() * mumbles.length)]!;
-    this.mumbleFx = 1.6;
+    this.mumbleFor = this.mumbleFx = readSeconds(this.mumble);
     this.audio.sfx('mumble');
   }
 

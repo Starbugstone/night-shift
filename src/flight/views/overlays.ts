@@ -77,10 +77,11 @@ export class ZibBubble {
     this.panic?.position.copyFrom(this.portrait.position);
   }
 
-  sync(msg: string, time: number, t: number, rm: boolean, panic = false): void {
+  /** `time` counts down from `total` (the line's reading time, scene.zibFor). */
+  sync(msg: string, time: number, t: number, rm: boolean, panic = false, total = 2.8): void {
     this.root.visible = time > 0;
     if (!this.root.visible) return;
-    const a = clamp(Math.min(time * 4, (2.8 - time) * 6), 0, 1);
+    const a = clamp(Math.min(time * 4, (total - time) * 6), 0, 1);
     this.root.alpha = a;
     this.root.y = rm ? 0 : (1 - a) * 30;
     if (msg !== this.message) {
@@ -322,6 +323,18 @@ export function tick(g: Graphics, x: number, y: number, r: number): Graphics {
 }
 
 export const WOOF = { size: 26, color: C.amberHi, weight: 900, outline: C.ink } as const;
+/**
+ * Label of the flight world's speech-bubble layer: barks, quips and pills sit in it, above every
+ * map object and under the saucer. scripts/pixi/check-bubbles.mjs checks the order on every level.
+ */
+export const FLIGHT_BUBBLES = 'flight-bubbles';
+/** Label of the player's own layers (saucer, fuse ring, particles), the only ones above the bubbles. */
+export const FLIGHT_PLAYER = 'flight-player';
+export function abovePlayer<T extends Container>(c: T): T {
+  c.label = FLIGHT_PLAYER;
+  return c;
+}
+
 export function woof(): Label {
   return new Label(WOOF, tr().flight.woof);
 }

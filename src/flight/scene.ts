@@ -14,6 +14,10 @@ import { circleSegment, pointInCircle, pointInCone, type SegHit } from './geomet
 import type { Container } from 'pixi.js';
 import { ViewSlot } from '../core/gfx/scene';
 import { TutorialFlightView } from './views/tutorial';
+import { FRESH_LINE_SECONDS, readSeconds } from '../core/read-time';
+
+/** Zib lines that comment rather than warn. */
+const FLAVOUR: ReadonlySet<string> = new Set(['nearRing', 'locked']);
 import {
   FLIGHT_HUD,
   LockOn,
@@ -88,6 +92,8 @@ export class FlightScene implements Scene {
   private alertT = 0;
   zibText = '';
   zibT = 0;
+  /** How long the current Zib line stays up (s): its reading time. */
+  zibFor = 0;
   private zibCd = 0;
   private zibN = 0;
   private inCone = false;
@@ -185,17 +191,19 @@ export class FlightScene implements Scene {
 
   private say(evt: ZibEvent, force = false): void {
     if (!force && this.zibCd > 0) return;
+    // flavour lines wait their turn: they don't cut a line the player is still reading
+    if (force && FLAVOUR.has(evt) && this.zibT > 0 && this.zibFor - this.zibT < FRESH_LINE_SECONDS) return;
     this.zibText = zibLine(evt, this.zibN++ + (evt.length % 2));
-    this.zibT = 2.8;
-    this.zibCd = 3.4;
+    this.zibFor = this.zibT = readSeconds(this.zibText);
+    this.zibCd = this.zibT + 0.6;
     this.ctx.audio.speak?.(this.zibText, 'zib'); // v4 voices
   }
 
   /** v4 easter eggs: a scenery line, said like any other. */
   private sayLine(text: string): void {
     this.zibText = text;
-    this.zibT = 2.8;
-    this.zibCd = 3.4;
+    this.zibFor = this.zibT = readSeconds(text);
+    this.zibCd = this.zibT + 0.6;
     this.ctx.audio.speak?.(text, 'zib');
   }
 

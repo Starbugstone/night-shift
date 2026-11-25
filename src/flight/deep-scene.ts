@@ -5,6 +5,10 @@
 // shape is the hit shape; the tells layered on top (ghost cones, arming arcs, countdown rings,
 // the tether to whoever sees you) are decoration and never move a detector.
 import type { Container } from 'pixi.js';
+import { FRESH_LINE_SECONDS, readSeconds } from '../core/read-time';
+
+/** Zib lines that comment rather than warn. */
+const FLAVOUR: ReadonlySet<string> = new Set(['nearRing', 'locked', 'checkpoint', 'twoOfThree']);
 import type { FlightAutopilotIntent, GameContext, Scene, Vec2 } from '../contracts';
 import { P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles } from '../core/fx';
 import { ViewSlot } from '../core/gfx/scene';
@@ -74,6 +78,8 @@ export class DeepFlightScene implements Scene {
   shake = 0;
   zibText = '';
   zibT = 0;
+  /** How long the current Zib line stays up (s): its reading time. */
+  zibFor = 0;
   collectibleToastT = 0;
   private zibCd = 0;
   private zibN = 0;
@@ -181,9 +187,11 @@ export class DeepFlightScene implements Scene {
 
   private say(evt: DeepZibEvent, force = false, panic = false): void {
     if (!force && this.zibCd > 0) return;
+    // flavour lines wait their turn: they don't cut a line the player is still reading
+    if (force && !panic && FLAVOUR.has(evt) && this.zibT > 0 && this.zibFor - this.zibT < FRESH_LINE_SECONDS) return;
     this.zibText = deepZibLine(evt, this.zibN++ + this.run.spotted);
-    this.zibT = 2.8;
-    this.zibCd = 3.2;
+    this.zibFor = this.zibT = readSeconds(this.zibText);
+    this.zibCd = this.zibT + 0.4;
     this.zibPanic = panic;
     this.ctx.audio.speak?.(this.zibText, 'zib', { panic }); // v4 voices
   }
@@ -191,8 +199,8 @@ export class DeepFlightScene implements Scene {
   /** v4 easter eggs: a scenery line, said like any other. */
   private sayLine(text: string): void {
     this.zibText = text;
-    this.zibT = 2.8;
-    this.zibCd = 3.2;
+    this.zibFor = this.zibT = readSeconds(text);
+    this.zibCd = this.zibT + 0.4;
     this.zibPanic = false;
     this.ctx.audio.speak?.(text, 'zib');
   }

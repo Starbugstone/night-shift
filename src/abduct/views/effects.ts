@@ -106,7 +106,8 @@ export class SpeechBubble {
     this.root.addChild(this.edge, this.tail, this.face, this.line);
   }
 
-  sync(text: string, age: number, x: number, y: number, camX: number, camY: number, rm: boolean): void {
+  /** `age` counts down from `total` (the line's reading time, sim.mumbleFor). */
+  sync(text: string, age: number, x: number, y: number, camX: number, camY: number, rm: boolean, total = 1.6): void {
     this.root.visible = age > 0;
     if (!this.root.visible) return;
     if (text !== this.cached) {
@@ -129,7 +130,7 @@ export class SpeechBubble {
     const reach = Math.min(d - 34, 40);
     this.root.alpha = Math.min(1, age / 0.18);
     this.root.position.set(baseX, baseY);
-    this.root.scale.set(rm ? 1 : easeOutBack((1.6 - age) / 0.22));
+    this.root.scale.set(rm ? 1 : easeOutBack((total - age) / 0.22));
     this.edge.position.set(left - baseX, top - baseY);
     this.face.position.set(left - baseX, top - baseY);
     this.tail.visible = reach > 5;

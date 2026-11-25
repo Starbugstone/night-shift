@@ -74,6 +74,8 @@ export class HazardViews {
   readonly ground = new Container();
   readonly detectors = new Container();
   readonly sky = new Container();
+  /** Speech and barks; the flight view stacks this above every map object (see FlightBubbles). */
+  readonly bubbles = new Container();
   readonly origin: Vec2 = { x: 0, y: 0 };
   private readonly each: (Sync | null)[];
   private readonly angle: Float64Array;
@@ -236,12 +238,14 @@ export class HazardViews {
         const bark = new BarkTell(d);
         this.ground.addChild(body.root);
         this.detectors.addChild(bark.root);
+        this.bubbles.addChild(bark.shout);
         return (cam, t, rm, hot) => {
           const seen = s.sim.st.cause === i;
           body.root.visible = cam.sees(d.x, d.y, 80);
           if (body.root.visible) body.sync(t, rm, seen);
           bark.root.visible = cam.sees(d.x, d.y, d.rMax + 20);
           if (bark.root.visible) bark.sync(f.a[i]!, t, rm, hot, seen);
+          else bark.shout.visible = false;
         };
       }
       case 'porch': {

@@ -20,7 +20,7 @@ import { FLIGHT_HUD, POWER_LINE, SUSPICION, barkRadius, neonOn, suspicionMultipl
 import { DogView, EntryRingView, SaucerView } from './craft';
 import { MapCollectibleToast, MapCollectibleView } from './collectible';
 import { EggView } from './eggs'; // v4 easter eggs
-import { FlightBanner, FlightTintView, NeonView, TargetArrow, WireView, ZibBubble, woof } from './overlays';
+import { FLIGHT_BUBBLES, FlightBanner, abovePlayer, FlightTintView, NeonView, TargetArrow, WireView, ZibBubble, woof } from './overlays';
 import { ConeView, DiscTell, lamp } from './tells';
 import { CameraView, GroundView, PropLayer, ShadowsView, TargetBuilding, VehicleView, basicGround, mapLamp, paintedSprite, plate } from './world';
 
@@ -121,12 +121,16 @@ export class TutorialFlightView implements SceneView {
     for (const c of this.cars) this.upperWorld.addChild(c.cone.root, c.head);
     this.upperWorld.addChild(this.saucer.groundGlow);
     for (const n of this.neon) this.upperWorld.addChild(n.root);
-    for (const d of this.dogs) this.upperWorld.addChild(d.ring.root, d.bark, d.question, d.sleep);
+    for (const d of this.dogs) this.upperWorld.addChild(d.ring.root);
     for (const l of this.wires) this.upperWorld.addChild(l.root);
     this.upperWorld.addChild(poles);
     for (const r of this.rings) this.upperWorld.addChild(r.root);
     if (this.collectible) this.upperWorld.addChild(this.collectible.root);
-    this.upperWorld.addChild(this.saucer.root, this.fx);
+    // speech bubbles above every map object, under the saucer
+    const bubbles = new Container();
+    bubbles.label = FLIGHT_BUBBLES;
+    for (const d of this.dogs) bubbles.addChild(d.bark, d.question, d.sleep);
+    this.upperWorld.addChild(bubbles, abovePlayer(this.saucer.root), abovePlayer(this.fx));
 
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
     const words = tr().flight;
@@ -249,7 +253,7 @@ export class TutorialFlightView implements SceneView {
           : s.tutStep === 0 ? w.tutDrag : s.tutStep === 1 ? w.tutRelease : w.tutHold,
         22, !tutorial || crossing ? 'drag' : s.tutStep === 0 ? 'drag' : s.tutStep === 1 ? 'release' : 'hold', t, rm, 510);
     }
-    this.zib.sync(s.zibText, s.state === 'spotted' ? 0 : s.zibT, t, rm);
+    this.zib.sync(s.zibText, s.state === 'spotted' ? 0 : s.zibT, t, rm, false, s.zibFor);
     this.spotted.root.visible = s.state === 'spotted';
     if (this.spotted.root.visible) this.spotted.sync(s.st, t, rm, s.shout, s.caption, s.spotted + 1);
   }

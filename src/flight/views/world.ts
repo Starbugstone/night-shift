@@ -114,7 +114,7 @@ export class GroundView {
           g.fillRect(x0, y0, width, height);
           paint(g, x0, y0, width, height);
           for (const road of roads) drawRoad(g, assets, road, theme, x0, y0, width, height);
-          drawJunctions(g, roads, theme);
+          drawJunctions(g, roads, theme, Boolean(assets.get('flight/road_h')));
         }, 1);
         const sprite = new Sprite(tex);
         sprite.position.set(x0, y0);

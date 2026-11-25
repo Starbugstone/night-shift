@@ -847,7 +847,7 @@ export class AbductView implements SceneView {
     const y = body.y[Joint.Head]!;
     const dreaming = !delivered && wake.awake <= 0 && mumbleFx <= 0;
     this.bang.sync(!delivered && wake.awake > 0, x, y, this.wakeAge, rm);
-    this.speech.sync(this.sim.mumble, !delivered && wake.awake <= 0 ? mumbleFx : 0, x, y, 0, 0, rm);
+    this.speech.sync(this.sim.mumble, !delivered && wake.awake <= 0 ? mumbleFx : 0, x, y, 0, 0, rm, this.sim.mumbleFor);
     this.snore.sync(dreaming ? snoreFx : 0, x, y, rm);
     this.dream.visible = dreaming;
     if (!dreaming) {

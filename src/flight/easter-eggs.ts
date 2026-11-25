@@ -38,6 +38,8 @@ export function eggOf(p: PropDef): EggSpec | null {
 
 /** Eggs already mentioned, per run: a deep run spans several flight scenes, a tutorial run is one scene. */
 const heard = new WeakMap<object, Set<PropDef>>();
+/** How long a fly-over egg waits for Zib to be free (check() runs once a frame: ~5 s). */
+const PENDING_CALLS = 300;
 
 /** Zib's once-per-run line about the map's eggs. */
 export class EggCues {
@@ -54,12 +56,16 @@ export class EggCues {
     this.said = said;
   }
 
+  /** A fly-over egg met while Zib was busy: said as soon as Zib is free, if that is soon. */
+  private pending: { p: PropDef; spec: EggSpec; sx: number; sy: number; calls: number } | null = null;
+
   /**
-   * The line to say now, or null. `canTalk` is false while a hazard line or the fuse has the floor:
-   * the egg then waits (it is not used up) until the saucer comes back to it.
+   * The line to say now, or null. `canTalk` is false while a hazard line, another Zib line or the
+   * fuse has the floor: an egg met then is remembered for ~5 s (300 calls) and said once Zib is
+   * free, so longer, readable Zib lines don't swallow the joke.
    */
   check(sx: number, sy: number, camX: number, camY: number, canTalk: boolean): string | null {
-    if (!canTalk) return null;
+    if (this.pending && ++this.pending.calls > PENDING_CALLS) this.pending = null;
     for (const { p, spec } of this.eggs) {
       if (this.said.has(p)) continue;
       let near: boolean;
@@ -70,11 +76,24 @@ export class EggCues {
           p.y - h / 2 > camY + VIEW_INSET.top && p.y + h / 2 < camY + VIEW_H - VIEW_INSET.bottom;
       }
       if (!near) continue;
-      this.said.add(p);
-      const lines = tr().easterEggs.zib[spec.line];
-      // which line: from where the saucer met it, so replays vary
-      return lines[Math.abs(Math.floor(sx + sy)) % lines.length]!;
+      if (!canTalk) {
+        if (spec.trigger === 'over' && this.pending?.p !== p) this.pending = { p, spec, sx, sy, calls: 0 };
+        continue;
+      }
+      return this.say(p, spec, sx, sy);
+    }
+    if (canTalk && this.pending && !this.said.has(this.pending.p)) {
+      const { p, spec, sx: px, sy: py } = this.pending;
+      return this.say(p, spec, px, py);
     }
     return null;
+  }
+
+  private say(p: PropDef, spec: EggSpec, sx: number, sy: number): string {
+    this.said.add(p);
+    if (this.pending?.p === p) this.pending = null;
+    const lines = tr().easterEggs.zib[spec.line];
+    // which line: from where the saucer met it, so replays vary
+    return lines[Math.abs(Math.floor(sx + sy)) % lines.length]!;
   }
 }

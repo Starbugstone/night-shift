@@ -511,7 +511,7 @@ export class DeepAbductView implements SceneView {
     const x = body.x[Joint.Head]!;
     const y = body.y[Joint.Head]!;
     this.bang.sync(!delivered && awake, x, y, this.wakeAge, rm);
-    this.speech.sync(sim.mumble, !delivered && !awake ? mumbleFx : 0, x, y, cx, cy, rm);
+    this.speech.sync(sim.mumble, !delivered && !awake ? mumbleFx : 0, x, y, cx, cy, rm, sim.mumbleFor);
     const sleeping = !delivered && !awake && mumbleFx <= 0;
     this.snore.sync(sleeping ? snoreFx : 0, x, y, rm);
     this.twitch.visible = sleeping && wake.value >= 73;
