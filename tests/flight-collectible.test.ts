@@ -381,7 +381,7 @@ describe('optional map collectibles', () => {
     const missedOutcome = { ...outcome, save: { ...outcome.save, reports: 3 } };
     for (const [lang, label, found, missed, gotQuip, missedQuip] of [
       ['en', 'Town pickup', 'Slipper flyer · collected', 'Slipper flyer · left behind', 'rubbing his nose', 'sitting on my desk'],
-      ['fr', 'Trouvaille en ville', 'Avis de chausson · récupéré', 'Avis de chausson · laissé sur place', 'provocation', 'trône sur mon bureau'],
+      ['fr', 'Trouvaille en ville', 'Avis de chausson · en soute', 'Avis de chausson · pas embarqué', 'provocation', 'trône sur mon bureau'],
     ] as const) {
       setLang(lang);
       const report = tutorialReport(1, delivery, collected, outcome);

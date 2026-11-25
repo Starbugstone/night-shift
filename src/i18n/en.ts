@@ -162,7 +162,7 @@ const deepZib = {
   scramble: ["The bay door's going up! They're scrambling an ambulance! For ME?", "Flashing arrows! That ambulance is coming OUT! Get out of the lane!"],
   // L7 cruise code
   // v4 L8
-  hum: ["The rock just put me on hold. Out of the belt!"],
+  hum: ['The rock just put me on hold. Out of the ring!'],
   photographer: ["The ship photographer! Mom said never end up on a souvenir mug!", 'Shutter! Inside the frame is bad! Outside the frame is where I should be!'],
   framed: ["He's lining up a shot! Move before the iris closes!", "Amber frame! Say cheese! No! Don't say cheese! LEAVE!"],
   steward: ['A steward with a torch! Act like a seagull. A big, round seagull.', 'Torch beam! Stewards check everything. Even the sky, apparently.'],
@@ -223,11 +223,11 @@ export const en = {
       'Abducting responsibly since 1947.',
       'Your specimen is our priority.',
       'We never sleep. Well, they do.',
-      'Five notes. Zero witnesses.',
+      'Quiet beam. Zero witnesses.',
       // v4 story
       'Grimsby night beat. Unpaid.',
       'Brass thermometers since 1953.',
-      'Zero notes. Zero royalties.',
+      'Zero permits. Zero witnesses.',
     ],
     build: 'v0.1 · night shift build',
     language: 'Language',
@@ -266,7 +266,7 @@ export const en = {
         'Tip: Form 7-B is strictly medical. Stop giggling in the Endoscopy wing.',
       ],
       afterL7: [
-        'Tip: OBELISK™ charges by the note. Our beam plays zero notes and costs nothing.',
+        'Tip: OBELISK™ charges for dramatic music. Our beam is silent and costs nothing.',
         'Tip: Temporal Dispatch runs on Form 88-MPH. File expenses before yesterday.',
       ],
     },
@@ -408,7 +408,7 @@ export const en = {
       collect: 'Hank, Dr. Osei & Mr. Pemberton',
       re: 'Work Order #0006 — Mandatory Form 7-B Audit',
       body: "Pete's lighthouse log reached Head Office, and Compliance noticed zero probes logged all quarter. Worse: humans queue voluntarily to be probed here and leave four-star reviews. Collect Hank, Dr. Osei and Mr. Pemberton with Form 7-B ticked en route.",
-      joke: "Our probe has been a brass thermometer and a clipboard since 1953. Frankly, we're insulted by their other theories. (A stray defibrillator marked FOR THE MACHINE is parked off the drop-off lane—grab it only if you've time.)",
+      joke: "Our probe has been a brass thermometer and a clipboard since 1953. Frankly, we're insulted by their other theories. (A stray defibrillator marked IT'S ALIVE! is parked off the drop-off lane—grab it only if you've time.)",
       signoff: '— Vrell. Co-signed in triplicate (send help).', // v4 story
     },
     // v4 L8
@@ -573,7 +573,7 @@ export const en = {
       level5: ['FLYING HUBCAP STEALS DOLPHIN, LEAVES POLITE NOTE', 'HUBCAP SPOTTED AT PIER — AQUARIUM DOLPHIN LEAVES NOTE, QUITS', 'LIGHTHOUSE KEEPER: "IT WASN\'T A BOAT"'],
       level6: ['LOCAL MAN PROBED WITH GOOSE FEATHER, RATES EXPERIENCE 4/5', "ST. MILDRED'S PATIENTS PROBED BY FEATHER, RATE WAIT TIME 'FASTER'", 'HOSPITAL WAITING TIMES DROP AS PATIENTS VANISH'],
       // v4 L8
-      level8: ['PREHISTORIC APE PATENTS SKY — FILING DEADLINE MISSED BY SECONDS', 'LOCAL APE THROWS BONE, LAWYERS CLAIM AIRSPACE', 'SLAB INVOKES RIGHT TO REMAIN SILENT, HUMS ANYWAY'],
+      level8: ['PREHISTORIC APE PATENTS SKY — FILING DEADLINE MISSED BY SECONDS', 'PREHISTORIC APE INVENTS STICK — DEMANDS ROYALTY FROM SKY', 'SLAB INVOKES RIGHT TO REMAIN SILENT, HUMS ANYWAY'],
       level7: ["CRUISE GUESTS SNAP UFO — MRS. PRUITT'S SISTER CLAIMS £14.99 BOUNTY", 'CRUISE GUESTS REPORT UFO, ALSO FREE SHRIMP', 'CAPTAIN MISSING, SHIP SAILS ON, NOBODY NOTICES'],
       generic: ['SAUCER SEEN AGAIN, COUNCIL "LOOKING INTO IT"', 'ALIENS SPOTTED: "THEY WAVED"', 'LOCAL SKY HAS "A THING IN IT", EXPERTS CONFIRM'],
     } as Record<string, Lines>,
@@ -632,8 +632,8 @@ export const en = {
       Pemberton: ['Bay 3 is empty. He left four stars.', 'Mr. Pemberton? Did he float out?'],
       // L7 cruise code
       // v4 L8
-      Flint: ["Who took the control thumb?"],
-      Reed: ["The understudy demands a solo."],
+      Flint: ["Flint? Who's going to show us how to hold the bone now?"],
+      Reed: ["Reed? Who's pounding the big dramatic drums now?"],
       Echo: ["The clerk is missing."],
       Captain: ['Bridge to Captain? Anyone?', 'The ship is steering itself. Act calm.'],
       Marco: ['Chef? The soufflé is asking for you.', 'The dessert trolley is unsupervised.'],
@@ -952,11 +952,11 @@ export const en = {
       // v4 L8
       'first-edition bone': {
         got: ["A first-edition throwing bone. Keep the receipt. Flint charges royalties every time you drop it.",
-          "I asked the slab what this bone does. It played me three notes and put me through to Sales.",
+          "I asked the slab what this bone does. It played dramatic drums and put me through to Sales.",
           // v4 easter eggs
           "A first-edition bone, seized before filing. OBELISK™ wanted it as prior art. Now it's OUR prior art.",
           "Bone recovered with seconds to spare. Krix had already stamped it 'PATENT PENDING'. Pending denied."],
-        missed: ["The bone stayed on Earth. Three million years from now it'll be in orbit. Let's get it then.",
+        missed: ["The bone stayed on Earth. Humanity gets to invent tools after all. Shame—they'll use them to build alarm clocks.",
           "Zib left the bone with Flint's lawyer. Good luck prising anything loose from that grip.",
           // v4 easter eggs
           'The bone stayed in the cave. Echo files it at dawn: one patent, three million years of royalties. To OBELISK™.'],
@@ -1253,7 +1253,7 @@ export const en = {
         got: [
           'A rubber glove blown up into a chicken at 4 AM. The happiest thing in the hospital.',
           'An inflated glove. Zib asked what the other gloves are for. I changed the subject. Firmly.',
-          "Glove balloon, logged. Fun fact: it's never lupus. Sometimes it's a glove.",
+          "Glove balloon, logged. Cheaper than a hospital bill, twice as squeaky.",
         ],
         missed: [
           'You left the glove balloon. Somewhere in the pharmacy a latex chicken keeps watch. Respect.',
@@ -1837,7 +1837,7 @@ export const en = {
       },
       astronomer: {
         name: 'Volunteer astronomer',
-        comment: "He brought a folding chair and three prime numbers. Finance asked how far we're driving him.",
+        comment: "He brought a folding chair and a thermos of cocoa. He's already asking if we can drop him off at Mars.",
         missedComment: "Left the astronomer on Birch Lane with his little dish. He's still waving at Venus.",
         memoHint: 'SETI dish',
       },
@@ -1952,9 +1952,9 @@ export const en = {
       // L3 Maple Court
       'orthodontic slipper': "Fitted with tiny braces and a retainer bill. Even Dave's footwear gets a six-month check-up.",
       'demo dentures': 'Oversized clinic chompers. They still snap shut whenever an intern reaches past them.',
-      'team-issued slipper': 'Number 9, non-slip sole, smells faintly of pep talks and victorious liniment.',
+      'team-issued slipper': 'Number 9, non-slip sole, smells faintly of half-time pep talks and locker-room spray.',
       "coach's whistle": 'One sharp blast in the hangar and three alien flight crews dropped for twenty push-ups.',
-      'neighbourhood watch mug': 'Reads "I SAW SOMETHING" in bold. Ironically abducted right under Gary\'s own blinking lens.',
+      'neighbourhood watch mug': 'Reads "I SAW SOMETHING" in bold. Beamed up right under Gary\'s own security camera.',
       'tinfoil hat': 'Hand-crimped for maximum paranoia. Blocks mind rays, boosts FM radio, zero protection against beams.',
       // L4 Grimsby City Centre
       'fossilized coffee': "Older than half the museum's Mesozoic wing. Lab 4 uses a chisel to take samples.",
@@ -1965,13 +1965,13 @@ export const en = {
       'mayoral toupee': 'Aerodynamic auburn weave. Tested in our wind tunnel; refused to budge up to Mach 2.',
       // L5 Barnacle Bay
       'sardine tin': 'Pried open with suspiciously neat flipper-work. So long, and thanks for all the snacks.',
-      'rubber duck': "Bubbles' rubber-duck debugger for marine law. Squeaks louder than a hull breach alarm.",
+      'rubber duck': "Bubbles the dolphin's bath-time confidant. Squeaks louder than our hull-breach alarm.",
       'harbourmaster mug': "Salt-crusted stoneware that survives force-nine gales and Pete's industrial-strength tea.",
       'ship in a bottle': 'Nine years of tweezers and swearing. We beamed it out faster than Pete got the mast in.',
-      'accounts mug': 'Double-entry ceramic. Sal already billed the Bureau for depreciation and emotional distress.',
-      'petty cash tin': 'Fourteen quid, two paperclips, and a stern IOU signed with a paw print by Kipper.',
+      'accounts mug': "Sal's bookkeeping mug. He already billed the Bureau for wear, tear and emotional distress.",
+      'petty cash tin': 'Fourteen quid, two paperclips and a stern IOU signed with a paw print by Kipper the dock cat.',
       // L6 St. Mildred's General
-      'jug of prep drink': 'Four litres of lemon-flavoured hubris. Classified as rocket propellant by Propulsion.',
+      'jug of prep drink': 'Four litres of lemon-flavoured clinic prep juice. Propulsion reclassified it as rocket fuel.',
       'silver butt plug': 'Seized in Internal Affairs. Flared base, mirror polish—still failed Form 7-B probe certification.',
       'on-call coffee': 'Darker than deep space, thick enough to hold a spoon upright. Handle with lead gloves.',
       'inflated rubber glove': 'Five-fingered night-shift mascot with a Sharpie grin. Morale in the hold jumped 14%.',
@@ -1985,7 +1985,7 @@ export const en = {
       'complimentary towel swan': 'Origami terrycloth that survived re-entry. Always know where your towel is—ours is labelled.',
       'lime mankini': 'Radioactive-lime sling stored behind double blast glass. Very nice—from two parsecs away.',
       // L8 Patent Valley
-      'first-edition bone': 'Thumbprint-notarised femur, seized before dawn. One toss away from inventing orbital lawsuits.',
+      'first-edition bone': "Humanity's very first tool—a heavy bone picked up by an ape. Bureau Safety immediately filed it as an unlicensed weapon.",
     } satisfies Record<string, string>,
   },
 };

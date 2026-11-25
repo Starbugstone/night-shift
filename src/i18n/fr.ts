@@ -34,11 +34,11 @@ export const fr: Strings = {
       'Enlèvements responsables depuis 1947.',
       'Votre spécimen est notre priorité.',
       'Ici, on ne dort pas. Enfin, eux si.',
-      'Cinq notes. Zéro témoin.',
+      'Rayon discret. Zéro témoin.',
       // v4 story
       'Secteur Grimsby. Stage non rémunéré.',
       'Thermomètres en laiton depuis 1953.',
-      'Zéro note. Zéro redevance.',
+      'Zéro permis. Zéro témoin.',
     ],
     build: 'v0.1 · version de nuit',
     language: 'Langue',
@@ -77,7 +77,7 @@ export const fr: Strings = {
         'Astuce : le Cerfa 7-B est strictement médical. Cessez de glousser en endoscopie.',
       ],
       afterL7: [
-        "Astuce : OBELISK™ facture à la note. Notre rayon n'en joue aucune et ne coûte rien.",
+        "Astuce : OBELISK™ facture la musique dramatique. Notre rayon est silencieux et gratuit.",
         'Astuce : le Dispatch Temporel tourne au Cerfa 88-MPH. Déclarez vos frais avant hier.',
       ],
     },
@@ -218,7 +218,7 @@ export const fr: Strings = {
       collect: 'Hank, le Dr Osei et M. Pemberton',
       re: 'Ordre n°0006 — Audit obligatoire Cerfa 7-B',
       body: "Le registre du phare de Pete est arrivé au siège, et la Conformité a noté zéro sondage ce trimestre. Pire : ici, les humains font la queue volontairement et laissent quatre étoiles. Embarquez Hank, le Dr Osei et M. Pemberton avec le Cerfa 7-B coché en chemin.",
-      joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. Leurs autres théories sont vexantes. (Un défibrillateur marqué POUR LA MACHINE traîne près du dépose-minute — à prendre seulement si vous avez le temps.)",
+      joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. Leurs autres théories sont vexantes. (Un défibrillateur marqué IL EST VIVANT ! traîne près du dépose-minute — à prendre seulement si vous avez le temps.)",
       signoff: '— Vrell. Signé en triple exemplaire (au secours).', // v4 story
     },
     // v4 L8
@@ -433,7 +433,7 @@ export const fr: Strings = {
       level5: ['UN ENJOLIVEUR VOLANT ENLÈVE UN DAUPHIN, LAISSE UN MOT POLI', 'ENJOLIVEUR SUR LA JETÉE — LE DAUPHIN LAISSE UN MOT ET DÉMISSIONNE', "GARDIEN DU PHARE : « CE N'ÉTAIT PAS UN BATEAU »"],
       level6: ["SONDÉ À LA PLUME D'OIE, UN PATIENT NOTE L'EXPÉRIENCE 4/5", 'SONDÉS À LA PLUME À SAINTE-MILDRED : « ATTENTE PLUS COURTE »', "LES TEMPS D'ATTENTE BAISSENT : LES PATIENTS DISPARAISSENT"],
       // v4 L8
-      level8: ['UN SINGE BREVÈTE LE CIEL — DÉLAI RATÉ À QUELQUES SECONDES PRÈS', 'UN SINGE LANCE UN OS, SES AVOCATS RÉCLAMENT LE CIEL', 'LA DALLE INVOQUE SON DROIT AU SILENCE, FREDONNE QUAND MÊME'],
+      level8: ['UN SINGE BREVÈTE LE CIEL — DÉLAI RATÉ À QUELQUES SECONDES PRÈS', 'UN SINGE INVENTE LE BÂTON — ET RÉCLAME DES DROITS AU CIEL', 'LA DALLE INVOQUE SON DROIT AU SILENCE, FREDONNE QUAND MÊME'],
       level7: ['OVNI EN CROISIÈRE — LA SŒUR DE MME PRUITT RÉCLAME 14,99 €', 'DES CROISIÉRISTES SIGNALENT UN OVNI, ET DES CREVETTES GRATUITES', 'COMMANDANT DISPARU : LE PAQUEBOT CONTINUE, PERSONNE NE TILTE'],
       generic: ['ENCORE UNE SOUCOUPE : LA MAIRIE « SE PENCHE SUR LE DOSSIER »', 'EXTRATERRESTRES APERÇUS : « ILS ONT FAIT COUCOU »', 'LE CIEL CONTIENT « UN TRUC », CONFIRMENT LES EXPERTS'],
     },
@@ -490,8 +490,8 @@ export const fr: Strings = {
       Pemberton: ['Box 3 vide. Il a laissé quatre étoiles.', 'M. Pemberton ? Il a pris son envol ?'],
       // L7 cruise code
       // v4 L8
-      Flint: ["Qui a pris le pouce témoin ?"],
-      Reed: ["La doublure exige un solo."],
+      Flint: ["Silex ? Qui va nous montrer comment tenir l'os, maintenant ?"],
+      Reed: ['Roseau ? Qui va taper sur les gros tambours dramatiques ?'],
       Echo: ['Il manque la greffière.'],
       Captain: ['Passerelle au commandant ? Allô ?', 'Le navire se pilote seul. Restons calmes.'],
       Marco: ['Chef ? Le soufflé vous réclame.', 'Le chariot à desserts est sans surveillance.'],
@@ -845,7 +845,7 @@ export const fr: Strings = {
     'Je suis le capitaine du flan.',
     'La lune me doit six euros.',
     "C'est ma lasagne de secours.",
-    "Déclarez le hamster à l'URSSAF.",
+    'Mettez le hamster sur la fiche de paie.',
     "Non, c'est la grange qui ME porte.",
     "J'ai déjà plié mardi.",
     "La soupe a besoin d'une ceinture.",
@@ -1210,7 +1210,7 @@ export const fr: Strings = {
         got: [
           "Un gant en latex gonflé en forme de poulet, à 4 h du matin. La chose la plus joyeuse de l'hôpital.",
           "Un gant gonflé. Zib a demandé à quoi servent les autres gants. J'ai changé de sujet. Fermement.",
-          "Gant gonflé, enregistré. Le saviez-vous : ce n'est jamais un lupus. Parfois, c'est un gant.",
+          "Gant gonflé, enregistré. Moins cher qu'une consultation, deux fois plus bruyant.",
         ],
         missed: [
           "Le gant gonflé est resté. Quelque part dans la pharmacie, un poulet en latex monte la garde. Respect.",
@@ -1764,9 +1764,9 @@ export const fr: Strings = {
   // v4 map collectibles
   mapCollectibles: {
     row: 'Trouvaille en ville',
-    found: '{name} · récupéré',
-    missed: '{name} · laissé sur place',
-    toast: '{name} récupéré !',
+    found: '{name} · en soute',
+    missed: '{name} · pas embarqué',
+    toast: 'En soute : {name} !',
     flyerHeader: 'PERDU',
     items: {
       slipper_flyer: {
@@ -1777,7 +1777,7 @@ export const fr: Strings = {
       },
       astronomer: {
         name: 'Astronome volontaire',
-        comment: "Il avait une chaise pliante et trois nombres premiers. La compta demande jusqu'où on le dépose.",
+        comment: 'Il avait une chaise pliante et un thermos de cacao. Il demande déjà si on peut le déposer sur Mars.',
         missedComment: "Vous avez laissé l'astronome chemin des Bouleaux avec sa parabole. Il fait encore coucou à Vénus.",
         memoHint: 'parabole SETI',
       },
@@ -1895,37 +1895,37 @@ export const fr: Strings = {
       'team-issued slipper': 'Numéro 9, semelle antidérapante, léger parfum de vestiaire et de discours de mi-temps.',
       "coach's whistle": 'Un seul coup dans le hangar et trois équipages extraterrestres se sont mis aux pompes.',
       'neighbourhood watch mug': "Gravé « J'AI VU QUELQUE CHOSE ». Enlevé en direct sous l'objectif de sa propre caméra.",
-      'tinfoil hat': 'Plié main contre la lecture de pensées. Capte France Inter, zéro défense contre nos rayons.',
+      'tinfoil hat': 'Plié main contre la lecture de pensées. Capte la radio FM, zéro défense contre nos rayons.',
       // L4 Grimsby centre-ville
       'fossilized coffee': "Plus vieux que la moitié de l'aile Jurassique. Le labo 4 prélève ses échantillons au burin.",
       'UFO snow globe': 'Produit dérivé sans licence de la boutique. Secouez pour la neige et la mise en demeure.',
       'limited-edition DJ mug': 'Exemplaire 1 sur 1. Maintient la boisson énergisante à température de piste à 3 h du matin.',
-      '12-inch remix': "Kévin jure que c'est du gros calibre pur son. La compta a mesuré ; la compta doute.",
+      '12-inch remix': "Kévin jure que son maxi fait trente centimètres de pur son. La compta a mesuré ; la compta doute.",
       'municipal mug': "Passé en note de frais « voirie ». L'objet le plus productif de toute la mairie.",
-      'mayoral toupee': "Tissage acajou aérodynamique. Testé en soufflerie : tient bon jusqu'à Mach 2.",
+      'mayoral toupee': "Postiche acajou aérodynamique. Testé en soufflerie : ne bouge pas d'un poil jusqu'à Mach 2.",
       // L5 Barnacle Bay
       'sardine tin': 'Ouverte à la nageoire avec une précision suspecte. Salut, et encore merci pour le poisson.',
-      'rubber duck': "Le confident juridique de Bubulle. Couine plus fort que l'alarme de dépressurisation.",
+      'rubber duck': "Le confident de bain de Bubulle le dauphin. Couine plus fort que l'alarme de dépressurisation.",
       'harbourmaster mug': "Grès croûté d'embruns, conçu pour survivre aux tempêtes force 9 et au thé de Pete.",
       'ship in a bottle': "Neuf ans de pince à épiler et de jurons. Téléporté plus vite qu'il n'a dressé le mât.",
-      'accounts mug': "Céramique en partie double. Sal a déjà facturé l'amortissement au Bureau.",
-      'petty cash tin': 'Quatorze euros, deux trombones et une reconnaissance de dette signée de la patte de Kipper.',
+      'accounts mug': "La tasse de compta de Sal. Il a déjà facturé l'usure et le préjudice moral au Bureau.",
+      'petty cash tin': 'Quatorze euros, deux trombones et une reconnaissance de dette signée de la patte de Kipper, le chat du port.',
       // L6 Hôpital Sainte-Mildred
-      'jug of prep drink': "Quatre litres d'arôme citron très persuasif. Reclassé carburant par le service Propulsion.",
+      'jug of prep drink': "Quatre litres de purge médicale au citron. La Propulsion l'a reclassée en carburant de fusée.",
       'silver butt plug': "Saisi aux Affaires internes. Base évasée, poli miroir — mais recalé à l'homologation Cerfa 7-B.",
       'on-call coffee': 'Plus noir que le vide spatial, assez épais pour tenir une cuillère debout. Gants de plomb requis.',
       'inflated rubber glove': 'Mascotte de garde à cinq doigts et sourire au marqueur. Le moral en soute a bondi de 14 %.',
       'hospital sock': 'Picots antidérapants recto-verso. Adhérence maximale, dignité en chute libre.',
-      bedpan: "Inox brossé, suspectement rutilant. Zib jure que c'est un casque viking ; les RH s'y opposent.",
+      bedpan: "Inox brossé, louchement propre. Zib jure que c'est un casque viking ; les RH disent non.",
       // L7 SS Buffet Royal
       'blue heart pendant': 'Émail de boutique sur chaîne presque dorée. Ne le jetez pas à la mer : la compta vous regarde.',
       "captain's log": 'Une vraie bûche avec plaque en laiton. Date stellaire classifiée ; échardes bien réelles.',
       'chocolate éclair': 'Scellé en stase pour préserver le glaçage. Deux traces de dents — Zib accuse les turbulences.',
       'giant pepper mill': "Un mètre de noyer tourné pour intimider les tables. Dites stop, ou éternuez pour l'éternité.",
-      'complimentary towel swan': 'Origami en éponge qui a survécu à la rentrée. Sachez toujours où est votre serviette.',
+      'complimentary towel swan': 'Origami en éponge qui a survécu à la rentrée atmosphérique. Sachez toujours où est votre serviette.',
       'lime mankini': 'Bretelles vert radioactif sous double vitre blindée. Très joli — vu à deux parsecs.',
       // L8 Vallée des brevets
-      'first-edition bone': "Fémur paraphé au pouce, saisi avant l'aube. À un lancer près d'inventer les procès orbitaux.",
+      'first-edition bone': "Le tout premier outil de l'humanité : un gros os ramassé par un singe. La Sécurité du Bureau l'a aussitôt classé arme non déclarée.",
     },
   },
 };

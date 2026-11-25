@@ -140,7 +140,7 @@ function obeliskCrate(): Graphics {
   return g;
 }
 
-/** L6: stray hospital defibrillator trolley marked FOR THE MACHINE (Frankenstein nod). */
+/** L6: stray hospital defibrillator trolley marked IT'S ALIVE! (Frankenstein nod). */
 function strayDefibrillator(): Graphics {
   const g = batched(new Graphics());
   const outline = { color: C.ink, width: 2.3 } as const;
@@ -159,7 +159,7 @@ function strayDefibrillator(): Graphics {
   g.roundRect(-13, -8, 16, 10, 2).fill('#162436');
   g.moveTo(-12, -3).lineTo(-8, -3).lineTo(-6, -7).lineTo(-4, 0).lineTo(-2, -3).lineTo(2, -3)
     .stroke({ color: C.mint, width: 1.8, join: 'round', cap: 'round' });
-  // Bold red lightning bolt tag under the screen ("FOR THE MACHINE")
+  // Bold red lightning bolt tag under the screen ("IT'S ALIVE!")
   g.poly([-6, 3, -9, 7, -5, 7, -7, 10, -1, 5.5, -5, 5.5]).fill('#d93f56');
   // Twin crimson shock paddles with coiled leads on the right side of the trolley
   g.moveTo(6, -5).quadraticCurveTo(10, -9, 13, -6).moveTo(6, 5).quadraticCurveTo(10, 9, 13, 6)

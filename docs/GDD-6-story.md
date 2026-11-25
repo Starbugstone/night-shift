@@ -352,3 +352,37 @@ Designed so every tier ships cleanly on its own without blocking other work (and
 | **Tier 4 · Environmental Cameos (Zero-Text Story)** | **Small–Medium** (data + 2–3 small sprites) | Place recurring props/cameos inside existing maps & rooms:<br>• Doyle's slipper flyer on Spin City wall (`src/abduct/rooms/index.ts`).<br>• Pruitt's blurry saucer photo on City Hall corridor wall (`src/abduct/rooms/deep.ts`).<br>• Larry asleep in L6 waiting room background (`src/abduct/rooms/deep-clinic.ts`).<br>• Redacted OBELISK™ shipping crate in L4 museum loading bay & L7 bridge (`deep.ts`, `deep-ship.ts`). | Zero required text (optional 1-line mumble in `en.ts`/`fr.ts` `data`). Pure scenery props (non-colliding, never alter hitboxes or difficulty bands). | `npm run difficulty` (confirm zero change to collision/route pass rates) + visual check at 375×690. |
 | **Tier 5 · 3-Panel Comic Interludes** | **Medium** (~180 LOC + 4–6 small panel art pieces) | Create `src/ui/interlude.ts` (`InterludeScene`, Pixi `ViewSlot`, 3 stacked panels, tap-to-advance / tap-to-skip, reduced-motion safe). Add `seenInterludes: string[]` to `SaveData` (`src/levels/save.ts`, backwards-compatible default `[]`). Trigger the 4 interludes from `src/core/game.ts` (`clockIn`, post-L2, post-L7, post-L8). | Add `interludes: { intro, probation, priorArt, finale }` in `src/i18n/{en,fr}.ts`. | Save migration test in `tests/levels-save.test.ts`; E2E check verifying one-tap skip, never replays on second run, and zero impact on headless playthrough scripts. |
 | **Tier 6 · Temporal Dispatch Tab (Future-Proof Stub, Only If Eras Are Greenlit)** | **Medium** (when Season 2 starts) | Add `GRIMSBY · NOW` / `TEMPORAL DISPATCH` era switcher to `src/ui/workorders.ts` after L8 clears, unlocking era packs (Prehistoric Time Trial, 1122 Keep, 1953 Mob Docks, 2199 Orbit) on the same save format. | Add `workOrders.eraTabs` and per-era dispatch headers in `src/i18n/{en,fr}.ts`. | Save compatibility + phone layout check on tab switch. |
+
+---
+
+## 6. Running jokes
+
+**Rules (user guidance, 2026-11-25):**
+- **At most 2–3 running jokes active** in any single level or screen.
+- **Clear setup first:** every running joke must be introduced plainly where it first appears so a new player can follow it without reading outside lore.
+- **Obvious references only:** no deep cuts, no stacking two references in one line, and every line should still make sense cold to someone who hasn't seen the film.
+
+### Active running jokes (kept & tracked)
+
+| Running joke | Where it is set up | Where it pays off | Active levels |
+| --- | --- | --- | --- |
+| **Krix & the toaster** ("last quarter's intern") | L1 memo joke (*"returned a man still clutching his toaster"*); L2 memo joke (*"power lines right before the toaster incident"*) | L7 first clear (OBELISK™ manifest signed by Krix); L8 memo, `krix` Field Find, L8 first clear; L9 first clear | L1, L2, L7, L8, L9 (peak 1–2 per shift) |
+| **Bureau paperwork & forms** (Form 7-B, Form 88-MPH, Accounting/Legal/HR) | L1–L2 memos & Vrell report comments; Form 7-B formally introduced in L6 memo (*"brass thermometer and a clipboard since 1953"*); Form 88-MPH introduced in L8–L9 | L6 probe audit & clinic souvenirs; L9 1955 time-car permit gag; Warehouse 4 / 4B trophy catalogue voice | All shifts (background voice; max 1 specific form per shift) |
+| **Unpaid intern, lanyard & parking ring** | L1 memo (*"Pass probation and we might even issue you a lanyard"*); Ranks ladder | Field Check (temporary lanyard); L5/Ranks (Bubbles gets a parking ring first); L8 first clear (Zib gets paid staff status) | L1, Field Check, L5, L8 |
+| **Mrs. Pruitt's binoculars & binder** | L3 memo (*"hasn't slept since 1994 and logs everything in a binder"*), L3 watcher | L4 memo & `saucer_photo` Field Find; L7 memo (her sister Doris carries the same binder on the cruise ship) | L3, L4, L7 |
+| **Gary's neighbourhood watch & lasers** | L3 memo (*"lasers have caught Gary eleven times"*), L3 garage | L3 first clear & L4 memo (Gary's CCTV complaint triggers the downtown audit); L3–L4 Gazette headlines | L3, L4 |
+| **The Grimsby odd-sock hoard** | L2 `odd sock` souvenir (*"So that's where they go. It's us."*) & L2 first clear | Loading tip (`afterL2`), Warehouse 4 trophy room | L2, loading tips |
+| **Cats are management** | Base loading tip (*"Cats are not specimens. Cats are management."*) | L5 Kipper (sleeper & petty cash tin); L7 Anchovy (takes command of the bridge) | Loading tips, L5, L7 |
+| **OBELISK™ patent racket** | L4 memo (*"unlisted black rock"*); L5 `obelisk_crate` Field Find; L7 memo & first clear | L8 memo, rooms, `first-edition bone`, first clear; L9 first clear (can't patent time travel) | L4, L5, L7, L8, L9 |
+| **Zib's Mum** | L1–L4 Zib bubbles (*"Mom would be so proud"*, *"cities are where saucers go to get towed"*) | Perfect deep-shift report (she phones Head Office to ask if Zib is eating enough) | Background flavour in flight & perfect reports |
+
+### Trimmed, simplified, or retired
+
+| Joke / reference | Why it was trimmed | Change made |
+| --- | --- | --- |
+| **Bone-turns-into-spaceship / "orbital lawsuits" (*2001* match-cut)** | Even fans of *2001* didn't decode the match-cut compressed with patent lawsuits (`first-edition bone` trophy, L8 causes, L8 headline, L8 missed-bone quip). | Replaced with the universally recognised *2001* image (first tool ever made, booming dramatic drums, shiny black boulder) + plain Bureau jokes that work cold. |
+| **Deep-cut *Contact* nods ("check out Vega", "three prime numbers")** | Too obscure for players who haven't seen *Contact* (1997). | Replaced with universal Mars / thermos-of-cocoa astronomy gags (`trophies.town.descriptions.astronomer`, `mapCollectibles.items.astronomer.comment`). |
+| **Unexplained "FOR THE MACHINE" defibrillator label** | Required knowing the hidden shout to decode the Frankenstein joke. | Changed to explicit `"IT'S ALIVE!"` / `« IL EST VIVANT ! »` in the Room 2 trophy card (L6 memo sync in `src/levels/deep-clinic.ts` flagged for coordinator). |
+| **Coder & accounting jargon in Trophy Room** ("rubber-duck debugger for marine law", "double-entry ceramic", "control thumb", "understudy solo") | Insider jargon that failed the cold-read clarity test. | Rewritten in plain comedic language (`rubber duck`, `accounts mug`, `flight.missed.Flint`, `flight.missed.Reed`). |
+| **France-only references in FR copy** (`France Inter`, `URSSAF`) | Violated the international-legibility rule in `AGENTS.md`. | Replaced with `la radio FM` and `la fiche de paie`. |
+| **"Tuesday" throwaway cadence** | Appeared 9 times across unrelated screens (crop circle, CCTV, coffee, museum, time car, defibrillator) without being a real arc. | Kept existing natural idioms ("last Tuesday"), capped — do not add new Tuesday gags in future levels. |
