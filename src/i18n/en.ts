@@ -271,6 +271,15 @@ export const en = {
     ],
     build: 'v0.1 · night shift build',
     language: 'Language',
+    // v4 reset
+    reset: {
+      button: 'Reset progress',
+      title: 'Start over from scratch?',
+      body: 'The Bureau will shred your whole file: every star, Glorb, upgrade and trophy, and the Specimen Archive. Sound and language settings stay.',
+      erase: 'Erase everything',
+      keep: 'Keep my progress',
+      done: 'File shredded. Welcome aboard, intern.',
+    },
   },
 
   loading: {

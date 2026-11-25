@@ -4,7 +4,7 @@ import { Label, type LabelStyle } from '../../core/gfx/text';
 import { C } from '../theme';
 import type { Button, ButtonKind } from '../widgets';
 
-const KINDS: Record<ButtonKind, number> = { primary: 0, secondary: 1, ghost: 2, amber: 3 };
+const KINDS: Record<ButtonKind, number> = { primary: 0, secondary: 1, ghost: 2, amber: 3, danger: 4 };
 const looks = new Map<string, LabelStyle>();
 
 /** One shared label look per (size, colour). */
@@ -52,6 +52,10 @@ export class ButtonView extends Container {
       stroke = 'rgba(170,160,220,0.6)';
     } else if (b.kind === 'amber') {
       fill = C.amber;
+    } else if (b.kind === 'danger') {
+      // destructive and final: a deeper red than C.red so the light caption reads
+      fill = '#d23a55';
+      fg = '#fff6ec';
     }
     if (!b.enabled) {
       fill = '#4a4470';

@@ -21,6 +21,8 @@ export interface Shell {
   toggleMute(): void;
   /** Switch the display language (saved; clears a `?lang=` override). */
   setLanguage(lang: Lang): void;
+  /** v4 reset: erase all progress (a fresh save), keeping sound and language. */
+  resetProgress(): void;
 
   toTitle(): void;
   toWorkOrders(): void;

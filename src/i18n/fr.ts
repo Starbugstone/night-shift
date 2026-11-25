@@ -42,6 +42,15 @@ export const fr: Strings = {
     ],
     build: 'v0.1 · version de nuit',
     language: 'Langue',
+    // v4 reset
+    reset: {
+      button: 'Recommencer à zéro',
+      title: 'Tout recommencer ?',
+      body: 'Le Bureau va broyer tout votre dossier : étoiles, Glorbs, améliorations, trophées et archives des spécimens. Vos réglages de son et de langue sont conservés.',
+      erase: 'Tout effacer',
+      keep: 'Garder ma progression',
+      done: 'Dossier broyé. Bienvenue à bord, stagiaire.',
+    },
   },
 
   loading: {

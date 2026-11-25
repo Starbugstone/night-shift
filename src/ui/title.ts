@@ -5,8 +5,10 @@ import { easeOutBack, easeOutCubic } from '../core/fx';
 import { GLOW, Glow, ScreenTint, glowTexture } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Shape, ellipseArc } from '../core/gfx/shapes';
-import { Label, measure } from '../core/gfx/text';
+import { Label, Paragraph, measure } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
+import { readSeconds } from '../core/read-time';
+import { hasProgress } from '../core/reset';
 import type { Shell } from '../core/shell';
 import { C } from './theme';
 import { Button } from './widgets';
@@ -14,6 +16,7 @@ import { artSprite } from './views/art';
 import { NightSky, Skyline } from './views/backdrop';
 import { ButtonView } from './views/button';
 import { SpeakerIcon } from './views/icons';
+import { highlightedPanel } from './views/menu-decor';
 import { fmt, getLang, langVersion, localArt, tr, type Lang } from '../i18n';
 import { trophyProgress } from './trophy-data';
 
@@ -31,6 +34,9 @@ const CLOUDS = [
   [120, 540, 170, 22, -6],
 ] as const;
 
+/** v4 reset: the "start over?" card, centred over the title. */
+export const RESET_CARD = { x: 32, y: 284, w: VIEW_W - 64, h: 392 } as const;
+
 export class TitleScene implements Scene {
   t = 0;
   readonly start = new Button(110, 640, 320, 92, '', 'primary', 36);
@@ -41,11 +47,23 @@ export class TitleScene implements Scene {
     { lang: 'en', b: new Button(VIEW_W - 92 - 14 - 68 - 8 - 68, VIEW_H - 92, 68, 68, 'EN', 'ghost', 22) },
     { lang: 'fr', b: new Button(VIEW_W - 92 - 14 - 68, VIEW_H - 92, 68, 68, 'FR', 'ghost', 22) },
   ];
+  // v4 reset: bottom-left, above the build label; shown only while there is progress to lose
+  readonly reset = new Button(24, VIEW_H - 94, 236, 56, '', 'ghost', 17);
+  readonly erase = new Button(RESET_CARD.x + 32, RESET_CARD.y + RESET_CARD.h - 176, RESET_CARD.w - 64, 68, '', 'danger', 24);
+  readonly keep = new Button(RESET_CARD.x + 32, RESET_CARD.y + RESET_CARD.h - 92, RESET_CARD.w - 64, 68, '', 'primary', 24);
+  /** The confirmation card is open; `confirmT` runs 0..1 as it pops in. */
+  confirming = false;
+  confirmT = 0;
+  /** Seconds left on the "file shredded" note after an erase. */
+  shreddedT = 0;
+  private scrimArmed = false;
   readonly taglineSeed = Math.random();
   private labelsFor = -1;
   private readonly look = new ViewSlot(() => new TitleView(this));
 
-  constructor(readonly shell: Shell) {}
+  constructor(readonly shell: Shell) {
+    this.reset.visible = hasProgress(shell.save);
+  }
 
   get view(): Container {
     return this.look.get().root;
@@ -54,11 +72,56 @@ export class TitleScene implements Scene {
   update(dt: number): void {
     this.t += dt;
     const p = this.shell.ctx.pointer;
+    this.shreddedT = Math.max(0, this.shreddedT - dt);
+    if (this.confirming) return this.updateConfirm(dt);
     if (this.mute.update(p, dt)) this.shell.toggleMute();
     for (const { lang, b } of this.langs) if (b.update(p, dt, this.shell.audio) && lang !== getLang()) this.shell.setLanguage(lang);
     this.relabel();
     if (this.start.update(p, dt, this.shell.audio)) this.shell.toWorkOrders();
     if (this.trophies.update(p, dt, this.shell.audio)) this.shell.toTrophies('title');
+    if (this.reset.update(p, dt, this.shell.audio)) this.openConfirm();
+  }
+
+  // v4 reset: the confirmation takes every tap while it is open
+  openConfirm(): void {
+    this.confirming = true;
+    this.confirmT = this.shell.ctx.reducedMotion ? 1 : 0;
+    this.scrimArmed = false;
+    this.erase.cancel();
+    this.keep.cancel();
+  }
+
+  closeConfirm(): void {
+    this.confirming = false;
+    this.scrimArmed = false;
+    this.erase.cancel();
+    this.keep.cancel();
+  }
+
+  private updateConfirm(dt: number): void {
+    const p = this.shell.ctx.pointer;
+    const audio = this.shell.audio;
+    this.confirmT = Math.min(1, this.confirmT + dt * 4.5);
+    if (this.erase.update(p, dt, audio)) {
+      this.shell.resetProgress();
+      this.closeConfirm();
+      this.reset.visible = hasProgress(this.shell.save);
+      this.labelsFor = -1; // the trophy count starts again from zero
+      this.shreddedT = readSeconds(tr().title.reset.done);
+      return;
+    }
+    if (this.keep.update(p, dt, audio)) return this.closeConfirm();
+    const c = RESET_CARD;
+    const inCard = p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h;
+    if (p.pressed && !inCard) this.scrimArmed = true;
+    if (p.released) {
+      const out = this.scrimArmed && !inCard;
+      this.scrimArmed = false;
+      if (out) {
+        audio.sfx('click');
+        this.closeConfirm();
+      }
+    }
   }
 
   /** Button labels and toggle state follow the language. */
@@ -69,6 +132,9 @@ export class TitleScene implements Scene {
     this.start.label = s.title.clockIn;
     const prog = trophyProgress(this.shell.save);
     this.trophies.label = fmt(s.trophies.buttonCount, { n: prog.found, max: prog.total });
+    this.reset.label = s.title.reset.button;
+    this.erase.label = s.title.reset.erase;
+    this.keep.label = s.title.reset.keep;
     for (const { lang, b } of this.langs) {
       b.kind = lang === getLang() ? 'secondary' : 'ghost';
       b.label = lang === 'en' ? 'EN' : 'FR';
@@ -93,6 +159,10 @@ const LOGO = { size: 76, color: C.mint, weight: 900, outline: C.ink } as const;
 const LOGO_SUB = { size: 32, color: C.amberHi, weight: 800, outline: C.ink } as const;
 const ZZ_SMALL = { size: 15, color: C.mint, weight: 900, align: 'left' } as const;
 const ZZ_BIG = { size: 20, color: C.mint, weight: 900, align: 'left' } as const;
+// v4 reset
+const SHREDDED = { size: 19, color: C.mint, weight: 800, outline: C.night } as const;
+const CONFIRM_TITLE = { size: 26, color: C.text, weight: 900, outline: C.ink } as const;
+const CONFIRM_BODY = { size: 17, color: '#e6e0ff', italic: true, weight: 500, lineHeight: 23 } as const;
 
 class TitleView implements SceneView {
   readonly root = new Container();
@@ -118,6 +188,9 @@ class TitleView implements SceneView {
   private readonly speaker = new SpeakerIcon(C.text);
   private readonly langBtns: ButtonView[];
   private readonly build = new Label(BUILD);
+  private readonly resetBtn: ButtonView;
+  private readonly shredded = new Label(SHREDDED);
+  private readonly confirm: ResetConfirmView;
 
   constructor(private readonly s: TitleScene) {
     const r = this.root;
@@ -163,7 +236,9 @@ class TitleView implements SceneView {
     this.trophiesBtn = new ButtonView(s.trophies);
     this.muteBtn = new ButtonView(s.mute);
     this.langBtns = s.langs.map(({ b: lb }) => new ButtonView(lb));
-    r.addChild(this.vignette, this.trophiesBtn, this.muteBtn, this.speaker, ...this.langBtns, this.build);
+    this.resetBtn = new ButtonView(s.reset);
+    this.confirm = new ResetConfirmView(s);
+    r.addChild(this.vignette, this.trophiesBtn, this.muteBtn, this.speaker, ...this.langBtns, this.build, this.resetBtn, this.shredded, this.confirm.root);
     this.vignette.strength = 0.7;
   }
 
@@ -260,7 +335,66 @@ class TitleView implements SceneView {
     this.muteBtn.sync();
     this.speaker.set(s.mute.x + 30, s.mute.y + 34, s.shell.save.muted);
     for (const v of this.langBtns) v.sync();
-    this.build.set(str.build, 24, VIEW_H - 30, s.langs[0]!.b.x - 36);
+    // v4 reset: the build label drops under the reset button while it shows
+    this.resetBtn.alpha = fade;
+    this.resetBtn.sync();
+    this.build.set(str.build, 24, s.reset.visible ? VIEW_H - 18 : VIEW_H - 30, s.langs[0]!.b.x - 36);
+    const note = s.shreddedT > 0;
+    this.shredded.visible = note;
+    if (note) {
+      this.shredded.set(str.reset.done, VIEW_W / 2, 836, VIEW_W - 40);
+      this.shredded.alpha = rm ? 1 : Math.min(1, s.shreddedT / 0.5);
+    }
+    this.confirm.sync(rm);
+  }
+}
+
+// ---------------------------------------------------------------- v4 reset confirmation
+
+/** "Start over from scratch?": a scrim and a card with the danger and the safe button. */
+class ResetConfirmView {
+  readonly root = new Container();
+  private readonly card = new Container();
+  private readonly title = new Label(CONFIRM_TITLE);
+  private readonly body = new Paragraph(CONFIRM_BODY);
+  private readonly eraseBtn: ButtonView;
+  private readonly keepBtn: ButtonView;
+  private textFor = -1;
+
+  constructor(private readonly s: TitleScene) {
+    const c = RESET_CARD;
+    this.root.visible = false;
+    const scrim = new Graphics().rect(0, 0, VIEW_W, VIEW_H).fill('rgba(8,5,24,0.8)');
+    const frame = new Graphics();
+    highlightedPanel(frame, 0, 0, c.w, c.h, { fill: C.panel, r: 24, stroke: C.muted, lineW: 4, shadow: 10 }, 0.16);
+    // the buttons keep their screen coordinates (the Button logic hit-tests them there)
+    this.eraseBtn = new ButtonView(s.erase);
+    this.keepBtn = new ButtonView(s.keep);
+    this.eraseBtn.position.set(-c.x, -c.y);
+    this.keepBtn.position.set(-c.x, -c.y);
+    this.card.addChild(frame, this.title, this.body, this.eraseBtn, this.keepBtn);
+    // pivot at the centre so the pop scales evenly
+    this.card.pivot.set(c.w / 2, c.h / 2);
+    this.card.position.set(c.x + c.w / 2, c.y + c.h / 2);
+    this.root.addChild(scrim, this.card);
+  }
+
+  sync(rm: boolean): void {
+    const s = this.s;
+    this.root.visible = s.confirming;
+    if (!s.confirming) return;
+    if (this.textFor !== langVersion()) {
+      this.textFor = langVersion();
+      const str = tr().title.reset;
+      const w = RESET_CARD.w;
+      this.title.set(str.title, w / 2, 58, w - 48);
+      this.body.setBlock(str.body, 32, 98, w - 64);
+    }
+    const k = rm ? 1 : easeOutBack(s.confirmT, 1.3);
+    this.card.scale.set(0.86 + 0.14 * k);
+    this.card.alpha = rm ? 1 : easeOutCubic(Math.min(1, s.confirmT * 2.2));
+    this.eraseBtn.sync();
+    this.keepBtn.sync();
   }
 }
 

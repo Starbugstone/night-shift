@@ -29,6 +29,7 @@ import { PointerInput } from './input';
 import { startLoop } from './loop';
 import { SceneManager, type Transition } from './scenes';
 import type { MutableContext, Shell } from './shell';
+import { resetSave } from './reset';
 import { browserStorage, isPreprodPath, preprodStorage, watchReducedMotion } from './storage';
 import { viewUploader } from './gfx/prepare';
 
@@ -158,6 +159,12 @@ export class Game implements Shell {
   toggleMute(): void {
     this.setSave({ ...this._save, muted: !this._save.muted });
     if (!this._save.muted) this.audio.sfx('click');
+  }
+
+  resetProgress(): void {
+    // v4 reset: through setSave, so preprod's store writes only its own key
+    this.run = null;
+    this.setSave(resetSave(this._save));
   }
 
   /** `?lang=fr|en` for testing: beats the saved choice until the player picks one. */

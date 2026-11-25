@@ -2,7 +2,7 @@
 // draws it.
 import type { Audio, PointerState } from '../contracts';
 
-export type ButtonKind = 'primary' | 'secondary' | 'ghost' | 'amber';
+export type ButtonKind = 'primary' | 'secondary' | 'ghost' | 'amber' | 'danger';
 
 /** Tap = press inside, release inside. Min 56 logical px tall. */
 export class Button {
