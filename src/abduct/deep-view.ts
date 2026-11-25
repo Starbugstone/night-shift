@@ -19,6 +19,7 @@ import { POP_SECONDS, SouvenirPop, souvenirLabel } from './souvenir';
 import type { AbductSimulation } from './simulation';
 import { TurnButtonsView, TurnTell } from './turn-draw';
 import { WetView } from './wet-view';
+import { ItemSparkle } from './views/item-sparkle'; // v4 items
 import { BuildingView, DeepNight, prop } from './views/building';
 import { DeliveryView, ExitChevrons, FuseRing, Reticle, SnoozeView, SnoreView, SpeechBubble, WakeBurst, type AbductViewInput } from './views/effects';
 import { ALERT_RGB, FailureView } from './views/failure';
@@ -346,6 +347,7 @@ export class DeepAbductView implements SceneView {
   private readonly specimen: SpecimenArt;
   private readonly subject = new Container();
   private readonly item: Container;
+  private readonly sparkle = new ItemSparkle(); // v4 items
   private readonly wet?: WetView;
   private readonly paperwork?: ProbePaperwork;
   private readonly night: DeepNight;
@@ -424,7 +426,7 @@ export class DeepAbductView implements SceneView {
     for (const view of this.sleepers) world.addChild(view.root);
     world.addChild(this.beam.root);
     if (this.wet) world.addChild(this.wet.back);
-    world.addChild(this.item, this.subject, this.snore.root, this.twitch, this.speech.root, this.bang.root);
+    world.addChild(this.sparkle.root, this.item, this.subject, this.snore.root, this.twitch, this.speech.root, this.bang.root);
     if (this.paperwork) world.addChild(this.paperwork.world);
     if (this.wet) world.addChild(this.wet.front);
     world.addChild(this.turn.root, this.reticle.root, this.exposure.root, this.delivery.world, this.particles, this.popup.root, this.snooze.root);
@@ -496,6 +498,7 @@ export class DeepAbductView implements SceneView {
       item.x + (sim.exitX - item.x) * p - sprite.w / 2,
       item.y + (sim.exitY - item.y) * p - sprite.h / 2,
     );
+    this.sparkle.sync(this.item.visible && !item.captured && !delivered, item.x, item.y, sprite.w, sprite.h, elapsed, rm); // v4 items
     this.subject.pivot.set(chestX, chestY);
     this.subject.position.set(chestX + (sim.exitX - chestX) * p, chestY + (sim.exitY - chestY) * p);
     const q = rm ? 0 : this.squash * 0.1;

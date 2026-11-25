@@ -33,7 +33,8 @@ function routes(w: Witness): [Room, Room] {
   const crown = art('exit_stone_hatch', forkX - 80, -height + 14);
   const bench = art('stone_plinth', 34, 576);
   const souvenir = art('patent_bone', 0, 0);
-  souvenir.x = bench.x + bench.w - souvenir.w - 8;
+  // v4 items: the free end of the plinth (the other end sat under the specimen's feet)
+  souvenir.x = bench.x + 10;
   souvenir.y = bench.y - souvenir.h;
   const launchX = forkX - (w.id === 'flint' ? 280 : 225);
   const fork = forkX + (w.id === 'reed' ? 155 : 260);

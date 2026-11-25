@@ -55,13 +55,15 @@ const SUBJECTS = {
   },
   pete: {
     pose: { ...CHAIR_POSE, neckX: 122, neckY: 505 },
-    item: { sprite: art('coffee_mug', 300, 656), name: 'harbourmaster mug' },
+    // v4 items: out in the middle of the lamp room, under the lens's sweep
+    item: { sprite: art('coffee_mug', 500, 656), name: 'harbourmaster mug' },
     caption: 'The lighthouse has logged you as a hazard to shipping.',
     mumbles: ['Ships ahoy… ships asleep.', 'Who moved the sea again?', "Light's on, nobody's home.", 'Fog’s rolling in. Lovely.', 'Keep the kettle lit for the gulls.'],
   },
   sal: {
     pose: { ...CHAIR_POSE, neckX: 128, neckY: 502 },
-    item: { sprite: art('coffee_mug', 378, 548), name: 'accounts mug' },
+    // v4 items: at the far end of the ledger desk
+    item: { sprite: art('coffee_mug', 437, 548), name: 'accounts mug' },
     caption: 'Sal has entered you in the ledger under "one outstanding".',
     mumbles: ['One outstanding. Always one outstanding.', 'The cod does not balance.', 'Carry the haddock.', 'Kipper, that is not petty cash.', "Receipts or it didn't swim."],
   },

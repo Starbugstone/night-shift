@@ -47,12 +47,16 @@ describe('souvenirs per route', () => {
     }
   });
 
-  it('a swapped item rests where the old one did: same centre, same bottom, manifest size', () => {
+  it('a swapped item rests on the room spot or on its own `at` spot, at manifest size', () => {
     for (const [id, s] of Object.entries(SOUVENIR_SWAPS)) {
       const sprite = ROOMS[id as RoomId].item.sprite;
       expect(sprite.key).toBe(s!.key);
-      // The loading-door pair rests on the top washer. Other swaps keep their original support.
-      if (id === 'laundry_loading') {
+      if (s!.at) {
+        // v4 items: moved elsewhere in the building, centred on at.x and lying on at.bottom
+        expect(sprite.x + sprite.w / 2, id).toBeCloseTo(s!.at.x, 0);
+        expect(sprite.y + sprite.h, id).toBe(s!.at.bottom);
+      } else if (id === 'laundry_loading') {
+        // The loading-door pair rests on the top washer. Other swaps keep their original support.
         const top = ROOMS.laundry_loading.furniture.find(f => f.sprite.key === 'room/washer')!.colliders![0]!;
         const centre = sprite.x + sprite.w / 2;
         expect(centre).toBeGreaterThan(top.x);
@@ -60,12 +64,14 @@ describe('souvenirs per route', () => {
         expect(sprite.y + sprite.h).toBe(top.y);
       } else expect(s!.dy ?? 0, id).toBe(0);
       expect({ w: sprite.w, h: sprite.h }).toEqual(ART[s!.key]);
-      expect(SOUVENIR_ART[s!.key], `${s!.key} has a fallback drawing`).toBeTypeOf('function');
+      // the slipper is a base room item: its fallback is in draw.ts, the new souvenirs' in souvenir-art.ts
+      if (s!.key !== 'room/slipper') expect(SOUVENIR_ART[s!.key], `${s!.key} has a fallback drawing`).toBeTypeOf('function');
     }
-    // hank_rear: the jug sat at 470,626 (40×60) on the waiting-room floor
+    // hank_rear: on the top crate of the supply-room stack at -1300,576 (140 wide)
     const plug = ROOMS.hank_rear.item.sprite;
-    expect(plug.x + plug.w / 2).toBeCloseTo(490, 0);
-    expect(plug.y + plug.h).toBe(686);
+    expect(plug.x + plug.w / 2).toBeGreaterThan(-1300);
+    expect(plug.x + plug.w / 2).toBeLessThan(-1160);
+    expect(plug.y + plug.h).toBe(576);
   });
 
   it('every item on a covered route has got and missed lines, in both languages', () => {

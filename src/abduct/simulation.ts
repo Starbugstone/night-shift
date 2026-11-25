@@ -420,7 +420,9 @@ export class AbductSimulation {
     // L6 clinic code: the exit stays shut until Form 7-B is complete
     if (!this.body.gripActive && contains(this.room.exitZone, this.body.chestX, this.body.chestY) && (this.interior?.probes?.done ?? true)) {
       this.delivered = true;
-      this.item.stolen = this.item.captured && contains(this.room.exitZone, this.item.x, this.item.y, 48) &&
+      // A captured item still with the body goes home with it. It trails the chest by up to ~70 px
+      // when the body enters the exit fast, so it is not asked to be inside the exit zone too.
+      this.item.stolen = this.item.captured &&
         Math.hypot(this.body.chestX - this.item.x, this.body.chestY - this.item.y) < 108;
       this.audio.sfx('success');
     }

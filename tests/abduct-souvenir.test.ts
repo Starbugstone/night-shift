@@ -27,7 +27,7 @@ describe('souvenir label', () => {
 });
 
 describe('grabbing the item', () => {
-  for (const id of ['farm_window', 'laundry_loading', 'dave_patio', 'gary_skylight'] as const satisfies readonly RoomId[]) {
+  for (const id of ['farm_window', 'laundry_loading', 'pemberton_window', 'osei_pharmacy'] as const satisfies readonly RoomId[]) {
     it(`${id}: swinging past it grabs it once, with one pickup sound`, () => {
       const sfx = vi.fn();
       const sim = new AbductSimulation(ROOMS[id], new Set(), { sfx }, () => 0.5);

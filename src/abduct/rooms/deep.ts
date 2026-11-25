@@ -71,7 +71,8 @@ const EXITS = {
 const SUBJECTS = {
   dave: {
     pose: { ...BED_POSE, neckX: 131, neckY: 568 },
-    item: { sprite: art('slipper', 292, 584), name: 'orthodontic slipper' },
+    // v4 items: at the foot of the bed, past his toes (under the raised knee it was half hidden)
+    item: { sprite: art('slipper', 338, 584), name: 'orthodontic slipper' },
     caption: 'The dentist will be billing for this wake-up call.',
     mumbles: ['Floss the moon, please.', 'That’s a load-bearing molar.', 'The plaque has a lawyer.', 'No, the drill dreams about me.', 'The mash needs more altitude.'],
   },
@@ -81,31 +82,36 @@ const SUBJECTS = {
       nearArm: 1.61, nearForearm: 0.54, farArm: 1.62, farForearm: 0.54,
       nearThigh: -0.06, nearShin: 0.76, farThigh: -0.08, farShin: 0.80,
     },
-    item: { sprite: art('slipper', 286, 608), name: 'team-issued slipper' },
+    // v4 items: up on the mantelpiece, under the chimney climb (on the couch it lay under her)
+    item: { sprite: art('slipper', 500, 446), name: 'team-issued slipper' },
     caption: 'Coach is calling a mandatory time-out.',
     mumbles: ['Give me twenty more naps.', 'That’s a foul on the pillow.', 'Stop stretching the mascot.', 'Everybody hydrate the couch.', 'Go Saucers! Defence!'],
   },
   gary: {
     pose: { ...CHAIR_POSE, neckX: 123, neckY: 503 },
-    item: { sprite: art('coffee_mug', 315, 516), name: 'neighbourhood watch mug' },
+    // v4 items: up in the loft, on the bookcase beside the skylight climb
+    item: { sprite: art('coffee_mug', 911, -264), name: 'neighbourhood watch mug' },
     caption: 'Gary finally caught something. It was his own abduction.',
     mumbles: ['That squirrel is casing us.', 'Put the begonias on the watchlist.', 'Enhance the wheelie bin.', 'The cul-de-sac needs a password.', 'The truth is out there. Lock the back door.', 'The Hendersons moved the hedge again.'],
   },
   nigel: {
     pose: { ...CHAIR_POSE, neckX: 120, neckY: 507 },
-    item: { sprite: art('coffee_mug', 346, 562), name: 'fossilized coffee' },
+    // v4 items: on the first display case in the Laser vault, before the grid
+    item: { sprite: art('coffee_mug', 1882, 496), name: 'fossilized coffee' },
     caption: 'The museum has added you to its Incident Collection.',
     mumbles: ['The mummy has a parking pass.', 'Stop feeding the fossils.', 'The T. rex owes me a tenner.', 'Please don’t tap on the sarcophagus.', "Don't panic. Where's my towel?"],
   },
   kev: {
     pose: { ...CHAIR_POSE, neckX: 135, neckY: 500 },
-    item: { sprite: art('coffee_mug', 394, 538), name: 'limited-edition DJ mug' },
+    // v4 items: on the far speaker stack on the dance floor, a detour past the vent
+    item: { sprite: art('coffee_mug', 1390, 436), name: 'limited-edition DJ mug' },
     caption: 'The beat dropped. So did the performance review.',
     mumbles: ['Next track: ten hours of white noise.', 'Drop the bass gently.', 'My headphones are in a union.', 'This one goes out to the duvet.', 'This one goes out to the Martians.'],
   },
   mayor: {
     pose: { ...CHAIR_POSE, neckX: 124, neckY: 502 },
-    item: { sprite: art('coffee_mug', 361, 544), name: 'municipal mug' },
+    // v4 items: at the far end of the desk, by the flag stand
+    item: { sprite: art('coffee_mug', 425, 544), name: 'municipal mug' },
     caption: 'You’ve been added to next Tuesday’s agenda.',
     mumbles: ['I hereby declare it bedtime.', 'Motion to table the blanket.', 'The potholes are polling well.', 'My pillow has diplomatic immunity.', 'July 4th speech first. Then upload the virus.'],
   },

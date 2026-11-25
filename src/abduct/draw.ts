@@ -18,6 +18,7 @@ import { POP_SECONDS, SOUVENIR_HINT, SouvenirMarker, SouvenirPop, souvenirLabel 
 import { paintSouvenir } from './souvenir-art';
 import { DeliveryView, ExitChevrons, Reticle, SnoozeView, SnoreView, SpeechBubble, WakeBurst, roundedZone, type AbductViewInput } from './views/effects';
 import { FailureView } from './views/failure';
+import { ItemSparkle } from './views/item-sparkle'; // v4 items
 import { INK, MINT, Segment, bitmap, box } from './views/pieces';
 
 export const RESTART = { x: 422, y: HUD_ROW.y, w: 104, h: HUD_ROW.h };
@@ -605,6 +606,7 @@ export class AbductView implements SceneView {
   private readonly beam: TutorialBeam;
   private readonly saucer: RoomSaucer;
   private readonly item: Container;
+  private readonly sparkle = new ItemSparkle(); // v4 items
   private readonly leftItem: Container;
   private readonly speech = new SpeechBubble(false);
   private readonly bang = new WakeBurst(false);
@@ -719,7 +721,7 @@ export class AbductView implements SceneView {
     const s = room.item.sprite;
     this.item = art(ctx, s.key, 0, 0, s.w, s.h);
     this.leftItem = art(ctx, s.key, 0, 0, s.w, s.h);
-    this.subject.addChild(this.item, this.human.root);
+    this.subject.addChild(this.sparkle.root, this.item, this.human.root);
     this.slurpMask.renderable = false;
     loose.addChild(this.beam.root, this.saucer.root, this.slurpMask, this.subject, this.leftItem, this.delivery.world);
     for (let i = 0; i < 3; i++) {
@@ -778,6 +780,7 @@ export class AbductView implements SceneView {
     this.item.visible = !this.leftItem.visible;
     const itemView = this.leftItem.visible ? this.leftItem : this.item;
     itemView.position.set(sim.item.x - item.w / 2, sim.item.y - item.h / 2);
+    this.sparkle.sync(!sim.item.captured && !delivered, sim.item.x, sim.item.y, item.w, item.h, elapsed, rm); // v4 items
     this.human.sync(body, sim.wake.awake > 0, this.breath());
     this.delivery.sync(sim, rm);
     this.sleepEffects();

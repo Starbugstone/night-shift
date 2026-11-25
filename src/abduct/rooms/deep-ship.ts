@@ -73,13 +73,16 @@ const SUBJECTS = {
   },
   marco: {
     pose: { ...CHAIR_POSE, neckX: 134, neckY: 449, nearThigh: 0.30, farThigh: 0.32 },
-    item: { sprite: art('eclair', 196, 560), name: 'chocolate éclair' },
+    // v4 items: on the counter past the soup pot (on the floor between the crates and the counter
+    // no body could reach it)
+    item: { sprite: art('eclair', 440, 552), name: 'chocolate éclair' },
     caption: 'The chef has sent your compliments back to the kitchen.',
     mumbles: ['More butter. No. More.', 'The soufflé can hear us.', 'Yes chef. No chef. Nap chef.', 'Fold the meringue, not the captain.', 'The jelly wobbles for no one.'],
   },
   greg: {
     pose: { ...BED_POSE, neckX: 119, neckY: 588 },
-    item: { sprite: art('complimentary_towel', 330, 584), name: 'complimentary towel swan' },
+    // v4 items: on the bar (past the lounger it fell down the stairwell to the cabin deck)
+    item: { sprite: art('complimentary_towel', 560, 536), name: 'complimentary towel swan' },
     caption: 'Greg would like to speak to the manager of the sky.',
     mumbles: ['Is the tractor beam all-inclusive?', 'I paid for the premium sunset.', 'Three towels is the legal limit.', 'Is there a buffet on the mothership?', 'I want a refund on gravity.'],
   },

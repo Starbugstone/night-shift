@@ -126,7 +126,8 @@ const hankHome = building([
 ], [sleeper('Gladys', 1100, 686, 380)]);
 
 export const hankFront = route(hankHome, 'hank', HANK_POSE,
-  { sprite: art('prep_jug', 880, 626), name: 'jug of prep drink' },
+  // v4 items: on top of the lobby vending machine
+  { sprite: art('prep_jug', 1675, 406), name: 'jug of prep drink' },
   'FRONT DOORS', HANK_EXITS.front, box(2430, 490, 90, 160), [
     point(700, 420), point(780, 340),
     probeAt(860, 340, 0),
@@ -189,7 +190,8 @@ const oseiHome = building([
 ]);
 
 export const oseiHelipad = route(oseiHome, 'osei', OSEI_POSE,
-  { sprite: art('coffee_mug', 160, 516), name: 'on-call coffee' },
+  // v4 items: on the lift-shaft floor under the feather probe (it used to drop 140 px off the bunk's end)
+  { sprite: art('coffee_mug', -300, 656), name: 'on-call coffee' },
   'ROOF HELIPAD', OSEI_EXITS.helipad, box(-296, -1296, 112, 61), [
     point(330, 250), point(200, 250),
     probeAt(170, 250, 0),
@@ -249,7 +251,8 @@ const pembertonHome = building([
 ], [sleeper('Roland', 680, 686, 340)]);
 
 export const pembertonWindow = route(pembertonHome, 'pemberton', PEMBERTON_POSE,
-  { sprite: art('slipper', 370, 666), name: 'hospital sock' },
+  // v4 items: on the bed under his raised knees (on the floor at the bed's foot it was out of reach)
+  { sprite: art('slipper', 280, 564), name: 'hospital sock' },
   'RECOVERY WINDOW', PEMBERTON_EXITS.window, box(2370, 230, 100, 140), [
     point(200, 400), point(330, 320),
     probeAt(400, 320, 0),
@@ -264,7 +267,8 @@ export const pembertonWindow = route(pembertonHome, 'pemberton', PEMBERTON_POSE,
   ]);
 
 export const pembertonChute = route(pembertonHome, 'pemberton', PEMBERTON_POSE,
-  { sprite: art('slipper', 20, 666), name: 'hospital sock' },
+  // v4 items: in the laundry cart on the way to the chute (under the bed's head it was out of reach)
+  { sprite: art('slipper', -244, 556), name: 'hospital sock' },
   'LAUNDRY CHUTE', PEMBERTON_EXITS.chute, box(-650, 1320, 120, 110), [
     point(180, 400), point(140, 330),
     probeAt(120, 330, 0),
