@@ -1,6 +1,6 @@
 # GDD-12 · Ni! (Grimsby Keep, 1122)
 
-Krix wants exclusive rights to the Holy Grail so OBELISK™ can sell eternal life by the month. Zib has until dawn to collect the three knights who signed the witness roll in their sleep.
+Krix wants exclusive rights to the Holy Grail so OBELISK™ can sell eternal life by the month. Zib has until dawn to collect the three witnesses who signed in their sleep.
 
 ## The shift
 
@@ -12,7 +12,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Work Order #0012 · Ni!**
 >
-> Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. Bring in the three knights who signed his witness roll in their sleep. You have until dawn. The knights by the west hedge demand a shrubbery.
+> Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. His three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery.
 >
 > The French are throwing cows. If the road moos, move.
 >
@@ -20,7 +20,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Ordre n°0012 · Sacré Graal !**
 >
-> Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ramenez avant l’aube les trois chevaliers qui ont signé sa déposition en dormant. Près de la haie à l’ouest, des chevaliers réclament un jardinet.
+> Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ses trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le service juridique annule les signatures. Près de la haie à l’ouest, des chevaliers réclament un jardinet.
 >
 > Les Français lancent des vaches. Si la route meugle, dégagez.
 >
@@ -32,9 +32,9 @@ Greybox **1800 × 2320** logical px, coordinates from the top left. South launch
 
 | Place | Centre | Entry rings |
 | --- | --- | --- |
-| Rodney’s pavilion, west market | (445, 955) | **Supply flap** (315, 990), recommended · **Banner loft** (495, 790) |
-| Black Knight’s bridge gatehouse | (900, 735) | **Toll arch** (785, 855), recommended · **Portcullis loft** (1020, 650) |
-| Tom’s tower, east crag | (1405, 560) | **Stone stair** (1550, 620), recommended · **Smoke hole** (1325, 390) |
+| Rodney’s pavilion, west market | (445, 955) | **Supply flap** / **Rabat de service** (315, 990), recommended · **Banner loft** / **Grenier aux bannières** (495, 790) |
+| Black Knight’s bridge gatehouse | (900, 735) | **Toll arch** / **Arche du péage** (785, 855), recommended · **Portcullis loft** / **Combles de la herse** (1020, 650) |
+| Tom’s tower, east crag | (1405, 560) | **Stone stair** / **Escalier de pierre** (1550, 620), recommended · **Smoke hole** / **Trou de fumée** (1325, 390) |
 | French outwork | (900, 1450) | Cow gantry looks north over the inner road. The watch slit faces the south approach. Park an abandoned wooden rabbit on wheels beside the wall, well away from the Killer Rabbit’s cave. The wooden rabbit is scenery without a collider or detector. |
 | Rabbit cave | (1190, 970) | Set its mouth into the crag at the tempting turn from bridge to tower. |
 
@@ -63,7 +63,7 @@ Use the standard ragdoll. Start both routes of each sleeper on the same settled 
 | Rodney | **Banner loft** · `rodney_loft` | Swing around the tall banner chest, wait until the hanging shield passes, then lift past the loft lip. The chest overhang blocks the straight lift. Take the **stuffed swallow** off the herald’s rail. |
 | **The Black Knight.** He insisted he could guard the bridge standing up for a week. He has been asleep in an upright shield stand since supper. | **Toll arch** · `black_knight_arch` | Lift him out of the stand past the toll counter. Settle above the sill before easing out under the rounded arch. The counter catches a direct pull. Take the **Black Knight’s arm** from the spare armour peg on the way out. |
 | Black Knight | **Portcullis loft** · `black_knight_loft` | Steer around the winding wheel and hold in the overhead recess while the existing sliding gate opens. The wheel blocks a straight lift even when the gate is open. Start at a **7.2 s** cycle with **4.1 s** clearance. Take the **Black Knight’s shield** from the recess. |
-| **Tom the Enchanter.** He can light an entire hillside. He fell asleep waiting for one damn candle. | **Stone stair** · `tom_stair` | Lift him clear of the stone bookstand, watch the lance of sleep-sparks from the upper landing, then cross to the stair door. A low plinth blocks a direct drag. Pick up the pin-in **Holy Hand Grenade** from the near landing. |
+| **Tom the Enchanter.** He can light an entire hillside. He fell asleep waiting for one damn candle. | **Stone stair** · `tom_stair` | Lift him clear of the stone bookstand, watch the lance of sleep-sparks from the upper landing, then cross to the stair door. A low plinth blocks a direct drag. Pick up the **Holy Hand Grenade** from the near landing. |
 | Tom | **Smoke hole** · `tom_smoke` | Slip past the tall flue lip, let his feet catch up under the side ledge, then rise between sleep-sparks. The flue lip blocks the straight ascent. Take **enchanter’s horns** from a peg above the wait ledge. |
 
 ### The room gags that affect the drag
@@ -81,7 +81,7 @@ Use the standard ragdoll. Start both routes of each sleeper on the same settled 
 | Field Finds | English | Français |
 | --- | --- | --- |
 | Name / exact memo hint | Shrubbery / `a shrubbery` | Jardinet / `un jardinet` |
-| Description | The knights wanted something tasteful. After the beam took it, they had to make do with a tasteful hole. | Les chevaliers voulaient quelque chose de joli. Après le rayon, il ne leur est resté qu’un joli trou. |
+| Description | The knights wanted a nice one. Not too expensive. The beam took it for free. | Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer. |
 | Status | The Hendersons will spend nine hundred years growing a hedge in this exact spot. The knights would like it a little higher. | Les Henderson mettront neuf siècles à faire pousser une haie pile ici. Les chevaliers la voudraient un peu plus haute. |
 | Locked hint | The loudest voices on the west bank want a little greenery. | Sur la rive ouest, les plus bruyants réclament un peu de verdure. |
 
@@ -89,12 +89,12 @@ One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-roo
 
 | Item | Catalogue text | Objet et notice FR |
 | --- | --- | --- |
-| Coconut halves | Horse sold separately. These two have never stopped for hay. | Demi-noix de coco · Cheval vendu séparément. Ces deux-là ne réclament jamais de foin. |
+| Coconut halves | Horse sold separately. Nobody can explain how they got to England. The swallow refuses to comment. | Demi-noix de coco · Cheval vendu séparément. Personne ne sait comment elles sont arrivées en Angleterre. L’hirondelle refuse de se prononcer. |
 | Stuffed swallow | Unladen. African or European? The taxidermist charged both rates. | Hirondelle empaillée · Sans charge. D’Afrique ou d’Europe ? Le taxidermiste a facturé les deux tarifs. |
 | Black Knight’s arm | Spare. He says he has another one somewhere. He said that last time. | Bras du Chevalier noir · De rechange. Il dit qu’il en a un autre quelque part. Il a dit ça la dernière fois. |
 | Black Knight’s shield | NONE SHALL PASS on the front. OPENING HOURS on the back. | Bouclier du Chevalier noir · NUL NE PASSERA devant. HORAIRES D’OUVERTURE derrière. |
-| Holy Hand Grenade | Count to three. Zib asked if that meant out loud. The hold has a skylight now. | Sainte Grenade · Comptez jusqu’à trois. Zib a demandé si c’était à voix haute. La soute a maintenant une lucarne. |
-| Enchanter’s horns | Ram’s horns on a skullcap. The ram has been asking for them back. | Cornes de l’enchanteur · Des cornes de bélier sur une calotte. Le bélier les réclame. |
+| Holy Hand Grenade | Count to three. Five is right out. Zib counted to five. The hold has a skylight now. | Sainte Grenade · Comptez jusqu’à trois. Cinq, c’est exclu. Zib a compté jusqu’à cinq. La soute a maintenant une lucarne. |
+| Enchanter’s horns | Ram’s horns on a skullcap. Slightly singed. Everything Tom owns is slightly singed. | Cornes de l’enchanteur · Des cornes de bélier sur une calotte. Un peu roussies. Chez Tom, tout est un peu roussi. |
 
 ### Specimen Archive
 
@@ -102,24 +102,24 @@ One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-roo
 | --- | --- | --- | --- | --- |
 | `rodney` · Sir Rodney the Not-Quite-So-Brave / Sire Rodney le Pas-si-Brave | 32 · 173 cm · 71 kg | Asked the farrier to shoe his horse. The farrier fitted his squire with tiny horseshoes. | Asked the beam to carry him backwards so he could claim he was advancing. | Commissioned a victory song. The minstrels keep adding verses about the running away. |
 | `black_knight` · The Black Knight / Le Chevalier noir | 41 · 188 cm · 91 kg | His armour is held on by pride. We found the spare fasteners unopened. | Declared the cargo bay a bridge. Nobody has crossed it since. | Asked for his armour back by weight. Swears we still owe him an elbow. |
-| `tom_enchanter` · Tom the Enchanter / Tom l’Enchanteur | 56 · 169 cm · 74 kg | Insisted on lighting his own birthday candles. We held it outdoors. | Warned the intake nurse about the rabbit. Showed her the size of the teeth with his hands. | His latest spell makes anything disappear. He’s still working on how to get it back. |
+| `tom_enchanter` · Tom the Enchanter / Tom l’Enchanteur | 56 · 169 cm · 74 kg | Insisted on lighting his own birthday candles. We held it outdoors. | Warned the intake nurse about the rabbit. Showed her the size of the teeth with his hands. | Points at the canteen and whispers ‘Look at the bones!’ It’s chicken night. |
 
 | ID | Description FR | `at3` FR | `at10` FR |
 | --- | --- | --- | --- |
 | `rodney` | A demandé au maréchal-ferrant de ferrer son cheval. L’écuyer s’est retrouvé avec de tout petits fers aux pieds. | A demandé au rayon de le porter à reculons pour prétendre qu’il avançait. | A commandé un chant de victoire. Les ménestrels n’arrêtent pas d’ajouter des couplets sur sa fuite. |
 | `black_knight` | Son armure tient par orgueil. Les attaches de rechange sont encore sous emballage. | A décrété que la soute était un pont. Plus personne ne la traverse. | A réclamé qu’on lui rende son armure au poids. Jure qu’il manque un coude. |
-| `tom_enchanter` | A tenu à allumer lui-même ses bougies d’anniversaire. On a fait la fête dehors. | A mis l’infirmière en garde contre le lapin. Il lui a montré avec les mains la taille des dents. | Son dernier sort fait disparaître n’importe quoi. Il cherche encore comment le faire revenir. |
+| `tom_enchanter` | A tenu à allumer lui-même ses bougies d’anniversaire. On a fait la fête dehors. | A mis l’infirmière en garde contre le lapin. Il lui a montré avec les mains la taille des dents. | Montre la cantine du doigt et chuchote « Regardez les os ! » Ce soir, c’est poulet. |
 
 ## Lines
 
 | Cue | EN | FR |
 | --- | --- | --- |
-| Zib, launch | “They don’t have horses. Just coconuts. Vrell, is this what you meant by half?” | « Ils n’ont pas de chevaux. Juste des noix de coco. Vrell, c’est de ça que vous remboursez la moitié ? » |
+| Zib, launch | “They don’t have horses. Just coconuts. Vrell, I’d like to expense the other half.” | « Ils n’ont pas de chevaux. Juste des noix de coco. Vrell, je voudrais me faire rembourser l’autre moitié. » |
 | French sentry, first sighting | “I fart in your general airspace, you flying saucepan!” | « Je pète dans votre espace aérien, casserole volante ! » |
 | French sentry, next approach after the first sighting | “A census? We’ve already got one!” | « Un recensement ? On en a déjà un ! » |
-| French sentry, next eligible approach, then Zib | “Your mother was a hamster!” / “Leave Mum out of this. She has Head Office on speed dial.” | « Votre mère était un hamster ! » / « Laissez ma mère en dehors de ça. Elle a le numéro du siège en favori. » |
-| Killer Rabbit, first approach / sighting | “Aw, a bunny!” / “Why does it have a body count?” | « Oh, un lapin ! » / « Pourquoi il a un tableau de chasse ? » |
-| Vrell, first clear | “Claim denied. Krix called his toaster to the stand. The court struck the toast from the record.” | « Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal a déclaré les tartines irrecevables. » |
+| French sentry, next eligible approach, then Zib | “Your mother was a hamster!” / “Is that a species correction? I’ll need a form.” | « Votre mère était un hamster ! » / « Je dois corriger l’espèce ? Il va me falloir un formulaire. » |
+| Zib, first approach to the Killer Rabbit / rabbit sighting | “Aw, a bunny!” / “Run away! Run away!” | « Oh, un lapin ! » / « Fuyez ! Fuyez ! » |
+| Vrell, first clear | “Claim denied. Krix called his toaster to the stand. The court gave it two minutes to pop.” | « Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal lui a donné deux minutes pour sortir une tartine. » |
 | Gazette, lead clipping at two or more sightings | **COW CLEARS CASTLE WALL. LANDING SCORES A FOUR.** | **UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.** |
 | Gazette, alternate clipping at two or more sightings | **COWS STILL DENY ALL KNOWLEDGE** | **LES VACHES NIENT TOUT EN BLOC** |
 | Ghost cover story | “Bridge reopens. Black Knight’s post ‘temporarily unarmed’.” | « Le pont rouvre. Poste du Chevalier noir « provisoirement désarmé ». » |
@@ -156,7 +156,7 @@ Reuse farm ground, dirt roads, sea tint, stone hatch, door frames, crates, gear,
 | `flight/grail_wooden_rabbit_top` | **112×82**. Rough planks, little cart wheels and long squared-off ears. Park at the French outwork with a soft shadow. |
 | `room/bg_grail_pavilion`, `room/bg_grail_bridge`, `room/bg_grail_tower` | **540×720** each. Cloth, stone and dim candle-warm air. Use existing gate and obstacle silhouettes for the greybox. |
 | `human/{rodney,black_knight,tom_enchanter}_{head,head_awake,torso,upper_arm,lower_arm,upper_leg,lower_leg}` | Standard humanoid sizes from the manifest. Rodney’s soft cap, a visor with a face opening, and Tom’s crooked horned hat. Compose the Knight’s detachable plates in the view. Typeset TIM on the tower sign. |
-| `room/{coconut_halves,stuffed_swallow,black_knight_arm,black_knight_shield,holy_hand_grenade,enchanter_horns}` | Long sides **45–70 px**. Give the pin-in orb a broad pull ring and simple gold cross. Use the same silhouettes in the trophy view. |
+| `room/{coconut_halves,stuffed_swallow,black_knight_arm,black_knight_shield,holy_hand_grenade,enchanter_horns}` | Long sides **45–70 px**. Give the orb a broad pull ring and simple gold cross. Use the same silhouettes in the trophy view. |
 
 | Pass | Owner and handoff |
 | --- | --- |
