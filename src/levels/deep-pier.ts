@@ -194,6 +194,8 @@ export const LEVEL5: DeepLevelDef = {
   },
   map: {
     theme: 'pier',
+    // v4 map collectibles: the unaccounted OBELISK™ shipping crate on the boardwalk slip in a boat's lighthouse shadow.
+    collectible: { id: 'obelisk_crate', x: 1225, y: 2505 },
     w: W,
     h: H,
     start: { x: 1070, y: 3200 },

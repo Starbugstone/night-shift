@@ -236,7 +236,14 @@ export type CreateAbductScene = (
 // ---------------------------------------------------------------- flight
 
 // v4 map collectibles
-export type MapCollectibleId = 'slipper_flyer';
+export type MapCollectibleId =
+  | 'slipper_flyer'
+  | 'astronomer'
+  | 'saucer_photo'
+  | 'obelisk_crate'
+  | 'defibrillator'
+  | 'shrimp_tower'
+  | 'krix';
 
 export interface FlightResult {
   /** Which entry point the player locked onto. */

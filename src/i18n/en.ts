@@ -373,7 +373,7 @@ export const en = {
       collect: 'Dave, Barb & Gary',
       re: 'Work Order #0003 — Maple Court (bulk order)',
       body: "Training is over. Maple Court has three targets before dawn: Dentist Dave, Coach Barb, and Gary from Neighbourhood Watch. Dodge the cruiser and Mrs. Pruitt's binoculars—she hasn't slept since 1994 and logs everything in a binder.",
-      joke: 'Gary rigged his garage with laser tripwires to catch prowlers. In eleven years they have caught Gary eleven times. Do not become entry twelve.',
+      joke: "Gary's garage lasers have caught Gary eleven times—don't become entry twelve. Also, a volunteer astronomer is camped on Birch Lane with a SETI dish, if you fancy a detour.",
       signoff: '— Vrell. Co-signed under mild protest.', // v4 story
     },
     level4: {
@@ -406,7 +406,7 @@ export const en = {
       collect: 'Hank, Dr. Osei & Mr. Pemberton',
       re: 'Work Order #0006 — Mandatory Form 7-B Audit',
       body: "Pete's lighthouse log reached Head Office, and Compliance noticed zero probes logged all quarter. Worse: humans queue voluntarily to be probed here and leave four-star reviews. Collect Hank, Dr. Osei and Mr. Pemberton with Form 7-B ticked en route.",
-      joke: 'Our probe has been a brass thermometer and a clipboard since 1953. We have no idea where humans got their other theories. Frankly, we are insulted.',
+      joke: "Our probe has been a brass thermometer and a clipboard since 1953. Frankly, we're insulted by their other theories. (A stray defibrillator marked FOR THE MACHINE is parked off the drop-off lane—grab it only if you've time.)",
       signoff: '— Vrell. Co-signed in triplicate (send help).', // v4 story
     },
     // v4 L8
@@ -1832,6 +1832,42 @@ export const en = {
         comment: "You took Doyle's missing-slipper flyer. We already have the slipper—now we're just rubbing his nose in it.",
         missedComment: "Left Doyle's slipper flyer up at Spin City. Half the town's hunting a shoe that's sitting on my desk.",
         memoHint: 'missing-slipper flyer',
+      },
+      astronomer: {
+        name: 'Volunteer astronomer',
+        comment: "He brought a folding chair and three prime numbers. Finance asked how far we're driving him.",
+        missedComment: "Left the astronomer on Birch Lane with his little dish. He's still waving at Venus.",
+        memoHint: 'SETI dish',
+      },
+      saucer_photo: {
+        name: "Pruitt's saucer photo",
+        comment: "Pinned right beside 'Missing Cat'. At least we look thinner in this lighting.",
+        missedComment: "Left Mrs. Pruitt's blurry photo on City Hall's board. The Gazette already bid twenty quid for it.",
+        memoHint: "Mrs. Pruitt's photo",
+      },
+      obelisk_crate: {
+        name: 'OBELISK™ crate',
+        comment: "Manifest says 'decorative basalt, do not hum at'. Accounting is furious nobody paid customs.",
+        missedComment: "Left that unaccounted crate on the pier. Customs cleared it as 'garden ornament'.",
+        memoHint: 'unaccounted crate',
+      },
+      defibrillator: {
+        name: 'Stray defibrillator',
+        comment: 'The machine is alive. Its service contract expired last Tuesday.',
+        missedComment: "Left the stray defibrillator by the drop-off lane. Probably fine, unless there's lightning.",
+        memoHint: 'defibrillator',
+      },
+      shrimp_tower: {
+        name: 'Shrimp tower',
+        comment: 'I wrote one rule on that memo. One. And now the hold smells like cocktail sauce.',
+        missedComment: 'You left the shrimp tower alone. Look at you, following one single instruction.',
+        memoHint: 'shrimp tower',
+      },
+      krix: {
+        name: 'Krix & toaster',
+        comment: 'Krix, in the hold, still clutching the toaster. HR and Legal are arm-wrestling for first crack at him.',
+        missedComment: "Left Krix on the ridge with his toaster. Three million years and he still hasn't returned his lanyard.",
+        memoHint: 'toaster intern',
       },
     },
   },

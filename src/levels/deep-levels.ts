@@ -226,10 +226,12 @@ export const LEVEL3 = {
     body:
       "Training is over. Maple Court has three targets before dawn: Dentist Dave, Coach Barb, and Gary from Neighbourhood Watch. Dodge the cruiser and Mrs. Pruitt's binoculars—she hasn't slept since 1994 and logs everything in a binder.",
     joke:
-      'Gary rigged his garage with laser tripwires to catch prowlers. In eleven years they have caught Gary eleven times. Do not become entry twelve.',
+      "Gary's garage lasers have caught Gary eleven times—don't become entry twelve. Also, a volunteer astronomer is camped on Birch Lane with a SETI dish, if you fancy a detour.",
   },
   map: {
     theme: 'suburb',
+    // v4 map collectibles: volunteer astronomer camped on the grass pullout at the east end of Birch Lane with a portable SETI dish.
+    collectible: { id: 'astronomer', x: 2055, y: 1580 },
     w: 2160,
     h: 2880,
     // The first deep level gives a beat longer to react than L4's 1 s fuse.
@@ -524,6 +526,8 @@ export const LEVEL4 = {
   },
   map: {
     theme: 'city',
+    // v4 map collectibles: Mrs. Pruitt's blurry saucer photo on City Hall's exterior municipal noticeboard (east plaza).
+    collectible: { id: 'saucer_photo', x: 1420, y: 460 },
     w: 2160,
     h: 3840,
     fuseSec: 0.8,

@@ -183,7 +183,7 @@ export const fr: Strings = {
       collect: 'Dave, Barb et Gary',
       re: 'Ordre n°0003 — Allée des Érables (commande groupée)',
       body: "Fini la formation. L'allée des Érables compte trois cibles avant l'aube : Dave le dentiste, Coach Barb et Gary des Voisins vigilants. Évitez la patrouille et les jumelles de Mme Pruitt — elle n'a pas fermé l'œil depuis 1994 et note tout dans un classeur.",
-      joke: "Gary a truffé son garage de pièges laser contre les rôdeurs. En onze ans, ils ont attrapé Gary onze fois. Ne devenez pas la ligne douze.",
+      joke: "Les lasers de Gary l'ont attrapé onze fois : ne devenez pas la ligne douze. Un astronome volontaire campe aussi chemin des Bouleaux avec une parabole SETI, si vous avez le temps.",
       signoff: '— Vrell. Contresigné avec réserves.', // v4 story
     },
     level4: {
@@ -216,7 +216,7 @@ export const fr: Strings = {
       collect: 'Hank, le Dr Osei et M. Pemberton',
       re: 'Ordre n°0006 — Audit obligatoire Cerfa 7-B',
       body: "Le registre du phare de Pete est arrivé au siège, et la Conformité a noté zéro sondage ce trimestre. Pire : ici, les humains font la queue volontairement et laissent quatre étoiles. Embarquez Hank, le Dr Osei et M. Pemberton avec le Cerfa 7-B coché en chemin.",
-      joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. On ignore totalement d'où viennent les autres théories humaines. Franchement, c'est vexant.",
+      joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. Leurs autres théories sont vexantes. (Un défibrillateur marqué POUR LA MACHINE traîne près du dépose-minute — à prendre seulement si vous avez le temps.)",
       signoff: '— Vrell. Signé en triple exemplaire (au secours).', // v4 story
     },
     // v4 L8
@@ -1772,6 +1772,42 @@ export const fr: Strings = {
         comment: "Vous avez pris l'avis de chausson de Doyle. On a déjà le chausson : là, c'est juste de la provocation.",
         missedComment: "Vous avez laissé l'avis de Doyle affiché à Spin City. Toute la ville cherche un chausson qui trône sur mon bureau.",
         memoHint: 'avis de chausson perdu',
+      },
+      astronomer: {
+        name: 'Astronome volontaire',
+        comment: "Il avait une chaise pliante et trois nombres premiers. La compta demande jusqu'où on le dépose.",
+        missedComment: "Vous avez laissé l'astronome chemin des Bouleaux avec sa parabole. Il fait encore coucou à Vénus.",
+        memoHint: 'parabole SETI',
+      },
+      saucer_photo: {
+        name: 'Cliché de Mme Pruitt',
+        comment: "Épinglé juste à côté d'un avis de chat perdu. Au moins, cet éclairage nous amincit.",
+        missedComment: "Vous avez laissé la photo floue de Mme Pruitt à la mairie. La Gazette en offre déjà vingt euros.",
+        memoHint: 'photo de Mme Pruitt',
+      },
+      obelisk_crate: {
+        name: 'Colis OBELISK™',
+        comment: "Le manifeste dit « basalte décoratif, ne pas fredonner devant ». La compta rage pour la douane.",
+        missedComment: "Vous avez laissé cette caisse non déclarée sur la jetée. La douane l'a classée en « nain de jardin ».",
+        memoHint: 'caisse non déclarée',
+      },
+      defibrillator: {
+        name: 'Défibrillateur égaré',
+        comment: 'La machine est vivante. Son contrat de maintenance a expiré mardi dernier.',
+        missedComment: "Vous avez laissé le défibrillateur près du dépose-minute. Aucun risque, sauf en cas d'orage.",
+        memoHint: 'défibrillateur',
+      },
+      shrimp_tower: {
+        name: 'Plateau de crevettes',
+        comment: "J'ai mis une seule règle dans cette note. Une. Et la soute sent maintenant la sauce cocktail.",
+        missedComment: "Vous n'avez pas touché à la tour de crevettes. Bravo, une consigne respectée sur tout le trimestre.",
+        memoHint: 'tour de crevettes',
+      },
+      krix: {
+        name: 'Krix et grille-pain',
+        comment: "Krix, en soute, toujours cramponné à son grille-pain. Les RH et le juridique font un bras de fer pour l'avoir.",
+        missedComment: "Vous avez laissé Krix sur la crête avec son grille-pain. Trois millions d'années et il a toujours son badge.",
+        memoHint: 'stagiaire au grille-pain',
       },
     },
   },

@@ -121,6 +121,13 @@ whatever the bands say.
   shaft or doorway. A v4 ledge inside Doyle's flue scored 100% in the model, yet stopped a real
   player.
 
+- **Every town pickup is hinted in the shift memo.** Each level after L1 has exactly one optional
+  map collectible, and its shift memo mentions it in EN and FR. A memo that already names an object or
+  person makes that thing the pickup. When you add a level, add both: the pickup (placed off the
+  straight route, outside every detector, clear of rings and pills) and the memo line. When you rewrite
+  a memo, keep the hint. `tests/flight-collectible*.test.ts` enforces it over all of `LEVELS`. The
+  pickup is optional: check that the bands, the beeline and Ghost are unchanged with it in the map.
+
 ## Too-easy checks
 
 - **Flight.** At each delay (0, 2.5, 5 and 8 s), a straight hold toward either tutorial ring must

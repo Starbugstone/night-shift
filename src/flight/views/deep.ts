@@ -378,7 +378,7 @@ export class DeepFlightView implements SceneView {
     for (const target of this.targets) bubbles.addChild(target.bubble);
     bubbles.addChild(this.hazards.bubbles);
     this.upperWorld.addChild(bubbles);
-    this.clear = Array.from({ length: this.rings.length * 2 + 4 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
+    this.clear = Array.from({ length: this.rings.length * 2 + 6 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
     this.moved = new Uint8Array(this.rings.length);
     this.pillOf = new Uint8Array(this.rings.length);
     this.asks = this.rings.map(() => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
@@ -435,11 +435,18 @@ export class DeepFlightView implements SceneView {
       b.w = a.w + 8;
       b.h = a.h + 8;
     }
-    if (this.collectible && this.collectible.root.alpha > 0) {
+    if (this.collectible && this.collectible.root.visible) {
       const b = this.clear[n++]!;
       b.x = this.collectible.root.x - cam.x - PICKUP_VIEW_R;
       b.y = this.collectible.root.y - cam.y - PICKUP_VIEW_R;
       b.w = b.h = PICKUP_VIEW_R * 2;
+    }
+    if (this.pickupToast && s.collectibleToastT > 0) {
+      const b = this.clear[n++]!;
+      b.x = VIEW_W / 2 - 162;
+      b.y = 212;
+      b.w = 324;
+      b.h = 52;
     }
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;

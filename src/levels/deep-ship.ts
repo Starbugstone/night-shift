@@ -167,6 +167,8 @@ export const LEVEL7: DeepLevelDef = {
   memo: { re: L7.re, body: L7.body, joke: L7.joke },
   map: {
     theme: 'ship',
+    // v4 map collectibles: the shrimp tower buffet cart on the aft port promenade.
+    collectible: { id: 'shrimp_tower', x: 758, y: 2962 },
     w: 2160,
     h: 3600,
     start: { x: 1080, y: 3480 },

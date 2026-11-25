@@ -93,6 +93,12 @@ every start time the difficulty evaluator tests. The challenge sits on the obvio
 be hard but must stay reachable for the casual (average human) model, more generously in early
 levels. `npm run difficulty` enforces both.
 
+**Hard rule: every town pickup is hinted in the shift memo.** Each level after L1 has exactly one
+optional map collectible (docs/GDD-8-map-collectibles.md), and that level's shift memo mentions it in
+English and French. If a memo already names an object or person, that thing is the collectible. L1 has
+none. `tests/flight-collectible*.test.ts` checks every level in `LEVELS`, so a new level fails until it
+has its pickup and its memo hint.
+
 **Hard rule: no bump on start.** Every room spawn must sit 10 s without input with zero bonks and
 zero wake (`tests/abduct-spawn.test.ts`); fix the spawn pose or position, never the wake rules.
 

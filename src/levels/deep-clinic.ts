@@ -204,10 +204,12 @@ export const LEVEL6: DeepLevelDef = {
     body:
       "Pete's lighthouse log reached Head Office, and Compliance noticed zero probes logged all quarter. Worse: humans queue voluntarily to be probed here and leave four-star reviews. Collect Hank, Dr. Osei and Mr. Pemberton with Form 7-B ticked en route.",
     joke:
-      'Our probe has been a brass thermometer and a clipboard since 1953. We have no idea where humans got their other theories. Frankly, we are insulted.',
+      "Our probe has been a brass thermometer and a clipboard since 1953. Frankly, we're insulted by their other theories. (A stray defibrillator marked FOR THE MACHINE is parked off the drop-off lane—grab it only if you've time.)",
   },
   map: {
     theme: 'clinic',
+    // v4 map collectibles: stray defibrillator trolley off the southern drop-off lane across from the Endoscopy Wing.
+    collectible: { id: 'defibrillator', x: 495, y: 2675 },
     w: 2160,
     h: 3120,
     start: { x: 1080, y: 2960 },

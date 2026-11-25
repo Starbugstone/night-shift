@@ -14,6 +14,8 @@ export const LEVEL8: DeepLevelDef = {
   hours: [5, 6], budgetSec: 100, parMarginSec: 25,
   map: {
     theme: 'badlands', w: 1440, h: 1920, start: { x: 520, y: 1700 },
+    // v4 map collectibles: Krix, the ex-intern in a black turtleneck clutching his toaster, on the east ridge north of Reed.
+    collectible: { id: 'krix', x: 1290, y: 570 },
     targets: [
       { human: 'Flint', short: 'Flint', building: { kind: 'terrace', key: 'flight/quarry_top', x: 360, y: 1300 }, entries: [],
         troop: { quota: 2, trails: [trail(540,1520,630,1480), trail(330,1350,235,1290), trail(590,1240,725,1260)] } },
