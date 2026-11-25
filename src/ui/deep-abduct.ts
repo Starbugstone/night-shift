@@ -77,6 +77,7 @@ class DeepShiftView implements SceneView {
   private readonly caption = new Label({ size: 16, weight: 900, color: '#ffffff' });
   private clock = '';
   private clockKey = -1;
+  private readonly clockX: number;
 
   constructor(
     private readonly inner: Container,
@@ -86,6 +87,8 @@ class DeepShiftView implements SceneView {
     private readonly time: () => number,
   ) {
     const storm = run.level.id === 'level9';
+    const room = run.current?.roomId;
+    this.clockX = room === 'inventor_balcony' || room === 'bully_transom' || room === 'band_hatch' ? 14 : DEEP_HUD_SUNRISE_SLOT.x;
     this.sun = new HudSunClock(storm ? null : artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h),
       storm ? tr().crestValley.left : run.level.id === 'level8' ? tr().timeTrial.left : undefined, storm);
     this.sun.alpha = 0.92;
@@ -104,8 +107,8 @@ class DeepShiftView implements SceneView {
       this.clockKey = key;
       this.clock = this.run.clockText(getLang());
     }
-    const { x, y, w, h } = DEEP_HUD_SUNRISE_SLOT;
-    this.sun.sync(x, y, w, h, this.clock, elapsed / budget, deadlineWarning, t, rm);
+    const { y, w, h } = DEEP_HUD_SUNRISE_SLOT;
+    this.sun.sync(this.clockX, y, w, h, this.clock, elapsed / budget, deadlineWarning, t, rm);
     this.warning.visible = deadlineWarning > 0.5;
     if (this.warning.visible) {
       const warn = DEEP_HUD_WARNING_SLOT;

@@ -341,15 +341,16 @@ export const fr: Strings = {
     stamp: 'PASS EXPIRÉ',
     launch: 'Départ dans {n} s',
     strike: 'Foudre dans {n} s',
+    strikeTime: '22 h 04',
     match: 'Même allure !',
     dance: 'Féerie sous les flots',
     marquee: 'DOUBLE PROGRAMME',
     flyerHeadline: ["SAUVEZ", "L'HORLOGE !"],
-    trophyUnfiled: "{hint} Guettez-la à la sortie ouest et suivez son allure jusqu'au rayon.",
+    trophyUnfiled: "{hint} Guettez-le à la sortie ouest et suivez son allure jusqu'au rayon.",
     archive: 'ARCHIVES DE 1955',
     sleepers: {
       doc: { caption: "Doc s'est réveillé en hurlant aux gigowatts et a dessiné un schéma sur votre coque.", mumbles: ['Deux virgule vingt-et-un… gigasiestes…', "Là où on dort, pas besoin d'oreiller…", "Nom de… vérifiez l'horloge…"] },
-      buff: { caption: "Buff s'est réveillé en distribuant des coups. Heureusement, il a surtout visé le jukebox.", mumbles: ["Allô ? Y a quelqu'un au bout du rêve ?", 'Fais comme un oreiller et… plie-toi…', 'Pouah… pas encore le camion de fumier…'] },
+      buff: { caption: "Buff s'est réveillé en distribuant des coups. Heureusement, il a surtout visé le jukebox.", mumbles: ["Allô ? Y a quelqu'un au bout du rêve ?", 'Dégage de mon oreiller… ça se mérite, une sieste…', 'Pouah… pas encore le camion de fumier…'] },
       marvin: { caption: "Marvin s'est réveillé, a pris une guitare et inventé trente ans de tapage nocturne.", mumbles: ['Chuck ? Écoute ce… ronflement…', 'Ils sont pas prêts pour cette sieste…', 'En si bémol, les gars… zzz…'] },
     },
   },
@@ -462,7 +463,7 @@ export const fr: Strings = {
     cover: {
       // v4 L9 1955
       storm: ['Classé : {cause}. Le Dispatch temporel a clos le dossier à 22 h 10.', "Classé : {cause}. L'orage est passé ; le laissez-passer a expiré à l'heure."],
-      item: ['Classé : {cause}. Objet du litige : {item}.', "Classé : {cause}. Manque à l'inventaire : {item}. Sans rapport.", 'Classé : {cause}. Seul indice : {item}.'],
+      item: ['Classé : {cause}. La pièce à conviction : « {item} ».', "Classé : {cause}. L'objet manquant : « {item} ». Sans rapport.", "Classé : {cause}. Le seul indice : l'objet « {item} »."],
       spotted: ['Classé : {cause}. {n} témoins, reclassés « en train de rêver ».', 'Classé : {cause}. {n} signalements, surtout en robe de chambre.'],
       clean: ["Classé : {cause}. Personne n'a rien vu. Comme d'habitude.", "Classé : {cause}. Dossier clos avant même d'être ouvert."],
       sunrise: ["Classé : {cause}, à l'aube. Le siège n'y croit pas.", 'Classé : {cause}. Avec le soleil levé, dur à défendre.'],
@@ -904,8 +905,11 @@ export const fr: Strings = {
     ],
     deepComments: {
       // v4 L9 1955
-      clocktower: ["Doc, Buff et Marvin enregistrés avec {remaining} s de marge. L'horloge s'est figée à 22 h 04 pile.", "Buff accuse le camion de fumier. Doc a tenté de breveter notre rayon tracteur en dormant."],
-      clocktowerSpotted: ["Livrés, et repéré {spotted} fois en 1955. Tout le bal croit désormais que les extraterrestres ont inventé le rock'n'roll."],
+      clocktower: ["Doc, Buff et Marvin enregistrés avec {remaining} s de marge. L'horloge s'est figée à 22 h 04 pile.", "Buff réclame ses cinq cents au jukebox. Doc a tenté de breveter notre rayon tracteur en dormant."],
+      clocktowerSpotted: {
+        one: "Livrés, et vous avez été repéré une fois en 1955. Tout le bal croit désormais que les extraterrestres ont inventé le rock'n'roll.",
+        other: "Livrés, et vous avez été repéré {n} fois en 1955. Tout le bal croit désormais que les extraterrestres ont inventé le rock'n'roll.",
+      },
       clocktowerExpired: ["22 h 10. L'orage est passé, l'horloge est bloquée et le laissez-passer temporel vient d'expirer.", "L'orage est fini. Votre laissez-passer a expiré à 22 h 10. Zib, ramenez la soucoupe à son siècle d'origine."],
       perfect: [
         "Trois spécimens, zéro témoin, rentré avant l'aube. Je n'ai rien à redire et je vous en veux.",
@@ -1040,7 +1044,7 @@ export const fr: Strings = {
       // v4 L9 1955
       "spare flex capacitor": {
         got: ["Un convecteur temporaire de rechange, qui clignote dans une boîte à biscuits. La Propulsion dit que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur temporaire enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
-        missed: ["Vous avez laissé le convecteur temporaire sur le rebord. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur temporaire. Dommage, la Propulsion voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
+        missed: ["Vous avez laissé le convecteur temporaire dans la cage d'horloge. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur temporaire. Dommage, la Propulsion voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
       },
       "yellow hazmat suit": {
         got: ["Une combinaison jaune fluo, avec un sèche-cheveux à la ceinture. Les humains croient qu'on s'habille comme ça. C'est presque flatteur.", "Combinaison jaune enregistrée. Zib l'a mise à la compta en se prétendant envoyé de la planète Vulcain. Ils y ont cru.", "Tenue antiradiation de 1955. Sent légèrement l'ozone et les cassettes de hard rock mal rembobinées."],
@@ -1051,15 +1055,15 @@ export const fr: Strings = {
         missed: ["Vous avez laissé la doudoune rouge derrière le gymnase. Le chaperon la garde au cas où les garde-côtes débarquent au bal.", "Pas de doudoune rouge. Tant mieux : Zib a déjà bien assez de vestes douteuses en soute."],
       },
       "retro skateboard": {
-        got: ["Un skate en bois violet et jaune, visiblement arraché à une trottinette à caisse. Encore du fumier de 1955 sur les roues. Lavez ça.", "Skate rétro enregistré. Zib a tenté un saut sur la rampe de la soucoupe et inventé trois nouvelles fiches d'hématome.", "Une planche à roulettes maison. Les humains ont inventé la glisse juste pour semer une brute en décapotable."],
+        got: ["Un skate en bois violet et jaune, visiblement arraché à une trottinette à caisse. Lyle dit que filer en skate sans payer, c'est quand même gruger l'addition.", "Skate rétro enregistré. Zib a tenté un saut sur la rampe de la soucoupe et inventé trois nouvelles fiches d'hématome.", "Une planche à roulettes maison. Les humains ont inventé la glisse juste pour semer une brute en décapotable."],
         missed: ["Vous avez laissé le skate près du comptoir. Buff trébuchera dessus demain matin et accusera le ciel de toute façon.", "Pas de skate. Tant mieux : notre mutuelle ne couvre pas les entorses d'antenne."],
       },
       "cherry electric guitar": {
         got: ["Une guitare rouge cerise encore brûlante d'un solo qui ne devrait pas exister avant vingt ans. La compta a confisqué l'ampli.", "Guitare électrique enregistrée. Zib a plaqué un accord dans le hangar et brisé quatre bocaux. Mais vos enfants adoreront ça.", "La guitare rouge de Marvin. La moitié du gymnase a fait un malaise ; l'autre cherche encore ce qui est arrivé au slow."],
-        missed: ["Vous avez laissé la guitare rouge sur scène. Tant mieux : Zib aurait monté un groupe, et je ne survivrais pas à une tournée.", "Pas de guitare. Marvin garde son instrument et la chronologie garde le rock'n'roll. Match nul."],
+        missed: ["Vous avez laissé la guitare rouge sur scène. Tant mieux : Zib aurait monté un groupe et passé la tournée en frais de mission.", "Pas de guitare. Marvin garde son instrument et la chronologie garde le rock'n'roll. Match nul."],
       },
       "clock-tower flyer": {
-        got: ["« SAUVEZ L'HORLOGE ! » — avec un numéro de téléphone griffonné en panique au dos. Éloignez ça du Dispatch temporel.", "Un tract froissé de 1955 pour sauver l'horloge. La foudre frapperait à 22 h 04 pile. Alerte divulgâchage : on a remarqué.", "Tract de l'horloge classé. Le juridique dit que donner une pièce en 1955 altère la chronologie. Rangez votre monnaie."],
+        got: ["« SAUVEZ L'HORLOGE ! » — avec un numéro de téléphone griffonné en panique au dos. Éloignez ça du Dispatch temporel.", "Un tract froissé de 1955 pour sauver l'horloge. La foudre frapperait à 22 h 04 pile. Spoiler : on a remarqué.", "Tract de l'horloge classé. Le juridique dit que donner une pièce en 1955 altère la chronologie. Rangez votre monnaie."],
         missed: ["Vous avez laissé le tract sur le plateau. Quelqu'un aura grand besoin de cette heure exacte dans trente ans.", "Pas de tract. Peu importe : on connaît déjà l'heure de la foudre, mes plombages vibrent encore."],
       },
       // v4 L8
@@ -1538,7 +1542,7 @@ export const fr: Strings = {
     "Great… somebody check the clock…": "Nom de… vérifiez l'horloge…",
     "Buff woke up swinging. Luckily he mostly hit the jukebox.": "Buff s'est réveillé en distribuant des coups. Heureusement, il a surtout visé le jukebox.",
     "Knock, knock… anybody dreaming?": "Allô ? Y a quelqu'un au bout du rêve ?",
-    "Make like a pillow and… fold…": "Fais comme un oreiller et… plie-toi…",
+    "Make like a pillow and… fold…": "Dégage de mon oreiller… ça se mérite, une sieste…",
     "Ugh… not the manure truck again…": "Pouah… pas encore le camion de fumier…",
     "Marvin woke up, grabbed a guitar and invented three decades of noise complaints.": "Marvin s'est réveillé, a pris une guitare et inventé trente ans de tapage nocturne.",
     "Chuck? Listen to this… snore…": "Chuck ? Écoute ce… ronflement…",
@@ -2091,7 +2095,7 @@ export const fr: Strings = {
       },
       statuses: {
         // v4 L9 1955
-        time_car: "En fourrière · Bridée à 87 mph",
+        time_car: "En fourrière · Bridée à 87 miles à l'heure",
         slipper_flyer: 'Épinglé chez Vrell',
         astronomer: 'Débriefé ; refuse de partir',
         saucer_photo: 'Censuré · Confidentiel Bureau',
@@ -2117,7 +2121,7 @@ export const fr: Strings = {
       "spare flex capacitor": "Trois tubes lumineux câblés dans une boîte en fer. Rend le voyage temporel possible et annule toute garantie galactique.",
       "yellow hazmat suit": "Vinyle jaune canari avec étui à sèche-cheveux. Officiellement classé par les humains comme « tenue de soirée martienne ».",
       "red puffy vest": "Doudoune rouge venue de trente ans dans le futur. Tout Crest Valley en 1955 croit son propriétaire tombé d’un bateau.",
-      "retro skateboard": "Planche violette et jaune démontée d’une caisse à savon. Quatre roulettes en acier, zéro frein, traces de fumier d’époque.",
+      "retro skateboard": "Planche violette et jaune démontée d'une caisse à savon. Quatre roulettes en acier, zéro frein et une addition de 1955 collée dessus.",
       "cherry electric guitar": "Demi-caisse rouge cerise au micro roussi. Jouée si fort au bal qu’elle a brièvement fissuré le continuum espace-temps.",
       "clock-tower flyer": "Affiche « SAUVEZ L’HORLOGE ! » en gras de 1955. Quelqu’un a griffonné « 22 h 04 » et un numéro paniqué au verso.",
       // L1 Ferme Doyle

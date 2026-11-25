@@ -526,6 +526,7 @@ export const en = {
     stamp: "PASS EXPIRED",
     launch: "Launch in {n} s",
     strike: "Strike in {n} s",
+    strikeTime: '10:04',
     match: "Match speed",
     dance: "Enchantment Beneath the Waves",
     marquee: 'DOUBLE FEATURE',
@@ -942,8 +943,11 @@ export const en = {
     ],
     deepComments: {
       // v4 L9 1955
-      clocktower: ["Doc, Buff and Marvin logged with {remaining} s to spare. The clock stopped at 10:04 right on time.", "Buff blamed the saucer on a manure truck. Doc tried to patent our tractor beam in his sleep."],
-      clocktowerSpotted: ["Delivered, and spotted {spotted} times in 1955. The whole dance thinks aliens invented rock and roll."],
+      clocktower: ["Doc, Buff and Marvin logged with {remaining} s to spare. The clock stopped at 10:04 right on time.", "Buff says the jukebox owes him a nickel. Doc tried to patent our tractor beam in his sleep."],
+      clocktowerSpotted: {
+        one: 'Delivered, and spotted once in 1955. The whole dance thinks aliens invented rock and roll.',
+        other: 'Delivered, and spotted {n} times in 1955. The whole dance thinks aliens invented rock and roll.',
+      },
       clocktowerExpired: ["10:10. The storm passed, the town clock is stuck, and the Temporal Dispatch pass just expired.", "Storm's over. Your pass expired at 10:10. Zib, please return the saucer to the century you found it in."],
       perfect: [
         'Three specimens, no sightings, home before dawn. I have nothing to complain about and I resent it.',
@@ -1084,7 +1088,7 @@ export const en = {
       // v4 L9 1955
       "spare flex capacitor": {
         got: ["A spare flex capacitor, pulsing gently in a biscuit tin. Propulsion says it shouldn't work. It's currently heating my lunch from yesterday.", "Spare flex capacitor, logged. Three blinking tubes and zero safety certification—classic Earth engineering.", "Doc built a time-bending capacitor out of junkyard relays. Meanwhile our Accounting server takes four hours to open a PDF."],
-        missed: ["You left the spare capacitor on the clock ledge. Good. If Zib had dropped it, we'd have owed last Thursday's overtime.", "No flex capacitor. Shame—Propulsion wanted to see how humans bent time without filing Form 88-MPH."],
+        missed: ["You left the spare capacitor in the clock riser. Good. If Zib had dropped it, we'd have owed last Thursday's overtime.", "No flex capacitor. Shame—Propulsion wanted to see how humans bent time without filing Form 88-MPH."],
       },
       "yellow hazmat suit": {
         got: ["A bright yellow radiation suit, complete with hairdryer tucked in the belt. Humans think we dress like this. Frankly, it's flattering.", "Yellow hazmat suit, logged. Zib wore it into Accounting and claimed to be a visitor from Planet Vulcan. Accounting believed them.", "Radiation suit from 1955. Smells faintly of storm ozone and terrible heavy-metal cassette tapes."],
@@ -1095,12 +1099,12 @@ export const en = {
         missed: ["You left the red puffy vest behind the gym. The chaperone will keep it handy in case the Coast Guard crashes the prom.", "No puffy vest. Fine. Zib already has enough questionable jackets in the hold."],
       },
       "retro skateboard": {
-        got: ["A purple-and-yellow wooden skateboard, clearly snapped off a kid's crate scooter. Still has 1955 manure on the rear wheels. Wash it.", "Retro skateboard, logged. Zib tried to ollie down the saucer ramp and invented three new bruise forms.", "One homemade skateboard. Humans invented extreme sports purely to escape one guy in a convertible."],
+        got: ["A purple-and-yellow wooden skateboard, clearly snapped off a kid's crate scooter. Lyle says skating past the till still counts as dining and dashing.", "Retro skateboard, logged. Zib tried to ollie down the saucer ramp and invented three new bruise forms.", "One homemade skateboard. Humans invented extreme sports purely to escape one guy in a convertible."],
         missed: ["You left the skateboard by the counter. Buff will trip over it in the morning and blame the sky anyway.", "No skateboard. Good. Our medical plan does not cover alien ankle sprains."],
       },
       "cherry electric guitar": {
         got: ["A cherry-red hollow-body guitar, still warm from a solo that shouldn't exist for another twenty years. Accounting has confiscated the amp.", "Electric guitar, logged. Zib played one power chord in the hangar and shattered four specimen jars. Your kids are gonna love it.", "Marvin's cherry guitar. Half the gym fainted; the other half is still trying to figure out what happened to the prom playlist."],
-        missed: ["You left the cherry guitar by the stage. Good—Zib would have started a band, and I cannot survive an intern tour.", "No guitar. Marvin keeps his axe, and the timeline keeps rock and roll. Call it a draw."],
+        missed: ["You left the cherry guitar by the stage. Good. Zib would have started a band and billed the tour as fieldwork.", "No guitar. Marvin keeps his axe, and the timeline keeps rock and roll. Call it a draw."],
       },
       "clock-tower flyer": {
         got: ["'SAVE THE CLOCK TOWER!'—and somebody scribbled a frantic phone number on the back. Keep it away from Temporal Dispatch.", "A crumpled clock-tower flyer from 1955. Apparently the lightning hit at 10:04 sharp. Spoiler alert: we noticed.", "Save-the-Clock-Tower leaflet, logged. Legal says donating a quarter in 1955 counts as tampering with the timeline. Put it back."],
@@ -2178,7 +2182,7 @@ export const en = {
       "spare flex capacitor": "Three blinking tubes wired inside a metal box. Makes time travel possible—and voids every warranty in the galaxy.",
       "yellow hazmat suit": "Blinding canary vinyl with a hairdryer holster. Officially listed in Earth folklore as \"typical Martian evening wear\".",
       "red puffy vest": "Quilted crimson waistcoat from thirty years in the future. Every 1955 local assumed its owner fell off a boat.",
-      "retro skateboard": "Purple-and-yellow plank stripped off a crate scooter. Four steel wheels, zero brakes, trace amounts of 1955 manure.",
+      "retro skateboard": "Purple-and-yellow plank stripped off a crate scooter. Four steel wheels, zero brakes, and a 1955 diner receipt stuck to the deck.",
       "cherry electric guitar": "Semi-hollow 1950s beauty with a singed pickup. Played so loud at prom it briefly cracked the space-time continuum.",
       "clock-tower flyer": "Reads \"SAVE THE CLOCK TOWER!\" in bold 1955 ink. Someone wrote a frantic phone number and \"10:04 PM\" on the back.",
       // L1 Doyle Farm

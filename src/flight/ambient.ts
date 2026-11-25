@@ -43,6 +43,7 @@ export class Ambient {
 
   constructor(map: DeepMap) {
     this.suburb = map.theme === 'suburb';
+    const modern = map.theme !== 'storm55';
     const targets = new Set<PropDef>(map.targets.map((t) => t.building));
     const all = [...map.props, ...targets];
 
@@ -73,11 +74,11 @@ export class Ambient {
     this.smoke = new Float32Array(smoke);
 
     const beacons: number[] = [];
-    towers.forEach((p, i) => {
+    if (modern) towers.forEach((p, i) => {
       const { w, h } = propSize(p);
       beacons.push(p.x + w * 0.5 - 20, p.y - h * 0.5 + 20, hash(i * 5.3) * 2);
     });
-    civic.forEach((p, i) => {
+    if (modern) civic.forEach((p, i) => {
       const { w, h } = propSize(p);
       beacons.push(p.x - w * 0.5 + 18, p.y - h * 0.5 + 18, hash(i * 2.3 + 1) * 2);
     });
@@ -100,7 +101,7 @@ export class Ambient {
 
     // steam from the pavement grates, city only: on the kerb of the horizontal streets
     const vents: number[] = [];
-    if (!this.suburb) {
+    if (!this.suburb && modern) {
       map.roads.forEach((r, i) => {
         if (r.dir !== 'h') return;
         for (let k = 0; k < 3; k++) {

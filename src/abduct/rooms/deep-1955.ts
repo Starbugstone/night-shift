@@ -63,30 +63,33 @@ const towerUpper = building([
 ], [hatch(0, 488, 708), hatch(-620, 500, 700)], [
   gate('Lightning shutter', box(390, -79, 350, 23), 'x', 20, 4.6, 16),
   { kind: 'draft', name: 'Tower draft', area: box(468, -235, 237, 200), ax: 105, ay: 0 },
-  swing('Lightning cable', fit('pendulum', 528, -320, 36, 94), 0.35, 1.2, -358),
+  swing('Lightning cable', art('lightning_cable55', 528, -320), 0.35, 1.2, -358),
   { kind: 'gear', name: 'Clock gear', sprite: fit('gear_small', 430, -510, 110, 110), speed: 0.9 },
 ]);
 
 const service = fit('door_frame', 1370, 335, 120, 210);
 const towerSide = building([
   clockBay,
-  section('Winch gallery', 'tower', box(740, 0, 760, 700), [shelf(850, 510, 120)], [service]),
+  section('Winch gallery', 'tower', box(740, 0, 760, 700), [shelf(850, 510, 120)], [
+    service, art('counterweight_guide55', 959, 386),
+  ]),
 ], [door(740, 217, 545), door(1500, 335, 545)], [
-  patrol('Counterweight', fit('gear_small', 969, 519, 65, 68), 0, 50),
+  patrol('Counterweight', fit('counterweight', 969, 519, 65, 68), 0, 50),
   gate('Service gate', box(1130, 150, 32, 536), 'y', 16, 4.2, 7),
-  swing('Service bell', fit('pendulum', 1010, 99, 44, 115), 0.4, 1.45, 40),
+  swing('Service bell', art('service_bell55', 1010, 99), 0.4, 1.45, 40),
 ]);
 
 const boothBay = section("Lyle's booth", 'cafe', box(0, 0, 740, 700), [
   prop(art('booth55', 42, 502), [box(60, 590, 150, 34)]),
   prop(fit('counter55', 355, 403, 192, 194)),
+  prop(art('counter_plinth55', 361, 591)),
 ], [art('stool55', 573, 607)]);
 
 const jukebox: Hazard = { kind: 'speaker', name: 'Jukebox', sprite: art('jukebox55', 575, 483), radius: 135, period: 2.4 };
 const transom = fit('exit_skylight', 473, -442, 200, 80);
 const cafeUpper = building([
   { ...boothBay, supports: [...boothBay.supports, shelf(349, 365, 105)] },
-  section('Awning gallery', 'cafe', box(355, -455, 385, 455), [], [transom]),
+  { ...section('Awning gallery', 'cafe', box(355, -455, 385, 455), [], [transom]), wallOnly: true },
 ], [hatch(0, 465, 685), hatch(-455, 465, 685)], [
   jukebox,
   { kind: 'fan', name: 'Ceiling fan', x: 693, y: 155, length: 46, speed: 1.9, phase: 0.6, duct: false, mountY: 28 },
@@ -96,11 +99,13 @@ const cafeUpper = building([
 const kitchen = fit('door_frame', 1380, 260, 120, 210);
 const cafeSide = building([
   boothBay,
-  section('Back kitchen', 'cafe', box(740, 0, 770, 700), [shelf(1115, 490, 130)], [kitchen, art('counter55', 1191, 566)]),
+  section('Back kitchen', 'cafe', box(740, 0, 770, 700), [
+    shelf(1115, 490, 130), prop(fit('counter55', 1026, 584, 108, 116)),
+  ], [kitchen, fit('counter55', 1191, 566, 178, 134)]),
 ], [door(740, 230, 530), door(1510, 260, 470)], [
   jukebox,
   gate('Kitchen swing door', box(740, 230, 24, 300), 'y', 16, 4.3, 10),
-  patrol('Bus cart', fit('laundry_cart', 880, 425, 110, 94), 68, 65),
+  patrol('Bus cart', art('bus_cart55', 865, 472), 50, 0),
   { kind: 'fragile', name: 'Pie case', sprite: art('pie_case55', 1030, 520) },
   { kind: 'creak', name: 'Loose kitchen tiles', area: box(1040, 328, 348, 334) },
 ], [sleeper('Lyle', 'lyle55', 1235, 452, 365)]);
@@ -108,6 +113,7 @@ const cafeSide = building([
 const trunkBay = section('Trunk bay', 'dance_lot', box(0, 0, 740, 700), [
   prop(TRUNK_55, [box(64, 590, 267, 44), box(331, 563, 39, 77)]),
   prop(fit('amp_case55', 427, 457, 140, 159)),
+  prop(art('amp_crate55', 427, 610)),
 ], [art('trunk_lid55', 33, 432), GYM_DOORS_55]);
 
 const bandstand = fit('exit_roof_hatch', 492, -502, 198, 70);
@@ -116,8 +122,9 @@ const danceUpper = building([
   section('Stage rigging', 'dance_lot', box(390, -520, 350, 520), [], [bandstand]),
 ], [hatch(0, 480, 700), hatch(-520, 480, 700)], [
   gate('Stage hatch', box(480, 0, 220, 24), 'x', 20, 4.5, 16),
-  swing('Microphone stand', fit('pendulum', 494, -240, 45, 120), 0.35, 1.32, -290),
-  { kind: 'pop', name: 'Party balloons', area: box(659, -408, 66, 104), cycle: { period: 5.2, open: 3.3, phase: 1.3 } },
+  swing('Microphone stand', art('mic_stand55', 494, -240), 0.35, 1.32, -290),
+  { kind: 'pop', name: 'Party balloons', artKey: 'room/party_balloons55', area: box(659, -408, 66, 104),
+    cycle: { period: 5.2, open: 3.3, phase: 1.3 } },
 ]);
 
 const canopy = fit('door_frame', 1390, 290, 120, 215);
@@ -126,7 +133,7 @@ const danceSide = building([
   section('Loading bay', 'dance_lot', box(740, 0, 780, 700), [shelf(1118, 520, 116)], [canopy, art('dock55', 1194, 580)]),
 ], [door(740, 255, 535), door(1520, 290, 505)], [
   gate('Loading door', box(740, 255, 24, 280), 'y', 16, 4.3, 9),
-  patrol('Amp trolley', art('amp_case55', 987, 460), 65, 66),
+  patrol('Amp trolley', art('amp_trolley55', 987, 450), 65, 0),
   { kind: 'creak', name: 'Canopy floorboards', area: box(1050, 265, 375, 335) },
 ], [sleeper('Chaperone', 'chaperone55', 1250, 460, 350)]);
 

@@ -234,7 +234,10 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
   let list: readonly string[];
   // v4 council: L8 is a time trial (four apes and Echo), so the three-specimen lines don't fit it
   if (r.levelId === 'level8') list = r.spotted > 0 ? c.monolithSpotted : c.monolith;
-  else if (r.levelId === 'level9') list = r.spotted > 0 ? c.clocktowerSpotted : c.clocktower;
+  else if (r.levelId === 'level9') {
+    if (r.spotted > 0) return plural(r.spotted, c.clocktowerSpotted);
+    list = c.clocktower;
+  }
   else if (r.stars >= 3) list = c.perfect;
   else if (r.spotted === 0 && r.failed === 0) list = c.ghost;
   else if (r.spotted >= 3) list = c.spotted;

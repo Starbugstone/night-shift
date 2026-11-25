@@ -103,9 +103,107 @@ export function paintRoom55(g: CanvasRenderingContext2D, key: string, w: number,
       block(0.09, 0.1, 0.13, 0.14, METAL);
       block(0.78, 0.76, 0.13, 0.14, METAL);
       return true;
+    case 'room/bus_cart55':
+      block(0.08, 0.17, 0.07, 0.62, METAL);
+      block(0.85, 0.07, 0.07, 0.72, METAL);
+      block(0.78, 0.025, 0.20, 0.08, METAL);
+      block(0.18, 0.075, 0.27, 0.14, CREAM);
+      block(0.53, 0.045, 0.16, 0.17, '#9eb7ba');
+      block(0.025, 0.2, 0.95, 0.13, TEAL);
+      block(0.15, 0.44, 0.35, 0.11, CREAM);
+      block(0.025, 0.55, 0.95, 0.085, TEAL);
+      block(0.10, 0.71, 0.80, 0.16, TEAL);
+      break;
+    case 'room/amp_trolley55':
+      for (const top of [0.01, 0.43]) {
+        block(0.05, top, 0.88, 0.42, '#b98f6c');
+        block(0.13, top + 0.10, 0.72, 0.28, '#5a4338');
+        ellipse(g, w * 0.49, h * (top + 0.24), w * 0.20, h * 0.102, '#3a2b25', INK);
+        ellipse(g, w * 0.49, h * (top + 0.24), w * 0.055, h * 0.029, '#7a5b4d');
+      }
+      block(0.015, 0.82, 0.97, 0.094, METAL);
+      break;
+    case 'room/counter_plinth55':
+      block(0, 0.01, 1, 0.98, '#3a4854');
+      block(0.08, 0.08, 0.84, 0.76, '#4c7377');
+      block(0.47, 0.13, 0.06, 0.66, '#334f55');
+      block(0, 0.85, 1, 0.14, '#2b3442');
+      return true;
+    case 'room/amp_crate55':
+      block(0.02, 0.01, 0.96, 0.98, '#725b58');
+      for (const top of [0.10, 0.39, 0.68]) block(0.06, top, 0.88, 0.22, '#997560');
+      block(0.08, 0.01, 0.09, 0.98, '#58454a');
+      block(0.83, 0.01, 0.09, 0.98, '#58454a');
+      return true;
+    case 'room/counterweight_guide55':
+      block(0.05, 0.035, 0.12, 0.94, '#59546b');
+      block(0.83, 0.035, 0.12, 0.94, '#59546b');
+      block(0.0, 0.01, 1.0, 0.055, '#725c65');
+      block(0.0, 0.935, 1.0, 0.055, '#725c65');
+      return true;
+    case 'room/counterweight':
+      block(0.37, 0, 0.26, 0.18, METAL);
+      block(0.06, 0.12, 0.88, 0.84, '#766353');
+      for (let i = 0; i < 5; i++) block(0.1, 0.25 + 0.125 * i, 0.8, 0.12, '#708092');
+      return true;
+    case 'room/lightning_cable55':
+      g.beginPath();
+      g.moveTo(w * 0.5, 0);
+      g.bezierCurveTo(w * 0.92, h * 0.28, w * 0.09, h * 0.56, w * 0.52, h * 0.80);
+      g.lineWidth = 10;
+      g.strokeStyle = INK;
+      g.stroke();
+      g.lineWidth = 5;
+      g.strokeStyle = '#78919c';
+      g.stroke();
+      g.lineWidth = 3;
+      block(0.18, 0.76, 0.65, 0.18, '#bd885c');
+      block(0.35, 0.91, 0.32, 0.07, CREAM);
+      return true;
+    case 'room/service_bell55':
+      block(0.43, 0, 0.14, 0.53, METAL);
+      ellipse(g, w / 2, h * 0.9, w * 0.16, h * 0.075, '#9e714f', INK);
+      g.beginPath();
+      g.moveTo(w * 0.05, h * 0.83);
+      g.bezierCurveTo(w * 0.24, h * 0.78, w * 0.08, h * 0.51, w * 0.5, h * 0.51);
+      g.bezierCurveTo(w * 0.92, h * 0.51, w * 0.76, h * 0.78, w * 0.95, h * 0.83);
+      g.closePath();
+      g.fillStyle = '#bd885c';
+      g.fill();
+      g.strokeStyle = INK;
+      g.stroke();
+      block(0.04, 0.79, 0.92, 0.065, CREAM);
+      return true;
+    case 'room/mic_stand55':
+      block(0.43, 0.1, 0.14, 0.83, METAL);
+      block(0.25, 0.02, 0.5, 0.25, '#526775');
+      for (let i = 0; i < 3; i++) block(0.34, 0.075 + i * 0.054, 0.32, 0.025, '#a5b9bb');
+      ellipse(g, w / 2, h * 0.93, w * 0.45, h * 0.054, '#625069', INK);
+      return true;
+    case 'room/party_balloons55':
+      g.beginPath();
+      g.moveTo(w * 0.27, h * 0.42);
+      g.quadraticCurveTo(w * 0.32, h * 0.7, w * 0.88, h * 0.98);
+      g.moveTo(w * 0.59, h * 0.35);
+      g.quadraticCurveTo(w * 0.52, h * 0.64, w * 0.88, h * 0.98);
+      g.moveTo(w * 0.76, h * 0.59);
+      g.quadraticCurveTo(w * 0.95, h * 0.77, w * 0.88, h * 0.98);
+      g.strokeStyle = '#b9a9a0';
+      g.lineWidth = 2;
+      g.stroke();
+      ellipse(g, w * 0.59, h * 0.22, w * 0.25, h * 0.20, '#ad839d', INK);
+      ellipse(g, w * 0.27, h * 0.29, w * 0.24, h * 0.18, '#74a3a0', INK);
+      ellipse(g, w * 0.75, h * 0.46, w * 0.22, h * 0.17, '#d5b997', INK);
+      return true;
     default:
       return false;
   }
+  for (const x of [0.17, 0.82]) {
+    block(x - 0.032, 0.855, 0.064, 0.10, METAL);
+    ellipse(g, w * x, h - 10, 9, 9, '#3b374a', INK);
+    ellipse(g, w * x, h - 10, 3.5, 3.5, METAL);
+  }
+  return true;
 }
 
 export function paintSouvenir55(g: CanvasRenderingContext2D, key: string, w: number, h: number): boolean {

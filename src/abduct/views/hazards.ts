@@ -668,6 +668,31 @@ function gateOrPop(state: HazardState, spec: Extract<Hazard, { kind: 'gate' | 'p
       },
     };
   }
+  if (spec.artKey) {
+    const art = roomArt(assets, spec.artKey, x, y, w, h);
+    const mask = new Graphics().rect(0, 0, 1, 1).fill(0xffffff);
+    art.mask = mask;
+    root.addChild(mask, art, dial.root);
+    return {
+      root,
+      sync(t, rm, cx, cy) {
+        root.visible = areaVisible(a, cx, cy);
+        if (!root.visible) return;
+        const tell = state.tell;
+        fill.tint = tell ? AMBER : '#8870ba';
+        fill.alpha = tell && (rm || Math.floor(t * 9) % 2 === 0) ? 0.3 : 0.14;
+        edge[0]!.visible = !shape.active && !tell;
+        edge[1]!.visible = !shape.active && tell;
+        art.visible = !!shape.active;
+        if (shape.active) {
+          art.x = shape.x;
+          mask.position.set(shape.x, y);
+          mask.scale.set(shape.w, h);
+        }
+        dial.sync(x + w / 2, y - 24, t, tell);
+      },
+    };
+  }
   const hx = x + w - 3;
   const house = new Container();
   house.y = y;

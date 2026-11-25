@@ -13,6 +13,10 @@ const spot = (skin: NonNullable<CameraHazard['skin']>, x: number, y: number, ran
 
 const copy = en.levels.level9;
 const { cable, turnout } = TIME_CAR;
+const lamps = [
+  { x: 514, y: 688 }, { x: 1110, y: 659 }, { x: 512, y: 1188 }, { x: 1165, y: 958 },
+  { x: 1505, y: 1448 }, { x: 267, y: 843 }, { x: 690, y: 1605 }, { x: 938, y: 1800 },
+];
 
 export const LEVEL9: DeepLevelDef = {
   kind: 'deep', id: 'level9', num: 9, title: copy.title, location: copy.location, blurb: copy.blurb,
@@ -47,9 +51,7 @@ export const LEVEL9: DeepLevelDef = {
         ([x, y]) => prop('house55_top', 'suburb_house', x!, y!, '#645666'),
       ),
       ...[[445, 1780], [447, 1940], [1310, 1985], [1330, 2090]].map(([x, y]) => prop('hedge_top', 'hedge', x!, y!)),
-      ...[[514, 688], [1110, 659], [512, 1188], [1165, 958], [1505, 1448], [690, 1605], [938, 1800]].map(
-        ([x, y]) => prop('streetlamp55_top', 'streetlight', x!, y!),
-      ),
+      ...lamps.map(({ x, y }) => prop('streetlamp55_top', 'streetlight', x, y)),
     ],
     targets: [
       { human: 'Doc', short: 'Doc', building: prop('courthouse55_top', 'civic', 820, 310, '#776b60'),
@@ -70,9 +72,6 @@ export const LEVEL9: DeepLevelDef = {
         angles: [2.12, 0], hold: 3.2, sweepAmp: 0.08, sweepRate: 0.8 },
       { type: 'wire', kind: 'power', ax: cable.x, ay: cable.north, bx: cable.x, by: cable.south },
     ],
-    lamps: [
-      { x: 514, y: 688 }, { x: 1110, y: 659 }, { x: 355, y: 1188 }, { x: 1165, y: 958 },
-      { x: 1505, y: 1448 }, { x: 267, y: 843 }, { x: 938, y: 1800 },
-    ],
+    lamps,
   },
 };

@@ -3,7 +3,7 @@ import { VIEW_H, VIEW_W, type Assets } from '../../contracts';
 import { Glow, ScreenTint, glowTexture } from '../../core/gfx/glow';
 import { Label } from '../../core/gfx/text';
 import { paintedTexture } from '../../core/gfx/textures';
-import { getLang } from '../../i18n';
+import { tr } from '../../i18n';
 import { clamp } from '../../ui/draw';
 import { artSprite, artTex } from '../../ui/views/art';
 import { HudPanel } from '../../ui/views/hud';
@@ -12,7 +12,7 @@ import type { HazardField } from '../hazards';
 import { TIME_CAR, type TimeCar } from '../time-car';
 import type { CameraView } from './world';
 
-export const TOWER_CLOCK = { x: 824, y: 272 } as const;
+export const TOWER_CLOCK = { x: 824, y: 272, radius: 41 } as const;
 export const TOWER_ROD = { x: 826, y: 178 } as const;
 const AXLE = { x: 31, y: 45 } as const;
 const TRACK_LENGTH = 324;
@@ -147,11 +147,12 @@ export class CrestValleyStrike {
     this.ground.addChild(this.fireFront);
 
     this.wash.tint = ICE;
-    const badge = new HudPanel().set(108, 42, ICE);
-    badge.position.set(-54, -21);
+    const badge = new HudPanel().set(126, 42, ICE);
+    badge.position.set(-63, -21);
     const glyph = new Graphics().poly([-35, -13, -48, 2, -39, 2, -43, 13, -28, -4, -37, -4]).fill(ICE);
+    glyph.x = -9;
     this.edge.addChild(badge, glyph, new Label({ size: 19, weight: 900, color: HOT })
-      .set(getLang() === 'fr' ? '22:04' : '10:04', 12, 0), this.arrow);
+      .set(tr().crestValley.strikeTime, 12, 0, 84), this.arrow);
     this.screen.addChild(this.wash, this.edge);
   }
 
@@ -185,9 +186,9 @@ export class CrestValleyStrike {
     this.wash.strength = !active ? 0 : reduced ? 0.11 * (1 - ease(age / 0.56)) :
       age === this.flashAt ? 0.72 : 0.37 * (1 - ease(age / 0.37));
 
-    // The same edge marker covers distant play and a tower that reduced motion leaves under the HUD.
-    const rx = cam.screenX(TOWER_ROD.x), ry = cam.screenY(TOWER_ROD.y);
-    const clockInView = rx >= 66 && rx <= 463 && ry >= 197 && cam.screenY(TOWER_CLOCK.y) < VIEW_H - 70;
+    const rx = cam.screenX(TOWER_CLOCK.x), ry = cam.screenY(TOWER_CLOCK.y);
+    const radius = TOWER_CLOCK.radius * cam.world.scale.x;
+    const clockInView = rx + radius > 0 && rx - radius < VIEW_W && ry + radius > 0 && ry - radius < VIEW_H;
     this.edge.visible = active && age < REVEAL_END && !clockInView;
     if (this.edge.visible) {
       const dx = rx - VIEW_W / 2, dy = ry - VIEW_H / 2;

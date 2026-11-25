@@ -665,6 +665,15 @@ export const ART: Record<string, ArtSpec> = {
   'room/trunk_lid55': { w: 88, h: 160 },
   'room/gym_doors55': { w: 180, h: 196 },
   'room/amp_case55': { w: 122, h: 84 },
+  'room/bus_cart55': { w: 110, h: 228 },
+  'room/amp_trolley55': { w: 122, h: 250 },
+  'room/counterweight_guide55': { w: 84, h: 260 },
+  'room/counter_plinth55': { w: 180, h: 109 },
+  'room/amp_crate55': { w: 140, h: 90 },
+  'room/lightning_cable55': { w: 36, h: 94 },
+  'room/service_bell55': { w: 44, h: 115 },
+  'room/mic_stand55': { w: 45, h: 120 },
+  'room/party_balloons55': { w: 66, h: 104 },
   'room/lyle55_asleep': { w: 90, h: 122 }, // Lyle waist-up behind his counter, cheek on fist; the counter top is at y = 114
   'room/lyle55_awake': { w: 90, h: 130 }, // bolt upright, spatula raised; the counter top is at y = 122
   'room/chaperone55_asleep': { w: 90, h: 122 }, // prom chaperone nodded off on a folding chair, ruler in her lap

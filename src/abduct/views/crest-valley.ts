@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import type { Assets } from '../../contracts';
+import { batched } from '../../core/gfx/shapes';
 import { paintedTexture } from '../../core/gfx/textures';
 import { artSprite } from '../../ui/views/art';
 import { CrestValleyClockHands } from '../../ui/views/crest-valley-clock';
@@ -42,7 +43,7 @@ function clockDial(w: number): Graphics {
     const a = i * Math.PI / 6;
     face.circle(w * 0.38 * Math.cos(a), w * 0.38 * Math.sin(a), i % 3 === 0 ? 4 : 2.3).fill('#594050');
   }
-  return face;
+  return batched(face);
 }
 
 export class CrestValleyRoomDecor {

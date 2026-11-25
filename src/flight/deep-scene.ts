@@ -86,6 +86,7 @@ export class DeepFlightScene implements Scene {
   collectibleToastT = 0;
   private zibCd = 0;
   private zibN = 0;
+  private zibEvent?: DeepZibEvent;
   zibPanic = false;
   private alertT = 0;
   private barkT = 0;
@@ -193,6 +194,7 @@ export class DeepFlightScene implements Scene {
     if (!force && this.zibCd > 0) return;
     // flavour lines wait their turn: they don't cut a line the player is still reading
     if (force && !panic && FLAVOUR.has(evt) && this.zibT > 0 && this.zibFor - this.zibT < FRESH_LINE_SECONDS) return;
+    this.zibEvent = evt;
     this.zibText = deepZibLine(evt, this.zibN++ + this.run.spotted);
     this.zibFor = this.zibT = readSeconds(this.zibText);
     this.zibCd = this.zibT + 0.4;
@@ -202,6 +204,7 @@ export class DeepFlightScene implements Scene {
 
   /** v4 easter eggs: a scenery line, said like any other. */
   private sayLine(text: string): void {
+    this.zibEvent = undefined;
     this.zibText = text;
     this.zibFor = this.zibT = readSeconds(text);
     this.zibCd = this.zibT + 0.4;
@@ -247,15 +250,9 @@ export class DeepFlightScene implements Scene {
       this.say(this.level.id === 'level9' ? 'stormClosing' : 'dawn', true, true);
       audio.sfx('sunrise', 0.6);
     }
-    if (car) {
-      if (beforeCarTime < TIME_CAR.strike && car.elapsed >= TIME_CAR.strike) {
-        audio.sfx('stamp', 1.1);
-        audio.sfx('crash', 0.36);
-        if (this.state === 'fly') this.say(car.phase === 'missed' ? 'timeCarMissed' : 'lightning', true, true);
-      } else if (car.visible && this.state === 'fly') {
-        if (beforeCarTime < TIME_CAR.launch && car.phase === 'rolling') this.say('timeCarLaunch', true);
-        else if (beforeCarTime < 9 && car.elapsed >= 9 && this.zibT <= 0) this.say('timeCarWarn', true);
-      }
+    if (car?.visible && this.state === 'fly') {
+      if (beforeCarTime < TIME_CAR.launch && car.phase === 'rolling') this.say('timeCarLaunch', true);
+      else if (beforeCarTime < 9 && car.elapsed >= 9 && this.zibT <= 0) this.say('timeCarWarn', true);
     }
 
     if (this.state === 'spotted') {
@@ -281,6 +278,13 @@ export class DeepFlightScene implements Scene {
     if (sim.justCollected && sim.collectible) {
       this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, sim.collectible.position);
       if (car) this.say('timeCarCaught', true);
+    }
+    if (car && beforeCarTime < TIME_CAR.strike && car.elapsed >= TIME_CAR.strike && sim.phase !== 'spotted') {
+      audio.sfx('stamp', 1.1);
+      audio.sfx('crash', 0.36);
+      if (this.state === 'fly' && (this.zibEvent !== 'timeCarCaught' || this.zibT <= 0)) {
+        this.say(car.phase === 'missed' ? 'timeCarMissed' : 'lightning', true, true);
+      }
     }
 
     if (this.state === 'locking') {

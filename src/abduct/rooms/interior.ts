@@ -6,6 +6,7 @@ import type { Area, Furniture, Sprite } from './layout';
 export interface InteriorRoom extends Area {
   name: string;
   backdrop: string;
+  wallOnly?: boolean;
   decor: readonly Sprite[];
   furniture: readonly Sprite[];
   supports: readonly Furniture[];
@@ -34,7 +35,7 @@ export type Hazard =
   | { kind: 'laser'; name: string; area: Area; cycle: Cycle; mountY?: number }
   | { kind: 'gate'; name: string; area: Area; axis: 'x' | 'y'; cycle: Cycle; hinged?: boolean; dialX?: number }
   | { kind: 'patrol'; name: string; sprite: Sprite; dx: number; dy: number; speed: number; phase: number; barks?: boolean }
-  | { kind: 'pop'; name: string; area: Area; cycle: Cycle }
+  | { kind: 'pop'; name: string; area: Area; cycle: Cycle; artKey?: string }
   | { kind: 'camera'; name: string; x: number; y: number; mountY?: number; angle: number; spread: number; range: number; sweep: number; speed: number; phase: number
     /** L5 pier code: a lighthouse lens, drawn as the lens's light (no CCTV body or REC light). */
     lens?: boolean }

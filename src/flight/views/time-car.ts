@@ -1,6 +1,7 @@
 import { Container, Graphics, TilingSprite } from 'pixi.js';
 import { VIEW_H, VIEW_W, type Assets } from '../../contracts';
 import { GLOW, Glow, glowTexture } from '../../core/gfx/glow';
+import { batched } from '../../core/gfx/shapes';
 import { Label } from '../../core/gfx/text';
 import { paintedTexture } from '../../core/gfx/textures';
 import { fmt, tr } from '../../i18n';
@@ -21,6 +22,7 @@ const LIGHT = '#ffedc9';
 const SECTIONS = 12;
 const CHIP = { size: 14, weight: 900, color: C.amberHi } as const;
 const TITLE = { size: 16, weight: 900, color: INK } as const;
+const MARQUEE = { ...TITLE, size: 13 } as const;
 const CAR_KEY = 'flight/pickup_time_car';
 
 export function timeCarWedge(raised = false): Graphics {
@@ -160,6 +162,7 @@ export class CrestValleyView {
   private readonly warning = new Glow(glowTexture(GLOW.lamp));
   private readonly contact = new Glow(glowTexture(GLOW.lamp));
   private readonly rain: TilingSprite;
+  private readonly turnout: Graphics;
   private readonly people: CrestValleyPerson[];
 
   constructor(assets: Assets, private readonly timeCar: TimeCar) {
@@ -168,7 +171,7 @@ export class CrestValleyView {
     const clock = new Container();
     clock.position.set(TOWER_CLOCK.x, TOWER_CLOCK.y);
     if (!artTex(assets, 'flight/courthouse55_top')) {
-      const face = new Graphics().circle(0, 0, 41).fill(LIGHT).stroke({ color: INK, width: 4 });
+      const face = new Graphics().circle(0, 0, TOWER_CLOCK.radius).fill(LIGHT).stroke({ color: INK, width: 4 });
       for (let i = 0; i < 12; i++) {
         const a = i * Math.PI / 6;
         face.circle(34 * Math.cos(a), 34 * Math.sin(a), i % 3 === 0 ? 2.8 : 1.6).fill(INK);
@@ -181,11 +184,11 @@ export class CrestValleyView {
       .stroke({ color: INK, width: 4 });
     const words = tr().crestValley;
     const marquee = new Container();
-    marquee.position.set(1370, 956);
+    marquee.position.set(1370, 951);
     if (!artTex(assets, 'flight/picture_house55_top')) {
       marquee.addChild(new Graphics().roundRect(-74, -16, 148, 32, 4).fill(LIGHT).stroke({ color: INK, width: 2 }));
     }
-    marquee.addChild(new Label(TITLE).set(words.marquee, 0, 0, 138));
+    marquee.addChild(new Label(MARQUEE).set(words.marquee, 0, 0, 108));
     // Hang from the eave, above the door and the side wall.
     const banner = new Container();
     banner.addChild(artSprite(assets, 'flight/dance_banner55') ?? new Graphics()
@@ -203,10 +206,10 @@ export class CrestValleyView {
     for (const person of this.people) this.scenery.addChild(person.root);
     this.scenery.addChild(this.warning, this.contact);
     const { x, y } = TIME_CAR.turnout;
-    const turnout = new Graphics().moveTo(x, y + 29).lineTo(x, y - 17).quadraticCurveTo(x, y - 35, x + 22, y - 35)
+    this.turnout = batched(new Graphics().moveTo(x, y + 29).lineTo(x, y - 17).quadraticCurveTo(x, y - 35, x + 22, y - 35)
       .lineTo(x + 48, y - 35).moveTo(x + 36, y - 47).lineTo(x + 48, y - 35).lineTo(x + 36, y - 23)
-      .stroke({ color: '#d9bea0', width: 5, cap: 'round', alpha: 0.58 });
-    this.ground.addChild(turnout, this.strike.ground);
+      .stroke({ color: '#d9bea0', width: 5, cap: 'round', alpha: 0.58 }));
+    this.ground.addChild(this.turnout, this.strike.ground);
     const rainArt = artTex(assets, 'flight/rain_stitch55') ?? paintedTexture('crest-valley|rain', 144, 144, g => {
       g.strokeStyle = '#90acc4';
       g.lineWidth = 1.5;
@@ -226,6 +229,7 @@ export class CrestValleyView {
 
   sync(cam: CameraView, time: number, rm: boolean, toast: number): void {
     const elapsed = this.timeCar.elapsed;
+    this.turnout.visible = cam.sees(TIME_CAR.turnout.x + 24, TIME_CAR.turnout.y - 9, 42);
     this.clockHands.sync(elapsed);
     for (const person of this.people) person.sync(cam, time, rm);
     const age = this.strike.age;

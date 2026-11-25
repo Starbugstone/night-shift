@@ -311,6 +311,7 @@ export class Mount {
 
 function backdrop(assets: Assets, room: InteriorRoom): Container {
   const { x, y, w, h } = room;
+  const baseboard = room.wallOnly ? h : h - 46;
   const root = new Container();
   root.position.set(x, y);
   const image = assets.get(room.backdrop);
@@ -323,15 +324,15 @@ function backdrop(assets: Assets, room: InteriorRoom): Container {
     const palette = PALETTES[room.backdrop] ?? DEFAULT_PALETTE;
     const g = new Graphics().rect(0, 0, w, h).fill(palette[0]);
     for (let line = 25; line < w - 15; line += 58) g.rect(line, 0, 2, h);
-    g.rect(0, h - 46, w, 32).fill({ color: palette[1], alpha: 0.14 });
-    g.rect(0, h - 46, w, 3).fill({ color: palette[1], alpha: 0.6 });
+    if (!room.wallOnly) g.rect(0, baseboard, w, 32);
+    g.fill({ color: palette[1], alpha: 0.14 });
+    if (!room.wallOnly) g.rect(0, baseboard, w, 3).fill({ color: palette[1], alpha: 0.6 });
     root.addChild(g);
     return root;
   }
   const spec = ART[room.backdrop]!;
   const scale = Math.min(1, w / spec.w);
   const tileW = spec.w * scale;
-  const baseboard = h - 46;
   const tileH = h > 800 ? 600 * scale : baseboard;
   for (let tileX = 0, col = 0; tileX < w; tileX += tileW, col++) {
     const drawW = Math.min(tileW, w - tileX);
@@ -346,6 +347,7 @@ function backdrop(assets: Assets, room: InteriorRoom): Container {
       tile.scale.x = flipX ? -1 : 1;
       root.addChild(tile);
     }
+    if (room.wallOnly) continue;
     const floor = bitmap(`floor|${room.backdrop}|${drawW}|${sx}`, flipX ? tileX + drawW : tileX, baseboard, drawW, 46, g => {
       g.drawImage(image, sx, 600, drawW / scale, 67, 0, 0, drawW, 46);
     });

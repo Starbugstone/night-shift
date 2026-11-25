@@ -129,7 +129,7 @@ export class WatcherTell {
   private readonly swing = new Shape();
   private readonly head = new Graphics().poly([12, 0, -8.8, 6.6, -8.8, -6.6]).fill(C.amberHi);
   private readonly glint = new Glow(glowTexture(GLOW.white), true);
-  private readonly pupil = new Container();
+  private readonly pupil?: Graphics;
   private readonly mark = new Label(LOOK, '!');
   private readonly r: number;
 
@@ -144,19 +144,23 @@ export class WatcherTell {
     dashedLine(this.ghostEdge, x, y, 0, 0, 14, 10).stroke({ color: C.amberHi, width: 4, join: 'round' });
     this.ghost.addChild(this.ghostFill, this.ghostEdge);
     this.r = Math.min(150, d.range * 0.3);
-    const eye = new Graphics().moveTo(-13, -28).quadraticCurveTo(0, -40, 13, -28)
-      .quadraticCurveTo(0, -16, -13, -28).closePath().fill(C.paper).stroke({ color: C.ink, width: 2.5 });
-    this.pupil.addChild(new Graphics().circle(0, 0, 5).fill('#3a2f5a').circle(1.5, -1.5, 1.6).fill(C.paper));
     this.mark.position.set(22, -34);
     this.root.addChild(this.cone.root, this.ghost, this.swing, this.head, this.glint,
-      new Glow(glowTexture(GLOW.amber), true).place(0, 0, 40, 40, 0.7), eye, this.pupil, this.mark);
+      new Glow(glowTexture(GLOW.amber), true).place(0, 0, 40, 40, 0.7));
+    if (d.skin !== 'cafe55') {
+      const eye = new Graphics().moveTo(-13, -28).quadraticCurveTo(0, -40, 13, -28)
+        .quadraticCurveTo(0, -16, -13, -28).closePath().fill(C.paper).stroke({ color: C.ink, width: 2.5 });
+      this.pupil = new Graphics().circle(0, 0, 5).fill('#3a2f5a').circle(1.5, -1.5, 1.6).fill(C.paper);
+      this.root.addChild(eye, this.pupil);
+    }
+    this.root.addChild(this.mark);
   }
 
   sync(a: number, b: number, tell: boolean, lead: number, hot: number, t: number, hazardTime: number, rm: boolean): void {
     this.cone.sync(0, 0, a, hot, lead);
     this.ghost.visible = this.swing.visible = this.head.visible = this.glint.visible = this.mark.visible = tell;
     const look = tell ? b : a;
-    this.pupil.position.set(Math.cos(look) * 5, -28 + Math.sin(look) * 2.5);
+    this.pupil?.position.set(Math.cos(look) * 5, -28 + Math.sin(look) * 2.5);
     if (!tell) return;
     const d = this.d;
     const tau = hazardTime - Math.floor(hazardTime / d.hold) * d.hold;

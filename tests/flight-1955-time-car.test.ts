@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import type { AbductResult, PointerState } from '../src/contracts';
+import { describe, expect, it, vi } from 'vitest';
+import type { AbductResult, GameContext, PointerState } from '../src/contracts';
+import { DeepFlightScene } from '../src/flight/deep-scene';
 import { DeepFlightSim } from '../src/flight/deep-sim';
 import { type Saucer } from '../src/flight/sim';
 import { TIME_CAR, TimeCar } from '../src/flight/time-car';
@@ -16,6 +17,16 @@ const DT = 1 / 60;
 const CLOSED: PointerState = { x: 270, y: 480, down: false, pressed: false, released: false };
 const CLEAR: AbductResult = { delivered: true, aborted: false, woke: false, bonks: 0, timeSec: 24, snores: 0, dignity: 100, itemsStolen: [] };
 const match = (car: TimeCar): Saucer => ({ ...car.position, vx: car.speed, vy: 0, stun: 0 });
+
+function flightAt(elapsed: number, audio: GameContext['audio']): DeepFlightScene {
+  const run = new DeepRun(LEVEL9, 8);
+  run.tick(elapsed);
+  const ctx: GameContext = {
+    pointer: { ...CLOSED }, assets: { get: () => undefined }, audio, upgrades: new Set(),
+    reducedMotion: true, tutorial: false, time: 0,
+  };
+  return new DeepFlightScene({ ctx, level: LEVEL9, run, onLocked: vi.fn(), onSunrise: vi.fn(), onQuit: vi.fn() });
+}
 
 describe('1955 time car', () => {
   it('rolls at 13 s, opens at 15 s and arrives at the cable at 20 s', () => {
@@ -117,6 +128,43 @@ describe('1955 time car', () => {
     expect(report.comment).toMatch(/storm/i);
     expect(report.rows.flat().join(' ')).not.toMatch(/sunrise|dawn/i);
     expect(new DeepRun(LEVEL9, 8).collectible?.timeCar?.phase).toBe('parked');
+  });
+
+  it('keeps a late catch line visible and audible through the strike', () => {
+    const audio = { speak: vi.fn(), sfx: vi.fn() };
+    const scene = flightAt(18.9, audio);
+    audio.speak.mockClear();
+    const { sim } = scene;
+    const car = sim.collectible!.timeCar!;
+    sim.place(car.position.x - 40, car.position.y, 2);
+    for (let frame = 0; frame < 52 && car.phase !== 'caught'; frame++) {
+      Object.assign(sim.saucer, match(car), { x: car.position.x - 40 });
+      scene.update(DT);
+    }
+    expect(car.phase).toBe('caught');
+    expect(car.elapsed).toBeGreaterThan(19.5);
+    const line = scene.zibText;
+    expect(line).toMatch(/Impounded at 87 mph/);
+    sim.saucer.vx = 0;
+    for (let frame = 0; frame < 34; frame++) scene.update(DT);
+    expect(car.elapsed).toBeGreaterThan(TIME_CAR.strike);
+    expect(scene.zibText).toBe(line);
+    expect(scene.zibT).toBeGreaterThan(0);
+    expect(audio.sfx).toHaveBeenCalledWith('crash', 0.36);
+    expect(audio.speak).toHaveBeenCalledExactlyOnceWith(line, 'zib', { panic: false });
+  });
+
+  it.each([0.35, DT])('skips strike audio when a sighting is imminent %s seconds before the deadline', (lead) => {
+    const audio = { sfx: vi.fn() };
+    const scene = flightAt(TIME_CAR.strike - lead, audio);
+    scene.sim.place(820, 870, 0);
+    scene.sim.st.sus = 0.999;
+    for (let frame = 0; frame < 48; frame++) scene.update(DT);
+    expect(scene.state).toBe('spotted');
+    expect(scene.run.elapsed).toBeGreaterThan(TIME_CAR.strike);
+    expect(audio.sfx).toHaveBeenCalledWith('spotted');
+    expect(audio.sfx).not.toHaveBeenCalledWith('stamp', 1.1);
+    expect(audio.sfx).not.toHaveBeenCalledWith('crash', 0.36);
   });
 
   it('keeps an impound across a respawn and files it even if the pass expires', () => {
