@@ -1825,10 +1825,13 @@ export const en = {
     found: '{name} · collected',
     missed: '{name} · left behind',
     toast: 'Collected: {name}',
+    flyerHeader: 'LOST',
     items: {
-      seti_dish: {
-        name: 'SETI dish',
-        comment: 'The dish picked up three prime numbers and a request to move our van.',
+      slipper_flyer: {
+        name: 'Slipper flyer',
+        comment: "You took Doyle's missing-slipper flyer. We already have the slipper—now we're just rubbing his nose in it.",
+        missedComment: "Left Doyle's slipper flyer up at Spin City. Half the town's hunting a shoe that's sitting on my desk.",
+        memoHint: 'missing-slipper flyer',
       },
     },
   },

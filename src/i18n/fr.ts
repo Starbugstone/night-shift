@@ -1762,13 +1762,16 @@ export const fr: Strings = {
   // v4 map collectibles
   mapCollectibles: {
     row: 'Trouvaille en ville',
-    found: '{name} · récupérée',
-    missed: '{name} · laissée sur place',
-    toast: '{name} récupérée !',
+    found: '{name} · récupéré',
+    missed: '{name} · laissé sur place',
+    toast: '{name} récupéré !',
+    flyerHeader: 'PERDU',
     items: {
-      seti_dish: {
-        name: 'Parabole SETI',
-        comment: "La parabole a capté trois nombres premiers et une demande de déplacer notre camionnette.",
+      slipper_flyer: {
+        name: 'Avis de chausson',
+        comment: "Vous avez pris l'avis de chausson de Doyle. On a déjà le chausson : là, c'est juste de la provocation.",
+        missedComment: "Vous avez laissé l'avis de Doyle affiché à Spin City. Toute la ville cherche un chausson qui trône sur mon bureau.",
+        memoHint: 'avis de chausson perdu',
       },
     },
   },

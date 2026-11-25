@@ -71,7 +71,7 @@ export function tutorialReport(levelIndex: number, abduct: AbductResult, flight:
   const par = lv.kind === 'tutorial' ? lv.parSec : 0;
   const total = flight.timeSec + abduct.timeSec;
   const r = tr().report;
-  const pickup = lv.map.collectible && mapCollectibleReport(lv.map.collectible.id, flight.mapCollectible);
+  const pickup = lv.map.collectible && mapCollectibleReport(lv.map.collectible.id, flight.mapCollectible, outcome.save.reports);
   return {
     subtitle: fmt(r.subtitle, { name: tr().levels[lv.id].human, route: tr().routes[flight.roomId].route }),
     rows: [
@@ -101,7 +101,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   const lv = run.level;
   const sunrise = run.phase === 'sunrise';
   const r = tr().report;
-  const pickup = lv.map.collectible && mapCollectibleReport(lv.map.collectible.id, run.collectible?.collectedId);
+  const pickup = lv.map.collectible && mapCollectibleReport(lv.map.collectible.id, run.collectible?.collectedId, outcome.save.reports);
   const names = run.order.map((i) => gt(lv.map.targets[i]!.short)).join(r.listSep);
   const n = run.deliveredCount;
   const dignityCount = lv.id === 'level8' ? run.totals.rooms.length : n;

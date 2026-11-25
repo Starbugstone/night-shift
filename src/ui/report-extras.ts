@@ -3,16 +3,20 @@
 import { fmt, gt, tr } from '../i18n';
 import type { MapCollectibleId } from '../contracts';
 
-export function mapCollectibleReport(id: MapCollectibleId, pickup: MapCollectibleId | undefined): {
+export function mapCollectibleReport(
+  id: MapCollectibleId,
+  pickup: MapCollectibleId | undefined,
+  seed = 0,
+): {
   row: [string, string];
   comment: string;
 } {
   const words = tr().mapCollectibles;
-  const { name, comment } = words.items[id];
+  const { name, comment, missedComment } = words.items[id];
   const collected = id === pickup;
   return {
     row: [words.row, fmt(collected ? words.found : words.missed, { name })],
-    comment: collected ? comment : '',
+    comment: collected ? comment : Math.abs(Math.floor(seed)) % 3 === 0 ? missedComment : '',
   };
 }
 

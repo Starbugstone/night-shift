@@ -19,21 +19,44 @@ function sparkle(r: number): Graphics {
     0, r, -r * 0.28, r * 0.28, -r, 0, -r * 0.28, -r * 0.28]).fill(C.mint);
 }
 
-function dish(): Graphics {
+const FLYER_HDR = { size: 9, color: '#fff8e8', weight: 900 } as const;
+
+function slipperFlyer(): Container {
+  const root = new Container();
   const g = batched(new Graphics());
-  const frame = { color: C.ink, width: 3 } as const;
-  g.ellipse(2, 8, 25, 19).fill('rgba(14,10,35,0.45)');
-  g.moveTo(-3, 4).lineTo(-18, 17).lineTo(12, 20).closePath().fill('#695a8c').stroke(frame);
-  g.ellipse(-2, 1, 24, 16).fill('#777c9e').stroke(frame);
-  g.ellipse(-2, -4, 24, 16).fill('#c7cfe6').stroke(frame);
-  g.ellipse(-2, -4, 17, 10).fill('#949fbf');
-  g.moveTo(-2, -4).lineTo(11, -18).stroke({ color: C.ink, width: 4, cap: 'round' });
-  g.circle(11, -18, 4).fill('#e7cb9a').stroke({ color: C.ink, width: 2 });
-  g.rotation = -0.45;
-  return g;
+  const frame = { color: C.ink, width: 2.5 } as const;
+  // Soft drop shadow on the dark pavement
+  g.roundRect(-18, -21, 42, 50, 3).fill('rgba(14,10,35,0.48)');
+  // Cream paper sheet with tear-off contact tabs along the bottom (one tab already torn off)
+  g.moveTo(-21, -24).lineTo(21, -24).lineTo(21, 25)
+    .lineTo(13, 25).lineTo(13, 19).lineTo(11, 19).lineTo(11, 25)
+    .lineTo(3, 25).lineTo(3, 19).lineTo(-5, 19).lineTo(-5, 25) // missing middle-left tab
+    .lineTo(-13, 25).lineTo(-13, 19).lineTo(-15, 19).lineTo(-15, 25)
+    .lineTo(-21, 25).closePath()
+    .fill('#fff6dc').stroke(frame);
+  // Perforation line above the tear-off tabs
+  g.moveTo(-19, 17).lineTo(19, 17).stroke({ color: '#c9ba96', width: 1.5 });
+  // Bold crimson LOST banner across the top
+  g.roundRect(-17, -18, 34, 11, 2).fill('#d93f56');
+  // Doyle's coral-red fuzzy slipper doodle in the centre (matches room/slipper.svg)
+  g.moveTo(-14, 1).quadraticCurveTo(-10, -2, -5, 0)
+    .lineTo(0, -4).quadraticCurveTo(3, -6, 9, -5).quadraticCurveTo(14, -4, 16, 2)
+    .quadraticCurveTo(17, 6, 12, 6).lineTo(-9, 7).quadraticCurveTo(-14, 7, -14, 3).closePath()
+    .fill('#dc6866').stroke({ color: C.ink, width: 2 });
+  g.moveTo(-11, 1).quadraticCurveTo(-7, -1, -3, 0).lineTo(-4, 3).lineTo(-11, 3).closePath().fill('#594050');
+  g.moveTo(2, -2).quadraticCurveTo(6, -4, 10, -2).stroke({ color: '#ebaa89', width: 1.5, cap: 'round' });
+  // Tiny scribbled "REWARD" lines under the slipper
+  g.moveTo(-12, 11).lineTo(12, 11).moveTo(-8, 14).lineTo(8, 14).stroke({ color: '#6b5c7a', width: 1.8, cap: 'round' });
+  // Red thumbtack pinning the flyer at the top centre
+  g.circle(0, -23, 4.5).fill('#e6485c').stroke({ color: C.ink, width: 2 });
+  g.circle(-1.2, -24.2, 1.3).fill('#ffd8de');
+  const header = new Label(FLYER_HDR).set(tr().mapCollectibles.flyerHeader, 0, -12.5, 32);
+  root.addChild(g, header);
+  root.rotation = -0.14;
+  return root;
 }
 
-const makeProp: Record<MapCollectibleId, () => Graphics> = { seti_dish: dish };
+const makeProp: Record<MapCollectibleId, () => Container> = { slipper_flyer: slipperFlyer };
 
 export class MapCollectibleView {
   readonly root = new Container();
@@ -78,7 +101,7 @@ export class MapCollectibleToast extends Container {
     super();
     const words = tr().mapCollectibles;
     const panel = new HudPanel().set(316, 44, C.mint);
-    this.position.set(VIEW_W / 2 - 158, 352);
+    this.position.set(VIEW_W / 2 - 158, 216);
     this.addChild(panel, new Label(TOAST).set(fmt(words.toast, { name: words.items[id].name }), 158, 22, 290));
   }
 

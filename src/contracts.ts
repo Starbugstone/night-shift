@@ -236,7 +236,7 @@ export type CreateAbductScene = (
 // ---------------------------------------------------------------- flight
 
 // v4 map collectibles
-export type MapCollectibleId = 'seti_dish';
+export type MapCollectibleId = 'slipper_flyer';
 
 export interface FlightResult {
   /** Which entry point the player locked onto. */
