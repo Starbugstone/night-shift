@@ -11,7 +11,7 @@ import { clamp, Contact, Ragdoll, STEP, type Blade, type Circle, type Rect, type
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
 import { GrailExit, GrailReaction } from './grail';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
-import { snoreHeard } from './snore-cue';
+import { SNORE_VOLUME, snoreHeard } from './snore-cue';
 import { tr } from '../i18n';
 import { readSeconds } from '../core/read-time';
 
@@ -452,7 +452,7 @@ export class AbductSimulation {
       this.snoreFx = 1.1;
       this.nextSnore = this.elapsed + 1.85 + this.random() * 0.65;
       if (interior && !this.grail?.knight && this.snores % 5 === 0 && this.mumbleFx === 0) this.sleepTalk();
-      if (snoreHeard(this.snores, charge)) this.audio.sfx('snore', this.room.human === 'doyle' ? 0.75 : 0.53);
+      if (snoreHeard(this.snores, charge)) this.audio.sfx('snore', this.room.human === 'doyle' ? SNORE_VOLUME.doyle : SNORE_VOLUME.sleeper);
     }
 
     this.updateItem();

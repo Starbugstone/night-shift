@@ -50,19 +50,27 @@ describe.each(Object.keys(ROOMS) as RoomId[])('beam cue in %s', roomId => {
   });
 });
 
-// "The snoring is even worse" (2026-11-26): every on-screen snore (~2 s) was voiced. See E8.
+// "The snoring is even worse" (2026-11-26): every on-screen snore (~2 s) was voiced. Then "too loud and too
+// frequent": one in five at 0.53 was still a drone. See E8.
+const SNORE_GAP = 20;
+const SNORE_LOUDEST = 0.32;
 describe.each(Object.keys(ROOMS) as RoomId[])('snore audio in %s', roomId => {
-  it('voices at most one snore in five while the sleeper lies still', () => {
-    let heard = 0;
+  it(`voices a quiet snore at most every ${SNORE_GAP} s while the sleeper lies still`, () => {
+    const heard: { at: number; volume: number }[] = [];
     const ctx: GameContext = {
-      pointer: { ...CLOSED }, assets: { get: () => undefined }, audio: { sfx: n => { if (n === 'snore') heard++; }, speak() {}, hush() {} },
+      pointer: { ...CLOSED }, assets: { get: () => undefined },
+      audio: { sfx: (n, volume = 1) => { if (n === 'snore') heard.push({ at: ctx.time, volume }); }, speak() {}, hush() {} },
       upgrades: new Set(), reducedMotion: true, tutorial: false, time: 0,
     };
     const scene = createAbductScene(ctx, { roomId, levelId: 'headless', rules: { wakeFails: false, hard: false } }, (_r: AbductResult) => {});
     const sim = (scene as unknown as { debug: AbductSimulation }).debug;
-    for (let f = 0; f < 20 * 60; f++) { ctx.time += 1 / 60; scene.update(1 / 60); }
+    for (let f = 0; f < 60 * 60; f++) { ctx.time += 1 / 60; scene.update(1 / 60); }
+    for (const h of heard) expect(h.volume, `snore at ${h.at.toFixed(1)} s`).toBeLessThanOrEqual(SNORE_LOUDEST);
     if (ROOMS[roomId].human === 'tom_enchanter') return; // its snore marks the spark charge: always heard
-    expect(sim.snores).toBeGreaterThan(3);
-    expect(heard, `${sim.snores} snores`).toBeLessThanOrEqual(Math.ceil(sim.snores / SNORE_AUDIO_EVERY));
+    expect(sim.snores).toBeGreaterThan(10);
+    expect(heard.length, `${sim.snores} snores`).toBeLessThanOrEqual(Math.ceil(sim.snores / SNORE_AUDIO_EVERY));
+    for (let i = 1; i < heard.length; i++) {
+      expect(heard[i]!.at - heard[i - 1]!.at, `gap before snore ${i + 1}`).toBeGreaterThanOrEqual(SNORE_GAP);
+    }
   });
 });
