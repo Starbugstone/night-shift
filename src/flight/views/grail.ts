@@ -6,7 +6,7 @@ import { artSprite } from '../../ui/views/art';
 import { C } from '../../ui/theme';
 import type { DeepFlightScene } from '../deep-scene';
 import type { HazardField } from '../hazards';
-import { CLOP, COW, RABBIT, type GrailHazard } from '../grail';
+import { CLOP, COW, GRAIL_LAUNCH, NI_KNIGHTS, PAVILION_RUTS, RABBIT, type GrailHazard } from '../grail';
 import { dashedArc, sectorPath } from './tells';
 import type { Box } from './clear-of';
 import type { CameraView } from './world';
@@ -21,13 +21,13 @@ export function grailTerrain(g: CanvasRenderingContext2D): void {
   const moat = 'M-120 600Q420 410 540 706T1050 889Q1310 887 1260 665T1860 475';
   stroke(moat, '#756d56', 170); stroke(moat, '#354e55', 156); stroke(moat, '#345e68', 133);
   const roads = [
-    'M900 2335L900 2150L774 2057Q610 2010 265 1930L265 1210L330 920L330 310H1530L1530 660L1515 1230L1525 1900Q1200 1975 900 2150',
+    'M-120 2068L180 2060L265 1930L265 1210L330 920L330 310H1530L1530 660L1515 1230L1525 1900Q1200 1975 900 2150L774 2057Q610 2010 265 1930',
     'M265 1010H1530', 'M900 2150V310',
   ];
   for (const d of roads) {
     stroke(d, '#504e44', 79); stroke(d, '#766d58', 66); stroke(d, '#716750', 42);
   }
-  for (const d of ['M265 1320L505 1290L460 1125L315 990', 'M785 855L1030 930L1010 1090L1190 1010H1370L1530 660']) {
+  for (const d of ['M' + PAVILION_RUTS.map(([x, y]) => `${x} ${y}`).join('L'), 'M785 855L1030 930L1010 1090L1190 1010H1370L1530 660']) {
     stroke(d, '#625e4c', 48); stroke(d, '#948169', 29); stroke(d, '#655f4e', 22);
   }
   // Old hoofprints survive between drops so a pilot can identify the landing site while waiting.
@@ -40,11 +40,13 @@ export function grailTerrain(g: CanvasRenderingContext2D): void {
       g.fill();
     }
   }
-  for (const x of [768,831]) {
-    g.fillStyle = '#6b493c'; g.fillRect(x, 2095, 9, 39);
+  // The empty hitching rail at the west launch, with the coconut halves hung from its reins.
+  const { x: lx, y: ly } = GRAIL_LAUNCH;
+  for (const x of [lx - 72, lx - 9]) {
+    g.fillStyle = '#6b493c'; g.fillRect(x, ly + 55, 9, 39);
   }
-  stroke('M769 2101h66', '#a37c59', 8);
-  stroke('M788 2104l6 14m13 -14l-3 13', '#c6b58e', 2);
+  stroke(`M${lx - 71} ${ly + 61}h66`, '#a37c59', 8);
+  stroke(`M${lx - 52} ${ly + 64}l6 14m13 -14l-3 13`, '#c6b58e', 2);
   g.restore();
 }
 
@@ -111,7 +113,7 @@ export class GrailSpeechView {
 
   constructor() {
     this.card.addChild(this.plate, this.words);
-    this.board.position.set(177, 1217);
+    this.board.position.set(NI_KNIGHTS.x + 2, NI_KNIGHTS.y - 43);
     this.board.addChild(new Graphics().rect(-4, 4, 8, 33).fill('#90654a').roundRect(-47, -12, 94, 26, 4).fill('#e4c68d').stroke({ color: C.ink, width: 2 }),
       new Label({ size: 15, weight: 900, color: C.ink }).set(tr().grail.board, 0, 1, 89));
     this.root.addChild(this.board, this.card);

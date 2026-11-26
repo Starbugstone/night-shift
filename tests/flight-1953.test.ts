@@ -16,7 +16,7 @@ import { defaultSave } from '../src/levels/save';
 import { PROFILES, playAbduction } from './difficulty/human';
 import { evaluateStars, evaluateTripodFirst } from './difficulty/stars';
 import { BEELINE_DELAYS } from './difficulty/beeline';
-import { autopilotController, runHeadless } from './flight-deep-harness';
+import { autopilotController, beelineController, runHeadless } from './flight-deep-harness';
 
 const { map } = LEVEL11;
 const DT = 1 / 60;
@@ -60,18 +60,47 @@ describe('1953 · Route 9 Drive-In', () => {
     expect(next.queueBarkT).toBe(0);
   });
 
-  it('the projector alone catches a direct launch to each entry at every tested phase', () => {
+  // v4 openings: no spawn gate. The evacuation pulls out of the drive-in ahead of the launch; overtaking
+  // it up the service road is the obvious line and it gets you caught.
+  it('the evacuation traffic alone catches a straight run to Sylvie’s staff door at every tested phase', () => {
+    const traffic = map.hazards.findIndex(h => h.type === 'traffic');
+    expect(traffic).toBeGreaterThanOrEqual(0);
+    const staff = map.targets[1]!.entries[0]!;
     for (const delay of BEELINE_DELAYS) {
-      for (const entry of map.targets.flatMap(t => t.entries)) {
-        const sim = new DeepFlightSim({ ...map, hazards: [DRIVE_IN_PROJECTOR] }, new Set(), delay);
-        while (sim.phase === 'fly' && sim.t < delay + 14) sim.update(DT, press(sim, entry));
-        expect(sim.phase, `${entry.roomId} from ${delay}s`).toBe('spotted');
-        expect(sim.spottedBy).toBe(0);
-      }
+      const sim = new DeepFlightSim({ ...map, hazards: [map.hazards[traffic]!] }, new Set(), delay);
+      while (sim.phase === 'fly' && sim.t < delay + 14) sim.update(DT, press(sim, staff));
+      expect(sim.phase, `${staff.roomId} from ${delay}s`).toBe('spotted');
+      expect(sim.spottedBy).toBe(0);
     }
   });
 
-  it('keeps the entire wait pocket, west road, queue, pickup and Church Lane dark', () => {
+  it('the naive beeline is caught by the evacuation at every tested phase', () => {
+    const traffic = map.hazards.findIndex(h => h.type === 'traffic');
+    for (const delay of BEELINE_DELAYS) {
+      const run = runHeadless(map, [], beelineController, LEVEL11.budgetSec, true, delay);
+      expect(run.done, `beeline from ${delay}s`).toBe(false);
+      expect(run.spots[0]?.hazard, `beeline from ${delay}s`).toBe(traffic);
+      expect(run.spots[0]?.cause).toBe('evacuees1953');
+    }
+  });
+
+  it('opens beside the saucer queue with no fixed detector reaching the launch', () => {
+    const { start } = map;
+    expect(Math.hypot(start.x - PILOT_QUEUE.x, start.y - PILOT_QUEUE.y)).toBeLessThan(265);
+    const field = new HazardField(map.hazards);
+    for (let t = 0; t < 25; t += 0.05) {
+      field.sample(t);
+      for (let x = start.x - 60; x <= start.x + 60; x += 10) {
+        for (let y = start.y - 60; y <= start.y + 80; y += 10) {
+          if (field.detect(x, y, noPorches) !== -1) throw new Error(`launch exposed at ${x},${y}, t=${t.toFixed(2)}`);
+        }
+      }
+    }
+    // The projector still lights the parking rows, off to the side of the launch.
+    expect(new HazardField([DRIVE_IN_PROJECTOR]).detect(900, 1900, noPorches)).toBe(0);
+  });
+
+  it('keeps the entire wait pocket, west road, queue, pickup, east verge and Church Lane dark', () => {
     const field = new HazardField(map.hazards);
     const points: Vec2[] = [TRIPOD_LEG];
     for (let x = 275; x <= 325; x += 5) {
@@ -86,8 +115,12 @@ describe('1953 · Route 9 Drive-In', () => {
     for (let x = 195; x <= 315; x += 12) {
       for (let y = 295; y <= 2185; y += 12) points.push({ x, y });
     }
+    // Church Lane up to the service-road kerb (the evacuation crosses its east end), and the east verge.
     for (let y = 235; y <= 355; y += 12) {
-      for (let x = 255; x <= 1620; x += 15) points.push({ x, y });
+      for (let x = 255; x <= 1500; x += 15) points.push({ x, y });
+    }
+    for (let x = 1690; x <= 1780; x += 15) {
+      for (let y = 300; y <= 2200; y += 15) points.push({ x, y });
     }
     for (let t = 0; t < 25; t += 0.05) {
       field.sample(t);

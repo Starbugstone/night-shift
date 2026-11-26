@@ -11,6 +11,7 @@ import { FRESH_LINE_SECONDS, readSeconds } from '../core/read-time';
 /** Zib lines that comment rather than warn. */
 const FLAVOUR: ReadonlySet<string> = new Set(['nearRing', 'locked', 'checkpoint', 'twoOfThree']);
 import type { FlightAutopilotIntent, GameContext, Scene, Vec2 } from '../contracts';
+import { VIEW_H, VIEW_W } from '../contracts'; // v4 openings
 import { P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles } from '../core/fx';
 import { ViewSlot } from '../core/gfx/scene';
 import { binLid } from '../levels/deep-birch-neighbours';
@@ -19,6 +20,7 @@ import { EggCues } from './easter-eggs'; // v4 easter eggs
 import { mapPickupFeedback } from './collectible';
 import { TripodLegPilot } from './invasion1953-pilot';
 import { greetedPilotQueues, PILOT_QUEUE } from './invasion1953';
+import { GRIMSBY_SET } from './recital'; // v4 openings
 import { TIME_CAR } from './time-car';
 import { TimeCarPilot } from './time-car-pilot';
 import { fmt, tr } from '../i18n'; // v4 voices
@@ -111,6 +113,8 @@ export class DeepFlightScene implements Scene {
   verseT = 0;
   verse = '';
   reciterIndex = -1;
+  /** v4 openings: L12's opener waits until a poet is on screen. */
+  private poetsUnseen = false;
   private versePending = false;
   private gagNear = -1;
   /** Seconds since the last respawn at a checkpoint, or -1. */
@@ -131,6 +135,7 @@ export class DeepFlightScene implements Scene {
     for (let i = 0; i < this.run.delivered.length; i++) if (this.run.delivered[i]) this.sim.markDelivered(i);
     const sp = this.run.spawn;
     this.sim.place(sp.x, sp.y, this.run.legs === 0 && this.run.spotted === 0 ? 0.4 : SAFE_WINDOW);
+    if (this.practice && this.level.id === 'level12') this.sim.place(GRIMSBY_SET.practice.x, GRIMSBY_SET.practice.y, 0.4); // v4 openings
     const n = this.level.map.hazards.length;
     this.lineFlash = new Float32Array(n);
     this.ambTell = new Uint8Array(n);
@@ -152,8 +157,9 @@ export class DeepFlightScene implements Scene {
       this.bannerT = 3;
       this.pendingOpener = deepStartEvent(this.level.id); // v4 story
       if (this.pendingOpener === 'start12') {
+        // v4 openings: the poets are no longer at the launch, so Zib names them on first sight.
         this.pendingOpener = null;
-        this.say('start12', true);
+        this.poetsUnseen = true;
       }
     }
     else if (this.run.legs > 0 && this.run.deliveredCount > 0 && this.run.lastFail === null) {
@@ -300,7 +306,7 @@ export class DeepFlightScene implements Scene {
     }
 
     const sim = this.sim;
-    if (this.practice && this.level.id === 'level12' && Math.abs(sim.saucer.x - 900) >= 552) {
+    if (this.practice && this.level.id === 'level12' && Math.abs(sim.saucer.x - GRIMSBY_SET.practice.x) >= GRIMSBY_SET.practice.laneDx) {
       this.done = true;
       this.opts.onQuit();
       return;
@@ -346,6 +352,13 @@ export class DeepFlightScene implements Scene {
     const rm = this.ctx.reducedMotion;
     if (this.level.map.theme === 'badlands' && nearHumOnset(field.defs, s.x, s.y, previousTime, st.t)) audio.sfx('monolith_hum');
     if (this.level.id === 'level12') {
+      for (let i = 0; this.poetsUnseen && i < field.defs.length; i++) {
+        const d = field.defs[i]!;
+        // 50 px: the guard sprite shows before its origin does
+        if (d.type !== 'camera' || d.x < sim.camX - 50 || d.x > sim.camX + VIEW_W + 50 || d.y < sim.camY - 50 || d.y > sim.camY + VIEW_H + 50) continue;
+        this.poetsUnseen = false;
+        this.say('start12', true);
+      }
       this.verseT = Math.max(0, this.verseT - dt);
       let speaker = -1;
       let distance = Infinity;

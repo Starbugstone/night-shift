@@ -787,6 +787,8 @@ export const fr: Strings = {
         // v4 1953
         projector1953: "Pièce A · photo du drive-in",
         sneeze1953: "Pièce A · image du rayon thermique",
+        // v4 openings
+        evacuees1953: 'Pièce A · photo de l’évacuation',
         // v4 2199
         poetry: "Division des gardes-poètes",
         dozer: "Flotte de démolition",
@@ -943,6 +945,8 @@ export const fr: Strings = {
       queue1953: ["C’est… Vrell ? Avec un porte-bloc ? Évidemment que c’est Vrell."],
       projector1953: ["Ils m’ont repéré et ils applaudissent. Ils croient que c’est moi, la 3D."],
       sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
+      // v4 openings
+      evacuees1953: ['Des phares ! On ne double jamais une évacuation. C’est malpoli, et c’est une preuve.'],
       // v4 2199
       start12: ["Ils ont envoyé des poètes. Vrell, leurs livres sont chargés ?"],
       demolition: ["Démolition dans trente secondes !"],
@@ -1058,6 +1062,8 @@ export const fr: Strings = {
       // v4 1953
       projector1953: ["Le public du drive-in vous repère et applaudit les « effets 3D »."],
       sneeze1953: ["Un tripode éternue sur votre coque. Toute la rangée avant a tout vu."],
+      // v4 openings
+      evacuees1953: ['Un break plein d’évacués fait une embardée, klaxonne et signale une soucoupe volante, à peine servie.'],
       // v4 2199
       poetry: ["Selon le garde-poète, tout le monde est resté pour le rappel. La plupart des gens étaient évanouis."],
       dozer: ["Le conducteur signale que la soucoupe gêne le passage. La maison d’Artie a déjà son dossier."],
@@ -1089,6 +1095,8 @@ export const fr: Strings = {
       // v4 1953
       projector1953: ["UNE SOUCOUPE !"],
       sneeze1953: ["À vos souhaits !"],
+      // v4 openings
+      evacuees1953: ['ILS SONT LÀ ! ACCÉLÈRE, HAROLD !'],
       // v4 2199
       poetry: ["UN RAPPEL !"],
       dozer: ["DÉGAGEZ LA ROUTE !"],
@@ -1124,6 +1132,8 @@ export const fr: Strings = {
       // v4 1953
       projector1953: ["Ils m’ont repéré et ils applaudissent. Ils croient que c’est moi, la 3D."],
       sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
+      // v4 openings
+      evacuees1953: ['J’ai doublé l’évacuation. La prochaine fois, j’attends mon tour comme un envahisseur civilisé.'],
       // v4 2199
       poetry: ["Je préfère tenter ma chance dans le sas."],
       dozer: ["Artie en a arrêté un en robe de chambre. C’était la tenue réglementaire ?"],

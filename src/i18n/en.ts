@@ -168,6 +168,8 @@ const deepZib = {
   queue1953: ["Is that… Vrell? With a clipboard? Of course it’s Vrell."],
   projector1953: ["They spotted me and clapped. They think I’m the 3-D."],
   sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
+  // v4 openings
+  evacuees1953: ["Headlights! Never overtake an evacuation. It's rude, and it's evidence."],
   // v4 2199
   start12: ["They’ve sent poets. Vrell, are their books loaded?"],
   demolition: ["Demolition in thirty seconds!"],
@@ -285,6 +287,8 @@ const spotCaptions = {
   // v4 1953
   projector1953: ['The drive-in crowd spots you and claps for the "3-D".'],
   sneeze1953: ["A tripod sneezes straight on your hull. You are now on camera."],
+  // v4 openings
+  evacuees1953: ['A station wagon full of evacuees swerves, honks and reports one flying saucer, barely used.'],
   // v4 2199
   poetry: ["The guard insists everyone stayed for the encore. Most of them were unconscious."],
   dozer: ["The driver marks the saucer as an obstruction. Artie’s house already has a file."],
@@ -998,6 +1002,8 @@ export const en = {
         // v4 1953
         projector1953: "Exhibit A · drive-in still",
         sneeze1953: "Exhibit A · heat-ray still",
+        // v4 openings
+        evacuees1953: 'Exhibit A · evacuation snapshot',
         // v4 2199
         poetry: "Recital Division",
         dozer: "Demolition fleet",
@@ -1126,6 +1132,8 @@ export const en = {
       // v4 1953
       projector1953: ["A FLYING SAUCER!"],
       sneeze1953: ["Bless you!"],
+      // v4 openings
+      evacuees1953: ["THEY'RE HERE! FLOOR IT, HAROLD!"],
       // v4 2199
       poetry: ["AN ENCORE!"],
       dozer: ["CLEAR THE ROAD!"],
@@ -1161,6 +1169,8 @@ export const en = {
       // v4 1953
       projector1953: ["They spotted me and clapped. They think I’m the 3-D."],
       sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
+      // v4 openings
+      evacuees1953: ['I overtook the evacuation. Next time I wait my turn like a civilised invader.'],
       // v4 2199
       poetry: ["I’ll take my chances in the airlock."],
       dozer: ["Artie stopped one of those in his dressing gown. Is that what I was supposed to wear?"],

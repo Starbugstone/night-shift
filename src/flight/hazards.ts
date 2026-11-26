@@ -21,7 +21,9 @@ export type CarKey = 'flight/police_top' | 'flight/sedan_top' | 'flight/taxi_top
   // L5 pier code: the harbour patrol boat drives a water path
   | 'flight/patrol_boat_top'
   // v4 L9 1955
-  | 'flight/police55_top';
+  | 'flight/police55_top'
+  // v4 openings: 1953 evacuation traffic
+  | 'flight/sedan55_top' | 'flight/wagon55_top';
 
 /** A car on a route: police cruiser (light bar), patrol car or plain car. */
 export interface CarHazard {
@@ -337,6 +339,8 @@ export const SPOT_CAUSES = [
   'grailSentry', 'cow', 'clop', 'rabbit',
   // v4 1953
   'projector1953', 'sneeze1953',
+  // v4 openings: 1953 evacuees (traffic and torch crowds)
+  'evacuees1953',
 ] as const;
 export type SpotCause = (typeof SPOT_CAUSES)[number];
 
@@ -881,7 +885,7 @@ export class HazardField {
       case 'car':
         return d.key === 'flight/police55_top' ? 'eraPolice' : d.role;
       case 'traffic':
-        return 'traffic';
+        return d.keys[0]?.endsWith('55_top') ? 'evacuees1953' : 'traffic'; // v4 openings
       case 'porch':
         return 'porch';
       case 'hum': return 'hum';
@@ -907,7 +911,7 @@ export class HazardField {
       case 'photographer':
         return 'photographer';
       case 'steward':
-        return d.skin ? 'dozer' : 'steward';
+        return d.skin === 'invasion' ? 'evacuees1953' : d.skin ? 'dozer' : 'steward'; // v4 openings
       default:
         return 'window';
     }

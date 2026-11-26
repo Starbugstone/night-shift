@@ -1,7 +1,7 @@
 import type { Audio, Vec2 } from '../contracts';
 import { readSeconds } from '../core/read-time';
 import { tr } from '../i18n';
-import type { HazardField } from './hazards';
+import type { CameraHazard, HazardField } from './hazards';
 import type { StewardHazard } from './photographer';
 import { pointInCircle } from './geometry';
 
@@ -13,6 +13,14 @@ export type GrailHazard =
 export const COW = { warning: 1.15, impact: 1.4, cycle: 7, radius: 108, body: 33 };
 export const CLOP = { period: 2.6, warning: 0.45, pulse: 1.05, radius: 118 };
 export const RABBIT = { radius: 118, speed: 110, arm: 0.75, lunge: 0.95, rest: 1.5 };
+/** The coconut cavalry trots in from the west along the cart track. */
+export const GRAIL_LAUNCH = { x: 180, y: 2060 };
+/** The French taunter watches the inner field between Rodney's pavilion and the Black Knight's bridge. */
+export const GRAIL_SENTRY = {
+  type: 'camera', skin: 'grail_sentry_top', x: 220, y: 1070, base: 1.28, range: 520, half: 0.6, amp: 0, rate: 0, phase: 0,
+} satisfies CameraHazard;
+/** The Knights Who Say Ni, by the west hedge north of Rodney's tent. */
+export const NI_KNIGHTS = { x: 185, y: 770 };
 export const cycleTime = (t: number, period: number): number => ((t % period) + period) % period;
 
 export function inRabbitRun(cx: number, cy: number, x: number, y: number): boolean {
@@ -29,11 +37,11 @@ export function rabbitStart(start: number, t: number, eligible: boolean): number
   return eligible ? t : -Infinity;
 }
 
-// The cart driver uses the marked shortcut past the first drop. The planner samples the
-// actual cow phase at its wait pocket before committing to this stretch.
+// The cart driver leaves the watched track and follows the wagon ruts up the field east of the lookout,
+// then times the first cow drop into Rodney's supply flap.
+export const PAVILION_RUTS = [[700, 2040], [700, 1150], [470, 1050], [315, 990]] as const;
 export function pavilionTrack(): Vec2[] {
-  const posts = [[900, 2150], [774, 2057], [265, 1930], [265, 1410],
-    [505, 1290], [460, 1125], [315, 990]] as const;
+  const posts = [[GRAIL_LAUNCH.x, GRAIL_LAUNCH.y], [430, 2045], ...PAVILION_RUTS] as const;
   const points: Vec2[] = [{ x: posts[0][0], y: posts[0][1] }];
   for (let i = 1; i < posts.length; i++) {
     const [x, y] = posts[i - 1]!, [tx, ty] = posts[i]!;
@@ -65,7 +73,7 @@ export class GrailSpeech {
 
   update(t: number, x: number, y: number, exposed: boolean, committed: boolean, collected: boolean): void {
     const words = tr().grail;
-    const near = Math.hypot(x - 900, y - 1510) < 650;
+    const near = Math.hypot(x - GRAIL_SENTRY.x, y - GRAIL_SENTRY.y) < 650;
     if (committed && !this.ranAway) {
       this.ranAway = this.sawBunny = true;
       this.speak(words.rabbit[1]!, t, x, y - 120);
@@ -80,8 +88,8 @@ export class GrailSpeech {
       } else if (!this.sawBunny && Math.hypot(x - 1190, y - 970) < 230) {
         this.speak(words.rabbit[0]!, t, x, y - 115);
         this.sawBunny = true;
-      } else if (!collected && t >= this.niAt && Math.hypot(x - 175, y - 1260) < 265) {
-        this.speak(words.ni, t, 175, 1200);
+      } else if (!collected && t >= this.niAt && Math.hypot(x - NI_KNIGHTS.x, y - NI_KNIGHTS.y) < 265) {
+        this.speak(words.ni, t, NI_KNIGHTS.x, NI_KNIGHTS.y - 60);
         this.niAt = this.until + 2;
       }
     }

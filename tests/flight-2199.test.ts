@@ -4,12 +4,14 @@ import { DeepFlightSim, SAFE_WINDOW } from '../src/flight/deep-sim';
 import type { Vec2 } from '../src/contracts';
 import { BEELINE_DELAYS } from './difficulty/beeline';
 import { DeepRun } from '../src/levels/run';
+import { DeepFlightScene } from '../src/flight/deep-scene';
 import { defaultSave, validateSave } from '../src/levels/save';
 import { applyDeepRun, isLevelUnlocked } from '../src/levels/progress';
 import { LEVELS } from '../src/levels/levels';
 import { HazardField } from '../src/flight/hazards';
 import { STEWARD_REACH } from '../src/flight/photographer';
-import { recitalAt } from '../src/flight/recital';
+import { GRIMSBY_SET, recitalAt } from '../src/flight/recital';
+import { beelineController, runHeadless } from './flight-deep-harness';
 import { pointInCone } from '../src/flight/geometry';
 import { deepReport } from '../src/ui/report';
 import { tr } from '../src/i18n';
@@ -50,12 +52,13 @@ function steerTo(sim: DeepFlightSim, target: Vec2): void {
 
 describe('2199 harbour approaches', () => {
   it('keeps every 48-pixel recommended ring, staging pocket and quay crossing clear throughout each sweep', () => {
-    for (const [x, y] of [[270,795],[1530,795],[1080,380],[535,565],[1490,560],[760,375],[1270,130],[190,1380]]) {
+    for (const [x, y] of [[270,795],[1530,795],[1080,1950],[535,565],[1490,560],[760,1945],[1270,130],[180,430],
+      [map.start.x, map.start.y], [GRIMSBY_SET.practice.x, GRIMSBY_SET.practice.y]]) {
       expect(exposure(x!, y!, 48).some(Boolean), `pocket at ${x},${y}`).toBe(false);
     }
   });
   it('leaves a shared brake-and-lock interval at every fast ring', () => {
-    for (const [x, y] of [[530,675],[1270,675],[900,470]]) {
+    for (const [x, y] of [[530,675],[1270,675],[900,2040]]) {
       let clear = 0, longest = 0;
       for (const exposed of exposure(x!, y!, 48)) {
         clear = exposed ? 0 : clear + dt;
@@ -91,11 +94,36 @@ describe('2199 harbour approaches', () => {
     }
   });
 
-  it('catches a finger aimed directly at each of the six rings from every launch phase', () => {
-    for (const delay of BEELINE_DELAYS) for (const target of map.targets) for (const entry of target.entries) {
-      const sim = new DeepFlightSim(map, new Set(), delay);
-      for (let tick = 0; tick < 8 / dt && sim.phase === 'fly'; tick++) steerTo(sim, entry);
-      expect(sim.spottedBy, entry.roomId).toBe(0);
+  it('launches from the north under the barges, with the avenue recital out of the opening screen', () => {
+    expect(map.start.y / map.h).toBeLessThan(0.25);
+    const d = map.hazards[0]!;
+    if (d.type !== 'camera') throw new Error('Avenue lectern missing');
+    expect(d.y - d.range, 'cone tip below the first screen').toBeGreaterThan(960);
+  });
+
+  it('catches the blind beeline at every launch phase', () => {
+    for (const delay of BEELINE_DELAYS) {
+      const run = runHeadless(map, [], beelineController, LEVEL12.budgetSec, true, delay);
+      expect(run.done, `delay ${delay}`).toBe(false);
+      expect(run.spots.length, `delay ${delay}`).toBe(1);
+    }
+  });
+
+  // The recommended doors sit on the outer lanes, the designed way down. Everything else meets the poet.
+  it('the avenue recital and the cordon alone catch every blind run into Moe’s bureau from the launch and both fast doors', () => {
+    const starts = [map.start, ...map.targets.slice(0, 2).flatMap(t => t.entries.filter(e => !e.recommended))];
+    const guarded = { ...map, hazards: [map.hazards[0]!, ...map.hazards.filter(d => d.type === 'wire')] };
+    for (const delay of BEELINE_DELAYS) for (const from of starts) {
+      const sim = new DeepFlightSim(guarded, new Set(), delay);
+      sim.markDelivered(0);
+      sim.markDelivered(1);
+      sim.place(from.x, from.y, 0);
+      const ctl = beelineController(sim);
+      for (let tick = 0; tick < 12 / dt && sim.phase === 'fly'; tick++) {
+        const it = ctl(sim);
+        sim.update(dt, { down: it.down, pressed: false, released: false, x: it.x, y: it.y });
+      }
+      expect(sim.spottedBy, `from ${from.x},${from.y} at ${delay}s`).toBe(0);
     }
   });
 
@@ -103,7 +131,7 @@ describe('2199 harbour approaches', () => {
     const turnouts = [
       [{ x: 310, y: 940 }, { x: 535, y: 565 }],
       [{ x: 1490, y: 940 }, { x: 1490, y: 560 }],
-      [{ x: 1080, y: 200 }, { x: 760, y: 375 }],
+      [{ x: 1080, y: 1770 }, { x: 760, y: 1945 }],
     ];
     for (const [i, target] of map.targets.entries()) for (const [j, entry] of target.entries.entries()) {
       const pocket = turnouts[i]![j]!;
@@ -128,14 +156,35 @@ describe('2199 harbour approaches', () => {
   });
   it('runs a stationary listener and the 0.45-second preview from the live camera sampler', () => {
     const d = map.hazards[0]!;
-    if (d.type !== 'camera') throw new Error('Opening lectern missing');
+    if (d.type !== 'camera') throw new Error('Avenue lectern missing');
+    const [lx, ly] = GRIMSBY_SET.listeners[0];
     const poses = new Set<boolean>();
     for (let t = 0; t < 12; t += 0.05) {
       field.sample(t + 0.45);
-      poses.add(recitalAt(d, t, 660, 1565));
-      expect(recitalAt(d, t + 0.45, 660, 1565)).toBe(pointInCone(660, 1565, d.x, d.y, field.a[0]!, d.half, d.range));
+      poses.add(recitalAt(d, t, lx, ly));
+      expect(recitalAt(d, t + 0.45, lx, ly)).toBe(pointInCone(lx, ly, d.x, d.y, field.a[0]!, d.half, d.range));
     }
     expect(poses.size).toBe(2);
+  });
+});
+
+describe('2199 opener', () => {
+  it('Zib names the poets when the first one comes on screen, not at the launch', () => {
+    const ctx = {
+      pointer: { down: false, x: 0, y: 0, pressed: false, released: false }, assets: { get: () => undefined },
+      audio: { sfx() {} }, upgrades: new Set<never>(), tutorial: false, time: 0, reducedMotion: true,
+    };
+    const scene = new DeepFlightScene({ ctx, level: LEVEL12, run: new DeepRun(LEVEL12, index), onLocked() {}, onSunrise() {}, onQuit() {} });
+    const line = tr().humor.deepZib.start12[0];
+    for (let i = 0; i < 30; i++) scene.update(1 / 60);
+    expect(scene.zibText).not.toBe(line);
+    scene.sim.place(600, 860, 3); // the west lectern's poet is now in view
+    let said = false;
+    for (let i = 0; i < 120 && !said; i++) {
+      scene.update(1 / 60);
+      said = scene.zibText === line;
+    }
+    expect(said).toBe(true);
   });
 });
 

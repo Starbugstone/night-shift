@@ -2,9 +2,12 @@ import type { FlightAutopilotIntent } from '../../src/contracts';
 import type { DeepFlightSim } from '../../src/flight/deep-sim';
 import { humanSteering, type HumanProfile } from './human';
 
-/** Take the west bank to the hedge, then hand control back to the regular ring planner. */
+/**
+ * After Rodney, slip west behind the French lookout to the hedge, then hand control back to the regular
+ * ring planner. The lookout watches the cart track south of the tent, so the detour waits for the first leg.
+ */
 export function shrubberyDetour(sim: DeepFlightSim, profile: HumanProfile, seed: number): () => FlightAutopilotIntent {
-  const route = [{ x: 440, y: 2110 }, { x: 265, y: 1930 }, { x: 265, y: 1450 }, sim.collectible!.def];
+  const route = [{ x: 220, y: 900 }, sim.collectible!.def];
   let i = 0;
   const hand = humanSteering(profile, seed);
   return () => {

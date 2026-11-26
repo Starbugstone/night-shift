@@ -93,6 +93,14 @@ every start time the difficulty evaluator tests. The challenge sits on the obvio
 be hard but must stay reachable for the casual (average human) model, more generously in early
 levels. `npm run difficulty` enforces both.
 
+**Hard rule: no spawn gate, and vary the openings (2026-11-26).** Meet the beeline rule on the way:
+a patrol crossing the route, traffic, a guard at the door, a timed burst mid-map. Don't do it by
+parking a fixed detector across every straight line out of the spawn. At most two levels may keep a
+spawn gate, each with a written story reason. Each spawn sits in a zone (an edge third, or the
+centre). Neighbouring levels in `LEVELS` order use different zones, and the game uses at least four.
+Tie the arrival to the level's story. `tests/levels-spawn-variety.test.ts` enforces both rules. Its
+`PENDING_*` lists name the levels still waiting for their rework and may only shrink.
+
 **Hard rule: every town pickup is hinted in the shift memo.** Each level after L1 has exactly one
 optional map collectible (docs/GDD-8-map-collectibles.md), and that level's shift memo mentions it in
 English and French. If a memo already names an object or person, that thing is the collectible. L1 has

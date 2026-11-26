@@ -202,7 +202,7 @@ export class DriveInScenery {
     this.child = at(this.root, artSprite(assets, 'flight/invasion_child_clap_top') ?? new Graphics()
       .ellipse(0, 7, 15, 11).fill('#7775a6').stroke(edge).circle(0, -9, 8).fill('#c79073').stroke(edge), 1130, 1915);
     this.car = at(this.root, artSprite(assets, 'flight/sedan55_top', 58, 106) ?? new Graphics()
-      .roundRect(-28, -49, 56, 98, 12).fill('#6b8299').stroke(edge).rect(-21, -24, 42, 42).fill('#413c57'), 1230, 1948);
+      .roundRect(-28, -49, 56, 98, 12).fill('#6b8299').stroke(edge).rect(-21, -24, 42, 42).fill('#413c57'), 1230, 1790); // v4 openings: queues at the drive-in exit
     this.car.rotation = Math.PI / 2;
     for (let i = 0; i < 3; i++) {
       const parked = new Graphics()
@@ -238,6 +238,6 @@ export class DriveInScenery {
     this.child.rotation = reduced ? 0 : 0.12 * Math.sin(t * 10);
     this.applause.alpha = exposed ? 1 : 0.42;
     this.applause.rotation = reduced ? 0 : 0.15 * Math.sin(t * 12);
-    this.car.x = 1230 + (reduced ? 0 : Math.max(0, Math.min(1, (t - 4) / 6)) * 485);
+    this.car.x = 1230 + (reduced ? 0 : Math.max(0, Math.min(1, (t - 4) / 6)) * 290);
   }
 }

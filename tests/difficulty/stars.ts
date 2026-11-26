@@ -102,7 +102,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     const read = firstLeg && level.id === 'birch_bakery' ? new BakeryFirstRead(sim, profile, seed)
       : firstLeg && level.id === 'birch_neighbours' ? new NeighboursCut(sim, profile, seed) : undefined;
     const legStart = shift.elapsed;
-    const hedge = detour === 'shrubbery' && level.id === 'level10' && sim.collectible?.available ? shrubberyDetour(sim, profile, seed) : undefined;
+    const hedge = detour === 'shrubbery' && level.id === 'level10' && shift.legs > 0 && sim.collectible?.available ? shrubberyDetour(sim, profile, seed) : undefined;
     const towel = detour === 'towel' && !sim.collectible!.collected ? towelDetour(sim, profile, seed) : undefined;
     let exposure: Record<number, number> | undefined;
     while (shift.phase === 'flight' && shift.elapsed < limit) {

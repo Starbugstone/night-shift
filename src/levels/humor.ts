@@ -155,6 +155,8 @@ export type DeepZibEvent =
   | 'stormClosing' | 'eraLight' | 'eraWatcher' | 'eraPolice'
   // v4 1953
   | 'start1953' | 'queue1953' | 'projector1953' | 'sneeze1953'
+  // v4 openings
+  | 'evacuees1953'
   | 'twoOfThree'
   | 'birchHandprint' | 'birchRetry' | 'birchLaunch' | 'birchBinLid' | 'birchReturned';
 

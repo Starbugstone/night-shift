@@ -1,4 +1,5 @@
 import { DRIVE_IN_PROJECTOR, SNEEZE_SHORTCUT, TRIPOD_LEG, TRIPOD_SNEEZE } from '../flight/invasion1953';
+import { TRAFFIC_LANE } from '../flight/hazards';
 import type { StewardHazard } from '../flight/photographer';
 import { en } from '../i18n/en';
 import type { DeepLevelDef, EntryDef, PropDef, PropKind } from './types';
@@ -23,14 +24,15 @@ export const LEVEL11: DeepLevelDef = {
   memo: { re: copy.re, body: copy.body, joke: copy.joke },
   hours: [1, 6], budgetSec: 292, parMarginSec: 118,
   map: {
-    theme: 'invasion53', w: 1800, h: 2280, start: { x: 900, y: 2185 }, fuseSec: 0.64,
+    theme: 'invasion53', w: 1800, h: 2280, start: { x: 1588, y: 1980 }, fuseSec: 0.64,
     collectible: TRIPOD_LEG,
     roads: [
       { dir: 'v', at: 255, from: 295, to: 2180 },
-      { dir: 'v', at: 1620, from: 295, to: 2180 },
+      { dir: 'v', at: 1620, from: 0, to: 2280 },
       { dir: 'h', at: 295, from: 255, to: 1620 },
       { dir: 'h', at: 2180, from: 255, to: 1620 },
       { dir: 'h', at: 1125, from: SNEEZE_SHORTCUT[2].x, to: 1620 },
+      { dir: 'h', at: 1790, from: 1200, to: 1620 },
     ],
     groundProps: [
       prop('invasion_crater_top', 'field', 475, 1213),
@@ -61,7 +63,8 @@ export const LEVEL11: DeepLevelDef = {
     ],
     hazards: [
       DRIVE_IN_PROJECTOR, TRIPOD_SNEEZE,
-      crowd(1195, 1370, 1355, 1290, 94, 178, 0.1),
+      { type: 'traffic', dir: 'v', at: 1620 - TRAFFIC_LANE, from: 0, to: 1640, sign: -1, speed: 110, gap: 360, offset: 0, coneRange: 260, coneHalf: 0.3, keys: ['flight/sedan55_top', 'flight/wagon55_top', 'flight/sedan55_top'] },
+      crowd(1400, 1470, 1480, 1270, 90, 178, 0.1), // v4 openings: evacuees on foot between the exit and Sylvie’s desk
       crowd(1140, 795, 1120, 600, 82, 165, 0.65),
     ],
     lamps: [{ x: 318, y: 752 }, { x: 1474, y: 1110 }, { x: 833, y: 570 }, { x: 155, y: 1170 }],

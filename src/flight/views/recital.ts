@@ -4,7 +4,7 @@ import type { Assets } from '../../contracts';
 import { tr } from '../../i18n';
 import { artSprite } from '../../ui/views/art';
 import type { DeepFlightScene } from '../deep-scene';
-import { cameraHeading, RECITAL_LOOKAHEAD, recitalAt } from '../recital';
+import { cameraHeading, GRIMSBY_SET, RECITAL_LOOKAHEAD, recitalAt } from '../recital';
 import { stewardPose, STEWARD_REACH } from '../photographer';
 import { dashedArc, dashedLine, sectorPath } from './tells';
 import type { Box } from './clear-of';
@@ -54,24 +54,21 @@ export class RecitalView {
       this.sectors.addChild(g);
       return g;
     });
-    this.listeners = [[660, 1565], [831, 522]].map(([x, y]) => {
+    this.listeners = GRIMSBY_SET.listeners.map(([x, y]) => {
       const figure = artSprite(assets, 'flight/recital_listener2199') ?? new Graphics().ellipse(0, 6, 17, 11)
         .fill('#88748b').circle(0, -5, 10).fill('#dbb998');
       figure.position.set(x!, y!);
       this.ground.addChild(figure);
       return figure;
     });
-    const sign = new Graphics().rect(811, 1924, 8, 47).rect(982, 1924, 8, 47).fill('#817e86')
-      .roundRect(793, 1900, 214, 50, 8).fill('#283a47').stroke({ color: '#d7c48e', width: 4 });
-    for (const x of [765, 1035]) {
-      const dir = x < 900 ? -1 : 1;
-      sign.moveTo(x - dir * 37, 2110).lineTo(x + dir * 27, 2110).moveTo(x + dir * 7, 2090)
-        .lineTo(x + dir * 27, 2110).lineTo(x + dir * 7, 2130).stroke({ color: '#ded3af', width: 9, cap: 'round' });
-    }
-    this.ground.addChild(sign, new Label({ size: 24, weight: 900, color: '#ffe6ab' }).set(tr().dispatch2199.sign, 900, 1924, 198));
+    const at = GRIMSBY_SET.sign;
+    const sign = new Graphics().rect(at.x - 89, at.y, 8, 47).rect(at.x + 82, at.y, 8, 47).fill('#817e86')
+      .roundRect(at.x - 107, at.y - 24, 214, 50, 8).fill('#283a47').stroke({ color: '#d7c48e', width: 4 });
+    this.ground.addChild(sign, new Label({ size: 24, weight: 900, color: '#ffe6ab' }).set(tr().dispatch2199.sign, at.x, at.y, 198));
     this.ground.addChild(new Graphics().moveTo(1460, 577).lineTo(1280, 667).stroke({ color: '#b7b4a1', width: 4, alpha: 0.8 }));
-    for (const [x, y] of [[400, 330], [1510, 287]]) {
-      for (let i = 0; i < 5; i++) this.lamps.addChild(new Graphics().circle(x! - 132 + i * 55, y! + 58 - i * 2, 7).fill('#ffd375'));
+    for (const { key, x, y } of s.level.map.groundProps) {
+      if (key !== 'flight/demolition_barge2199_top') continue;
+      for (let i = 0; i < 5; i++) this.lamps.addChild(new Graphics().circle(x - 132 + i * 55, y + 58 - i * 2, 7).fill('#ffd375'));
     }
     this.ground.addChild(this.lamps);
     this.heights = [];

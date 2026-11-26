@@ -2,7 +2,8 @@ import type { FlightAutopilotIntent, Vec2 } from '../contracts';
 import type { DeepFlightSim } from './deep-sim';
 import { TRIPOD_LEG } from './invasion1953';
 
-const APPROACH = [{ x: 258, y: 2185 }, { x: 186, y: 1640 }, TRIPOD_LEG] as const;
+// v4 openings: from the launch by the queue, south of the screen (outside the projector's reach), then north.
+const APPROACH = [{ x: 1560, y: 2205 }, { x: 258, y: 2205 }, { x: 186, y: 1640 }, TRIPOD_LEG] as const;
 
 /** Optional first leg for the browser replay and the detour difficulty model. */
 export class TripodLegPilot {

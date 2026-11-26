@@ -5,7 +5,7 @@ import { humanSteering, type HumanProfile } from './human';
 export function towelDetour(sim: DeepFlightSim, profile: HumanProfile, seed: number) {
   const hand = humanSteering(profile, seed);
   const rack = sim.collectible!.def;
-  const route = [{ x: 310, y: 2110 }, { x: 310, y: 1468 }, rack];
+  const route = [{ x: 310, y: 518 }, rack];
   let leg = 0;
   return () => {
     const { saucer: s, camX, camY } = sim;
