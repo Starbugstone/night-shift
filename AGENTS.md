@@ -214,8 +214,8 @@ Several sessions edit this checkout at once, with uncommitted hunks in the same 
 `deep-view.ts`...), and some keep local commits they have not pushed yet. (2026-11-26, advised by Neon and Sol.)
 
 - **Who commits.** Delegated children never run `git add`, `git commit`, `git stash`, `git checkout` or
-  `git reset`: they report their files and hunks, and the parent commits. A top-level thread commits only
-  when the user asks ("commit and push").
+  `git reset`: they report their files and hunks, and the parent commits. **Hard rule (user, 2026-11-26):** a
+  top-level thread commits and pushes every finished change to `preprod` without asking, once its checks pass.
 - **Never in the shared checkout:** `git stash` (it takes other sessions' edits off the disk), `git checkout`,
   `git switch`, `git restore` or `git reset` on files that aren't yours, `git add -A`, `git add .`,
   `git commit -a`, and force-pushing.
@@ -228,5 +228,6 @@ Several sessions edit this checkout at once, with uncommitted hunks in the same 
   when every outgoing commit is yours, or the user asked to ship it. Otherwise, or if the push is rejected,
   don't rebase the shared checkout: cherry-pick your commits onto `origin/preprod` in a scratch worktree, run
   the checks there, `git push origin HEAD:preprod`, and tell the user the shared branch needs reconciling.
-- **Branches.** Work ships to `preprod`. Merge or push to `main` only when the user says so.
+- **Branches.** Work ships to `preprod`. Merge or push to `main` only when the user says so: that is the only
+  push that needs asking.
 - **Report** the pushed SHA, what it contains and the checks you ran.
