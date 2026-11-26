@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import type { Assets } from '../../contracts';
-import { Label, Paragraph } from '../../core/gfx/text';
+import { Label, Paragraph, measure } from '../../core/gfx/text';
 import { tr } from '../../i18n';
 import { artSprite } from '../../ui/views/art';
 import { C } from '../../ui/theme';
@@ -8,6 +8,7 @@ import type { DeepFlightScene } from '../deep-scene';
 import type { HazardField } from '../hazards';
 import { CLOP, COW, RABBIT, type GrailHazard } from '../grail';
 import { dashedArc, sectorPath } from './tells';
+import type { Box } from './clear-of';
 import type { CameraView } from './world';
 
 export function grailTerrain(g: CanvasRenderingContext2D): void {
@@ -101,12 +102,15 @@ export class GrailDetectorView {
 export class GrailSpeechView {
   readonly root = new Container();
   private readonly card = new Container();
+  private readonly plate = new Graphics();
+  private width = 252;
+  private height = 60;
   private readonly words = new Paragraph({ size: 17, weight: 750, color: C.paperInk, align: 'center' });
   private readonly board = new Container();
   private line = '';
 
   constructor() {
-    this.card.addChild(new Graphics().roundRect(-126, -30, 252, 60, 13).fill(C.paper).stroke({ color: C.ink, width: 3 }), this.words);
+    this.card.addChild(this.plate, this.words);
     this.board.position.set(177, 1217);
     this.board.addChild(new Graphics().rect(-4, 4, 8, 33).fill('#90654a').roundRect(-47, -12, 94, 26, 4).fill('#e4c68d').stroke({ color: C.ink, width: 2 }),
       new Label({ size: 15, weight: 900, color: C.ink }).set(tr().grail.board, 0, 1, 89));
@@ -118,11 +122,26 @@ export class GrailSpeechView {
     this.board.visible = !!s.sim.collectible?.collectedId;
     this.card.visible = !!cue && cue.until > s.run.elapsed;
     if (!cue || !this.card.visible) return;
-    this.card.position.set(Math.max(s.sim.camX + 130, Math.min(s.sim.camX + 410, cue.x)), Math.max(s.sim.camY + 196, Math.min(s.sim.camY + 760, cue.y)));
     if (cue.text !== this.line) {
       this.line = cue.text;
-      const height = this.words.setBlock(this.line, -117.5, 0, 235);
+      this.width = Math.max(72, Math.min(260, measure(this.line, 17, 750) + 28));
+      const height = this.words.setBlock(this.line, -this.width / 2 + 12, 0, this.width - 24);
       this.words.y = -height / 2;
+      this.height = height + 20;
+      this.plate.clear().roundRect(-this.width / 2, -this.height / 2, this.width, this.height, 12)
+        .fill(C.paper).stroke({ color: C.ink, width: 3 });
     }
+    const pad = this.width / 2 + 6;
+    this.card.position.set(Math.max(s.sim.camX + pad, Math.min(s.sim.camX + 540 - pad, cue.x)),
+      Math.max(s.sim.camY + 196, Math.min(s.sim.camY + 760, cue.y)));
+  }
+
+  avoid(box: Box, cam: CameraView): boolean {
+    if (!this.card.visible) return false;
+    box.x = this.card.x - cam.x - this.width / 2 - 4;
+    box.y = this.card.y - cam.y - this.height / 2 - 4;
+    box.w = this.width + 8;
+    box.h = this.height + 8;
+    return true;
   }
 }

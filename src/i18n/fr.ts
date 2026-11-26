@@ -138,7 +138,7 @@ export const fr: Strings = {
     orderNo: 'ORDRE N°{num}',
     training: 'FORMATION',
     learner: 'A',
-    deepShift: 'GROSSE NUIT ×3',
+    deepShift: 'GROSSE NUIT ×{n}',
     locked: 'VERROUILLÉ',
     par: 'Objectif {time}',
     best: 'Record {time}',

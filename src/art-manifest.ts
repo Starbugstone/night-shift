@@ -768,6 +768,7 @@ export const ART: Record<string, ArtSpec> = {
   // v4 Birch Lane · APPEND
   'flight/bakery_back_windowsill_top': { w: 160, h: 108 },
   'flight/bakery_loading_gate_top': { w: 150, h: 86 },
+  'flight/pruitt_binoculars': { w: 76, h: 76 }, // Mrs Pruitt leaning out to watch the lane.
   'flight/birch_bakery_top': { w: 300, h: 240 },
   'flight/henderson_garage_top': { w: 320, h: 240 },
   'flight/len_workshop_top': { w: 260, h: 200 },

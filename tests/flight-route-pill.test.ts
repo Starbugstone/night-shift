@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_H, VIEW_W } from '../src/contracts';
 import { LEVELS, isDeep } from '../src/levels/levels';
+import { LANGS, TABLES } from '../src/i18n';
 import { RING_R } from '../src/flight/sim';
 import { placePill, placePills, type Box, type PillAsk } from '../src/flight/views/clear-of';
 
@@ -80,6 +81,48 @@ describe('route pill placement', () => {
     const boxes = placeAll(hud, rings, sides, widths);
     boxes.forEach((p, i) => expectClear(p, hud, rings, `pill ${i}`));
     expect(overlaps(boxes[0]!, boxes[1]!), JSON.stringify(boxes)).toBe(false);
+  });
+
+  it('stacks both labels in the remaining band when neither preferred side fits', () => {
+    const hud = [{ x: 0, y: 200, w: VIEW_W, h: VIEW_H - 200 }];
+    const boxes = placeAll(hud, [[-RING_R, 150], [VIEW_W + RING_R, 150]], [1, 1], [450, 440]);
+    for (const box of boxes) {
+      expect(box.y).toBeGreaterThanOrEqual(TOP);
+      expect(box.y + box.h).toBeLessThanOrEqual(200);
+    }
+    expect(overlaps(boxes[0]!, boxes[1]!)).toBe(false);
+  });
+
+  it('places disjoint entry labels while panning every work order in English and French', () => {
+    for (const level of LEVELS) {
+      const map = level.map;
+      const entries = isDeep(level) ? level.map.targets.flatMap(t => t.entries) : level.map.entries;
+      for (const lang of LANGS) {
+        const strings = TABLES[lang];
+        for (const entry of entries) {
+          for (const offsetX of [0, 140, 270, 400, 540]) {
+            for (const offsetY of [0, 130, 480, 840, 960]) {
+              const x = Math.max(0, Math.min(map.w - VIEW_W, entry.x - offsetX));
+              const y = Math.max(0, Math.min(map.h - VIEW_H, entry.y - offsetY));
+              const visible = entries.filter(e => e.x >= x - RING_R && e.x <= x + VIEW_W + RING_R &&
+                e.y >= y + TOP - RING_R && e.y <= y + VIEW_H + RING_R);
+              const centers = visible.map((e): [number, number] => [e.x - x, e.y - y]);
+              const boxes = placeAll([chips(347), minimap, ringBox(270, 557)], centers,
+                visible.map(e => e.labelSide === 'above' ? -1 : 1), visible.map(e => {
+                  const route = strings.routes[e.roomId];
+                  const advice = (strings.routeAdvice as Partial<Record<typeof e.roomId, string>>)[e.roomId] ?? route.difficulty;
+                  return Math.min(VIEW_W - 16, 28 + (route.route + strings.flight.entrySep + advice).length * 11);
+                }));
+              for (let i = 0; i < boxes.length; i++) {
+                for (let j = i + 1; j < boxes.length; j++) {
+                  expect(overlaps(boxes[i]!, boxes[j]!), `${level.id}/${lang} at ${x},${y}: ${visible[i]!.roomId}, ${visible[j]!.roomId}`).toBe(false);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   });
 
   it('keeps every deep-level pill clear of the HUD, of every ring and of every other pill on screen', () => {

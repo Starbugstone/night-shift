@@ -349,16 +349,25 @@ class ReportView implements SceneView {
     );
 
     const rowLabel = { size: L.rowSize, color: C.paperInk, align: 'left', weight: 700 } as const;
+    const full = CW - 52;
+    const values = model.rows.map(([label, value], i) => {
+      const room = full - measure(label, L.rowSize, 700) - 14;
+      const size = L.rowSize + (i === 0 ? -2 : 1);
+      return { room, size, stacked: stackedRowValue(measure, value, room, full, size) };
+    });
+    const extra = 14;
+    const stackedCount = values.filter(v => v.stacked !== null).length;
+    const singleHeight = L.rowGap - extra * stackedCount / values.length;
+    let top = L.rowY[0]! - L.rowGap / 2;
     this.rows = model.rows.map(([label, value], i) => {
-      const y = L.rowY[i]!;
+      const { room, size: valueSize, stacked } = values[i]!;
+      const height = singleHeight + (stacked === null ? 0 : extra);
+      const y = top + height / 2;
+      top += height;
       const text = new Container();
       const row = new Container();
-      const room = CW - 52 - measure(label, L.rowSize, 700) - 14;
-      const valueSize = L.rowSize + (i === 0 ? -2 : 1);
-      // a long value (three souvenirs) gets its own line under the label instead of shrinking to a smudge
-      const stacked = stackedRowValue(measure, value, room, CW - 52, valueSize);
       if (stacked !== null) {
-        const half = Math.round(L.rowGap * 0.24);
+        const half = Math.round((L.rowSize + stacked) / 4) + 1;
         text.addChild(
           new Label(rowLabel).set(label, CX + 26, y - half),
           new Label({ size: stacked, color: '#4b2fa0', align: 'right', weight: 800 }).set(value, CX + CW - 26, y + half + 1, CW - 52),
@@ -369,7 +378,7 @@ class ReportView implements SceneView {
           new Label({ size: valueSize, color: '#4b2fa0', align: 'right', weight: 800 }).set(value, CX + CW - 26, y, room),
         );
       }
-      row.addChild(text, new Graphics().rect(CX + 26, y + L.rowLine, CW - 52, 2).fill(C.paperLine));
+      row.addChild(text, new Graphics().rect(CX + 26, top - 1, full, 2).fill(C.paperLine));
       this.paper.addChild(row);
       return { root: row, text };
     });

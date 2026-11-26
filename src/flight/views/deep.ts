@@ -1,3 +1,4 @@
+import { COW } from '../grail';
 import { RecitalView } from './recital';
 import { Container, Graphics } from 'pixi.js';
 import type { Assets } from '../../contracts';
@@ -20,8 +21,7 @@ import { BULB_ROWS, SHIP, SHIP_BOTTOM, SHIP_LEFT, SHIP_RIGHT, drawShipGround } f
 import { FLIGHT_HUD } from '../sim';
 import { DeepSpottedView } from '../spotted';
 import { AmbientView } from './ambient';
-import { EntryRingView, RING_CLEAR, SaucerView } from './craft';
-import { placePills, type Box, type PillAsk } from './clear-of';
+import { EntryLabels, EntryRingView, RING_CLEAR, SaucerView } from './craft';
 import { DeepFlightHud } from './deep-hud';
 import { DriveInScenery } from './invasion1953';
 import { HazardViews } from './hazards';
@@ -317,14 +317,7 @@ export class DeepFlightView implements SceneView {
   private readonly driveIn: DriveInScenery | null;
   private readonly lights: Glow[];
   private readonly rings: (EntryRingView | RoamView)[];
-  /** v4 council: scratch obstacles for route pills (HUD boxes, the entry rings on screen, then the pills placed). */
-  private readonly clear: Box[];
-  /** v4 council: route pill scratch, one slot per visible entry ring (`placePills`). */
-  private readonly asks: PillAsk[];
-  private readonly spots: { x: number; y: number }[];
-  private readonly moved: Uint8Array;
-  /** Which ring each pill slot belongs to. */
-  private readonly pillOf: Uint8Array;
+  private readonly labels: EntryLabels;
   private readonly saucer: SaucerView;
   private readonly fx: ParticleView;
   private readonly fuse = new WorldFuse();
@@ -428,11 +421,7 @@ export class DeepFlightView implements SceneView {
     if (this.driveIn) bubbles.addChild(this.driveIn.bubbles);
     if (this.collectible) bubbles.addChild(this.collectible.bubbles);
     this.upperWorld.addChild(bubbles);
-    this.clear = Array.from({ length: this.rings.length * 2 + 7 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
-    this.moved = new Uint8Array(this.rings.length);
-    this.pillOf = new Uint8Array(this.rings.length);
-    this.asks = this.rings.map(() => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
-    this.spots = this.rings.map(() => ({ x: 0, y: 0 }));
+    this.labels = new EntryLabels(this.rings.length, 8 + m.hazards.length);
     this.upperWorld.addChild(abovePlayer(this.checkpoint.arrival), abovePlayer(this.saucer.root), abovePlayer(this.fuse.root), abovePlayer(this.fx));
     world.addChild(this.tints.worldWash, this.upperWorld);
     this.tints.dawnDecor.addChild(this.dawn.root);
@@ -490,31 +479,50 @@ export class DeepFlightView implements SceneView {
     const quietPills = !!strike && strike.age < 1.12;
     const striking = !!strike && strike.age >= -0.12 && strike.age < 0.75;
     const avoid = this.hud.avoid;
+    const clear = this.labels.obstacles;
     let n = avoid.length;
     for (let i = 0; i < n; i++) {
       // 4 px of air round each HUD box, so a pill never sits flush against the minimap or a chip
-      const a = avoid[i]!, b = this.clear[i]!;
+      const a = avoid[i]!, b = clear[i]!;
       b.x = a.x - 4;
       b.y = a.y - 4;
       b.w = a.w + 8;
       b.h = a.h + 8;
     }
-    if (this.collectible?.avoid(this.clear[n]!, cam.x, cam.y)) n++;
+    if (this.collectible?.avoid(clear[n]!, cam.x, cam.y)) n++;
+    if (this.grail?.avoid(clear[n]!, cam)) n++;
+    if (this.recitals?.avoid(clear[n]!, cam)) n++;
+    for (let i = 0; i < sim.field.defs.length; i++) {
+      const d = sim.field.defs[i]!;
+      if (d.type === 'cow' && (sim.field.tell[i] || sim.field.on[i])) {
+        const rise = sim.field.tell[i] && !rm ? 150 * (1 - sim.field.b[i]! / COW.warning) : 0;
+        const b = clear[n++]!;
+        b.x = d.x - cam.x - 57;
+        b.y = d.y - cam.y - rise - 36;
+        b.w = 114;
+        b.h = 72;
+      } else if (d.type === 'watcher' && this.birch) {
+        const b = clear[n++]!;
+        b.x = d.x - cam.x - 42;
+        b.y = d.y - cam.y - 60;
+        b.w = b.h = 84;
+      }
+    }
     if (this.crestValley?.car.root.visible) {
-      const b = this.clear[n++]!;
+      const b = clear[n++]!;
       b.x = this.crestValley.car.root.x - cam.x - 96;
       b.y = this.crestValley.car.root.y - cam.y - 88;
       b.w = 192;
       b.h = 209;
     }
-    if (quietPills) {
-      const b = this.clear[n++]!;
+    {
+      const b = clear[n++]!;
       b.x = saucer.x - cam.x - FUSE_R - 8;
       b.y = saucer.y - cam.y - FUSE_R - 8;
       b.w = b.h = (FUSE_R + 8) * 2;
     }
     if (this.pickupToast && s.collectibleToastT > 0) {
-      const b = this.clear[n++]!;
+      const b = clear[n++]!;
       b.x = VIEW_W / 2 - 162;
       b.y = 212;
       b.w = 324;
@@ -525,7 +533,7 @@ export class DeepFlightView implements SceneView {
       const p = sim.rings[i]!;
       ring.root.visible = !sim.delivered[sim.ringRef[i]!.target] && cam.sees(p.x, p.y, 160);
       if (ring.root.visible && ring instanceof EntryRingView) {
-        const b = this.clear[n++]!;
+        const b = clear[n++]!;
         b.x = p.x - cam.x - RING_CLEAR;
         b.y = p.y - cam.y - RING_CLEAR;
         b.w = b.h = RING_CLEAR * 2;
@@ -536,7 +544,6 @@ export class DeepFlightView implements SceneView {
       if (ring.root.visible) ring.sync(i, t, rm, sim.lock.ring === i, sim.lock.fraction, sim.lockedRing === i, s.st, cam.x);
     }
     // pills whose own spot is free stay there; the others find room round them and each other
-    let count = 0;
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       if (ring.root.visible && ring instanceof EntryRingView) {
@@ -547,16 +554,10 @@ export class DeepFlightView implements SceneView {
           ring.showPill(false);
           continue;
         }
-        ring.ask(cam.x, cam.y, this.asks[count]!);
-        this.pillOf[count++] = i;
+        this.labels.request(ring, cam.x, cam.y);
       }
     }
-    placePills(this.clear, n, this.asks, count, this.spots, this.moved, quietPills);
-    for (let k = 0; k < count; k++) {
-      const ring = this.rings[this.pillOf[k]!] as EntryRingView;
-      ring.showPill(this.moved[k] !== 2);
-      ring.putPill(this.spots[k]!.x, this.spots[k]!.y, cam.x, cam.y);
-    }
+    this.labels.place(n, cam.x, cam.y);
     this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0, this.recitals?.coverEars); // v4 UFO pilot
     this.saucer.sync(saucer, t, rm, locking, s.st, lock, sim.field.scramble(saucer.x, saucer.y), sim.st.safe, SAFE_WINDOW);
     if (lifting && !rm) this.saucer.root.y -= Math.min(1, s.st * 6) * 36;

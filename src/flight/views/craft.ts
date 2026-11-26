@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
-import type { PillAsk } from './clear-of';
+import { placePills, type Box, type PillAsk } from './clear-of';
 import type { Assets } from '../../contracts';
-import { VIEW_W } from '../../contracts';
+import { VIEW_H, VIEW_W } from '../../contracts';
 import { easeOutBack } from '../../core/fx';
 import { GLOW, glowTexture, Glow } from '../../core/gfx/glow';
 import { panelPath } from '../../core/gfx/shapes';
@@ -356,11 +356,16 @@ export class EntryRingView {
     const route = words.route + tr().flight.entrySep;
     const advice = routeAdvice(entry.roomId);
     const routeW = measure(route, 19, 800);
-    this.labelW = routeW + measure(advice, 19, 800) + 28;
+    const textW = routeW + measure(advice, 19, 800);
+    this.labelW = Math.min(VIEW_W - 16, textW + 28);
+    const text = new Container();
     const calm = entry.recommended ?? /easy|safe|short/.test(entry.difficulty);
+    text.addChild(new Label(ROUTE).set(route, 0, 1), new Label(calm ? EASY : HARD).set(advice, routeW, 1));
+    text.x = 14;
+    text.scale.x = (this.labelW - 28) / textW;
     this.pill.addChild(panelPath(new Graphics(), 0, -20, this.labelW, 40,
       { fill: 'rgba(27,20,51,0.9)', r: 20, stroke: C.mint, lineW: 2, shadow: 0 }),
-      new Label(ROUTE).set(route, 14, 1), new Label(calm ? EASY : HARD).set(advice, 14 + routeW, 1));
+      text);
     this.pill.y = (entry.labelSide === 'above' ? -1 : 1) * PILL_GAP;
     this.root.addChild(this.spin, this.progress, this.pill);
   }
@@ -403,6 +408,44 @@ export class EntryRingView {
   }
 
 
+}
+
+/** Both flight views place their visible entry labels together, in screen space. */
+export class EntryLabels {
+  readonly obstacles: Box[];
+  private readonly asks: PillAsk[];
+  private readonly spots: { x: number; y: number }[];
+  private readonly rings: EntryRingView[] = [];
+  private readonly moved: Uint8Array;
+  private count = 0;
+
+  constructor(capacity: number, otherObstacles: number) {
+    this.obstacles = Array.from({ length: 2 * capacity + otherObstacles }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
+    this.asks = Array.from({ length: capacity }, () => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
+    this.spots = Array.from({ length: capacity }, () => ({ x: 0, y: 0 }));
+    this.moved = new Uint8Array(capacity);
+  }
+
+  request(ring: EntryRingView, camX: number, camY: number): void {
+    const ask = this.asks[this.count]!;
+    ring.ask(camX, camY, ask);
+    if (ask.ringX < -RING_R || ask.ringX > VIEW_W + RING_R ||
+        ask.ringY < ask.top || ask.ringY > VIEW_H + RING_R) {
+      ring.showPill(false);
+      return;
+    }
+    this.rings[this.count++] = ring;
+  }
+
+  place(n: number, camX: number, camY: number): void {
+    placePills(this.obstacles, n, this.asks, this.count, this.spots, this.moved);
+    for (let i = 0; i < this.count; i++) {
+      const ring = this.rings[i]!;
+      ring.showPill(this.moved[i] !== 2);
+      ring.putPill(this.spots[i]!.x, this.spots[i]!.y, camX, camY);
+    }
+    this.count = 0;
+  }
 }
 
 export class DogView {

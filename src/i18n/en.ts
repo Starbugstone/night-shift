@@ -430,7 +430,7 @@ export const en = {
     orderNo: 'WORK ORDER #{num}',
     training: 'TRAINING',
     learner: 'L',
-    deepShift: 'DEEP SHIFT ×3',
+    deepShift: 'DEEP SHIFT ×{n}',
     locked: 'LOCKED',
     par: 'Par {time}',
     best: 'Best {time}',

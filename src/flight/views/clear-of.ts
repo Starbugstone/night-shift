@@ -108,9 +108,9 @@ export function placePill(obs: readonly Box[], n: number, a: PillAsk, out: { x: 
  * is on screen below the top bar and misses `obs[0..n)` and the pills kept before them stay there; the rest then go where
  * `placePill` finds room round all of those and each other. `obs` needs `count` spare boxes after
  * `n` (they are overwritten). Writes each pill's top-left corner into `outs[i]`; allocates nothing.
- * With `hideBlocked`, a fallback that still overlaps is flagged by `moved[i] === 2`.
+ * A pill with no free space is flagged by `moved[i] === 2`.
  */
-export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array, hideBlocked = false): void {
+export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array): void {
   for (let i = 0; i < count; i++) {
     const a = asks[i]!;
     const o = outs[i]!;
@@ -124,9 +124,24 @@ export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], coun
     const a = asks[i]!;
     const o = outs[i]!;
     placePill(obs, n, a, o);
-    if (hideBlocked && (o.y < a.top || o.y + a.h > VIEW_H - MARGIN || !fits(obs, n, o.x, o.y, a.w, a.h))) {
-      moved[i] = 2;
-      continue;
+    if (o.y < a.top || o.y + a.h > VIEW_H - MARGIN || !fits(obs, n, o.x, o.y, a.w, a.h)) {
+      // A crowded screen can leave both preferred sides outside the usable area.
+      // Try the top of each free band, keeping the closest one to the ring.
+      let distance = Infinity;
+      for (let j = -1; j < n; j++) {
+        const y = j < 0 ? a.top : obs[j]!.y + obs[j]!.h + 6;
+        const d = Math.abs(y + a.h / 2 - a.ringY);
+        if (d >= distance) continue;
+        const x = slide(obs, n, a, y);
+        if (!Number.isFinite(x)) continue;
+        distance = d;
+        o.x = x;
+        o.y = y;
+      }
+      if (distance === Infinity) {
+        moved[i] = 2;
+        continue;
+      }
     }
     n = keep(obs, n, o.x, o.y, a);
   }
@@ -134,9 +149,9 @@ export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], coun
 
 function keep(obs: Box[], n: number, x: number, y: number, a: PillAsk): number {
   const b = obs[n]!;
-  b.x = x;
-  b.y = y;
-  b.w = a.w;
-  b.h = a.h;
+  b.x = x - 4;
+  b.y = y - 4;
+  b.w = a.w + 8;
+  b.h = a.h + 8;
   return n + 1;
 }

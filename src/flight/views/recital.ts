@@ -1,11 +1,13 @@
 import { Container, Graphics } from 'pixi.js';
 import { Label, Paragraph } from '../../core/gfx/text';
+import type { Assets } from '../../contracts';
 import { tr } from '../../i18n';
 import { artSprite } from '../../ui/views/art';
 import type { DeepFlightScene } from '../deep-scene';
 import { cameraHeading, RECITAL_LOOKAHEAD, recitalAt } from '../recital';
 import { stewardPose, STEWARD_REACH } from '../photographer';
 import { dashedArc, dashedLine, sectorPath } from './tells';
+import type { Box } from './clear-of';
 import { CameraView } from './world';
 
 function preview(range: number, half: number): Graphics {
@@ -14,6 +16,16 @@ function preview(range: number, half: number): Graphics {
   dashedLine(g, 0, 0, x, -y, 13, 9);
   dashedLine(g, 0, 0, x, y, 13, 9);
   return dashedArc(g, range, -half, half, 13, 9).stroke({ color: '#ffba56', width: 3 });
+}
+
+/** The same uniform and broad two-page folio identify the speaker on the map and in dialogue. */
+export function poetryGuard(assets: Assets): Container {
+  return artSprite(assets, 'flight/reciter2199_top', 104, 98) ?? new Graphics()
+    .ellipse(0, 15, 44, 28).fill('#925d91').stroke({ color: '#292037', width: 3 })
+    .ellipse(0, -15, 23, 22).fill('#a6bb94').stroke({ color: '#292037', width: 3 })
+    .roundRect(-25, -38, 50, 12, 4).fill('#786080').circle(-10, -17, 3).circle(10, -17, 3).fill('#292037')
+    .poly([-42, 4, -20, 4, 0, 12, 20, 4, 42, 4, 36, 32, 18, 32, 0, 40, -18, 32, -36, 32])
+    .fill('#ffe2a4').stroke({ color: '#58394b', width: 4 }).moveTo(0, 12).lineTo(0, 37).stroke({ color: '#906c61', width: 3 });
 }
 
 /** Decorations read from the same hazard clock as the live sectors. */
@@ -25,7 +37,12 @@ export class RecitalView {
   private readonly listeners: Container[];
   private readonly previews: Graphics[];
   private readonly lamps = new Container();
-  private readonly verse = new Paragraph({ size: 17, weight: 700, color: '#30243e', lineHeight: 22 });
+  private readonly cards: Container[];
+  private readonly heights: number[];
+  private readonly tail = new Graphics().poly([-13, 0, 6, -18, 15, 0]).fill('#fff0d2')
+    .moveTo(-13, 0).lineTo(6, -18).lineTo(15, 0).stroke({ color: '#483449', width: 4, join: 'round' });
+  private height = 0;
+  private readonly verses = tr().dispatch2199.verses;
   private readonly predicted = { x: 0, y: 0, heading: 0, torch: 0 };
   private readonly tmp = { x: 0, y: 0 };
 
@@ -57,8 +74,23 @@ export class RecitalView {
       for (let i = 0; i < 5; i++) this.lamps.addChild(new Graphics().circle(x! - 132 + i * 55, y! + 58 - i * 2, 7).fill('#ffd375'));
     }
     this.ground.addChild(this.lamps);
-    this.bubble.addChild(new Graphics().roundRect(-167, 0, 334, 103, 15).fill('#f1e4cd')
-      .stroke({ color: '#493950', width: 3 }), this.verse);
+    this.heights = [];
+    this.cards = this.verses.map(line => {
+      const card = new Container();
+      const words = new Paragraph({ size: 18, weight: 700, color: '#35263e', align: 'left', lineHeight: 25 });
+      const height = Math.max(84, words.setBlock(line, -151, 12, 374) + 26);
+      this.heights.push(height);
+      const ink = '#483449';
+      const plate = new Graphics().roundRect(-236, 0, 472, height, 17).fill('#fff0d2').stroke({ color: ink, width: 4 })
+        .roundRect(-230, 6, 65, height - 12, 12).fill('#59445d');
+      const reader = poetryGuard(assets);
+      reader.scale.set(reader.scale.x * 0.63, reader.scale.y * 0.63);
+      reader.position.set(-197, height / 2);
+      card.addChild(plate, reader, words);
+      this.bubble.addChild(card);
+      return card;
+    });
+    this.bubble.addChild(this.tail);
   }
 
   sync(cam: CameraView): void {
@@ -89,10 +121,32 @@ export class RecitalView {
         g.rotation = p.torch;
       }
     }
-    this.bubble.visible = this.s.verseT > 0 && this.s.state === 'fly';
-    if (this.bubble.visible) {
-      this.bubble.position.set(Math.max(cam.x + 174, Math.min(cam.x + 366, 900)), Math.max(cam.y + 252, Math.min(cam.y + 680, 1260)));
-      this.verse.setBlock(this.s.verse, -153, 10, 307);
-    }
+    const speaker = f.defs[this.s.reciterIndex];
+    const verse = this.verses.indexOf(this.s.verse);
+    this.bubble.visible = speaker?.type === 'camera' && verse >= 0 && this.s.state === 'fly';
+    if (!this.bubble.visible || speaker?.type !== 'camera') return;
+    for (let i = 0; i < this.cards.length; i++) this.cards[i]!.visible = i === verse;
+    const h = this.height = this.heights[verse]!;
+    const x = Math.max(cam.x + 245, Math.min(cam.x + 295, speaker.x));
+    // Stay clear of the HUD, the guard and the saucer. At the fork the reader is
+    // beyond the viewport, so the folio in the speech card still shows who is talking.
+    const top = cam.y + 209;
+    const above = speaker.y - 98 - h;
+    let y = above >= top ? above : Math.max(top, speaker.y + 68);
+    if (Math.abs(sim.saucer.x - x) < 307 && sim.saucer.y + 85 > y && sim.saucer.y - 85 < y + h)
+      y = sim.saucer.y + 108;
+    this.bubble.position.set(x, Math.min(cam.y + 936 - h, y));
+    const below = this.bubble.y > speaker.y;
+    this.tail.position.set(Math.max(-199, Math.min(199, speaker.x - x)), below ? 2 : h - 2);
+    this.tail.scale.y = below ? 1 : -1;
+  }
+
+  avoid(box: Box, cam: CameraView): boolean {
+    if (!this.bubble.visible) return false;
+    box.x = this.bubble.x - cam.x - 240;
+    box.y = this.bubble.y - cam.y - 21;
+    box.w = 480;
+    box.h = this.height + 42;
+    return true;
   }
 }

@@ -18,7 +18,7 @@ import { pointInCone } from '../geometry';
 import { drawVehicleFallback } from '../props';
 import { LOCK_ANIM, type FlightScene } from '../scene';
 import { FLIGHT_HUD, POWER_LINE, SUSPICION, barkRadius, neonOn, suspicionMultiplier } from '../sim';
-import { DogView, EntryRingView, SaucerView } from './craft';
+import { DogView, EntryLabels, EntryRingView, RING_CLEAR, SaucerView } from './craft';
 import { MapCollectibleToast, MapCollectibleView } from './collectible';
 import { EggView } from './eggs'; // v4 easter eggs
 import { FLIGHT_BUBBLES, FlightBanner, abovePlayer, FlightTintView, NeonView, TargetArrow, WireView, ZibBubble, woof } from './overlays';
@@ -59,6 +59,7 @@ export class TutorialFlightView implements SceneView {
   private readonly neon: NeonView[];
   private readonly wires: WireView[];
   private readonly rings: EntryRingView[];
+  private readonly labels: EntryLabels;
   private readonly lights: Glow[];
   private readonly quit = new HudButton('close');
   private readonly fuse: HudFuse;
@@ -106,6 +107,7 @@ export class TutorialFlightView implements SceneView {
     const poles = new Graphics();
     for (const [x, y] of s.poles) poles.circle(x, y, POWER_LINE.poleR).fill('#6b4a2e').stroke({ color: C.ink, width: 3 });
     this.rings = m.entries.map((e) => new EntryRingView(assets, e));
+    this.labels = new EntryLabels(this.rings.length, 0);
     this.lights = m.lamps.map((l) => mapLamp(l.x, l.y));
 
     const world = this.camera.world;
@@ -215,11 +217,19 @@ export class TutorialFlightView implements SceneView {
       if (n.root.visible) n.sync(on, s.hazT, rm);
     }
     for (let i = 0; i < this.wires.length; i++) this.wires[i]!.sync(s.lineFlash[i]!, t, rm);
+    let ringCount = 0;
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       ring.root.visible = cam.sees(ring.root.x, ring.root.y, 180);
-      if (ring.root.visible) ring.sync(i, t, rm, s.lock.ring === i, s.lock.fraction, s.lockedRing === i, s.st, s.camX);
+      if (!ring.root.visible) continue;
+      ring.sync(i, t, rm, s.lock.ring === i, s.lock.fraction, s.lockedRing === i, s.st, cam.x);
+      const box = this.labels.obstacles[ringCount++]!;
+      box.x = ring.root.x - cam.x - RING_CLEAR;
+      box.y = ring.root.y - cam.y - RING_CLEAR;
+      box.w = box.h = 2 * RING_CLEAR;
+      this.labels.request(ring, cam.x, cam.y);
     }
+    this.labels.place(ringCount, cam.x, cam.y);
 
     this.quit.sync(s.quit, tr().common.quit, s.quit.pressedDown);
     const f = this.fuseState;

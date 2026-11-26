@@ -295,16 +295,16 @@ class LevelCard {
     if (unlocked && !training) roundRect(card, 4, CARD_H / 2, 12, (CARD_H - 8) / 2, 6).fill(C.red);
     this.root.addChild(card);
     // v4 1953: Clive fronts this dispatch's poster.
-    if (lv.kind === 'deep' && lv.id !== 'level11' && lv.id !== 'level12') {
+    if (lv.id === 'birch_neighbours') {
+      this.photos.push(new Mugshot(assets, 'human/len_head', CARD_W - 47, 52, unlocked, index + 1, 29));
+      this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 82, 64, unlocked, index, 37));
+    } else if (lv.kind === 'deep' && lv.map.targets.length === 3 && lv.id !== 'level11' && lv.id !== 'level12') {
       const cx = CARD_W - 66;
       const anchors = [[cx - 26, 46], [cx + 24, 44], [cx - 2, 84]] as const;
       for (const [i, target] of lv.map.targets.entries()) {
         const [x, y] = anchors[i]!;
         this.photos.push(new Mugshot(assets, targetHeadKey(target), x, y, unlocked, index + i, 25));
       }
-    } else if (lv.id === 'birch_neighbours') {
-      this.photos.push(new Mugshot(assets, 'human/len_head', CARD_W - 47, 57, unlocked, index + 1, 29));
-      this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 79, 62, unlocked, index, 37));
     } else this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 62, 58, unlocked, index, 38));
     for (const photo of this.photos) this.root.addChild(photo.root);
 
@@ -312,7 +312,8 @@ class LevelCard {
     const tagX = 44 + measure(order, 14, 800);
     const learner = training && !recommended;
     const mint = training || recommended;
-    const tag = recommended ? strings.nextDispatch : training ? strings.training : lv.id === 'level8' ? tr().timeTrial.badge : strings.deepShift;
+    const tag = recommended ? strings.nextDispatch : training ? strings.training : lv.id === 'level8' ? tr().timeTrial.badge
+      : fmt(strings.deepShift, { n: lv.map.targets.length });
     const tw = measure(tag, 13, 900) + (learner ? 40 : 18);
     const badge = roundRect(new Graphics(), tagX, 14, tw, 24, 12)
       .fill(mint ? 'rgba(124,255,203,0.16)' : 'rgba(255,93,115,0.24)')
@@ -370,7 +371,7 @@ class LevelCard {
 
   private openBadge(training: boolean): Graphics {
     const badge = new Container();
-    badge.position.set(CARD_W - 34, training ? 88 : 96);
+    badge.position.set(CARD_W - 34, training ? 88 : 125);
     const backing = new Graphics().circle(0, 3, 18).fill('rgba(5,3,20,0.45)')
       .circle(0, 0, 18).fill(C.mint).stroke({ color: C.ink, width: 3 });
     const chevron = new Graphics().moveTo(-4, -7).lineTo(4, 0).lineTo(-4, 7)

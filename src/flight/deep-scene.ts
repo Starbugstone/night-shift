@@ -1,3 +1,4 @@
+import { pointInCone } from './geometry';
 // Deep-level flight scene (L3+): renders DeepFlightSim, runs the sunrise clock, the 1-second
 // fuse, the photo-flash SPOTTED freeze and respawn at the checkpoint.
 //
@@ -109,7 +110,7 @@ export class DeepFlightScene implements Scene {
   private pendingOpener: DeepZibEvent | null = null; // v4 story
   verseT = 0;
   verse = '';
-  private reciterNear = false;
+  reciterIndex = -1;
   private versePending = false;
   private gagNear = -1;
   /** Seconds since the last respawn at a checkpoint, or -1. */
@@ -351,10 +352,20 @@ export class DeepFlightScene implements Scene {
     if (this.level.map.theme === 'badlands' && nearHumOnset(field.defs, s.x, s.y, previousTime, st.t)) audio.sfx('monolith_hum');
     if (this.level.id === 'level12') {
       this.verseT = Math.max(0, this.verseT - dt);
-      const near = Math.hypot(s.x - 900, s.y - 1350) <= 780;
-      if (near && !this.reciterNear) this.versePending = true;
-      this.reciterNear = near;
-      if (near && this.versePending && !this.pendingOpener && this.zibCd === 0 && this.verseT === 0) {
+      let speaker = -1;
+      let distance = Infinity;
+      for (let i = 0; i < field.defs.length; i++) {
+        const d = field.defs[i]!;
+        if (d.type !== 'camera' || d.skin !== 'reciter2199_top') continue;
+        const r = Math.hypot(s.x - d.x, s.y - d.y);
+        if (r >= distance || (r > 220 && !pointInCone(s.x, s.y, d.x, d.y, field.a[i]!, d.half + 0.24, d.range + 145))) continue;
+        speaker = i;
+        distance = r;
+      }
+      if (st.cause >= 0 && field.defs[st.cause]?.type === 'camera') speaker = st.cause;
+      if (speaker !== this.reciterIndex) this.versePending = speaker >= 0;
+      this.reciterIndex = speaker;
+      if (speaker >= 0 && this.versePending && !this.pendingOpener && this.zibCd === 0 && this.verseT === 0) {
         const verses = tr().dispatch2199.verses;
         this.verse = verses[this.run.recitalVerse++ % verses.length]!;
         this.verseT = readSeconds(this.verse);

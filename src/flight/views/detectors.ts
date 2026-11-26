@@ -133,7 +133,7 @@ export class WatcherTell {
   private readonly mark = new Label(LOOK, '!');
   private readonly r: number;
 
-  constructor(private readonly d: WatcherHazard) {
+  constructor(private readonly d: WatcherHazard, neighbour?: Container) {
     this.root.position.set(d.x, d.y);
     this.cone = new ConeView(d.half, d.range, '200,220,255', 0.7);
     this.ghostFill = sectorPath(new Graphics(), d.range, -d.half, d.half).fill(C.amber);
@@ -147,7 +147,10 @@ export class WatcherTell {
     this.mark.position.set(22, -34);
     this.root.addChild(this.cone.root, this.ghost, this.swing, this.head, this.glint,
       new Glow(glowTexture(GLOW.amber), true).place(0, 0, 40, 40, 0.7));
-    if (d.skin !== 'cafe55') {
+    if (neighbour) {
+      neighbour.position.set(0, -17);
+      this.root.addChild(neighbour);
+    } else if (d.skin !== 'cafe55') {
       const eye = new Graphics().moveTo(-13, -28).quadraticCurveTo(0, -40, 13, -28)
         .quadraticCurveTo(0, -16, -13, -28).closePath().fill(C.paper).stroke({ color: C.ink, width: 2.5 });
       this.pupil = new Graphics().circle(0, 0, 5).fill('#3a2f5a').circle(1.5, -1.5, 1.6).fill(C.paper);

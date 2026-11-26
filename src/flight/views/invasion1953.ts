@@ -41,7 +41,7 @@ export class DriveInDetectorView {
   private readonly warning = new Graphics();
   private readonly pose = new Container();
   private readonly scarf: Container | null;
-  private readonly cue = sign(23, '#ffe0ad');
+  private readonly cue = new Label({ size: 24, weight: 900, color: '#fff0c4', outline: '#422e45', outlineW: 4 });
   private readonly bless = sign(22, '#ffebc2');
   private readonly lines = tr().invasion1953;
   private readonly blessFor = readSeconds(this.lines.bless);

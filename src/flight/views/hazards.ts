@@ -1,3 +1,4 @@
+import { poetryGuard } from './recital';
 import { GrailDetectorView } from './grail';
 import { Container, Graphics } from 'pixi.js';
 import type { Assets, Vec2 } from '../../contracts';
@@ -277,7 +278,10 @@ export class HazardViews {
         };
       }
       case 'watcher': {
-        const watcher = new WatcherTell(d);
+        const neighbour = s.level.id === 'birch_neighbours' ? artSprite(assets, 'flight/pruitt_binoculars') ??
+          new Graphics().ellipse(0, 14, 27, 19).fill('#ac86a3').circle(0, -5, 18).fill('#e5bb9e')
+            .circle(-9, -5, 8).circle(9, -5, 8).fill('#92bdca').stroke({ color: C.ink, width: 4 }) : undefined;
+        const watcher = new WatcherTell(d, neighbour);
         this.detectors.addChild(watcher.root);
         return (cam, t, rm, hot) => {
           watcher.root.visible = cam.sees(d.x, d.y, d.range + 40);
@@ -296,27 +300,32 @@ export class HazardViews {
         let turn = d.mount === 'radar' ? 0 : Math.PI / 2;
         if (d.skin) {
           body.position.set(d.x, d.y);
-          const art = artSprite(assets, 'flight/' + d.skin);
+          const isReciter = d.skin === 'reciter2199_top';
+          const art = isReciter ? null : artSprite(assets, 'flight/' + d.skin);
           if (art && d.skin === 'marshal55_torch') {
             art.anchor.x = 27 / 32;
             turn = 0;
           }
-          const fixture = art ?? new Graphics()
+          const fixture = isReciter ? poetryGuard(assets) : art ?? new Graphics()
             .circle(0, 3, 15).fill('#625163').stroke({ color: C.ink, width: 3 })
             .roundRect(-13, -15, 26, 18, 4).fill('#8e7772').stroke({ color: C.ink, width: 3 })
             .roundRect(-11, -17, 22, 7, 3).fill('#ffe5ac');
-          if (d.skin === 'reciter2199_top') body.addChild(new Graphics().roundRect(-29, -18, 58, 42, 6)
-            .fill('#866d70').stroke({ color: C.ink, width: 3 }));
+          if (isReciter) {
+            fixture.y = -26;
+            body.addChild(new Graphics().ellipse(0, 38, 48, 14).fill({ color: '#241e35', alpha: 0.55 })
+              .poly([-35, 24, 35, 24, 26, 49, -26, 49]).fill('#72565c').stroke({ color: C.ink, width: 3 })
+              .roundRect(-41, 19, 82, 13, 4).fill('#c29470').stroke({ color: C.ink, width: 3 }));
+          }
           body.addChild(fixture);
         }
         const head = body.children[body.children.length - 1]!;
         const camera = new CameraTell(d);
-        this.ground.addChild(body);
         this.detectors.addChild(camera.root);
+        (d.skin === 'reciter2199_top' ? this.detectors : this.ground).addChild(body);
         return (cam, t, rm, hot) => {
           const a = f.a[i]!;
           body.visible = cam.sees(d.x, d.y, 60);
-          head.rotation = d.skin === 'grail_sentry_top' ? 0 : a + turn;
+          head.rotation = d.skin === 'reciter2199_top' ? a - d.base : d.skin === 'grail_sentry_top' ? 0 : a + turn;
           camera.root.visible = cam.sees(d.x, d.y, d.range + 20);
           if (camera.root.visible) camera.sync(a, hot, d.skin === 'reciter2199_top' ? 0 : this.lead[i]!, t, i, rm);
         };
