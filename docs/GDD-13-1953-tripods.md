@@ -14,7 +14,7 @@ The brass thermometer is a single reveal in the first-clear report. Rookie Vrell
 
 > **Work Order #0013 · The War of the Colds**
 >
-> Agent Zib, the drive-in is showing an invasion. The machine out front is ours. It was supposed to be counting people. Bring in three witnesses by dawn. A tripod leg props up the coop in the west farmyard.
+> Agent Zib, the drive-in is showing an invasion. The machine out front is ours. It was supposed to be counting people. Bring in three witnesses by dawn. In the west farmyard, a tripod leg props up the coop.
 >
 > I was a rookie pilot that night. Half the division had colds. I’ll tell you what I did about it when you get back.
 >
@@ -22,7 +22,7 @@ The brass thermometer is a single reveal in the first-clear report. Rookie Vrell
 
 > **Ordre n°0013 · La Guerre des rhumes**
 >
-> Agent Zib, le drive-in projette un film d’invasion. Notre engin, devant l’écran, devait compter les gens. Ramenez trois témoins avant l’aube. Une patte de tripode soutient le poulailler dans la cour, à l’ouest.
+> Agent Zib, le drive-in projette un film d’invasion. Notre engin, devant l’écran, devait compter les gens. Ramenez trois témoins avant l’aube. Dans la cour à l’ouest, une patte de tripode soutient le poulailler.
 >
 > J’étais jeune pilote, ce soir-là. La moitié de la division était enrhumée. Je vous raconterai ce que j’ai fait à votre retour.
 >
@@ -90,7 +90,7 @@ Use these cosmetic reactions in both routes of each witness. Keep the existing w
 
 | Field Finds | English | Français |
 | --- | --- | --- |
-| Name / exact memo hint | Tripod leg / `A tripod leg` | Patte de tripode / `Une patte de tripode` |
+| Name / exact memo hint | Tripod leg / `a tripod leg` | Patte de tripode / `une patte de tripode` |
 | Description | Grandpa Doyle put it under a chicken coop. For years it was the only working part of the Division. | Grand-père Doyle l’a calée sous son poulailler. Des années durant, c’était la seule pièce de la division encore en service. |
 | Status | The Division now fields one bipod. It leans on things. | La division compte désormais un bipode. Il s’appuie où il peut. |
 | Locked hint | Look under the coop in the west farmyard. | Regardez sous le poulailler, dans la cour à l’ouest. |
@@ -106,7 +106,7 @@ One slot per souvenir in the [trophy room](GDD-9-trophy-room.md). Use each Engli
 | Drive-in programme | The bill promised an invasion. The audience asked for a refund when it actually arrived. | Programme du drive-in · L’affiche promettait une invasion. Quand elle a commencé pour de vrai, le public a demandé à être remboursé. |
 | Invasion reel | The last reel. The Martians lose to germs. Vrell won’t let us show it at the Bureau. | Bobine de l’invasion · La dernière. Les microbes ont raison des Martiens. Vrell interdit de la projeter au Bureau. |
 | White truce flag | Pastor Matt waved it at ‘the Martians’. We’re not from Mars. We waved back anyway. With the heat ray. | Drapeau blanc · Le pasteur Matt l’a agité devant « les Martiens ». On ne vient pas de Mars. On a répondu quand même. Au rayon thermique. |
-| Church bell clapper | Rang all night. The Martians thought it was last orders. | Battant de cloche · A sonné toute la nuit. Les Martiens ont cru que le bar fermait. |
+| Church bell clapper | Rang all night. Half the Division thought it was last orders. | Battant de cloche · A sonné toute la nuit. La moitié de la division a cru que le bar fermait. |
 
 ### Specimen Archive
 
@@ -133,7 +133,7 @@ One slot per souvenir in the [trophy room](GDD-9-trophy-room.md). Use each Engli
 | Zib, heat-ray sighting | “A war machine just sneezed on me. Does that count as a sick day?” | « Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ? » |
 | Vrell, first clear | “Grandpa Doyle lent me his brass thermometer. I took temperatures from behind. The whole drive-in thought it was a probe.” | « Papy Doyle m’a prêté son thermomètre en laiton. J’ai pris leur température par derrière. Tout le drive-in a cru voir une sonde. » |
 | Gazette, two or more sightings | **SAUCER SEEN OVER DRIVE-IN. AUDIENCE DEMANDS SEQUEL.** | **SOUCOUPE AU DRIVE-IN. LE PUBLIC RÉCLAME UNE SUITE.** |
-| Tripod leg cover story | “The chickens refused to evacuate. They own the tripod now.” | « Les poules ont refusé d’évacuer. Le tripode est à elles, maintenant. » |
+| Tripod leg cover story | “Coop loses a leg overnight. Farmer blames a very tall fox.” | « Le poulailler perd un pied dans la nuit. Le fermier accuse un renard très grand. » |
 | Clive, mumbles | “It blinked first… I win…” / “It’s only a meteor… meteors don’t unscrew…” | « C’est lui qui a cligné des yeux… j’ai gagné… » / « Ce n’est qu’un météore… ça ne se dévisse pas, un météore… » |
 | Sylvie, mumbles | “If the screen comes down… that’s the interval…” / “Row by row… you first, sir, you’re on fire…” | « Si l’écran s’écroule… c’est l’entracte… » / « Rangée par rangée… vous d’abord, monsieur, vous êtes en feu… » |
 | Sylvie, sleep-scream | “AAAAH! …Oh, it’s you.” | « AAAAH !… Ah, c’est vous. » |
@@ -142,7 +142,7 @@ One slot per souvenir in the [trophy room](GDD-9-trophy-room.md). Use each Engli
 | Pickup, collected on a repeat | “The leg goes in the cabinet. The Division asked if we could lend it a broom handle.” | « La patte va en vitrine. La division demande si on peut lui prêter un manche à balai. » |
 | Pickup, missed rotation | “Leave the leg, then. Without it, every egg rolls into the crater.” | « Laissez la patte, alors. Sans elle, tous les œufs roulent dans le cratère. » |
 
-In the first clear’s cover-story row, add “Fever log filed as Form 7-B. Compliance classified the method.” / « Relevé classé formulaire 7-B. La Conformité a mis la méthode sous scellés. » That ties the report to the clinic. The first-clear comment uses 120 characters in EN and 127 in FR, against a budget of 135 per locale. Check wrapping in both locales. Use the archive-clipping masthead in the Gazette. Keep the two-sighting priority and use the leg line in the existing cover-story row on repeat runs. Present-day Vrell stays at Dispatch.
+In the first clear’s cover-story row, add “The fever log became Form 7-B. Compliance classified the method.” / « Le relevé est devenu le Cerfa 7-B. La Conformité a mis la méthode sous scellés. » The first-clear comment uses 120 characters in EN and 127 in FR, against a budget of 135 per locale. Check wrapping in both locales. Use the archive-clipping masthead in the Gazette. Keep the two-sighting priority and use the leg line in the existing cover-story row on repeat runs. Present-day Vrell stays at Dispatch.
 
 ## Clock, stars and proof
 

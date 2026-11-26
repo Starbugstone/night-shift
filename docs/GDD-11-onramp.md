@@ -75,7 +75,7 @@ Use six seeds for the release gate. Use floors of 6/6 delivered, 6/6 skilled Gho
 
 > **Ordre n°0003 · La première fournée de Mabel**
 >
-> Zib, votre première vraie mission vous attend à la boulangerie du chemin des Bouleaux. Ramenez Mabel. Une tarte aux cerises refroidit sur le rebord de la fenêtre, à l’arrière. Si elle monte à bord, je la pèserai avant la compta.
+> Zib, votre première vraie mission vous attend à la boulangerie du chemin des Bouleaux. Ramenez Mabel. Sur le rebord de la fenêtre arrière, une tarte aux cerises refroidit. Si elle monte à bord, je la pèserai avant la compta.
 >
 > Miettes dort sur les clés de la boulangerie. Mabel doit lui demander la permission d’ouvrir.
 >
@@ -84,7 +84,8 @@ Use six seeds for the release gate. Use floors of 6/6 delivered, 6/6 skilled Gho
 ### Flight
 
 - Greybox a **1080 × 1440** suburb block. Start at **(540, 1250)**, with the bakery centred at **(540, 460)**. Put the Roof vent at roughly **(470, 400)** and the Stockroom door at **(615, 505)**. Use a cream roof, a wide extractor cap and a striped canopy over the loading door. Tuck the parked Spin City van out of the live approach.
-- Mount the existing `porch` detector over the loading-yard gate at **(540, 910)**, with a **290 px** trigger radius, **340 px** active radius and **1.00 s** map fuse. On arm, the lamp head swivels toward the saucer and lights up a floury handprint on the gate. Keep that light local to the prop and show a static handprint reveal in reduced motion. At the 430 px/s speed cap the shorter direct approach still spends about **1.05 s** under the light after its **0.40 s** arm. The shortest paths from spawn to either ring cross its trigger. The obvious wide approach goes via the west verge near **(140, 910)**. Leave an equally legible retreat from the edge. The lamp shows its exact arming arc in amber before the hard active boundary appears. The boundary and saucer fuse go red on actual exposure. A player who brushes the boundary can steer out while the fuse still has room, then see it drain in clear air.
+- Mount the existing `porch` detector over the loading-yard gate at **(540, 910)**, with a **290 px** trigger radius, **340 px** active radius and **1.00 s** map fuse. On arm, the lamp head swivels toward the saucer and lights up a floury handprint on the gate. Keep that light local to the prop and show a static handprint reveal in reduced motion. At the 430 px/s speed cap the shorter direct approach still spends about **1.05 s** under the light after its **0.40 s** arm. The shortest paths from spawn to either ring cross its trigger. Leave a clear retreat from the edge. The lamp shows its exact arming arc in amber before the hard active boundary appears. The boundary and saucer fuse go red on actual exposure. A player who brushes the boundary can steer out while the fuse still has room, then see it drain in clear air.
+- Mark the west detour from the fork via **(140, 1250) → (140, 520)**. Follow the verge until north of the gate light, then branch to either ring. The first leg stays at least **340 px** from the gate, the verge stays **400 px** away, and both branches stay more than **400 px** away. All three legs stay outside the **290 px** trigger, for **0 s** of arming.
 - Keep the whole hover pocket at both rings outside the active radius. The first lesson is how far to go around a triggered hazard. Each ring has a name and a terrain landmark. No concurrent flight detector. Any pools of decorative light remain soft.
 - At the fork, show “Go around the gate light” / « Contournez la lampe du portail ».
 - Use the existing flight speech hook for Zib’s handprint line on the first arm visible to the player. Start it when the handprint appears, including in reduced motion.
@@ -131,7 +132,7 @@ The **cherry pie** is the only town pickup. Set it on a back windowsill at the w
 | Vrell, first delivery | “Crumb opened at five. He knocked the card reader off the counter. Cash only.” | « Miettes a ouvert à cinq heures. Il a fait tomber le terminal de paiement. Espèces uniquement. » |
 | Gazette, two or more sightings | **BAKER’S BUNS SEEN RISING INTO NIGHT SKY** | **LES MICHES DE MABEL S’ENVOLENT EN PLEINE NUIT** |
 | Mabel, mumble | “I knead five more minutes…” | « Encore cinq minutes… je suis pas encore levée… » |
-| Pickup, collected on a repeat | “Another pie. This one had a note under it. ‘Bring back the tin.’” | « Encore une tarte. Avec un mot dessous. “Rendez le moule.” » |
+| Pickup, collected on a repeat | “There’s a note under the pie. ‘Bring back the tin.’” | « Il y a un mot sous la tarte. “Rendez le moule.” » |
 | Pickup, left behind | “You left the pie. Crumb sat in it.” | « Vous avez laissé la tarte. Miettes s’est assis dedans. » |
 | Zib, sighting retry | “Around the lamp this time. It knows what I look like now.” | « Je contourne la lampe, cette fois. Elle sait à quoi je ressemble. » |
 
@@ -140,6 +141,13 @@ Use the existing first-clear cover-story row for “The first loaf clocked in. M
 ### Clock and proof
 
 One delivery ends the shift. Show elapsed time without a countdown or dawn wash. **Night owl by 56 s**, with an initial clean casual median of **32–44 s**. Keep enough room for a quiet stop and the **6–10 s** pickup branch. A full sighting or failed room loses Ghost for that run. Retrying from the live checkpoint can still earn Delivered. Start with at least 95% skilled and 85% casual delivery on each room route over 20 seeds. The recommended Stockroom door should reach 95% casual.
+
+Override the memo’s Delivered and Night owl goals. Use the elapsed par of **0:56** for `{time}`.
+
+| Memo goal | EN | FR |
+| --- | --- | --- |
+| Delivered | `{star} — bring Mabel aboard` | `{star} — embarquer Mabel` |
+| Night owl | `{star} — finish in {time} or less` | `{star} — {time} ou moins` |
 
 Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the motion light or fail to lock within a **60 s test window**. That cap is for the test. Each room’s direct 270 px/s drag must fail a clean delivery within 45 s at all four phases. The ordinary route, pickup route and ten-second idle proof all use the same collision and wake rules.
 
