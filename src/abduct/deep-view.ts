@@ -509,6 +509,7 @@ export class DeepAbductView implements SceneView {
     this.world.position.set(-cx + Math.sin(t * 94) * shake * 4, -cy + Math.cos(t * 116) * shake * 2.5);
     this.night.sync(cx, cy, deepShift.dawn);
     this.building.sync(cx, cy, t, rm, deepShift.dawn);
+    this.building.scan(body.x, body.y);
     this.staff?.sync(body, !!sim.interior?.hazards[0]?.tell, !!sim.failure || sim.delivered);
     this.grail?.sync(body, sim.elapsed, rm, !!sim.failure || sim.delivered);
     this.crestValley?.sync(deepShift.elapsed ?? t, rm);

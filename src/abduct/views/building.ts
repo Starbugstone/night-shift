@@ -1,6 +1,7 @@
 import { paintDispatchProp } from '../dispatch-art';
 import { caveBackdrop, paintCaveProp } from '../monolith-art';
-import { Container, Graphics, type Sprite as PixiSprite } from 'pixi.js';
+import { Container, Graphics, Sprite as PixiSprite } from 'pixi.js';
+import { paintedTexture } from '../../core/gfx/textures';
 import { ART } from '../../art-manifest';
 import { VIEW_H, VIEW_W, type Assets } from '../../contracts';
 import { GLOW, Glow, ScreenTint, glowTexture } from '../../core/gfx/glow';
@@ -9,7 +10,7 @@ import { Label } from '../../core/gfx/text';
 import { getLang } from '../../i18n';
 import { letteredKey } from '../probe-draw';
 import type { Building, InteriorRoom, Opening } from '../rooms/interior';
-import type { Sprite } from '../rooms/layout';
+import type { Area, Sprite } from '../rooms/layout';
 import type { HazardState } from '../interior';
 import type { SwingingRect } from '../ragdoll';
 import { INK, MINT, RED, TAU, bitmap, box, circleInView, disc, intersects, Segment } from './pieces';
@@ -536,12 +537,21 @@ class HazardLights {
   }
 }
 
+/** Solid props wear a cream rim (neutral: outside the mint/amber/red tell colours); decor never does. */
+const RIM = '#fff0d2';
+const RIM_WIDTH = 3;
+/** Rim opacity with the specimen far away, and the distances (px) where it starts and finishes fading in. */
+const RIM_REST = 0.35;
+const RIM_FAR = 260;
+const RIM_NEAR = 50;
+
 export class BuildingView {
   readonly root = new Container();
   private readonly rooms: { spec: InteriorRoom; root: Container }[] = [];
   private readonly gags: Furnishing[] = [];
   private readonly lights: Light[] = [];
   private readonly hazardLights: HazardLights[] = [];
+  private readonly rims: { root: Container; areas: readonly Area[] }[] = [];
   private readonly dim = box(0, 0, VIEW_W + 16, VIEW_H + 16, '#0a0828');
   private readonly dawn = new Glow(glowTexture(GLOW.dawn), true);
 
@@ -563,8 +573,8 @@ export class BuildingView {
         if (!room.furniture.includes(sprite)) layer.addChild(prop(assets, sprite));
       }
       for (const s of room.decor) if (s !== exit) layer.addChild(prop(assets, s));
-      for (const { sprite } of room.supports) layer.addChild(prop(assets, sprite));
-      for (const s of room.furniture) layer.addChild(prop(assets, s));
+      for (const { sprite, colliders } of room.supports) layer.addChild(this.solid(assets, sprite, colliders ?? [sprite]));
+      for (const s of room.furniture) layer.addChild(this.solid(assets, s, [s]));
       this.rooms.push({ root: layer, spec: room });
       this.root.addChild(layer);
       for (const s of room.furniture) this.furnish(s, gags, lights);
@@ -588,6 +598,59 @@ export class BuildingView {
         this.hazardLights.push(effect);
         lights.addChild(effect.root);
       }
+    }
+  }
+
+  /** A solid prop's art, behind it a cream rim traced round that art; scan() fades the rim in as the specimen nears. */
+  private solid(assets: Assets, s: Sprite, areas: readonly Area[]): Container {
+    const art = prop(assets, s);
+    const root = new Container();
+    // Trace the texture the prop actually shows (manifest art or its painted fallback).
+    const shown = art instanceof PixiSprite ? art : art.children.find(child => child instanceof PixiSprite);
+    const source = shown?.texture.source.resource as CanvasImageSource | undefined;
+    if (source) {
+      const p = RIM_WIDTH + 2;
+      const tex = paintedTexture(`rim|${letteredKey(s.key)}|${getLang()}|${s.w}|${s.h}`, s.w + p * 2, s.h + p * 2, (g) => {
+        for (let k = 0; k < 16; k++) {
+          const a = (k / 16) * TAU;
+          g.drawImage(source, p + Math.cos(a) * RIM_WIDTH, p + Math.sin(a) * RIM_WIDTH, s.w, s.h);
+        }
+        g.globalCompositeOperation = 'source-in';
+        g.fillStyle = RIM;
+        g.fillRect(0, 0, s.w + p * 2, s.h + p * 2);
+        g.globalCompositeOperation = 'destination-out';
+        g.drawImage(source, p, p, s.w, s.h);
+        g.globalCompositeOperation = 'source-over';
+      });
+      const rim = new PixiSprite(tex);
+      rim.position.set(s.x - p, s.y - p);
+      root.addChild(rim);
+    } else {
+      const g = new Graphics();
+      for (const { x, y, w, h } of areas) g.roundRect(x - 2, y - 2, w + 4, h + 4, Math.min(7, w / 3, h / 3)).stroke({ color: RIM, width: RIM_WIDTH });
+      root.addChild(g);
+    }
+    root.alpha = RIM_REST;
+    this.rims.push({ root, areas });
+    const both = new Container();
+    both.addChild(root, art);
+    return both;
+  }
+
+  /** Fade each solid prop's rim in by how close the nearest joint of the specimen is to its colliders. */
+  scan(xs: ArrayLike<number>, ys: ArrayLike<number>): void {
+    for (const rim of this.rims) {
+      let best = Infinity;
+      for (const a of rim.areas) {
+        for (let i = 0; i < xs.length; i++) {
+          const dx = Math.max(a.x - xs[i]!, 0, xs[i]! - a.x - a.w);
+          const dy = Math.max(a.y - ys[i]!, 0, ys[i]! - a.y - a.h);
+          const d = dx * dx + dy * dy;
+          if (d < best) best = d;
+        }
+      }
+      const near = Math.min(1, Math.max(0, (RIM_FAR - Math.sqrt(best)) / (RIM_FAR - RIM_NEAR)));
+      rim.root.alpha = RIM_REST + (1 - RIM_REST) * near * near * (3 - 2 * near);
     }
   }
 
