@@ -116,7 +116,7 @@ const captainHome = building([
   door(760, 200), hatch(0, 1214, 'ladder', 172), hatch(700, 220, 'stairs', 200), door(0, 900, 1386),
 ], [
   swell(230, 0.4),
-  swing('Chart lamp', fit('chart_lamp', 345, 60, 40, 88), 0.62, 1.9, 14),
+  swing('Chart lamp', fit('chart_lamp', 345, 60, 40, 88), 0.5, 1.9, 14), // v4 difficulty curve (Neon P7): 0.62 -> 0.5
   fragile('Brass compass', art('brass_compass', 480, 516)),
   { kind: 'creak', name: 'Chart-room stairs', area: box(800, 200, 380, 420) },
   gate('Mast hatch', box(1194, -560, 352, 28), 'x', 7.2, 3.9, 1.3),
@@ -167,7 +167,7 @@ const marcoHome = building([
   patrol('Busboy bot', art('busboy_bot', 1300, 596), 80, 0, 1.1),
   fragile('Chocolate fountain', art('chocolate_fountain', 1520, 446)),
   castor('Room-service trolley', art('dessert_trolley', 2420, 566), 80, 2.1),
-  gate('Promenade door', box(2670, 330, 34, 356), 'y', 7, 3.85, 2.0),
+  gate('Promenade door', box(2670, 330, 34, 356), 'y', 7, 4.3, 2.0), // v4 openings: 3.85 -> 4.3 s open
 ]);
 
 export const marcoSkylight = route(marcoHome, 'marco', 'GALLEY SKYLIGHT', EXITS.marcoSkylight,

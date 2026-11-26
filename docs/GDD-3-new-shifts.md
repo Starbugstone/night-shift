@@ -103,7 +103,7 @@ Worse, intelligence reports that **humans queue up to be probed. Voluntarily.** 
 appointments, fast the night before, bring a friend to drive them home and leave four-star
 reviews. The Endoscopy Wing is signposted **"Department of Internal Affairs"** (FR « Service des
 Affaires internes »). Vrell is professionally insulted. Tonight: three specimens, each signed off
-on **Form 7-B** (FR « Cerfa 7-B ») en route: temperature, reflexes, ticklishness. *"The Bureau's
+on **Form 7-B** (FR « formulaire 7-B ») en route: temperature, reflexes, ticklishness. *"The Bureau's
 probe has been a brass thermometer and a clipboard since 1953. We have no idea where the humans
 got their other theories."*
 
@@ -157,6 +157,20 @@ Cabin 404 approaches). Graduates the "A Whole Cruise Ship" mission concept card.
 
 **Look.** Cream bow against ink-blue sea, moonlit Mist decks, a Teal lido pool, strings of deck bulbs
 (decor only), a foam wake trailing south. Interiors in ballroom Brick and Gold with brass rails.
+
+**Arrival (openings rework, 2026-11-26).** The saucer comes alongside from the open sea off the port rail at
+**(170, 2330)** (zone W-mid), not up the wake: nothing on the first screen looks at it. The galley sits on the
+starboard side at **(1280, 1850)** and the lido further aft at **(1260, 2820)**, so every way on crosses the open deck.
+The port cabin windows moved aft (y 2840, 3020) off the arrival lanes. Every straight run at all six rings is caught
+on the deck, beyond the opening screen (`tests/flight-ship.test.ts`):
+- the bridge's port-wing watch at **(872, 1016)** looks aft down the port deck, and the deck officer below it at
+  **(872, 1236)** looks south-south-west. The clean way to the bridge is up the starboard side or round the bow;
+- the galley's west-door CCTV at **(1100, 1850)** looks across the open deck towards the port rail. Its old roof
+  CCTV still sweeps the promenade door, and the midships photographer **(1120, 1640)** still covers the skylight;
+- **Doris**, Mrs. Pruitt's sister, watches from her lido lounger at **(1020, 2710)** with the family binoculars, a
+  slow sweep over the deck lane from the port rail to Greg's lido (range 480). She catches the naive beeline.
+Neon P7 room easing: the chart lamp swings 0.5 rad (was 0.62) and the promenade door stays open 4.3 s of 7 (was 3.85).
+The mast ladder hatch keeps its 172 px: any wider and the funnel route's deep-rules proof wakes the captain.
 
 **Flight signature: the deck photographer.** A photographer half-presses: an amber rectangular frame
 locks onto where the saucer is *now* and a closing iris previews the shutter (~1.0 s). Then the

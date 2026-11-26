@@ -33,8 +33,10 @@ const funnel = (x: number, y: number): PropDef => ({ key: 'flight/funnel_top', k
 // ====================================================================== the three hero roofs
 
 const BRIDGE: PropDef = { key: 'flight/ship_bridge_top', kind: 'civic', x: 1080, y: 1060, tint: '#e8e2d4' };
-const GALLEY: PropDef = { key: 'flight/ship_galley_top', kind: 'civic', x: 880, y: 1850, tint: '#d9d2c4' };
-const LIDO: PropDef = { key: 'flight/ship_lido_top', kind: 'civic', x: 1220, y: 2640, tint: '#3f8f8a' };
+// v4 openings (2026-11-26): the galley sits on the starboard side and the lido further aft, so a boarder from
+// the port rail crosses the open deck to reach either.
+const GALLEY: PropDef = { key: 'flight/ship_galley_top', kind: 'civic', x: 1280, y: 1850, tint: '#d9d2c4' };
+const LIDO: PropDef = { key: 'flight/ship_lido_top', kind: 'civic', x: 1260, y: 2820, tint: '#3f8f8a' };
 
 const L7_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
   {
@@ -91,24 +93,26 @@ function porthole(side: -1 | 1, y: number, period: number, on: number, phase: nu
 }
 
 const L7_HAZARDS: HazardDef[] = [
-  // Doris, whale-watching from her stern balcony with binoculars, all night, every night
+  // Doris, Mrs. Pruitt's sister, on her lido lounger with the family binoculars, all night, every night.
+  // v4 openings (2026-11-26): she watches the deck lane from the port rail to Greg's lido, the way on,
+  // not the arrival (the saucer now comes alongside from the open sea, off the port rail).
   {
     type: 'watcher',
     name: 'Doris',
-    x: 1080,
-    y: 3150,
-    range: 300,
-    half: 0.22,
-    angles: [1.57, -0.95, 2.3, 0.85, -2.2, 1.95, -1.3, 1.2, 2.6, 0.5],
-    hold: 1.9,
-    sweepAmp: 0.28,
-    sweepRate: 1.7,
+    x: 1020,
+    y: 2710,
+    range: 480,
+    half: 0.57,
+    angles: [-2.81],
+    hold: 3,
+    sweepAmp: 0.3,
+    sweepRate: 0.8,
   },
   // cabin windows along both sides of the hull: the sea lanes beside the ship are not free
   porthole(-1, 1180, 4.8, 2.0, 0.4),
   porthole(-1, 1650, 5.2, 2.2, 2.1),
-  porthole(-1, 2120, 4.6, 2.0, 3.3),
-  porthole(-1, 2600, 5.0, 2.2, 1.2),
+  porthole(-1, 2840, 4.6, 2.0, 3.3),
+  porthole(-1, 3020, 5.0, 2.2, 1.2),
   porthole(1, 1180, 5.0, 2.0, 2.8),
   porthole(1, 1650, 4.6, 2.2, 0.9),
   porthole(1, 2120, 5.2, 2.0, 1.7),
@@ -118,15 +122,22 @@ const L7_HAZARDS: HazardDef[] = [
   { type: 'camera', x: 1080, y: 2190, range: 300, half: 0.3, base: -PI / 2, amp: 1.15, rate: 1.05, phase: 1.7 },
   // the galley's own CCTV on its roof corner, sweeping the promenade door (the skylight is the photographer's)
   // v4 difficulty curve (Neon P7): 245 px so it no longer stacks onto the aft funnel camera's sweep
-  { type: 'camera', x: 1010, y: 1762, range: 245, half: 0.28, base: 1.65, amp: 0.5, rate: 0.9, phase: 0.6 },
+  { type: 'camera', x: 1410, y: 1762, range: 265, half: 0.28, base: 1.65, amp: 0.7, rate: 0.9, phase: 0.6 },
   // Greg's neighbour in the next cabin keeps switching the light on: it lights the porthole ring
-  { type: 'window', wx: 1372, wy: 2752, x: 1360, y: 2740, r: 95, period: 5.0, on: 4.15, phase: 1.1 },
+  { type: 'window', wx: 1412, wy: 2932, x: 1400, y: 2920, r: 95, period: 5.0, on: 4.15, phase: 1.1 },
+  // v4 openings (2026-11-26): the officers of the watch on the port bridge wing and the deck below it look
+  // aft down the port deck, the way a boarder from the port rail comes to the bridge (the clean way in is
+  // up the starboard side or round the bow).
+  { type: 'camera', x: 872, y: 1016, range: 400, half: 0.45, base: 1.46, amp: 0, rate: 0, phase: 0 },
+  { type: 'camera', x: 872, y: 1236, range: 400, half: 0.45, base: 1.94, amp: 0, rate: 0, phase: 0 },
+  // v4 openings: the galley's west-door CCTV looks across the open deck towards the port rail.
+  { type: 'camera', x: 1100, y: 1850, range: 450, half: 0.65, base: 2.1, amp: 0, rate: 0, phase: 0 },
   { type: 'camera', ...RADAR, base: 0 },
   { type: 'camera', ...RADAR, base: PI },
   // photographers: on the foredeck by the bridge, midships by the galley, aft by the lido
   // v4 difficulty curve (Neon P7): the foredeck frame stops at 275 px, clear of the bridge radar's sweep
   photographer(1080, 760, 275, PI / 2),
-  photographer(720, 1640, 320, 0),
+  photographer(1120, 1640, 320, 0),
   photographer(1180, 3190, 290, PI / 2),
   // stewards on both promenades, out of step
   steward(700, 1300, 700, 2480, 0),
@@ -173,7 +184,7 @@ export const LEVEL7: DeepLevelDef = {
     collectible: { id: 'shrimp_tower', x: 758, y: 2962 },
     w: 2160,
     h: 3600,
-    start: { x: 1080, y: 3480 },
+    start: { x: 170, y: 2330 },
     roads: [],
     groundProps: [],
     props: [

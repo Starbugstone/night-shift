@@ -5,6 +5,9 @@ import { DeepFlightSim, copyFlightState, newFlightState, stepFlight } from '../s
 import { PHOTO, PhotoPhase, photoPhase } from '../src/flight/photographer';
 import { LEVEL7 } from '../src/levels/deep-ship';
 import type { DeepMap } from '../src/levels/types';
+import type { PointerState, Vec2 } from '../src/contracts';
+import { BEELINE_DELAYS } from './difficulty/beeline';
+import { beelineController, runHeadless } from './flight-deep-harness';
 
 const PHOTOGRAPHER: HazardDef = { type: 'photographer', x: 500, y: 500, range: 300, halfW: 100, halfH: 80, facing: 0 };
 
@@ -137,3 +140,65 @@ describe('stewards and the radar mast', () => {
     expect(LEVEL7.map.hazards.filter((h) => h.type === 'photographer').length).toBe(3);
   });
 });
+
+// v4 openings (2026-11-26): the saucer comes alongside from the open sea off the port rail. Nothing watches the
+// arrival, and nothing is free either: a finger held straight at any of the six rings is caught on the deck, beyond
+// the opening screen, by the port bridge-wing watch, the galley's west-door CCTV or Doris on her lido lounger.
+describe('L7 openings', () => {
+  const { map } = LEVEL7;
+  const DT = 1 / 60;
+  const idle: PointerState = { down: false, x: 0, y: 0, pressed: false, released: false };
+  const press = (sim: DeepFlightSim, goal: Vec2): PointerState => {
+    const s = sim.saucer;
+    const distance = Math.hypot(goal.x - s.x, goal.y - s.y);
+    const scale = Math.min(186, distance * 1.4) / Math.max(1, distance);
+    return {
+      ...idle, down: distance > 12 || Math.hypot(s.vx, s.vy) > 60,
+      x: s.x - sim.camX + (goal.x - s.x) * scale - s.vx * (distance < 130 ? 0.35 : 0.1),
+      y: s.y - sim.camY + (goal.y - s.y) * scale - s.vy * (distance < 130 ? 0.35 : 0.1),
+    };
+  };
+  const opening = new DeepFlightSim(map, new Set(), 0);
+  const onFirstScreen = (x: number, y: number): boolean =>
+    x >= opening.camX && x <= opening.camX + 540 && y >= opening.camY && y <= opening.camY + 960;
+
+  it('catches a straight run from the launch to every ring at every tested phase, beyond the opening', () => {
+    for (const entry of map.targets.flatMap((t) => t.entries)) {
+      for (const delay of BEELINE_DELAYS) {
+        const sim = new DeepFlightSim(map, new Set(), delay);
+        while (sim.phase === 'fly' && sim.t < delay + 16) sim.update(DT, press(sim, entry));
+        const at = `${entry.roomId} from ${delay}s`;
+        expect(sim.phase, at).toBe('spotted');
+        const { x, y } = sim.saucer;
+        expect(Math.hypot(x - map.start.x, y - map.start.y), at).toBeGreaterThan(600);
+        expect(onFirstScreen(x, y), `${at}: caught on the first screen`).toBe(false);
+      }
+    }
+  });
+
+  it('the naive beeline is caught at every tested phase, beyond the opening', () => {
+    for (const delay of BEELINE_DELAYS) {
+      const run = runHeadless(map, [], beelineController, LEVEL7.budgetSec, true, delay);
+      expect(run.done, `beeline from ${delay}s`).toBe(false);
+      const spot = run.spots[0]!;
+      expect(spot, `beeline from ${delay}s`).toBeDefined();
+      expect(Math.hypot(spot.x - map.start.x, spot.y - map.start.y)).toBeGreaterThan(600);
+    }
+  });
+
+  it('nothing on the first screen can see the saucer at launch', () => {
+    const field = new HazardField(map.hazards);
+    const lit = new Float64Array(8).fill(1);
+    for (let t = 0; t < 12; t += 0.1) {
+      field.sample(t);
+      for (let x = opening.camX; x <= opening.camX + 540; x += 20) {
+        for (let y = opening.camY; y <= opening.camY + 960; y += 20) {
+          // Only the cabin windows' pools on the sea beside the hull may show; they light, they don't look.
+          const i = field.detect(x, y, lit);
+          if (i >= 0) expect(map.hazards[i]!.type, `seen at ${x},${y} t=${t.toFixed(1)}`).toBe('window');
+        }
+      }
+    }
+  });
+});
+
