@@ -86,11 +86,13 @@ const boothBay = section("Lyle's booth", 'cafe', box(0, 0, 740, 700), [
 ], [art('stool55', 573, 607)]);
 
 const jukebox: Hazard = { kind: 'speaker', name: 'Jukebox', sprite: art('jukebox55', 575, 483), radius: 135, period: 2.4 };
-const transom = fit('exit_skylight', 473, -442, 200, 80);
+const transom = fit('exit_skylight', 803, -800, 200, 80);
 const cafeUpper = building([
   { ...boothBay, supports: [...boothBay.supports, shelf(349, 365, 105)] },
-  { ...section('Awning gallery', 'cafe', box(355, -455, 385, 455), [], [transom]), wallOnly: true },
-], [hatch(0, 465, 685), hatch(-455, 465, 685)], [
+  { ...section('Awning gallery', 'cafe', box(355, -455, 385, 455)), wallOnly: true },
+  section('Pie loft', 'cafe', box(355, -815, 680, 360),
+    [prop(fit('pie_case55', 709, -562, 126, 93))], [transom]),
+], [hatch(0, 465, 685), hatch(-455, 440, 695), hatch(-815, 799, 1009)], [
   jukebox,
   { kind: 'fan', name: 'Ceiling fan', x: 693, y: 155, length: 46, speed: 1.9, phase: 0.6, duct: false, mountY: 28 },
   gate('Hinged sash', box(369, -210, 357, 25), 'x', 20, 4.4, 16),
@@ -146,9 +148,10 @@ export const ROOMS_1955 = {
     point(184, 254), point(326, 234), point(597, 229), point(657, 317), point(863, 312), point(1030, 304),
     point(1270, 304, 'Service gate', 200), point(1440, 420),
   ], 'hazmat_suit', 'yellow hazmat suit', 910, 510),
-  bully_transom: route(cafeUpper, 'buff', 'AWNING TRANSOM', transom, box(493, -420, 160, 67), [
+  bully_transom: route(cafeUpper, 'buff', 'AWNING TRANSOM', transom, box(823, -778, 160, 67), [
     point(173, 255), point(311, 180), point(575, 185), point(575, -98),
-    point(572, -349, 'Hinged sash', 200), point(573, -387),
+    point(572, -349, 'Hinged sash', 200), point(572, -595),
+    point(658, -717), point(850, -717), point(903, -747),
   ], 'retro_skateboard', 'retro skateboard', 405, 365, true),
   bully_kitchen: route(cafeSide, 'buff', 'KITCHEN DOOR', kitchen, box(1405, 278, 90, 135), [
     point(175, 270), point(320, 218), point(580, 223), point(650, 290),

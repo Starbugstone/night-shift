@@ -59,7 +59,7 @@ const EXITS = {
   captainMast: art('exit_roof_hatch', 1290, -886),
   captainFunnel: art('exit_chimney_top', -274, -286),
   marcoSkylight: art('exit_skylight', 1170, -1506),
-  marcoPromenade: art('exit_patio_door', 1826, 446),
+  marcoPromenade: art('exit_patio_door', 2706, 446),
   gregAwning: fit('exit_skylight', 1300, -706, 220, 80),
   gregCabin: art('exit_porthole', 2480, 966),
 } as const;
@@ -153,7 +153,10 @@ const marcoHome = building([
   room('Dining room', 'dining_room', box(900, 0, 1100, 700),
     [art('porthole', 1060, 150), art('porthole', 1640, 150)],
     [art('counter', 1450, 576)]),
-], [hatch(0, 560, 'vent', 180), door(900, 260), hatch(-1100, 584, 'vent', 280)], [
+  room('Sun deck', 'lido_bar', box(2000, 0, 885, 700),
+    [EXITS.marcoPromenade, art('porthole', 2480, 134)],
+    [art('lounger', 2250, 586)]),
+], [door(2000, 160, 530), hatch(0, 560, 'vent', 180), door(900, 260), hatch(-1100, 584, 'vent', 280)], [
   swell(230, 2.1),
   castor('Dessert trolley', art('dessert_trolley', 626, 566), 120, 2.1),
   swing('Hanging ladles', art('hanging_ladles', 300, 96), 0.35, 2.0, 14),
@@ -163,7 +166,8 @@ const marcoHome = building([
   swing('Chandelier', art('chandelier', 1180, 40), 0.5, 1.75, 14),
   patrol('Busboy bot', art('busboy_bot', 1300, 596), 80, 0, 1.1),
   fragile('Chocolate fountain', art('chocolate_fountain', 1520, 446)),
-  gate('Promenade door', box(1790, 330, 34, 356), 'y', 7, 3.85, 2.0),
+  castor('Room-service trolley', art('dessert_trolley', 2420, 566), 80, 2.1),
+  gate('Promenade door', box(2670, 330, 34, 356), 'y', 7, 3.85, 2.0),
 ]);
 
 export const marcoSkylight = route(marcoHome, 'marco', 'GALLEY SKYLIGHT', EXITS.marcoSkylight,
@@ -173,10 +177,11 @@ export const marcoSkylight = route(marcoHome, 'marco', 'GALLEY SKYLIGHT', EXITS.
     point(935, -1260), point(1090, -1260), point(1265, -1444),
   ], true);
 export const marcoPromenade = route(marcoHome, 'marco', 'PROMENADE DOOR', EXITS.marcoPromenade,
-  box(1860, 488, 90, 150), [
+  box(2740, 488, 90, 150), [
     point(196, 340), point(420, 310), point(760, 320), point(1010, 470, 'Dessert trolley', 170), point(1010, 320, undefined, 120),
-    point(1350, 310), point(1550, 240), point(1720, 300), point(1720, 500),
-    point(1906, 560, 'Promenade door', 190),
+    point(1350, 310), point(1550, 240), point(1760, 295), point(2080, 290),
+    point(2280, 376), point(2490, 315), point(2600, 340), point(2600, 484),
+    point(2785, 550, 'Promenade door', 190),
   ]);
 
 // ====================================================================== Greg

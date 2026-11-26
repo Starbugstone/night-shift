@@ -84,7 +84,7 @@ function route(
 // ====================================================================== the marine park (Bubbles)
 
 const PARK_EXITS = {
-  roof: fit('exit_skylight', 1510, -286, 280, 90),
+  roof: fit('exit_skylight', 2390, -596, 280, 90),
   tunnel: art('exit_loading_door', -2100, 446),
 } as const;
 
@@ -97,8 +97,9 @@ const parkHome = building([
     [fit('show_pool', 14, 526, 872, 160)], [], [], []),
   room('Sea-lion rocks', 'show_pool', box(900, 0, 1000, 700),
     [], [fit('sea_lion_rocks', 1170, 626, 240, 60)]),
-  room('Service roof', 'attic', box(1420, -300, 460, 300),
-    [PARK_EXITS.roof]),
+  room('Service roof', 'attic', box(1420, -610, 1280, 610),
+    [PARK_EXITS.roof, art('sprinkler_head', 1660, -596), art('sprinkler_head', 2260, -596)],
+    [fit('fish_crates', 1860, -270, 190, 256)]),
   // two glass dividers: over the low one, then push her down under the hanging one
   room('Viewing tunnel', 'aquarium_tunnel', box(-900, 0, 900, 700),
     [], [fit('tunnel_divider', -260, 420, 60, 266), fit('tunnel_divider', -560, 14, 70, 370)]),
@@ -130,16 +131,19 @@ const PARK_WET: Wetness = {
   ],
   refills: [
     { name: 'Leaky roof panel', kind: 'sprinkler', area: box(1590, 40, 220, 230) },
+    { name: 'Leaky roof panel', kind: 'sprinkler', area: box(1600, -580, 170, 500) },
+    { name: 'Leaky roof panel', kind: 'sprinkler', area: box(2110, -580, 320, 425) },
     { name: 'Mop bucket', kind: 'bucket', area: box(-1560, 560, 120, 126) },
     // optional: a quick spray on the way, if you catch it
     { name: 'Hall sprinkler', kind: 'sprinkler', area: box(-1440, 40, 140, 520), cycle: { period: 5, open: 2, phase: 0 } },
   ],
 };
 
-export const bubblesRoof = route(parkHome, 'bubbles', 'ROOF PANEL', PARK_EXITS.roof, box(1580, -270, 140, 80), [
+export const bubblesRoof = route(parkHome, 'bubbles', 'ROOF PANEL', PARK_EXITS.roof, box(2460, -580, 140, 80), [
   point(200, 600, undefined, 30), point(760, 600, undefined, 30), point(975, 615, undefined, 50),
   point(1180, 440, undefined, 70), point(1580, 230, undefined, 70), point(1670, 150, undefined, 40),
-  point(1670, -170, 'Roof panel', 150), point(1660, -230),
+  point(1670, -170, 'Roof panel', 150), point(1680, -331),
+  point(1790, -422), point(2150, -424), point(2360, -450), point(2530, -540),
 ], true, PARK_WET);
 
 export const bubblesTunnel = route(parkHome, 'bubbles', 'LOADING DOCK', PARK_EXITS.tunnel, box(-2050, 460, 120, 160), [
