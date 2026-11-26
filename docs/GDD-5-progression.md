@@ -63,7 +63,7 @@ Abduction sources by shift are [tutorial rooms](../src/abduct/rooms/index.ts), [
 ### Fuse staircase (2026-11-26)
 
 The map fuse (`map.fuseSec`, "seen for X s = spotted") never grows from one level to the next in
-`LEVELS` order: L1 1.0 · L2 1.0 · #0003 1.0 · #0004 0.95 · L3–L8 0.9 · L9 0.86 · then the Dispatch eras
+`LEVELS` order: L1 1.0 · L2 1.0 · #0003 0.95 · #0004 0.95 · L3–L8 0.9 · L9 0.86 · then the Dispatch eras
 down to the 2199 finale at 0.72. Field Check stays at 1.2 as an unscored drill. Before, L1 had 0.72,
 L3 1.3 and L4 0.8, so the farm was harsher than the first town and L5–L8 were softer than L4
 (review/difficulty-curve-neon.md). Each level's ceiling is the longest fuse at which its naive

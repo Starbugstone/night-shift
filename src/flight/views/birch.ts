@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
-import { bakeryGate } from '../../levels/deep-birch-bakery';
-import { binLid, birchWatcher } from '../../levels/deep-birch-neighbours';
+import { bakeryGate, bakeryLaunch } from '../../levels/deep-birch-bakery';
+import { binLid, BIRCH_CUT, birchWatcher } from '../../levels/deep-birch-neighbours';
 import type { DeepFlightScene } from '../deep-scene';
 
 export class BirchFlightDecor {
@@ -23,7 +23,8 @@ export class BirchFlightDecor {
       flour.rotation = 0.4;
       flour.visible = false;
       this.foreground.addChild(lamp, flour);
-      this.ground.addChild(new Graphics().moveTo(524, 1250).lineTo(140, 1250).lineTo(140, 920)
+      // The west verge round the gate light, from the Main Street turn up Birch Lane (2026-11-26 openings).
+      this.ground.addChild(new Graphics().moveTo(bakeryLaunch.x - 20, bakeryLaunch.y - 70).lineTo(140, bakeryLaunch.y - 160).lineTo(140, 920)
         .stroke({ color: '#959582', width: 4, alpha: 0.55, join: 'round' }));
     } else {
       const wall = new Graphics();
@@ -33,11 +34,14 @@ export class BirchFlightDecor {
         for (let x = from + 18; x < to; x += 24) wall.moveTo(x, 1299).lineTo(x, 1311);
       }
       wall.stroke({ color: '#694f63', width: 2 });
+      // 2026-11-26 openings: the east verge from Birch Lane, then the cut into Len's yard
+      // that clears while Mrs. Pruitt looks south (BIRCH_CUT).
       const drives = new Graphics();
-      for (const [turnout, end] of [[125, 430], [1315, 1010]] as const) {
-        drives.moveTo(turnout, 1420).lineTo(end, 1200)
+      const { from, to } = BIRCH_CUT;
+      for (const [ax, ay, bx, by] of [[1620, 1490, 1615, 720], [1615, 720, from.x, from.y], [from.x, from.y, to.x, to.y]]) {
+        drives.moveTo(ax!, ay!).lineTo(bx!, by!)
           .stroke({ color: '#5b6571', width: 71, alpha: 0.84, cap: 'round' })
-          .moveTo(turnout, 1420).lineTo(end, 1200)
+          .moveTo(ax!, ay!).lineTo(bx!, by!)
           .stroke({ color: '#b1a895', width: 3, alpha: 0.72, cap: 'round' });
       }
       const lid = new Graphics().ellipse(2, 9, 36, 15).fill({ color: '#221c36', alpha: 0.56 })

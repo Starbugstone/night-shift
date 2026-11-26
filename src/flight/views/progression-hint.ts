@@ -23,10 +23,12 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
   switch (level.id) {
     case 'birch_bakery':
       if (sim.suspicion > 0) return lessons.coolOff;
-      if (y > 1030 - pad(tr().birch.goAround)) return tr().birch.goAround;
+      // v4 openings: from the bend where the gate light comes into view, not from Main Street
+      if (y > 1030 - pad(tr().birch.goAround) && y < 1560 + pad(tr().birch.goAround)) return tr().birch.goAround;
       break;
     case 'birch_neighbours':
-      if (y > 1170 - pad(tr().birch.crossWatcher) && Math.abs(x - 720) > 245) return tr().birch.crossWatcher;
+      // v4 openings: at the mouth of the marked cut from the east verge into Len's yard
+      if (x > 1380 - pad(tr().birch.crossWatcher) && y < 900 + pad(tr().birch.crossWatcher)) return tr().birch.crossWatcher;
       break;
     case 'level3':
       for (const hazard of sim.field.defs) {

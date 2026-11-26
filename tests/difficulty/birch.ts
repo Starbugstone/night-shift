@@ -2,6 +2,8 @@ import type { FlightAutopilotIntent, Vec2 } from '../../src/contracts';
 import type { DeepFlightSim } from '../../src/flight/deep-sim';
 import { SAUCER } from '../../src/flight/sim';
 import type { LevelId } from '../../src/levels/save';
+import { bakeryGate, bakeryPie } from '../../src/levels/deep-birch-bakery';
+import { BIRCH_CUT } from '../../src/levels/deep-birch-neighbours';
 import { humanSteering, rng, type HumanProfile } from './human';
 
 export function isBirch(id: LevelId): id is 'birch_bakery' | 'birch_neighbours' {
@@ -23,8 +25,9 @@ export function steerTo(sim: DeepFlightSim, target: Vec2, hover: boolean): Fligh
   };
 }
 
-const PIE_APPROACH = [{ x: 140, y: 1250 }, { x: 140, y: 730 }, { x: 180, y: 660 }];
-const GNOME_APPROACH = [{ x: 1355, y: 1550 }, { x: 1360, y: 1040 }, { x: 1255, y: 610 }];
+const PIE_APPROACH = [{ x: 140, y: 1250 }, { x: 140, y: 560 }, bakeryPie];
+// 2026-11-26 openings: up the east verge, then along the top of Mrs. Pruitt's sweep to the gnome.
+const GNOME_APPROACH = [{ x: 1620, y: 1520 }, { x: 1620, y: 560 }, { x: 1275, y: 560 }, { x: 1275, y: 605 }];
 
 export class BirchPickupFirst {
   private readonly hand;
@@ -62,8 +65,9 @@ export class BakeryFirstRead {
   constructor(private readonly sim: DeepFlightSim, profile: HumanProfile, seed: number) {
     this.hand = humanSteering(profile, seed);
     // Players pick slightly different spots in the apron to inspect the lamp.
-    const aim = 1121 + 24 * profile.jitter / 7 * (2 * rng(seed * 7013 + 17)() - 1);
-    this.points = [{ x: 540, y: aim }, { x: 540, y: 1330 }, { x: 128, y: 1270 }, { x: 135, y: 700 }];
+    // 2026-11-26 openings: they come up Birch Lane from Main Street and inspect the lamp from just inside its trigger.
+    const aim = bakeryGate.y + 211 + 24 * profile.jitter / 7 * (2 * rng(seed * 7013 + 17)() - 1);
+    this.points = [{ x: bakeryGate.x, y: aim }, { x: bakeryGate.x, y: 1300 }, { x: 128, y: 1240 }, { x: 135, y: 700 }];
   }
 
   get active(): boolean {
@@ -87,17 +91,28 @@ export class BakeryFirstRead {
   }
 }
 
-/** Travel the painted cut through Pruitt's sweep using the usual hand wobble. */
+/**
+ * Follow the painted east verge and the cut into Len's yard with the usual hand wobble. A practised
+ * player waits at the mouth of the cut for Mrs. Pruitt to look south ("Cross when she looks away") and
+ * also waits out her amber page-turn tell. A first evening follows the paint straight through and is
+ * caught when she happens to look north.
+ */
 export class NeighboursCut {
   private readonly hand;
   private readonly points;
+  private readonly readsTell: boolean;
+  private readonly reaction: number;
+  private goAt = Infinity;
   private step = 0;
 
   constructor(private readonly sim: DeepFlightSim, profile: HumanProfile, seed: number) {
     this.hand = humanSteering(profile, seed);
-    // The thumb leans toward the next ring while straightening out of the turn.
-    const x = 430 + Math.max(0, profile.drift - 10) * 1.1;
-    this.points = [{ x: 125, y: 1450 }, { x, y: 1200 }, { x, y: 1030 }];
+    this.readsTell = profile.reaction < 0.25;
+    this.reaction = profile.reaction;
+    // The thumb leans toward the rings (west) while running up the verge, then follows the painted cut.
+    const lean = Math.max(0, profile.drift - 10) * 1.1;
+    const x = 1615 - lean;
+    this.points = [{ x: 1620, y: 1480 }, { x, y: 1000 }, { x, y: 720 }, BIRCH_CUT.from, { x: BIRCH_CUT.to.x, y: BIRCH_CUT.to.y + lean }];
   }
 
   get active(): boolean {
@@ -105,9 +120,19 @@ export class NeighboursCut {
   }
 
   steer(): FlightAutopilotIntent {
-    const { saucer: s, camX, camY, t } = this.sim;
-    if (Math.hypot(s.x - this.points[this.step]!.x, s.y - this.points[this.step]!.y) < 52) this.step++;
+    const { saucer: s, camX, camY, t, field } = this.sim;
+    const mouth = this.step === 3;
+    if (Math.hypot(s.x - this.points[this.step]!.x, s.y - this.points[this.step]!.y) < 52) {
+      if (!mouth) this.step++;
+      else {
+        // She looks south on her first bearing (BIRCH_NEIGHBOURS hazard 0, angles[0]).
+        const away = !this.readsTell || (field.a[0]! > 0.14 && !field.tell[0]);
+        if (!away) this.goAt = Infinity;
+        else if (this.goAt === Infinity) this.goAt = t + this.reaction;
+        if (t >= this.goAt) this.step++;
+      }
+    }
     const target = this.points[Math.min(this.step, this.points.length - 1)]!;
-    return this.hand(steerTo(this.sim, target, false), t, s.x - camX, s.y - camY, 'cut');
+    return this.hand(steerTo(this.sim, target, this.step === 3 && this.readsTell), t, s.x - camX, s.y - camY, 'cut');
   }
 }
