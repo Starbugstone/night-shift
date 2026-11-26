@@ -58,6 +58,8 @@ export interface TrafficHazard {
   sign: 1 | -1;
   speed: number;
   gap: number;
+  /** v4 openings: L9's Saturday-night cruisers (their own SPOTTED card). */
+  cruise?: boolean;
   offset: number;
   coneRange: number;
   coneHalf: number;
@@ -343,6 +345,8 @@ export const SPOT_CAUSES = [
   'evacuees1953',
   // v4 openings: the 1953 sky-watch volunteer on the church tower
   'spotter1953',
+  // v4 openings: L9's Saturday-night cruisers on the cross street
+  'cruisers1955',
 ] as const;
 export type SpotCause = (typeof SPOT_CAUSES)[number];
 
@@ -887,6 +891,7 @@ export class HazardField {
       case 'car':
         return d.key === 'flight/police55_top' ? 'eraPolice' : d.role;
       case 'traffic':
+        if (d.cruise) return 'cruisers1955'; // v4 openings
         return d.keys[0]?.endsWith('55_top') ? 'evacuees1953' : 'traffic'; // v4 openings
       case 'porch':
         return 'porch';

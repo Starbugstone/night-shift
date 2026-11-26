@@ -158,6 +158,7 @@ export type DeepZibEvent =
   // v4 openings
   | 'evacuees1953'
   | 'spotter1953' // v4 openings
+  | 'cruisers1955' // v4 openings
   | 'twoOfThree'
   | 'birchHandprint' | 'birchRetry' | 'birchLaunch' | 'birchBinLid' | 'birchReturned';
 

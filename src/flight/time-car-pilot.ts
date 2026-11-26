@@ -4,8 +4,12 @@ import type { DeepFlightSim } from './deep-sim';
 import { SAUCER } from './sim';
 import { TIME_CAR } from './time-car';
 
+/** The west verge run to the turnout; a leg without `y` stays level with the launch. */
+const VERGE: readonly { x: number; y?: number }[] = [{ x: 140 }, { x: 140, y: 980 }];
+
 export class TimeCarPilot {
   private west = false;
+  private verge = 0;
   mode: 'west' | 'stage' | 'intercept' = 'west';
 
   constructor(private readonly sim: DeepFlightSim) {}
@@ -14,7 +18,14 @@ export class TimeCarPilot {
     const { saucer: s, camX, camY, collectible } = this.sim;
     const car = collectible?.timeCar;
     if (!car?.visible) return { down: false, x: s.x - camX, y: s.y - camY };
-    if (s.x < 725) this.west = true;
+    // 2026-11-26 openings: from Main Street's south end, cut over to the west verge and run up it, clear of
+    // the Marshal's torch over the café's back lot, then stage at the turnout.
+    const leg = this.verge < VERGE.length ? VERGE[this.verge]! : null;
+    if (leg) {
+      const ly = leg.y ?? this.sim.map.start.y;
+      if (Math.abs(s.x - leg.x) < 70 && Math.abs(s.y - ly) < 90) this.verge++;
+    }
+    if (this.verge >= VERGE.length) this.west = true;
 
     let ax: number;
     let ay: number;
@@ -25,8 +36,9 @@ export class TimeCarPilot {
       ay = (car.position.y - s.y) * 11 - s.vy * 5;
     } else {
       this.mode = this.west ? 'stage' : 'west';
-      const targetX = this.west ? TIME_CAR.turnout.x : 650;
-      const targetY = this.west ? TIME_CAR.turnout.y : this.sim.map.start.y;
+      const next = VERGE[Math.min(this.verge, VERGE.length - 1)]!;
+      const targetX = this.west ? TIME_CAR.turnout.x : next.x;
+      const targetY = this.west ? TIME_CAR.turnout.y : next.y ?? this.sim.map.start.y;
       const x = targetX - s.x;
       const y = targetY - s.y;
       const pace = Math.min(2.4, 390 / Math.max(1, Math.hypot(x, y)));

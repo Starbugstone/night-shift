@@ -163,7 +163,8 @@ export const ROOMS_1955 = {
     point(603, -330, 'Microphone stand', 160), point(590, -451),
   ], 'cherry_guitar', 'cherry electric guitar', 440, 410, true),
   band_canopy: route(danceSide, 'marvin', 'LOADING CANOPY', canopy, box(1413, 312, 98, 133), [
+    // 2026-11-26: climb once through the loading door so the hanging legs clear the amp trolley's top
     point(214, 310), point(365, 234), point(596, 228), point(650, 304), point(885, 311, 'Loading door', 190),
-    point(1110, 305), point(1320, 284, undefined, 33), point(1460, 373),
+    point(975, 240), point(1110, 250), point(1320, 284, undefined, 33), point(1460, 373),
   ], 'puffy_vest', 'red puffy vest', 1170, 520),
 } satisfies Record<string, Room>;

@@ -170,6 +170,7 @@ const deepZib = {
   sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
   // v4 openings
   evacuees1953: ["Headlights! Never overtake an evacuation. It's rude, and it's evidence."],
+  cruisers1955: ["Cruisers on the cross street! Wait for a gap, like a well-raised hubcap."],
   spotter1953: ['Binoculars on the church tower! Is that a Pruitt? They’ve been watching since 1953?!'],
   // v4 2199
   start12: ["They’ve sent poets. Vrell, are their books loaded?"],
@@ -290,6 +291,7 @@ const spotCaptions = {
   sneeze1953: ["A tripod sneezes straight on your hull. You are now on camera."],
   // v4 openings
   evacuees1953: ['A station wagon full of evacuees swerves, honks and reports one flying saucer, barely used.'],
+  cruisers1955: ['A convertible full of teens slams on the brakes. By Monday the whole school "saw it first".'],
   spotter1953: ['Edna Pruitt of the volunteer sky watch logs “one saucer, cheap chrome”. Her daughter will keep the logbook going.'],
   // v4 2199
   poetry: ["The guard insists everyone stayed for the encore. Most of them were unconscious."],
@@ -1015,6 +1017,7 @@ export const en = {
         eraPolice: "Exhibit A · from the sheriff's cruiser",
       },
       fare: 'FARE 12.40',
+        cruisers1955: 'Exhibit A · snapshot from a convertible',
       unit4: 'UNIT 4',
       patrol2: 'PATROL 2',
       rec: 'REC',
@@ -1146,6 +1149,7 @@ export const en = {
       eraPolice: ['PULL OVER, HUBCAP!', 'CALL THE SHERIFF!'],
     } satisfies Record<string, Lines>,
     spotZib: {
+      cruisers1955: ['HEY, NICE RIDE!', 'WHO DRIVES A HUBCAP?'],
       police: ['The cop saw me. Respawning at the last specimen. Act like it was a different saucer.', 'Unit 4 again! At this point we should exchange Christmas cards.'],
       patrol: ['Patrol car got me. Back to the checkpoint. Different saucer, different saucer.'],
       traffic: ['A TAXI saw me. Of all the things to be seen by.'],
@@ -1184,6 +1188,7 @@ export const en = {
       eraPolice: ['A 1955 cruiser caught me! Even their vintage headlights are too bright!', 'Spotted by the patrol car. Back to the last witness—nobody saw a thing.'],
     } satisfies Record<string, Lines>,
     /** `{by}` = what failed you (already translated). */
+      cruisers1955: ['Caught crossing on a Saturday night. Next time I look both ways. Twice.'],
     abductFail: {
       woke: [
         '{by} woke up and saw everything. {by} is now "processing it" on a forum.',

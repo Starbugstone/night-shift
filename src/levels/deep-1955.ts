@@ -21,9 +21,9 @@ const lamps = [
 export const LEVEL9: DeepLevelDef = {
   kind: 'deep', id: 'level9', title: copy.title, location: copy.location, blurb: copy.blurb,
   human: copy.human, mugshot: 'human/doc_head', memo: { re: copy.re, body: copy.body, joke: copy.joke },
-  hours: [22, 22], budgetSec: 380, parMarginSec: 246,
+  hours: [22, 22], budgetSec: 380, parMarginSec: 258,
   map: {
-    theme: 'storm55', w: 1760, h: 2240, start: { x: 1050, y: 2010 }, fuseSec: 0.86,
+    theme: 'storm55', w: 1760, h: 2240, start: { x: 900, y: 2170 }, fuseSec: 0.86,
     collectible: { id: 'time_car', ...TIME_CAR.bay },
     roads: [
       { dir: 'v', at: 820, from: 755, to: 2240 },
@@ -57,20 +57,26 @@ export const LEVEL9: DeepLevelDef = {
       { human: 'Doc', short: 'Doc', building: prop('courthouse55_top', 'civic', 820, 310, '#776b60'),
         entries: [entry('inventor_service', 620, 350, 'below', true), entry('inventor_balcony', 1040, 330, 'above')] },
       { human: 'Buff Tanner', short: 'Buff', building: prop('cafe55_top', 'diner', 390, 1100),
-        entries: [entry('bully_kitchen', 235, 1020, 'above', true), entry('bully_transom', 430, 1245, 'below')] },
+        entries: [entry('bully_kitchen', 235, 1020, 'above', true), entry('bully_transom', 360, 1240, 'below')] },
       { human: 'Marvin Cherry', short: 'Marvin', building: prop('dance_gym55_top', 'civic', 1380, 1320, '#695365'),
-        entries: [entry('band_canopy', 1570, 1520, 'above', true), entry('band_hatch', 1250, 1550, 'below')] },
+        entries: [entry('band_canopy', 1585, 1320, 'above', true), entry('band_hatch', 1380, 1235, 'above')] },
     ],
     hazards: [
-      spot('marshal55_torch', 1030, 1940, 440, 0.49, -2.25, 0.06),
-      spot('dance_spot55', 1400, 1480, 585, 0.5, 2.145, 0.18),
-      spot('worklamp55', 820, 694, 540, 0.52, Math.PI / 2),
+      spot('marshal55_torch', 588, 1633, 380, 0.25, -2.1, 0.04),
+      spot('dance_spot55', 1174, 1636, 380, 0.25, -1.1),
+      spot('worklamp55', 820, 694, 575, 0.8, Math.PI / 2),
       { type: 'car', key: 'flight/police55_top', role: 'police', path: [
         { x: 1135, y: 755 }, { x: 1640, y: 755 }, { x: 1640, y: 1030 }, { x: 1135, y: 1030 },
       ], loop: true, speed: 150, dwell: 0, phase: 450, coneRange: 240, coneHalf: 0.32, sweepAmp: 0, sweepRate: 0, barR: 0 },
       { type: 'watcher', skin: 'cafe55', name: 'Café watcher', x: 555, y: 1100, range: 225, half: 0.35,
         angles: [2.12, 0], hold: 3.2, sweepAmp: 0.08, sweepRate: 0.8 },
       { type: 'wire', kind: 'power', ax: cable.x, ay: cable.north, bx: cable.x, by: cable.south },
+      spot('dance_spot55', 1150, 1860, 600, 0.45, -0.89),
+      // Saturday-night cruising on the cross street: the obvious way north from Main Street has to time a gap
+      { type: 'traffic', dir: 'h', at: 1140, from: 700, to: 1730, sign: -1, speed: 120, gap: 520, offset: 0,
+        coneRange: 210, coneHalf: 0.35, keys: ['flight/sedan55_top', 'flight/wagon55_top'], cruise: true },
+      // the starting-line lamp lights the parked time car: sitting on it before the run gets you seen
+      spot('worklamp55', 95, 830, 150, 0.55, -0.75),
     ],
     lamps,
   },

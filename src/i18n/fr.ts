@@ -798,6 +798,7 @@ export const fr: Strings = {
         eraPolice: 'Pièce A · depuis la voiture du shérif',
       },
       fare: 'COURSE 12,40',
+        cruisers1955: 'Pièce A · photo prise d’une décapotable',
       unit4: 'UNITÉ 4',
       patrol2: 'PATROUILLE 2',
       rec: 'ENR',
@@ -957,6 +958,7 @@ export const fr: Strings = {
         "12 nov. 1955 ! Trois témoins — et coupe la route à la voiture par l'ouest !",
       ],
       timeCarWarn: [
+      cruisers1955: ['Des voitures qui paradent ! J’attends un trou, comme un enjoliveur bien élevé.'],
         "Tu entends ce moteur ? Coupe-lui la route par la sortie à l'ouest !",
         "Les phares s'allument ! File par l'ouest pour lui couper la route !",
       ],
@@ -1075,6 +1077,7 @@ export const fr: Strings = {
       eraPolice: ['Un policier de 1955 signale « un plat à tarte volant, cap au nord ». Le central lui conseille le déca.', 'Pris dans des phares chromés. Le shérif lance un avis sur « un ballon-sonde très impoli ».'],
     },
     spotShouts: {
+      cruisers1955: ['Une décapotable pleine d’ados pile net. Lundi, tout le lycée « l’a vu en premier ».'],
       police: ['UNITÉ 4, OVNI !', 'HALTE ! …SVP ?'],
       patrol: ['REÇU, SOUCOUPE !', 'RENFORTS !'],
       watcher: ['JE LE SAVAIS !', 'DOROTHÉE ! LE CARNET !'],
@@ -1109,6 +1112,7 @@ export const fr: Strings = {
       eraPolice: ['RANGEZ-VOUS, ENJOLIVEUR !', 'APPELEZ LE SHÉRIF !'],
     },
     spotZib: {
+      cruisers1955: ['EH, JOLIE CAISSE !', 'QUI CONDUIT UN ENJOLIVEUR ?'],
       police: ["Le flic m'a vu. Retour au dernier spécimen. Fais comme si c'était une autre soucoupe.", "Encore l'unité 4 ! À ce stade, on devrait s'envoyer des cartes de vœux."],
       patrol: ["La patrouille m'a eu. Retour à l'étape. Autre soucoupe, autre soucoupe."],
       traffic: ["Un TAXI m'a vu. Fallait vraiment que ce soit un TAXI."],
@@ -1147,6 +1151,7 @@ export const fr: Strings = {
       eraPolice: ["Une patrouille de 1955 m'a eu ! Même leurs phares d'époque éclairent trop !", "Repéré par la voiture de police. Retour au dernier témoin — personne n'a rien vu."],
     },
     abductFail: {
+      cruisers1955: ['Repéré en traversant un samedi soir. La prochaine fois, je regarde des deux côtés. Deux fois.'],
       woke: [
         "{by} a tout vu en se réveillant. {by} « digère l'expérience » sur un forum.",
         "{by} a ouvert un œil. Puis l'autre. Puis la bouche. Ensuite, ça s'est gâté.",

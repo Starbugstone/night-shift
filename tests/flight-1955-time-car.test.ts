@@ -196,11 +196,11 @@ describe('1955 time car', () => {
     expect(old.levels.level9).toEqual(defaultSave().levels.level9);
     expect(isLevelUnlocked(old, workOrderNumber('level9') - 1)).toBe(true);
     const run = new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1);
-    run.tick(134);
-    expect(run.clockText()).toBe('10:05:54');
+    run.tick(122);
+    expect(run.clockText()).toBe('10:05:42');
     const summary = { delivered: 3, spotted: 0, failedAbductions: 0, sunrise: false, mapCollectible: 'time_car' as const };
-    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 134 }, 'level9')).toEqual([true, true, true, true]);
-    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 134.01 }, 'level9')).toEqual([true, true, false, true]);
+    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 122 }, 'level9')).toEqual([true, true, true, true]);
+    expect(computeDeepStars(LEVEL9.budgetSec, LEVEL9.parMarginSec, { ...summary, elapsedSec: 122.01 }, 'level9')).toEqual([true, true, false, true]);
   });
 
   it('a clean pilot at skilled drag speed impounds the car and earns all four stars', () => {
