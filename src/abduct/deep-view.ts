@@ -153,7 +153,8 @@ class DeepHud {
     const pad = this.lessonActive ? 12 : 0;
     let tip = '';
     if (sim.room.wrapperLessons) tip = '';
-    else if (sim.grailExit?.inside) tip = tr().grail.settle;
+    else if (sim.grailExit?.inside && (sim.grailExit.steady || !input.dragging)) tip = sim.grailExit.steady ? tr().grail.steady : tr().grail.wobble;
+    else if (sim.grailExit && input.dragging && nearZone(sim.room.exitZone, chestX, chestY, 90 + pad)) tip = tr().grail.settle;
     else if (wet?.sheathed && wet.level < 0.9 && wet.refilling === -1) tip = tips.refill;
     else if (sim.room.human === 'nora' && chestX > 295 - pad && chestX < 510 + pad && chestY < 445) tip = tr().birch.crossLaser;
     else if (sim.room.human === 'gary' && chestX > 270 - pad && chestX < 505 + pad && chestY > 175 - pad) tip = tips.laser;
@@ -208,6 +209,10 @@ class DeepHud {
   }
 }
 
+function nearZone(z: { x: number; y: number; w: number; h: number }, x: number, y: number, pad: number): boolean {
+  return x > z.x - pad && x < z.x + z.w + pad && y > z.y - pad && y < z.y + z.h + pad;
+}
+
 class DeepExit {
   readonly root = new Container();
   private readonly unlocked = new Container();
@@ -230,8 +235,10 @@ class DeepExit {
     this.unlocked.addChild(this.fill, this.dashes.root, this.arrows.root,
       panel, new Label({ size: 14, weight: 900, color: MINT }).set(title, exitX, titleY, width - 12));
     if (sim.grailExit) {
-      this.settleBar = box(a.x, a.y + a.h - 5, a.w, 5, MINT);
-      this.unlocked.addChild(this.settleBar);
+      // An empty track shows from the start that this opening has a bar to fill.
+      const track = box(a.x - 2, a.y + a.h - 12, a.w + 4, 12, INK, 0.75);
+      this.settleBar = box(a.x, a.y + a.h - 10, 0, 8, MINT);
+      this.unlocked.addChild(track, this.settleBar);
     }
     this.arrows.root.position.set(exitX, exitY);
     this.root.addChild(this.glow, prop(ctx.assets, s), this.unlocked);

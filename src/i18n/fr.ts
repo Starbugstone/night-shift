@@ -226,7 +226,7 @@ export const fr: Strings = {
       human: "Rodney, le Chevalier et Tom",
       collect: "Trois témoins",
       re: "Ordre n°{num} · Sacré Graal !",
-      body: "Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ses trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le service juridique annule les signatures. Près de la haie à l’ouest, des chevaliers réclament un jardinet.",
+      body: "Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ses trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le service juridique annule les signatures. Près de la haie à l’ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux.",
       joke: "Les Français lancent des vaches. Si la route meugle, dégagez.",
       signoff: "— Vrell. Pas de joute pendant le service.",
     },
@@ -452,7 +452,9 @@ export const fr: Strings = {
   // v4 L9 1955
   // v4 1122
   grail: {
-    settle: "Relâchez pour stabiliser le spécimen",
+    settle: "Lâchez dans la fenêtre temporelle",
+    steady: "Stable… la fenêtre temporelle se verrouille",
+    wobble: "Ça balance trop. Laissez-le se calmer",
     archive: "ARCHIVES 1122",
     board: "TROP HAUT",
     ni: "Ni !",

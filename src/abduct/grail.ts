@@ -83,6 +83,9 @@ export class GrailExit {
 
   constructor(private x: number, private y: number, private readonly seconds: number) {}
 
+  /** The torso is still enough for the bar to fill rather than drain. */
+  get steady(): boolean { return this.speed <= SETTLE_SPEED; }
+
   step(x: number, y: number, inside: boolean): boolean {
     const speed = Math.hypot(x - this.x, y - this.y) / STEP;
     this.speed += (speed - this.speed) * SPEED_SMOOTHING;

@@ -519,7 +519,7 @@ export const en = {
       human: "Rodney, the Knight & Tom",
       collect: "Three witnesses",
       re: "Work Order #{num} · Ni!",
-      body: "Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. His three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery.",
+      body: "Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. His three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery. The time window only takes still passengers: let go in the exit and wait for the bar, or they arrive in instalments.",
       joke: "The French are throwing cows. If the road moos, move.",
       signoff: "— Vrell. No jousting on Bureau time.",
     },
@@ -672,7 +672,9 @@ export const en = {
   // v4 L9 1955
   // v4 1122
   grail: {
-    settle: "Release to steady the specimen",
+    settle: "Let go in the time window",
+    steady: "Steady… the time window is locking on",
+    wobble: "Too wobbly. Let the swing die down",
     archive: "1122 ARCHIVE",
     board: "TOO HIGH",
     ni: "Ni!",

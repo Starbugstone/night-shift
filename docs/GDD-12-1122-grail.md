@@ -12,7 +12,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Work Order #0012 · Ni!**
 >
-> Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. His three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery.
+> Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. His three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery. The time window only takes still passengers: let go in the exit and wait for the bar, or they arrive in instalments.
 >
 > The French are throwing cows. If the road moos, move.
 >
@@ -20,7 +20,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Ordre n°0012 · Sacré Graal !**
 >
-> Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ses trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le service juridique annule les signatures. Près de la haie à l’ouest, des chevaliers réclament un jardinet.
+> Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ses trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le service juridique annule les signatures. Près de la haie à l’ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux.
 >
 > Les Français lancent des vaches. Si la route meugle, dégagez.
 >
@@ -60,6 +60,8 @@ The map fuse lasts **0.75 s**. At the 430 px/s speed cap, even a centre pass thr
 ## The three witnesses
 
 Use the standard ragdoll. Start both routes of each sleeper on the same settled pose and keep the first viewport legible. The short route saves a room bend and asks for one tighter timing decision. Existing hard wake rules apply. At each exit, release the beam to settle the witness. The mint bar fills in **1.25 s** while their torso stays steady and recedes while it swings. Leaving the opening clears the bar.
+
+**Why, and how it is taught.** Each exit is a Temporal Dispatch time window, and it only locks on a still passenger (anything that swings arrives in instalments). The shift memo gives this reason. In the room, an empty dark track sits under every exit from the start. While the beam still holds the witness near the opening, the prompt reads “Let go in the time window”. After release it reads “Steady… the time window is locking on” while the bar fills, or “Too wobbly. Let the swing die down” while it drains.
 
 | Sleeper | Route | What the player does |
 | --- | --- | --- |

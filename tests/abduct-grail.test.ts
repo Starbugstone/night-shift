@@ -49,7 +49,9 @@ it('lets the torso settle inside the exit and clears partial progress when it le
   const exit = new GrailExit(0, 0, 1);
   for (let frame = 1; frame <= 240; frame++)
     expect(exit.step(frame, 0, true)).toBe(false);
+  expect(exit.steady).toBe(false);
   for (let frame = 0; frame < 1 / STEP; frame++) exit.step(240, 0, true);
+  expect(exit.steady).toBe(true);
   expect(exit.progress).toBeGreaterThan(0);
   expect(exit.progress).toBeLessThan(1);
   expect(exit.step(240, 0, false)).toBe(false);
