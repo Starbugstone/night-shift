@@ -294,11 +294,10 @@ class LevelCard {
     roundRect(card, 4, 4, 12, CARD_H - 8, 6).fill(!unlocked ? '#4a4470' : training ? C.mint : C.amber);
     if (unlocked && !training) roundRect(card, 4, CARD_H / 2, 12, (CARD_H - 8) / 2, 6).fill(C.red);
     this.root.addChild(card);
-    // v4 1953: Clive fronts this dispatch's poster.
     if (lv.id === 'birch_neighbours') {
       this.photos.push(new Mugshot(assets, 'human/len_head', CARD_W - 47, 52, unlocked, index + 1, 29));
       this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 82, 64, unlocked, index, 37));
-    } else if (lv.kind === 'deep' && lv.map.targets.length === 3 && lv.id !== 'level11' && lv.id !== 'level12') {
+    } else if (lv.kind === 'deep' && lv.map.targets.length === 3) {
       const cx = CARD_W - 66;
       const anchors = [[cx - 26, 46], [cx + 24, 44], [cx - 2, 84]] as const;
       for (const [i, target] of lv.map.targets.entries()) {
