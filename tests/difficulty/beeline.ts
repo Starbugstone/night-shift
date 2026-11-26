@@ -1,6 +1,7 @@
 import type { GameContext, RoomId } from '../../src/contracts';
 import { ROOMS } from '../../src/abduct/rooms';
 import { AbductSimulation } from '../../src/abduct/simulation';
+import { isBirch, steerTo } from './birch';
 import { FlightScene } from '../../src/flight/scene';
 import type { LevelDef, TutorialLevelDef } from '../../src/levels/types';
 import { beelineController, runHeadless } from '../flight-deep-harness';
@@ -40,8 +41,14 @@ export function beelineFlight(level: LevelDef): number {
     if (level.kind === 'tutorial') {
       if (level.map.entries.every(entry => !cleanTutorialBeeline(level, entry, delay))) stopped++;
     } else {
-      const route = runHeadless(level.map, [], beelineController, level.budgetSec, true, delay);
-      if (!route.done) stopped++;
+      const route = runHeadless(level.map, [], beelineController, level.clockMode === 'elapsed' ? 60 : level.budgetSec, true, delay);
+      const direct = isBirch(level.id) ? level.map.targets.flatMap(target => target.entries) : [];
+      const allCaught = direct.every(entry => {
+        // On a two-target shift the direct holds must fail before the first lock.
+        const firstLeg = runHeadless(level.map, [], sim => () => steerTo(sim, entry, true), 60, true, delay);
+        return firstLeg.legs.length === 0;
+      });
+      if (!route.done && allCaught) stopped++;
     }
   }
   return stopped;

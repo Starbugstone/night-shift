@@ -163,6 +163,8 @@ export interface DeepTarget<Entries extends EntryDef[] = [EntryDef, EntryDef]> {
   entries: Entries;
 }
 
+type MapTarget = DeepTarget<EntryDef[]>;
+
 export interface DeepMap {
   /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
   theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55';
@@ -173,7 +175,7 @@ export interface DeepMap {
   roads: RoadDef[];
   groundProps: PropDef[];
   props: PropDef[];
-  targets: [DeepTarget<EntryDef[]>] | [DeepTarget<EntryDef[]>, DeepTarget<EntryDef[]>, DeepTarget<EntryDef[]>];
+  targets: [MapTarget] | [MapTarget, MapTarget] | [MapTarget, MapTarget, MapTarget];
   hazards: HazardDef[];
   /** Warm light pools (decor). */
   lamps: Vec2[];
@@ -183,9 +185,12 @@ export interface DeepMap {
   ground?: readonly GroundPatch[];
 }
 
-/** L3+: three specimens, one big map, a sunrise clock. */
+/** A live shift with one to three targets and an elapsed or deadline clock. */
 export interface DeepLevelDef extends LevelBase {
   kind: 'deep';
+  /** Elapsed-time shift with a par and no deadline. */
+  clockMode?: 'elapsed';
+  elapsedParSec?: number;
   /** Real seconds from the start of the shift to sunrise. */
   budgetSec: number;
   /** Night owl star: finish with at least this many seconds left. */
@@ -193,6 +198,10 @@ export interface DeepLevelDef extends LevelBase {
   /** Clock face hours: shift start .. sunrise, e.g. [2, 6]. */
   hours: [number, number];
   map: DeepMap;
+}
+
+export function deepPar(level: DeepLevelDef): number {
+  return level.elapsedParSec ?? level.budgetSec - level.parMarginSec;
 }
 
 export type LevelDef = TutorialLevelDef | DeepLevelDef;

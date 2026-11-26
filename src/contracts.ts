@@ -146,6 +146,8 @@ export type RoomId =
   | 'farm_chimney'
   | 'laundry_skylight'
   | 'laundry_loading'
+  // v4 Birch Lane
+  | 'mabel_stockroom' | 'mabel_vent' | 'nora_side' | 'nora_loft' | 'len_workshop' | 'len_skylight'
   // L3 Cul-de-Sac Sweep
   | 'dave_roof'
   | 'dave_patio'
@@ -239,6 +241,8 @@ export type CreateAbductScene = (
 
 // v4 map collectibles
 export type MapCollectibleId =
+  // v4 Birch Lane
+  | 'cherry_pie' | 'garden_gnome'
   | 'slipper_flyer'
   | 'astronomer'
   | 'saucer_photo'

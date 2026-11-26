@@ -1,6 +1,6 @@
 // Speech bubbles on every flight map stay on top: barks, quips and pills live in the world's
 // FLIGHT_BUBBLES layer, and only the player's own layers (saucer, fuse ring, particles: label
-// FLIGHT_PLAYER) may be drawn after it. Walks every flight level until the level id repeats,
+// FLIGHT_PLAYER) may be drawn after it. Walks the live Work Order registry,
 // so new levels are checked without editing this script.
 //   node scripts/pixi/check-bubbles.mjs BASE_URL      (an e2e or dev build: reads __nightShift.stage)
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -8,11 +8,17 @@ const base = process.argv[2];
 if (!base) { console.error('usage: check-bubbles.mjs BASE_URL'); process.exit(2); }
 const browser = await chromium.launch({ args: (process.env.GPUARGS ?? '').split(' ').filter(Boolean) });
 const page = await browser.newPage({ viewport: { width: 375, height: 690 } });
-const seen = new Set();
+await page.goto(new URL('?unlock=1', base).href);
+await page.waitForFunction(() => window.__nightShift?.workOrders, null, { timeout: 90000 });
+const orders = await page.evaluate(() => window.__nightShift.workOrders);
 let failures = 0;
-for (let n = 1; n < 40; n++) {
-  await page.goto(`${base}?flight=${n}`);
-  await page.waitForFunction(() => window.__nightShift && window.__nightShift.scene === 'flight' && !window.__nightShift.transitioning, null, { timeout: 30000 });
+for (const order of orders) {
+  await page.evaluate(num => window.__nightShift.goto('flight', num), order.num);
+  await page.waitForFunction(id => {
+    const ns = window.__nightShift;
+    const a = ns.active;
+    return ns.scene === 'flight' && !ns.transitioning && (a.level?.id ?? a.opts?.level?.id) === id;
+  }, order.id, { timeout: 90000 });
   const r = await page.evaluate(() => {
     const ns = window.__nightShift;
     const a = ns.active;
@@ -36,8 +42,6 @@ for (let n = 1; n < 40; n++) {
     if (tail.length) problems.push(`${tail.length} world layer(s) after the layer holding the bubbles`);
     return { id, problem: problems.join('; ') || null, count: bubbles.children.length };
   });
-  if (seen.has(r.id)) break;
-  seen.add(r.id);
   console.log(`${r.problem ? 'FAIL' : 'ok  '} ${r.id}${r.count !== undefined ? ` (${r.count} bubble groups)` : ''}${r.problem ? ': ' + r.problem : ''}`);
   if (r.problem) failures++;
 }

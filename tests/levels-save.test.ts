@@ -61,7 +61,7 @@ describe('save', () => {
     source.trophies = { 'demo dentures': { room: 'dave_roof', count: 1, first: 4 } };
     source.muted = source.allUnlocked = source.legacyDispatch = source.fieldCheckSeen = true;
     source.lang = 'fr';
-    const v2 = JSON.stringify({ ...source, version: 2 });
+    const v2 = JSON.stringify({ ...source, version: 2, levels: Object.fromEntries(oldIds.map(id => [id, source.levels[id]])) });
     const v1 = JSON.stringify({ version: 1, glorbs: 3 });
     const store = memStore({ [V2_SAVE_KEY]: v2, [LEGACY_SAVE_KEY]: v1 });
     expect(loadSave(store)).toEqual({ ...source, bridgeAccess: true });

@@ -3,6 +3,7 @@ import { describe as group, expect as want, it as check } from 'vitest';
 import { backfillSpecimens as backfill } from '../src/levels/progress';
 import { defaultSave as freshSave } from '../src/levels/save';
 import { LEVELS as ALL_LEVELS, isDeep as deepLevel } from '../src/levels/levels';
+import { buildSpecimenCatalog } from '../src/ui/trophy-data';
 
 group('specimen back-fill for older saves', () => {
   check('a save with every level delivered gets every specimen, with a stable probe stamp', () => {
@@ -12,11 +13,12 @@ group('specimen back-fill for older saves', () => {
     const b = freshSave();
     for (const lv of ALL_LEVELS) b.levels[lv.id].delivered = true;
     backfill(b);
-    want(Object.keys(a.specimens).length).toBe(23);
+    const ids = buildSpecimenCatalog().flatMap(section => section.slots.map(slot => slot.id));
+    want(Object.keys(a.specimens).sort()).toEqual(ids.sort());
     want(a.specimens).toEqual(b.specimens);
     const probed = Object.values(a.specimens).filter((e) => e.probed).length;
     want(probed).toBeGreaterThan(3);
-    want(probed).toBeLessThan(20);
+    want(probed).toBeLessThan(ids.length);
   });
 
   check('a trophy proves its route\'s specimen; an existing archive is left alone', () => {

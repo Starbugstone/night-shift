@@ -4,6 +4,7 @@ import { Container, Graphics, Sprite } from 'pixi.js';
 import type { Assets, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
+import { deepPar } from '../levels/types';
 import { LEVELS, formatOrderNumber } from '../levels/levels';
 import { MAX_STARS, RANKS, dispatchRequirements, isLevelUnlocked, levelStarCount, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, tr } from '../i18n';
@@ -293,6 +294,9 @@ class LevelCard {
         const [x, y] = anchors[i]!;
         this.photos.push(new Mugshot(assets, targetHeadKey(target), x, y, unlocked, index + i, 25));
       }
+    } else if (lv.id === 'birch_neighbours') {
+      this.photos.push(new Mugshot(assets, 'human/len_head', CARD_W - 47, 57, unlocked, index + 1, 29));
+      this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 79, 62, unlocked, index, 37));
     } else this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 62, 58, unlocked, index, 38));
     for (const photo of this.photos) this.root.addChild(photo.root);
 
@@ -319,7 +323,7 @@ class LevelCard {
     this.root.addChild(new Label({ size: 16, color: unlocked ? C.muted : C.amber, align: 'left', weight: 700 })
       .set(lt.location, 34, 56 + lines * 28, CARD_W - 150));
 
-    this.sun = unlocked && lv.kind === 'deep' && lv.id !== 'level9' ? new SunIcon(5.5, 8, 11.5) : null;
+    this.sun = unlocked && lv.kind === 'deep' && lv.clockMode !== 'elapsed' && lv.id !== 'level9' ? new SunIcon(5.5, 8, 11.5) : null;
     this.arrow = unlocked ? this.openBadge(training) : null;
     if (!unlocked) {
       const missing = dispatchRequirements(LEVELS, index).filter(id => !save.levels[id].delivered);
@@ -342,7 +346,7 @@ class LevelCard {
       star.position.set(52 + i * 44, CARD_H - 32);
       this.root.addChild(star);
     }
-    if (lv.kind === 'deep') {
+    if (lv.kind === 'deep' && lv.clockMode !== 'elapsed') {
       const label = fmt(lv.id === 'level9' ? tr().crestValley.duration : strings.sunriseIn, { time: fmtTime(lv.budgetSec) });
       this.root.addChild(new Label({ size: 16, color: C.amberHi, align: 'right', weight: 800 }).set(label, CARD_W - 24, CARD_H - 44, CARD_W - 230));
       if (this.sun) {
@@ -351,7 +355,7 @@ class LevelCard {
       }
     } else {
       this.root.addChild(new Label({ size: 16, color: C.muted, align: 'right', weight: 700 })
-        .set(fmt(strings.par, { time: fmtTime(lv.parSec) }), CARD_W - 24, CARD_H - 44));
+        .set(fmt(strings.par, { time: fmtTime(lv.kind === 'deep' ? deepPar(lv) : lv.parSec) }), CARD_W - 24, CARD_H - 44));
     }
     this.root.addChild(new Label({ size: 15, color: C.amberHi, align: 'right', weight: 600 })
       .set(prog.bestTimeSec === null ? strings.notAttempted : fmt(strings.best, { time: fmtTime(prog.bestTimeSec) }), CARD_W - 24, CARD_H - 22));

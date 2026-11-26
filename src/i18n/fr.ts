@@ -77,7 +77,6 @@ export const fr: Strings = {
       afterL8: ["Astuce : si une voiture en inox atteint 88 miles à l'heure sous l'orage, écartez-vous. Notre assurance plafonne à 85."],
       afterL2: [
         "Astuce : chaque chaussette orpheline de Spin City depuis 1998 dort dans l'entrepôt 4.",
-        "Astuce : si Mme Pruitt vous fait coucou, ce n'est pas amical. Elle calibre ses jumelles.",
       ],
       afterL4: [
         'Astuce : La Gazette de Grimsby paie 20 € la photo floue de soucoupe. Ne les financez pas.',
@@ -155,6 +154,7 @@ export const fr: Strings = {
     incoming: 'NOTE DE SERVICE',
     to: 'À : Stagiaire Zib',
     // v4 L9 1955
+    toAgentSenior: 'À : Agent Zib',
     toAgent: 'À : Agent Zib (junior)',
     from: 'DE : Superviseur Vrell',
     re: 'OBJET : {re}',
@@ -167,7 +167,54 @@ export const fr: Strings = {
     startShift: 'Au boulot !',
   },
 
+  // v4 Birch Lane
+  birch: {
+    goAround: "Contournez la lampe du portail",
+    crossWatcher: "Passez quand elle regarde ailleurs",
+    crossLaser: "Attendez que la ligne s’éteigne",
+    mabelMumble: "Encore cinq minutes… je suis pas encore levée…",
+    noraMumble: "Je dors pour des raisons de sécurité…",
+    lenMumble: "Ce tic-tac… ah, c’est ma montre…",
+    crumb: "Miettes",
+    alarm: "CODE DE L’ALARME",
+    open: "OUVERT",
+    bakeryCover: "Le premier pain a pointé. Mabel est encore « en livraison ».",
+    neighboursCover: "La fougère des Henderson se porte à merveille.",
+    deliverGoal: "{star} — embarquer Mabel",
+    neighboursGoal: "{star} — embarquer Nora et Len avant l’aube ({time})",
+    owlGoal: "{star} — en {time} maximum",
+    timeAgainstPar: "{used} écoulées · objectif {par}",
+    post1122: "Pluie. Vaches. Dommage que vous ne soyez pas là.",
+    post1953: "Drive-in. Le film aurait bien eu besoin d’un mouchoir.",
+    post2199: "L’avenir. J’ai failli finir sous une route. Sauvé par la paperasse. Évidemment.",
+    collectBakery: "Embarquez Mabel",
+    collectNeighbours: "Embarquez les deux spécimens",
+    pruittTip: "Astuce : si Mme Pruitt vous fait coucou, ce n’est pas amical. Elle calibre ses jumelles.",
+  },
   levels: {
+    // v4 Birch Lane
+    birch_bakery: {
+      title: "La première fournée de Mabel",
+      location: "Boulangerie du chemin des Bouleaux",
+      blurb: "Debout avant le quartier. Moins levée que la pâte.",
+      human: "Mabel la boulangère",
+      collect: "Mabel",
+      body: "Zib, votre première vraie mission vous attend à la boulangerie du chemin des Bouleaux. Ramenez Mabel. Sur le rebord de la fenêtre arrière, une tarte aux cerises refroidit. Si elle monte à bord, je la pèserai avant la compta.",
+      joke: "Miettes dort sur les clés de la boulangerie. Mabel doit lui demander la permission d’ouvrir.",
+      signoff: "— Vrell. Laissez la caisse.",
+      re: "Ordre n°{num} · La première fournée de Mabel",
+    },
+    birch_neighbours: {
+      title: "En l’absence des Henderson",
+      location: "Chemin des Bouleaux, angle de l’allée des Érables",
+      blurb: "Deux dorment. La voisine, elle, veille.",
+      human: "Nora Finch et Len Briggs",
+      collect: "Nora et Len",
+      body: "Ramenez Nora du garage des Henderson et Len de l’atelier voisin avant l’aube. Mme Pruitt, en face, n’a pas dormi depuis 1994. Les Henderson ont oublié leur nain de jardin. Il boude près de l’allée de Len, côté est.",
+      joke: "Le code est derrière le laser. Gary, de la surveillance du quartier, l’a installé gratuitement. Il s’est fait prendre quatre fois.",
+      signoff: "— Vrell. N’arrosez pas la fougère. Elle est en plastique.",
+      re: "Ordre n°{num} · En l’absence des Henderson",
+    },
     // v4 L9 1955
     level9: {
       title: "Fin de quart à 22 h 04",
@@ -209,8 +256,8 @@ export const fr: Strings = {
       human: 'Dave, Barb et Gary',
       collect: 'Dave, Barb et Gary',
       re: 'Ordre n°{num} — Allée des Érables (commande groupée)',
-      body: "Fini la formation. L'allée des Érables compte trois cibles avant l'aube : Dave le dentiste, Coach Barb et Gary des Voisins vigilants. Évitez la patrouille et les jumelles de Mme Pruitt — elle n'a pas fermé l'œil depuis 1994 et note tout dans un classeur.",
-      joke: "Les lasers de Gary l'ont déjà piégé onze fois : évitez d'être la douzième. Un astronome amateur campe aussi chemin des Bouleaux avec une parabole SETI, si vous avez le temps.",
+      body: "Trois avant l’aube cette fois, Zib. Dave le dentiste, Barb la coach et Gary de la surveillance du quartier. Gare à la voiture de police. Mme Pruitt surveille la rue aux jumelles depuis sa fenêtre. Gary a fait des achats.",
+      joke: "Les lasers de Gary l’ont piégé onze fois. Un astronome bénévole veille chemin des Bouleaux avec sa parabole SETI, si le détour vous tente.",
       signoff: '— Vrell. Contresigné avec réserves.', // v4 story
     },
     level4: {
@@ -279,6 +326,13 @@ export const fr: Strings = {
 
   routes: {
     // v4 L9 1955
+    // v4 Birch Lane
+    mabel_stockroom: { route: "Porte de la réserve", difficulty: "miettes et grille" },
+    mabel_vent: { route: "Aération du toit", difficulty: "chariot et conduit" },
+    nora_side: { route: "Porte latérale", difficulty: "établi et laser" },
+    nora_loft: { route: "Trappe du grenier", difficulty: "coffre et laser" },
+    len_workshop: { route: "Porte de l’atelier", difficulty: "comptoir et étau" },
+    len_skylight: { route: "Lucarne", difficulty: "guidon et montée" },
     inventor_balcony: { route: "Balcon de l'horloge", difficulty: "engrenages et câble" },
     inventor_service: { route: "Porte de service", difficulty: "cloche et grille" },
     bully_transom: { route: "Imposte de l'auvent", difficulty: "jukebox et ventilo" },
@@ -450,8 +504,8 @@ export const fr: Strings = {
     ranOut: 'épuisée : soleil levé à {h} h',
     usedSpare: '{used} écoulées · {left} de marge',
     delivered: 'Spécimens livrés',
-    deliveredValue: '{n}/3',
-    deliveredNames: '{n}/3  ({names})',
+    deliveredValue: '{n}/{total}',
+    deliveredNames: '{n}/{total}  ({names})',
     failedAbductions: 'Enlèvements ratés',
     avgDignity: 'Dignité moyenne',
     percent: '{n} %',
@@ -478,6 +532,9 @@ export const fr: Strings = {
       sunrise: ["Classé : {cause}, à l'aube. Le siège n'y croit pas.", 'Classé : {cause}. Avec le soleil levé, dur à défendre.'],
     },
     causes: {
+      // v4 Birch Lane
+      birch_bakery: ["un nuage de farine"],
+      birch_neighbours: ["un couvercle de poubelle"],
       // v4 L9 1955
       level9: ["la foudre en boule sur le tribunal", "un reflet sur un pare-chocs chromé", "un abus de milk-shakes au chocolat"],
       level1: ['des gaz des marais', 'une très grande chouette effraie', 'une moissonneuse-batteuse ambitieuse'],
@@ -492,6 +549,9 @@ export const fr: Strings = {
       generic: ['des gaz des marais', 'un ballon-sonde', 'Vénus'],
     },
     headlines: {
+      // v4 Birch Lane
+      birch_bakery: ["LES MICHES DE MABEL S’ENVOLENT EN PLEINE NUIT"],
+      birch_neighbours: ["MME PRUITT SIGNALE UNE SOUCOUPE POUR LA 37ᵉ FOIS. ET CETTE FOIS, ELLE A RAISON."],
       // v4 L9 1955
       level9: [
         "LA FOUDRE FIGE L'HORLOGE À 22 H 04 — UN ENJOLIVEUR VOLANT ACCUSÉ",
@@ -542,7 +602,7 @@ export const fr: Strings = {
     banner: 'ORDRE N°{num} · AUBE À {h} H',
     secured: 'SPÉCIMEN EMBARQUÉ',
     backToCheckpoint: 'Touchez pour revenir à la dernière étape',
-    countOf: '{n} sur 3',
+    countOf: '{n}/{total}',
     entrySep: ' — ',
     spinCity: 'SPIN CITY',
     missed: {
@@ -734,6 +794,11 @@ export const fr: Strings = {
     },
     itemsNone: 'aucun',
     deepZib: {
+      birchReturned: ["Un à bord. J’égale mon record. Et ils veulent que je recommence."],
+      birchBinLid: ["C’est un des nôtres ?… Ah, un couvercle de poubelle. Belle ligne, quand même."],
+      birchLaunch: ["Des jumelles et un classeur. Vrell, je crois qu’elle est des nôtres."],
+      birchRetry: ["Je contourne la lampe, cette fois. Elle sait à quoi je ressemble."],
+      birchHandprint: ["Pris la main dans le sac. De farine. Et c’est même pas ma main."],
       // v4 L9 1955
       start9: [
         "Nom de Zeus, 1955 ! Là où on vole, pas besoin de route. File à l'ouest, Zib !",
@@ -899,7 +964,7 @@ export const fr: Strings = {
     },
     garyFail: [
       '{by}. Le système de sécurité de Gary attrape enfin un vrai intrus. Gary dort pendant ce temps, comme le veut la tradition.',
-      "{by}. En onze ans, son système a attrapé Gary onze fois, et vous une fois. Vous entrez dans les records. Ceux de Gary.",
+      "{by}. Le système de Gary a attrapé Gary onze fois, et vous une fois. Vous entrez dans le livre des records. Celui de Gary.",
     ],
     failAlarm: "L'alarme",
     failSleeper: "L'autre dormeur",
@@ -963,10 +1028,13 @@ export const fr: Strings = {
     },
     // v4 story: Vrell's scripted arc lines on a level's first delivery
     storyFirstClear: {
+      // v4 Birch Lane
+      birch_bakery: "Miettes a ouvert à cinq heures. Il a fait tomber le terminal de paiement. Espèces uniquement.",
+      birch_neighbours: "Les deux sont à bord. Mme Pruitt a inscrit la soucoupe dans son registre comme extension sans permis de construire.",
       // v4 L9 1955
       level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
       level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la D9 vers la ville : le veilleur de Spin City vous attend.',
-      level2: "Larry est enregistré, et la compta a pisté quarante chaussettes disparues jusqu'à votre soucoupe. Fini l'essai, cap sur l'allée des Érables.",
+      level2: "Larry est recensé. La compta a remonté la piste de quarante chaussettes jusqu’à votre soucoupe. Votre badge provisoire est dans le bac. Deux missions chemin des Bouleaux, puis la commande en gros.",
       level3: 'Banlieue bouclée, mais Gary a porté plainte et Mme Pruitt a envoyé votre photo à la mairie. Direction le centre-ville.',
       level4: "Maire livré, presque intact. Le registre de Nigel note une pierre noire vendue à un « acheteur maritime », et le bureau du maire a suivi sa caisse jusqu'à Barnacle Bay. Suivez la côte.",
       level5: "Bubulle a laissé un mot poli — qui apprend à écrire à un dauphin ? — et le registre de Pete a déclenché un audit. Sortez le thermomètre en laiton.",
@@ -995,6 +1063,13 @@ export const fr: Strings = {
   ],
 
   items: {
+    // v4 Birch Lane
+    "sourdough starter": { one: "{n} levain", other: "{n} levains" },
+    "kitchen timer": { one: "{n} minuteur de cuisine", other: "{n} minuteurs de cuisine" },
+    "house-sitting checklist": { one: "{n} liste de gardiennage", other: "{n} listes de gardiennage" },
+    "magnetic parts dish": { one: "{n} coupelle aimantée", other: "{n} coupelles aimantées" },
+    "bicycle bell": { one: "{n} sonnette de vélo", other: "{n} sonnettes de vélo" },
+    "biscuit tin": { one: "{n} boîte à biscuits", other: "{n} boîtes à biscuits" },
     // v4 L9 1955
     "spare flex capacitor": { one: "{n} convecteur temporaire", other: "{n} convecteurs temporaires" },
     "yellow hazmat suit": { one: "{n} combinaison jaune", other: "{n} combinaisons jaunes" },
@@ -1050,6 +1125,13 @@ export const fr: Strings = {
   // v4 items & recap humour
   souvenirs: {
     items: {
+    // v4 Birch Lane
+    "sourdough starter": { got: ["Le plus ancien employé de Mabel. Nourri deux fois par jour, jamais payé. Zib connaît ça."], missed: ["Resté sur place : levain."] },
+    "kitchen timer": { got: ["Sonne à quatre heures et réveille toute la rue. Sauf Mabel. Les voisins nous ont demandé de le garder."], missed: ["Resté sur place : minuteur de cuisine."] },
+    "house-sitting checklist": { got: ["Rentrer les poubelles. Si Gary passe, faire semblant d’être au téléphone."], missed: ["Resté sur place : liste de gardiennage."] },
+    "magnetic parts dish": { got: ["Contient une vis. Tout le monde attend de voir ce qui va prendre du jeu."], missed: ["Resté sur place : coupelle aimantée."] },
+    "bicycle bell": { got: ["La seule chose dans l’atelier de Len qui lui appartient. Enfin, il croit."], missed: ["Resté sur place : sonnette de vélo."] },
+    "biscuit tin": { got: ["Contient des boulons. La boîte marquée BOULONS contient des biscuits. Len dit que ça marche très bien comme ça."], missed: ["Resté sur place : boîte à biscuits."] },
       // v4 L9 1955
       "spare flex capacitor": {
         got: ["Un convecteur temporaire de rechange, qui clignote dans une boîte à biscuits. La Propulsion dit que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur temporaire enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
@@ -1541,6 +1623,30 @@ export const fr: Strings = {
   },
 
   data: {
+    Mabel: "Mabel",
+    Nora: "Nora",
+    Len: "Len",
+    "Nora Finch": "Nora Finch",
+    "Len Briggs": "Len Briggs",
+    Skylight: "Lucarne",
+    // v4 Birch Lane
+    "Baker Mabel": "Mabel la boulangère",
+    "Crumb": "Miettes",
+    "Garage laser": "Laser du garage",
+    "Stockroom": "Réserve",
+    "Service bay": "Local de service",
+    "Henderson garage": "Garage des Henderson",
+    "Henderson loft": "Grenier des Henderson",
+    "Len’s workshop": "Atelier de Len",
+    "Len’s skylight": "Lucarne de Len",
+    "Stockroom door": "Porte de la réserve",
+    "Roof vent": "Aération du toit",
+    "Side door": "Porte latérale",
+    "Loft hatch": "Trappe du grenier",
+    "Workshop door": "Porte de l’atelier",
+    "I knead five more minutes…": "Encore cinq minutes… je suis pas encore levée…",
+    "I’m asleep for security reasons…": "Je dors pour des raisons de sécurité…",
+    "There’s the tick… oh. It’s my watch…": "Ce tic-tac… ah, c’est ma montre…",
     // v4 L9 1955
     Doc: "Doc",
     Buff: "Buff",
@@ -1970,13 +2076,13 @@ export const fr: Strings = {
     location: 'Chemin des Bouleaux · lisière',
     blurb: 'Un détecteur, un cadre de porte, zéro chrono.',
     re: 'Test terrain n°{num}-B — Fin de formation',
-    body: "La camionnette de la laverie a tourné vers l'allée des Érables, et le siège m'a collé trois spécimens d'un coup. Avant la vraie course contre l'aube, faites un exercice non payé : frôlez un détecteur, passez le cadre de porte, ne réveillez pas le leurre.",
+    body: "Le siège veut une commande en gros à l’allée des Érables. D’abord, un exercice chemin des Bouleaux. Déclenchez un détecteur, franchissez un seuil et laissez dormir le leurre.",
     joke: "Zéro étoile, zéro Glorb, zéro dossier — sauf si vous cassez la soucoupe. Ma retraite est dans onze semaines, Zib. Ne gâchez pas tout.",
     signoff: '— Vrell. Exercice gratuit, exigences payantes.',
     start: 'Lancer le test terrain',
-    skip: "Passer à l'ordre n°{num}",
+    skip: "Passer à la boulangerie",
     replay: 'Rejouer le test terrain',
-    continueToOrder: "Lancer l'ordre n°{num}",
+    continueToOrder: "Partir pour la boulangerie",
     prompts: {
       porch: "Passez devant le détecteur — sortez pour calmer l'alerte.",
       ring: "Faites du surplace dans l'anneau vert pour verrouiller.",
@@ -1984,10 +2090,10 @@ export const fr: Strings = {
       // v4 council: the clatter demo, a clipboard dropped down the beam
       clatter: 'Porte-bloc tombé ! Regardez les jauges.',
       retry: 'Réessayer relance la pièce, pas toute la nuit.',
-      complete: '1 sur 3 validé. En vrai service, un seul chrono pour les trois.',
+      complete: "Un spécimen recensé. En mission, le chrono tourne dans toutes les pièces. Première vraie mission à la boulangerie du chemin des Bouleaux.",
     },
     completeTitle: 'TEST TERRAIN VALIDÉ',
-    completeComment: "Correct. Votre tour de cou provisoire est dans la bannette. Le chrono démarre à l'allée des Érables — évitez Mme Pruitt.",
+    completeComment: "Gardez votre badge provisoire à portée de main.",
   },
   // v4 map collectibles
   mapCollectibles: {
@@ -1997,6 +2103,9 @@ export const fr: Strings = {
     toast: 'En soute : {name} !',
     flyerHeader: 'PERDU',
     items: {
+      // v4 Birch Lane
+      cherry_pie: { name: "Tarte aux cerises", memoHint: "une tarte aux cerises", comment: "Il y a un mot sous la tarte. “Rendez le moule.”", missedComment: "Vous avez laissé la tarte. Miettes s’est assis dedans." },
+      garden_gnome: { name: "Nain de jardin", memoHint: "nain de jardin", comment: "Il a demandé une place côté hublot. Et une petite ombrelle dans son verre.", missedComment: "Le nain est resté. Demain, il tente le bus." },
       // v4 L9 1955
       time_car: {
         name: "Voiture temporelle",
@@ -2103,6 +2212,10 @@ export const fr: Strings = {
       reportCount: 'Rapport n°{n} · ×{count}',
       workOrderLabel: 'Ordre de mission',
       entries: {
+        // v4 Birch Lane
+        mabel: { name: "Mabel la boulangère", age: "55", height: "163 cm", weight: "71 kg", desc: "Prépare chaque matin un petit pain pour Larry, de la laverie. Il dort toujours à l’heure de venir le chercher." },
+        nora: { name: "Nora Finch", age: "46", height: "168 cm", weight: "73 kg", desc: "Classe les clés par porte sur sa liste. Elle a prévu une colonne pour les surprises." },
+        len: { name: "Len Briggs", age: "62", height: "177 cm", weight: "81 kg", desc: "Ça fait si longtemps qu’il emprunte les outils des Henderson qu’il dit les « garder en dépôt ». Ils sont trop polis pour les réclamer." },
         doyle: {
           name: 'Le fermier Doyle',
           age: '58 ans',
@@ -2271,6 +2384,10 @@ export const fr: Strings = {
       addendum3: 'ADDENDUM · 3e VISITE',
       addendum10: 'ADDENDUM · 10e VISITE',
       repeats: {
+        // v4 Birch Lane
+        mabel: { at3: "A tâté la paroi de la soucoupe et dit qu’il lui fallait encore dix minutes.", at10: "A goûté le biscuit offert. L’a renvoyé. « Un biscuit apéro qui se prend pour un sablé. »" },
+        nora: { at3: "A emporté la clé de secours de la soucoupe pour la mettre à l’abri. Elle dit que c’est sur la liste. Elle ne dit pas laquelle.", at10: "A découvert que la fougère était en plastique. L’a arrosée quand même, par respect." },
+        len: { at3: "A révisé la soucoupe pendant le trajet. Elle a maintenant une sonnette. Personne ne sait d’où elle sort.", at10: "A monté des petites roues sur la soucoupe. Elle tourne comme une poussette." },
         doyle: {
           at3: "Dort désormais avec sa courgette de concours sous le bras pour être sûr que la soucoupe ne l'oublie pas.",
           at10: "Aligne des verres d'eau partout dans la ferme et dort avec une batte de baseball. Il ne nous a toujours pas touchés.",
@@ -2382,6 +2499,9 @@ export const fr: Strings = {
       unfiledDetail: "{hint} Faites du surplace sur la lueur verte pendant l'ordre n°{num} pour l'embarquer.",
       memoHintFallback: 'La note de service évoque « {hint} ».',
       descriptions: {
+        // v4 Birch Lane
+        cherry_pie: "Un petit doigt de vapeur a fait signe à Zib. Son nez a fait le reste.",
+        garden_gnome: "Pêche au-dessus d’une mare comblée depuis des années. Il y croit encore.",
         // v4 L9 1955
         time_car: "Coupé en inox brossé à portes papillon, pneus cramés et zéro permis. La Propulsion interdit à Zib de voir ce qui se passe à 88.",
         slipper_flyer: "Photocopié en gros Comic Sans, un numéro déjà arraché en bas. Celui qui l'a pris risque d'être sacrément déçu.",
@@ -2393,6 +2513,9 @@ export const fr: Strings = {
         krix: "Notre fameux ex-stagiaire, toujours accroché au grille-pain de Doyle. Jure qu'un appareil noir brillant, c'est de la techno alien.",
       },
       statuses: {
+        // v4 Birch Lane
+        cherry_pie: "À moitié mangée. Vrell nie tout. Son porte-bloc est taché de cerise.",
+        garden_gnome: "Enfin en vacances.",
         // v4 L9 1955
         time_car: "En fourrière · Bridée à 87 miles à l'heure",
         slipper_flyer: 'Épinglé sur le tableau de Vrell',
@@ -2404,6 +2527,9 @@ export const fr: Strings = {
         krix: 'Convoqué aux RH',
       },
       hints: {
+        // v4 Birch Lane
+        cherry_pie: "Refroidit à l’arrière de la boulangerie, sur un rebord de fenêtre.",
+        garden_gnome: "Près de l’allée de Len, côté est. Prenez votre passeport.",
         // v4 L9 1955
         time_car: "Relisez la note : une voiture à portes papillon non déclarée fonce vers l'horloge avant 22 h 04.",
         slipper_flyer: 'La note de service évoque un avis de chausson perdu près de la laverie.',
@@ -2416,6 +2542,13 @@ export const fr: Strings = {
       },
     },
     descriptions: {
+      // v4 Birch Lane
+      "sourdough starter": "Le plus ancien employé de Mabel. Nourri deux fois par jour, jamais payé. Zib connaît ça.",
+      "kitchen timer": "Sonne à quatre heures et réveille toute la rue. Sauf Mabel. Les voisins nous ont demandé de le garder.",
+      "house-sitting checklist": "Rentrer les poubelles. Si Gary passe, faire semblant d’être au téléphone.",
+      "magnetic parts dish": "Contient une vis. Tout le monde attend de voir ce qui va prendre du jeu.",
+      "bicycle bell": "La seule chose dans l’atelier de Len qui lui appartient. Enfin, il croit.",
+      "biscuit tin": "Contient des boulons. La boîte marquée BOULONS contient des biscuits. Len dit que ça marche très bien comme ça.",
       // v4 L9 1955
       "spare flex capacitor": "Trois tubes qui clignotent dans un boîtier en métal. Ouvre le voyage dans le temps — et annule toute garantie galactique.",
       "yellow hazmat suit": "Vinyle jaune canari avec étui à sèche-cheveux. Entré dans le folklore terrien comme « tenue de soirée martienne ».",

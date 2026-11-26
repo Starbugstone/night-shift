@@ -16,6 +16,9 @@ import { bubblesRoof, bubblesTunnel, peteGallery, peteSlipway, salDock, salLoft 
 import { hankFront, hankRear, oseiHelipad, oseiPharmacy, pembertonChute, pembertonWindow } from './deep-clinic';
 // v4 L9 1955
 import { ROOMS_1955 } from './deep-1955';
+// v4 Birch Lane
+import { BAKERY_ROOMS } from './deep-birch-bakery';
+import { NEIGHBOUR_ROOMS } from './deep-birch-neighbours';
 // v4 L8
 import { MONOLITH_ROOMS } from './deep-monolith';
 // L7 cruise code
@@ -26,6 +29,9 @@ export const ROOMS: Readonly<Record<RoomId, Room>> = withSouvenirs({
   farm_chimney: farmChimney,
   laundry_skylight: laundrySkylight,
   laundry_loading: laundryLoading,
+  // v4 Birch Lane
+  ...BAKERY_ROOMS,
+  ...NEIGHBOUR_ROOMS,
   dave_roof: daveRoof,
   dave_patio: davePatio,
   barb_chimney: barbChimney,

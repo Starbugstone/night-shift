@@ -1,4 +1,7 @@
 import type { RoomId } from '../contracts';
+// v4 Birch Lane
+import { BIRCH_BAKERY } from './deep-birch-bakery';
+import { BIRCH_NEIGHBOURS } from './deep-birch-neighbours';
 import { LEVEL3, LEVEL4 } from './deep-levels';
 import { LEVEL5 } from './deep-pier'; // L5 pier code
 // L6 clinic code
@@ -187,6 +190,9 @@ export const LEVELS: readonly LevelDef[] = [
       ],
     },
   },
+  // v4 Birch Lane
+  BIRCH_BAKERY,
+  BIRCH_NEIGHBOURS,
   LEVEL3,
   LEVEL4,
   // v3: L5 (pier code), L6 (clinic code), L7 (cruise code) register here, in that order
@@ -223,6 +229,8 @@ export const ROOM_IDS: readonly RoomId[] = [
   'farm_chimney',
   'laundry_skylight',
   'laundry_loading',
+  // v4 Birch Lane
+  'mabel_stockroom', 'mabel_vent', 'nora_side', 'nora_loft', 'len_workshop', 'len_skylight',
   'dave_roof',
   'dave_patio',
   'barb_chimney',

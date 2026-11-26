@@ -1,8 +1,8 @@
-// The deep-level runner (L3+): one shift, three specimens, one sunrise clock.
+// The deep-level runner: one shift, one to three targets, one shared clock.
 // DOM-free; src/core/game.ts drives the scenes from it.
 //
 //   flight ──lock on ring──▶ abduct ──delivered──▶ flight (respawn at that ring = checkpoint)
-//     ▲  │                     │ └─delivered #3──▶ done
+//     ▲  │                     │ └─quota met──▶ done
 //     │  └─spotted: freeze,    └─failed/aborted──▶ choice ──retry──▶ abduct (same route)
 //     │    respawn at checkpoint                        └─back──▶ flight (at that ring)
 //     └─────────────────────────────────────────────────────────────┘
@@ -119,6 +119,10 @@ export class DeepRun {
   }
 
   clockText(locale = 'en'): string {
+    if (this.level.clockMode === 'elapsed') {
+      const sec = Math.floor(this.elapsed);
+      return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+    }
     if (this.level.id === 'level9') {
       const seconds = crestValleyClock(this.elapsed);
       const hour = locale === 'fr' ? 22 : 10;
@@ -133,7 +137,7 @@ export class DeepRun {
     return `${h}:${m < 10 ? '0' : ''}${m}`;
   }
 
-  /** Advance the sunrise clock (flight and abduction). Returns true when the sun comes up. */
+  /** Charge active flight and room time. Returns true when a deadline expires. */
   tick(dt: number): boolean {
     if (this.phase !== 'flight' && this.phase !== 'abduct') return false;
     this.elapsed = Math.min(this.level.budgetSec, this.elapsed + dt);

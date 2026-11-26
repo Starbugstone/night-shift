@@ -226,6 +226,14 @@ function krixIntern(): Graphics {
 
 /** Each sketch, its own bounding box and its tilt. */
 const FALLBACK: Record<MapCollectibleId, { draw: () => Graphics; w: number; h: number; rot: number }> = {
+  cherry_pie: { draw: () => new Graphics().ellipse(0, 6, 50, 30).fill('#b4d7db')
+    .ellipse(0, -4, 44, 25).fill('#ad3e58').stroke({ color: '#dea359', width: 6 })
+    .moveTo(-31, -17).lineTo(8, 16).moveTo(-12, -23).lineTo(29, 12)
+    .moveTo(-30, 11).lineTo(10, -23).moveTo(-8, 16).lineTo(31, -16).stroke({ color: '#f3bd67', width: 5 }), w: 112, h: 96, rot: 0 },
+  garden_gnome: { draw: () => new Graphics().roundRect(-31, 18, 46, 26, 8).fill('#367f73')
+    .circle(-8, 1, 18).fill('#e8a48c').poly([-26, 1, -8, 34, 11, 3, -9, 11]).fill('#fff1d6')
+    .poly([-29, -8, 4, -50, 14, -8]).fill('#d64c62').moveTo(13, 23)
+    .quadraticCurveTo(38, -30, 44, -23).lineTo(44, 24).stroke({ color: '#ac876f', width: 3 }), w: 91, h: 113, rot: 0 },
   time_car: { draw: () => timeCarWedge(true), w: 96, h: 172, rot: 0 },
   slipper_flyer: { draw: slipperFlyer, w: 46, h: 58, rot: -0.14 },
   astronomer: { draw: volunteerAstronomer, w: 56, h: 46, rot: 0 },
@@ -561,6 +569,7 @@ export class MapCollectibleView {
   private readonly shouter: PickupShout | null;
   private readonly tag: NameTag;
   private readonly glint = sparkle(15);
+  private readonly steam: Graphics | null;
   private readonly lock = new Container();
   private readonly progress: Graphics[] = [];
   /** How far the prop, its lock ring and its tag reach from the pickup's centre (culling). */
@@ -581,7 +590,10 @@ export class MapCollectibleView {
     this.reach = Math.max(ringR + 8, h / 2 + 2 + this.tag.h, this.tag.w / 2);
     this.root.position.set(x, y);
     this.glint.position.set(w / 2 - 6, -h / 2 + 8);
+    this.steam = id === 'cherry_pie' ? new Graphics().moveTo(12, -21).bezierCurveTo(0, -36, 26, -45, 22, -60)
+      .bezierCurveTo(20, -69, 8, -65, 9, -57).stroke({ color: '#e6e3d6', alpha: 0.46, width: 3.5, cap: 'round' }) : null;
     this.root.addChild(this.figure.root, this.glint, this.lock);
+    if (this.steam) this.root.addChild(this.steam);
     for (let i = 0; i < SEGMENTS; i++) {
       const angle = -Math.PI / 2 + i * Math.PI * 2 / SEGMENTS;
       const end = angle + 0.39;
@@ -605,6 +617,10 @@ export class MapCollectibleView {
     this.tag.sync(show, Math.hypot(sx - x, sy - y), this.pickup.progress, reduced, cam.x);
     if (!show) return;
     this.figure.sync(t, reduced);
+    if (this.steam) {
+      this.steam.rotation = reduced ? 0 : Math.sin(t * 2) * 0.11;
+      this.steam.alpha = reduced ? 0.82 : 0.72 + Math.sin(t * 1.4) * 0.22;
+    }
     this.glint.alpha = reduced ? 0.85 : 0.72 + 0.22 * Math.sin(t * 4);
     const filled = this.pickup.progress * SEGMENTS;
     this.lock.alpha = Math.min(1, filled);

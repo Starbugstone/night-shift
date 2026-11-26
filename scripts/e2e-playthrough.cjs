@@ -1,5 +1,5 @@
 // End-to-end bot: plays all four tutorial routes (L1 window/chimney, L2 skylight/loading door), then
-// full deep shifts from L3 through L9, all through real pointer input.
+// full deep shifts from the current Work Orders, all through real pointer input.
 // Every abduction (tutorial and deep) is driven by the scene's own per-frame autopilot through
 // `debug.autopilotFinger()`: the screen point to hold the mouse button at (the beam heads for it).
 // The mouse stays down for the whole room.
@@ -12,6 +12,7 @@
 //   BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs   (add GPUARGS=... for the real GPU, below)
 // Env: ONLY=tutorial|deep|L3…L9|probe to run a subset (RUNS=L1-window,... picks tutorial routes, ROOM= the probe room); PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE to find playwright.
 // CAR_FIRST=1 exercises the optional intercept on L9 and requires all four stars.
+// BIRCH_PICKUP=1 flies the pickup detour on either Birch Lane order and requires all four stars.
 // Screenshots use window.__nightShift.capture() (page.screenshot hangs on this WSL box, and the
 // WebGL canvas is blank to toDataURL outside the frame that drew it).
 const path = require('path');
@@ -40,7 +41,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   const shot = async (name) => {
     // the game canvas is WebGL: capture() renders and reads it in one go
-    const data = await page.evaluate(() => window.__nightShift.capture());
+    const data = await page.evaluate(() => { window.__nightShift.redraw(); return window.__nightShift.capture(); });
     fs.writeFileSync(`${OUT}/${name}.png`, Buffer.from(data.split(',')[1], 'base64'));
   };
   const map = await (async () => {
@@ -196,10 +197,27 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
 
   // ------------------------------------------------------------------ deep shifts (L3, L4)
   /** In-page per-frame driver for the abduction autopilot (see the abduct branch of deepShift). */
-  async function installDriver(carFirst = false) {
-    await page.evaluate((carFirst) => {
+  async function installDriver(carFirst = false, birchPickup = false) {
+    await page.evaluate(({ carFirst, birchPickup }) => {
       if (window.__e2eDrv) return;
       const drv = (window.__e2eDrv = { fx: 270, fy: 520, on: false, flight: null });
+      let via = 0;
+      const birchRoute = ns => ns.run.level.id === 'birch_bakery'
+        ? [{ x: 140, y: 1250 }, { x: 140, y: 730 }, { x: 180, y: 660 }]
+        : [{ x: 1355, y: 1550 }, { x: 1360, y: 1040 }, { x: 1255, y: 610 }];
+      const route = birchPickup ? birchRoute(window.__nightShift) : null;
+      const detour = sim => {
+        const { saucer: s, camX, camY } = sim;
+        if (via < route.length - 1 && Math.hypot(s.x - route[via].x, s.y - route[via].y) < 46) via++;
+        const { x, y } = route[via];
+        const dx = x - s.x, dy = y - s.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const hover = via === route.length - 1;
+        const lead = hover ? Math.min(190, d * 1.4) : 186;
+        const damp = hover && d < 130 ? 0.35 : 0.1;
+        return { down: !hover || d > 14 || Math.hypot(s.vx, s.vy) > 65,
+          x: s.x - camX + dx / d * lead - s.vx * damp, y: s.y - camY + dy / d * lead - s.vy * damp };
+      };
       const tick = () => {
         const ns = window.__nightShift;
         const a = ns && ns.active;
@@ -207,7 +225,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         // flight: ask the autopilot every frame; the bot replays its finger with the real mouse
         if (ns && ns.scene === 'flight' && a && a.debug && typeof a.debug.autopilot === 'function') {
           const timeCar = ns.run?.collectible?.timeCar;
-          const it = carFirst && timeCar?.visible ? a.debug.timeCarAutopilot() : a.debug.autopilot();
+          const it = carFirst && timeCar?.visible ? a.debug.timeCarAutopilot()
+            : route && !ns.run.collectible.collected ? detour(a.debug.sim) : a.debug.autopilot();
           drv.flight = { down: it.down, x: it.x, y: it.y };
         } else drv.flight = null;
         if (ns && ns.scene === 'abduct' && a && a.debug && typeof a.debug.autopilot === 'function' && drv.on && p && p.down) {
@@ -220,14 +239,17 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-    }, carFirst);
+    }, { carFirst, birchPickup });
   }
 
   async function deepShift({ id, num }, name) {
     const carFirst = id === 'level9' && process.env.CAR_FIRST === '1';
+    const birch = id.startsWith('birch_');
+    const birchPickup = birch && process.env.BIRCH_PICKUP === '1';
     await openFixture('?unlock=1&flight=' + num);
     await waitScene('flight');
-    await installDriver(carFirst);
+    await installDriver(carFirst, birchPickup);
+    if (birch) await page.evaluate(() => { window.__nightShift.drawing = false; });
     const log = [];
     const t0 = Date.now();
     let down = false;
@@ -253,6 +275,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         const a = ns.active;
         const run = ns.run;
         const base = { scene: ns.scene, busy: ns.transitioning, clock: run ? run.clockText() : null, elapsed: run ? run.elapsed : null, delivered: run ? run.delivered.slice() : null, spotted: run ? run.spotted : null, failed: run ? run.failedAbductions : null };
+        if (run?.level.id.startsWith('birch_')) base.room = run.current?.roomId;
         if (run?.level.id === 'level8') {
           base.witnesses = run.specimenCount;
           base.troops = run.troops.map(t => t?.caught.size ?? null);
@@ -268,7 +291,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         }
         if (!a || !a.debug || typeof a.debug.autopilot !== 'function') return base;
         if (ns.scene === 'flight') { const f = window.__e2eDrv && window.__e2eDrv.flight; return { ...base, kind: 'flight', it: f ? { down: f.down, x: f.x, y: f.y } : null, state: a.state }; }
-        if (ns.scene === 'abduct') return { ...base, kind: 'abduct', drv: window.__e2eDrv ? { fx: window.__e2eDrv.fx, fy: window.__e2eDrv.fy } : null };
+        if (ns.scene === 'abduct') return { ...base, kind: 'abduct', roomElapsed: a.debug.elapsed, checkpoint: a.debug.pilot.index, drv: window.__e2eDrv ? { fx: window.__e2eDrv.fx, fy: window.__e2eDrv.fy } : null };
         return base;
       });
       if (info.witnesses > lastWitnesses) {
@@ -293,6 +316,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       }
       if (info.room && info.scene !== lastScene) log.push({ room: info.room });
       if (info.scene !== lastScene) {
+        if (birch) console.error(name, info.scene, info.clock, info.room ?? '');
         log.push({ at: ((Date.now() - t0) / 1000).toFixed(1), scene: info.scene, clock: info.clock, delivered: info.delivered, spotted: info.spotted, failed: info.failed });
         await up();
         await abd.reset();
@@ -305,7 +329,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       // presses are swallowed while a transition runs: don't start a gesture until it ends
       if (info.busy && !down) { await sleep(16); continue; }
       if (info.kind === 'flight') {
-        if (!info.it) { await installDriver(carFirst); await sleep(30); continue; }
+        if (!info.it) { await installDriver(carFirst, birchPickup); await sleep(30); continue; }
         const it = info.it;
         if (!it.down) { await up(); await sleep(16); continue; }
         await moveTo(Math.max(2, Math.min(538, it.x)), Math.max(84, Math.min(958, it.y)));
@@ -314,6 +338,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         continue;
       }
       if (info.kind === 'abduct') {
+        if (birch && info.roomElapsed > 80) throw new Error(`${info.room} stalled at checkpoint ${info.checkpoint}`);
         await abd.step(info.drv);
         continue;
       }
@@ -342,6 +367,16 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       if (JSON.stringify(reloaded) !== JSON.stringify(result)) throw new Error('Crest Valley save changed on reload');
       log.push({ reloaded });
     }
+    if (birch) {
+      const result = end.level[id];
+      if (end.scene !== 'report' || !result.delivered || birchPickup && !result.stars.every(Boolean)) {
+        throw new Error('Birch Lane did not finish with the requested outcome: ' + JSON.stringify({ result, log }));
+      }
+      await openFixture('');
+      const reloaded = await page.evaluate(id => window.__nightShift.save.levels[id], id);
+      if (JSON.stringify(reloaded) !== JSON.stringify(result)) throw new Error('Birch Lane save changed on reload');
+      log.push({ reloaded });
+    }
     return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), renderer, end, log };
   }
 
@@ -360,10 +395,10 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   }
   const deepOrders = await page.evaluate(() => window.__nightShift.workOrders.filter(order => order.kind === 'deep'));
   const runName = id => id.replace(/^level(\d+)$/, 'L$1');
-  if (ONLY === 'deep' || deepOrders.some(order => runName(order.id) === ONLY)) {
+  if (ONLY === 'deep' || deepOrders.some(order => runName(order.id) === ONLY || order.id === ONLY)) {
     for (const order of deepOrders) {
       const name = runName(order.id);
-      if (ONLY === 'deep' || ONLY === name) results[name] = await deepShift(order, name);
+      if (ONLY === 'deep' || ONLY === name || ONLY === order.id) results[name] = await deepShift(order, name);
     }
     console.log(JSON.stringify({ results, errors }, null, 1));
     await browser.close();

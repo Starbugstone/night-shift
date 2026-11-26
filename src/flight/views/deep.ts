@@ -30,6 +30,7 @@ import { paintBadlands } from './monolith';
 import { CameraView, GroundView, PropLayer, ShadowsView, TAU, TargetBuilding, basicGround, mapLamp } from './world';
 import { EggView } from './eggs'; // v4 easter eggs
 import { MapCollectibleToast, MapCollectibleView } from './collectible';
+import { BirchFlightDecor } from './birch';
 import { CrestValleyView } from './time-car';
 
 const SHADOW_OFF: Partial<Record<PropKind, number>> = {
@@ -301,6 +302,7 @@ export class DeepFlightView implements SceneView {
   private readonly shadows: ShadowsView;
   private readonly eggs: EggView; // v4 easter eggs
   private readonly collectible: MapCollectibleView | null;
+  private readonly birch: BirchFlightDecor | null;
   private readonly crestValley: CrestValleyView | null;
   private readonly pickupToast: MapCollectibleToast | null;
   private readonly targets: DeepTargetView[];
@@ -353,6 +355,7 @@ export class DeepFlightView implements SceneView {
       }
     });
     this.ship = m.theme === 'ship' ? new ShipDecor() : null;
+    this.birch = s.level.id === 'birch_bakery' || s.level.id === 'birch_neighbours' ? new BirchFlightDecor(s) : null;
     this.groundProps = new PropLayer(assets, m.groundProps);
     this.props = new PropLayer(assets, m.props);
     this.shadows = new ShadowsView(assets, [...m.props, ...m.targets.map((tg) => tg.building)], SHADOW_OFF);
@@ -371,6 +374,7 @@ export class DeepFlightView implements SceneView {
     const world = this.camera.world;
     world.addChild(this.ground.root);
     if (this.ship) world.addChild(this.ship.root);
+    if (this.birch) world.addChild(this.birch.ground);
     world.addChild(this.groundProps.root, this.ambient.ground, this.eggs.ground, this.shadows.root, this.props.root); // v4 easter eggs: streaks
     for (const target of this.targets) world.addChild(target.root);
     if (this.crestValley) {
@@ -378,6 +382,7 @@ export class DeepFlightView implements SceneView {
       world.addChildAt(this.crestValley.ground, 2);
       world.addChild(this.crestValley.scenery);
     }
+    if (this.birch) world.addChild(this.birch.foreground);
     world.addChild(this.checkpoint.root, this.hazards.ground, this.ambient.steam, this.saucer.shadow);
     for (const light of this.lights) this.upperWorld.addChild(light);
     this.upperWorld.addChild(this.eggs.lights); // v4 easter eggs
@@ -434,6 +439,7 @@ export class DeepFlightView implements SceneView {
     this.groundProps.sync(cam);
     this.ambient.sync(cam, t, rm, dawn, saucer.x, saucer.y);
     this.props.sync(cam);
+    this.birch?.sync(t, rm);
     this.eggs.sync(cam, t, rm); // v4 easter eggs
     this.collectible?.sync(cam, t, rm, saucer.x, saucer.y);
     this.crestValley?.sync(cam, t, rm, s.collectibleToastT);

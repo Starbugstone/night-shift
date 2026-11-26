@@ -1,3 +1,4 @@
+import { workOrderNumber } from '../src/levels/levels';
 import { describe, expect, it, vi } from 'vitest';
 import type { AbductResult, GameContext, PointerState } from '../src/contracts';
 import { DeepFlightScene } from '../src/flight/deep-scene';
@@ -19,7 +20,7 @@ const CLEAR: AbductResult = { delivered: true, aborted: false, woke: false, bonk
 const match = (car: TimeCar): Saucer => ({ ...car.position, vx: car.speed, vy: 0, stun: 0 });
 
 function flightAt(elapsed: number, audio: GameContext['audio']): DeepFlightScene {
-  const run = new DeepRun(LEVEL9, 8);
+  const run = new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1);
   run.tick(elapsed);
   const ctx: GameContext = {
     pointer: { ...CLOSED }, assets: { get: () => undefined }, audio, upgrades: new Set(),
@@ -106,7 +107,7 @@ describe('1955 time car', () => {
   });
 
   it('resolves the strike while inside a room and keeps the missed aftermath on return', () => {
-    const run = new DeepRun(LEVEL9, 8);
+    const run = new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1);
     expect(run.clockText()).toBe('10:03:40');
     run.tick(18);
     expect(run.startAbduct(2, 0)).toBe('band_canopy');
@@ -127,7 +128,7 @@ describe('1955 time car', () => {
     expect(report.stamp).toBe('storm');
     expect(report.comment).toMatch(/storm/i);
     expect(report.rows.flat().join(' ')).not.toMatch(/sunrise|dawn/i);
-    expect(new DeepRun(LEVEL9, 8).collectible?.timeCar?.phase).toBe('parked');
+    expect(new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1).collectible?.timeCar?.phase).toBe('parked');
   });
 
   it('keeps a late catch line visible and audible through the strike', () => {
@@ -168,7 +169,7 @@ describe('1955 time car', () => {
   });
 
   it('keeps an impound across a respawn and files it even if the pass expires', () => {
-    const run = new DeepRun(LEVEL9, 8);
+    const run = new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1);
     run.tick(16);
     const pickup = run.collectible!;
     const car = pickup.timeCar!;
@@ -180,21 +181,21 @@ describe('1955 time car', () => {
     expect(car.phase).toBe('caught');
     const outcome = applyDeepRun(defaultSave(), 'level9', run.summary());
     expect(outcome.stars).toEqual([false, false, false, false]);
-    expect(townCatalog().at(-1)).toMatchObject({ index: 8, id: 'time_car', levelId: 'level9' });
+    expect(townCatalog().find(slot => slot.id === 'time_car')).toMatchObject({ id: 'time_car', levelId: 'level9' });
     const restored = validateSave(JSON.parse(JSON.stringify(outcome.save)));
-    expect(buildTownShelfState(restored).slots.at(-1)).toMatchObject({ found: true, slot: { id: 'time_car' } });
-    const laterMiss = applyDeepRun(restored, 'level9', new DeepRun(LEVEL9, 8).summary());
+    expect(buildTownShelfState(restored).slots.find(({ slot }) => slot.id === 'time_car')).toMatchObject({ found: true, slot: { id: 'time_car' } });
+    const laterMiss = applyDeepRun(restored, 'level9', new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1).summary());
     expect(laterMiss.save.levels.level9.mapCollectible).toBe('time_car');
   });
 
   it('unlocks after any L8 clear and uses 10:05:45 as the exact Night owl par', () => {
     const legacy = validateSave({ version: 1, reports: 1 });
-    expect(isLevelUnlocked(legacy, 6)).toBe(true);
-    expect(isLevelUnlocked(legacy, 8)).toBe(false);
+    expect(isLevelUnlocked(legacy, workOrderNumber('level7') - 1)).toBe(true);
+    expect(isLevelUnlocked(legacy, workOrderNumber('level9') - 1)).toBe(false);
     const old = validateSave({ version: 2, levels: { level8: { stars: [true, false, false, false] } } });
     expect(old.levels.level9).toEqual(defaultSave().levels.level9);
-    expect(isLevelUnlocked(old, 8)).toBe(true);
-    const run = new DeepRun(LEVEL9, 8);
+    expect(isLevelUnlocked(old, workOrderNumber('level9') - 1)).toBe(true);
+    const run = new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1);
     run.tick(125);
     expect(run.clockText()).toBe('10:05:45');
     const summary = { delivered: 3, spotted: 0, failedAbductions: 0, sunrise: false, mapCollectible: 'time_car' as const };

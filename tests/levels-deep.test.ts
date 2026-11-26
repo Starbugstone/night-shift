@@ -1,3 +1,4 @@
+import { workOrderNumber } from '../src/levels/levels';
 // Deep levels (L3, L4): progression, save migration, the shift runner and map layout rules.
 import { describe, expect, it } from 'vitest';
 import type { AbductResult } from '../src/contracts';
@@ -18,7 +19,7 @@ function abduct(over: Partial<AbductResult> = {}): AbductResult {
 }
 
 describe('levels and routes', () => {
-  it('has two training levels and two deep levels, 12 stars in all', () => {
+  it('keeps two training levels and derives the maximum stars from the dispatch list', () => {
     // v3 (L5-L7) adds deep levels as each lands: every level after the two tutorials is deep
     expect(LEVELS.map((l) => l.kind)).toEqual(['tutorial', 'tutorial', ...LEVELS.slice(2).map(() => 'deep')]);
     // three stars a level, plus the town pickup star on every level with a map pickup (all but L1)
@@ -31,8 +32,8 @@ describe('levels and routes', () => {
     expect(isRoomId('nope')).toBe(false);
     expect(levelIndexForRoom('farm_chimney')).toBe(0);
     expect(levelIndexForRoom('laundry_loading')).toBe(1);
-    expect(levelIndexForRoom('gary_skylight')).toBe(2);
-    expect(levelIndexForRoom('mayor_elevator')).toBe(3);
+    expect(levelIndexForRoom('gary_skylight')).toBe(workOrderNumber('level3') - 1);
+    expect(levelIndexForRoom('mayor_elevator')).toBe(workOrderNumber('level4') - 1);
     const all = LEVELS.flatMap(levelRooms);
     expect(new Set(all).size).toBe(ROOM_IDS.length);
     expect(new Set(all)).toEqual(new Set(ROOM_IDS));
@@ -104,7 +105,7 @@ describe('progression', () => {
 
 describe('the shift runner', () => {
   it('delivers specimens, moves the checkpoint and finishes after the third', () => {
-    const run = new DeepRun(LEVEL3, 2);
+    const run = new DeepRun(LEVEL3, workOrderNumber(LEVEL3.id) - 1);
     expect(run.phase).toBe('flight');
     expect(run.checkpoint).toEqual(LEVEL3.map.start);
     run.tick(10);
@@ -130,7 +131,7 @@ describe('the shift runner', () => {
   });
 
   it('a failed abduction offers a retry of the same route, or flight from that ring', () => {
-    const run = new DeepRun(LEVEL4, 3);
+    const run = new DeepRun(LEVEL4, workOrderNumber(LEVEL4.id) - 1);
     run.startAbduct(1, 1);
     expect(run.finishAbduct(abduct({ delivered: false, failReason: 'sleeper', failBy: 'Tiny' }))).toBe('choice');
     expect(run.failedAbductions).toBe(1);
@@ -148,7 +149,7 @@ describe('the shift runner', () => {
   });
 
   it('the sunrise clock runs in flight and abduction, not on menus, and ends the shift', () => {
-    const run = new DeepRun(LEVEL3, 2);
+    const run = new DeepRun(LEVEL3, workOrderNumber(LEVEL3.id) - 1);
     expect(run.clockText()).toBe('2:00');
     const half = LEVEL3.budgetSec / 2;
     run.tick(half);

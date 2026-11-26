@@ -1,3 +1,4 @@
+import { workOrderNumber } from '../src/levels/levels';
 import { describe, expect, it, vi } from 'vitest';
 import { ART } from '../src/art-manifest';
 import { DeepFlightScene } from '../src/flight/deep-scene';
@@ -23,10 +24,10 @@ import { playAbduction, PROFILES } from './difficulty/human';
 describe('Prior Contact', () => {
   it('unlocks on the first completed cruise, including a migrated save', () => {
     const save = validateSave({ levels: { level7: { attempts: 3 } } });
-    expect(isLevelUnlocked(save, 7)).toBe(false);
+    expect(isLevelUnlocked(save, workOrderNumber('level8') - 1)).toBe(false);
     const cruise = applyDeepRun(save, 'level7', { delivered: 3, failedAbductions: 1, spotted: 1, elapsedSec: 410, sunrise: false });
     expect(cruise.unlockedNext).toBe(true);
-    expect(isLevelUnlocked(validateSave(cruise.save), 7)).toBe(true);
+    expect(isLevelUnlocked(validateSave(cruise.save), workOrderNumber('level8') - 1)).toBe(true);
   });
 
   it('detects exactly between the edges during the note, with a silent warning', () => {
@@ -80,7 +81,7 @@ describe('Prior Contact', () => {
   });
 
   it.each(['ape', 'cave'])('cancels a pending %s lock when the saucer teleports', kind => {
-    const run = new DeepRun(LEVEL8, 7);
+    const run = new DeepRun(LEVEL8, workOrderNumber(LEVEL8.id) - 1);
     const onLocked = vi.fn();
     const scene = new DeepFlightScene({
       run, level: LEVEL8, onLocked, onSunrise: vi.fn(), onQuit: vi.fn(),
@@ -140,7 +141,7 @@ describe('Prior Contact', () => {
   });
 
   it('keeps partial troops across cave visits and sightings, and closes a full troop', () => {
-    const run = new DeepRun(LEVEL8, 7);
+    const run = new DeepRun(LEVEL8, workOrderNumber(LEVEL8.id) - 1);
     const first = run.troops[0]!;
     expect(first.catch(1)).toBe(true);
     expect(first.catch(1)).toBe(false);
@@ -169,7 +170,7 @@ describe('Prior Contact', () => {
 
   it('files the final witness at the same shift time and score with either motion setting', () => {
     const results = [false, true].map(reducedMotion => {
-      const run = new DeepRun(LEVEL8, 7);
+      const run = new DeepRun(LEVEL8, workOrderNumber(LEVEL8.id) - 1);
       run.troops[0]!.catch(0);
       run.troops[0]!.catch(1);
       run.troops[1]!.catch(0);
@@ -193,7 +194,7 @@ describe('Prior Contact', () => {
   });
 
   it('cannot earn quota at sunrise, and scores the exact Night owl margin and Ghost rule', () => {
-    const run = new DeepRun(LEVEL8, 7);
+    const run = new DeepRun(LEVEL8, workOrderNumber(LEVEL8.id) - 1);
     run.delivered.fill(true);
     run.failedAbductions++;
     const score = () => computeDeepStars(run.budget, LEVEL8.parMarginSec, run.summary(), LEVEL8.id);

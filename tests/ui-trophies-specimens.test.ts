@@ -406,7 +406,7 @@ describe('specimen save round-trip, validation, probe accumulation & cosmetic in
     ], () => 0.1);
     const prog = trophyProgress(save);
     expect(prog.specimensFound).toBe(3);
-    expect(prog.specimensTotal).toBe(23);
+    expect(prog.specimensTotal).toBe(buildSpecimenCatalog().flatMap(section => section.slots).length);
     expect(prog.found).toBe(3);
     expect(prog.total).toBe(prog.souvenirsTotal + prog.townTotal + prog.specimensTotal);
 
@@ -444,7 +444,7 @@ describe('specimen save round-trip, validation, probe accumulation & cosmetic in
     tap(scene, scene.tabSpecimens.x + scene.tabSpecimens.w / 2, scene.tabSpecimens.y + scene.tabSpecimens.h / 2);
     expect(scene.debug.room).toBe('specimens');
     expect(scene.debug.specimensFound).toBe(3);
-    expect(scene.debug.specimensTotal).toBe(23);
+    expect(scene.debug.specimensTotal).toBe(26);
     expect(scene.tabSpecimens.kind).toBe('primary');
 
     // Tap first specimen card (doyle) -> opens specimen detail modal

@@ -1,3 +1,4 @@
+import { workOrderNumber } from '../src/levels/levels';
 // v4 story: per-level memo sign-offs, Vrell first-clear arc lines, Zib shift openers & 2/3 banter,
 // progress-gated loading tips, and Field Check copy — in English and French.
 import { afterEach, describe, expect, it } from 'vitest';
@@ -73,7 +74,7 @@ describe('v4 story copy & hooks', () => {
       expect(failedTut.comment).not.toBe(storyFirstClear('level1'));
 
       const l3 = LEVELS.find((l) => l.id === 'level3') as DeepLevelDef;
-      const run = new DeepRun(l3, 2);
+      const run = new DeepRun(l3, workOrderNumber(l3.id) - 1);
       for (let t = 0; t < 3; t++) {
         run.startAbduct(t, 0);
         run.finishAbduct(abduct);

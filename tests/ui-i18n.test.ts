@@ -46,6 +46,8 @@ const SAME_IN_FRENCH = new Set([
   'Hank', 'Osei', 'Pemberton', 'Gladys', 'Roland',
   // L7 cruise code
   'Greg', 'Marco', 'CASINO', 'Doris',
+  // v4 Birch Lane: names, archive ages and the localized quota fractions
+  'Mabel', 'Nora', 'Len', 'Nora Finch', 'Len Briggs', '55', '46', '62', '{n}/{total}', '{n}/{total}  ({names})',
   // v4 L9 1955: names and a loanword
   'Doc', 'Buff', 'Buff Tanner', 'Marvin', 'Marvin Cherry', 'Lyle', 'Jukebox',
 ]);

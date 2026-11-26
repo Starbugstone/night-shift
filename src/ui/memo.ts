@@ -3,6 +3,7 @@ import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { LEVELS, formatOrderNumber, workOrderNumber } from '../levels/levels';
+import { deepPar } from '../levels/types';
 import { routeAdvice } from '../levels/route-advice';
 import { fmt, tr } from '../i18n';
 import { easeOutBack } from '../core/fx';
@@ -29,8 +30,10 @@ const CPS = 70;
 /** Temporal Dispatch orders written after Zib's promotion at the end of Prior Contact. */
 const STAFF_MEMOS: ReadonlySet<string> = new Set(['level9', 'level10', 'level11', 'level12']);
 
-export function memoAddressee(id: string): string {
-  return STAFF_MEMOS.has(id) ? tr().memo.toAgent : tr().memo.to;
+export function memoAddressee(id: string, promoted = false): string {
+  const { memo } = tr();
+  if (!STAFF_MEMOS.has(id)) return memo.to;
+  return promoted ? memo.toAgentSenior : memo.toAgent;
 }
 
 export class MemoScene implements Scene {
@@ -167,7 +170,7 @@ class MemoView implements SceneView {
     this.paper.pivot.set(VIEW_W / 2, PAPER_Y + PAPER_H / 2);
     this.paper.addChild(
       page, this.portrait.root,
-      new Label(address).set(memoAddressee(lv.id), PX + 148, PAPER_Y + 46, PW - 168),
+      new Label(address).set(memoAddressee(lv.id, save.levels.level12?.delivered), PX + 148, PAPER_Y + 46, PW - 168),
       new Label(address).set(m.from, PX + 148, PAPER_Y + 72, PW - 168),
       new Label({ size: 21, color: C.paperInk, align: 'left', weight: 900 }).set(lt.title, PX + 28, PAPER_Y + 182, PW - 56),
     );
@@ -206,10 +209,15 @@ class MemoView implements SceneView {
     const gy = PAPER_Y + PAPER_H - (goals > 3 ? 166 : 160);
     this.paper.addChild(new Label({ size: 15, color: '#6a3fbf', align: 'left', weight: 900 }).set(m.goals, PX + 28, gy));
     const words = tr().crestValley;
-    const deepGoals = lv.id === 'level9' ? [words.deliverGoal, m.deepGoals[1]!, words.owlGoal]
+    const birch = tr().birch;
+    const deepGoals = lv.id === 'birch_bakery' ? [birch.deliverGoal, m.deepGoals[1]!, birch.owlGoal]
+      : lv.id === 'birch_neighbours' ? [birch.neighboursGoal, m.deepGoals[1]!, m.deepGoals[2]!]
+      : lv.id === 'level9' ? [words.deliverGoal, m.deepGoals[1]!, words.owlGoal]
       : lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : m.deepGoals;
     const lines = [...(lv.kind === 'deep' ? deepGoals : m.tutorialGoals), lv.id === 'level9' ? words.carGoal : m.pickupGoal];
-    const times = lv.kind === 'deep' ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec), ''] : ['', '', fmtTime(lv.parSec), ''];
+    const times = lv.kind === 'deep' && lv.clockMode !== 'elapsed'
+      ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec), '']
+      : ['', '', fmtTime(lv.kind === 'deep' ? deepPar(lv) : lv.parSec), ''];
     const best = save.levels[lv.id].stars;
     const goalLook = { size: goals > 3 ? 16 : 17, color: C.paperInk, align: 'left', weight: 700 } as const;
     const starPx = goals > 3 ? 26 : 30;

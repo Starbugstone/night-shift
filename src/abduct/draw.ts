@@ -233,6 +233,7 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
 }
 
 const SHIRTS: Record<Human, string> = {
+  mabel: '#8f567a', nora: '#b46a52', len: '#53749f',
   doyle: '#ac5961', larry: '#6482a6', dave: '#a284be', barb: '#dd6269',
   gary: '#e9b258', nigel: '#416790', kev: '#ae73bd', mayor: '#575783',
   // L5 pier code (bubbles is drawn by src/abduct/dolphin-art.ts)
@@ -247,6 +248,7 @@ const SHIRTS: Record<Human, string> = {
   doc: '#e0d6b1', buff: '#533752', marvin: '#88516c',
 };
 const PANTS: Record<Human, string> = {
+  mabel: '#514965', nora: '#555b71', len: '#53749f',
   doyle: '#904951', larry: '#b4977f', dave: '#76569c', barb: '#744451',
   gary: '#926861', nigel: '#374e6c', kev: '#62496d', mayor: '#443d5c',
   // L5 pier code

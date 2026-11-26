@@ -402,7 +402,7 @@ export class Game implements Shell {
     const i = clampLevel(levelIndex);
     const outcome = applyRun(this._save, LEVELS[i]!.id, abduct, flight);
     if (persist) this.setSave(outcome.save);
-    const practiceNext = persist && i === FIELD_CHECK_INDEX - 1 && outcome.stars[0] && !outcome.save.fieldCheckSeen;
+    const practiceNext = persist && LEVELS[i]?.id === 'level2' && outcome.stars[0] && !outcome.save.fieldCheckSeen;
     this.scenes.go('report', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome,
       practiceNext ? () => this.toFieldCheck() : undefined), false, transition);
   }

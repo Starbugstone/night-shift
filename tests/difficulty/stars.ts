@@ -1,5 +1,6 @@
 // Drive the flight scenes without a view, then score their full attempts with the game's star rules.
 import type { FlightAutopilotIntent, FlightResult, GameContext, PointerState, RoomId, Vec2 } from '../../src/contracts';
+import { FlightAutopilot } from '../../src/flight/autopilot';
 import { DeepFlightScene, SPOT_HOLD } from '../../src/flight/deep-scene';
 import { FlightScene } from '../../src/flight/scene';
 import { computeDeepStars, computeStars } from '../../src/levels/progress';
@@ -7,6 +8,7 @@ import { LEVELS } from '../../src/levels/levels';
 import { DeepRun } from '../../src/levels/run';
 import type { Stars } from '../../src/levels/save';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from '../../src/levels/types';
+import { BakeryFirstRead, BirchPickupFirst, isBirch, NeighboursCut } from './birch';
 import { CarFirst, type CarAttempt } from './time-car';
 import { humanFlightController, humanSteering, playAbduction, rng, type AbductRun, type HumanProfile } from './human';
 
@@ -35,6 +37,7 @@ interface StarRun {
   tutorialObstacle?: boolean;
   peakSuspicion: number;
   car?: CarAttempt;
+  legs?: readonly { seconds: number; room: RoomId }[];
 }
 
 type FirstAbduction = (room: RoomId, profile: HumanProfile, seed: number) => AbductRun;
@@ -65,7 +68,7 @@ function steer(pointer: PointerState, hand?: FlightAutopilotIntent): void {
   }
 }
 
-function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, carFirst = false): StarRun {
+function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, detour = false, order?: number[]): StarRun {
   const ctx = flightContext();
   const shift = new DeepRun(level, LEVELS.findIndex(l => l.id === level.id));
   shift.tick(rng(seed)() * 9);
@@ -74,7 +77,10 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
   const roomFailures: string[] = [];
   let peakSuspicion = 0;
   let car: CarFirst | undefined;
-  while (shift.phase === 'flight') {
+  let birch: BirchPickupFirst | undefined;
+  const legs: { seconds: number; room: RoomId }[] = [];
+  const limit = level.clockMode === 'elapsed' ? 180 : Infinity;
+  while (shift.phase === 'flight' && shift.elapsed < limit) {
     const flight = new DeepFlightScene({
       ctx, level, run: shift,
       onLocked: (target, entry) => { shift.startAbduct(target, entry); },
@@ -82,14 +88,20 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
       onQuit() { throw new Error('Difficulty player quit flight'); },
     });
     const { sim } = flight;
-    const controller = humanFlightController(profile, seed + shift.legs * 1009)(sim);
-    if (carFirst && !car) car = new CarFirst(sim, profile, seed);
+    const orderedPilot = order && new FlightAutopilot(sim, order);
+    const controller = orderedPilot ? () => orderedPilot.intent() : humanFlightController(profile, seed + shift.legs * 1009)(sim);
+    if (detour && !car && sim.collectible?.timeCar) car = new CarFirst(sim, profile, seed);
+    if (detour && !birch && isBirch(level.id)) birch = new BirchPickupFirst(sim, profile, seed);
+    const firstLeg = !detour && shift.legs === 0 && profile.name !== 'bot';
+    const read = firstLeg && level.id === 'birch_bakery' ? new BakeryFirstRead(sim, profile, seed)
+      : firstLeg && level.id === 'birch_neighbours' ? new NeighboursCut(sim, profile, seed) : undefined;
+    const legStart = shift.elapsed;
     let exposure: Record<number, number> | undefined;
-    while (shift.phase === 'flight') {
+    while (shift.phase === 'flight' && shift.elapsed < limit) {
       const wasFlying = flight.state === 'fly';
       // the SPOTTED card waits for a tap: the player taps when it used to close by itself
       const chase = wasFlying && car?.active ? car : undefined;
-      steer(ctx.pointer, wasFlying ? (chase?.steer() ?? controller(sim)) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
+      steer(ctx.pointer, wasFlying ? (chase?.steer() ?? (birch?.active ? birch.steer() : read?.active ? read.steer() : controller(sim))) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
       ctx.time += DT;
       flight.update(DT);
       chase?.record();
@@ -110,8 +122,9 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
       }
     }
 
+    if (shift.current) legs.push({ seconds: shift.elapsed - legStart, room: shift.current.roomId });
     let attempt = 0;
-    while (shift.current && shift.remaining > 0) {
+    while (shift.current && shift.remaining > 0 && shift.elapsed < limit) {
       const { roomId } = shift.current;
       rooms.push(roomId);
       const run = attempt === 0 ? firstAbduction(roomId, profile, seed) : playAbduction(roomId, profile, seed + attempt * 1013);
@@ -120,8 +133,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
       if (shift.tick(run.clockSec)) break;
       if (!run.delivered) roomFailures.push(`${roomId}: ${run.failReason}${run.failBy ? ` (${run.failBy})` : ''}`);
       if (run.failReason === 'timeout') break;
-      shift.finishAbduct(run.result);
-      if (shift.phase !== 'choice') break;
+      if (shift.finishAbduct(run.result) !== 'choice') break;
       shift.retry();
       attempt++;
     }
@@ -135,6 +147,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     roomFailures,
     peakSuspicion,
     ...(car ? { car: car.result() } : {}),
+    ...(isBirch(level.id) || level.id === 'level3' ? { legs } : {}),
   };
 }
 
@@ -206,6 +219,17 @@ function tutorialAttempt(level: TutorialLevelDef, entry: TutorialLevelDef['map']
   };
 }
 
+export function evaluateBirchDetours(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction) {
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, true));
+  return {
+    profile: profile.name,
+    attempts: runs.length,
+    fourth: runs.filter(run => run.stars[3]).length,
+    allFour: runs.filter(run => run.stars.every(Boolean)).length,
+    runs,
+  };
+}
+
 export interface StarReport {
   profile: string;
   /** Earned counts in the game's star order. */
@@ -214,10 +238,10 @@ export interface StarReport {
   runs: StarRun[];
 }
 
-export function evaluateStars(level: LevelDef, profile: HumanProfile, seeds: number, firstAbduction: FirstAbduction): StarReport {
+export function evaluateStars(level: LevelDef, profile: HumanProfile, seeds: number, firstAbduction: FirstAbduction, order?: number[]): StarReport {
   const runs: StarRun[] = [];
   for (let seed = 1; seed <= seeds; seed++) {
-    if (level.kind === 'deep') runs.push(deepShift(level, profile, seed, firstAbduction));
+    if (level.kind === 'deep') runs.push(deepShift(level, profile, seed, firstAbduction, false, order));
     else for (const entry of level.map.entries) runs.push(tutorialAttempt(level, entry, profile, seed));
   }
   const earned: StarReport['earned'] = [0, 0, 0];

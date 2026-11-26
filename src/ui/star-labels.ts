@@ -5,7 +5,10 @@ import { isDeep } from '../levels/levels';
 import type { LevelDef } from '../levels/types';
 
 export function shownStarLabels(lv: LevelDef): string[] {
-  const base = lv.id === 'level8' ? tr().timeTrial.stars : isDeep(lv) ? tr().starLabels.deep : tr().starLabels.tutorial;
+  const { starLabels, timeTrial } = tr();
+  const base = lv.id === 'level8' ? timeTrial.stars
+    : isDeep(lv) && lv.map.targets.length < 3 ? [starLabels.tutorial[0]!, starLabels.deep[1]!, starLabels.deep[2]!]
+    : isDeep(lv) ? starLabels.deep : starLabels.tutorial;
   const id = lv.map.collectible?.id;
   return id ? [...base, tr().mapCollectibles.items[id].name] : [...base];
 }

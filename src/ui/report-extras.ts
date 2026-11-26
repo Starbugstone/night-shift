@@ -16,7 +16,7 @@ export function mapCollectibleReport(
   const collected = id === pickup;
   return {
     row: [words.row, fmt(collected ? words.found : words.missed, { name })],
-    comment: collected ? comment : Math.abs(Math.floor(seed)) % 3 === 0 ? missedComment : '',
+    comment: collected ? comment : id === 'cherry_pie' || id === 'garden_gnome' || Math.abs(Math.floor(seed)) % 3 === 0 ? missedComment : '',
   };
 }
 
@@ -30,6 +30,7 @@ export interface CoverInput {
   spotted: number;
   /** The shift ended at sunrise (deep levels). */
   sunrise: boolean;
+  firstClear?: boolean;
   /** Rotation (reports filed so far) so repeat runs read differently. */
   seed: number;
 }
@@ -47,6 +48,10 @@ export function itemNoun(id: string): string {
 
 /** Vrell's one-line cover story, keyed to level, souvenir and sightings. */
 export function coverStory(c: CoverInput): string {
+  if (c.firstClear && !c.sunrise) {
+    if (c.levelId === 'birch_bakery') return tr().birch.bakeryCover;
+    if (c.levelId === 'birch_neighbours') return tr().birch.neighboursCover;
+  }
   const x = tr().reportExtras;
   const causes = x.causes[c.levelId] ?? x.causes.generic!;
   const cause = pickLine(causes, c.seed);
@@ -60,6 +65,7 @@ export function coverStory(c: CoverInput): string {
 export function tabloidHeadline(levelId: string, spotted: number, seed: number): string | null {
   if (spotted < TABLOID_SPOTTED) return null;
   const h = tr().reportExtras.headlines;
+  if (levelId === 'birch_bakery' || levelId === 'birch_neighbours') return h[levelId]![0]!;
   const own = h[levelId] ?? [];
   const all = [...own, ...h.generic!];
   // the level's own headlines come up first, the generic ones on later runs

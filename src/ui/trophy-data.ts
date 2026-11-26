@@ -109,6 +109,7 @@ export interface TownTrophySlotState {
   readonly slot: TownTrophySlot;
   /** True when `save.levels[levelId].mapCollectible === slot.id`. */
   readonly found: boolean;
+  readonly postcards?: readonly string[];
 }
 
 export interface TownShelfState {
@@ -478,6 +479,17 @@ export function buildShelfState(save: SaveData, capacity = ROOM_CAPACITY): Troph
   return { pages, slots: allSlots, foundCount, totalCount, totalHauls };
 }
 
+/** Gnome postcards follow the era dial, regardless of delivery order. */
+export function gnomePostcards(save: SaveData): string[] {
+  if (save.levels.birch_neighbours.mapCollectible !== 'garden_gnome') return [];
+  const words = tr().birch;
+  const cards = [];
+  if (save.levels.level10?.delivered) cards.push('1122 · ' + words.post1122);
+  if (save.levels.level11?.delivered) cards.push('1953 · ' + words.post1953);
+  if (save.levels.level12?.delivered) cards.push('2199 · ' + words.post2199);
+  return cards;
+}
+
 /** Resolve the full Room 2 (Field finds) shelf state from a SaveData (read-only). */
 export function buildTownShelfState(save: SaveData): TownShelfState {
   const catalog = townCatalog();
@@ -485,7 +497,7 @@ export function buildTownShelfState(save: SaveData): TownShelfState {
   const slots: TownTrophySlotState[] = catalog.map((slot) => {
     const found = save.levels[slot.levelId]?.mapCollectible === slot.id;
     if (found) foundCount++;
-    return { slot, found };
+    return { slot, found, ...(found && slot.id === 'garden_gnome' ? { postcards: gnomePostcards(save) } : {}) };
   });
   return { slots, foundCount, totalCount: slots.length };
 }

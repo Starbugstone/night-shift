@@ -2,18 +2,21 @@
 // the star and deep-level bands. Used by tests/levels-difficulty.test.ts and the
 // evaluate-difficulty skill (.claude/skills/evaluate-difficulty/SKILL.md).
 import type { RoomId } from '../../src/contracts';
-import type { LevelDef } from '../../src/levels/types';
+import { deepPar, type LevelDef } from '../../src/levels/types';
 import { workOrderNumber } from '../../src/levels/levels';
 import { starLabels } from '../../src/levels/progress';
+import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
 import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
-import { evaluateCarFirst, evaluateStars, type CarReport, type StarReport } from './stars';
+import { evaluateBirchDetours, evaluateCarFirst, evaluateStars, type CarReport, type StarReport } from './stars';
 import { naiveCarCatches } from './time-car';
 
 // Minimum shares of full attempts, in the game's star order. The beeline and wake
 // checks below still enforce challenge when the route-aware player earns many stars.
 const STAR_FLOORS = {
   tutorial: { skilled: [5 / 6, 0.75, 2 / 3], casual: [2 / 3, 0.60, 1 / 2] },
+  birch_bakery: { skilled: [1, 1, 5 / 6], casual: [1, 5 / 6, 5 / 6] },
+  birch_neighbours: { skilled: [5 / 6, 5 / 6, 5 / 6], casual: [5 / 6, 4 / 6, 5 / 6] },
   early: { skilled: [5 / 6, 2 / 3, 2 / 3], casual: [2 / 3, 0.60, 1 / 2] },
   middle: { skilled: [5 / 6, 0.60, 2 / 3], casual: [2 / 3, 0.45, 1 / 2] },
   late: { skilled: [5 / 6, 0.50, 2 / 3], casual: [2 / 3, 0.33, 1 / 2] },
@@ -46,6 +49,14 @@ export interface Band {
 
 /** Difficulty targets for the deep levels. */
 export const BANDS: Record<string, Band | undefined> = {
+  birch_bakery: {
+    skilledRoute: 0.95, casualRoute: 0.85, casualBuilding: 0.95, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.95, casualBudgetShare: 0.8, tension: 20,
+  },
+  birch_neighbours: {
+    skilledRoute: 0.90, casualRoute: 0.80, casualBuilding: 0.90, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.90, casualBudgetShare: 0.8, tension: 20,
+  },
   level3: {
     skilledRoute: 0.8,
     casualRoute: 0.5,
@@ -158,6 +169,7 @@ export interface LevelReport extends StarLevelReport {
   budgetSec: number;
   parSec: number;
   tension: number;
+  birchDetours?: ReturnType<typeof evaluateBirchDetours>[];
   carFirst?: CarReport[];
   carBeelines?: ReturnType<typeof naiveCarCatches>;
 }
@@ -208,7 +220,7 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
   const skilledStars = stars.find((row) => row.profile === 'skilled');
   const casualStars = stars.find((row) => row.profile === 'casual');
   const casualRuns = casualStars?.runs ?? [];
-  const par = level.kind === 'tutorial' ? level.parSec : level.budgetSec - level.parMarginSec;
+  const par = level.kind === 'tutorial' ? level.parSec : deepPar(level);
   const entries = level.kind === 'tutorial' ? level.map.entries : level.map.targets.flatMap(target => target.entries);
   const base: StarLevelReport = {
     levelId: level.id,
@@ -223,7 +235,7 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     violations: [],
   };
   const num = workOrderNumber(level.id);
-  const floors = STAR_FLOORS[level.kind === 'tutorial' ? 'tutorial' : num <= workOrderNumber('level4') ? 'early' : num <= workOrderNumber('level6') ? 'middle' : 'late'];
+  const floors = STAR_FLOORS[level.id === 'birch_bakery' || level.id === 'birch_neighbours' ? level.id : level.kind === 'tutorial' ? 'tutorial' : num <= workOrderNumber('level4') ? 'early' : num <= workOrderNumber('level6') ? 'middle' : 'late'];
   for (const row of base.stars) {
     const want = row.profile === 'skilled' ? floors.skilled : row.profile === 'casual' ? floors.casual : [];
     for (const [i, floor] of want.entries()) {
@@ -302,10 +314,19 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     flight,
     shiftEstimate,
     budgetSec: level.budgetSec,
-    parSec: level.budgetSec - level.parMarginSec,
+    parSec: deepPar(level),
     tension: Math.round(tension),
   };
   report.violations.push(...check(report, band));
+  if (isBirch(level.id)) {
+    report.birchDetours = [...profiles, PROFILES.bot].map(profile => evaluateBirchDetours(level, profile, profile.name === 'bot' ? 1 : seeds, play));
+    for (const row of report.birchDetours) {
+      const bakery = level.id === 'birch_bakery';
+      const floor = row.profile === 'bot' ? 1 : row.profile === 'skilled' ? (bakery ? 0.95 : 0.90) : bakery ? 0.90 : 0.80;
+      if (row.fourth < Math.floor(floor * row.attempts)) report.violations.push(`Pickup (${row.profile}) earns ${row.fourth}/${row.attempts}, floor ${pct(floor)}`);
+      if ((row.profile === 'bot' || seeds >= 20) && row.allFour === 0) report.violations.push(`Pickup (${row.profile}): no four-star shift`);
+    }
+  }
   if (level.id === 'level9') {
     if (seeds >= 6) {
       for (const row of stars) {
@@ -420,7 +441,10 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
   lines.push('');
   lines.push(`Tension (casual mean peak wake): ${r.tension}.`);
   const deadline = r.levelId === 'level9' ? 'storm passes at' : 'sunrise';
-  lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')} · ${deadline} ${r.budgetSec} s · Night owl by ${r.parSec} s.`);
+  lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')}${Number.isFinite(r.budgetSec) ? ` · ${deadline} ${r.budgetSec} s` : ''} · Night owl by ${r.parSec} s.`);
+  if (r.birchDetours) for (const row of r.birchDetours) {
+    lines.push(`${row.profile} pickup detour: ${row.fourth}/${row.attempts} fourth stars, ${row.allFour}/${row.attempts} four-star shifts.`);
+  }
   if (r.carFirst && r.carBeelines) {
     lines.push('', '| Car-first | Catches | Delivered | Pickup star | All four |', '| --- | --- | --- | --- | --- |');
     for (const row of r.carFirst)

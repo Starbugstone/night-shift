@@ -1,3 +1,4 @@
+import { LEVEL8 } from '../src/levels/deep-monolith';
 // v3 report additions: Bureau ID photo capture, Vrell's cover story, the tabloid headline, the
 // Form 7-B readings, and a layout that still fits the 540×960 card in English and French.
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -18,7 +19,6 @@ import { BAND_BOTTOM, BAND_TOP, CW, CX, CY, STAR_Y, layoutReport, type Box, type
 import { fitPhoto, WINDOW } from '../src/ui/report-photo';
 import { reportContent } from '../src/ui/report-content';
 import { deepReport, tutorialReport } from '../src/ui/report';
-import type { DeepLevelDef } from '../src/levels/types';
 
 const LANGS: Lang[] = ['en', 'fr'];
 const LEVEL_IDS = ['level1', 'level2', 'level3', 'level4', 'level5', 'level6', 'level7'];
@@ -218,17 +218,17 @@ function outcome(): RunOutcome {
 
 describe('report scene', () => {
   it('accounts for all 100 seconds on a fractional L8 finish', () => {
-    const run = new DeepRun(LEVELS[7] as DeepLevelDef, 7);
+    const run = new DeepRun(LEVEL8, LEVELS.indexOf(LEVEL8));
     run.elapsed = 58.8;
     expect(deepReport(run, outcome()).rows[0]![1]).toBe('0:59 used · 0:41 to spare');
   });
 
   it('never shows the 25 s Night owl margin on a run that missed it (L8)', () => {
     setLang('en');
-    const lv = LEVELS[7] as DeepLevelDef;
+    const lv = LEVEL8;
     expect(lv.parMarginSec).toBe(25);
     const summary = (elapsedSec: number) => ({ delivered: 3, spotted: 0, failedAbductions: 0, elapsedSec, sunrise: false });
-    const run = new DeepRun(lv, 7);
+    const run = new DeepRun(lv, LEVELS.indexOf(lv));
     run.elapsed = 75.15;
     expect(computeDeepStars(lv.budgetSec, lv.parMarginSec, summary(run.elapsed), 'level8')[2]).toBe(false);
     expect(deepReport(run, outcome()).rows[0]![1]).toBe('1:16 used · 0:24 to spare');
@@ -240,7 +240,7 @@ describe('report scene', () => {
   it('reports an L8 timeout without a sunrise clock', () => {
     for (const lang of LANGS) {
       setLang(lang);
-      const run = new DeepRun(LEVELS[7] as DeepLevelDef, 7);
+      const run = new DeepRun(LEVEL8, LEVELS.indexOf(LEVEL8));
       run.elapsed = 100;
       run.phase = 'sunrise';
       const line = deepReport(run, outcome()).rows[0]![1];
@@ -273,9 +273,9 @@ describe('report scene', () => {
     for (let li = 0; li < LEVELS.length; li++) {
       const lv = LEVELS[li]!;
       if (lv.kind !== 'deep') continue;
-      const run = new DeepRun(lv as DeepLevelDef, li);
+      const run = new DeepRun(lv, li);
       // L8 time trial: the troops are beamed from the map (no entries), only Echo has a room
-      const rooms = (lv as DeepLevelDef).map.targets.map((t, i) => (t.entries.length > 0 ? i : -1)).filter((i) => i >= 0);
+      const rooms = lv.map.targets.map((t, i) => (t.entries.length > 0 ? i : -1)).filter((i) => i >= 0);
       for (const target of rooms) {
         run.startAbduct(target, 0);
         run.finishAbduct({ ...abduct, probeReadings: ['Reflexes: brisk ✓'] });
@@ -285,7 +285,9 @@ describe('report scene', () => {
       expect(model.photo, lv.id).toBe(photo);
       expect(model.readings.length).toBe(rooms.length);
       expect(model.headline).toBeTruthy();
-      expect(model.cover).toMatch(/3/);
+      if (lv.id === 'birch_bakery') expect(model.cover).toBe(tr().birch.bakeryCover);
+      else if (lv.id === 'birch_neighbours') expect(model.cover).toBe(tr().birch.neighboursCover);
+      else expect(model.cover).toMatch(/3/);
       const { layout } = reportContent(model, outcome(), measure);
       expect(layout.cover.lines.some((t) => model.cover.startsWith(t)), lv.id).toBe(true);
     }

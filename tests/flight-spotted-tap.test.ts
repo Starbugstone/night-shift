@@ -1,3 +1,4 @@
+import { workOrderNumber } from '../src/levels/levels';
 // The SPOTTED card waits for a tap instead of closing on a timer; the sunrise clock charges only
 // the first SPOT_HOLD seconds of it, the same penalty as when the card closed by itself.
 import { describe, expect, it, vi } from 'vitest';
@@ -30,7 +31,7 @@ function tap(ctx: GameContext, update: () => void): void {
 describe('SPOTTED card', () => {
   it('waits for a tap on a deep shift and charges the clock only for the hold', () => {
     const ctx = context();
-    const run = new DeepRun(LEVEL3, 2);
+    const run = new DeepRun(LEVEL3, workOrderNumber(LEVEL3.id) - 1);
     const scene = new DeepFlightScene({ run, level: LEVEL3, ctx, onLocked: vi.fn(), onSunrise: vi.fn(), onQuit: vi.fn() });
     scene.update(DT);
     scene.sim.phase = 'spotted';

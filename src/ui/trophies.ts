@@ -1570,6 +1570,7 @@ class DetailModalView {
   private readonly row1Val = new Label(PROV_VAL);
   private readonly row2Key = new Label(PROV_KEY);
   private readonly row2Val = new Label(PROV_VAL);
+  private readonly postcards = new Paragraph({ size: 16, lineHeight: 22, color: C.text, weight: 650 });
   private readonly row3Key = new Label(PROV_KEY);
   private readonly row3Val = new Label(PROV_VAL);
   private readonly closeView: ButtonView;
@@ -1695,6 +1696,7 @@ class DetailModalView {
       this.row1Val,
       this.row2Key,
       this.row2Val,
+      this.postcards,
       this.row3Key,
       this.row3Val,
       this.closeView,
@@ -1801,6 +1803,7 @@ class DetailModalView {
     const lvText = tr().levels[slot.levelId];
 
     this.applyModalHeight(MODAL_H);
+    this.postcards.visible = false;
     this.drawModalChrome(found, 'souvenir', 374, 390, 138);
     this.setSpecimenOnlyVisible(false);
     this.townStage.visible = false;
@@ -1866,13 +1869,16 @@ class DetailModalView {
   }
 
   private populateTown(item: TownTrophySlotState): void {
-    const { slot, found } = item;
+    const { slot, found, postcards } = item;
     const strings = tr().trophies;
     const townStr = strings.town;
     const lvText = tr().levels[slot.levelId];
 
-    this.applyModalHeight(MODAL_H);
-    this.drawModalChrome(found, 'town', 412, 426, 102);
+    this.postcards.visible = !!postcards?.length;
+    const postcardH = this.postcards.visible
+      ? this.postcards.setBlock(postcards!.join('\n'), 42, 520, MODAL_W - 84) + 14 : 0;
+    this.applyModalHeight(MODAL_H + postcardH);
+    this.drawModalChrome(found, 'town', 412, 426, 102 + postcardH);
     this.setSpecimenOnlyVisible(false);
 
     // Top-left badge
@@ -1931,6 +1937,7 @@ class DetailModalView {
   }
 
   private populateSpecimen(item: SpecimenSlotState): void {
+    this.postcards.visible = false;
     const { slot, entry, found } = item;
     const strings = tr().trophies;
     const specStr = strings.specimens;

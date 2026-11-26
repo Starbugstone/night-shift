@@ -12,7 +12,9 @@ export const DEEP_STAR_LABELS: readonly string[] = en.starLabels.deep;
 
 /** English star labels of a level, the town pickup star (named after the pickup) included when it has one. */
 export function starLabels(l: LevelDef): readonly string[] {
-  const base = l.id === 'level8' ? en.timeTrial.stars : isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
+  const base = l.id === 'level8' ? en.timeTrial.stars
+    : isDeep(l) && l.map.targets.length < 3 ? ['Delivered', DEEP_STAR_LABELS[1]!, DEEP_STAR_LABELS[2]!]
+    : isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
   const id = l.map.collectible?.id;
   return id ? [...base, en.mapCollectibles.items[id].name] : base;
 }
@@ -116,9 +118,12 @@ export interface SpecimenFind {
 }
 
 export function computeDeepStars(budgetSec: number, parMarginSec: number, r: DeepSummary, levelId?: LevelId): Stars {
-  const all = r.delivered >= 3 && !r.sunrise;
-  const pickup = LEVELS.find((l) => l.id === levelId)?.map.collectible?.id;
-  return [all, all && r.spotted === 0 && (levelId === 'level8' || r.failedAbductions === 0), all && budgetSec - r.elapsedSec >= parMarginSec,
+  const level = LEVELS.find(l => l.id === levelId);
+  const deep = level && isDeep(level) ? level : undefined;
+  const all = r.delivered >= (deep?.map.targets.length ?? 3) && !r.sunrise;
+  const pickup = deep?.map.collectible?.id;
+  const nightOwl = deep?.elapsedParSec === undefined ? budgetSec - r.elapsedSec >= parMarginSec : r.elapsedSec <= deep.elapsedParSec;
+  return [all, all && r.spotted === 0 && (levelId === 'level8' || r.failedAbductions === 0), all && nightOwl,
     all && pickup !== undefined && r.mapCollectible === pickup];
 }
 

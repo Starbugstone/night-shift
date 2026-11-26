@@ -6,7 +6,7 @@ import { LEVEL3 } from './deep-levels';
 import { LEVELS } from './levels';
 import type { DeepLevelDef } from './types';
 
-export const FIELD_CHECK_INDEX = LEVELS.findIndex(level => level.id === 'level2') + 1;
+export const FIELD_CHECK_INDEX = LEVELS.findIndex(level => level.id === 'birch_bakery');
 export const FIELD_CHECK_RULES: AbductRules = { hard: true, wakeFails: false };
 
 const dave = LEVEL3.map.targets[0];

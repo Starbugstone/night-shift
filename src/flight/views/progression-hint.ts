@@ -21,6 +21,13 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
     return sim.inRing >= 0 || y < 575 + pad(ring) - pad(porch) ? ring : porch;
   }
   switch (level.id) {
+    case 'birch_bakery':
+      if (sim.suspicion > 0) return lessons.coolOff;
+      if (y > 1030 - pad(tr().birch.goAround)) return tr().birch.goAround;
+      break;
+    case 'birch_neighbours':
+      if (y > 1170 - pad(tr().birch.crossWatcher) && Math.abs(x - 720) > 245) return tr().birch.crossWatcher;
+      break;
     case 'level3':
       for (const hazard of sim.field.defs) {
         if (hazard.type !== 'porch') continue;

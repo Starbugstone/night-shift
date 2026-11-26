@@ -8,12 +8,14 @@ import { inLighthouseShadow, type LighthouseHazard } from '../src/flight/lightho
 import { FlightScene } from '../src/flight/scene';
 import { LOCK, RING_R, SAUCER, type Saucer } from '../src/flight/sim';
 import { setLang, tr } from '../src/i18n';
+import { BIRCH_BAKERY } from '../src/levels/deep-birch-bakery';
+import { BIRCH_NEIGHBOURS } from '../src/levels/deep-birch-neighbours';
 import { LEVEL3, LEVEL4 } from '../src/levels/deep-levels';
 import { LEVEL5 } from '../src/levels/deep-pier';
 import { LEVEL6 } from '../src/levels/deep-clinic';
 import { LEVEL7 } from '../src/levels/deep-ship';
 import { LEVEL8 } from '../src/levels/deep-monolith';
-import { isDeep, isTutorial, LEVELS } from '../src/levels/levels';
+import { isDeep, isTutorial, LEVELS, workOrderNumber } from '../src/levels/levels';
 import { applyDeepRun, applyRun } from '../src/levels/progress';
 import { DeepRun } from '../src/levels/run';
 import { defaultSave, loadSave, SAVE_KEY, validateSave, writeSave } from '../src/levels/save';
@@ -141,7 +143,7 @@ describe('optional map collectibles', () => {
     const location: Vec2 = { x: start.x + 200, y: start.y };
     const deep = { ...LEVEL3, map: { ...LEVEL3.map, hazards: [], collectible: { ...flyer, ...location } } };
     const ctx = context();
-    const run = new DeepRun(deep, 2);
+    const run = new DeepRun(deep, workOrderNumber(deep.id) - 1);
     const onSunrise = vi.fn();
     const onLocked = vi.fn();
     const openLeg = () => new DeepFlightScene({ ctx, level: deep, run, onSunrise, onLocked, onQuit: vi.fn() });
@@ -164,7 +166,7 @@ describe('optional map collectibles', () => {
   });
 
   it('places every deep pickup safely off detectors, rings, trails, props and map edges', () => {
-    const deepLevels: readonly DeepLevelDef[] = [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL8];
+    const deepLevels: readonly DeepLevelDef[] = [BIRCH_BAKERY, BIRCH_NEIGHBOURS, LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL8];
     const pocket = RING_R * LOCK.insideFrac;
     for (const lv of deepLevels) {
       const m = lv.map;
@@ -215,10 +217,10 @@ describe('optional map collectibles', () => {
         }
       }
     }
-  });
+  }, 20_000);
 
-  it('every deep map pickup (L3–L8) is reachable by an unspotted autopilot detour and stays optional', () => {
-    const deepLevels: readonly DeepLevelDef[] = [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL8];
+  it('every stationary deep map pickup is reachable by an unspotted autopilot detour and stays optional', () => {
+    const deepLevels: readonly DeepLevelDef[] = [BIRCH_BAKERY, BIRCH_NEIGHBOURS, LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL8];
     for (const lv of deepLevels) {
       const pickup = lv.map.collectible!;
       const ctx = context();
@@ -291,11 +293,11 @@ describe('optional map collectibles', () => {
       }
       expect(locked, `${lv.id} reaches a specimen after pickup`).toBe(true);
     }
-  });
+  }, 20_000);
 
   it('L8 Krix coexists with roaming apes and leaves >= 25 s Night owl margin on a full detour run', () => {
     const ctx = context();
-    const run = new DeepRun(LEVEL8, 7);
+    const run = new DeepRun(LEVEL8, workOrderNumber(LEVEL8.id) - 1);
     const onLocked = vi.fn();
     const scene = new DeepFlightScene({ ctx, level: LEVEL8, run, onLocked, onSunrise: vi.fn(), onQuit: vi.fn() });
     const krix = LEVEL8.map.collectible!;
@@ -343,7 +345,7 @@ describe('optional map collectibles', () => {
   });
 
   it('shows collected and missed rows and Vrell lines in EN & FR for every deep level (L3–L8)', () => {
-    const deepLevels: readonly DeepLevelDef[] = [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL8];
+    const deepLevels: readonly DeepLevelDef[] = [BIRCH_BAKERY, BIRCH_NEIGHBOURS, LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL8];
     for (const lang of ['en', 'fr'] as const) {
       setLang(lang);
       const words = tr().mapCollectibles;

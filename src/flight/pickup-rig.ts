@@ -12,6 +12,9 @@ export function pickupKey(id: MapCollectibleId): string {
 
 /** Size of `flight/pickup_<id>` in logical px: how big the pickup is on the map. */
 export const PICKUP_SIZE: Record<MapCollectibleId, readonly [w: number, h: number]> = {
+  // v4 Birch Lane
+  cherry_pie: [112, 96],
+  garden_gnome: [96, 120],
   slipper_flyer: [58, 86],
   astronomer: [128, 112],
   saucer_photo: [100, 108],

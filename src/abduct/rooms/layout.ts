@@ -17,7 +17,9 @@ export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'ke
   // L6 clinic code
   | 'hank' | 'osei' | 'pemberton'
   // v4 L9 1955
-  | 'doc' | 'buff' | 'marvin';
+  | 'doc' | 'buff' | 'marvin'
+  // v4 Birch Lane
+  | 'mabel' | 'nora' | 'len';
 
 export interface Sprite {
   key: string;
@@ -67,6 +69,8 @@ export interface Room {
   route: readonly Waypoint[];
   /** v4 council: the scene wrapping this room (Field Check) owns the lesson prompt; the room's own stays off. */
   wrapperLessons?: boolean;
+  /** How far right to frame the cutaway until the specimen starts moving. */
+  spawnLookAhead?: number;
 }
 
 export function sprite(key: string, x: number, y: number): Sprite {

@@ -11,7 +11,8 @@ import { GLOW, ScreenTint } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { roundRect } from '../core/gfx/shapes';
 import { Label, Paragraph } from '../core/gfx/text';
-import { targetHeadKey } from './draw';
+import { deepPar } from '../levels/types';
+import { fmtTime, targetHeadKey } from './draw';
 import { artSprite } from './views/art';
 import { NightSky } from './views/backdrop';
 import { ButtonView } from './views/button';
@@ -59,7 +60,9 @@ export class DeepChoiceScene implements Scene {
     const left = run.remaining;
     const m = Math.floor(left / 60);
     const sec = Math.floor(left % 60);
-    this.status = fmt(run.level.id === 'level9' ? d.stormIn : d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
+    this.status = run.level.clockMode === 'elapsed'
+      ? fmt(tr().birch.timeAgainstPar, { used: run.clockText(), par: fmtTime(deepPar(run.level)) })
+      : fmt(run.level.id === 'level9' ? d.stormIn : d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
   }
 
   update(dt: number): void {
@@ -102,7 +105,7 @@ class DeepChoiceView implements SceneView {
   private readonly failedFace: Container | Graphics | null;
 
   constructor(private readonly s: DeepChoiceScene) {
-    this.sun = s.run.level.id === 'level9' ? null : new SunIcon(9, 12, 16);
+    this.sun = s.run.level.id === 'level9' || s.run.level.clockMode === 'elapsed' ? null : new SunIcon(9, 12, 16);
     this.title = new Label({ size: s.title.length > 13 ? 42 : 50, color: C.red, weight: 900, outline: C.ink });
     this.title.set(s.title, VIEW_W / 2, 120, VIEW_W - 60);
     this.title.rotation = -0.05;
@@ -153,6 +156,10 @@ class DeepChoiceView implements SceneView {
 
     const x = 228;
     const w = VIEW_W - 120 - 168 - 26;
+    if (run.level.clockMode === 'elapsed') {
+      this.root.addChild(new Label({ size: 15, color: C.muted, weight: 800, align: 'left' }).set(status, x, 426, w + 18));
+      return failedFace;
+    }
     const used = w * Math.min(1, run.elapsed / run.budget);
     const hot = run.deadlineWarning > 0;
     const bar = roundRect(new Graphics(), x, 426, w, 14, 7).fill('#16102e');

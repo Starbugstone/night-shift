@@ -151,7 +151,8 @@ export type DeepZibEvent =
   // v4 L9 1955
   | 'start9' | 'timeCarWarn' | 'timeCarLaunch' | 'lightning' | 'timeCarMissed' | 'timeCarCaught'
   | 'stormClosing' | 'eraLight' | 'eraWatcher' | 'eraPolice'
-  | 'twoOfThree';
+  | 'twoOfThree'
+  | 'birchHandprint' | 'birchRetry' | 'birchLaunch' | 'birchBinLid' | 'birchReturned';
 
 export const DEEP_ZIB: Record<DeepZibEvent, readonly string[]> = en.humor.deepZib;
 
@@ -254,6 +255,7 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
 
 // v4 story
 const DEEP_START: Readonly<Record<string, DeepZibEvent>> = {
+  birch_neighbours: 'birchLaunch',
   level3: 'start3',
   level4: 'start4',
   level5: 'start5',
@@ -279,6 +281,7 @@ export function loadingTips(save?: Pick<SaveData, 'levels'>): readonly string[] 
   if (!save) return tips;
   const out: string[] = [...tips];
   if (save.levels.level2.delivered) out.push(...tierTips.afterL2);
+  if (save.levels.birch_neighbours.delivered) out.push(tr().birch.pruittTip);
   if (save.levels.level4.delivered) out.push(...tierTips.afterL4);
   if (save.levels.level5.delivered) out.push(...tierTips.afterL5);
   if (save.levels.level7.delivered) out.push(...tierTips.afterL7);

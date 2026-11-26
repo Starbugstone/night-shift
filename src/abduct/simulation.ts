@@ -19,6 +19,7 @@ const SNOOZE_AMOUNT = 40;
 const SNOOZE_SECONDS = 0.65;
 const QUIET_RULES: AbductRules = { hard: false, wakeFails: false };
 const HUMAN_NAMES = {
+  mabel: 'Baker Mabel', nora: 'Nora Finch', len: 'Len Briggs',
   doyle: 'Farmer Doyle', larry: 'Larry', dave: 'Dentist Dave', barb: 'Coach Barb',
   gary: 'Gary', nigel: 'Night Guard Nigel', kev: 'DJ Kev', mayor: 'Mayor Whitlock',
   // L5 pier code
@@ -239,7 +240,7 @@ export class AbductSimulation {
     this.snoozeOwned = upgrades.has('snooze_ray');
     this.pilot = new AbductPilot(room);
     if (this.interior) {
-      this.camera.x = this.body.chestX - VIEW_W * 0.5;
+      this.camera.x = this.body.chestX - VIEW_W * 0.5 + (room.spawnLookAhead ?? 0);
       this.camera.y = this.body.chestY - VIEW_H * 0.49;
     }
     const item = room.item.sprite;
@@ -399,7 +400,8 @@ export class AbductSimulation {
         if (speed < SQUASH_SPEED) this.onBonk(SQUASH_SPEED, false, this.body.chestX, this.body.chestY);
       } else if (interior.strain < 0.15) this.squashed = false;
       const smooth = 1 - Math.exp(-STEP * 5.4);
-      this.camera.x += (this.body.chestX - VIEW_W * 0.5 - this.camera.x) * smooth;
+      const lookAhead = this.moved ? 0 : this.room.spawnLookAhead ?? 0;
+      this.camera.x += (this.body.chestX - VIEW_W * 0.5 + lookAhead - this.camera.x) * smooth;
       this.camera.y += (this.body.chestY - VIEW_H * 0.49 - this.camera.y) * smooth;
     }
     if (hardest >= 0) this.onBonk(speed, false, this.body.impactX[hardest]!, this.body.impactY[hardest]!);

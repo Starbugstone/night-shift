@@ -12,13 +12,14 @@ const FLAVOUR: ReadonlySet<string> = new Set(['nearRing', 'locked', 'checkpoint'
 import type { FlightAutopilotIntent, GameContext, Scene, Vec2 } from '../contracts';
 import { P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles } from '../core/fx';
 import { ViewSlot } from '../core/gfx/scene';
+import { binLid } from '../levels/deep-birch-neighbours';
 import { deepStartEvent, deepZibLine, spotCaption, spotShout, spotZibLine, type DeepZibEvent } from '../levels/humor'; // v4 story
 import { EggCues } from './easter-eggs'; // v4 easter eggs
 import { mapPickupFeedback } from './collectible';
 import { TIME_CAR } from './time-car';
 import { TimeCarPilot } from './time-car-pilot';
 import { fmt, tr } from '../i18n'; // v4 voices
-import { formatOrderNumber } from '../levels/levels';
+import { formatOrderNumber, workOrderNumber } from '../levels/levels';
 import type { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
 import { HUD_ROW } from '../ui/hud';
@@ -142,11 +143,11 @@ export class DeepFlightScene implements Scene {
       this.bannerT = 3;
       this.pendingOpener = deepStartEvent(this.level.id); // v4 story
       // v4 voices: Bureau dispatch reads the work order banner over the PA
-      const words = tr().flight;
-      this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.level.id === 'level8' ? tr().timeTrial.banner : this.level.id === 'level9' ? tr().crestValley.banner : words.collectAll}.`, 'bureau', { within: 2.9 });
+      this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.bannerBody}.`, 'bureau', { within: 2.9 });
     }
     else if (this.run.legs > 0 && this.run.deliveredCount > 0 && this.run.lastFail === null) {
-      this.say(this.level.id !== 'level8' && this.run.deliveredCount === 2 ? 'twoOfThree' : 'checkpoint', true); // v4 story
+      this.say(this.level.id === 'birch_neighbours' ? 'birchReturned'
+        : this.level.id !== 'level8' && this.run.deliveredCount === 2 ? 'twoOfThree' : 'checkpoint', true); // v4 story
       // back from a successful abduction: count it
       this.deliverT = 2.6;
       this.deliveredIdx = this.run.order[this.run.order.length - 1] ?? -1;
@@ -155,12 +156,23 @@ export class DeepFlightScene implements Scene {
     }
   }
 
+  get bannerBody(): string {
+    const words = tr();
+    switch (this.level.id) {
+      case 'birch_bakery': return words.birch.collectBakery;
+      case 'birch_neighbours': return words.birch.collectNeighbours;
+      case 'level8': return words.timeTrial.banner;
+      case 'level9': return words.crestValley.banner;
+      default: return words.flight.collectAll;
+    }
+  }
+
   get bannerHeading(): string {
     const words = tr();
-    if (this.practice) return fmt(words.fieldCheck.re, { num: formatOrderNumber(this.run.levelIndex) });
+    if (this.practice) return fmt(words.fieldCheck.re, { num: formatOrderNumber(workOrderNumber('level2')) });
     const num = formatOrderNumber(this.run.levelIndex + 1);
     if (this.level.id === 'level9') return fmt(words.crestValley.order, { num });
-    return this.level.id === 'level8'
+    return this.level.id === 'level8' || this.level.clockMode === 'elapsed'
       ? fmt(words.workOrders.orderNo, { num })
       : fmt(words.flight.banner, { num, h: this.level.hours[1] });
   }
@@ -321,7 +333,7 @@ export class DeepFlightScene implements Scene {
       audio.sfx('click', 0.9);
       if (!this.seen.has('porch')) {
         this.seen.add('porch');
-        this.say('porch', true, true);
+        this.say(this.level.id === 'birch_bakery' ? 'birchHandprint' : 'porch', true, true);
       }
       // the click: a ring snaps out to the edge of the light
       const d = field.defs[st.click]!;
@@ -373,6 +385,11 @@ export class DeepFlightScene implements Scene {
       }
     }
     this.gagNear = near;
+    if (this.level.id === 'birch_neighbours' && !this.seen.has('birchBinLid') &&
+        !this.pendingOpener && this.zibCd <= 0 && Math.hypot(s.x - binLid.x, s.y - binLid.y) < 185) {
+      this.seen.add('birchBinLid');
+      this.say('birchBinLid', true);
+    }
     // v4 easter eggs: a film cameo on the map, once per run, never over a hazard line or the opener
     this.eggs ??= new EggCues(this.level.map.props, this.run);
     const egg = this.eggs.check(s.x, s.y, sim.camX, sim.camY, this.zibCd <= 0 && !this.pendingOpener && st.cause < 0 && sim.suspicion === 0);
@@ -451,7 +468,7 @@ export class DeepFlightScene implements Scene {
     this.cpT = 0;
     this.fx.clear();
     this.checkpointBurst(pos.x, pos.y);
-    this.say('respawn', true);
+    this.say(this.level.id === 'birch_bakery' ? 'birchRetry' : 'respawn', true);
   }
 
   /** The saucer beams back in at a checkpoint. */

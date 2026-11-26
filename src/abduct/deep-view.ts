@@ -21,6 +21,7 @@ import { TurnButtonsView, TurnTell } from './turn-draw';
 import { WetView } from './wet-view';
 import { ItemSparkle } from './views/item-sparkle'; // v4 items
 import { BuildingView, DeepNight, prop } from './views/building';
+import { BirchRoomDecor } from './views/birch';
 import { CrestValleyRoomDecor } from './views/crest-valley';
 import { DeliveryView, ExitChevrons, FuseRing, Reticle, SnoozeView, SnoreView, SpeechBubble, WakeBurst, type AbductViewInput } from './views/effects';
 import { ALERT_RGB, FailureView } from './views/failure';
@@ -38,7 +39,7 @@ export const DEEP_HUD_WARNING_SLOT = { x: 230, y: 831, w: 296, h: 45 } as const;
  * (src/ui/deep-abduct.ts): how close sunrise is (0..1) and how many specimens are already
  * aboard (-1 = not on a shift, no counter).
  */
-export const deepShift = { dawn: 0, delivered: -1, elapsed: undefined as number | undefined };
+export const deepShift = { dawn: 0, delivered: -1, total: 3, sharedTimer: false, elapsed: undefined as number | undefined };
 
 function meets(opening: Opening, room: InteriorRoom): boolean {
   if (opening.axis === 'vertical') {
@@ -151,6 +152,7 @@ class DeepHud {
     let tip = '';
     if (sim.room.wrapperLessons) tip = '';
     else if (wet?.sheathed && wet.level < 0.9 && wet.refilling === -1) tip = tips.refill;
+    else if (sim.room.human === 'nora' && chestX > 295 - pad && chestX < 510 + pad && chestY < 445) tip = tr().birch.crossLaser;
     else if (sim.room.human === 'gary' && chestX > 270 - pad && chestX < 505 + pad && chestY > 175 - pad) tip = tips.laser;
     else if (sim.room.human === 'dave' && chestX > 280 - pad && chestX < 480 + pad && chestY < 490 + pad) tip = tips.settle;
     else if ((sim.room.human === 'sterling' || sim.room.human === 'marco' || sim.room.human === 'greg') && chestX < 390 + pad && chestY > -pad && chestY < 680 + pad && elapsed < 10) tip = tips.roll;
@@ -158,6 +160,7 @@ class DeepHud {
     this.lesson.visible = this.lessonActive && !sim.delivered && !sim.failure;
     if (this.lesson.visible) this.lesson.sync(VIEW_W / 2, 756, 49, tip, 20, 'release', elapsed, rm);
     const { watching, exposure, sleepers: states } = sim.interior!;
+    this.timer.visible = !deepShift.sharedTimer;
     const second = Math.floor(elapsed);
     if (second !== this.second) {
       this.second = second;
@@ -192,7 +195,7 @@ class DeepHud {
     for (let i = 0; i < this.pips.length; i++) {
       const { on, off } = this.pips[i]!;
       on.visible = have > i;
-      off.visible = have >= 0 && have <= i;
+      off.visible = have >= 0 && have <= i && i < deepShift.total;
     }
     this.snooze.visible = sim.snoozeOwned && !sim.snoozeUsed && !sim.failure && !sim.delivered;
     if (this.snooze.visible) {
@@ -353,6 +356,7 @@ export class DeepAbductView implements SceneView {
   private readonly paperwork?: ProbePaperwork;
   private readonly night: DeepNight;
   private readonly building: BuildingView;
+  private readonly birch?: BirchRoomDecor;
   private readonly crestValley?: CrestValleyRoomDecor;
   private readonly exit: DeepExit;
   private readonly swell: SwellView;
@@ -407,6 +411,7 @@ export class DeepAbductView implements SceneView {
     this.night = new DeepNight(building.bounds.y + building.bounds.h - 14);
     this.building = new BuildingView(building, hazards, sim.room.exit, assets);
     if (sim.room.human === 'doc' || sim.room.human === 'marvin') this.crestValley = new CrestValleyRoomDecor(assets, sim.room);
+    if (sim.room.human === 'mabel' || sim.room.human === 'nora' || sim.room.human === 'len') this.birch = new BirchRoomDecor(sim, assets);
     this.exit = new DeepExit(sim, ctx, this.paperwork);
     this.swell = new SwellView(building, assets);
     this.snore = new SnoreView(ctx, true);
@@ -419,6 +424,7 @@ export class DeepAbductView implements SceneView {
     const world = this.world;
     world.addChild(this.building.root, this.exit.root);
     if (this.crestValley) world.addChild(this.crestValley.back);
+    if (this.birch) world.addChild(this.birch.root);
     for (let i = 0; i < hazards.length; i++) {
       const view = hazardView(building, hazards[i]!, assets, i);
       if (view) {
@@ -463,6 +469,7 @@ export class DeepAbductView implements SceneView {
     this.night.sync(cx, cy, deepShift.dawn);
     this.building.sync(cx, cy, t, rm, deepShift.dawn);
     this.crestValley?.sync(deepShift.elapsed ?? t, rm);
+    this.birch?.sync(rm);
     this.exit.sync(cx, cy, rm);
     for (const view of this.hazards) view.sync(t, rm, cx, cy, body);
     this.swell.sync(t, rm, cx, cy, VIEW_W, VIEW_H);

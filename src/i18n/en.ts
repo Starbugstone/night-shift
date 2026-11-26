@@ -9,6 +9,13 @@ type Plural = { one: string; other: string };
 
 const routes = {
   // v4 L9 1955
+  // v4 Birch Lane
+  mabel_stockroom: { route: "Stockroom door", difficulty: "rack & Crumb" },
+  mabel_vent: { route: "Roof vent", difficulty: "trolley & vent" },
+  nora_side: { route: "Side door", difficulty: "workbench & laser" },
+  nora_loft: { route: "Loft hatch", difficulty: "tool chest & laser" },
+  len_workshop: { route: "Workshop door", difficulty: "counter & vice" },
+  len_skylight: { route: "Skylight", difficulty: "handlebars & lift" },
   inventor_balcony: { route: "Clock balcony", difficulty: "gears & cable" },
   inventor_service: { route: "Service door", difficulty: "bell & gate" },
   bully_transom: { route: "Awning transom", difficulty: "jukebox & fan" },
@@ -126,6 +133,12 @@ const vrell = {
 } satisfies Record<CommentKey, Lines>;
 
 const deepZib = {
+  // v4 Birch Lane
+  birchHandprint: ["Caught white-handed. And it isn’t even my hand."],
+  birchRetry: ["Around the lamp this time. It knows what I look like now."],
+  birchLaunch: ["Binoculars and a binder. Vrell, I think she’s one of us."],
+  birchBinLid: ["Is that one of ours? …It’s a bin lid. Nice lines, though."],
+  birchReturned: ["One aboard. That ties my record. They’re making me do it twice."],
   // v4 L9 1955
   start9: [
     "1955! Where we're flying, we don't need roads—just the west turnout!",
@@ -306,7 +319,6 @@ export const en = {
       afterL8: ['Tip: if a stainless car hits 88 mph in a thunderstorm, step aside. Our hull insurance stops at 85.'],
       afterL2: [
         'Tip: every odd sock lost in Spin City since 1998 is in Bureau Warehouse 4.',
-        'Tip: if Mrs. Pruitt waves at you, she is not being friendly. She is calibrating.',
       ],
       afterL4: [
         'Tip: The Grimsby Gazette pays £20 for blurry saucer photos. Do not subsidise them.',
@@ -384,6 +396,7 @@ export const en = {
     incoming: 'INCOMING MEMO',
     to: 'TO: Intern Zib',
     // v4 L9 1955
+    toAgentSenior: 'TO: Agent Zib',
     toAgent: 'TO: Agent Zib (junior)',
     from: 'FROM: Supervisor Vrell',
     re: 'RE: {re}',
@@ -397,7 +410,54 @@ export const en = {
   },
 
   /** Work order text per level id. */
+  // v4 Birch Lane
+  birch: {
+    goAround: "Go around the gate light",
+    crossWatcher: "Cross when she looks away",
+    crossLaser: "Wait for the line to go dark",
+    mabelMumble: "I knead five more minutes…",
+    noraMumble: "I’m asleep for security reasons…",
+    lenMumble: "There’s the tick… oh. It’s my watch…",
+    crumb: "Crumb",
+    alarm: "ALARM CODE",
+    open: "OPEN",
+    bakeryCover: "The first loaf clocked in. Mabel is still listed as out on delivery.",
+    neighboursCover: "The Hendersons’ fern is still in perfect health.",
+    deliverGoal: "{star} — bring Mabel aboard",
+    neighboursGoal: "{star} — bring Nora and Len aboard before dawn ({time})",
+    owlGoal: "{star} — finish in {time} or less",
+    timeAgainstPar: "{used} elapsed · par {par}",
+    post1122: "Wet. Cows. Wish you were here.",
+    post1953: "Drive-in. The main feature needed a tissue.",
+    post2199: "The future. Nearly a road. Saved by paperwork. Typical.",
+    collectBakery: "Collect Mabel",
+    collectNeighbours: "Collect both specimens",
+    pruittTip: "Tip: if Mrs. Pruitt waves at you, she is not being friendly. She is calibrating.",
+  },
   levels: {
+    // v4 Birch Lane
+    birch_bakery: {
+      title: "Baker Mabel’s First Batch",
+      location: "Birch Lane Bakery",
+      blurb: "Up before the town. Asleep before the bread.",
+      human: "Baker Mabel",
+      collect: "Mabel",
+      body: "Zib, your first live call is the bakery on Birch Lane. Collect Mabel. There’s a cherry pie cooling on the back windowsill. If it comes aboard, I’ll weigh it before Accounting does.",
+      joke: "Crumb sleeps on the bakery keys. Mabel has to ask permission to open.",
+      signoff: "— Vrell. Leave the till.",
+      re: "Work Order #{num} · Baker Mabel’s First Batch",
+    },
+    birch_neighbours: {
+      title: "While the Hendersons Are Away",
+      location: "Birch Lane, Maple Court turn",
+      blurb: "Two sleepers. One neighbour who isn’t.",
+      human: "Nora Finch & Len Briggs",
+      collect: "Nora & Len",
+      body: "Bring in Nora from the Hendersons’ garage and Len from next door before dawn. Mrs. Pruitt across the lane hasn’t slept since 1994. The Hendersons left their garden gnome behind. He’s sulking by Len’s east drive.",
+      joke: "The alarm code is behind the laser. Gary from Neighbourhood Watch fitted the laser for free. It’s caught him four times.",
+      signoff: "— Vrell. Don’t water the fern. It’s plastic.",
+      re: "Work Order #{num} · While the Hendersons Are Away",
+    },
     // v4 L9 1955
     level9: {
       title: "Clocking Out at 10:04",
@@ -439,8 +499,8 @@ export const en = {
       human: 'Dave, Barb & Gary',
       collect: 'Dave, Barb & Gary',
       re: 'Work Order #{num} — Maple Court (bulk order)',
-      body: "Training is over. Maple Court has three targets before dawn: Dentist Dave, Coach Barb, and Gary from Neighbourhood Watch. Dodge the cruiser and Mrs. Pruitt's binoculars—she hasn't slept since 1994 and logs everything in a binder.",
-      joke: "Gary's garage lasers have caught Gary eleven times—don't become entry twelve. Also, a volunteer astronomer is camped on Birch Lane with a SETI dish, if you fancy a detour.",
+      body: "Three before dawn this time, Zib. Dentist Dave, Coach Barb and Gary from Neighbourhood Watch. Watch for the cruiser. Mrs. Pruitt has binoculars trained on the street from her window. Gary’s been shopping.",
+      joke: "Gary’s new lasers have caught him eleven times. A volunteer astronomer is on Birch Lane with a SETI dish, if you fancy a detour.",
       signoff: '— Vrell. Co-signed under mild protest.', // v4 story
     },
     level4: {
@@ -619,8 +679,8 @@ export const en = {
     ranOut: 'ran out: sun up at {h}:00 AM',
     usedSpare: '{used} used · {left} to spare',
     delivered: 'Specimens delivered',
-    deliveredValue: '{n}/3',
-    deliveredNames: '{n}/3  ({names})',
+    deliveredValue: '{n}/{total}',
+    deliveredNames: '{n}/{total}  ({names})',
     failedAbductions: 'Failed abductions',
     avgDignity: 'Avg. dignity remaining',
     percent: '{n}%',
@@ -650,6 +710,9 @@ export const en = {
       sunrise: ['Filed as: {cause}, at dawn. Head Office is not buying it.', 'Filed as: {cause}. The sunrise made it hard to argue.'],
     },
     causes: {
+      // v4 Birch Lane
+      birch_bakery: ["a cloud of flour"],
+      birch_neighbours: ["a blue bin lid"],
       // v4 L9 1955
       level9: ["ball lightning off the courthouse", "a prototype tailfin reflection", "too many chocolate malts"],
       level1: ['swamp gas', 'a very tall barn owl', 'a combine harvester with ambitions'],
@@ -665,6 +728,9 @@ export const en = {
     } as Record<string, Lines>,
     /** Stamped on the report when the saucer was spotted twice or more. All caps, PG. */
     headlines: {
+      // v4 Birch Lane
+      birch_bakery: ["BAKER’S BUNS SEEN RISING INTO NIGHT SKY"],
+      birch_neighbours: ["MRS. PRUITT REPORTS SAUCER FOR 37TH TIME. FIRST TIME SHE’S RIGHT."],
       // v4 L9 1955
       level9: [
         'LIGHTNING STOPS COURTHOUSE CLOCK AT 10:04 — FLYING HUBCAP BLAMED',
@@ -715,7 +781,7 @@ export const en = {
     banner: 'WORK ORDER #{num} · SUNRISE AT {h}:00',
     secured: 'SPECIMEN SECURED',
     backToCheckpoint: 'Tap to go back to the last checkpoint',
-    countOf: '{n} of 3',
+    countOf: '{n}/{total}',
     /** "Window — easy" on the map. */
     entrySep: ' — ',
     spinCity: 'SPIN CITY',
@@ -936,7 +1002,7 @@ export const en = {
     } satisfies Record<string, Lines>,
     garyFail: [
       "{by}. Gary's security system catches its first real intruder. Gary sleeps through it, as tradition demands.",
-      "{by}. In eleven years Gary's system has caught Gary eleven times and you once. You're in the record books. Gary's.",
+      "{by}. Gary’s system has caught Gary eleven times and you once. You’re in the record books. Gary’s.",
     ],
     /** Who failed you when nobody is named. */
     failAlarm: 'The alarm',
@@ -1001,10 +1067,13 @@ export const en = {
     },
     // v4 story: Vrell's scripted arc lines on a level's first delivery
     storyFirstClear: {
+      // v4 Birch Lane
+      birch_bakery: "Crumb opened at five. He knocked the card reader off the counter. Cash only.",
+      birch_neighbours: "Both aboard. Mrs. Pruitt has logged the saucer as an extension without planning permission.",
       // v4 L9 1955
       level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Why is it blinking two more dates?",
       level1: "Not dead, not fired, and Doyle is in the hold. Take Route 9 into town—Spin City's night clerk is next.",
-      level2: 'Larry is logged, and Accounting traced forty missing socks to your saucer. Off training, Zib—Maple Court awaits.',
+      level2: "Larry is logged and Accounting traced forty socks to your saucer. Temporary lanyard’s in the tray. Two calls on Birch Lane, then the bulk order.",
       level3: "Suburbia cleared, though Gary filed a complaint and Mrs. Pruitt mailed your photo to City Hall. We're going downtown.",
       level4: "Mayor returned, mostly intact. Nigel's ledger has a black rock sold to a 'maritime buyer', and the Mayor's desk logged its crate to Barnacle Bay. Follow the coast.",
       level5: "Bubbles left a polite note—who taught a dolphin to write?—and Pete's log triggered a Compliance audit. Pack the brass thermometer.",
@@ -1035,6 +1104,13 @@ export const en = {
 
   /** Stolen items, by the item's id (its English name in the room data). */
   items: {
+    // v4 Birch Lane
+    "sourdough starter": { one: "{n} sourdough starter", other: "{n} sourdough starters" },
+    "kitchen timer": { one: "{n} kitchen timer", other: "{n} kitchen timers" },
+    "house-sitting checklist": { one: "{n} house-sitting checklist", other: "{n} house-sitting checklists" },
+    "magnetic parts dish": { one: "{n} magnetic parts dish", other: "{n} magnetic parts dishes" },
+    "bicycle bell": { one: "{n} bicycle bell", other: "{n} bicycle bells" },
+    "biscuit tin": { one: "{n} biscuit tin", other: "{n} biscuit tins" },
     // v4 L9 1955
     "spare flex capacitor": { one: "{n} spare flex capacitor", other: "{n} spare flex capacitors" },
     "yellow hazmat suit": { one: "{n} yellow hazmat suit", other: "{n} yellow hazmat suits" },
@@ -1094,6 +1170,13 @@ export const en = {
    */
   souvenirs: {
     items: {
+    // v4 Birch Lane
+    "sourdough starter": { got: ["Mabel’s oldest employee. Fed twice a day, never paid. Zib says they relate."], missed: ["Left behind: sourdough starter."] },
+    "kitchen timer": { got: ["Goes off at four and wakes the whole street. Except Mabel. The street has asked us to keep it."], missed: ["Left behind: kitchen timer."] },
+    "house-sitting checklist": { got: ["Bring the bins in. If Gary drops by, pretend to be on the phone."], missed: ["Left behind: house-sitting checklist."] },
+    "magnetic parts dish": { got: ["Contains one screw. The household is waiting to find out what wobbles."], missed: ["Left behind: magnetic parts dish."] },
+    "bicycle bell": { got: ["The only thing in Len’s workshop that belongs to Len. He thinks."], missed: ["Left behind: bicycle bell."] },
+    "biscuit tin": { got: ["Contains bolts. The tin marked BOLTS contains biscuits. Len says the system works."], missed: ["Left behind: biscuit tin."] },
       // v4 L9 1955
       "spare flex capacitor": {
         got: ["A spare flex capacitor, pulsing gently in a biscuit tin. Propulsion says it shouldn't work. It's currently heating my lunch from yesterday.", "Spare flex capacitor, logged. Three blinking tubes and zero safety certification—classic Earth engineering.", "Doc built a time-bending capacitor out of junkyard relays. Meanwhile our Accounting server takes four hours to open a PDF."],
@@ -1592,6 +1675,30 @@ export const en = {
    * source text as an id; only drawing goes through `gt()`.
    */
   data: {
+    Mabel: "Mabel",
+    Nora: "Nora",
+    Len: "Len",
+    "Nora Finch": "Nora Finch",
+    "Len Briggs": "Len Briggs",
+    Skylight: "Skylight",
+    // v4 Birch Lane
+    "Baker Mabel": "Baker Mabel",
+    "Crumb": "Crumb",
+    "Garage laser": "Garage laser",
+    "Stockroom": "Stockroom",
+    "Service bay": "Service bay",
+    "Henderson garage": "Henderson garage",
+    "Henderson loft": "Henderson loft",
+    "Len’s workshop": "Len’s workshop",
+    "Len’s skylight": "Len’s skylight",
+    "Stockroom door": "Stockroom door",
+    "Roof vent": "Roof vent",
+    "Side door": "Side door",
+    "Loft hatch": "Loft hatch",
+    "Workshop door": "Workshop door",
+    "I knead five more minutes…": "I knead five more minutes…",
+    "I’m asleep for security reasons…": "I’m asleep for security reasons…",
+    "There’s the tick… oh. It’s my watch…": "There’s the tick… oh. It’s my watch…",
     // v4 L9 1955
     Doc: "Doc",
     Buff: "Buff",
@@ -2031,13 +2138,13 @@ export const en = {
     location: 'Birch Lane · Maple Court edge',
     blurb: 'One porch light, one door lip, zero clock.',
     re: 'Field Check #{num}-B — Off Training',
-    body: "The laundromat van turned into Maple Court, and Head Office just dumped a three-specimen shift on my desk. Before sunrise goes live, run one unpaid drill on Birch Lane: trip a porch sensor, clear a door lip, and don't wake the decoy.",
+    body: "Head Office wants a bulk order in Maple Court. First, a drill on Birch Lane. Trip a porch sensor, clear a door lip and let the decoy sleep.",
     joke: "No stars, no Glorbs, no permanent record—unless you break the saucer. My pension is eleven weeks away, Zib. Please don't ruin it.",
     signoff: '— Vrell. Unpaid drill, paid expectations.',
     start: 'Run Field Check',
-    skip: 'Skip to Order #{num}',
+    skip: "Skip to the bakery",
     replay: 'Replay Field Check',
-    continueToOrder: 'Start Order #{num}',
+    continueToOrder: "Start the bakery call",
     prompts: {
       porch: 'Pass the porch sensor — slide out to cool the fuse.',
       ring: 'Hover in the mint ring to lock on.',
@@ -2045,10 +2152,10 @@ export const en = {
       // v4 council: the clatter demo, a clipboard dropped down the beam
       clatter: 'A clipboard fell! Watch both meters.',
       retry: 'Retries reset this room, not your whole shift.',
-      complete: '1 of 3 logged. Live shifts share one sunrise clock.',
+      complete: "One logged. On a live shift the clock keeps running in every room. First live call: Birch Lane Bakery.",
     },
     completeTitle: 'FIELD CHECK PASSED',
-    completeComment: "Adequate. Your temporary lanyard is in the tray. Sunrise starts on Maple Court—don't get seen by Mrs. Pruitt.",
+    completeComment: "Keep your temporary lanyard handy.",
   },
   // v4 map collectibles
   mapCollectibles: {
@@ -2058,6 +2165,9 @@ export const en = {
     toast: 'Collected: {name}',
     flyerHeader: 'LOST',
     items: {
+      // v4 Birch Lane
+      cherry_pie: { name: "Cherry pie", memoHint: "a cherry pie", comment: "There’s a note under the pie. ‘Bring back the tin.’", missedComment: "You left the pie. Crumb sat in it." },
+      garden_gnome: { name: "Garden gnome", memoHint: "garden gnome", comment: "He’s requested a window seat. And a little umbrella in his drink.", missedComment: "The gnome stayed. Tomorrow he’s trying the bus." },
       // v4 L9 1955
       time_car: {
         name: "Time car",
@@ -2164,6 +2274,10 @@ export const en = {
       reportCount: 'Report #{n} · ×{count}',
       workOrderLabel: 'Work order',
       entries: {
+        // v4 Birch Lane
+        mabel: { name: "Baker Mabel", age: "55", height: "163 cm", weight: "71 kg", desc: "Bakes a breakfast roll for Larry from the laundromat every morning. He has never been awake to collect it." },
+        nora: { name: "Nora Finch", age: "46", height: "168 cm", weight: "73 kg", desc: "Sorts her key list by the door each key ought to open. There’s a column for surprises." },
+        len: { name: "Len Briggs", age: "62", height: "177 cm", weight: "81 kg", desc: "Has borrowed the Hendersons’ tools for so long he calls it ‘storage’. They’re too polite to ask." },
         doyle: {
           name: 'Farmer Doyle',
           age: '58',
@@ -2332,6 +2446,10 @@ export const en = {
       addendum3: 'ADDENDUM · 3RD VISIT',
       addendum10: 'ADDENDUM · 10TH VISIT',
       repeats: {
+        // v4 Birch Lane
+        mabel: { at3: "Poked the saucer wall and said it needed another ten minutes.", at10: "Tried our complimentary biscuit. Sent it back. Called it a cracker with ambitions." },
+        nora: { at3: "Took the spare saucer key home for safekeeping. She says it’s on the list. She won’t say which list.", at10: "Found out the fern was plastic. Watered it anyway, out of respect." },
+        len: { at3: "Serviced the saucer while in the hold. It now has a bell. Nobody knows where he got the bell.", at10: "Fitted the saucer with stabilisers. Now it turns like a pram." },
         doyle: {
           at3: "Tucks his prize marrow under one arm at bedtime now so the saucer won't leave it behind.",
           at10: "Lines the farm with half-full glasses of water and sleeps with a baseball bat. Still hasn't hit us.",
@@ -2443,6 +2561,9 @@ export const en = {
       unfiledDetail: '{hint} Hover slowly over the mint glint during Work Order #{num} to bring it aboard.',
       memoHintFallback: 'Shift memo mentions "{hint}".',
       descriptions: {
+        // v4 Birch Lane
+        cherry_pie: "Its steam curled into a little finger and beckoned. Zib followed it by the nose.",
+        garden_gnome: "Holds a fishing rod over a pond that was filled in years ago. Still hopeful.",
         // v4 L9 1955
         time_car: 'Brushed stainless coupe with gull-wing doors, scorched tyres and zero permits. Propulsion refuses to let Zib test what happens at 88.',
         slipper_flyer: 'Photocopied in frantic Comic Sans with one tear-off tab already missing. Whoever took that number is about to be very disappointed.',
@@ -2454,6 +2575,9 @@ export const en = {
         krix: "Our infamous ex-intern, still clutching Farmer Doyle's toaster. Insists a shiny black appliance counts as alien technology.",
       } satisfies Record<string, string>,
       statuses: {
+        // v4 Birch Lane
+        cherry_pie: "Half eaten. Vrell denies everything. There’s cherry on his clipboard.",
+        garden_gnome: "On holiday at last.",
         // v4 L9 1955
         time_car: "Impounded · Capped at 87 mph",
         slipper_flyer: "Pinned to Vrell's corkboard",
@@ -2465,6 +2589,9 @@ export const en = {
         krix: 'Under HR review',
       } satisfies Record<string, string>,
       hints: {
+        // v4 Birch Lane
+        cherry_pie: "Cooling on the bakery’s back windowsill.",
+        garden_gnome: "By Len’s east drive. Bring a passport.",
         // v4 L9 1955
         time_car: "Check the shift memo for an unlicensed gull-wing coupe racing the clock tower before 10:04.",
         slipper_flyer: 'The shift memo mentions a desperate missing-footwear notice near the laundromat.',
@@ -2477,6 +2604,13 @@ export const en = {
       } satisfies Record<string, string>,
     },
     descriptions: {
+      // v4 Birch Lane
+      "sourdough starter": "Mabel’s oldest employee. Fed twice a day, never paid. Zib says they relate.",
+      "kitchen timer": "Goes off at four and wakes the whole street. Except Mabel. The street has asked us to keep it.",
+      "house-sitting checklist": "Bring the bins in. If Gary drops by, pretend to be on the phone.",
+      "magnetic parts dish": "Contains one screw. The household is waiting to find out what wobbles.",
+      "bicycle bell": "The only thing in Len’s workshop that belongs to Len. He thinks.",
+      "biscuit tin": "Contains bolts. The tin marked BOLTS contains biscuits. Len says the system works.",
       // v4 L9 1955
       "spare flex capacitor": "Three blinking tubes wired inside a metal box. Makes time travel possible—and voids every warranty in the galaxy.",
       "yellow hazmat suit": "Blinding canary vinyl with a hairdryer holster. Officially listed in Earth folklore as \"typical Martian evening wear\".",

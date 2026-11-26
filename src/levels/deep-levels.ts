@@ -1,4 +1,5 @@
 // L3 and L4: the deep levels (docs/GDD-2-deeper.md). Map data only.
+import { en } from '../i18n/en';
 import { ART } from '../art-manifest';
 import { TRAFFIC_LANE, type HazardDef } from '../flight/hazards';
 import type { DeepLevelDef, DeepTarget, EntryDef, PropDef } from './types';
@@ -88,7 +89,7 @@ const L3_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
     short: 'Barb',
     building: BARB,
     entries: [
-      entry(BARB, 'barb_chimney', 'Chimney', 'short, sooty', [70, 116], 'below'),
+      { ...entry(BARB, 'barb_chimney', 'Chimney', 'short, sooty', [70, 116], 'below'), recommended: true },
       entry(BARB, 'barb_backdoor', 'Back door', 'long, Biscuit', [199, 25], 'above'),
     ],
   },
@@ -220,13 +221,7 @@ export const LEVEL3 = {
   budgetSec: 420,
   parMarginSec: 160,
   hours: [2, 6],
-  memo: {
-    re: 'Work Order #{num} — Maple Court (bulk order)',
-    body:
-      "Training is over. Maple Court has three targets before dawn: Dentist Dave, Coach Barb, and Gary from Neighbourhood Watch. Dodge the cruiser and Mrs. Pruitt's binoculars—she hasn't slept since 1994 and logs everything in a binder.",
-    joke:
-      "Gary's garage lasers have caught Gary eleven times—don't become entry twelve. Also, a volunteer astronomer is camped on Birch Lane with a SETI dish, if you fancy a detour.",
-  },
+  memo: { re: en.levels.level3.re, body: en.levels.level3.body, joke: en.levels.level3.joke },
   map: {
     theme: 'suburb',
     // v4 map collectibles: volunteer astronomer camped on the grass pullout at the east end of Birch Lane with a portable SETI dish.

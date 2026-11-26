@@ -13,7 +13,7 @@ import { clamp, targetHeadKey } from '../../ui/draw';
 import { HUD_ROW, type FuseState } from '../../ui/hud';
 import { C } from '../../ui/theme';
 import { artSprite, artTex } from '../../ui/views/art';
-import { HudButton, HudFuse, HudPanel, HudPrompt, HudSunClock } from '../../ui/views/hud';
+import { HudButton, HudFuse, HudPanel, HudPrompt, HudSunClock, HudTimer } from '../../ui/views/hud';
 import type { DeepFlightScene } from '../deep-scene';
 import { propSize } from '../props';
 import { RING_R, SUSPICION } from '../sim';
@@ -165,18 +165,19 @@ class TargetChip {
 
 class DeliveredBanner {
   readonly root = new Container();
-  private readonly states = [0, 1, 2, 3].map((n) => fmt(tr().flight.countOf, { n }));
+  private readonly states: string[];
   private readonly counts = new Label(TOTAL);
   private readonly empty: Graphics[] = [];
   private readonly lit: Graphics[] = [];
 
-  constructor() {
+  constructor(private readonly total: number) {
+    this.states = Array.from({ length: total + 1 }, (_, n) => fmt(tr().flight.countOf, { n, total }));
     this.root.position.set(VIEW_W / 2, 300);
     const card = new HudPanel();
     card.set(300, 84, C.mint);
     card.position.set(-150, -42);
     this.root.addChild(card, new Label(SHIFT).set(tr().flight.secured, 0, -20, 270), this.counts);
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < this.total; i++) {
       const off = new Graphics().circle(0, 0, 10).fill('#120d2b').stroke({ color: '#6b63a3', width: 2.5 });
       const on = new Graphics().circle(0, 0, 10).fill(C.mint).stroke({ color: C.ink, width: 2.5 });
       off.position.set(-118 + i * 30, 14);
@@ -191,7 +192,7 @@ class DeliveredBanner {
     const age = 2.6 - time;
     this.root.alpha = clamp(Math.min(age * 6, time * 2.5), 0, 1);
     this.root.scale.set(rm ? 1 : easeOutBack(age / 0.3));
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < this.total; i++) {
       const landed = i < delivered - 1 || (i === delivered - 1 && age > 0.45);
       const hit = i === delivered - 1 && !rm ? 1 + 0.6 * Math.max(0, 1 - Math.abs(age - 0.5) * 6) : 1;
       this.empty[i]!.visible = !landed;
@@ -199,7 +200,7 @@ class DeliveredBanner {
       if (landed) this.lit[i]!.scale.set(hit);
       else this.empty[i]!.scale.set(hit);
     }
-    this.counts.set(this.states[Math.min(3, delivered)]!, 60, 15, 150);
+    this.counts.set(this.states[Math.min(this.total, delivered)]!, 60, 15, 150);
   }
 }
 
@@ -207,12 +208,12 @@ export class DeepFlightHud {
   readonly root = new Container();
   private readonly quit = new HudButton('close');
   private readonly fuse: HudFuse;
-  private readonly sun: HudSunClock;
+  private readonly sun: HudSunClock | HudTimer;
   private readonly fuseState: FuseState = { value: 0, exposed: false, t: 0, reduced: false, seconds: 1 };
   private readonly chips: TargetChip[];
   private readonly map: MiniMap;
   private readonly banner: FlightBanner;
-  private readonly delivered = new DeliveredBanner();
+  private readonly delivered: DeliveredBanner;
   private readonly zib: ZibBubble;
   private readonly hint = new HudPrompt();
   /** v4 council: the lesson hint sits above the saucer while the saucer is low on screen. */
@@ -228,15 +229,16 @@ export class DeepFlightHud {
     const { assets } = s.ctx;
     const words = tr().flight;
     const m = s.level.map;
+    this.delivered = new DeliveredBanner(m.targets.length);
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
     const storm = s.level.id === 'level9';
-    this.sun = new HudSunClock(storm ? null : artTex(assets, 'ui/sunrise_clock'),
+    this.sun = s.level.clockMode === 'elapsed' ? new HudTimer() : new HudSunClock(storm ? null : artTex(assets, 'ui/sunrise_clock'),
       storm ? tr().crestValley.left : s.level.id === 'level8' ? tr().timeTrial.left : undefined, storm);
     this.fuseState.seconds = 1 / (SUSPICION.rate * s.sim.mult);
     const fuse = Math.round(this.fuseState.seconds * 10) / 10;
     this.banner = new FlightBanner(400, 86,
       new Label(SHIFT).set(s.bannerHeading, VIEW_W / 2, 424, VIEW_W - 150),
-      new Label(COLLECT).set(storm ? tr().crestValley.banner : s.level.id === 'level8' ? tr().timeTrial.banner : words.collectAll, VIEW_W / 2, 452, VIEW_W - 150),
+      new Label(COLLECT).set(s.bannerBody, VIEW_W / 2, 452, VIEW_W - 150),
       new Label(SEEN_RULE).set(s.level.id === 'level8' ? tr().timeTrial.hover : fmt(words.seenRule, { s: num(fuse, Number.isInteger(fuse) ? 0 : 1) }), VIEW_W / 2, 474, VIEW_W - 150),
     );
     this.map = new MiniMap(s);
@@ -280,7 +282,8 @@ export class DeepFlightHud {
       this.clockSec = sec;
       this.clock = run.clockText(getLang());
     }
-    this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.deadlineWarning, t, rm);
+    if (this.sun instanceof HudTimer) this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock);
+    else this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.deadlineWarning, t, rm);
     const targets = s.level.map.targets;
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i]!;

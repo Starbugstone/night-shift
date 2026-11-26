@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import type { AbductResult, Assets, FlightResult, Scene } from '../contracts';
 import { deepComment, storyFirstClear, sunriseMemo } from '../levels/humor'; // v4 story
 import type { DeepRun } from '../levels/run';
+import { deepPar } from '../levels/types';
 import { VIEW_W } from '../contracts';
 import { P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, PC, Particles, easeOutBack, easeOutCubic } from '../core/fx';
 import { ParticleView } from '../core/gfx/particles';
@@ -54,6 +55,7 @@ export interface ReportModel {
   rows: Array<[string, string]>;
   stamp: 'delivered' | 'failed' | 'sunrise' | 'storm';
   archive?: boolean;
+  bakerySign?: boolean;
   starLabels: readonly string[];
   comment: string;
   delivered: boolean;
@@ -106,16 +108,25 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   const pickup = lv.map.collectible && mapCollectibleReport(lv.map.collectible.id, run.collectible?.collectedId, outcome.save.reports);
   const names = run.order.map((i) => gt(lv.map.targets[i]!.short)).join(r.listSep);
   const n = run.deliveredCount;
+  const total = lv.map.targets.length;
+  const firstClear = outcome.newStarFlags[0];
   const dignityCount = lv.id === 'level8' ? run.totals.rooms.length : n;
-  // Round the margin down and derive the used time from it: the two still add up to the budget, and
-  // a 24.85 s margin reads 0:24, not a 0:25 that looks like it earned the 25 s Night owl.
-  const spareSeconds = Math.max(0, Math.floor(run.budget - run.elapsed));
-  const usedSeconds = run.budget - spareSeconds;
+  let time: string;
+  if (lv.clockMode === 'elapsed') {
+    time = fmt(tr().birch.timeAgainstPar, { used: fmtTime(Math.ceil(run.elapsed)), par: fmtTime(deepPar(lv)) });
+  } else if (sunrise) {
+    time = lv.id === 'level9' ? tr().crestValley.ranOut
+      : lv.id === 'level8' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] });
+  } else {
+    // Round down the spare time so a missed par cannot appear to have been met.
+    const spare = Math.floor(run.remaining);
+    time = fmt(r.usedSpare, { used: fmtTime(run.budget - spare), left: fmtTime(spare) });
+  }
   return {
     subtitle: fmt(r.subtitleDeep, { location: tr().levels[lv.id].location }),
     rows: [
-      [r.shiftTime, sunrise ? (lv.id === 'level9' ? tr().crestValley.ranOut : lv.id === 'level8' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] })) : fmt(r.usedSpare, { used: fmtTime(usedSeconds), left: fmtTime(spareSeconds) })],
-      [r.delivered, lv.id === 'level8' ? fmt(tr().timeTrial.count, { n: run.specimenCount }) : names ? fmt(r.deliveredNames, { n, names }) : fmt(r.deliveredValue, { n })],
+      [r.shiftTime, time],
+      [r.delivered, lv.id === 'level8' ? fmt(tr().timeTrial.count, { n: run.specimenCount }) : names ? fmt(r.deliveredNames, { n, total, names }) : fmt(r.deliveredValue, { n, total })],
       [r.spotted, String(run.spotted)],
       [r.failedAbductions, String(run.failedAbductions + run.aborts)],
       [r.bonked, String(run.totals.bonks)],
@@ -125,6 +136,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
     ],
     stamp: sunrise ? (lv.id === 'level9' ? 'storm' : 'sunrise') : 'delivered',
     archive: lv.id === 'level9',
+    bakerySign: lv.id === 'birch_bakery' && outcome.stars[0],
     starLabels: shownStarLabels(lv),
     comment: sunrise
       ? sunriseMemo(outcome.save.reports, lv.id)
@@ -132,9 +144,9 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
           { levelId: lv.id, stars: countStars(outcome.stars), spotted: run.spotted, failed: run.failedAbductions, bonks: run.totals.bonks, remaining: run.remaining, order: run.order, items: run.totals.items, rooms: run.totals.rooms },
           outcome.save.reports,
         ),
-    delivered: !sunrise && n >= 3,
+    delivered: !sunrise && n >= total,
     ...(run.photo ? { photo: run.photo } : {}),
-    cover: coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, seed: outcome.save.reports }),
+    cover: coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, firstClear, seed: outcome.save.reports }),
     headline: tabloidHeadline(lv.id, run.spotted, outcome.save.reports),
     readings: run.probeReadings,
   };
@@ -371,6 +383,14 @@ class ReportView implements SceneView {
       roundRect(new Graphics(), 4, 5, ph.box.w, ph.box.h, 8).fill('rgba(29,22,49,0.16)'),
       idPhoto(assets, model.photo, ph.k),
     );
+    if (model.bakerySign) {
+      const sign = artSprite(assets, 'ui/bakery_open_sign', 80, 45) ?? new Graphics()
+        .roundRect(-40, -19, 80, 37, 6).fill('#385c60').stroke({ color: '#805771', width: 4 })
+        .ellipse(23, 5, 5, 3).circle(18, 1, 2).circle(22, -1, 2).circle(26, 0, 2).fill('#f7dfbb');
+      sign.position.set(ph.box.w * 0.49, ph.box.h - 9);
+      this.photo.addChild(sign, new Label({ size: 14, color: '#fff0c7', weight: 900 })
+        .set(tr().birch.open, sign.x - 8, sign.y, 46));
+    }
     this.paper.addChild(this.photo);
     this.approved = content.approved ? approvedStamp(assets, L.approved, content.approved) : null;
     if (this.approved) this.paper.addChild(this.approved);
