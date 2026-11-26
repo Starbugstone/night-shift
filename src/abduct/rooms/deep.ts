@@ -256,7 +256,7 @@ const nigelHome = building([
 ], [door(1770, 1030, 1386), door(760, 175), door(1700, 212), hatch(700, 555, 'ladder'), door(760, 890, 1386)], [
   swing('Pterodactyl', art('pterodactyl', 1145, 83), 0.58, 2.0, 14),
   laser('Vault grid', box(2058, 14, 10, 672), 6.1, 3.2, 0.95),
-  laser('Skylight grid', box(2298, 178, 318, 10), 5.8, 3.2, 1.8, 14),
+  laser('Skylight grid', box(2298, 178, 318, 10), 5.8, 3.8, 3.3, 14), // v4 difficulty curve (Neon P2): open 3.2 -> 3.8 s, phase 1.8 -> 3.3
   fragile('Snow globe', art('snow_globe', 296, 1095)),
   gate('Cargo shutter', box(1520, 887, 34, 499), 'y', 7, 3.85, 2.2),
 ]);

@@ -145,6 +145,16 @@ Specimens:
 ### L4: "Downtown Graveyard Shift" (Grimsby city centre)
 
 Map ~2160×3840. Sunrise budget 480 s (Night owl: done by 310 s).
+Spawn (2026-11-26 openings rework, zone W-mid): Zib drifts in from the west over the rooftops at
+**(110, 1400)**, north of Market St, so the Mayor is the nearest call. City Hall's south-west roof
+camera (range 480, small sweep) watches the diagonal from West Ave to his elevator and catches the
+straight run; the clean way in is from the north-west, along the north side. Every straight run
+at any ring is caught beyond the opening (`tests/levels-deep.test.ts`): a club door camera watches
+the plaza west of Kev (come from the north), and the West Tower, the plaza tower (over the tram stop
+beside the wire gap) and the museum forecourt watch West Ave down to Nigel (come through the gap). The north pigeon loop
+flies over the east side. Neon P2 trimmed the outer highrise cameras (south-east, west and east
+towers) and three outer office windows, and widened the traffic gaps (~20 %); the Skylight grid opens
+3.8 s in every 5.8 s (was 3.2 s).
 Flight hazards:
 - a **police helicopter**, whose searchlight sweeps a big circle along a loop;
 - **two patrol cars**;

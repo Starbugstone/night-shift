@@ -351,7 +351,7 @@ const hr = (k: 'a' | 'b' | 'c', x: number, y: number): PropDef => ({
   tint: k === 'a' ? '#3d4466' : k === 'b' ? '#4a3d5e' : '#35505a',
 });
 
-// highrises that carry cameras or insomniac windows
+// highrises (some carry an insomniac window)
 const HR_SE = hr('a', 1880, 2840);
 const HR_W = hr('b', 240, 2240);
 const HR_E = hr('c', 1880, 1300);
@@ -425,21 +425,32 @@ const L4_HAZARDS: HazardDef[] = [
     barR: 0,
   },
   // traffic: the ring road (south) and Market St (middle), both ways, one lane either side of the line
-  { type: 'traffic', dir: 'h', at: 3420 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 380, gap: 560, offset: 0, coneRange: 210, coneHalf: 0.32, keys: ['flight/taxi_top', 'flight/sedan_top'] },
-  { type: 'traffic', dir: 'h', at: 3420 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 340, gap: 640, offset: 200, coneRange: 210, coneHalf: 0.32, keys: ['flight/sedan_top', 'flight/taxi_top', 'flight/sedan_top'] },
-  { type: 'traffic', dir: 'h', at: 1600 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 360, gap: 600, offset: 120, coneRange: 200, coneHalf: 0.32, keys: ['flight/taxi_top'] },
-  { type: 'traffic', dir: 'h', at: 1600 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 360, gap: 620, offset: 400, coneRange: 200, coneHalf: 0.32, keys: ['flight/sedan_top'] },
+  // v4 openings (Neon P2): wider gaps between cars so the city reads instead of swamping a thumb
+  { type: 'traffic', dir: 'h', at: 3420 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 380, gap: 680, offset: 0, coneRange: 210, coneHalf: 0.32, keys: ['flight/taxi_top', 'flight/sedan_top'] },
+  { type: 'traffic', dir: 'h', at: 3420 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 340, gap: 760, offset: 200, coneRange: 210, coneHalf: 0.32, keys: ['flight/sedan_top', 'flight/taxi_top', 'flight/sedan_top'] },
+  { type: 'traffic', dir: 'h', at: 1600 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 360, gap: 720, offset: 120, coneRange: 200, coneHalf: 0.32, keys: ['flight/taxi_top'] },
+  { type: 'traffic', dir: 'h', at: 1600 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 360, gap: 740, offset: 400, coneRange: 200, coneHalf: 0.32, keys: ['flight/sedan_top'] },
   // rooftop cameras: the museum roof (sweeps skylight and loading bay), City Hall, and the route
   roofCam(MUSEUM, 'ne', { range: 290, half: 0.26, base: 2.48, amp: 0.65, rate: 1.65, phase: 0 }, 15),
   roofCam(CITYHALL, 'se', { range: 285, half: 0.29, base: -1.96, amp: 0.35, rate: 1.3, phase: 1.3 }),
+  // v4 openings: from the west spawn the Mayor is the first call. City Hall's south-west camera watches the
+  // diagonal from the west avenue to his elevator; come in from the north-west, along the north side.
+  roofCam(CITYHALL, 'sw', { range: 480, half: 0.6, base: 2.5, amp: 0.15, rate: 0.9, phase: 0 }),
   // Sweeps the roof vent. The south-west fire escape has an approach outside the turning point.
   roofCam(CLUB, 'nw', { range: 280, half: 0.28, base: 0.57, amp: 0.54, rate: 1.45, phase: 0.4 }, 15),
+  // v4 openings: cameras on the approaches from the west spawn. The club's door camera watches the plaza
+  // west of Kev's fire escape; the West Tower's and the museum forecourt's watch West Ave down to Nigel,
+  // and the plaza tower's watches the tram stop beside the wire gap. Come to Kev from the north, and to
+  // Nigel through the tram-wire gap.
+  roofCam(CLUB, 'nw', { range: 520, half: 0.7, base: -2.9, amp: 0.12, rate: 0.9, phase: 0 }, 15),
+  roofCam(HR_PLAZA, 'sw', { range: 300, half: 0.5, base: PI / 2, amp: 0.12, rate: 0.9, phase: 0.5 }, 12),
+  roofCam(HR_W, 'ne', { range: 420, half: 0.5, base: 0.45, amp: 0.12, rate: 0.9, phase: 2 }, 12),
+  roofCam(MUSEUM, 'nw', { range: 480, half: 0.5, base: -1.2, amp: 0.12, rate: 0.9, phase: 1 }, 15),
   // mid-town: CCTV poles in the plaza between the club and Market St
   { type: 'camera', x: 1080, y: 1900, range: 300, half: 0.32, base: 1.85, amp: 0.8, rate: 0.9, phase: 0, mount: 'pole' },
   { type: 'camera', x: 860, y: 2300, range: 280, half: 0.3, base: -0.6, amp: 0.8, rate: 1.2, phase: 2, mount: 'pole' },
-  { type: 'camera', x: 1880, y: 2860, range: 300, half: 0.3, base: PI, amp: 0.75, rate: 1.2, phase: 0 },
-  roofCam(HR_W, 'n', { range: 300, half: 0.3, base: 0.2, amp: 0.8, rate: 1.1, phase: 1 }, 12),
-  roofCam(HR_E, 'n', { range: 300, half: 0.3, base: PI * 0.85, amp: 0.7, rate: 1.3, phase: 2 }, 12),
+  // v4 openings (Neon P2): the outer highrise cameras (south-east, west and east towers) are gone;
+  // they watched no door and only added clutter.
   { type: 'camera', x: 700, y: HR_MID.y - 108, range: 280, half: 0.3, base: PI / 2, amp: 0.8, rate: 1.0, phase: 0.5 },
   // billboards: neon scrambles steering
   { type: 'neon', x: 1080, y: 2700, r: 150, text: 'BURGERS', billboard: true },
@@ -464,10 +475,11 @@ const L4_HAZARDS: HazardDef[] = [
     type: 'flock',
     kind: 'pigeon',
     path: [
+      // v4 openings: the north flock loops over the east side, off the diagonal from the west spawn
       { x: 1980, y: 300 },
       { x: 1800, y: 1300 },
-      { x: 200, y: 1000 },
-      { x: 300, y: 250 },
+      { x: 1150, y: 1150 },
+      { x: 1100, y: 260 },
     ],
     speed: 290,
     r: 50,
@@ -475,12 +487,9 @@ const L4_HAZARDS: HazardDef[] = [
   },
   // The alley window flashes south of the fire escape's holding pocket.
   win(HR_PLAZA, 'e', 2220, 4.6, 1.2, 0.7),
-  win(HR_SE, 'n', 1880, 5.2, 2.2, 0),
   win(HR_W, 's', 260, 4.6, 2.0, 1.3),
   win(HR_E, 's', 1860, 5.0, 2.4, 2.1),
   win(HR_MID, 's', 700, 4.4, 1.8, 0.4),
-  win(HR_NW, 'n', 240, 4.8, 2.2, 3.0),
-  win(HR_NE, 'n', 1900, 5.4, 2.0, 1.0),
   // tram wires over Market St's north kerb (gaps at the middle and the east end)
   { type: 'wire', kind: 'tram', ax: 20, ay: 2440, bx: 560, by: 2440 },
   { type: 'wire', kind: 'tram', ax: 560, ay: 2440, bx: 960, by: 2440 },
@@ -525,7 +534,8 @@ export const LEVEL4 = {
     w: 2160,
     h: 3840,
     fuseSec: 0.9, // v4 difficulty curve (Neon P1): was 0.8
-    start: { x: 1080, y: 3640 },
+    // v4 openings: Zib drifts in from the west over the rooftops, north of Market St (zone W-mid)
+    start: { x: 110, y: 1400 },
     roads: [
       { dir: 'h', at: 3420, from: 0, to: 2160 },
       { dir: 'h', at: 2500, from: 0, to: 2160 },

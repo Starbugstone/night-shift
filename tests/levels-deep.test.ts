@@ -10,6 +10,8 @@ import { LEVEL3, LEVEL4 } from '../src/levels/deep-levels';
 import { LEVELS, ROOM_IDS, deepSlot, isDeep, isRoomId, levelIndexForRoom, levelRooms } from '../src/levels/levels';
 import { DEEP_PAY_MULT, MAX_STARS, UPGRADES, applyDeepRun, computeDeepStars, isLevelUnlocked, totalStars } from '../src/levels/progress';
 import { DeepRun } from '../src/levels/run';
+import { DeepFlightSim } from '../src/flight/deep-sim';
+import { BEELINE_DELAYS } from './difficulty/beeline';
 import { defaultSave, validateSave } from '../src/levels/save';
 
 const LOCK_R = RING_R * LOCK.insideFrac;
@@ -246,6 +248,29 @@ describe('deep maps', () => {
     expect(h.filter((d) => d.type === 'flock' && d.kind === 'pigeon').length).toBeGreaterThanOrEqual(1);
     expect(h.filter((d) => d.type === 'window').length).toBeGreaterThanOrEqual(3);
     expect(h.filter((d) => d.type === 'wire' && d.kind === 'tram').length).toBeGreaterThanOrEqual(1);
+  });
+
+  // v4 openings (2026-11-26): no spawn gate, yet a straight run at any ring is caught on the way.
+  it('L4: a straight run from the west spawn at each of the six rings is spotted beyond the opening, at every tested start time', () => {
+    const { map } = LEVEL4;
+    const DT = 1 / 60;
+    for (const delay of BEELINE_DELAYS) {
+      for (const e of map.targets.flatMap((t) => t.entries)) {
+        const sim = new DeepFlightSim(map, new Set(), delay);
+        while (sim.phase === 'fly' && sim.t < delay + 40) {
+          const s = sim.saucer;
+          const d = Math.hypot(e.x - s.x, e.y - s.y);
+          const k = Math.min(186, d * 1.4) / Math.max(1, d);
+          sim.update(DT, {
+            down: d > 12 || Math.hypot(s.vx, s.vy) > 60, pressed: false, released: false,
+            x: s.x - sim.camX + (e.x - s.x) * k - s.vx * (d < 130 ? 0.35 : 0.1),
+            y: s.y - sim.camY + (e.y - s.y) * k - s.vy * (d < 130 ? 0.35 : 0.1),
+          });
+        }
+        expect(sim.phase, `${e.roomId} from ${delay}s`).toBe('spotted');
+        expect(Math.hypot(sim.saucer.x - map.start.x, sim.saucer.y - map.start.y), `${e.roomId} from ${delay}s`).toBeGreaterThan(600);
+      }
+    }
   });
 });
 
