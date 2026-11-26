@@ -1,4 +1,5 @@
 // Camera, foreground layers, and HUD of the multi-room abduction scene.
+import { EnchanterStaffView, GrailReactionView } from './views/grail';
 import { Container, Graphics, type Sprite } from 'pixi.js';
 import { VIEW_H, VIEW_W, type GameContext } from '../contracts';
 import { GLOW, PC, P_PUFF, P_RING, P_SPARK, P_STAR, P_TWINKLE, Particles } from '../core/fx';
@@ -357,6 +358,8 @@ export class DeepAbductView implements SceneView {
   private readonly night: DeepNight;
   private readonly building: BuildingView;
   private readonly birch?: BirchRoomDecor;
+  private readonly staff?: EnchanterStaffView;
+  private readonly grail?: GrailReactionView;
   private readonly crestValley?: CrestValleyRoomDecor;
   private readonly exit: DeepExit;
   private readonly swell: SwellView;
@@ -437,6 +440,14 @@ export class DeepAbductView implements SceneView {
     world.addChild(this.beam.root);
     if (this.wet) world.addChild(this.wet.back);
     world.addChild(this.sparkle.root, this.item, this.subject);
+    if (sim.room.human === 'tom_enchanter') {
+      this.staff = new EnchanterStaffView();
+      world.addChild(this.staff.root);
+    }
+    if (sim.grail) {
+      this.grail = new GrailReactionView(sim.grail);
+      world.addChild(this.grail.root);
+    }
     if (this.crestValley) world.addChild(this.crestValley.front);
     world.addChild(this.snore.root, this.twitch, this.speech.root, this.bang.root);
     if (this.paperwork) world.addChild(this.paperwork.world);
@@ -468,6 +479,8 @@ export class DeepAbductView implements SceneView {
     this.world.position.set(-cx + Math.sin(t * 94) * shake * 4, -cy + Math.cos(t * 116) * shake * 2.5);
     this.night.sync(cx, cy, deepShift.dawn);
     this.building.sync(cx, cy, t, rm, deepShift.dawn);
+    this.staff?.sync(body, !!sim.interior?.hazards[0]?.tell, !!sim.failure || sim.delivered);
+    this.grail?.sync(body, sim.elapsed, rm, !!sim.failure || sim.delivered);
     this.crestValley?.sync(deepShift.elapsed ?? t, rm);
     this.birch?.sync(rm);
     this.exit.sync(cx, cy, rm);

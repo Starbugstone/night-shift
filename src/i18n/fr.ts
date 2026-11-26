@@ -216,6 +216,18 @@ export const fr: Strings = {
       re: "Ordre n°{num} · En l’absence des Henderson",
     },
     // v4 L9 1955
+    // v4 1122
+    level10: {
+      title: "Sacré Graal !",
+      location: "Fort de Grimsby · 1122",
+      blurb: "Trois témoins. Les vaches sont hostiles.",
+      human: "Rodney, le Chevalier et Tom",
+      collect: "Trois témoins",
+      re: "Ordre n°{num} · Sacré Graal !",
+      body: "Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ses trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le service juridique annule les signatures. Près de la haie à l’ouest, des chevaliers réclament un jardinet.",
+      joke: "Les Français lancent des vaches. Si la route meugle, dégagez.",
+      signoff: "— Vrell. Pas de joute pendant le service.",
+    },
     level9: {
       title: "Fin de quart à 22 h 04",
       location: "Crest Valley · 12 nov. 1955",
@@ -333,6 +345,13 @@ export const fr: Strings = {
     nora_loft: { route: "Trappe du grenier", difficulty: "coffre et laser" },
     len_workshop: { route: "Porte de l’atelier", difficulty: "comptoir et étau" },
     len_skylight: { route: "Lucarne", difficulty: "guidon et montée" },
+    // v4 1122
+    rodney_flap: {"route": "Rabat de service", "difficulty": "râtelier et foin"},
+    rodney_loft: {"route": "Grenier aux bannières", "difficulty": "coffre et écu"},
+    black_knight_arch: {"route": "Arche du péage", "difficulty": "comptoir et seuil"},
+    black_knight_loft: {"route": "Combles de la herse", "difficulty": "roue et herse"},
+    tom_stair: {"route": "Escalier de pierre", "difficulty": "lutrin et étincelles"},
+    tom_smoke: {"route": "Trou de fumée", "difficulty": "conduit et étincelles"},
     inventor_balcony: { route: "Balcon de l'horloge", difficulty: "engrenages et câble" },
     inventor_service: { route: "Porte de service", difficulty: "cloche et grille" },
     bully_transom: { route: "Imposte de l'auvent", difficulty: "jukebox et ventilo" },
@@ -391,6 +410,18 @@ export const fr: Strings = {
   ],
 
   // v4 L9 1955
+  // v4 1122
+  grail: {
+    archive: "ARCHIVES 1122",
+    board: "TROP HAUT",
+    ni: "Ni !",
+    taunts: ["Je pète dans votre espace aérien, casserole volante !", "Un recensement ? On en a déjà un !", "Votre mère était un hamster !", "Je dois corriger l’espèce ? Il va me falloir un formulaire."],
+    rabbit: ["Oh, un lapin !", "Fuyons ! Fuyons !"],
+    ghost: "Le pont rouvre. Poste du Chevalier noir « provisoirement désarmé ».",
+    greenery: "Les chevaliers se taisent enfin. Les voisins soupçonnent un jardinet.",
+    retreat: "Courage… on repart par où on est venus !",
+    knight: ["Ce n’est qu’une bosse.", "Une blessure superficielle.", "Bon. Disons match nul."],
+  },
   crestValley: {
     left: 'HEURE',
     banner: 'Les trois spécimens avant 22 h 10',
@@ -553,6 +584,8 @@ export const fr: Strings = {
       birch_bakery: ["LES MICHES DE MABEL S’ENVOLENT EN PLEINE NUIT"],
       birch_neighbours: ["MME PRUITT SIGNALE UNE SOUCOUPE POUR LA 37ᵉ FOIS. ET CETTE FOIS, ELLE A RAISON."],
       // v4 L9 1955
+      // v4 1122
+      level10: ["UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.", "LES VACHES NIENT TOUT EN BLOC"],
       level9: [
         "LA FOUDRE FIGE L'HORLOGE À 22 H 04 — UN ENJOLIVEUR VOLANT ACCUSÉ",
         'ENJOLIVEUR CHROMÉ GRANDE RUE — LA BRUTE LOCALE TOUJOURS K.O. AU CAFÉ',
@@ -654,6 +687,11 @@ export const fr: Strings = {
         photographer: 'Pièce A · photo officielle de croisière, 14,99 €',
         steward: 'Pièce A · téléphone du steward, pont 9',
         // v4 L9 1955
+        // v4 1122
+        grailSentry: "Pièce A · depuis les remparts",
+        cow: "Pièce A · trace de sabot",
+        clop: "Pièce A · cavalerie à noix de coco",
+        rabbit: "Pièce A · morsures",
         eraLight: 'Pièce A · photo du guetteur',
         eraWatcher: 'Pièce A · depuis la vitre du café',
         eraPolice: 'Pièce A · depuis la voiture du shérif',
@@ -800,6 +838,8 @@ export const fr: Strings = {
       birchRetry: ["Je contourne la lampe, cette fois. Elle sait à quoi je ressemble."],
       birchHandprint: ["Pris la main dans le sac. De farine. Et c’est même pas ma main."],
       // v4 L9 1955
+      // v4 1122
+      start10: ["Pas de chevaux. Des noix de coco. Vrell, c’est ça, la voiture de fonction ?"],
       start9: [
         "Nom de Zeus, 1955 ! Là où on vole, pas besoin de route. File à l'ouest, Zib !",
         "12 nov. 1955 ! Trois témoins — et coupe la route à la voiture par l'ouest !",
@@ -825,6 +865,11 @@ export const fr: Strings = {
         'Chopée ! Une voiture temporelle en soute — prends ÇA, le continuum !',
       ],
       stormClosing: ["Encore trente secondes d'orage. Après ça, notre laissez-passer expire !"],
+      // v4 1122
+      grailSentry: ["À couvert derrière le rempart !"],
+      cow: ["Du lait en chute libre !"],
+      clop: ["Ces sabots sont des noix."],
+      rabbit: ["Vous avez vu ses dents ?"],
       eraLight: ["Cette lampe ME suit ! Dans l'ombre, vite !", 'Un projecteur ! Fais le nuage. Un nuage tout à fait ordinaire.'],
       eraWatcher: ['Le client du café regarde droit par la fenêtre !'],
       eraPolice: ['Une voiture de police de 1955. Ses phares y voient très bien !'],
@@ -896,6 +941,11 @@ export const fr: Strings = {
       photographer: ['Le photographe du bord tient son cliché. En vente à la boutique dès le petit-déj, 14,99 € encadré.', 'Pose longue, mise au point parfaite. La compagnie vous met dans sa prochaine brochure.'],
       steward: ["Un steward note « un feu de pont non autorisé ». Le troisième cette semaine. Personne n'explique les deux autres.", "La lampe vous trouve. Le steward demande votre carte d'embarquement."],
       // v4 L9 1955
+      // v4 1122
+      grailSentry: ["Un guetteur français a déposé une injure en bonne et due forme."],
+      cow: ["Une vache vous a identifié lors d’une confrontation."],
+      clop: ["Les cavaliers sont à pied. Ils vont quand même plus vite que le service juridique."],
+      rabbit: ["Le lapin a pris des notes. Avec les dents."],
       eraLight: ['Le projecteur vous épingle en plein vol. Trois lycéens jurent avoir vu une Buick volante.', 'Pris sous le spot du bal. Demain matin, la Gazette titre « ENJOLIVEUR AU BAL ».'],
       eraWatcher: ['Un habitué du Café Lyle lâche son milk-shake et jure que la vitrine à tartes est hantée.', 'Un client à la fenêtre dessine votre soucoupe sur une serviette. Plutôt ressemblant.'],
       eraPolice: ['Un policier de 1955 signale « un plat à tarte volant, cap au nord ». Le central lui conseille le déca.', 'Pris dans des phares chromés. Le shérif lance un avis sur « un ballon-sonde très impoli ».'],
@@ -916,6 +966,11 @@ export const fr: Strings = {
       photographer: ['OUISTITI !', 'ON NE BOUGE PLUS !'],
       steward: ["CARTE D'EMBARQUEMENT !", 'MONSIEUR ! MONSIEUR !'],
       // v4 L9 1955
+      // v4 1122
+      grailSentry: ["GARDES !"],
+      cow: ["MEUH !"],
+      clop: ["CLOP CLOP !"],
+      rabbit: ["CRAC !"],
       eraLight: ["C'EST QUOI ÇA ?!", 'UNE SOUCOUPE !'],
       eraWatcher: ['HÉ, LYLE ! REGARDE !', 'MON MILK-SHAKE !'],
       eraPolice: ['RANGEZ-VOUS, ENJOLIVEUR !', 'APPELEZ LE SHÉRIF !'],
@@ -940,6 +995,11 @@ export const fr: Strings = {
       // L6 clinic code
       ambulance: ["Une ambulance m'a eu. Maintenant j'ai vraiment besoin de m'allonger.", "Gyrophare ET phares. Surveille les flèches du garage avant qu'elle sorte, Zib."],
       // v4 L9 1955
+      // v4 1122
+      grailSentry: ["La prochaine fois, la rive ouest."],
+      cow: ["Une vache vient de clouer une soucoupe au sol."],
+      clop: ["Un cheval à pied vient de me doubler."],
+      rabbit: ["Je le préférais la gueule fermée."],
       eraLight: ["Pris dans un projecteur de 1955. Fais le nuage d'orage, Zib — un nuage discret.", "Grillé sous le faisceau ! On reprend avant que quelqu'un écrive un roman de SF sur moi."],
       eraWatcher: ["Le client du café m'a vu ! Reste loin de la vitrine de Lyle au prochain passage.", "Vu par la fenêtre du café ! La prochaine fois, je passe par l'allée."],
       eraPolice: ["Une patrouille de 1955 m'a eu ! Même leurs phares d'époque éclairent trop !", "Repéré par la voiture de police. Retour au dernier témoin — personne n'a rien vu."],
@@ -1032,6 +1092,8 @@ export const fr: Strings = {
       birch_bakery: "Miettes a ouvert à cinq heures. Il a fait tomber le terminal de paiement. Espèces uniquement.",
       birch_neighbours: "Les deux sont à bord. Mme Pruitt a inscrit la soucoupe dans son registre comme extension sans permis de construire.",
       // v4 L9 1955
+      // v4 1122
+      level10: "Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal lui a donné deux minutes pour sortir une tartine.",
       level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
       level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la D9 vers la ville : le veilleur de Spin City vous attend.',
       level2: "Larry est recensé. La compta a remonté la piste de quarante chaussettes jusqu’à votre soucoupe. Votre badge provisoire est dans le bac. Deux missions chemin des Bouleaux, puis la commande en gros.",
@@ -1071,6 +1133,13 @@ export const fr: Strings = {
     "bicycle bell": { one: "{n} sonnette de vélo", other: "{n} sonnettes de vélo" },
     "biscuit tin": { one: "{n} boîte à biscuits", other: "{n} boîtes à biscuits" },
     // v4 L9 1955
+    // v4 1122
+    "coconut halves": {"one": "{n} Demi-noix de coco", "other": "{n} paires de demi-noix de coco"},
+    "stuffed swallow": {"one": "{n} Hirondelle empaillée", "other": "{n} hirondelles empaillées"},
+    "black knight’s arm": {"one": "{n} Bras du Chevalier noir", "other": "{n} bras du Chevalier noir"},
+    "black knight’s shield": {"one": "{n} Bouclier du Chevalier noir", "other": "{n} boucliers du Chevalier noir"},
+    "holy hand grenade": {"one": "{n} Sainte Grenade", "other": "{n} Saintes Grenades"},
+    "enchanter’s horns": {"one": "{n} Cornes de l’enchanteur", "other": "{n} paires de cornes de l’enchanteur"},
     "spare flex capacitor": { one: "{n} convecteur temporaire", other: "{n} convecteurs temporaires" },
     "yellow hazmat suit": { one: "{n} combinaison jaune", other: "{n} combinaisons jaunes" },
     "red puffy vest": { one: "{n} doudoune rouge", other: "{n} doudounes rouges" },
@@ -1693,6 +1762,46 @@ export const fr: Strings = {
     "Loading door": "Porte de livraison",
     "Chaperone": "Chaperon",
     "Café watcher": "Client du café",
+    // v4 1122
+    "Supply flap": "Rabat de service",
+    "Banner loft": "Grenier aux bannières",
+    "Toll arch": "Arche du péage",
+    "Portcullis loft": "Combles de la herse",
+    "Stone stair": "Escalier de pierre",
+    "Smoke hole": "Trou de fumée",
+    "SUPPLY FLAP": "RABAT DE SERVICE",
+    "BANNER LOFT": "GRENIER AUX BANNIÈRES",
+    "TOLL ARCH": "ARCHE DU PÉAGE",
+    "PORTCULLIS LOFT": "COMBLES DE LA HERSE",
+    "STONE STAIR": "ESCALIER DE PIERRE",
+    "SMOKE HOLE": "TROU DE FUMÉE",
+    "Bravely… back the way we came!": "Courage… on repart par où on est venus !",
+    "I’ll guard the rear… from home…": "Je couvre nos arrières… de chez moi…",
+    "‘Tis but a dent.": "Ce n’est qu’une bosse.",
+    "Merely a flesh wound.": "Une blessure superficielle.",
+    "Fine. We’ll call it a draw.": "Bon. Disons match nul.",
+    "Some call me Tim. The sign painter won’t take it back.": "Certains m’appellent Tim. Le peintre ne veut pas reprendre l’enseigne.",
+    "Just a pilot light… stand back… further…": "Juste une petite flamme… reculez… encore…",
+    "Rodney": "Rodney",
+    "Black Knight": "Chevalier noir",
+    "Tom": "Tom",
+    "Pavilion": "Pavillon",
+    "Bridge gatehouse": "Corps de garde",
+    "Candle tower": "Tour aux bougies",
+    "West gallery": "Galerie ouest",
+    "Upper gallery": "Galerie haute",
+    "Hanging shield": "Écu suspendu",
+    "Portcullis": "Herse",
+    "Sleep-sparks": "Étincelles de sommeil",
+    "Shield rack": "Râtelier",
+    "Toll counter": "Comptoir du péage",
+    "Stone bookstand": "Lutrin de pierre",
+    "Banner chest": "Coffre aux bannières",
+    "Winding wheel": "Treuil",
+    "Flue lip": "Rebord du conduit",
+    "Sir Rodney the Not-Quite-So-Brave": "Sire Rodney le Pas-si-Brave",
+    "The Black Knight": "Le Chevalier noir",
+    "Tom the Enchanter": "Tom l’Enchanteur",
     "CLOCK BALCONY": "BALCON DE L'HORLOGE",
     "SERVICE DOOR": "PORTE DE SERVICE",
     "AWNING TRANSOM": "IMPOSTE DE L'AUVENT",
@@ -2107,6 +2216,13 @@ export const fr: Strings = {
       cherry_pie: { name: "Tarte aux cerises", memoHint: "une tarte aux cerises", comment: "Il y a un mot sous la tarte. “Rendez le moule.”", missedComment: "Vous avez laissé la tarte. Miettes s’est assis dedans." },
       garden_gnome: { name: "Nain de jardin", memoHint: "nain de jardin", comment: "Il a demandé une place côté hublot. Et une petite ombrelle dans son verre.", missedComment: "Le nain est resté. Demain, il tente le bus." },
       // v4 L9 1955
+      // v4 1122
+      shrubbery: {
+        name: "Jardinet",
+        memoHint: "un jardinet",
+        comment: "Vous avez rapporté un jardinet. Maintenant ils veulent qu’on abatte un arbre avec un hareng. Je raccroche.",
+        missedComment: "Pas de jardinet. Les chevaliers disent Ni à la compta. La compta répond Ni.",
+      },
       time_car: {
         name: "Voiture temporelle",
         memoHint: "voiture temporelle",
@@ -2356,6 +2472,28 @@ export const fr: Strings = {
           weight: '57 kg',
           desc: 'Greffière préhistorique à lunettes de pierre, reine de la paperasse. Elle a voulu breveter notre rayon avant le petit-déj.',
         },
+        // v4 1122
+        rodney: {
+          name: "Sire Rodney le Pas-si-Brave",
+          age: "32 ans",
+          height: "173 cm",
+          weight: "71 kg",
+          desc: "A demandé au maréchal-ferrant de ferrer son cheval. L’écuyer s’est retrouvé avec de tout petits fers aux pieds.",
+        },
+        black_knight: {
+          name: "Le Chevalier noir",
+          age: "41 ans",
+          height: "188 cm",
+          weight: "91 kg",
+          desc: "Son armure tient par orgueil. Les attaches de rechange sont encore sous emballage.",
+        },
+        tom_enchanter: {
+          name: "Tom l’Enchanteur",
+          age: "56 ans",
+          height: "169 cm",
+          weight: "74 kg",
+          desc: "A tenu à allumer lui-même ses bougies d’anniversaire. On a fait la fête dehors.",
+        },
         doc: {
           name: 'Doc',
           age: '65 ans',
@@ -2468,6 +2606,19 @@ export const fr: Strings = {
           at3: "A gravé « NE PAS ENLEVER SANS PARAPHE » sur une dalle qu'elle cale près de son oreiller en pierre chaque soir.",
           at10: "A mis la gravité en demeure sur tablette de pierre : le juridique a plaidé trois heures face à un caillou.",
         },
+        // v4 1122
+        rodney: {
+          at3: "A demandé au rayon de le porter à reculons pour prétendre qu’il avançait.",
+          at10: "A commandé un chant de victoire. Les ménestrels n’arrêtent pas d’ajouter des couplets sur sa fuite.",
+        },
+        black_knight: {
+          at3: "A décrété que la soute était un pont. Plus personne ne la traverse.",
+          at10: "A réclamé qu’on lui rende son armure au poids. Jure qu’il manque un coude.",
+        },
+        tom_enchanter: {
+          at3: "A mis l’infirmière en garde contre le lapin. Il lui a montré avec les mains la taille des dents.",
+          at10: "Montre la cantine du doigt et chuchote « Regardez les os ! » Ce soir, c’est poulet.",
+        },
         doc: {
           at3: "Il a scotché trois minuteurs de cuisine sur sa blouse pour calculer nos gigowatts exacts au décollage.",
           at10: "Il a perdu une année entière entre deux visites, griffonné « dérive temporelle » et accusé la foudre du tribunal.",
@@ -2503,6 +2654,8 @@ export const fr: Strings = {
         cherry_pie: "Un petit doigt de vapeur a fait signe à Zib. Son nez a fait le reste.",
         garden_gnome: "Pêche au-dessus d’une mare comblée depuis des années. Il y croit encore.",
         // v4 L9 1955
+        // v4 1122
+        shrubbery: "Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer.",
         time_car: "Coupé en inox brossé à portes papillon, pneus cramés et zéro permis. La Propulsion interdit à Zib de voir ce qui se passe à 88.",
         slipper_flyer: "Photocopié en gros Comic Sans, un numéro déjà arraché en bas. Celui qui l'a pris risque d'être sacrément déçu.",
         astronomer: 'Douze ans à guetter le ciel avec sa parabole, enlevé en pleine gorgée de chocolat chaud. Il a réclamé un crochet par Mars.',
@@ -2517,6 +2670,8 @@ export const fr: Strings = {
         cherry_pie: "À moitié mangée. Vrell nie tout. Son porte-bloc est taché de cerise.",
         garden_gnome: "Enfin en vacances.",
         // v4 L9 1955
+        // v4 1122
+        shrubbery: "Rempoté · Plus joli que la haie des Henderson. Ne leur dites rien.",
         time_car: "En fourrière · Bridée à 87 miles à l'heure",
         slipper_flyer: 'Épinglé sur le tableau de Vrell',
         astronomer: 'Débriefé ; refuse de partir',
@@ -2531,6 +2686,8 @@ export const fr: Strings = {
         cherry_pie: "Refroidit à l’arrière de la boulangerie, sur un rebord de fenêtre.",
         garden_gnome: "Près de l’allée de Len, côté est. Prenez votre passeport.",
         // v4 L9 1955
+        // v4 1122
+        shrubbery: "Sur la rive ouest, les plus bruyants réclament un peu de verdure.",
         time_car: "Relisez la note : une voiture à portes papillon non déclarée fonce vers l'horloge avant 22 h 04.",
         slipper_flyer: 'La note de service évoque un avis de chausson perdu près de la laverie.',
         astronomer: "Relisez la note : quelqu'un en banlieue a sorti une parabole pleine d'espoir.",
@@ -2550,6 +2707,13 @@ export const fr: Strings = {
       "bicycle bell": "La seule chose dans l’atelier de Len qui lui appartient. Enfin, il croit.",
       "biscuit tin": "Contient des boulons. La boîte marquée BOULONS contient des biscuits. Len dit que ça marche très bien comme ça.",
       // v4 L9 1955
+      // v4 1122
+      "coconut halves": "Personne ne sait comment elles sont arrivées en Angleterre. L’hirondelle refuse de se prononcer.",
+      "stuffed swallow": "Sans charge. D’Afrique ou d’Europe ? Le taxidermiste a facturé les deux tarifs.",
+      "black knight’s arm": "De rechange. Il dit qu’il en a un autre quelque part. Il a dit ça la dernière fois.",
+      "black knight’s shield": "NUL NE PASSERA devant. HORAIRES D’OUVERTURE derrière.",
+      "holy hand grenade": "Comptez jusqu’à trois. Cinq, c’est exclu. Zib a compté jusqu’à cinq. La soute a maintenant une lucarne.",
+      "enchanter’s horns": "Des cornes de bélier sur une calotte. Un peu roussies. Chez Tom, tout est un peu roussi.",
       "spare flex capacitor": "Trois tubes qui clignotent dans un boîtier en métal. Ouvre le voyage dans le temps — et annule toute garantie galactique.",
       "yellow hazmat suit": "Vinyle jaune canari avec étui à sèche-cheveux. Entré dans le folklore terrien comme « tenue de soirée martienne ».",
       "red puffy vest": "Doudoune rouge venue de trente ans dans le futur. En 1955, toute la ville pense que son proprio est tombé d'un bateau.",

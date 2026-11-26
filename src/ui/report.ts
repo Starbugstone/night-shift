@@ -54,7 +54,7 @@ export interface ReportModel {
   subtitle: string;
   rows: Array<[string, string]>;
   stamp: 'delivered' | 'failed' | 'sunrise' | 'storm';
-  archive?: boolean;
+  archive?: string;
   bakerySign?: boolean;
   starLabels: readonly string[];
   comment: string;
@@ -135,7 +135,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
       ...(pickup ? [pickup.row] : []),
     ],
     stamp: sunrise ? (lv.id === 'level9' ? 'storm' : 'sunrise') : 'delivered',
-    archive: lv.id === 'level9',
+    archive: lv.id === 'level9' ? tr().crestValley.archive : lv.id === 'level10' ? tr().grail.archive : undefined,
     bakerySign: lv.id === 'birch_bakery' && outcome.stars[0],
     starLabels: shownStarLabels(lv),
     comment: sunrise
@@ -146,7 +146,9 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
         ),
     delivered: !sunrise && n >= total,
     ...(run.photo ? { photo: run.photo } : {}),
-    cover: coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, firstClear, seed: outcome.save.reports }),
+    cover: lv.id === 'level10' && !sunrise && run.collectible?.collectedId ? tr().grail.greenery
+      : lv.id === 'level10' && outcome.stars[1] ? tr().grail.ghost
+      : coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, firstClear, seed: outcome.save.reports }),
     headline: tabloidHeadline(lv.id, run.spotted, outcome.save.reports),
     readings: run.probeReadings,
   };
@@ -666,7 +668,7 @@ function fittedBlock(b: TextBlock, color: string, weight: number, italic: boolea
   return root;
 }
 
-function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<ReportLayout['clip']>, archive = false): Container {
+function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<ReportLayout['clip']>, archive?: string): Container {
   const root = new Container();
   const mx = clip.x + clip.w / 2;
   const my = clip.y + 26;
@@ -686,7 +688,7 @@ function tabloidClipping(assets: Assets, headline: TextBlock, clip: NonNullable<
     new Label({ size: 17, color: '#ffffff', weight: 900 }).set(tr().reportExtras.masthead, mx, my, 186),
   );
   // the 1955 stamp sits right of the masthead, clear of the two headline lines below it
-  if (archive) root.addChild(new Label({ size: 11, weight: 900, color: '#63462f' }).set(tr().crestValley.archive, (mx + 100 + clip.x + clip.w) / 2, my, clip.x + clip.w - mx - 112));
+  if (archive) root.addChild(new Label({ size: 11, weight: 900, color: '#63462f' }).set(archive, (mx + 100 + clip.x + clip.w) / 2, my, clip.x + clip.w - mx - 112));
   root.addChild(fittedBlock(headline, '#1d1631', 900, false, 'center'));
   return root;
 }

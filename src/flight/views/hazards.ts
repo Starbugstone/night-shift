@@ -1,3 +1,4 @@
+import { GrailDetectorView } from './grail';
 import { Container, Graphics } from 'pixi.js';
 import type { Assets, Vec2 } from '../../contracts';
 import { artSprite } from '../../ui/views/art';
@@ -152,6 +153,9 @@ export class HazardViews {
       case 'heli':
       case 'ambulance':
       case 'photographer':
+      case 'cow':
+      case 'rabbit':
+      case 'squire':
       case 'steward':
         o.x = f.x[i]!;
         o.y = f.y[i]!;
@@ -180,6 +184,13 @@ export class HazardViews {
     const { assets } = s.ctx;
     const f = s.sim.field;
     switch (d.type) {
+      case 'cow':
+      case 'rabbit':
+      case 'squire': {
+        const view = new GrailDetectorView(assets, d);
+        this.detectors.addChild(view.root);
+        return (cam, _t, rm, hot) => view.sync(cam, f, i, hot, rm);
+      }
       case 'hum': {
         const view = new MonolithView(assets, d);
         this.detectors.addChild(view.root);
@@ -295,7 +306,7 @@ export class HazardViews {
         return (cam, t, rm, hot) => {
           const a = f.a[i]!;
           body.visible = cam.sees(d.x, d.y, 60);
-          head.rotation = a + turn;
+          head.rotation = d.skin === 'grail_sentry_top' ? 0 : a + turn;
           camera.root.visible = cam.sees(d.x, d.y, d.range + 20);
           if (camera.root.visible) camera.sync(a, hot, this.lead[i]!, t, i, rm);
         };

@@ -395,6 +395,12 @@ export class DeepFlightScene implements Scene {
     const egg = this.eggs.check(s.x, s.y, sim.camX, sim.camY, this.zibCd <= 0 && !this.pendingOpener && st.cause < 0 && sim.suspicion === 0);
     if (egg) this.sayLine(egg);
 
+    const grail = this.run.grail;
+    if (grail) {
+      grail.update(this.run.elapsed, s.x, s.y, sim.phase === 'spotted' && field.defs[st.cause]?.type === 'camera',
+        !!field.on[field.rabbitIndex], !!sim.collectible?.collectedId);
+      grail.sound(field, previousTime, audio, s.x, s.y);
+    }
     // ---- the fuse
     const exposed = st.cause >= 0;
     if (exposed) {

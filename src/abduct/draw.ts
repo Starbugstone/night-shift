@@ -245,6 +245,7 @@ const SHIRTS: Record<Human, string> = {
   // L6 clinic code
   hank: '#b98b5e', osei: '#4f8f8a', pemberton: '#c9cfe0',
   // v4 L9 1955
+  rodney: '#8a9254', black_knight: '#4e3e48', tom_enchanter: '#815e7b',
   doc: '#e0d6b1', buff: '#533752', marvin: '#88516c',
 };
 const PANTS: Record<Human, string> = {
@@ -260,6 +261,7 @@ const PANTS: Record<Human, string> = {
   // L6 clinic code
   hank: '#7f8aa8', osei: '#3f7773', pemberton: '#c9cfe0',
   // v4 L9 1955
+  rodney: '#634a43', black_knight: '#574657', tom_enchanter: '#554353',
   doc: '#8b7258', buff: '#5b536b', marvin: '#39304e',
 };
 

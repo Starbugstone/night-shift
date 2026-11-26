@@ -1,6 +1,7 @@
 // Difficulty evaluator: scores each level with human-model players (./human.ts) and checks
 // the star and deep-level bands. Used by tests/levels-difficulty.test.ts and the
 // evaluate-difficulty skill (.claude/skills/evaluate-difficulty/SKILL.md).
+import { GRAIL_TARGETS } from './grail';
 import type { RoomId } from '../../src/contracts';
 import { deepPar, type LevelDef } from '../../src/levels/types';
 import { workOrderNumber } from '../../src/levels/levels';
@@ -8,7 +9,7 @@ import { starLabels } from '../../src/levels/progress';
 import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
 import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
-import { evaluateBirchDetours, evaluateCarFirst, evaluateStars, type CarReport, type StarReport } from './stars';
+import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateStars, type CarReport, type StarReport } from './stars';
 import { naiveCarCatches } from './time-car';
 
 // Minimum shares of full attempts, in the game's star order. The beeline and wake
@@ -120,6 +121,11 @@ export const BANDS: Record<string, Band | undefined> = {
     flightDone: 0.8, casualBudgetShare: 0.8, tension: 20,
   },
   // v4 L9 1955: late-tier stars and a tighter standard-shift estimate.
+  // v4 1122
+  level10: {
+    skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.8, casualBudgetShare: 120 / 330, tension: 20,
+  },
   level9: {
     skilledRoute: 0.8, casualRoute: 0.5, casualBuilding: 0.8, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: L9_SHIFT_SEC.max / 380, tension: 20,
@@ -170,6 +176,7 @@ export interface LevelReport extends StarLevelReport {
   parSec: number;
   tension: number;
   birchDetours?: ReturnType<typeof evaluateBirchDetours>[];
+  shrubbery?: ReturnType<typeof evaluateShrubbery>[];
   carFirst?: CarReport[];
   carBeelines?: ReturnType<typeof naiveCarCatches>;
 }
@@ -327,6 +334,13 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
       if ((row.profile === 'bot' || seeds >= 20) && row.allFour === 0) report.violations.push(`Pickup (${row.profile}): no four-star shift`);
     }
   }
+  if (level.id === 'level10') {
+    report.shrubbery = profiles.map(profile => evaluateShrubbery(level, profile, seeds, play));
+    for (const row of report.shrubbery) {
+      const floor = row.profile === 'skilled' ? 0.9 : row.profile === 'casual' ? 0.75 : 1;
+      if (row.fourthStars < Math.floor(seeds * floor)) report.violations.push(`Shrubbery (${row.profile}) earned ${row.fourthStars}/${seeds}`);
+    }
+  }
   if (level.id === 'level9') {
     if (seeds >= 6) {
       for (const row of stars) {
@@ -444,6 +458,13 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
   lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')}${Number.isFinite(r.budgetSec) ? ` · ${deadline} ${r.budgetSec} s` : ''} · Night owl by ${r.parSec} s.`);
   if (r.birchDetours) for (const row of r.birchDetours) {
     lines.push(`${row.profile} pickup detour: ${row.fourth}/${row.attempts} fourth stars, ${row.allFour}/${row.attempts} four-star shifts.`);
+  }
+  if (r.shrubbery) {
+    for (const row of r.shrubbery) lines.push(`Shrubbery detour (${row.profile}): ${row.fourthStars}/${row.attempts} fourth stars.`);
+    if (r.seeds === 20) {
+      lines.push('', '| Proposed target | Delivered | Ghost | Night owl | Shrubbery detour |', '| --- | --- | --- | --- | --- |');
+      for (const row of GRAIL_TARGETS) lines.push(`| ${row.join(' | ')} |`);
+    }
   }
   if (r.carFirst && r.carBeelines) {
     lines.push('', '| Car-first | Catches | Delivered | Pickup star | All four |', '| --- | --- | --- | --- | --- |');

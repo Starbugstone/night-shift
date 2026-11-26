@@ -8,6 +8,7 @@ import { POINT, pointReach } from './point';
 import { InteriorSimulation, type InteriorFailure } from './interior';
 import { clamp, Contact, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
+import { GrailReaction } from './grail';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
 import { readSeconds } from '../core/read-time';
 
@@ -31,6 +32,7 @@ const HUMAN_NAMES = {
   // L6 clinic code
   hank: 'Hank', osei: 'Dr. Osei', pemberton: 'Mr. Pemberton',
   // v4 L9 1955
+  rodney: 'Sir Rodney the Not-Quite-So-Brave', black_knight: 'The Black Knight', tom_enchanter: 'Tom the Enchanter',
   doc: 'Doc', buff: 'Buff Tanner', marvin: 'Marvin Cherry',
 } as const;
 const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
@@ -97,6 +99,7 @@ export class AbductSimulation {
   readonly body: Ragdoll;
   /** v3 report: Bureau ID photo pose (src/abduct/photo.ts). */
   readonly photo: PhotoCapture;
+  readonly grail?: GrailReaction;
   readonly wake: WakeMeter;
   readonly item: LooseItem;
   readonly fanBlades: readonly Blade[];
@@ -121,6 +124,7 @@ export class AbductSimulation {
   snoozeX = 0;
   snoozeY = 0;
   elapsed = 0;
+  private sparkCharge = false;
   snores = 0;
   snoreFx = 0;
   mumble = '';
@@ -174,6 +178,7 @@ export class AbductSimulation {
     private readonly random: () => number = Math.random,
     readonly rules: AbductRules = QUIET_RULES,
   ) {
+    if (room.human === 'rodney' || room.human === 'black_knight') this.grail = new GrailReaction(room.human === 'black_knight');
     this.exitX = room.exitZone.x + room.exitZone.w / 2;
     this.exitY = room.exitMouthY ?? room.exitZone.y + room.exitZone.h / 2;
     this.emitterX = room.roofExit ? room.exit.x + room.exit.w / 2 : VIEW_W / 2;
@@ -262,6 +267,7 @@ export class AbductSimulation {
   get complete(): boolean { return this.failure ? this.failureTime >= FAILURE_SECONDS : this.delivered && this.slurp >= 1; }
 
   autopilot(): AbductAutopilotIntent {
+    if (this.grail?.retreat) { this.pilot.speed = 0; return HOLD_INTENT; }
     return this.delivered || this.failure ? HOLD_INTENT : this.pilot.move(this.body, this.elapsed, this.interior);
   }
 
@@ -408,6 +414,8 @@ export class AbductSimulation {
     if (interior?.failure) this.failure ??= interior.failure;
     if (this.failure) return;
 
+    const grailLine = this.grail?.step(this.body, this.beamMoved, this.wake.value, this.mumbleFx > 0);
+    if (grailLine) this.sleepTalk(grailLine);
     const cue = this.propCue;
     if (this.beamMoved && this.liftAt < 0) this.liftAt = this.elapsed;
     if (cue && this.liftAt >= 0 && this.elapsed - this.liftAt >= PROP_CUE_DELAY && this.wake.awake === 0 && this.mumbleFx === 0) {
@@ -415,17 +423,21 @@ export class AbductSimulation {
       if (contains(cue.room, this.body.chestX, this.body.chestY)) this.sleepTalk(cue.line);
     }
 
-    if (this.wake.awake === 0 && this.elapsed >= this.nextSnore) {
+    const charge = this.room.human === 'tom_enchanter' && !!interior?.hazards[0]?.tell;
+    const snore = this.room.human === 'tom_enchanter' ? charge && !this.sparkCharge : this.elapsed >= this.nextSnore;
+    this.sparkCharge = charge;
+    if (this.wake.awake === 0 && snore) {
       this.snores++;
       this.snoreFx = 1.1;
       this.nextSnore = this.elapsed + 1.85 + this.random() * 0.65;
-      if (interior && this.snores % 5 === 0 && this.mumbleFx === 0) this.sleepTalk();
+      if (interior && !this.grail?.knight && this.snores % 5 === 0 && this.mumbleFx === 0) this.sleepTalk();
       this.audio.sfx('snore', this.room.human === 'doyle' ? 0.75 : 0.53);
     }
 
     this.updateItem();
     // L6 clinic code: the exit stays shut until Form 7-B is complete
     if (!this.body.gripActive && contains(this.room.exitZone, this.body.chestX, this.body.chestY) && (this.interior?.probes?.done ?? true)) {
+      this.grail?.cancel();
       this.delivered = true;
       // A captured item still with the body goes home with it. It trails the chest by up to ~70 px
       // when the body enters the exit fast, so it is not asked to be inside the exit zone too.
@@ -447,8 +459,9 @@ export class AbductSimulation {
     if (speed >= 195) this.shake = clamp(speed / 300, 0.6, 1.6);
 
     this.interior?.noise((cat ? 46 : clamp((speed - 40) * 0.29, 0, 70)), x, y);
+    this.grail?.impact(this.body, x, this.elapsed);
     this.onWake(wasAwake);
-    if (this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
+    if (!this.grail?.knight && this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
   }
 
   /** L5: splashes wake people up; a dolphin that dries out wakes squeaking. */
@@ -476,6 +489,7 @@ export class AbductSimulation {
 
   private onWake(wasAwake: boolean): void {
     if (this.wake.awake === 0 || wasAwake) return;
+    this.grail?.cancel();
     this.wakeSeq++;
     this.mumbleFx = 0;
     this.snoreFx = 0;

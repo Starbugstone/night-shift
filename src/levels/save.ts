@@ -10,7 +10,7 @@ export const V2_SAVE_KEY = 'night-shift-save-v2';
 export const LEGACY_SAVE_KEY = 'night-shift-save-v1';
 export const SAVE_VERSION = 3;
 
-export const LEVEL_IDS = ['level1', 'level2', 'birch_bakery', 'birch_neighbours', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9'] as const;
+export const LEVEL_IDS = ['level1', 'level2', 'birch_bakery', 'birch_neighbours', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9', 'level10'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
 
 export const LEGACY_DISPATCH_IDS = ['level3', 'level4', 'level5', 'level6', 'level7'] as const;

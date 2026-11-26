@@ -16,6 +16,13 @@ const routes = {
   nora_loft: { route: "Loft hatch", difficulty: "tool chest & laser" },
   len_workshop: { route: "Workshop door", difficulty: "counter & vice" },
   len_skylight: { route: "Skylight", difficulty: "handlebars & lift" },
+  // v4 1122
+  rodney_flap: {"route": "Supply flap", "difficulty": "shield rack & hay"},
+  rodney_loft: {"route": "Banner loft", "difficulty": "chest & swinging shield"},
+  black_knight_arch: {"route": "Toll arch", "difficulty": "counter & sill"},
+  black_knight_loft: {"route": "Portcullis loft", "difficulty": "wheel & gate"},
+  tom_stair: {"route": "Stone stair", "difficulty": "lectern & sparks"},
+  tom_smoke: {"route": "Smoke hole", "difficulty": "flue & sparks"},
   inventor_balcony: { route: "Clock balcony", difficulty: "gears & cable" },
   inventor_service: { route: "Service door", difficulty: "bell & gate" },
   bully_transom: { route: "Awning transom", difficulty: "jukebox & fan" },
@@ -140,6 +147,8 @@ const deepZib = {
   birchBinLid: ["Is that one of ours? …It’s a bin lid. Nice lines, though."],
   birchReturned: ["One aboard. That ties my record. They’re making me do it twice."],
   // v4 L9 1955
+  // v4 1122
+  start10: ["No horses. Just coconuts. Vrell, is that what you meant by a company car?"],
   start9: [
     "1955! Where we're flying, we don't need roads—just the west turnout!",
     'Nov 12, 1955! Three witnesses—and intercept that time car from the west turnout!',
@@ -165,6 +174,11 @@ const deepZib = {
     'Got it! One stainless time car in the hold—take THAT, continuum!',
   ],
   stormClosing: ['Thirty seconds until the storm passes. After that, our pass expires!'],
+  // v4 1122
+  grailSentry: ["Down behind the wall!"],
+  cow: ["Incoming dairy!"],
+  clop: ["Those hooves are nuts."],
+  rabbit: ["Look at the teeth!"],
   eraLight: ["That lamp's looking at ME. Back into the dark!", 'Spotlight! Act like a cloud. A completely ordinary cloud.'],
   eraWatcher: ["That regular's looking straight out the window!"],
   eraPolice: ['1955 patrol car. Its headlights can see just fine!'],
@@ -238,6 +252,11 @@ const spotCaptions = {
   photographer: ['The ship photographer gets the shot. It will be on sale at the gift shop by breakfast, £14.99 framed.', 'Long exposure, perfect focus. The cruise line puts you on next year\'s brochure.'],
   steward: ['A steward logs "one unauthorised deck light". It is the third this week. Nobody can explain the other two.', 'The torch finds you. The steward asks to see your boarding card.'],
   // v4 L9 1955
+  // v4 1122
+  grailSentry: ["A French lookout has filed a formal insult."],
+  cow: ["A cow has identified you at a line-up."],
+  clop: ["The cavalry is on foot. They are still faster than Legal."],
+  rabbit: ["The rabbit has taken the minutes. In teeth marks."],
   eraLight: ['The storm lamp pins you in mid-air. Three teens on Main Street blame a flying Buick.', 'Caught in the dance spotlight. Tomorrow morning the Gazette runs "HUBCAP OVER PROM".'],
   eraWatcher: ["A regular at Lyle's drops his malt and swears the pie case is haunted.", "Someone at Lyle's window sketches your saucer on a napkin. Surprisingly accurate."],
   eraPolice: ['A 1955 patrolman radios in "one shiny pie tin, heading north". Dispatch tells him to lay off the coffee.', 'Caught in chrome high beams. The sheriff puts out an APB on "a very rude weather balloon".'],
@@ -459,6 +478,18 @@ export const en = {
       re: "Work Order #{num} · While the Hendersons Are Away",
     },
     // v4 L9 1955
+    // v4 1122
+    level10: {
+      title: "Ni!",
+      location: "Grimsby Keep · 1122",
+      blurb: "Three witnesses. The cows are hostile.",
+      human: "Rodney, the Knight & Tom",
+      collect: "Three witnesses",
+      re: "Work Order #{num} · Ni!",
+      body: "Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. His three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery.",
+      joke: "The French are throwing cows. If the road moos, move.",
+      signoff: "— Vrell. No jousting on Bureau time.",
+    },
     level9: {
       title: "Clocking Out at 10:04",
       location: "Crest Valley · Nov 12, 1955",
@@ -582,6 +613,18 @@ export const en = {
   ],
 
   // v4 L9 1955
+  // v4 1122
+  grail: {
+    archive: "1122 ARCHIVE",
+    board: "TOO HIGH",
+    ni: "Ni!",
+    taunts: ["I fart in your general airspace, you flying saucepan!", "A census? We’ve already got one!", "Your mother was a hamster!", "Is that a species correction? I’ll need a form."],
+    rabbit: ["Aw, a bunny!", "Run away! Run away!"],
+    ghost: "Bridge reopens. Black Knight’s post ‘temporarily unarmed’.",
+    greenery: "Knights fall quiet at last. Neighbours suspect a shrubbery.",
+    retreat: "Bravely… back the way we came!",
+    knight: ["‘Tis but a dent.", "Merely a flesh wound.", "Fine. We’ll call it a draw."],
+  },
   crestValley: {
     left: "PM",
     banner: "Collect all three by 10:10",
@@ -732,6 +775,8 @@ export const en = {
       birch_bakery: ["BAKER’S BUNS SEEN RISING INTO NIGHT SKY"],
       birch_neighbours: ["MRS. PRUITT REPORTS SAUCER FOR 37TH TIME. FIRST TIME SHE’S RIGHT."],
       // v4 L9 1955
+      // v4 1122
+      level10: ["COW CLEARS CASTLE WALL. LANDING SCORES A FOUR.", "COWS STILL DENY ALL KNOWLEDGE"],
       level9: [
         'LIGHTNING STOPS COURTHOUSE CLOCK AT 10:04 — FLYING HUBCAP BLAMED',
         'CHROME HUBCAP OVER MAIN ST — LOCAL BULLY STILL OUT COLD IN BOOTH',
@@ -836,6 +881,11 @@ export const en = {
         photographer: 'Exhibit A · official cruise photo, £14.99',
         steward: "Exhibit A · steward's phone, deck 9",
         // v4 L9 1955
+        // v4 1122
+        grailSentry: "Exhibit A · from the battlements",
+        cow: "Exhibit A · hoof print",
+        clop: "Exhibit A · coconut cavalry",
+        rabbit: "Exhibit A · bite marks",
         eraLight: "Exhibit A · searchlight lookout",
         eraWatcher: 'Exhibit A · through the café window',
         eraPolice: "Exhibit A · from the sheriff's cruiser",
@@ -953,6 +1003,11 @@ export const en = {
       photographer: ['SAY CHEESE!', 'HOLD THAT POSE!'],
       steward: ['BOARDING CARD!', 'SIR! SIR!'],
       // v4 L9 1955
+      // v4 1122
+      grailSentry: ["GUARDS!"],
+      cow: ["MOO!"],
+      clop: ["CLOP CLOP!"],
+      rabbit: ["SNAP!"],
       eraLight: ['WHAT THE—?!', 'A FLYING SAUCER!'],
       eraWatcher: ['HEY, LYLE! LOOK!', 'MY MALT!'],
       eraPolice: ['PULL OVER, HUBCAP!', 'CALL THE SHERIFF!'],
@@ -977,6 +1032,11 @@ export const en = {
       // L6 clinic code
       ambulance: ['An ambulance got me. Now I really need to lie down.', 'Siren AND headlights. Watch the bay arrows before it launches, Zib.'],
       // v4 L9 1955
+      // v4 1122
+      grailSentry: ["Next time, the west bank."],
+      cow: ["That cow just grounded a spaceship."],
+      clop: ["I have been overtaken by a pedestrian horse."],
+      rabbit: ["I preferred it with its mouth shut."],
       eraLight: ['Caught in a 1955 floodlight. Act like a thundercloud, Zib—a quiet one.', 'Spotted under the beam! Resetting before anyone writes a sci-fi paperback about me.'],
       eraWatcher: ["The diner regular saw me! Keep wide of Lyle's front window next pass.", "Caught through the café glass! Next time I'm taking the alley."],
       eraPolice: ['A 1955 cruiser caught me! Even their vintage headlights are too bright!', 'Spotted by the patrol car. Back to the last witness—nobody saw a thing.'],
@@ -1071,6 +1131,8 @@ export const en = {
       birch_bakery: "Crumb opened at five. He knocked the card reader off the counter. Cash only.",
       birch_neighbours: "Both aboard. Mrs. Pruitt has logged the saucer as an extension without planning permission.",
       // v4 L9 1955
+      // v4 1122
+      level10: "Claim denied. Krix called his toaster to the stand. The court gave it two minutes to pop.",
       level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Why is it blinking two more dates?",
       level1: "Not dead, not fired, and Doyle is in the hold. Take Route 9 into town—Spin City's night clerk is next.",
       level2: "Larry is logged and Accounting traced forty socks to your saucer. Temporary lanyard’s in the tray. Two calls on Birch Lane, then the bulk order.",
@@ -1112,6 +1174,13 @@ export const en = {
     "bicycle bell": { one: "{n} bicycle bell", other: "{n} bicycle bells" },
     "biscuit tin": { one: "{n} biscuit tin", other: "{n} biscuit tins" },
     // v4 L9 1955
+    // v4 1122
+    "coconut halves": {"one": "{n} Coconut halves", "other": "{n} pairs of coconut halves"},
+    "stuffed swallow": {"one": "{n} Stuffed swallow", "other": "{n} stuffed swallows"},
+    "black knight’s arm": {"one": "{n} Black Knight’s arm", "other": "{n} Black Knight’s arms"},
+    "black knight’s shield": {"one": "{n} Black Knight’s shield", "other": "{n} Black Knight’s shields"},
+    "holy hand grenade": {"one": "{n} Holy Hand Grenade", "other": "{n} Holy Hand Grenades"},
+    "enchanter’s horns": {"one": "{n} Enchanter’s horns", "other": "{n} sets of enchanter’s horns"},
     "spare flex capacitor": { one: "{n} spare flex capacitor", other: "{n} spare flex capacitors" },
     "yellow hazmat suit": { one: "{n} yellow hazmat suit", other: "{n} yellow hazmat suits" },
     "red puffy vest": { one: "{n} red puffy vest", other: "{n} red puffy vests" },
@@ -1745,6 +1814,46 @@ export const en = {
     "Loading door": "Loading door",
     "Chaperone": "Chaperone",
     "Café watcher": "Café watcher",
+    // v4 1122
+    "Supply flap": "Supply flap",
+    "Banner loft": "Banner loft",
+    "Toll arch": "Toll arch",
+    "Portcullis loft": "Portcullis loft",
+    "Stone stair": "Stone stair",
+    "Smoke hole": "Smoke hole",
+    "SUPPLY FLAP": "SUPPLY FLAP",
+    "BANNER LOFT": "BANNER LOFT",
+    "TOLL ARCH": "TOLL ARCH",
+    "PORTCULLIS LOFT": "PORTCULLIS LOFT",
+    "STONE STAIR": "STONE STAIR",
+    "SMOKE HOLE": "SMOKE HOLE",
+    "Bravely… back the way we came!": "Bravely… back the way we came!",
+    "I’ll guard the rear… from home…": "I’ll guard the rear… from home…",
+    "‘Tis but a dent.": "‘Tis but a dent.",
+    "Merely a flesh wound.": "Merely a flesh wound.",
+    "Fine. We’ll call it a draw.": "Fine. We’ll call it a draw.",
+    "Some call me Tim. The sign painter won’t take it back.": "Some call me Tim. The sign painter won’t take it back.",
+    "Just a pilot light… stand back… further…": "Just a pilot light… stand back… further…",
+    "Rodney": "Rodney",
+    "Black Knight": "Black Knight",
+    "Tom": "Tom",
+    "Pavilion": "Pavilion",
+    "Bridge gatehouse": "Bridge gatehouse",
+    "Candle tower": "Candle tower",
+    "West gallery": "West gallery",
+    "Upper gallery": "Upper gallery",
+    "Hanging shield": "Hanging shield",
+    "Portcullis": "Portcullis",
+    "Sleep-sparks": "Sleep-sparks",
+    "Shield rack": "Shield rack",
+    "Toll counter": "Toll counter",
+    "Stone bookstand": "Stone bookstand",
+    "Banner chest": "Banner chest",
+    "Winding wheel": "Winding wheel",
+    "Flue lip": "Flue lip",
+    "Sir Rodney the Not-Quite-So-Brave": "Sir Rodney the Not-Quite-So-Brave",
+    "The Black Knight": "The Black Knight",
+    "Tom the Enchanter": "Tom the Enchanter",
     "CLOCK BALCONY": "CLOCK BALCONY",
     "SERVICE DOOR": "SERVICE DOOR",
     "AWNING TRANSOM": "AWNING TRANSOM",
@@ -2169,6 +2278,13 @@ export const en = {
       cherry_pie: { name: "Cherry pie", memoHint: "a cherry pie", comment: "There’s a note under the pie. ‘Bring back the tin.’", missedComment: "You left the pie. Crumb sat in it." },
       garden_gnome: { name: "Garden gnome", memoHint: "garden gnome", comment: "He’s requested a window seat. And a little umbrella in his drink.", missedComment: "The gnome stayed. Tomorrow he’s trying the bus." },
       // v4 L9 1955
+      // v4 1122
+      shrubbery: {
+        name: "Shrubbery",
+        memoHint: "a shrubbery",
+        comment: "You brought a shrubbery. Now they want a tree cut down with a herring. I’m hanging up.",
+        missedComment: "No shrubbery. The knights are saying Ni to Accounting. Accounting is saying it back.",
+      },
       time_car: {
         name: "Time car",
         memoHint: "gull-wing time car",
@@ -2418,6 +2534,28 @@ export const en = {
           weight: '126 lb · 57 kg',
           desc: 'Prehistoric patent clerk with stone spectacles and ruthless paperwork. Tried to trademark our tractor beam before breakfast.',
         },
+        // v4 1122
+        rodney: {
+          name: "Sir Rodney the Not-Quite-So-Brave",
+          age: "32",
+          height: "173 cm",
+          weight: "71 kg",
+          desc: "Asked the farrier to shoe his horse. The farrier fitted his squire with tiny horseshoes.",
+        },
+        black_knight: {
+          name: "The Black Knight",
+          age: "41",
+          height: "188 cm",
+          weight: "91 kg",
+          desc: "His armour is held on by pride. We found the spare fasteners unopened.",
+        },
+        tom_enchanter: {
+          name: "Tom the Enchanter",
+          age: "56",
+          height: "169 cm",
+          weight: "74 kg",
+          desc: "Insisted on lighting his own birthday candles. We held it outdoors.",
+        },
         doc: {
           name: 'Doc',
           age: '65',
@@ -2530,6 +2668,19 @@ export const en = {
           at3: "Chiselled a \"DO NOT BEAM WITHOUT INITIALS\" sign and props it beside her stone pillow every dusk.",
           at10: "Issued a cease-and-desist on gravity itself; Legal spent three hours arguing with a stone tablet.",
         },
+        // v4 1122
+        rodney: {
+          at3: "Asked the beam to carry him backwards so he could claim he was advancing.",
+          at10: "Commissioned a victory song. The minstrels keep adding verses about the running away.",
+        },
+        black_knight: {
+          at3: "Declared the cargo bay a bridge. Nobody has crossed it since.",
+          at10: "Asked for his armour back by weight. Swears we still owe him an elbow.",
+        },
+        tom_enchanter: {
+          at3: "Warned the intake nurse about the rabbit. Showed her the size of the teeth with his hands.",
+          at10: "Points at the canteen and whispers ‘Look at the bones!’ It’s chicken night.",
+        },
         doc: {
           at3: "Taped three kitchen timers to his coat to measure our tractor beam's exact gigawatt draw on lift-off.",
           at10: "Lost a whole year between visits—just scribbled \"temporal drift\" and blamed the courthouse lightning.",
@@ -2565,6 +2716,8 @@ export const en = {
         cherry_pie: "Its steam curled into a little finger and beckoned. Zib followed it by the nose.",
         garden_gnome: "Holds a fishing rod over a pond that was filled in years ago. Still hopeful.",
         // v4 L9 1955
+        // v4 1122
+        shrubbery: "The knights wanted a nice one. Not too expensive. The beam took it for free.",
         time_car: 'Brushed stainless coupe with gull-wing doors, scorched tyres and zero permits. Propulsion refuses to let Zib test what happens at 88.',
         slipper_flyer: 'Photocopied in frantic Comic Sans with one tear-off tab already missing. Whoever took that number is about to be very disappointed.',
         astronomer: 'Spent twelve years aiming a dish at deep space; got beamed up mid-sip of cocoa. Asked if we could drop him off at Mars.',
@@ -2579,6 +2732,8 @@ export const en = {
         cherry_pie: "Half eaten. Vrell denies everything. There’s cherry on his clipboard.",
         garden_gnome: "On holiday at last.",
         // v4 L9 1955
+        // v4 1122
+        shrubbery: "Repotted · Nicer than the Hendersons’ hedge. Don’t tell them.",
         time_car: "Impounded · Capped at 87 mph",
         slipper_flyer: "Pinned to Vrell's corkboard",
         astronomer: 'Debriefed; refuses to leave',
@@ -2593,6 +2748,8 @@ export const en = {
         cherry_pie: "Cooling on the bakery’s back windowsill.",
         garden_gnome: "By Len’s east drive. Bring a passport.",
         // v4 L9 1955
+        // v4 1122
+        shrubbery: "The loudest voices on the west bank want a little greenery.",
         time_car: "Check the shift memo for an unlicensed gull-wing coupe racing the clock tower before 10:04.",
         slipper_flyer: 'The shift memo mentions a desperate missing-footwear notice near the laundromat.',
         astronomer: 'Check the shift memo: someone in suburbia set up an optimistic backyard dish.',
@@ -2612,6 +2769,13 @@ export const en = {
       "bicycle bell": "The only thing in Len’s workshop that belongs to Len. He thinks.",
       "biscuit tin": "Contains bolts. The tin marked BOLTS contains biscuits. Len says the system works.",
       // v4 L9 1955
+      // v4 1122
+      "coconut halves": "Nobody can explain how these got to England. The swallow refuses to comment.",
+      "stuffed swallow": "Unladen. African or European? The taxidermist charged both rates.",
+      "black knight’s arm": "Spare. He says he has another one somewhere. He said that last time.",
+      "black knight’s shield": "NONE SHALL PASS on the front. OPENING HOURS on the back.",
+      "holy hand grenade": "Count to three. Five is right out. Zib counted to five. The hold has a skylight now.",
+      "enchanter’s horns": "Ram’s horns on a skullcap. Slightly singed. Everything Tom owns is slightly singed.",
       "spare flex capacitor": "Three blinking tubes wired inside a metal box. Makes time travel possible—and voids every warranty in the galaxy.",
       "yellow hazmat suit": "Blinding canary vinyl with a hairdryer holster. Officially listed in Earth folklore as \"typical Martian evening wear\".",
       "red puffy vest": "Quilted crimson waistcoat from thirty years in the future. Every 1955 local assumed its owner fell off a boat.",

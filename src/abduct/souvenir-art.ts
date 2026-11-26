@@ -43,6 +43,40 @@ function word(g: CanvasRenderingContext2D, text: string, x: number, y: number, s
 }
 
 export const SOUVENIR_ART: Readonly<Record<string, Painter>> = {
+  'room/coconut_halves': (g, w, h) => {
+    for (const [x, y] of [[0.29, 0.44], [0.70, 0.59]] as const) {
+      blob(g, w * x, h * y, w * 0.24, h * 0.30, '#8e6048');
+      blob(g, w * x, h * (y - 0.1), w * 0.23, h * 0.18, '#fff0bc');
+      blob(g, w * x, h * (y - 0.1), w * 0.16, h * 0.11, '#78503a');
+    }
+  },
+  'room/stuffed_swallow': (g, w, h) => {
+    g.scale(w / 65, h / 48);
+    const bird = new Path2D('M4 39l16-17L12 7l21 14Q43 7 51 16l10 1-8 6Q46 40 26 30L11 43l3-10Z');
+    g.fillStyle = '#627e8c'; g.fill(bird); g.stroke(bird);
+  },
+  'room/black_knight_arm': (g, w, h) => {
+    g.scale(w / 68, h / 40);
+    const sleeve = new Path2D('M6 9Q15 1 27 7l12 12 21 1 4 11-28 3-15-10-12 2Z');
+    g.fillStyle = '#858c9b'; g.fill(sleeve); g.stroke(sleeve);
+  },
+  'room/black_knight_shield': (g, w, h) => {
+    g.scale(w / 57, h / 62);
+    const shield = new Path2D('M5 8L28 2 52 8 49 33Q43 48 28 58Q11 47 7 32Z');
+    g.fillStyle = '#a7535c'; g.fill(shield); g.stroke(shield);
+    g.fillStyle = '#e9bd78'; g.fillRect(26, 14, 5, 28); g.fillRect(18, 23, 21, 5);
+  },
+  'room/holy_hand_grenade': (g, w, h) => {
+    blob(g, w * 0.52, h * 0.65, w * 0.36, h * 0.27, '#e5b361');
+    g.beginPath(); g.arc(w * 0.32, h * 0.27, w * 0.14, 0, TAU); g.stroke();
+    g.fillStyle = '#ead18e'; g.fillRect(w * 0.47, h * 0.05, w * 0.12, h * 0.37); g.fillRect(w * 0.34, h * 0.17, w * 0.37, h * 0.09);
+  },
+  'room/enchanter_horns': (g, w, h) => {
+    g.scale(w / 60, h / 42);
+    const horns = new Path2D('M17 27Q-3 16 6 3Q3 13 20 14L32 25 43 13Q52 10 51 2Q63 16 45 28Z');
+    g.fillStyle = '#dbbc8c'; g.fill(horns); g.stroke(horns);
+    blob(g, 30, 29, 17, 10, '#575267');
+  },
   // L1 farm chimney: a fat green marrow with a rosette
   'room/prize_marrow': (g, w, h) => {
     blob(g, w * 0.47, h * 0.58, w * 0.44, h * 0.36, '#5f8f4e', -0.06);

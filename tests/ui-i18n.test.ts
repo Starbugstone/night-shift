@@ -42,6 +42,8 @@ const SAME_IN_FRENCH = new Set([
   '{total}  (fly {fly} · beam {beam})', 'long, Biscuit',
   // L5 pier code
   'Pete', 'Sal', 'Kipper',
+  // v4 1122
+  'Rodney', 'Tom',
   // L6 clinic code
   'Hank', 'Osei', 'Pemberton', 'Gladys', 'Roland',
   // L7 cruise code

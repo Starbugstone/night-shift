@@ -8,6 +8,7 @@
 // 3. Every 0.1 s the autopilot rolls the real physics forward (copied state, a second hazard
 //    field) for "go to the next hold point" and "wait here", and picks the
 //    first one that keeps the suspicion fuse well short of full.
+import { inRabbitRun, pavilionTrack } from './grail';
 import { inHumBelt } from './monolith';
 import type { FlightAutopilotIntent, Vec2 } from '../contracts';
 import type { DeepMap } from '../levels/types';
@@ -132,6 +133,13 @@ export function exposureGrid(m: DeepMap): ExposureGrid {
           raster(k, d.x, d.y, d.range, (px, py) => pointInCone(px, py, d.x, d.y, a, d.half, d.range));
           break;
         }
+        case 'squire':
+        case 'cow': {
+          if (!field.on[i]) break;
+          const x = field.x[i]!, y = field.y[i]!, r = field.a[i]!;
+          raster(k, x, y, r, (px, py) => pointInCircle(px, py, x, y, r));
+          break;
+        }
         case 'hum':
           if (field.on[i]) raster(k, d.x, d.y, d.outer, (x, y) => inHumBelt(d, x, y));
           break;
@@ -198,6 +206,8 @@ export function exposureGrid(m: DeepMap): ExposureGrid {
           extra[i] = extra[i]! + 14;
           noHold[i] = 1;
         } else if (d.type === 'porch' && pointInCircle(x, y, d.x, d.y, d.r + 20)) {
+          noHold[i] = 1;
+        } else if (d.type === 'rabbit' && inRabbitRun(d.x, d.y, x, y)) {
           noHold[i] = 1;
         } else if (d.type === 'photographer' && pointInCircle(x, y, d.x, d.y, d.range)) {
           // L7 cruise code: a photographer frames whoever lingers in range; pass through, never wait there
@@ -443,6 +453,7 @@ export class FlightAutopilot {
     this.target = bestT;
     this.ring = bestRing;
     this.path = best ? best.pts : [{ x: s.x, y: s.y }];
+    if (sim.map.theme === 'grail' && bestRing === 0 && Math.hypot(s.x - sim.map.start.x, s.y - sim.map.start.y) < 60) this.path = pavilionTrack();
     if (sim.ringRef[bestRing]?.ape) this.path[this.path.length - 1] = sim.rings[bestRing]!;
     this.pi = 0;
     // hold points: never-exposed cells right before an exposed stretch, plus the goal

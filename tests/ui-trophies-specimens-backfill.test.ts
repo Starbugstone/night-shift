@@ -1,5 +1,6 @@
 import { describe as group, expect as want, it as check } from 'vitest';
 // Coordinator: saves from before the Specimen Archive fill it from their trophies and delivered levels.
+import { buildSpecimenCatalog } from '../src/ui/trophy-data';
 import { backfillSpecimens as backfill } from '../src/levels/progress';
 import { defaultSave as freshSave } from '../src/levels/save';
 import { LEVELS as ALL_LEVELS, isDeep as deepLevel } from '../src/levels/levels';

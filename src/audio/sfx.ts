@@ -89,6 +89,14 @@ export class SynthAudio implements Audio {
         this.noise(t, 0.06, 0.35 * v, 'lowpass', 1200, 1);
         this.tone('sine', 300, 340, t + 0.05, 0.25, 0.12 * v, 18, 25); // boing tail
         break;
+      case 'clop':
+        this.tone('triangle', 700, 230, t, 0.055, 0.44 * v);
+        this.tone('triangle', 540, 185, t + 0.07, 0.075, 0.5 * v);
+        break;
+      case 'moo':
+        this.tone('sawtooth', 136, 92, t, 0.66, 0.21 * v, 4, 4, true, 460);
+        this.tone('triangle', 264, 178, t, 0.65, 0.12 * v);
+        break;
       case 'snore': {
         this.noise(t, 0.9, 0.35 * v, 'bandpass', 380, 2.5, 220, true);
         this.tone('sawtooth', 62, 55, t, 0.9, 0.09 * v, 0, 0, true, 300);

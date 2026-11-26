@@ -10,6 +10,7 @@
 import type { AbductFailReason, AbductResult, RoomId, Vec2 } from '../contracts';
 import { ROOMS } from '../abduct/rooms';
 import { MapCollectible } from '../flight/collectible';
+import { GrailSpeech } from '../flight/grail';
 import { crestValleyClock } from '../flight/time-car';
 import { troopTallies, type TroopTally } from '../flight/roam';
 import { specimenForTarget, type DeepSummary, type SpecimenFind, type TrophyFind } from './progress';
@@ -70,6 +71,7 @@ export class DeepRun {
   /** v3 report (L6): Form 7-B readings of the delivered specimens. */
   readonly probeReadings: string[] = [];
 
+  readonly grail: GrailSpeech | undefined;
   readonly troops: (TroopTally | undefined)[];
   readonly collectible: MapCollectible | null;
 
@@ -77,6 +79,7 @@ export class DeepRun {
     readonly level: DeepLevelDef,
     readonly levelIndex: number,
   ) {
+    if (level.id === 'level10') this.grail = new GrailSpeech();
     this.delivered = level.map.targets.map(() => false);
     this.troops = troopTallies(level.map.targets);
     this.collectible = level.map.collectible ? new MapCollectible(level.map.collectible) : null;

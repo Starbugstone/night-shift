@@ -149,6 +149,7 @@ export type DeepZibEvent =
   | 'start7'
   | 'start8'
   // v4 L9 1955
+  | 'start10' | 'grailSentry' | 'cow' | 'clop' | 'rabbit'
   | 'start9' | 'timeCarWarn' | 'timeCarLaunch' | 'lightning' | 'timeCarMissed' | 'timeCarCaught'
   | 'stormClosing' | 'eraLight' | 'eraWatcher' | 'eraPolice'
   | 'twoOfThree'
@@ -263,6 +264,7 @@ const DEEP_START: Readonly<Record<string, DeepZibEvent>> = {
   level7: 'start7',
   level8: 'start8',
   level9: 'start9',
+  level10: 'start10',
 };
 
 /** v4 story: shift-opener Zib event for a deep level id, or null if none. */

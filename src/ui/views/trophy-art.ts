@@ -233,6 +233,14 @@ function paintTownPickupShape(g: CanvasRenderingContext2D, id: MapCollectibleId,
   g.fillStyle = SILHOUETTE_COLOR;
 
   switch (id) {
+    case 'shrubbery':
+      g.fillRect(-9, 10, 18, 15);
+      for (let i = 0; i < 3; i++) {
+        g.beginPath();
+        g.ellipse(0, 7 - 12 * i, 20 - i * 4, 10, 0, 0, TAU);
+        g.fill();
+      }
+      break;
     case 'slipper_flyer': {
       g.rotate(-0.12);
       g.beginPath();

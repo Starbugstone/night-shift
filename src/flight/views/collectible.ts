@@ -234,6 +234,8 @@ const FALLBACK: Record<MapCollectibleId, { draw: () => Graphics; w: number; h: n
     .circle(-8, 1, 18).fill('#e8a48c').poly([-26, 1, -8, 34, 11, 3, -9, 11]).fill('#fff1d6')
     .poly([-29, -8, 4, -50, 14, -8]).fill('#d64c62').moveTo(13, 23)
     .quadraticCurveTo(38, -30, 44, -23).lineTo(44, 24).stroke({ color: '#ac876f', width: 3 }), w: 91, h: 113, rot: 0 },
+  shrubbery: { draw: () => new Graphics().poly([-24, 24, 24, 24, 18, 55, -18, 55]).fill('#bd7555')
+    .rect(-4, -25, 8, 52).fill('#906449').ellipse(0, 6, 46, 17).ellipse(0, -18, 33, 16).ellipse(0, -40, 19, 13).fill('#659956'), w: 106, h: 116, rot: 0 },
   time_car: { draw: () => timeCarWedge(true), w: 96, h: 172, rot: 0 },
   slipper_flyer: { draw: slipperFlyer, w: 46, h: 58, rot: -0.14 },
   astronomer: { draw: volunteerAstronomer, w: 56, h: 46, rot: 0 },

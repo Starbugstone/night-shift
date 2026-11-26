@@ -31,6 +31,7 @@ import { CameraView, GroundView, PropLayer, ShadowsView, TAU, TargetBuilding, ba
 import { EggView } from './eggs'; // v4 easter eggs
 import { MapCollectibleToast, MapCollectibleView } from './collectible';
 import { BirchFlightDecor } from './birch';
+import { grailTerrain, GrailSpeechView } from './grail';
 import { CrestValleyView } from './time-car';
 
 const SHADOW_OFF: Partial<Record<PropKind, number>> = {
@@ -303,6 +304,7 @@ export class DeepFlightView implements SceneView {
   private readonly eggs: EggView; // v4 easter eggs
   private readonly collectible: MapCollectibleView | null;
   private readonly birch: BirchFlightDecor | null;
+  private readonly grail: GrailSpeechView | null;
   private readonly crestValley: CrestValleyView | null;
   private readonly pickupToast: MapCollectibleToast | null;
   private readonly targets: DeepTargetView[];
@@ -340,6 +342,10 @@ export class DeepFlightView implements SceneView {
         case 'badlands':
           basicGround(g, assets, 'flight/ground_badlands', x, y, w, h, '#493743', '#614951', s.speckles, false);
           if (!assets.get('flight/ground_badlands')) paintBadlands(g, x, y, w, h);
+          break;
+        case 'grail':
+          basicGround(g, assets, 'flight/ground_farm', x, y, w, h, '#374c42', '#4e6350', s.speckles, true);
+          grailTerrain(g);
           break;
         case 'storm55':
           basicGround(g, assets, 'flight/ground_storm55', x, y, w, h, '#303849', '#3b4253', s.speckles, false);
@@ -393,6 +399,8 @@ export class DeepFlightView implements SceneView {
     // speech bubbles above every map object (houses, dogs, critters, rings), under the saucer
     const bubbles = new Container();
     bubbles.label = FLIGHT_BUBBLES;
+    this.grail = m.theme === 'grail' ? new GrailSpeechView() : null;
+    if (this.grail) bubbles.addChild(this.grail.root);
     for (const target of this.targets) bubbles.addChild(target.bubble);
     bubbles.addChild(this.hazards.bubbles);
     if (this.collectible) bubbles.addChild(this.collectible.bubbles);
@@ -451,6 +459,7 @@ export class DeepFlightView implements SceneView {
       l.visible = cam.sees(l.x, l.y, 120);
       l.alpha = 1 - dawn * 0.6;
     }
+    this.grail?.sync(s);
     this.hazards.sync(cam, t, rm);
     // v4 council: route pills keep clear of the HUD boxes and of every entry ring on screen
     const quietPills = !!strike && strike.age < 1.12;

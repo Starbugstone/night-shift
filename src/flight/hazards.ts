@@ -3,6 +3,7 @@
 // Every hazard except porch lights is a pure function of the hazard clock `t`, so the same
 // field can be sampled at future times (the autopilot looks ahead this way) and the drawn shape
 // is always the hit shape: render code reads the positions/angles sampled here.
+import { COW, CLOP, RABBIT, cycleTime, rabbitStart, inRabbitRun, type GrailHazard } from './grail';
 import type { Vec2 } from '../contracts';
 import { circleSegment, pointInCircle, pointInCone, wrapAngle, type SegHit } from './geometry';
 import { POWER_LINE, SAUCER, barkRadius, neonOn, neonScramble, type Saucer } from './sim';
@@ -150,7 +151,7 @@ export interface CameraHazard {
   /** L7 cruise code: turn steadily at this many rad/s from `base` instead of sweeping (a radar). */
   spin?: number;
   /** v4 L9 1955: era fixture at the cone origin. */
-  skin?: 'marshal55_torch' | 'dance_spot55' | 'worklamp55';
+  skin?: 'marshal55_torch' | 'dance_spot55' | 'worklamp55' | 'grail_sentry_top';
 }
 
 /** Neon sign / billboard: inside the glow, steering is scrambled while it is lit. */
@@ -206,6 +207,7 @@ export interface GagHazard {
 }
 
 export type HazardDef =
+  | GrailHazard
   | CarHazard
   | TrafficHazard
   | PorchHazard
@@ -327,11 +329,12 @@ export const SPOT_CAUSES = [
   'hum',
   // v4 L9 1955
   'eraLight', 'eraWatcher', 'eraPolice',
+  'grailSentry', 'cow', 'clop', 'rabbit',
 ] as const;
 export type SpotCause = (typeof SPOT_CAUSES)[number];
 
 /** Things that bump the saucer. */
-export type BumpCause = 'wire' | 'tram' | 'bat' | 'pigeon' | 'crane'
+export type BumpCause = 'wire' | 'tram' | 'bat' | 'pigeon' | 'crane' | 'cow'
   // L5 pier code
   | 'gull';
 
@@ -370,6 +373,7 @@ function newCar(key: CarKey): CarRT {
  * copied for look-ahead.
  */
 export class HazardField {
+  readonly rabbitIndex: number;
   readonly defs: readonly HazardDef[];
   /** Per-hazard sampled pose: x, y, angle (meaning depends on type). */
   readonly x: Float64Array;
@@ -407,6 +411,7 @@ export class HazardField {
 
   constructor(defs: readonly HazardDef[]) {
     this.defs = defs;
+    this.rabbitIndex = defs.findIndex(d => d.type === 'rabbit');
     const n = defs.length;
     this.x = new Float64Array(n);
     this.y = new Float64Array(n);
@@ -444,7 +449,7 @@ export class HazardField {
         this.ambSlot[i] = amb++;
       } else if (d.type === 'photographer') {
         this.photoSlot[i] = photo++; // L7 cruise code
-      } else if (d.type === 'steward') {
+      } else if (d.type === 'steward' || d.type === 'squire') {
         route = new Route(d.path, false); // L7 cruise code
       }
       this.cars.push(cars);
@@ -594,6 +599,33 @@ export class HazardField {
           this.a[i] = tau >= 0 && tau < PHOTO.iris + PHOTO.expose ? Math.atan2(this.photo[k + 2]! - d.y, this.photo[k + 1]! - d.x) : d.facing + 0.5 * Math.sin(t * 0.7 + d.x);
           break;
         }
+        case 'cow': {
+          const age = cycleTime(t - d.offset, COW.cycle);
+          this.x[i] = d.x;
+          this.y[i] = d.y;
+          this.b[i] = age;
+          this.a[i] = COW.radius;
+          this.tell[i] = Number(age < COW.warning);
+          this.on[i] = Number(age >= COW.warning && age < COW.warning + COW.impact);
+          break;
+        }
+        case 'squire': {
+          stewardPose(d, this.routes[i]!, t, this.steward, this.tmp);
+          this.x[i] = this.steward.x;
+          this.y[i] = this.steward.y;
+          this.b[i] = this.steward.heading;
+          const age = cycleTime(t, CLOP.period);
+          this.tell[i] = Number(age >= CLOP.period - CLOP.warning);
+          this.on[i] = Number(age < CLOP.pulse);
+          this.a[i] = Math.min(1, age / CLOP.pulse) * CLOP.radius;
+          break;
+        }
+        case 'rabbit':
+          this.x[i] = d.x;
+          this.y[i] = d.y;
+          this.a[i] = RABBIT.radius;
+          this.on[i] = 0;
+          break;
         case 'steward': {
           stewardPose(d, this.routes[i]!, t, this.steward, this.tmp);
           this.x[i] = this.steward.x;
@@ -687,6 +719,13 @@ export class HazardField {
         case 'watcher':
           if (pointInCone(x, y, d.x, d.y, this.a[i]!, d.half, d.range)) return i;
           break;
+        case 'rabbit':
+          if (this.on[i] && inRabbitRun(d.x, d.y, x, y)) return i;
+          break;
+        case 'cow':
+        case 'squire':
+          if (this.on[i] && pointInCircle(x, y, this.x[i]!, this.y[i]!, this.a[i]!)) return i;
+          break;
         case 'dog':
           if (pointInCircle(x, y, d.x, d.y, this.a[i]!)) return i;
           break;
@@ -718,6 +757,17 @@ export class HazardField {
       }
     }
     return -1;
+  }
+
+  stepRabbit(start: number, x: number, y: number, speed: number): number {
+    const i = this.rabbitIndex;
+    if (i < 0) return start;
+    const next = rabbitStart(start, this.t, speed <= RABBIT.speed && pointInCircle(x, y, this.x[i]!, this.y[i]!, RABBIT.radius));
+    const age = this.t - next;
+    this.tell[i] = Number(age < RABBIT.arm);
+    this.on[i] = Number(age >= RABBIT.arm && age < RABBIT.arm + RABBIT.lunge);
+    this.b[i] = age;
+    return next;
   }
 
   /** L6: scramble ambulances whose bay the saucer at (x, y) is near, at hazard time t. Returns the first index scrambled, or -1. */
@@ -776,14 +826,14 @@ export class HazardField {
         const tail = d.len * CRANE_TAIL;
         const a = this.a[i]!;
         touched = circleSegment(s.x, s.y, R * POWER_LINE.hitFrac + d.width / 2, d.x - Math.cos(a) * tail, d.y - Math.sin(a) * tail, this.x2[i]!, this.y2[i]!, hit);
-      } else if (d.type === 'flock') {
+      } else if (d.type === 'flock' || (d.type === 'cow' && this.on[i])) {
         const dx = s.x - this.x[i]!;
         const dy = s.y - this.y[i]!;
-        const rr = d.r + R * 0.7;
+        const rr = (d.type === 'cow' ? COW.body : d.r) + R * 0.7;
         const d2 = dx * dx + dy * dy;
         if (d2 < rr * rr) {
           const dd = Math.sqrt(d2) || 1;
-          hit.nx = dx / dd;
+          hit.nx = d2 === 0 ? 1 : dx / dd;
           hit.ny = dy / dd;
           hit.depth = rr - dd;
           touched = true;
@@ -830,7 +880,10 @@ export class HazardField {
       case 'heli':
         return 'heli';
       case 'camera':
-        return d.skin ? 'eraLight' : 'camera';
+        return d.skin === 'grail_sentry_top' ? 'grailSentry' : d.skin ? 'eraLight' : 'camera';
+      case 'squire': return 'clop';
+      case 'cow':
+      case 'rabbit': return d.type;
       case 'ambulance':
         return 'ambulance';
       // L5 pier code
@@ -849,6 +902,7 @@ export class HazardField {
   bumpCause(i: number): BumpCause {
     const d = this.defs[i]!;
     if (d.type === 'wire') return d.kind === 'tram' ? 'tram' : 'wire';
+    if (d.type === 'cow') return 'cow';
     if (d.type === 'flock') return d.kind;
     return 'crane';
   }

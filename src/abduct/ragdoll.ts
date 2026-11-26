@@ -343,6 +343,8 @@ export class Ragdoll {
     return this.vy[joint]!;
   }
 
+  supported(joint: number): boolean { return this.contactY[joint]! < -0.5; }
+
   kick(joint: number, vx: number, vy: number): void {
     this.oldX[joint] = this.oldX[joint]! - vx * STEP;
     this.oldY[joint] = this.oldY[joint]! - vy * STEP;

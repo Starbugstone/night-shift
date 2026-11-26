@@ -23,6 +23,7 @@ export const PICKUP_SIZE: Record<MapCollectibleId, readonly [w: number, h: numbe
   shrimp_tower: [104, 116],
   krix: [92, 116],
   // v4 L9 1955
+  shrubbery: [106, 116],
   time_car: [96, 172],
 };
 

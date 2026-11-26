@@ -79,7 +79,9 @@ export type SfxName =
   | 'pickup'
   | 'checkpoint'
   | 'sunrise'
-  | 'monolith_hum';
+  | 'monolith_hum'
+  // v4 1122
+  | 'moo' | 'clop';
 
 /** v4 voices: who is talking when a line of text appears (src/audio/voice.ts). */
 export type VoiceId = 'zib' | 'vrell' | 'bureau';
@@ -178,7 +180,8 @@ export type RoomId =
   | 'echo_appeal'
   // v4 L9 1955
   | 'inventor_balcony' | 'inventor_service' | 'bully_transom' | 'bully_kitchen' | 'band_hatch' | 'band_canopy'
-  ;
+  // v4 1122
+  | 'rodney_flap' | 'rodney_loft' | 'black_knight_arch' | 'black_knight_loft' | 'tom_stair' | 'tom_smoke';
 
 /** How punishing an abduction is. Tutorials: all false. Deep levels: all true. */
 export interface AbductRules {
@@ -251,7 +254,9 @@ export type MapCollectibleId =
   | 'shrimp_tower'
   | 'krix'
   // v4 L9 1955
-  | 'time_car';
+  | 'time_car'
+  // v4 1122
+  | 'shrubbery';
 
 export interface FlightResult {
   /** Which entry point the player locked onto. */

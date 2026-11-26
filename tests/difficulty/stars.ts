@@ -9,6 +9,7 @@ import { DeepRun } from '../../src/levels/run';
 import type { Stars } from '../../src/levels/save';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from '../../src/levels/types';
 import { BakeryFirstRead, BirchPickupFirst, isBirch, NeighboursCut } from './birch';
+import { shrubberyDetour } from './grail';
 import { CarFirst, type CarAttempt } from './time-car';
 import { humanFlightController, humanSteering, playAbduction, rng, type AbductRun, type HumanProfile } from './human';
 
@@ -96,12 +97,13 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     const read = firstLeg && level.id === 'birch_bakery' ? new BakeryFirstRead(sim, profile, seed)
       : firstLeg && level.id === 'birch_neighbours' ? new NeighboursCut(sim, profile, seed) : undefined;
     const legStart = shift.elapsed;
+    const hedge = detour && level.id === 'level10' && sim.collectible?.available ? shrubberyDetour(sim, profile, seed) : undefined;
     let exposure: Record<number, number> | undefined;
     while (shift.phase === 'flight' && shift.elapsed < limit) {
       const wasFlying = flight.state === 'fly';
       // the SPOTTED card waits for a tap: the player taps when it used to close by itself
       const chase = wasFlying && car?.active ? car : undefined;
-      steer(ctx.pointer, wasFlying ? (chase?.steer() ?? (birch?.active ? birch.steer() : read?.active ? read.steer() : controller(sim))) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
+      steer(ctx.pointer, wasFlying ? (hedge && sim.collectible?.available ? hedge() : chase?.steer() ?? (birch?.active ? birch.steer() : read?.active ? read.steer() : controller(sim))) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
       ctx.time += DT;
       flight.update(DT);
       chase?.record();
@@ -251,6 +253,11 @@ export function evaluateStars(level: LevelDef, profile: HumanProfile, seeds: num
     if (run.stars[2]) earned[2]++;
   }
   return { profile: profile.name, earned, attempts: runs.length, runs };
+}
+
+export function evaluateShrubbery(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction) {
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, true));
+  return { profile: profile.name, fourthStars: runs.filter(run => run.stars[3]).length, attempts: seeds };
 }
 
 export interface CarReport {

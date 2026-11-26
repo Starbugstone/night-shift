@@ -38,6 +38,7 @@ export interface FlightState {
   ambT: Float64Array;
   /** L7 cruise code: per photographer, the hazard time of its last half-press and the frame centre. */
   photo: Float64Array;
+  rabbitStart: number;
   /** Detection ignored while > 0. */
   safe: number;
   bumpCd: number;
@@ -59,6 +60,7 @@ export function newFlightState(porches: number, ambulances = 0, photographers = 
     porchArm: new Float64Array(porches),
     porchLit: new Float64Array(porches),
     ambT: new Float64Array(ambulances).fill(-Infinity),
+    rabbitStart: -Infinity,
     photo: newPhotoState(photographers),
     safe: 0,
     bumpCd: 0,
@@ -70,6 +72,7 @@ export function newFlightState(porches: number, ambulances = 0, photographers = 
 
 export function copyFlightState(dst: FlightState, src: FlightState): void {
   dst.t = src.t;
+  dst.rabbitStart = src.rabbitStart;
   dst.s.x = src.s.x;
   dst.s.y = src.s.y;
   dst.s.vx = src.s.vx;
@@ -129,6 +132,7 @@ export function stepFlight(
   st.click = field.stepPorches(s.x, s.y, dt, st.porchArm, st.porchLit);
   field.stepAmbulances(s.x, s.y, st.t);
   field.stepPhotographers(s.x, s.y, saucerSpeed(s), st.t);
+  if (field.rabbitIndex >= 0) st.rabbitStart = field.stepRabbit(st.rabbitStart, s.x, s.y, saucerSpeed(s));
   if (st.safe > 0) {
     st.safe = Math.max(0, st.safe - dt);
     st.cause = -1;
@@ -229,6 +233,7 @@ export class DeepFlightSim {
     this.st.cool = 0;
     this.st.safe = safe;
     this.st.porchArm.fill(0);
+    this.st.rabbitStart = -Infinity;
     this.lock.reset();
     this.collectible?.resetHover();
     this.phase = 'fly';

@@ -126,7 +126,7 @@ export interface StewardPose {
 }
 
 /** Where a steward is at hazard time t (allocation-free). */
-export function stewardPose(d: StewardHazard, route: Route, t: number, out: StewardPose, tmp: { x: number; y: number }): void {
+export function stewardPose(d: Pick<StewardHazard, 'path' | 'speed' | 'dwell' | 'phase' | 'sweepAmp' | 'sweepRate'>, route: Route, t: number, out: StewardPose, tmp: { x: number; y: number }): void {
   const run = route.total / d.speed;
   const period = 2 * (run + d.dwell);
   let tau = (((d.phase / d.speed + t) % period) + period) % period;

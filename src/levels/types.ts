@@ -167,7 +167,7 @@ type MapTarget = DeepTarget<EntryDef[]>;
 
 export interface DeepMap {
   /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
-  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55';
+  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55' | 'grail';
   collectible?: MapCollectibleDef;
   w: number;
   h: number;
