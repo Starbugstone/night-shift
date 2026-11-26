@@ -1,5 +1,5 @@
 import type { RoomId } from '../contracts';
-import { COW, GRAIL_LAUNCH, GRAIL_SENTRY, NI_KNIGHTS } from '../flight/grail';
+import { COW, CRAG_SENTRY, GRAIL_LAUNCH, GRAIL_SENTRY, NI_KNIGHTS, OUTWORK, OUTWORK_SENTRIES } from '../flight/grail';
 import { en } from '../i18n/en';
 import type { DeepLevelDef, EntryDef, PropDef } from './types';
 
@@ -13,15 +13,16 @@ export const LEVEL10: DeepLevelDef = {
   kind: 'deep', id: 'level10', requires: ['level9'], title: copy.title, location: copy.location,
   blurb: copy.blurb, human: copy.human, mugshot: 'human/rodney_head',
   memo: { re: copy.re, body: copy.body, joke: copy.joke },
-  hours: [2, 6], budgetSec: 330, parMarginSec: 202,
+  hours: [2, 6], budgetSec: 330, parMarginSec: 198,
   map: {
-    theme: 'grail', w: 1800, h: 2320, start: GRAIL_LAUNCH, fuseSec: 0.75,
+    theme: 'grail', w: 1800, h: 2320, start: GRAIL_LAUNCH, fuseSec: 0.8,
     collectible: { id: 'shrubbery', x: 100, y: 805 },
     // The banks, bridge and winding cart tracks are painted together in the terrain tile.
     roads: [], groundProps: [],
     props: [
-      // The French have rolled their wooden rabbit up to Rodney's tent; the taunter perches on it.
-      prop('grail_battlement_top', 900, 1450), prop('grail_wooden_rabbit_top', GRAIL_SENTRY.x - 6, GRAIL_SENTRY.y + 22),
+      // The French outwork holds the middle of the field. Their wooden rabbit has rolled up to Rodney's tent, and
+      // the taunter perches on it.
+      prop('grail_battlement_top', OUTWORK.x, OUTWORK.y), prop('grail_wooden_rabbit_top', GRAIL_SENTRY.x - 6, GRAIL_SENTRY.y + 22),
       prop('grail_cave_top', 1190, 922), prop('grail_ni_knights_top', NI_KNIGHTS.x, NI_KNIGHTS.y),
       prop('hedge_top', 95, 700, 'hedge'), prop('hedge_top', 85, 915, 'hedge'),
       { key: 'room/coconut_halves', x: GRAIL_LAUNCH.x - 40, y: GRAIL_LAUNCH.y + 85, kind: 'haybale' },
@@ -39,6 +40,7 @@ export const LEVEL10: DeepLevelDef = {
       { type: 'cow', x: 460, y: 1125, offset: 0 }, { type: 'cow', x: 1010, y: 1090, offset: COW.cycle / 2 },
       { type: 'squire', path: [{ x: 605, y: 920 }, { x: 630, y: 590 }], speed: 82, dwell: 1, phase: 0, sweepAmp: 0, sweepRate: 0 },
       { type: 'rabbit', x: 1190, y: 970 },
+      ...OUTWORK_SENTRIES, CRAG_SENTRY,
     ],
     lamps: [{ x: 265, y: 1930 }, { x: 265, y: 1210 }, { x: 330, y: 920 }, { x: 1525, y: 1900 },
       { x: 1515, y: 1230 }, { x: 1530, y: 660 }, { x: 700, y: 1300 }, { x: 1030, y: 930 }],

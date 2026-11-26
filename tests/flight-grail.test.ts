@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { VIEW_H, VIEW_W } from '../src/contracts';
 import { DeepFlightSim, stepFlight } from '../src/flight/deep-sim';
-import { COW, GRAIL_LAUNCH, GRAIL_SENTRY, GrailSpeech, RABBIT } from '../src/flight/grail';
+import { COW, CRAG_SENTRY, GRAIL_LAUNCH, GRAIL_SENTRY, GrailSpeech, OUTWORK_SENTRIES, RABBIT } from '../src/flight/grail';
 import { en } from '../src/i18n/en';
 import { LEVEL10 } from '../src/levels/deep-grail';
 import { BEELINE_DELAYS } from './difficulty/beeline';
@@ -16,41 +16,47 @@ function drive(sim: DeepFlightSim, dx: number, dy: number) {
 }
 
 describe('Grimsby Keep', () => {
-  it('launches from the west cart track, clear of every detector, and the lookout guards Rodney’s tent instead', () => {
+  it('launches from the west cart track with every detector off the first screen below the HUD', () => {
     expect(map.start).toEqual(GRAIL_LAUNCH);
     expect(GRAIL_LAUNCH.x).toBeLessThan(map.w / 4);
-    // First screen at launch: the lookout stands above it, and only the far rim of his sector reaches its top
-    // quarter. The lower three quarters, around the saucer, are dark.
+    // First screen at launch: every sentry stands above it. Only cone tips reach its top 200 px, under the HUD.
     const sim = new DeepFlightSim(map, new Set());
     const top = sim.camY;
-    expect(GRAIL_SENTRY.y).toBeLessThan(top);
+    for (const d of [GRAIL_SENTRY, ...OUTWORK_SENTRIES, CRAG_SENTRY]) {
+      expect(d.y).toBeLessThan(top);
+      expect(Math.hypot(d.x - map.start.x, d.y - map.start.y)).toBeGreaterThan(900);
+    }
     const lit = new Float64Array(8);
     const exposed: string[] = [];
     for (let t = 0; t < 20; t += 0.25) {
       sim.field.sample(t);
-      for (let y = top + VIEW_H / 4; y <= top + VIEW_H; y += 20) for (let x = sim.camX; x <= sim.camX + VIEW_W; x += 20) {
+      for (let y = top + 200; y <= top + VIEW_H; y += 20) for (let x = sim.camX; x <= sim.camX + VIEW_W; x += 20) {
         if (sim.field.detect(x, y, lit) !== -1) exposed.push(`${x},${y} at ${t}s`);
       }
     }
     expect(exposed).toEqual([]);
-    expect(Math.hypot(GRAIL_SENTRY.x - map.start.x, GRAIL_SENTRY.y - map.start.y)).toBeGreaterThan(900);
   });
 
-  // The nearest witness from the west launch is Rodney, so the naive beeline (tests/difficulty/beeline.ts) runs at
-  // his tent. The lookout catches a straight run at either of his rings, about 800 px out, past the first screen.
-  it.each(BEELINE_DELAYS)('at %s seconds the lookout at Rodney’s tent catches every direct first approach to Rodney', delay => {
+  // The French line (the taunter at Rodney's tent, the two outwork sentries and the crag lookout) faces south. A straight run from
+  // the launch at any of the six doors is seen well past the first screen. The way round is the east end of the
+  // outwork.
+  it.each(BEELINE_DELAYS)('at %s seconds the French line catches a straight run at every door, past the first screen', delay => {
     const beeline = runHeadless(map, [], beelineController, 60, true, delay);
     expect(beeline.legs).toEqual([]);
     expect(beeline.spots.map(spot => spot.cause)).toEqual(['grailSentry']);
-    for (const ring of map.targets[0]!.entries) {
+    const firstScreen = new DeepFlightSim(map, new Set()).camY;
+    for (const ring of map.targets.flatMap(target => target.entries)) {
       const sim = new DeepFlightSim(map, new Set(), delay);
-      for (let frame = 0; frame < 360 && sim.st.sus < 1; frame++) {
+      for (let frame = 0; frame < 600 && sim.st.sus < 1 && sim.phase === 'fly'; frame++) {
         const { x, y } = sim.saucer, dx = ring.x - x, dy = ring.y - y;
-        const d = Math.hypot(dx, dy);
-        drive(sim, dx / d * 180, dy / d * 180);
+        const d = Math.hypot(dx, dy) || 1, k = Math.min(180, d * 1.4) / d;
+        drive(sim, dx * k, dy * k);
       }
       expect(sim.st.sus, ring.roomId).toBe(1);
-      expect(sim.field.spotCause(sim.st.cause)).toBe('grailSentry');
+      // At 0 s the first cow lands on the run to Rodney's loft just before the taunter's fuse fills.
+      expect(['grailSentry', 'cow'], ring.roomId).toContain(sim.field.spotCause(sim.st.cause));
+      expect(Math.hypot(sim.saucer.x - map.start.x, sim.saucer.y - map.start.y), ring.roomId).toBeGreaterThan(800);
+      expect(sim.saucer.y, ring.roomId).toBeLessThan(firstScreen);
     }
     const planned = runHeadless(map, [], autopilotController(), 150, true, delay);
     expect(planned.spots).toEqual([]);

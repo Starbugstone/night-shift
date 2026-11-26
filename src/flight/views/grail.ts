@@ -6,7 +6,7 @@ import { artSprite } from '../../ui/views/art';
 import { C } from '../../ui/theme';
 import type { DeepFlightScene } from '../deep-scene';
 import type { HazardField } from '../hazards';
-import { CLOP, COW, GRAIL_LAUNCH, NI_KNIGHTS, PAVILION_RUTS, RABBIT, type GrailHazard } from '../grail';
+import { CLOP, COW, END_RUN_RUTS, GRAIL_LAUNCH, NI_KNIGHTS, RABBIT, type GrailHazard } from '../grail';
 import { dashedArc, sectorPath } from './tells';
 import type { Box } from './clear-of';
 import type { CameraView } from './world';
@@ -27,7 +27,7 @@ export function grailTerrain(g: CanvasRenderingContext2D): void {
   for (const d of roads) {
     stroke(d, '#504e44', 79); stroke(d, '#766d58', 66); stroke(d, '#716750', 42);
   }
-  for (const d of ['M' + PAVILION_RUTS.map(([x, y]) => `${x} ${y}`).join('L'), 'M785 855L1030 930L1010 1090L1190 1010H1370L1530 660']) {
+  for (const d of ['M' + END_RUN_RUTS.map(([x, y]) => `${x} ${y}`).join('L'), 'M785 855L1030 930L1010 1090L1190 1010H1370L1530 660']) {
     stroke(d, '#625e4c', 48); stroke(d, '#948169', 29); stroke(d, '#655f4e', 22);
   }
   // Old hoofprints survive between drops so a pilot can identify the landing site while waiting.

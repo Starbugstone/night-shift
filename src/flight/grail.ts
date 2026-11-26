@@ -15,9 +15,24 @@ export const CLOP = { period: 2.6, warning: 0.45, pulse: 1.05, radius: 118 };
 export const RABBIT = { radius: 118, speed: 110, arm: 0.75, lunge: 0.95, rest: 1.5 };
 /** The coconut cavalry trots in from the west along the cart track. */
 export const GRAIL_LAUNCH = { x: 180, y: 2060 };
-/** The French taunter watches the inner field between Rodney's pavilion and the Black Knight's bridge. */
+/**
+ * The French taunter rides the wooden rabbit at the west side of Rodney's tent and watches the cart track south
+ * of it. The column north of the launch and both straight runs at Rodney's rings cross his sector.
+ */
 export const GRAIL_SENTRY = {
-  type: 'camera', skin: 'grail_sentry_top', x: 220, y: 1070, base: 1.28, range: 520, half: 0.6, amp: 0, rate: 0, phase: 0,
+  type: 'camera', skin: 'grail_sentry_top', x: 210, y: 990, base: 1.35, range: 550, half: 0.4, amp: 0, rate: 0, phase: 0,
+} satisfies CameraHazard;
+/** The French outwork in mid-field, south of the Black Knight's bridge. Two sentries stand back to back on it. */
+export const OUTWORK = { x: 762, y: 1065 };
+export const OUTWORK_SENTRIES = [
+  // looks south-west: the straight runs at Rodney's loft and the Black Knight's arch
+  { type: 'camera', skin: 'grail_sentry_top', x: 735, y: 990, base: 2.54, range: 600, half: 0.48, amp: 0, rate: 0, phase: 0 },
+  // looks south: the straight runs at the Black Knight's loft and Tom's smoke hole
+  { type: 'camera', skin: 'grail_sentry_top', x: 790, y: 985, base: 1.72, range: 570, half: 0.33, amp: 0, rate: 0, phase: 0 },
+] as const satisfies readonly CameraHazard[];
+/** A third French lookout stands at the foot of Tom's stair and looks back down the road to the outwork. */
+export const CRAG_SENTRY = {
+  type: 'camera', skin: 'grail_sentry_top', x: 1505, y: 675, base: 2.34, range: 390, half: 0.28, amp: 0, rate: 0, phase: 0,
 } satisfies CameraHazard;
 /** The Knights Who Say Ni, by the west hedge north of Rodney's tent. */
 export const NI_KNIGHTS = { x: 185, y: 770 };
@@ -37,11 +52,11 @@ export function rabbitStart(start: number, t: number, eligible: boolean): number
   return eligible ? t : -Infinity;
 }
 
-// The cart driver leaves the watched track and follows the wagon ruts up the field east of the lookout,
-// then times the first cow drop into Rodney's supply flap.
-export const PAVILION_RUTS = [[700, 2040], [700, 1150], [470, 1050], [315, 990]] as const;
+// The French line faces south. The cart driver's way round it: east along the south track, past the east end of
+// the outwork, in behind the sentries, then west along the moat bank to Rodney's supply flap.
+export const END_RUN_RUTS = [[560, 2045], [900, 1540], [1100, 1460], [1220, 1290], [1135, 1090], [1020, 915]] as const;
 export function pavilionTrack(): Vec2[] {
-  const posts = [[GRAIL_LAUNCH.x, GRAIL_LAUNCH.y], [430, 2045], ...PAVILION_RUTS] as const;
+  const posts = [[GRAIL_LAUNCH.x, GRAIL_LAUNCH.y], ...END_RUN_RUTS, [600, 900], [420, 960], [315, 990]] as const;
   const points: Vec2[] = [{ x: posts[0][0], y: posts[0][1] }];
   for (let i = 1; i < posts.length; i++) {
     const [x, y] = posts[i - 1]!, [tx, ty] = posts[i]!;
