@@ -462,10 +462,7 @@ export class AbductSimulation {
     if (ready && (this.interior?.probes?.done ?? true)) {
       this.grail?.cancel();
       this.delivered = true;
-      // A captured item still with the body goes home with it. It trails the chest by up to ~70 px
-      // when the body enters the exit fast, so it is not asked to be inside the exit zone too.
-      this.item.stolen = this.item.captured &&
-        Math.hypot(this.body.chestX - this.item.x, this.body.chestY - this.item.y) < 108;
+      this.item.stolen = this.item.captured;
       this.audio.sfx('success');
     }
   }
@@ -609,13 +606,25 @@ export class AbductSimulation {
     }
   }
 
+  private touchesItem(): boolean {
+    const { item, body } = this;
+    for (let i = 0; i < body.x.length; i++) {
+      const dx = body.x[i]! - item.x;
+      const dy = body.y[i]! - item.y;
+      const reach = body.plan.radii[i]! + this.itemRadius;
+      if (dx * dx + dy * dy <= reach * reach) return true;
+    }
+    return false;
+  }
+
   private updateItem(): void {
     const item = this.item;
     const body = this.body;
     const dy = item.y - body.chestY;
     const t = clamp((item.y - CEILING) / Math.max(30, body.chestY - CEILING), 0, 1);
     const columnX = this.interior ? body.chestX : this.emitterX + (body.chestX - this.emitterX) * t;
-    if (this.beamMoved && !item.captured && dy > -115 && dy < 78 && Math.abs(item.x - columnX) < 57) {
+    const inBeam = dy > -115 && dy < 78 && Math.abs(item.x - columnX) < 57;
+    if (this.beamMoved && !item.captured && (inBeam || this.touchesItem())) {
       item.captured = true;
       item.side = item.x < body.chestX ? -1 : 1;
       this.itemSeq++;
@@ -632,6 +641,9 @@ export class AbductSimulation {
     item.x += item.vx * STEP;
     item.y += item.vy * STEP;
 
+    // Once beamed up, the souvenir floats with the specimen. Otherwise a closed shutter
+    // can keep it on the wrong side for the rest of the run, even after the pickup pop.
+    if (item.captured) return;
     const c = this.contact;
     for (const solid of this.solids) {
       if (!c.find(item.x, item.y, this.itemRadius, solid)) continue;

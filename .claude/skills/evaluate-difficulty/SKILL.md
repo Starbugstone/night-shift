@@ -56,6 +56,13 @@ fuse, and each frame is attributed to the detector the game selects. `npm test` 
 at six seeds.
 Seed counts must be positive integers. Unknown level IDs and deep levels without a band fail.
 
+Each level also reports the casual median time from first input to delivery and two souvenir
+counts. The ordinary route supplies the time. The souvenir run takes one detour from the closest
+point along the route, approaches the item from above and returns to that point. Both use the
+same seeds, pace, reaction delay and hand wobble. Grabbed counts a pickup even if the specimen
+later wakes. Taken home counts the item on the delivery report. The floor is 40% of all attempts,
+or 75% for the flex capacitor. Field Check runs under its practice rules and appears with L2.
+
 ## Star bands
 
 The game awards Delivered for a completed delivery or all three in a deep shift. Still asleep

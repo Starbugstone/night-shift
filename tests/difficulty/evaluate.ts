@@ -4,11 +4,13 @@
 import { GRAIL_TARGETS } from './grail';
 import type { RoomId } from '../../src/contracts';
 import { deepPar, type LevelDef } from '../../src/levels/types';
+import { FIELD_CHECK_ROOM, FIELD_CHECK_RULES } from '../../src/levels/field-check';
+import { ROOMS } from '../../src/abduct/rooms';
 import { workOrderNumber } from '../../src/levels/levels';
 import { starLabels } from '../../src/levels/progress';
 import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
-import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
+import { HARD_RULES, OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
 import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateTripodFirst, evaluateStars, type CarReport, type StarReport, type TripodReport } from './stars';
 import { checkDispatchFinale } from './dispatch2199';
 import { naiveCarCatches } from './time-car';
@@ -171,6 +173,7 @@ interface StarLevelReport {
   stars: StarReport[];
   beelineCaught: number;
   roomBeelines: { roomId: RoomId; clean: number }[];
+  souvenirs: { roomId: RoomId | 'field_check'; grabbed: number; delivered: number; medianSec: number }[];
   casualMedianParShare: number;
   casualMedianPeakSuspicion: number;
   violations: string[];
@@ -240,18 +243,42 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
   const casualRuns = casualStars?.runs ?? [];
   const par = level.kind === 'tutorial' ? level.parSec : deepPar(level);
   const entries = level.kind === 'tutorial' ? level.map.entries : level.map.targets.flatMap(target => target.entries);
+  const roomRules = level.kind === 'tutorial' ? { hard: false, wakeFails: false } : HARD_RULES;
+  const survey = entries.map(entry => ({
+    id: entry.roomId as RoomId | 'field_check', room: ROOMS[entry.roomId], rules: roomRules,
+  }));
+  if (level.id === 'level2') survey.push({ id: 'field_check', room: FIELD_CHECK_ROOM, rules: FIELD_CHECK_RULES });
+  const souvenirs = survey.map(({ id, room, rules }) => {
+    let grabbed = 0;
+    let delivered = 0;
+    const times: number[] = [];
+    for (let seed = 1; seed <= seeds; seed++) {
+      const plain = level.kind === 'deep' && id !== 'field_check' ? play(id, PROFILES.casual, seed)
+        : playAbduction(room, PROFILES.casual, seed, rules);
+      if (plain.delivered) times.push(plain.timeSec);
+      const attempt = playAbduction(room, PROFILES.casual, seed, rules, [], 'souvenir');
+      if (attempt.captured) grabbed++;
+      if (attempt.result.itemsStolen.includes(room.item.name)) delivered++;
+    }
+    return { roomId: id, grabbed, delivered, medianSec: median(times) };
+  });
   const base: StarLevelReport = {
     levelId: level.id,
     title: level.title,
     seeds,
     starLabels: starLabels(level),
     stars,
+    souvenirs,
     beelineCaught: beelineFlight(level),
     roomBeelines: entries.map(entry => ({ roomId: entry.roomId, clean: naiveRoomWins(entry.roomId, level.kind === 'deep') })),
     casualMedianParShare: median(casualRuns.filter(run => run.stars[0]).map(run => run.seconds / par)),
     casualMedianPeakSuspicion: median(casualRuns.map(run => run.peakSuspicion)),
     violations: [],
   };
+  for (const row of souvenirs) {
+    const floor = row.roomId === 'inventor_balcony' ? 0.75 : 0.4;
+    if (row.delivered / seeds < floor) base.violations.push(`${row.roomId}: took the souvenir home ${row.delivered}/${seeds}, floor ${pct(floor)}`);
+  }
   const num = workOrderNumber(level.id);
   const floors = STAR_FLOORS[level.id === 'birch_bakery' || level.id === 'birch_neighbours' ? level.id : level.kind === 'tutorial' ? 'tutorial' : num <= workOrderNumber('level4') ? 'early' : num <= workOrderNumber('level6') ? 'middle' : 'late'];
   for (const row of base.stars) {
@@ -472,6 +499,11 @@ export function formatReport(r: StarLevelReport | LevelReport): string {
   lines.push(`Naive flight stopped: ${r.beelineCaught}/${BEELINE_DELAYS.length} start times. Casual median par used: ${pct(r.casualMedianParShare)}. Casual median peak suspicion: ${pct(r.casualMedianPeakSuspicion)}.`);
   const directWins = r.roomBeelines.filter(room => room.clean > 0);
   if (directWins.length) lines.push(`Clean direct room drags: ${directWins.map(room => `${room.roomId} ${room.clean}/${BEELINE_DELAYS.length}`).join(', ')}.`);
+  lines.push('');
+  lines.push('| Room | Casual median exit (s) | Souvenir grabbed | Taken home |', '| --- | ---: | ---: | ---: |');
+  for (const row of r.souvenirs) {
+    lines.push(`| ${row.roomId} | ${Number.isFinite(row.medianSec) ? row.medianSec.toFixed(1) : '–'} | ${row.grabbed}/${r.seeds} | ${row.delivered}/${r.seeds} |`);
+  }
   lines.push('');
   if ('routes' in r) appendDeepReport(lines, r);
   lines.push(r.violations.length ? `**Out of band:**\n${r.violations.map((v) => `- ${v}`).join('\n')}` : '**In band.**');

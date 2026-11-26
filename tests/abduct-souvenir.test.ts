@@ -3,6 +3,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RoomId } from '../src/contracts';
 import { ROOMS } from '../src/abduct/rooms';
+import { Joint, STEP } from '../src/abduct/ragdoll';
 import { AbductSimulation } from '../src/abduct/simulation';
 import { souvenirLabel } from '../src/abduct/souvenir';
 import { setLang, tr } from '../src/i18n';
@@ -27,6 +28,20 @@ describe('souvenir label', () => {
 });
 
 describe('grabbing the item', () => {
+  it('takes an item touched by a foot outside the beam and banks it on delivery', () => {
+    const room = ROOMS.dave_roof;
+    const sim = new AbductSimulation({ ...room, exitZone: { x: 0, y: 0, w: 700, h: 700 } }, new Set(), { sfx() {} });
+    const { body, item } = sim;
+    item.x = body.x[Joint.NearFoot]!;
+    item.y = body.y[Joint.NearFoot]!;
+    expect(Math.abs(item.x - body.chestX)).toBeGreaterThan(108);
+    sim.moveBeam(body.beamX, body.beamY - 1);
+    sim.update(STEP);
+    expect(item.captured).toBe(true);
+    expect(sim.result().itemsStolen).toEqual([room.item.name]);
+    expect(sim.result(true).itemsStolen).toEqual([]);
+  });
+
   for (const id of ['farm_window', 'laundry_loading', 'pemberton_window', 'osei_pharmacy'] as const satisfies readonly RoomId[]) {
     it(`${id}: swinging past it grabs it once, with one pickup sound`, () => {
       const sfx = vi.fn();

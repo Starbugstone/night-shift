@@ -59,7 +59,7 @@ const clockBay = section('Clock ledge', 'tower', box(0, 0, 740, 700), [
 const balcony = art('exit_roof_hatch', 520, -604);
 const towerUpper = building([
   clockBay,
-  section('Clock riser', 'tower', box(390, -620, 350, 620), [shelf(408, -325, 108)], [balcony]),
+  section('Clock riser', 'tower', box(390, -620, 350, 620), [shelf(665, -377, 61)], [balcony]),
 ], [hatch(0, 488, 708), hatch(-620, 500, 700)], [
   gate('Lightning shutter', box(390, -79, 350, 23), 'x', 20, 4.6, 16),
   { kind: 'draft', name: 'Tower draft', area: box(468, -235, 237, 200), ax: 105, ay: 0 },
@@ -141,7 +141,7 @@ export const ROOMS_1955 = {
   inventor_balcony: route(towerUpper, 'doc', 'CLOCK BALCONY', balcony, box(519, -594, 161, 66), [
     point(194, 300), point(315, 283), point(600, 279), point(599, 150),
     point(599, -227, 'Lightning shutter', 190), point(601, -343), point(601, -566),
-  ], 'flex_capacitor', 'spare flex capacitor', 460, -325, true),
+  ], 'flex_capacitor', 'spare flex capacitor', 687, -377, true),
   inventor_service: route(towerSide, 'doc', 'SERVICE DOOR', service, box(1392, 367, 92, 133), [
     point(184, 254), point(326, 234), point(597, 229), point(657, 317), point(863, 312), point(1030, 304),
     point(1270, 304, 'Service gate', 200), point(1440, 420),

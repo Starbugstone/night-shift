@@ -22,7 +22,6 @@ function room(id: keyof typeof en.routes, human: Resident, upper: boolean, obsta
   // The transit bench's cushion starts 88 px down its 192 px source, behind the tall armrest.
   const seat = human === 'penny' ? fit(h.seat, h.x - 56, h.y - 64, h.w + 57, 140) : fit(h.seat, h.x, h.y - 3, h.w, 110);
   const support = prop(seat, [box(h.x, h.y, h.w, 24)]);
-  const shelf = prop(fit('shelf', itemX - 50, itemY + 30, 100, 16));
   const section = (name: string, area: Area, supports: Furniture[], decor: Sprite[] = []): InteriorRoom =>
     ({ name, backdrop, ...area, supports, decor, furniture: [], mounts: [] });
   const length = upper ? shaftRise[human] : sideLength;
@@ -41,7 +40,10 @@ function room(id: keyof typeof en.routes, human: Resident, upper: boolean, obsta
     landing.push(prop(platform));
   }
   const subject = en.trophies.specimens.entries[human].name;
-  const buildingDef = building([section(subject, box(0, 0, 740, 700), [support, prop(obstacle), shelf]),
+  // Artie keeps the petunias on the existing landing at the garden door.
+  const furnishings = [support, prop(obstacle)];
+  if (id !== 'artie_garden') furnishings.push(prop(fit('shelf', itemX - 50, itemY + 30, 100, 16)));
+  const buildingDef = building([section(subject, box(0, 0, 740, 700), furnishings),
     { ...section(en.routes[id].route, tunnel, []), wallOnly: upper },
     { ...section(en.routes[id].route, outer, landing, [exit]), wallOnly: upper }], openings, hazards);
   const prize = sprite('room/' + item, 0, 0);
@@ -66,7 +68,7 @@ const cabinet = (key: string) => fit(key, 255, 95, 115, 330);
 export const ROOMS_2199 = {
   artie_garden: room('artie_garden', 'artie', false, fit('demolition_blade2199', 355, 403, 246, 115), [],
     [...sideApproach(370, 300, 260, 1340), step(2380, 250, 60), step(2385, 242),
-      step(2604, 254, 115), step(2650, 250), step(2851, 278, 110), ...outerDoor], 'petunias2199', 'bowl of petunias', 415, 390),
+      step(2604, 254, 115), step(2650, 250), step(2851, 278, 110), ...outerDoor], 'petunias2199', 'bowl of petunias', 2955, 419),
   artie_bath: room('artie_bath', 'artie', true, cabinet('wardrobe'), [
     { kind: 'swing', name: 'Shower rail', sprite: fit('lightning_cable55', 480, -2405, 56, 115), mountY: -2458, amplitude: 0.7, speed: 0.24, phase: 3.7 },
   ], [...upperSteps(490, shaftRise.artie), step(594, -2272), step(594, -2465, 134, 'Shower rail'), step(590, -2675)], 'spare_robe2199', 'spare dressing gown', 413, 395),

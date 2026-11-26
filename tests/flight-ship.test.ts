@@ -133,7 +133,7 @@ describe('stewards and the radar mast', () => {
     expect(LEVEL7.map.w).toBe(2160);
     expect(LEVEL7.map.h).toBe(3600);
     expect(LEVEL7.budgetSec).toBe(480);
-    expect(LEVEL7.parMarginSec).toBe(150);
+    expect(LEVEL7.parMarginSec).toBe(134);
     expect(LEVEL7.map.hazards.filter((h) => h.type === 'photographer').length).toBe(3);
   });
 });
