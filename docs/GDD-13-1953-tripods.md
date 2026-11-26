@@ -114,13 +114,13 @@ One slot per souvenir in the [trophy room](GDD-9-trophy-room.md). Use each Engli
 | --- | --- | --- | --- | --- |
 | `forester` · Clive Forester / Clive Forester | 38 · 181 cm · 79 kg | Published the first scientific paper to ask a meteor what the hell it wanted. | Brought a handkerchief to his intake interview. It was for us. | Asked the meteor for a second sample. It closed the lid. |
 | `van_bell` · Sylvie Van Bell / Sylvie Van Bell | 29 · 164 cm · 58 kg | Got the whole drive-in to leave. Had to promise the invasion would wait until after the credits. | Screamed when she saw the probe. Screamed again when she saw the form. | Put the saucers in the back row. Then had to tell them to stop steaming up the windows. |
-| `collier` · Pastor Matt Collier / Pasteur Matt Collier | 57 · 176 cm · 83 kg | Offered sanctuary to the whole town. The congregation arrived with popcorn. | Blessed our probe. Lab 4 says it’s never worked better. | Put a collection plate beneath the hole in the roof. The Martians paid for half the repairs. |
+| `collier` · Pastor Matt Collier / Pasteur Matt Collier | 57 · 176 cm · 83 kg | Offered sanctuary to the whole town. The congregation arrived with popcorn. | Blessed our probe. Lab 4 says it’s never worked better. | Put a collection plate under the hole in the roof. We paid half. He thanked the Martians. |
 
 | ID | Description FR | `at3` FR | `at10` FR |
 | --- | --- | --- | --- |
 | `forester` | A publié le premier article scientifique à demander à un météore ce qu’il foutait là. | A apporté un mouchoir à son entretien. C’était pour nous. | A demandé un deuxième échantillon au météore. Il a refermé le couvercle. |
 | `van_bell` | A fait évacuer tout le drive-in. Elle a dû promettre que l’invasion attendrait la fin du générique. | A hurlé en voyant la sonde. Puis encore en voyant le formulaire. | A envoyé les soucoupes au dernier rang. Puis a dû leur dire d’arrêter d’embuer les vitres. |
-| `collier` | A ouvert son église à toute la ville. Les fidèles sont arrivés avec du pop-corn. | A béni notre sonde. Le labo 4 dit qu’elle n’a jamais aussi bien marché. | A posé la corbeille de la quête sous le trou du toit. Les Martiens ont payé la moitié des réparations. |
+| `collier` | A ouvert son église à toute la ville. Les fidèles sont arrivés avec du pop-corn. | A béni notre sonde. Le labo 4 dit qu’elle n’a jamais aussi bien marché. | A posé la corbeille de la quête sous le trou du toit. On a payé la moitié. Il a remercié les Martiens. |
 
 ## Lines
 
@@ -133,7 +133,7 @@ One slot per souvenir in the [trophy room](GDD-9-trophy-room.md). Use each Engli
 | Zib, heat-ray sighting | “A war machine just sneezed on me. Does that count as a sick day?” | « Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ? » |
 | Vrell, first clear | “Grandpa Doyle lent me his brass thermometer. I took temperatures from behind. The whole drive-in thought it was a probe.” | « Papy Doyle m’a prêté son thermomètre en laiton. J’ai pris leur température par derrière. Tout le drive-in a cru voir une sonde. » |
 | Gazette, two or more sightings | **SAUCER SEEN OVER DRIVE-IN. AUDIENCE DEMANDS SEQUEL.** | **SOUCOUPE AU DRIVE-IN. LE PUBLIC RÉCLAME UNE SUITE.** |
-| Tripod leg cover story | “Coop loses a leg overnight. Farmer blames a very tall fox.” | « Le poulailler perd un pied dans la nuit. Le fermier accuse un renard très grand. » |
+| Cover story, repeat delivery with tripod leg aboard on this run | “Coop loses a leg overnight. Farmer blames a very tall fox.” | « Le poulailler perd un pied dans la nuit. Le fermier accuse un renard très grand. » |
 | Clive, mumbles | “It blinked first… I win…” / “It’s only a meteor… meteors don’t unscrew…” | « C’est lui qui a cligné des yeux… j’ai gagné… » / « Ce n’est qu’un météore… ça ne se dévisse pas, un météore… » |
 | Sylvie, mumbles | “If the screen comes down… that’s the interval…” / “Row by row… you first, sir, you’re on fire…” | « Si l’écran s’écroule… c’est l’entracte… » / « Rangée par rangée… vous d’abord, monsieur, vous êtes en feu… » |
 | Sylvie, sleep-scream | “AAAAH! …Oh, it’s you.” | « AAAAH !… Ah, c’est vous. » |
@@ -142,7 +142,7 @@ One slot per souvenir in the [trophy room](GDD-9-trophy-room.md). Use each Engli
 | Pickup, collected on a repeat | “The leg goes in the cabinet. The Division asked if we could lend it a broom handle.” | « La patte va en vitrine. La division demande si on peut lui prêter un manche à balai. » |
 | Pickup, missed rotation | “Leave the leg, then. Without it, every egg rolls into the crater.” | « Laissez la patte, alors. Sans elle, tous les œufs roulent dans le cratère. » |
 
-In the first clear’s cover-story row, add “The fever log became Form 7-B. Compliance classified the method.” / « Le relevé est devenu le Cerfa 7-B. La Conformité a mis la méthode sous scellés. » The first-clear comment uses 120 characters in EN and 127 in FR, against a budget of 135 per locale. Check wrapping in both locales. Use the archive-clipping masthead in the Gazette. Keep the two-sighting priority and use the leg line in the existing cover-story row on repeat runs. Present-day Vrell stays at Dispatch.
+In the first clear’s cover-story row, add “The fever log became Form 7-B. Compliance classified the method.” / « Le relevé est devenu le Cerfa 7-B. La Conformité a mis la méthode sous scellés. » The first-clear comment uses 120 characters in EN and 127 in FR, against a budget of 135 per locale. Check wrapping in both locales. Use the archive-clipping masthead in the Gazette and keep its two-sighting priority. After the first clear, use the tall-fox cover story only on deliveries where Zib picked up the tripod leg during that run. Use the ordinary cover story for other outcomes after the first clear. Present-day Vrell stays at Dispatch.
 
 ## Clock, stars and proof
 

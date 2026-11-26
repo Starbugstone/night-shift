@@ -86,14 +86,14 @@ Use the standard ragdoll. Start both routes of each sleeper on the same settled 
 | --- | --- | --- |
 | Name / exact memo hint | Shrubbery / `a shrubbery` | Jardinet / `un jardinet` |
 | Description | The knights wanted a nice one. Not too expensive. The beam took it for free. | Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer. |
-| Status | The knights would like it a little higher. Judging by the Hendersons’ hedge, someone took notes. | Les chevaliers le voudraient un peu plus haut. À voir la haie des Henderson, quelqu’un a pris des notes. |
+| Status | Hiring. Hide the Hendersons’ hedge. | On recrute. Cachez la haie des Henderson. |
 | Locked hint | The loudest voices on the west bank want a little greenery. | Sur la rive ouest, les plus bruyants réclament un peu de verdure. |
 
 One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-room.md). Use each English item name as its lower-case ID, and register singular and plural in both languages.
 
 | Item | Catalogue text | Objet et notice FR |
 | --- | --- | --- |
-| Coconut halves | Horse sold separately. Nobody can explain how they got to England. The swallow refuses to comment. | Demi-noix de coco · Cheval vendu séparément. Personne ne sait comment elles sont arrivées en Angleterre. L’hirondelle refuse de se prononcer. |
+| Coconut halves | Nobody can explain how these got to England. The swallow refuses to comment. | Demi-noix de coco · Personne ne sait comment elles sont arrivées en Angleterre. L’hirondelle refuse de se prononcer. |
 | Stuffed swallow | Unladen. African or European? The taxidermist charged both rates. | Hirondelle empaillée · Sans charge. D’Afrique ou d’Europe ? Le taxidermiste a facturé les deux tarifs. |
 | Black Knight’s arm | Spare. He says he has another one somewhere. He said that last time. | Bras du Chevalier noir · De rechange. Il dit qu’il en a un autre quelque part. Il a dit ça la dernière fois. |
 | Black Knight’s shield | NONE SHALL PASS on the front. OPENING HOURS on the back. | Bouclier du Chevalier noir · NUL NE PASSERA devant. HORAIRES D’OUVERTURE derrière. |
@@ -127,7 +127,7 @@ One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-roo
 | Gazette, lead clipping at two or more sightings | **COW CLEARS CASTLE WALL. LANDING SCORES A FOUR.** | **UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.** |
 | Gazette, alternate clipping at two or more sightings | **COWS STILL DENY ALL KNOWLEDGE** | **LES VACHES NIENT TOUT EN BLOC** |
 | Ghost cover story | “Bridge reopens. Black Knight’s post ‘temporarily unarmed’.” | « Le pont rouvre. Poste du Chevalier noir « provisoirement désarmé ». » |
-| Pickup cover story, delivery with shrubbery | “Knights say Ni to garden centre price hike.” | « Les chevaliers disent Ni à la hausse des prix en jardinerie. » |
+| Pickup cover story, delivery with shrubbery | “Knights fall quiet at last. Neighbours suspect a shrubbery.” | « Les chevaliers se taisent enfin. Les voisins soupçonnent un jardinet. » |
 | Rodney, retreat / ordinary mumble | “Bravely… back the way we came!” / “I’ll guard the rear… from home…” | « Courage… on repart par où on est venus ! » / « Je couvre nos arrières… de chez moi… » |
 | Black Knight, first / second / third and later bonks | “‘Tis but a dent.” → “Merely a flesh wound.” → “Fine. We’ll call it a draw.” | « Ce n’est qu’une bosse. » → « Une blessure superficielle. » → « Bon. Disons match nul. » |
 | Tom, mumbles | “Some call me Tim. The sign painter won’t take it back.” / “Just a pilot light… stand back… further…” | « Certains m’appellent Tim. Le peintre ne veut pas reprendre l’enseigne. » / « Juste une petite flamme… reculez… encore… » |

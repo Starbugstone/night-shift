@@ -147,7 +147,7 @@ Override the memo’s Delivered and Night owl goals. Use the elapsed par of **0:
 | Memo goal | EN | FR |
 | --- | --- | --- |
 | Delivered | `{star} — bring Mabel aboard` | `{star} — embarquer Mabel` |
-| Night owl | `{star} — finish in {time} or less` | `{star} — {time} ou moins` |
+| Night owl | `{star} — finish in {time} or less` | `{star} — en {time} maximum` |
 
 Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the motion light or fail to lock within a **60 s test window**. That cap is for the test. Each room’s direct 270 px/s drag must fail a clean delivery within 45 s at all four phases. The ordinary route, pickup route and ten-second idle proof all use the same collision and wake rules.
 

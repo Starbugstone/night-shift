@@ -20,7 +20,7 @@ Greybox **1800 × 2320** logical px with the origin at the top left. Retain the 
 | Artie’s house | (425, 795) | **Garden door** (270, 795), recommended and labelled below. **Bathroom hatch** (530, 675), labelled above. |
 | Transit office | (1375, 795) | **Service door** (1530, 795), recommended and labelled below. **Ticket loft** (1270, 675), labelled above. |
 | Complaint bureau | (900, 365) | **Side returns** (1080, 380), recommended and labelled above. **Voice vent** (900, 470), labelled below. |
-| Connector streets | **y = 1130**, **y = 250** | The lower street joins the outer lanes between the launch cone and the inner hazards. The quay rail along **y = 250** connects the outside of all three blocks. East approach to Side returns uses **(1490, 250) → (1080, 250) → (1080, 380)**. From the west, cross the quay rail on the same line. |
+| Connector streets | **y = 1130**, **y = 130** | The lower street joins the outer lanes between the launch cone and the inner hazards. The quay rail along **y = 130** connects the outside of all three blocks. East approach to Side returns uses **(1490, 130) → (1080, 130) → (1080, 380)**. From the west, join the same rail. |
 | Harbour towel rack | (180, 1430) | Towel ring at **(190, 1380)**. The bay branches west off the outer lane at (310, 1440), then opens back onto the same road. |
 
 ### Poetry guards and the demolition dozer
@@ -44,6 +44,8 @@ Use existing `camera` detection and its sinusoidal heading, `base + amp × sin(r
 **Ticket loft exposure.** The lock disc has radius **48 px** and is centred at **(1270, 675)**. On the southbound pass, the lamp is at `y + 18` for chassis position `y`. The entire disc comes into range at `y = 675 + 48 − 18 − 195 = 510`. Both cone edges contain the whole disc until `y = 675 − 18 − 48 / sin(0.80) ≈ 590.09`. Every lock point is exposed together for `(590.09 − 510) / 72 ≈ 1.11 s`, longer than both the **0.80 s** base fuse and the **1.00 s** Hush Drive fuse (`0.80 / 0.8`).
 
 The patrol cycle is `2 × (200 / 72 + 1.0) ≈ 7.56 s`. Measured from the start of the southbound pass, the cone overlaps some of the disc from about **0.19 s** through **3.19 s**, including the turn. This leaves `7.56 − (3.19 − 0.19) ≈ 4.56 s` of shared clear time. The 48 px turnout pocket at **(1490, 560)** starts **172 px** east of the patrol. Straight passes and the west-facing south turn reach at most `195 × sin(0.80) ≈ 140 px` east. At the north turn, the nearest point of the pocket is `√(220² + 160²) − 48 ≈ 224 px` from the chassis, beyond the **213 px** maximum reach including the lamp offset. Verify a real-pointer approach, one-second hover and exit within the shared clear window in the greybox.
+
+**Quay crossing exposure.** At the old crossing **(1270, 250)**, a hovering saucer enters range when the northbound chassis reaches `y = 250 + 18 + 195 = 463`. It stays lit for `(463 − 400) / 72 = 0.875 s` on the straight. At the turn the saucer is **150 px** from the chassis. With the **18 px** lamp offset, the cone turns through `0.80 − asin((18 / 150) × sin(0.80))` before its edge clears the saucer. At **π rad/s** that adds **0.227 s**, for **1.102 s** of continuous exposure against the **0.80 s** base fuse and **1.00 s** Hush Drive fuse. The lamp reaches north to `400 − 18 − 195 = 187`. At **y = 130** the rail has **57 px** of clearance, leaving **9 px** at the edge of a **48 px** pocket and **0 s** of exposure across the full cycle.
 
 **No straight-line win.** Leave the south approach in open air so a blind shortest-path controller heads into the opening recital. On the nominal direct rays from the launch to all six rings, the slice from about **y = 1980 to y = 1610** lies in the cone’s overlap across its full sweep. The shortest guaranteed chord across the cone is about **441 px**, or **1.03 s** at the 430 px/s speed cap before braking. Compare it with the **0.80 s** starting fuse. Prove the full controller runs at **0, 2.5, 5 and 8 s**, including the real nearest-ring choice and the follow-up legs. Run the manual direct drags too. Keep the y = 1130 connector and both outside lanes free of collision and exposure over a full cycle. The lower street gives players a clear route across town after a sighting or a delivery. Time the inner lecterns and the east dozer to save travel, or take the quay rail.
 
@@ -113,7 +115,7 @@ Use archive IDs `artie`, `penny` and `moe`. The dossier and repeat addenda fit t
 | `artie` · `at3` | Complained that the demolition fleet parked on his rhubarb. The fleet replied. In verse. | S’est plaint que la flotte de démolition s’était garée sur sa rhubarbe. La flotte a répondu. En vers. |
 | `artie` · `at10` | Still in the dressing gown. Says he’ll change when the universe makes sense. | Toujours en robe de chambre. Il se changera quand l’univers aura un sens. |
 | `penny` · `desc` | Hitchhiked to her own driving test. The examiner made her get out and walk back. | Est venue à son permis en stop. L’examinateur l’a fait descendre et revenir à pied. |
-| `penny` · `at3` | Hitched a lift on our saucer. Gave it two stars. Docked one for the probe. | A fait du stop en soucoupe. Deux étoiles. Elle en a retiré une pour la sonde. |
+| `penny` · `at3` | Reviewed our saucer. Two stars. Said the minibar was full of evidence. | A testé notre soucoupe. Deux étoiles. Le minibar était plein de pièces à conviction. |
 | `penny` · `at10` | Thumbs a lift off every saucer that passes. Ours has started taking the long way round. | Fait du stop dès qu’une soucoupe passe. La nôtre fait désormais un détour. |
 | `moe` · `desc` | His off switch is labelled NOT NOW. It is the only part of the manual he agrees with. | Son interrupteur porte la mention PAS MAINTENANT. C’est le seul point du manuel sur lequel il est d’accord. |
 | `moe` · `at3` | Filed a noise complaint against his own reboot chime. Refuses to meet with the accused. | A porté plainte contre sa propre sonnerie de redémarrage. Refuse de rencontrer l’accusé. |
@@ -162,7 +164,7 @@ Override the memo’s Delivered and Night owl goals. Use the demolition timer of
 | Memo goal | EN | FR |
 | --- | --- | --- |
 | Delivered | `{star} — all 3 before demolition ({time})` | `{star} — les trois avant la démolition ({time})` |
-| Night owl | `{star} — {time} left before demolition` | `{star} — {time} avant la démolition` |
+| Night owl | `{star} — {time} left before demolition` | `{star} — {time} de marge avant la démolition` |
 
 | Where | EN | FR |
 | --- | --- | --- |
@@ -171,7 +173,7 @@ Override the memo’s Delivered and Night owl goals. Use the demolition timer of
 | Opening reciter, first approach | “Ode, verse 1 of 300: / O squat and crumbly house of brown, / I’ll pave you flat. And all the town.” | « Ode, strophe 1 sur 300 : / Ô maison trapue et marron, / je vous aplatis. Et le canton. » |
 | Opening reciter, next verse | “O bypass, gleaming slab of tar. / I paved my heart. There’s room for a car.” | « Ô déviation, mon beau goudron. / J’ai bitumé mon cœur. Garez-vous donc. » |
 | Opening reciter, third verse | “Roses are red, your roof is slate. / Kindly vacate by half past eight.” | « Roses rouges, toit d’ardoise. / À huit heures et demie, on vous rase. » |
-| Poetry sighting | “One more stanza and I’m taking the airlock.” | « Encore une strophe et je prends le sas. » |
+| Poetry sighting | “I’ll take my chances in the airlock.” | « Je préfère tenter ma chance dans le sas. » |
 | Dozer sighting | “Artie stopped one of those in his dressing gown. Is that what I was supposed to wear?” | « Artie en a arrêté un en robe de chambre. C’était la tenue réglementaire ? » |
 | Deadline report | “The demolition went ahead. We’ve been invited to comment on the rubble.” | « La démolition a eu lieu. On nous invite à donner notre avis sur les gravats. » |
 | Vrell, first clear | “Three residents. Grimsby stays. Your mother called, Zib. I told her: adequate.” | « Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : convenable. » |
