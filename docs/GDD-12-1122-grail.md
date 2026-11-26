@@ -16,7 +16,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 >
 > The French are throwing cows. If the road moos, move.
 >
-> — Vrell. Expenses will cover one half of a coconut.
+> — Vrell. No jousting on Bureau time.
 
 > **Ordre n°0012 · Sacré Graal !**
 >
@@ -24,7 +24,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 >
 > Les Français lancent des vaches. Si la route meugle, dégagez.
 >
-> — Vrell. Les frais couvrent une demi-noix de coco.
+> — Vrell. Pas de joute pendant le service.
 
 ## Flight
 
@@ -42,16 +42,18 @@ Draw the entry rings and pickup lock in mint with the existing UI. Draw the real
 
 Mark a diagonal shortcut from a wait pocket near **(505, 1290)** to Rodney’s supply flap with wagon ruts. The first cow lands across that diagonal. The west cart track stays open the whole time.
 
+Mark the inner bridge-to-tower cut with cart ruts from a second wait notch at **(1030, 930)** via **(1070, 1010) → (1190, 1010) → (1370, 1010)**. The ruts cross the second cow mark and the rabbit’s lunge half-disc. Give the notch **32 px** of usable radius. Its centre is about **161 px** from the second cow mark and **165 px** from the cave mouth, leaving the full notch outside both footprints. The rut line saves the trip around the east bank. Once the cow clears, players can cruise past the cave or brake and react to the rabbit’s raised ears. Verify both the fast crossing and a steer-out from a committed lunge on the rut line.
+
 | Hazard | System and tell | Greybox |
 | --- | --- | --- |
 | **French cow barrage** | New timed impact patch using the existing circle detection and shared fuse. The catapult gives a creak and the cow moos as it leaves the wall. Zib sees a stationary, dashed amber landing mark for **1.15 s**, then the cow lands and the patch detects for **1.25 s**. The actual circle has a hard edge and goes red on exposure. Sample the warning, impact and clear phases in the sim. The cow gets up and walks off the diagonal as the patch clears. The walk-off is scenery. | Alternate **(460, 1125)** and **(1010, 1090)** every **3.8 s**, radius **108**. The first drop cuts the diagonal to Rodney and the second cuts the bridge approach. Show both landing marks from their safe approaches before the cows leave the wall. Verify the whole wait pocket and outer cart track clear the landing patches. |
 | French sentry | Existing fixed `camera` cone with a taunter leaning out. The taunter is plainly visible above the exact hard-edged sector. The edge and fuse go red while he sees the saucer. A continuous watch has no arming phase. | Source **(900, 1510)**, facing south, range **565**, half angle **0.80 rad**, zero sweep. This is the dependable beeline stop. |
 | Coconut squires | Move the emitter along an existing `steward` route and use the `dog` radial pulse shape instead of the torch. The squire raises the halves as an amber rim previews the full clop reach. After the strike, the hard current ring shows the true danger radius and goes red on contact. Animate a horseless trot. Audio can be muted and the gap remains readable. | One squire on **(605, 920) ↔ (630, 590)** at **82 px/s**, **1.0 s** turn dwell. Begin at **2.6 s** per clop, **0.45 s** amber lead, **118 px** max radius. Use the same clock and route pose in the autopilot and the view. Keep the ring’s outer extent clear of Rodney’s supply-flap lock. |
-| Killer Rabbit | Local proximity detector adapted from the porch arming pattern. Slow hover within **118 px** of the mouth at **≤110 px/s** arms the lunge for **0.75 s**. Amber arc and raised ears show the coming footprint. Leaving or speeding up during arming cancels it. On commit the white rabbit lunges across the same **118 px** half-disc for **0.95 s** and its exact edge goes red on exposure. Then it retreats for **1.5 s** before it can rearm. | Use a south-facing half-disc centred on the cave. “Low” means the existing hover speed. Normal cruise passes the mouth safely and the east bank gives a route around the entire footprint. Keep all entry and pickup catchments outside it. |
+| Killer Rabbit | Local proximity detector adapted from the porch arming pattern. Slow hover within **118 px** of the mouth at **≤110 px/s** arms the lunge for **0.75 s**. Amber arc and raised ears show the coming footprint. Leaving or speeding up during arming cancels it. On commit the white rabbit lunges across the same **118 px** half-disc for **0.95 s** and its exact edge goes red on exposure. Play Zib’s retreat bark on the first committed lunge of the run, even if Zib escapes. Then the rabbit retreats for **1.5 s** before it can rearm. | Use a south-facing half-disc centred on the cave. Normal cruise passes the mouth safely and the east bank gives a route around the entire footprint. Keep all entry and pickup catchments outside it. |
 
 Start the map fuse at **0.83 s**. Cow and clop phases come from the hazard clock. Keep the rabbit’s arming timestamp in the flight state with the other proximity detectors. A sighting clears the interrupted lock and returns Zib to the last delivered ring, or the launch fork on the first leg. Keep the shift clock and completed deliveries.
 
-**No straight-line win.** Every direct line from spawn to a first ring goes through the fixed French view before it can lock, including the closest recommended ring. The shortest chord through the sector is about **396 px** at these coordinates, or **0.92 s** at the 430 px/s speed cap. Both initial bank turns clear the sector. Place the clops and cow marks after establishing the full sim check. West bank and east track allow clean first legs and re-entry after a sighting. From a delivery ring, follow the rear lane or time the inner crossing from the wait pocket. Cruise past the rabbit’s mouth once clear of the cow mark. Prove the straight runs at **0, 2.5, 5 and 8 s** with the actual saucer deceleration and fuse, then check the intended first approaches and returns at those phases. Timing a cow between shots is skilled play. The first-lane beeline still has to face the sentry.
+**No straight-line win.** Every direct line from spawn to a first ring goes through the fixed French view before it can lock, including the closest recommended ring. The shortest chord through the sector is about **396 px** at these coordinates, or **0.92 s** at the 430 px/s speed cap. Both initial bank turns clear the sector. Place the clops and cow marks after establishing the full sim check. West bank and east track allow clean first legs and re-entry after a sighting. From a delivery ring, follow the rear lane or time the inner crossing from its wait notch. Prove the straight runs at **0, 2.5, 5 and 8 s** with the actual saucer deceleration and fuse, then check the intended first approaches and returns at those phases. Timing a cow between shots is skilled play. The first-lane beeline still has to face the sentry.
 
 ## The three witnesses
 
@@ -82,7 +84,7 @@ Use the standard ragdoll. Start both routes of each sleeper on the same settled 
 | --- | --- | --- |
 | Name / exact memo hint | Shrubbery / `a shrubbery` | Jardinet / `un jardinet` |
 | Description | The knights wanted a nice one. Not too expensive. The beam took it for free. | Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer. |
-| Status | The Hendersons will spend nine hundred years growing a hedge in this exact spot. The knights would like it a little higher. | Les Henderson mettront neuf siècles à faire pousser une haie pile ici. Les chevaliers la voudraient un peu plus haute. |
+| Status | The knights would like it a little higher. Judging by the Hendersons’ hedge, someone took notes. | Les chevaliers le voudraient un peu plus haut. À voir la haie des Henderson, quelqu’un a pris des notes. |
 | Locked hint | The loudest voices on the west bank want a little greenery. | Sur la rive ouest, les plus bruyants réclament un peu de verdure. |
 
 One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-room.md). Use each English item name as its lower-case ID, and register singular and plural in both languages.
@@ -118,7 +120,7 @@ One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-roo
 | French sentry, first sighting | “I fart in your general airspace, you flying saucepan!” | « Je pète dans votre espace aérien, casserole volante ! » |
 | French sentry, next approach after the first sighting | “A census? We’ve already got one!” | « Un recensement ? On en a déjà un ! » |
 | French sentry, next eligible approach, then Zib | “Your mother was a hamster!” / “Is that a species correction? I’ll need a form.” | « Votre mère était un hamster ! » / « Je dois corriger l’espèce ? Il va me falloir un formulaire. » |
-| Zib, first approach to the Killer Rabbit / rabbit sighting | “Aw, a bunny!” / “Run away! Run away!” | « Oh, un lapin ! » / « Fuyez ! Fuyez ! » |
+| Zib, first approach to the Killer Rabbit / first committed lunge | “Aw, a bunny!” / “Run away! Run away!” | « Oh, un lapin ! » / « Fuyons ! Fuyons ! » |
 | Vrell, first clear | “Claim denied. Krix called his toaster to the stand. The court gave it two minutes to pop.” | « Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal lui a donné deux minutes pour sortir une tartine. » |
 | Gazette, lead clipping at two or more sightings | **COW CLEARS CASTLE WALL. LANDING SCORES A FOUR.** | **UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.** |
 | Gazette, alternate clipping at two or more sightings | **COWS STILL DENY ALL KNOWLEDGE** | **LES VACHES NIENT TOUT EN BLOC** |
@@ -160,7 +162,7 @@ Reuse farm ground, dirt roads, sea tint, stone hatch, door frames, crates, gear,
 
 | Pass | Owner and handoff |
 | --- | --- |
-| 1. Flight greybox | **Flight/level** owns the map, safe approaches, fixed sentry, marked cow shortcut and wait pocket. Place the wooden rabbit through the existing prop view and use the existing speech rotation for the sentry. **Flight hazards** owns the three local behaviours and tells, with pure clock sampling for cows and clops and flight-local rabbit state. Share the data with autopilot. |
+| 1. Flight greybox | **Flight/level** owns the map, safe approaches, fixed sentry, and both marked shortcuts and wait pockets. Place the wooden rabbit through the existing prop view and use the existing speech rotation for the sentry. **Flight hazards** owns the three local behaviours and tells, with pure clock sampling for cows and clops and flight-local rabbit state. Share the data with autopilot. |
 | 2. Rooms | **Abduction** owns the six routes, collision/wake proof, Rodney’s reaction and the Knight’s per-bonk armour pieces and escalating mumbles. Reuse room timers and report plumbing. |
 | 3. Registry and save | **Coordinator** registers the stable level, room, human and pickup IDs, and the shared 1955 prerequisite by stable ID. Verify both orders through the 2199 gate and use the delivery flag for the gnome’s 1122 postcard. Check the migrated 1955 save and Dispatch returns from memo, abort and report. |
 | 4. Art and copy | **Art** supplies the original SVG pack. **Story/UI** puts the memo, Vrell priorities, lines, two-language item names, archive and Field Find data into the existing surfaces and checks their layout. |

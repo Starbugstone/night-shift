@@ -38,8 +38,8 @@ Park Spin City’s van at the Birch Lane turn. Larry’s report grants the tempo
 | Field Check body | “Head Office wants a bulk order in Maple Court. First, a drill on Birch Lane. Trip a porch sensor, clear a door lip and let the decoy sleep.” | « Le siège veut une commande en gros à l’allée des Érables. D’abord, un exercice chemin des Bouleaux. Déclenchez un détecteur, franchissez un seuil et laissez dormir le leurre. » |
 | Field Check skip / continue | “Skip to the bakery” / “Start the bakery call” | « Passer à la boulangerie » / « Partir pour la boulangerie » |
 | Field Check completed | “One logged. On a live shift the clock keeps running in every room. First live call: Birch Lane Bakery.” | « Un spécimen recensé. En mission, le chrono tourne dans toutes les pièces. Première vraie mission à la boulangerie du chemin des Bouleaux. » |
-| Maple Court memo | “Three before dawn this time, Zib. Dentist Dave, Coach Barb and Gary from Neighbourhood Watch. Watch for the cruiser. Pruitt’s still got her binoculars. Gary’s been shopping.” | « Trois avant l’aube cette fois, Zib. Dave le dentiste, Barb la coach et Gary de la surveillance du quartier. Gare à la voiture de police. Mme Pruitt a toujours ses jumelles. Gary a fait des achats. » |
-| Maple Court laser joke | “Gary’s new lasers have caught him eleven times. A volunteer astronomer is on Birch Lane with a SETI dish, if you fancy a detour.” | « Les nouveaux lasers de Gary l’ont déjà attrapé onze fois. Un astronome bénévole est installé chemin des Bouleaux avec une antenne SETI, si le détour vous tente. » |
+| Maple Court memo | “Three before dawn this time, Zib. Dentist Dave, Coach Barb and Gary from Neighbourhood Watch. Watch for the cruiser. Mrs. Pruitt has binoculars trained on the street from her window. Gary’s been shopping.” | « Trois avant l’aube cette fois, Zib. Dave le dentiste, Barb la coach et Gary de la surveillance du quartier. Gare à la voiture de police. Mme Pruitt surveille la rue aux jumelles depuis sa fenêtre. Gary a fait des achats. » |
+| Maple Court laser joke | “Gary’s new lasers have caught him eleven times. A volunteer astronomer is on Birch Lane with a SETI dish, if you fancy a detour.” | « Les lasers de Gary l’ont piégé onze fois. Un astronome bénévole veille chemin des Bouleaux avec sa parabole SETI, si le détour vous tente. » |
 | Maple Court laser failure (`garyFail`, record-books variant) | “{by}. Gary’s system has caught Gary eleven times and you once. You’re in the record books. Gary’s.” | « {by}. Le système de Gary a attrapé Gary onze fois, et vous une fois. Vous entrez dans le livre des records. Celui de Gary. » |
 
 The Maple Court memo keeps the astronomer as its sole pickup. The two laser lines refer to the same tally on Gary’s new system. In the loading tip rotation, show Pruitt’s wave-and-calibration line only after delivery of `birch_neighbours` so her first appearance stays on Birch Lane.
@@ -127,15 +127,15 @@ The **cherry pie** is the only town pickup. Set it on a back windowsill at the w
 
 | Cue | EN | FR |
 | --- | --- | --- |
-| Zib, first on-screen motion-light arm | “I haven’t even touched the dough. Why are they taking my fingerprints?” | « J’ai même pas touché à la pâte. Pourquoi ils relèvent mes empreintes ? » |
+| Zib, first on-screen motion-light arm | “Caught white-handed. And it isn’t even my hand.” | « Pris la main dans le sac. De farine. Et c’est même pas ma main. » |
 | Vrell, first delivery | “Crumb opened at five. He knocked the card reader off the counter. Cash only.” | « Miettes a ouvert à cinq heures. Il a fait tomber le terminal de paiement. Espèces uniquement. » |
-| Gazette, two or more sightings | **BAKER’S BUNS SEEN RISING INTO NIGHT SKY** | **LES MICHES DE LA BOULANGÈRE MONTENT AU SEPTIÈME CIEL** |
+| Gazette, two or more sightings | **BAKER’S BUNS SEEN RISING INTO NIGHT SKY** | **LES MICHES DE MABEL S’ENVOLENT EN PLEINE NUIT** |
 | Mabel, mumble | “I knead five more minutes…” | « Encore cinq minutes… je suis pas encore levée… » |
 | Pickup, collected on a repeat | “Another pie. This one had a note under it. ‘Bring back the tin.’” | « Encore une tarte. Avec un mot dessous. “Rendez le moule.” » |
 | Pickup, left behind | “You left the pie. Crumb sat in it.” | « Vous avez laissé la tarte. Miettes s’est assis dedans. » |
 | Zib, sighting retry | “Around the lamp this time. It knows what I look like now.” | « Je contourne la lampe, cette fois. Elle sait à quoi je ressemble. » |
 
-Use the existing first-clear cover-story row for “Bakery opens without its baker. Customers praise the best service in years.” / « La boulangerie ouvre sans sa boulangère. Les clients disent qu’ils n’ont jamais été aussi bien servis. » Show a floury paw print on the **OPEN** / **OUVERT** sign in the report art. The sign sets up Crumb’s cash-only punchline.
+Use the existing first-clear cover-story row for “The first loaf clocked in. Mabel is still listed as out on delivery.” / « Le premier pain a pointé. Mabel est encore « en livraison ». » Show a floury paw print on the **OPEN** / **OUVERT** sign in the report art. The sign sets up Crumb’s cash-only punchline.
 
 ### Clock and proof
 
@@ -155,7 +155,7 @@ Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the moti
 >
 > Bring in Nora from the Hendersons’ garage and Len from next door before dawn. Mrs. Pruitt across the lane hasn’t slept since 1994. The Hendersons left their garden gnome behind. He’s sulking by Len’s east drive.
 >
-> Nora wrote the alarm code on a list. The list is inside, behind the laser. Gary from Neighbourhood Watch fitted it for free. It has caught Gary four times.
+> The alarm code is behind the laser. Gary from Neighbourhood Watch fitted the laser for free. It’s caught him four times.
 >
 > — Vrell. Don’t water the fern. It’s plastic.
 
@@ -163,7 +163,7 @@ Test both flight beelines at 0, 2.5, 5 and 8 s. Each must be spotted by the moti
 >
 > Ramenez Nora du garage des Henderson et Len de l’atelier voisin avant l’aube. Mme Pruitt, en face, n’a pas dormi depuis 1994. Les Henderson ont oublié leur nain de jardin. Il boude près de l’allée de Len, côté est.
 >
-> Nora a noté le code de l’alarme sur une liste. La liste est à l’intérieur, derrière le laser. Gary, de la surveillance du quartier, l’a installé gratuitement. Il a déjà attrapé Gary quatre fois.
+> Le code est derrière le laser. Gary, de la surveillance du quartier, l’a installé gratuitement. Il s’est fait prendre quatre fois.
 >
 > — Vrell. N’arrosez pas la fougère. Elle est en plastique.
 
@@ -217,8 +217,8 @@ The gnome sends postcards in his Field Finds status. The existing found flag gat
 
 | Archive ID | Name | Age | Height | Weight | Description | At 3 deliveries | At 10 deliveries |
 | --- | --- | ---: | ---: | ---: | --- | --- | --- |
-| `nora` · EN | Nora Finch | 46 | 168 cm | 73 kg | Keeps a list of keys and a second list of where she put the first list. Lost the second list. | Took the spare saucer key home. Hung it on the Hendersons’ peg marked MISCELLANEOUS. | Found out the fern was plastic. Watered it anyway, out of respect. |
-| `nora` · FR | Nora Finch | 46 | 168 cm | 73 kg | Tient une liste des clés et une deuxième pour retrouver la première. A perdu la deuxième. | A emporté la clé de secours de la soucoupe. L’a accrochée chez les Henderson, au crochet DIVERS. | A découvert que la fougère était en plastique. L’a arrosée quand même, par respect. |
+| `nora` · EN | Nora Finch | 46 | 168 cm | 73 kg | Sorts her key list by the door each key ought to open. There’s a column for surprises. | Took the spare saucer key home for safekeeping. She says it’s on the list. She won’t say which list. | Found out the fern was plastic. Watered it anyway, out of respect. |
+| `nora` · FR | Nora Finch | 46 | 168 cm | 73 kg | Classe les clés par porte sur sa liste. Elle a prévu une colonne pour les surprises. | A emporté la clé de secours de la soucoupe pour la mettre à l’abri. Elle dit que c’est sur la liste. Elle ne dit pas laquelle. | A découvert que la fougère était en plastique. L’a arrosée quand même, par respect. |
 | `len` · EN | Len Briggs | 62 | 177 cm | 81 kg | Has borrowed the Hendersons’ tools for so long he calls it ‘storage’. They’re too polite to ask. | Serviced the saucer while in the hold. It now has a bell. Nobody knows where he got the bell. | Fitted the saucer with stabilisers. Now it turns like a pram. |
 | `len` · FR | Len Briggs | 62 | 177 cm | 81 kg | Ça fait si longtemps qu’il emprunte les outils des Henderson qu’il dit les « garder en dépôt ». Ils sont trop polis pour les réclamer. | A révisé la soucoupe pendant le trajet. Elle a maintenant une sonnette. Personne ne sait d’où elle sort. | A monté des petites roues sur la soucoupe. Elle tourne comme une poussette. |
 
@@ -231,10 +231,10 @@ The gnome sends postcards in his Field Finds status. The existing found flag gat
 | Vrell, first clear | “Both aboard. Mrs. Pruitt has logged the saucer as an extension without planning permission.” | « Les deux sont à bord. Mme Pruitt a inscrit la soucoupe dans son registre comme extension sans permis de construire. » |
 | Gazette, two or more sightings | **MRS. PRUITT REPORTS SAUCER FOR 37TH TIME. FIRST TIME SHE’S RIGHT.** | **MME PRUITT SIGNALE UNE SOUCOUPE POUR LA 37ᵉ FOIS. ET CETTE FOIS, ELLE A RAISON.** |
 | Nora, mumble | “I’m asleep for security reasons…” | « Je dors pour des raisons de sécurité… » |
-| Len, mumble | “It’s not the wheel ticking… it’s me…” | « C’est pas la roue qui fait tic-tac… c’est moi… » |
+| Len, mumble | “There’s the tick… oh. It’s my watch…” | « Ce tic-tac… ah, c’est ma montre… » |
 | Pickup, collected on a repeat | “He’s requested a window seat. And a little umbrella in his drink.” | « Il a demandé une place côté hublot. Et une petite ombrelle dans son verre. » |
 | Pickup, left behind | “The gnome stayed. Tomorrow he’s trying the bus.” | « Le nain est resté. Demain, il tente le bus. » |
-| Zib, return to flight | “One aboard. That ties my record. Next house.” | « Un à bord. J’égale mon record. Maison suivante. » |
+| Zib, return to flight | “One aboard. That ties my record. They’re making me do it twice.” | « Un à bord. J’égale mon record. Et ils veulent que je recommence. » |
 
 ### Clock and proof
 

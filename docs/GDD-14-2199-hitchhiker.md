@@ -38,8 +38,10 @@ Use existing `camera` detection and its sinusoidal heading, `base + amp × sin(r
 - The active cone has a hard pale edge. Show a dashed **amber** edge at the cone heading sampled **0.45 s ahead** whenever the predicted edge advances into clear space. Use the exact sampled shape for the preview with faint fill confined to that shape. The current edge and saucer fuse turn **red** on live exposure. **Mint** is reserved for Zib, entries and the towel lock. A static sign, floor arrows and lamp spill have no detector edges. All cues retain their geometry and timing in reduced motion and with muted audio.
 - Place one of the two listeners at **(660, 1565)** on the edge of the opening recital, visible from the fork. Keep the other at the complaints lectern. Each slumps when the live edge reaches its anchor and straightens when it clears. Sample the same cone predicate and clock in the view. Use a static pose swap in reduced motion. Both listeners are scenery. On the first approach to the opening recital, play the numbered ode under **Copy**. Subsequent approaches use the next verse in the three-line rotation, wrapping after the third and respecting the existing speech cooldown. Use `FLIGHT_BUBBLES`, `readSeconds()` and alien babble. Let Zib’s first-leg line finish before the verse starts. A full fuse uses the standard spot delay and flight respawn, with the poetry caption. It cancels the interrupted lock and preserves the timer, last delivered ring and earlier deliveries.
 - Pose Zib with fingers in their ears when the saucer enters the existing amber preview. Hold that pose in reduced motion. The live edge and fuse still show the actual exposure. Use the existing cockpit rig and test the pose at phone size.
-- **East demolition dozer.** Use the existing `steward` route and cone with a dozer skin. The blade turns with the chassis, and the lamp uses the same origin offset as the cone. Start the route at **(1170, 955) ↔ (1170, 780)** at **72 px/s**, **1.0 s** turn dwell, **148 px** range, **0.30 rad** half angle and zero torch sweep. Show the next turn’s bounded cone in amber, with a hard live edge and red on exposure. The lower street, outside lane and service door stay clear at all phases. The north turn can catch the fast loft approach until the blade turns away. The dozer’s lamp uses standard sighting and recovery.
-- Target starting safe pockets for the fast rings are **(535, 565)**, **(1265, 565)** and **(760, 375)**. Measure their entire usable hover area against the sweep envelope. Players can wait outside the cone until the amber edge moves away, make the short approach, brake and lock. At each fast entry leave a quiet interval of **at least 2.2 s** for braking and hovering. Leave the entire usable area of each recommended ring clear over a full cycle. The return from each fast entry must reach a safe pocket within the standard checkpoint grace once the player starts to steer.
+- **East demolition dozer.** Use the existing `steward` route and cone with a dozer skin. The blade turns with the chassis, and the lamp uses the cone’s **18 px** forward offset. Run the dozer on the street north of the ticket office, **(1270, 400) ↔ (1270, 600)** at **72 px/s**, **1.0 s** turn dwell, **148 px** range, **0.30 rad** half angle and zero torch sweep. Show the next turn’s bounded cone in amber, with a hard live edge and red on exposure. Mark the southwest approach from the Ticket loft turnout and show where the southbound lamp crosses it. The lower street, outside lane and Service door stay clear at all phases. The dozer’s lamp uses standard sighting and recovery.
+- Target starting safe pockets for the fast rings are **(535, 565)**, **(1490, 560)** and **(760, 375)**. Measure their entire usable hover area against the sweep envelope. Players can wait outside the cone until the amber edge moves away, make the short approach, brake and lock. At each fast entry leave a quiet interval of **at least 2.2 s** for braking and hovering. Leave the entire usable area of each recommended ring clear over a full cycle. The return from each fast entry must reach a safe pocket within the standard checkpoint grace once the player starts to steer.
+
+**Ticket loft exposure.** The old north turn lit the ring centre for about **0.17 s < 0.80 s**. On the new southbound pass, the offset lamp reaches **(1270, 675)** once the dozer reaches `y = 675 − 148 − 18 = 509`. The cone then holds the centre for `(600 − 509) / 72 ≈ 1.264 s` before the turn. The ring is 75 px from the chassis at the turn, so the 18 px offset puts the ring on the cone edge at `0.30 − asin((18 / 75) × sin(0.30)) ≈ 0.229 rad`. At π rad/s that adds **0.073 s**, for **1.34 s** continuous exposure against the **0.80 s** base fuse and the **1.00 s** Hush Drive fuse. The cycle is `2 × (200 / 72 + 1.0) ≈ 7.56 s`, leaving about **6.22 s** clear at the centre. At **x = 1490**, the wait-pocket centre is **220 px** laterally from the route, beyond the lamp’s maximum geometric reach of **166 px**. This leaves **54 px** of conservative clearance before accounting for the half angle. Verify the full 48 px Ticket loft lock area, approach and departure in the greybox.
 
 **No straight-line win.** Leave the south approach in open air so a blind shortest-path controller heads into the opening recital. On the nominal direct rays from the launch to all six rings, the slice from about **y = 1980 to y = 1610** lies in the cone’s overlap across its full sweep. The shortest guaranteed chord across the cone is about **441 px**, or **1.03 s** at the 430 px/s speed cap before braking. Compare it with the **0.80 s** starting fuse. Prove the full controller runs at **0, 2.5, 5 and 8 s**, including the real nearest-ring choice and the follow-up legs. Run the manual direct drags too. Keep the y = 1130 connector and both outside lanes free of collision and exposure over a full cycle. The lower street gives players a clear route across town after a sighting or a delivery. Time the inner lecterns and the east dozer to save travel, or take the quay rail.
 
@@ -77,7 +79,7 @@ For side routes, begin with a **300 px** tall bay opening at **x = 740** and the
 | --- | --- | --- |
 | Name | Bypass towel | Serviette de la déviation |
 | Status | Issue standard. Laundering optional. | Modèle réglementaire. Lavage facultatif. |
-| `memoHint` | `a towel` | `une serviette` |
+| `memoHint` | `your towel` | `votre serviette` |
 | Unfound hint | On the west harbour rack. | Sur le portant à l’ouest du port. |
 | Catalogue | The most useful thing a traveller can carry. Zib has used it as a cape, a pillow and a white flag. All tonight. | L’objet le plus utile en voyage. Zib s’en est servi comme cape, oreiller et drapeau blanc. Tout ça ce soir. |
 | Vrell, collected on a repeat | “Good. For once the emergency equipment is machine washable.” | « Parfait. Pour une fois, le matériel de secours passe en machine. » |
@@ -88,7 +90,7 @@ Put each room souvenir on the natural line through the first hold, clear of movi
 | --- | --- | --- | --- |
 | `artie_garden` | Bowl of petunias / Pot de pétunias | Fell from a great height. Its only comment: “Oh no, not again.” | Pot tombé de très haut. Son seul commentaire : « Oh non, pas encore. » |
 | `artie_bath` | Spare dressing gown / Robe de chambre de rechange | Artie’s formal one. Identical to the other, but he’s ironed the belt. | La tenue de cérémonie d’Artie. La même que l’autre, mais il a repassé la ceinture. |
-| `penny_service` | Ear fish / Poisson d’oreille | Translates anything. Zib tried it on a tax return. The fish asked to be let out. | Traduit tout. Zib l’a essayé sur une déclaration d’impôts. Le poisson a demandé à sortir. |
+| `penny_service` | Ear fish / Poisson d’oreille | Fits in one ear. Zib tried it at a recital. It translated three stanzas as ‘Move your car.’ | Se glisse dans l’oreille. Au récital, il a traduit trois strophes par « Déplacez votre véhicule. » |
 | `penny_loft` | Electronic travel guide / Guide de voyage électronique | Grimsby’s entry reads, in full: “Mostly harmless.” The author was trying to leave when she wrote it. | La fiche de Grimsby, en entier : « Globalement inoffensive. » L’autrice essayait de quitter la ville quand elle l’a rédigée. |
 | `moe_returns` | Complaint stamp / Tampon à réclamations | Worn smooth on the side that says RECEIVED. The reply side is pristine. | La face REÇU est complètement usée. La face RÉPONDU est intacte. |
 | `moe_vent` | Answer display / Afficheur de réponses | It displays 42. The customer is expected to supply the question. | Il affiche 42. Au client de fournir la question. |
@@ -139,7 +141,7 @@ At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual 
 
 **Shift memo · Work Order #0014 · Your Town Is in the Way**
 
-> Agent Zib, Bubbles found Krix’s hyperspace bypass notice. He sold Grimsby as vacant. File Artie, Penny and Moe before the fleet starts digging. Always know where your towel is. There’s a towel on the west harbour rack.
+> Agent Zib, Bubbles found Krix’s hyperspace bypass notice. He sold Grimsby as vacant. File Artie, Penny and Moe before the fleet starts digging. Always know where your towel is. Yours is on the west harbour rack.
 >
 > The plans were on display at the planning office in Alpha Centauri. For fifty years.
 >
@@ -147,7 +149,7 @@ At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual 
 
 **Ordre n°0014 · Votre ville gêne le passage**
 
-> Agent Zib, Bubulle a trouvé l’avis de déviation hyperspatiale de Krix. Il a vendu Grimsby en prétendant que la ville était inhabitée. Recensez Artie, Penny et Moe avant que la flotte ne creuse. Sachez toujours où est votre serviette. Il y a une serviette sur le portant à l’ouest du port.
+> Agent Zib, Bubulle a trouvé l’avis de déviation hyperspatiale. Krix a vendu Grimsby, soi-disant vide. Vite, recensez Artie, Penny et Moe. Sachez toujours où est votre serviette. La vôtre est sur le portant à l’ouest du port.
 >
 > Les plans étaient affichés au bureau de l’urbanisme d’Alpha du Centaure. Depuis cinquante ans.
 >
@@ -161,14 +163,14 @@ At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual 
 | Opening reciter, next verse | “O bypass, gleaming slab of tar. / I paved my heart. There’s room for a car.” | « Ô déviation, mon beau goudron. / J’ai bitumé mon cœur. Garez-vous donc. » |
 | Opening reciter, third verse | “Roses are red, your roof is slate. / Kindly vacate by half past eight.” | « Roses rouges, toit d’ardoise. / À huit heures et demie, on vous rase. » |
 | Poetry sighting | “If there’s a second stanza, I’ll take the airlock.” | « S’il y a une deuxième strophe, je prends le sas. » |
-| Dozer sighting | “Artie lay down in front of one of those. I’m not lying down in front of anything.” | « Artie s’est allongé devant un de ces engins. Moi, je ne m’allonge devant rien. » |
+| Dozer sighting | “Artie stopped one of those in his dressing gown. Is that what I was supposed to wear?” | « Artie en a arrêté un en robe de chambre. C’était la tenue réglementaire ? » |
 | Deadline report | “The demolition went ahead. We’ve been invited to comment on the rubble.” | « La démolition a eu lieu. On nous invite à donner notre avis sur les gravats. » |
 | Vrell, first clear | “Three residents. Grimsby stays. Your mother called, Zib. I told her: adequate.” | « Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : convenable. » |
 | Cover story, ordinary delivery | **TOWN FOUND IN AREA MARKED VACANT** | **UNE VILLE DÉCOUVERTE EN ZONE DÉCLARÉE INHABITÉE** |
 | Cover story, Ghost | **POETRY GUARDS PRAISE AUDIENCE FOR SITTING VERY STILL.** | **LES GARDES-POÈTES SALUENT UN PUBLIC IMMOBILE.** |
 | Gazette, deadline with two or more sightings | **RUBBLE ENTERS PUBLIC CONSULTATION** | **LES GRAVATS SOUMIS À CONSULTATION PUBLIQUE** |
 | Artie mumbles | “Tea first. Then the end of the world.” / “I’m decent. It’s a dressing gown.” | « D’abord le thé. La fin du monde après. » / « Je suis habillé. C’est une robe de chambre. » |
-| Penny mumbles | “Breakfast included… if you catch it…” / “Any planet’s fine… not this one…” | « Petit-déjeuner compris… si vous arrivez à l’attraper… » / « N’importe quelle planète… sauf celle-ci… » |
+| Penny mumbles | “Ch. 1: Leave Grimsby. Ch. 2: See ch. 1…” / “Local delicacy… bring your own…” | « Ch. 1 : partir. Ch. 2 : voir ch. 1… » / « Spécialité locale… à apporter… » |
 | Moe mumbles | “Life. Don’t talk to me about life.” / “Brain the size of a planet. They want me to nap.” | « La vie… ne me parlez pas de la vie. » / « Un cerveau gros comme une planète. Et on me demande de faire la sieste. » |
 | Moe, first / second / third and later bonks | “Ow.” → “That’s all right. I’m used to it.” → “Don’t pretend you care.” | « Aïe. » → « C’est rien. J’ai l’habitude. » → « Faites pas semblant de vous en faire pour moi. » |
 
@@ -180,7 +182,7 @@ After Vrell’s first-clear line, show a skippable three-panel Bureau epilogue w
 
 | Panel | Action | EN | FR |
 | --- | --- | --- | --- |
-| 1 | Vrell stamps the bypass plan void. Zib’s signature goes above Vrell’s countersignature. Vrell slides the bill to Krix, whose pen hovers over **RECEIVED** / **REÇU**. Krix’s toaster pops on the desk. Use one retained shape for the toast and show it already raised in reduced motion. | **ORDER VOID** | **ORDRE ANNULÉ** |
+| 1 | Vrell stamps the bypass plan void. Zib’s signature goes above Vrell’s countersignature. Vrell slides the separate, headed bill to Krix, whose pen hovers over its receipt mark. Krix’s toaster pops on the desk after the bill is readable. Use one retained shape for the toast and show it already raised in reduced motion. | **ORDER VOID** · **DEMOLITION CHARGES · BILL TO KRIX** · **RECEIVED** | **ORDRE ANNULÉ** · **FRAIS DE DÉMOLITION · À PAYER PAR KRIX** · **REÇU** |
 | 2 | Bubbles’ porthole is empty. A damp note rests against the glass. The parking transfer underneath has her finprint and a handwritten “Nobody coached me. I’m just that good.” / « Personne ne m’a donné de cours. Je suis douée, c’est tout. » | “So long, and thanks for all the fish.” | « Salut, et encore merci pour le poisson. » |
 | 3 | Vrell stamps his retirement form **PENSION VESTED** / **DROITS À LA RETRAITE ACQUIS** and files it in **LATER** / **PLUS TARD**. He clips the transferred permit to Zib’s old lanyard and hands it back. Outside, **ZIB** appears above the mint ring and the saucer floats in Bubbles’ pool. | Zib: “It has a POOL.” | Zib : « Il y a une PISCINE. » |
 
