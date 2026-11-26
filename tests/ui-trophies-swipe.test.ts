@@ -5,7 +5,7 @@ import type { Shell } from '../src/core/shell';
 import { defaultSave, type SaveData } from '../src/levels/save';
 import { previewSave } from '../src/ui/trophy-data';
 
-// Small wings so the order can be checked across a wing boundary (the real catalogue fits one wing today).
+// Small wings so the order can be checked across a wing boundary.
 const wings = vi.hoisted(() => ({ capacity: undefined as number | undefined }));
 vi.mock('../src/ui/trophy-data', async (importOriginal) => {
   const real = await importOriginal<typeof import('../src/ui/trophy-data')>();
@@ -94,7 +94,8 @@ describe('trophy swipe order', () => {
     for (let i = 1; i < scene.nav.souvenirs.length; i++) {
       const a = scene.nav.souvenirs[i - 1]!;
       const b = scene.nav.souvenirs[i]!;
-      expect(b.y >= a.y).toBe(true);
+      if (b.page === a.page) expect(b.y).toBeGreaterThanOrEqual(a.y);
+      else expect(b.page).toBe(a.page + 1);
     }
   });
 

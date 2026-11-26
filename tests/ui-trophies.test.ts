@@ -102,11 +102,15 @@ describe('HARD RULE: every room souvenir belongs in the Trophy Room', () => {
     }
   });
 
-  it('current catalogue fits in one room under ROOM_CAPACITY and lays out without overlaps or overflow', () => {
+  it('packs the catalogue into wings without splitting cases, overlaps or overflow', () => {
     const pages = buildTrophyPages(sections);
-    expect(slots.length).toBeLessThanOrEqual(ROOM_CAPACITY);
-    expect(pages.length).toBe(1);
-    expect(pages[0]!.count).toBe(slots.length);
+    expect(pages.flatMap(page => page.sections)).toEqual(sections);
+    expect(pages.reduce((total, page) => total + page.count, 0)).toBe(slots.length);
+    for (const [i, page] of pages.entries()) {
+      expect(page.count).toBeLessThanOrEqual(ROOM_CAPACITY);
+      const nextCase = pages[i + 1]?.sections[0];
+      if (nextCase) expect(page.count + nextCase.slots.length).toBeGreaterThan(ROOM_CAPACITY);
+    }
 
     const shelf = buildShelfState(defaultSave());
     for (const page of shelf.pages) {
