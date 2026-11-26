@@ -86,7 +86,7 @@ Use the standard ragdoll. Start both routes of each sleeper on the same settled 
 | --- | --- | --- |
 | Name / exact memo hint | Shrubbery / `a shrubbery` | Jardinet / `un jardinet` |
 | Description | The knights wanted a nice one. Not too expensive. The beam took it for free. | Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer. |
-| Status | Hiring. Hide the Hendersons’ hedge. | On recrute. Cachez la haie des Henderson. |
+| Status | Repotted · Nicer than the Hendersons’ hedge. Don’t tell them. | Rempoté · Plus joli que la haie des Henderson. Ne leur dites rien. |
 | Locked hint | The loudest voices on the west bank want a little greenery. | Sur la rive ouest, les plus bruyants réclament un peu de verdure. |
 
 One optional souvenir per route, six slots in the [trophy room](GDD-9-trophy-room.md). Use each English item name as its lower-case ID, and register singular and plural in both languages.
