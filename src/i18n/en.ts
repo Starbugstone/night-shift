@@ -615,6 +615,7 @@ export const en = {
   // v4 L9 1955
   // v4 1122
   grail: {
+    settle: "Release to steady the specimen",
     archive: "1122 ARCHIVE",
     board: "TOO HIGH",
     ni: "Ni!",

@@ -1,4 +1,5 @@
 import type { RoomId } from '../contracts';
+import { COW } from '../flight/grail';
 import { en } from '../i18n/en';
 import type { DeepLevelDef, EntryDef, PropDef } from './types';
 
@@ -12,9 +13,9 @@ export const LEVEL10: DeepLevelDef = {
   kind: 'deep', id: 'level10', requires: ['level9'], title: copy.title, location: copy.location,
   blurb: copy.blurb, human: copy.human, mugshot: 'human/rodney_head',
   memo: { re: copy.re, body: copy.body, joke: copy.joke },
-  hours: [2, 6], budgetSec: 330, parMarginSec: 200,
+  hours: [2, 6], budgetSec: 330, parMarginSec: 202,
   map: {
-    theme: 'grail', w: 1800, h: 2320, start: { x: 900, y: 2150 }, fuseSec: 0.83,
+    theme: 'grail', w: 1800, h: 2320, start: { x: 900, y: 2150 }, fuseSec: 0.75,
     collectible: { id: 'shrubbery', x: 115, y: 1370 },
     // The banks, bridge and winding cart tracks are painted together in the terrain tile.
     roads: [], groundProps: [],
@@ -34,7 +35,7 @@ export const LEVEL10: DeepLevelDef = {
     ],
     hazards: [
       { type: 'camera', skin: 'grail_sentry_top', x: 900, y: 1510, base: Math.PI / 2, range: 565, half: 0.8, amp: 0, rate: 0, phase: 0 },
-      { type: 'cow', x: 460, y: 1125, offset: 0 }, { type: 'cow', x: 1010, y: 1090, offset: 3.8 },
+      { type: 'cow', x: 460, y: 1125, offset: 0 }, { type: 'cow', x: 1010, y: 1090, offset: COW.cycle / 2 },
       { type: 'squire', path: [{ x: 605, y: 920 }, { x: 630, y: 590 }], speed: 82, dwell: 1, phase: 0, sweepAmp: 0, sweepRate: 0 },
       { type: 'rabbit', x: 1190, y: 970 },
     ],

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
-import { GrailReaction } from '../src/abduct/grail';
-import { Ragdoll } from '../src/abduct/ragdoll';
+import { GrailExit, GrailReaction } from '../src/abduct/grail';
+import { Ragdoll, STEP } from '../src/abduct/ragdoll';
 import { GRAIL_ROOMS } from '../src/abduct/rooms/deep-grail';
 import { en } from '../src/i18n/en';
 
@@ -43,4 +43,17 @@ it('warns in silence, steps about 55 px with the beam attached, then needs a coo
   expect(r.retreat).toBeGreaterThan(0.8);
   r.cancel();
   expect(r.retreat).toBe(0);
+});
+
+it('lets the torso settle inside the exit and clears partial progress when it leaves', () => {
+  const exit = new GrailExit(0, 0, 1);
+  for (let frame = 1; frame <= 240; frame++)
+    expect(exit.step(frame, 0, true)).toBe(false);
+  for (let frame = 0; frame < 1 / STEP; frame++) exit.step(240, 0, true);
+  expect(exit.progress).toBeGreaterThan(0);
+  expect(exit.progress).toBeLessThan(1);
+  expect(exit.step(240, 0, false)).toBe(false);
+  expect(exit.progress).toBe(0);
+  for (let frame = 0; frame <= 1 / STEP; frame++) exit.step(240, 0, true);
+  expect(exit.progress).toBe(1);
 });

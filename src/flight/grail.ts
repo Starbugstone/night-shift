@@ -10,7 +10,7 @@ export type GrailHazard =
   | (Pick<StewardHazard, 'path' | 'speed' | 'dwell' | 'phase' | 'sweepAmp' | 'sweepRate'> & { type: 'squire' })
   | { type: 'rabbit'; x: number; y: number };
 
-export const COW = { warning: 1.15, impact: 1.25, cycle: 7.6, radius: 108, body: 33 };
+export const COW = { warning: 1.15, impact: 1.4, cycle: 7, radius: 108, body: 33 };
 export const CLOP = { period: 2.6, warning: 0.45, pulse: 1.05, radius: 118 };
 export const RABBIT = { radius: 118, speed: 110, arm: 0.75, lunge: 0.95, rest: 1.5 };
 export const cycleTime = (t: number, period: number): number => ((t % period) + period) % period;

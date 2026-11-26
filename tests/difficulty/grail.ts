@@ -19,8 +19,8 @@ export function shrubberyDetour(sim: DeepFlightSim, profile: HumanProfile, seed:
   };
 }
 
-/** GDD-12's proposed matched-seed targets. The six-seed progression floors are shared with late dispatch. */
-export const GRAIL_TARGETS = [
-  ['Skilled', '90–100%', '65–80%', '75–85%', '90–100%'],
-  ['Casual', '80–95%', '40–45%', '50–55%', '75–90%'],
-] as const;
+/** GDD-12's percentage bands for 20 matched seeds, in star order. */
+export const GRAIL_TARGETS = {
+  skilled: [[90, 100], [65, 80], [75, 85], [90, 100]],
+  casual: [[80, 95], [40, 45], [50, 55], [75, 90]],
+} as const;

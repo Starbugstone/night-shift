@@ -8,7 +8,7 @@ import { POINT, pointReach } from './point';
 import { InteriorSimulation, type InteriorFailure } from './interior';
 import { clamp, Contact, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
-import { GrailReaction } from './grail';
+import { GrailExit, GrailReaction } from './grail';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
 import { readSeconds } from '../core/read-time';
 
@@ -100,6 +100,7 @@ export class AbductSimulation {
   /** v3 report: Bureau ID photo pose (src/abduct/photo.ts). */
   readonly photo: PhotoCapture;
   readonly grail?: GrailReaction;
+  readonly grailExit?: GrailExit;
   readonly wake: WakeMeter;
   readonly item: LooseItem;
   readonly fanBlades: readonly Blade[];
@@ -234,6 +235,7 @@ export class AbductSimulation {
     this.solids = solids;
     const plan = bodyPlanFor(room.human);
     this.body = new Ragdoll(room.pose, solids, upgrades.has('beam_dampener'), plan);
+    if (room.exitSettleSec) this.grailExit = new GrailExit(this.body.chestX, this.body.chestY, room.exitSettleSec);
     // L5: moisture sheath (the dolphin) and water zones (src/abduct/moisture.ts)
     const wet = room.interior?.wet;
     this.wet = wet || plan.kind === 'dolphin'
@@ -436,7 +438,10 @@ export class AbductSimulation {
 
     this.updateItem();
     // L6 clinic code: the exit stays shut until Form 7-B is complete
-    if (!this.body.gripActive && contains(this.room.exitZone, this.body.chestX, this.body.chestY) && (this.interior?.probes?.done ?? true)) {
+    const { chestX, chestY } = this.body;
+    const inExit = !this.body.gripActive && contains(this.room.exitZone, chestX, chestY);
+    const ready = this.grailExit?.step(chestX, chestY, inExit) ?? inExit;
+    if (ready && (this.interior?.probes?.done ?? true)) {
       this.grail?.cancel();
       this.delivered = true;
       // A captured item still with the body goes home with it. It trails the chest by up to ~70 px

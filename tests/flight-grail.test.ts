@@ -32,10 +32,10 @@ describe('Grimsby Keep', () => {
   });
 
   it('warns before either cow lands and removes its bump with its impact patch', () => {
-    for (const [x, y, offset] of [[460,1125,0],[1010,1090,3.8]] as const) {
+    for (const [x, y, offset] of [[460,1125,0],[1010,1090,COW.cycle / 2]] as const) {
       const sim = new DeepFlightSim(map, new Set());
       const i = offset ? 2 : 1;
-      for (const [age, warning, active] of [[0.3,1,0],[COW.warning + 0.01,0,1],[2.42,0,0]]) {
+      for (const [age, warning, active] of [[0.3,1,0],[COW.warning + 0.01,0,1],[COW.warning + COW.impact + 0.01,0,0]]) {
         sim.place(x + 12, y, 0);
         sim.st.t = offset + age!;
         drive(sim, 0, 0);

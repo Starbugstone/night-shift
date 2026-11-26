@@ -62,6 +62,8 @@ export interface Room {
   exitZone: Area;
   roofExit?: boolean;
   exitMouthY?: number;
+  /** Time the specimen must hang steadily in this exit before extraction. */
+  exitSettleSec?: number;
   item: { sprite: Sprite; name: string };
   cat?: Sprite;
   fan?: { x: number; y: number; angle: number; speed: number; bladeLength: number };

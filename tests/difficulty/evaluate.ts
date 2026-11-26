@@ -336,8 +336,18 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
   }
   if (level.id === 'level10') {
     report.shrubbery = profiles.map(profile => evaluateShrubbery(level, profile, seeds, play));
+    if (seeds === 20 && shiftEstimate.casual !== undefined && shiftEstimate.casual < 105)
+      report.violations.push(`casual shift estimate ${shiftEstimate.casual} s, band wants ≥ 105 s`);
     for (const row of report.shrubbery) {
       const floor = row.profile === 'skilled' ? 0.9 : row.profile === 'casual' ? 0.75 : 1;
+      if (seeds === 20 && (row.profile === 'skilled' || row.profile === 'casual')) {
+        const counts = [...stars.find(star => star.profile === row.profile)!.earned, row.fourthStars];
+        GRAIL_TARGETS[row.profile].forEach(([min, max], index) => {
+          const percent = 100 * counts[index]! / seeds;
+          if (percent < min || percent > max)
+            report.violations.push(`${report.starLabels[index]} (${row.profile}) earns ${percent}%, band wants ${min}–${max}%`);
+        });
+      }
       if (row.fourthStars < Math.floor(seeds * floor)) report.violations.push(`Shrubbery (${row.profile}) earned ${row.fourthStars}/${seeds}`);
     }
   }
@@ -463,7 +473,8 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
     for (const row of r.shrubbery) lines.push(`Shrubbery detour (${row.profile}): ${row.fourthStars}/${row.attempts} fourth stars.`);
     if (r.seeds === 20) {
       lines.push('', '| Proposed target | Delivered | Ghost | Night owl | Shrubbery detour |', '| --- | --- | --- | --- | --- |');
-      for (const row of GRAIL_TARGETS) lines.push(`| ${row.join(' | ')} |`);
+      for (const [profile, ranges] of Object.entries(GRAIL_TARGETS))
+        lines.push(`| ${profile} | ${ranges.map(([min, max]) => `${min}–${max}%`).join(' | ')} |`);
     }
   }
   if (r.carFirst && r.carBeelines) {

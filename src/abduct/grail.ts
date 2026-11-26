@@ -71,3 +71,26 @@ export class GrailReaction {
 
   cancel(): void { this.pending = ''; this.retreat = 0; }
 }
+
+const SETTLE_SPEED = 28;
+const SPEED_SMOOTHING = 1 - Math.exp(-STEP / 0.2);
+
+/** The existing opening takes a steady passenger. Letting go parks the beam. */
+export class GrailExit {
+  progress = 0;
+  inside = false;
+  private speed = 0;
+
+  constructor(private x: number, private y: number, private readonly seconds: number) {}
+
+  step(x: number, y: number, inside: boolean): boolean {
+    const speed = Math.hypot(x - this.x, y - this.y) / STEP;
+    this.speed += (speed - this.speed) * SPEED_SMOOTHING;
+    this.x = x;
+    this.y = y;
+    this.inside = inside;
+    const delta = (this.speed <= SETTLE_SPEED ? STEP : -STEP) / this.seconds;
+    this.progress = inside ? Math.min(1, Math.max(0, this.progress + delta)) : 0;
+    return this.progress >= 1;
+  }
+}

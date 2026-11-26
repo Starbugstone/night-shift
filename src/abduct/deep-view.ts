@@ -152,6 +152,7 @@ class DeepHud {
     const pad = this.lessonActive ? 12 : 0;
     let tip = '';
     if (sim.room.wrapperLessons) tip = '';
+    else if (sim.grailExit?.inside) tip = tr().grail.settle;
     else if (wet?.sheathed && wet.level < 0.9 && wet.refilling === -1) tip = tips.refill;
     else if (sim.room.human === 'nora' && chestX > 295 - pad && chestX < 510 + pad && chestY < 445) tip = tr().birch.crossLaser;
     else if (sim.room.human === 'gary' && chestX > 270 - pad && chestX < 505 + pad && chestY > 175 - pad) tip = tips.laser;
@@ -209,6 +210,7 @@ class DeepHud {
 class DeepExit {
   readonly root = new Container();
   private readonly unlocked = new Container();
+  private readonly settleBar?: Sprite;
   private readonly glow = new Glow(glowTexture(GLOW.mint), true);
   private readonly fill: Sprite;
   private readonly arrows = new ExitChevrons();
@@ -226,6 +228,10 @@ class DeepExit {
     panel.position.set(exitX - width / 2, titleY - 12);
     this.unlocked.addChild(this.fill, this.dashes.root, this.arrows.root,
       panel, new Label({ size: 14, weight: 900, color: MINT }).set(title, exitX, titleY, width - 12));
+    if (sim.grailExit) {
+      this.settleBar = box(a.x, a.y + a.h - 5, a.w, 5, MINT);
+      this.unlocked.addChild(this.settleBar);
+    }
     this.arrows.root.position.set(exitX, exitY);
     this.root.addChild(this.glow, prop(ctx.assets, s), this.unlocked);
     if (paperwork) this.root.addChild(paperwork.lock);
@@ -241,6 +247,7 @@ class DeepExit {
     const pulse = rm ? 0.5 : 0.5 + 0.5 * Math.sin(elapsed * 3.2);
     const near = 1 - clamp((Math.hypot(body.chestX - x, body.chestY - y) - 60) / 300, 0, 1);
     this.glow.place(x, y, 170, 170, 0.3 + 0.12 * pulse + 0.3 * near);
+    if (this.settleBar) this.settleBar.width = sim.room.exitZone.w * sim.grailExit!.progress;
     this.fill.alpha = 0.07 + 0.07 * pulse + 0.1 * near;
     this.dashes.sync(3 + near, rm ? 0 : -elapsed * 14);
     this.arrows.root.y = y - pulse * (5 + near * 4);

@@ -49,7 +49,7 @@ function make(human: keyof typeof subjects, upper: boolean, route: keyof typeof 
     : [740, sideEnd].map(at => ({ axis: 'vertical' as const, at, from: 215, to: 545, trim: 'door' as const }));
   const item = sprite('room/' + itemArt, shelfX + 30, 0);
   item.y = shelfY - item.h;
-  return { human, pose: who.pose, item: { sprite: item, name: itemName }, exit, exitZone: zone, roofExit: upper,
+  return { human, pose: who.pose, item: { sprite: item, name: itemName }, exit, exitZone: zone, exitSettleSec: 1.25, roofExit: upper,
     par: 90, backdrop: bay.backdrop, furniture: [...bay.supports, ...next.supports], route: [],
     interior: { building: building([bay, next], openings, hazards), checkpoints, caption: who.caption, mumbles: who.mumbles,
       exitName: en.routes[route].route.toUpperCase() } };
@@ -67,12 +67,12 @@ export const GRAIL_ROOMS = {
     [{ kind: 'swing', name: 'Hanging shield', sprite: fit('black_knight_shield', 487, -242, 79, 96), amplitude: 0.65, speed: 1.2, phase: 0.6, mountY: -333 }],
     [...rise, p(610, -105), p(606, -335, 'Hanging shield', 175), p(598, -490)]),
   black_knight_arch: make('black_knight', false, 'black_knight_arch', 'grail_counter', 'black_knight_arm', 'black knight’s arm', [],
-    [...side, p(1054, 335), p(1304, 292), p(1365, 365)]),
+    [...side, p(1054, 276), p(1304, 292), p(1365, 303)]),
   black_knight_loft: make('black_knight', true, 'black_knight_loft', 'gear_big', 'black_knight_shield', 'black knight’s shield',
     [{ kind: 'gate', name: 'Portcullis', area: box(390, -198, 350, 22), axis: 'x', cycle: { period: 7.2, open: 4.1, phase: 0.8 } }],
     [...rise, p(597, -88), p(597, -360, 'Portcullis', 205), p(598, -490)]),
   tom_stair: make('tom_enchanter', false, 'tom_stair', 'grail_lectern', 'holy_hand_grenade', 'holy hand grenade',
-    [sparks(box(1155, 171, 10, 415), 7.4, 4.6)], [...side, p(981, 325), p(1405, 323, 'Sleep-sparks', 248), p(1502, 373)]),
+    [sparks(box(1155, 171, 10, 415), 11.5, 4.6)], [...side, p(981, 325), p(1405, 323, 'Sleep-sparks', 248), p(1502, 373)]),
   tom_smoke: make('tom_enchanter', true, 'tom_smoke', 'grail_flue', 'enchanter_horns', 'enchanter’s horns',
-    [sparks(box(404, -200, 323, 10), 6.3, 3.7, 2.25)], [...rise, p(598, -78), p(598, -486, 'Sleep-sparks', 257), p(598, -490)]),
+    [sparks(box(404, -200, 323, 10), 6.3, 3.7, 4)], [...rise, p(598, -79), p(598, -486, 'Sleep-sparks', 257), p(598, -490)]),
 };

@@ -412,6 +412,7 @@ export const fr: Strings = {
   // v4 L9 1955
   // v4 1122
   grail: {
+    settle: "Relâchez pour stabiliser le spécimen",
     archive: "ARCHIVES 1122",
     board: "TROP HAUT",
     ni: "Ni !",
