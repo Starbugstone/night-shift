@@ -19,9 +19,9 @@ import type { LevelDef } from '../src/levels/types';
 const GATE_EXEMPT: Readonly<Record<string, string>> = {};
 
 /** Levels whose spawn gate is still to be reworked. */
-const PENDING_GATE = new Set(['level7', 'level8', 'level9']);
+const PENDING_GATE = new Set(['level7', 'level9']);
 /** Levels whose spawn zone is still to be moved off their neighbours' zone. */
-const PENDING_ZONE = new Set(['level8']);
+const PENDING_ZONE = new Set<string>();
 
 /** Hazards whose origin travels: a patrol crossing the way out is fine, it is not a gate. */
 const MOVING = new Set<HazardDef['type']>(['car', 'traffic', 'steward', 'squire', 'ambulance', 'heli', 'flock', 'wire', 'crane', 'gag']);

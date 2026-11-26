@@ -6,9 +6,9 @@ Krix, the Bureau’s former toaster intern, has sent an OBELISK™ slab three mi
 
 | Objective | How it plays |
 | --- | --- |
-| Flint’s quarry | Collect any two of three roaming apes. The first trail lies just north of the starting saucer, outside the sounding belt. |
-| Reed’s bandstand | Collect any two of three. Lookouts near the slab bring witnesses into its hearing belt. Another witness can be picked up while the slab sounds. |
-| Echo’s archive | Hover on the southeast hatch to enter the patent office. Lift Echo past the practice toss, through the shaft’s iris and out of the appeals hatch. |
+| Flint’s quarry | Collect any two of three roaming apes around the quarry at **(330, 1700)**, south-west of the picket line. Every trail stays outside the sounding belts. |
+| Reed’s bandstand | Collect any two of three around the bandstand at **(1050, 1800)**, south-east of the picket line. The north-east lookout walks up close to the east slab’s belt, so a witness there is picked up at the edge of the hearing. |
+| Echo’s archive | The archive sits downstream at **(760, 2040)**. Hover on its east hatch **(847, 2079)** to enter the patent office. Lift Echo past the practice toss, through the shaft’s iris and out of the appeals hatch. |
 
 Players can take the three objectives in any order. Each moving mint ring follows one ape. As at a cave entrance, the saucer must slow to 110 px/s or less and hover within 48 logical pixels for one second. Progress drains on a missed hover. Touching the shadow makes the ape bolt about 27 pixels. It settles after a quarter-second, giving a steady thumb time to follow it. Left alone, an ape scratches, walks to a lookout, gawks, then wanders home. When a troop fills, its remaining ring leaves the map.
 
@@ -16,7 +16,9 @@ The minimap tracks the witnesses. Edge arrows point to the nearest available mem
 
 ## Read the rock
 
-The 1440 × 1920 riverbed has three humming slabs. Their exact inner and outer circles turn amber 0.55 seconds before a note. Only the annulus detects the saucer during the note. Its centre stays quiet. A belt that hears the saucer turns red and burns the shared suspicion fuse. The same boundaries and hover progress are visible with reduced motion or sound off.
+**Arrival (2026-11-26 openings rework).** Zib comes down the dry riverbed from upstream, out of the north-east, and stops on a quiet plateau at **(1250, 150)** (zone N-east, `tests/levels-spawn-variety.test.ts`). The opening screen shows only rock. Below it, OBELISK’s three slabs hum across the whole valley: the **picket line**, slabs at **(200, 1312)**, **(754, 1300)** and **(1180, 1314)**, inner radius **75**, outer **299**, each on its own beat (6.7 s / 5.5 s sounding, 6.8 / 6.0, 6.5 / 5.7), so the gaps drift along the line. Every troop and Echo’s archive sit downstream of it. A finger held straight at Echo’s hatch or at any ape crosses a belt while it sounds and is caught well past the opening, at every tested start time; the naive beeline is caught there too (`tests/levels-monolith.test.ts`). The clean way is to wait for a slab’s silence, or slip into a quiet centre and out again. Krix and his toaster wait on the west plateau at **(180, 760)**, a detour before the crossing.
+
+The 1440 × 2200 riverbed has three humming slabs. Their exact inner and outer circles turn amber 0.55 seconds before a note. Only the annulus detects the saucer during the note. Its centre stays quiet. A belt that hears the saucer turns red and burns the shared suspicion fuse. The same boundaries and hover progress are visible with reduced motion or sound off.
 
 Echo’s split-level cave keeps the easy `echo_appeal` route from the spatial review. The old records wing is closed. A practice bone lands on its plinth between throws. Its trajectory and warning stay visible, and the first hard collision breaks it. The ape’s stone spectacles, the swinging appeal bell and the first-edition bone souvenir carry the gag through to the specimen report.
 

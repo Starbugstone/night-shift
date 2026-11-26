@@ -49,7 +49,8 @@ function routes(w: Witness): [Room, Room] {
   const sideGate = length - 390;
   const hazards: Hazard[] = [
     { kind: 'toss', name: 'Practice toss', sprite: art('practice_bone', launchX, 582), height: 260, airtime: 2.8, period: 6.7, phase },
-    { kind: 'creak', name: 'Loose shale', area: box(shaleStart, shaleTop, launchX - 51 - 80 - shaleStart, 686 - shaleTop) },
+    // 2026-11-26 (Neon P10): Echo's shale runs on to the launcher, so a hurried drag creaks longer.
+    { kind: 'creak', name: 'Loose shale', area: box(shaleStart, shaleTop, launchX - 51 - (w.id === 'echo' ? 10 : 80) - shaleStart, 686 - shaleTop) },
     { kind: 'gate', name: 'Stone shutter', area: box(sideGate, lintel, 32, 686 - lintel), axis: 'y', cycle: { period: 7.3, open: 4.4, phase } },
     { kind: 'gate', name: 'Iris stone', dialX: forkX + 106, area: box(forkX - 226, -height + 462, 452, 26), axis: 'x', cycle: { period: 7.1, open: 4.2, phase: phase + 0.8 } },
   ];

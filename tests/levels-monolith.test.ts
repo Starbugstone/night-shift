@@ -18,7 +18,9 @@ import { nearHumOnset, type HumSlab } from '../src/flight/monolith';
 import { LEVEL8 } from '../src/levels/deep-monolith';
 import { applyDeepRun, computeDeepStars, isLevelUnlocked } from '../src/levels/progress';
 import { validateSave } from '../src/levels/save';
-import { autopilotController, runHeadless } from './flight-deep-harness';
+import { autopilotController, beelineController, runHeadless } from './flight-deep-harness';
+import { BEELINE_DELAYS } from './difficulty/beeline';
+import type { PointerState, Vec2 } from '../src/contracts';
 import { playAbduction, PROFILES } from './difficulty/human';
 
 describe('Prior Contact', () => {
@@ -241,6 +243,68 @@ describe('Prior Contact', () => {
       const run = playAbduction(id, PROFILES.bot, seed);
       expect(run.delivered, JSON.stringify(run)).toBe(true);
       expect(run.timeSec).toBeLessThan(90);
+    }
+  });
+});
+
+// v4 openings (2026-11-26): Zib arrives on the north-east plateau and OBELISK's picket line of three slabs
+// hums across the valley below it. No spawn gate and no free straight line: a finger held straight at Echo's
+// hatch or chasing any ape is caught on the way, beyond the opening screen.
+describe('Prior Contact: the picket line', () => {
+  const { map } = LEVEL8;
+  const idle: PointerState = { down: false, x: 0, y: 0, pressed: false, released: false };
+  const press = (sim: DeepFlightSim, goal: Vec2): PointerState => {
+    const s = sim.saucer;
+    const distance = Math.hypot(goal.x - s.x, goal.y - s.y);
+    const scale = Math.min(186, distance * 1.4) / Math.max(1, distance);
+    return {
+      ...idle, down: distance > 12 || Math.hypot(s.vx, s.vy) > 60,
+      x: s.x - sim.camX + (goal.x - s.x) * scale - s.vx * (distance < 130 ? 0.35 : 0.1),
+      y: s.y - sim.camY + (goal.y - s.y) * scale - s.vy * (distance < 130 ? 0.35 : 0.1),
+    };
+  };
+
+  // Ape rings walk their trails, so the finger chases the ring's live position, as a thumb on an ape would.
+  it('catches a straight run from the plateau at Echo and at every ape, at every tested phase, beyond the opening', () => {
+    const opening = new DeepFlightSim(map, new Set(), 0);
+    const screen = { x: opening.camX, y: opening.camY };
+    for (let ring = 0; ring < opening.rings.length; ring++) {
+      for (const delay of BEELINE_DELAYS) {
+        const sim = new DeepFlightSim(map, new Set(), delay);
+        while (sim.phase === 'fly' && sim.t < delay + 16) sim.update(1 / 60, press(sim, sim.rings[ring]!));
+        const at = `ring ${ring} from ${delay}s`;
+        expect(sim.phase, at).toBe('spotted');
+        const { x, y } = sim.saucer;
+        expect(Math.hypot(x - map.start.x, y - map.start.y), at).toBeGreaterThan(600);
+        expect(x >= screen.x && x <= screen.x + 540 && y >= screen.y && y <= screen.y + 960, `${at}: caught on the first screen`).toBe(false);
+      }
+    }
+  });
+
+  it('catches the naive beeline at every tested phase, beyond the opening', () => {
+    for (const delay of BEELINE_DELAYS) {
+      const run = runHeadless(map, [], beelineController, LEVEL8.budgetSec, true, delay);
+      expect(run.done, `beeline from ${delay}s`).toBe(false);
+      const spot = run.spots[0]!;
+      expect(spot, `beeline from ${delay}s`).toBeDefined();
+      expect(Math.hypot(spot.x - map.start.x, spot.y - map.start.y)).toBeGreaterThan(600);
+    }
+  });
+
+  it('keeps every belt off the first screen at launch', () => {
+    const opening = new DeepFlightSim(map, new Set(), 0);
+    for (const d of map.hazards) {
+      if (d.type !== 'hum') continue;
+      const cx = Math.max(opening.camX, Math.min(d.x, opening.camX + 540));
+      const cy = Math.max(opening.camY, Math.min(d.y, opening.camY + 960));
+      expect(Math.hypot(d.x - cx, d.y - cy), `slab at ${d.x},${d.y}`).toBeGreaterThan(d.outer);
+    }
+  });
+
+  it('keeps every ape trail and the Krix pickup clear of the sounding belts', () => {
+    const points = [...map.targets.flatMap(t => t.troop?.trails.flatMap(tr => [tr.home, tr.lookout]) ?? []), map.collectible!];
+    for (const p of points) for (const d of map.hazards) {
+      if (d.type === 'hum') expect(Math.hypot(p.x - d.x, p.y - d.y), `${p.x},${p.y}`).toBeGreaterThan(d.outer + RING_R);
     }
   });
 });
