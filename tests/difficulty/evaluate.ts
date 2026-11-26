@@ -9,7 +9,7 @@ import { starLabels } from '../../src/levels/progress';
 import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
 import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
-import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateStars, type CarReport, type StarReport } from './stars';
+import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateTripodFirst, evaluateStars, type CarReport, type StarReport, type TripodReport } from './stars';
 import { checkDispatchFinale } from './dispatch2199';
 import { naiveCarCatches } from './time-car';
 
@@ -121,6 +121,11 @@ export const BANDS: Record<string, Band | undefined> = {
     skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.6, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: 0.8, tension: 20,
   },
+  // v4 1953: the two timed crossings sit one tier above the 1955 introductions.
+  level11: {
+    skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.8, casualBudgetShare: 125 / 315, tension: 20,
+  },
   // v4 L9 1955: late-tier stars and a tighter standard-shift estimate.
   // v4 1122
   level10: {
@@ -182,6 +187,7 @@ export interface LevelReport extends StarLevelReport {
   shrubbery?: ReturnType<typeof evaluateShrubbery>[];
   towelFirst?: ReturnType<typeof evaluateTowelFirst>[];
   carFirst?: CarReport[];
+  tripodFirst?: TripodReport[];
   carBeelines?: ReturnType<typeof naiveCarCatches>;
 }
 
@@ -359,6 +365,15 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     report.towelFirst = profiles.map(p => evaluateTowelFirst(level, p, seeds, play));
     report.violations.push(...checkDispatchFinale(report));
   }
+  if (level.id === 'level11') {
+    report.tripodFirst = profiles.map(profile => evaluateTripodFirst(level, profile, seeds, play));
+    for (const row of report.tripodFirst) {
+      if (row.profile !== 'skilled' && row.profile !== 'casual') continue;
+      const rate = row.fourthStars / row.attempts;
+      const floor = row.profile === 'skilled' ? 5 / 6 : 4 / 6;
+      if (seeds >= 6 && rate < floor) report.violations.push(`Tripod leg detour (${row.profile}) earns ${pct(rate)}, band wants ≥ ${pct(floor)}`);
+    }
+  }
   if (level.id === 'level9') {
     if (seeds >= 6) {
       for (const row of stars) {
@@ -488,6 +503,12 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
   if (r.towelFirst) {
     lines.push('', '| West harbour detour | Filed with towel |', '| --- | --- |');
     for (const row of r.towelFirst) lines.push(`| ${row.profile} | ${row.fourthStars}/${row.attempts} |`);
+  }
+  if (r.tripodFirst) {
+    lines.push('', '| Tripod-leg detour | Catches | Pickup star |', '| --- | --- | --- |');
+    for (const row of r.tripodFirst) {
+      lines.push(`| ${row.profile} | ${row.catches}/${row.attempts} | ${row.fourthStars}/${row.attempts} |`);
+    }
   }
   if (r.carFirst && r.carBeelines) {
     lines.push('', '| Car-first | Catches | Delivered | Pickup star | All four |', '| --- | --- | --- | --- | --- |');

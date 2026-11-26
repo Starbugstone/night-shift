@@ -75,6 +75,13 @@ function swing(state: HazardState, spec: Extract<Hazard, { kind: 'swing' }>, ass
     mount.sync(shape.x, shape.y);
     root.addChild(mount.root);
   }
+  if (spec.sprite.key === 'room/invasion_bell_clapper') {
+    const reach = Math.hypot(shape.h, shape.w / 2);
+    const rim = new Graphics();
+    rim.arc(0, 0, reach, Math.PI / 2 - spec.amplitude, Math.PI / 2 + spec.amplitude)
+      .stroke({ color: AMBER, width: 2.5, alpha: 0.7 });
+    pivot.addChildAt(rim, 0);
+  }
   root.addChild(pivot);
   return {
     root,
@@ -408,7 +415,9 @@ class CameraView implements HazardView {
     if (!lens) {
       this.camera = new Container();
       this.camera.position.set(x, y);
-      this.camera.addChild(roomArt(assets, 'room/security_camera', -61, -20, 67, 38));
+      this.camera.addChild(spec.skin === 'invasion'
+        ? roomArt(assets, 'room/invasion_probe_eye', -64, -36, 76, 72)
+        : roomArt(assets, 'room/security_camera', -61, -20, 67, 38));
       this.root.addChild(this.camera);
     }
     this.ring.position.set(x, y);
@@ -485,7 +494,7 @@ class LaserView implements HazardView {
     this.nearY = vertical ? y : y + h / 2;
     this.farX = vertical ? this.nearX : x + w;
     this.farY = vertical ? y + h : this.nearY;
-    for (const margin of [12, 5]) {
+    for (const margin of spec.skin === 'invasion' ? [5] : [12, 5]) {
       const glow = box(x - (vertical ? margin : 0), y - (vertical ? 0 : margin), w + (vertical ? margin * 2 : 0), h + (vertical ? 0 : margin * 2), RED, margin === 12 ? 0.16 : 0.3);
       glow.blendMode = 'add';
       this.active.addChild(glow);
@@ -505,7 +514,7 @@ class LaserView implements HazardView {
       if (vertical) this.off.rect(this.nearX - 1, y + i, 2, dash);
       else this.off.rect(x + i, this.nearY - 1, dash, 2);
     }
-    this.off.fill({ color: MINT, alpha: 0.4 });
+    this.off.fill({ color: spec.skin === 'invasion' ? '#d0cceb' : MINT, alpha: 0.4 });
     this.root.addChild(this.active, this.charging, this.off);
     if (spec.mountY !== undefined) {
       const mount = new Mount(this.nearX - 9, spec.mountY, 6);

@@ -27,6 +27,7 @@ import { CrestValleyRoomDecor } from './views/crest-valley';
 import { DeliveryView, ExitChevrons, FuseRing, Reticle, SnoozeView, SnoreView, SpeechBubble, WakeBurst, type AbductViewInput } from './views/effects';
 import { ALERT_RGB, FailureView } from './views/failure';
 import { hazardView } from './views/hazards';
+import { BiscuitDrops } from './views/invasion1953';
 import { AMBER, DashedLine, DashedRect, INK, LIGHT, MINT, RED, TAU, box, circleInView, intersects } from './views/pieces';
 import { SleeperView } from './views/sleeper';
 
@@ -454,6 +455,8 @@ export class DeepAbductView implements SceneView {
       }
     }
     world.addChild(this.swell.world);
+    this.biscuits = sim.room.human === 'collier' ? new BiscuitDrops(ctx.assets) : null;
+    if (this.biscuits) world.addChild(this.biscuits.root);
     for (const view of this.sleepers) world.addChild(view.root);
     world.addChild(this.beam.root);
     if (this.wet) world.addChild(this.wet.back);
@@ -474,6 +477,8 @@ export class DeepAbductView implements SceneView {
     this.root.addChild(this.night.root, world, this.dawn, this.vignette, this.direction.root, this.alarm, this.delivery.flash, this.hud.root,
       this.swell.dial, this.failure.root);
   }
+
+  private readonly biscuits: BiscuitDrops | null;
 
   sync(): void {
     const { sim, ctx, input } = this;
@@ -510,6 +515,7 @@ export class DeepAbductView implements SceneView {
     const y = clamp(beamY, cy + 102, cy + VIEW_H - 93);
     this.beam.sync(sim, x, y, cy, input.dragging, rm);
     this.wet?.sync(cx, cy, t, rm);
+    this.biscuits?.sync(t, sim.bonkSeq, chestX, chestY, rm);
     this.syncSpecimen(cx, cy);
     this.paperwork?.sync(body, t, rm, cx, cy);
     this.reticle.root.visible = !delivered;

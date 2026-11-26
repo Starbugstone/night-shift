@@ -68,6 +68,7 @@ export function tabloidHeadline(levelId: string, spotted: number, seed: number):
   if (levelId === 'birch_bakery' || levelId === 'birch_neighbours') return h[levelId]![0]!;
   const own = h[levelId] ?? [];
   if (levelId === 'level10') return pickLine(own, seed);
+  if (levelId === 'level11') return own[0] ?? null;
   const all = [...own, ...h.generic!];
   // the level's own headlines come up first, the generic ones on later runs
   const s = Math.abs(Math.floor(seed));

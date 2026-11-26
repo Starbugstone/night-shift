@@ -22,6 +22,8 @@ import { BAKERY_ROOMS } from './deep-birch-bakery';
 import { NEIGHBOUR_ROOMS } from './deep-birch-neighbours';
 // v4 1122
 import { GRAIL_ROOMS } from './deep-grail';
+// v4 1953
+import { ROOMS_1953 } from './deep-1953';
 // v4 L8
 import { MONOLITH_ROOMS } from './deep-monolith';
 // L7 cruise code
@@ -67,6 +69,9 @@ export const ROOMS: Readonly<Record<RoomId, Room>> = withSouvenirs({
   ...ROOMS_1955,
   // v4 1122
   ...GRAIL_ROOMS,
+  // v4 1953
+  ...ROOMS_1953,
+  // v4 2199
   ...ROOMS_2199,
   // L7 cruise code
   captain_mast: captainMast,

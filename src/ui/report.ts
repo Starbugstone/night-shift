@@ -136,7 +136,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
       ...(pickup ? [pickup.row] : []),
     ],
     stamp: sunrise ? (lv.id === 'level12' ? 'demolition' : lv.id === 'level9' ? 'storm' : 'sunrise') : 'delivered',
-    archive: lv.id === 'level9' ? tr().crestValley.archive : lv.id === 'level10' ? tr().grail.archive : undefined,
+    archive: lv.id === 'level9' ? tr().crestValley.archive : lv.id === 'level10' ? tr().grail.archive : lv.id === 'level11' ? tr().invasion1953.archive : undefined,
     bakerySign: lv.id === 'birch_bakery' && outcome.stars[0],
     starLabels: shownStarLabels(lv),
     comment: sunrise
@@ -150,6 +150,8 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
     cover: lv.id === 'level10' && !sunrise && run.collectible?.collectedId ? tr().grail.greenery
       : lv.id === 'level10' && outcome.stars[1] ? tr().grail.ghost
       : lv.id === 'level12' ? sunrise ? tr().dispatch2199.deadline : outcome.stars[1] ? tr().dispatch2199.ghost : tr().dispatch2199.cover
+      : lv.id === 'level11' && !sunrise && outcome.newStarFlags[0] ? tr().invasion1953.firstCover
+      : lv.id === 'level11' && !sunrise && run.collectible?.collectedId === 'tripod_leg' ? tr().invasion1953.legCover
       : coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, firstClear, seed: outcome.save.reports }),
     headline: lv.id === 'level12' && sunrise && run.spotted >= 2 ? tr().dispatch2199.gazette : tabloidHeadline(lv.id, run.spotted, outcome.save.reports),
     readings: run.probeReadings,

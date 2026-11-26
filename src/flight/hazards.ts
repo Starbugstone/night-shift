@@ -6,6 +6,7 @@
 import { COW, CLOP, RABBIT, cycleTime, rabbitStart, inRabbitRun, type GrailHazard } from './grail';
 import { cameraHeading } from './recital';
 import type { Vec2 } from '../contracts';
+import { burstPhase, type CameraBurst } from './invasion1953';
 import { circleSegment, pointInCircle, pointInCone, wrapAngle, type SegHit } from './geometry';
 import { POWER_LINE, SAUCER, barkRadius, neonOn, neonScramble, type Saucer } from './sim';
 // L5 pier code: the lighthouse beam
@@ -152,7 +153,9 @@ export interface CameraHazard {
   /** L7 cruise code: turn steadily at this many rad/s from `base` instead of sweeping (a radar). */
   spin?: number;
   /** v4 L9 1955: era fixture at the cone origin. */
-  skin?: 'marshal55_torch' | 'dance_spot55' | 'worklamp55' | 'grail_sentry_top' | 'reciter2199_top';
+  skin?: 'marshal55_torch' | 'dance_spot55' | 'worklamp55' | 'grail_sentry_top' | 'reciter2199_top' | 'invasion_projector_top' | 'invasion_sick_tripod_top';
+  /** v4 1953: fixed camera gated by an amber warning and timed exposure. */
+  burst?: CameraBurst;
 }
 
 /** Neon sign / billboard: inside the glow, steering is scrambled while it is lit. */
@@ -332,6 +335,8 @@ export const SPOT_CAUSES = [
   'poetry', 'dozer',
   'eraLight', 'eraWatcher', 'eraPolice',
   'grailSentry', 'cow', 'clop', 'rabbit',
+  // v4 1953
+  'projector1953', 'sneeze1953',
 ] as const;
 export type SpotCause = (typeof SPOT_CAUSES)[number];
 
@@ -583,6 +588,11 @@ export class HazardField {
           this.x[i] = d.x;
           this.y[i] = d.y;
           this.a[i] = cameraHeading(d, t);
+          if (d.burst) {
+            const phase = burstPhase(d.burst, t);
+            this.on[i] = phase === 'live' ? 1 : 0;
+            this.tell[i] = phase === 'warn' ? 1 : 0;
+          }
           break;
         // L5 pier code: a = the beam's centre angle
         case 'lighthouse':
@@ -735,7 +745,7 @@ export class HazardField {
           if (pointInCircle(x, y, this.x2[i]!, this.y2[i]!, d.spotR)) return i;
           break;
         case 'camera':
-          if (pointInCone(x, y, d.x, d.y, this.a[i]!, d.half, d.range)) return i;
+          if (this.on[i] && pointInCone(x, y, d.x, d.y, this.a[i]!, d.half, d.range)) return i;
           break;
         case 'window':
           if (this.on[i] && pointInCircle(x, y, d.x, d.y, d.r)) return i;
@@ -882,6 +892,8 @@ export class HazardField {
       case 'heli':
         return 'heli';
       case 'camera':
+        if (d.skin === 'invasion_projector_top') return 'projector1953';
+        if (d.skin === 'invasion_sick_tripod_top') return 'sneeze1953';
         return d.skin === 'grail_sentry_top' ? 'grailSentry' : d.skin === 'reciter2199_top' ? 'poetry' : d.skin ? 'eraLight' : 'camera';
       case 'squire': return 'clop';
       case 'cow':

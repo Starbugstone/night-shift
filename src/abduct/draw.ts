@@ -248,6 +248,8 @@ const SHIRTS: Record<Human, string> = {
   rodney: '#8a9254', black_knight: '#4e3e48', tom_enchanter: '#815e7b',
   artie: '#965b78', penny: '#a57d48', moe: '#90a5ab',
   doc: '#e0d6b1', buff: '#533752', marvin: '#88516c',
+  // v4 1953
+  forester: '#e1dcd1', van_bell: '#776b9b', collier: '#474253',
 };
 const PANTS: Record<Human, string> = {
   mabel: '#514965', nora: '#555b71', len: '#53749f',
@@ -265,6 +267,8 @@ const PANTS: Record<Human, string> = {
   rodney: '#634a43', black_knight: '#574657', tom_enchanter: '#554353',
   artie: '#784960', penny: '#415063', moe: '#54576a',
   doc: '#8b7258', buff: '#5b536b', marvin: '#39304e',
+  // v4 1953
+  forester: '#594f69', van_bell: '#3f415f', collier: '#463e55',
 };
 
 export interface SpecimenArt {

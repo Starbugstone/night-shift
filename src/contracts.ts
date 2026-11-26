@@ -182,6 +182,8 @@ export type RoomId =
   | 'inventor_balcony' | 'inventor_service' | 'bully_transom' | 'bully_kitchen' | 'band_hatch' | 'band_canopy'
   // v4 1122
   | 'rodney_flap' | 'rodney_loft' | 'black_knight_arch' | 'black_knight_loft' | 'tom_stair' | 'tom_smoke'
+  // v4 1953
+  | 'forester_kitchen' | 'forester_attic' | 'van_bell_staff' | 'van_bell_vent' | 'collier_vestry' | 'collier_bell'
   // v4 2199
   | 'artie_garden' | 'artie_bath' | 'penny_service' | 'penny_loft' | 'moe_returns' | 'moe_vent'
   ;
@@ -260,6 +262,8 @@ export type MapCollectibleId =
   | 'time_car'
   // v4 1122
   | 'shrubbery'
+  // v4 1953
+  | 'tripod_leg'
   // v4 2199
   | 'bypass_towel';
 

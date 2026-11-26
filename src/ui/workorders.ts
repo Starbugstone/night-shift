@@ -294,7 +294,8 @@ class LevelCard {
     roundRect(card, 4, 4, 12, CARD_H - 8, 6).fill(!unlocked ? '#4a4470' : training ? C.mint : C.amber);
     if (unlocked && !training) roundRect(card, 4, CARD_H / 2, 12, (CARD_H - 8) / 2, 6).fill(C.red);
     this.root.addChild(card);
-    if (lv.kind === 'deep' && lv.id !== 'level12') {
+    // v4 1953: Clive fronts this dispatch's poster.
+    if (lv.kind === 'deep' && lv.id !== 'level11' && lv.id !== 'level12') {
       const cx = CARD_W - 66;
       const anchors = [[cx - 26, 46], [cx + 24, 44], [cx - 2, 84]] as const;
       for (const [i, target] of lv.map.targets.entries()) {

@@ -26,6 +26,8 @@ export const PICKUP_SIZE: Record<MapCollectibleId, readonly [w: number, h: numbe
   shrubbery: [106, 116],
   bypass_towel: [96, 72],
   time_car: [96, 172],
+  // v4 1953
+  tripod_leg: [104, 124],
 };
 
 /** How far one channel moves a part at full strength: px, radians, and extra scale (0.05 = +5 %). */

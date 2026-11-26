@@ -12,6 +12,8 @@ import { LEVEL8 } from './deep-monolith';
 import { LEVEL9 } from './deep-1955';
 // v4 1122
 import { LEVEL10 } from './deep-grail';
+// v4 1953
+import { LEVEL11 } from './deep-1953';
 // v4 2199
 import { LEVEL12 } from './deep-2199';
 // L7 cruise code
@@ -46,10 +48,14 @@ export const LEVELS: readonly LevelDef[] = [
       groundProps: [
         { key: 'flight/field_rows', kind: 'field', x: 210, y: 1570 },
         { key: 'flight/field_rows', kind: 'field', x: 870, y: 1570 },
+        // v4 1953: the coop rests where the missing brace left its footprint.
+        { key: 'flight/doyle_coop_print_top', kind: 'footprint53', x: 218, y: 690 },
+        { key: 'flight/doyle_coop_block_top', kind: 'coopBlock53', x: 186, y: 675 },
         { key: 'flight/field_rows', kind: 'field', x: 190, y: 190 },
         { key: 'flight/field_rows', kind: 'field', x: 520, y: 170, rot: PI / 2 },
       ],
       props: [
+        { key: 'flight/doyle_coop_top', kind: 'coop53', x: 151, y: 637, rot: 0.09 },
         { key: 'flight/barn_top', kind: 'barn', x: 850, y: 500 },
         { key: 'flight/tractor_top', kind: 'tractor', x: 870, y: 790, rot: 0.35 },
         { key: 'flight/haybale_top', kind: 'haybale', x: 720, y: 720 },
@@ -212,6 +218,8 @@ export const LEVELS: readonly LevelDef[] = [
   LEVEL9,
   // v4 1122
   LEVEL10,
+  // v4 1953
+  LEVEL11,
   // v4 2199
   LEVEL12,
 ];
@@ -279,6 +287,8 @@ export const ROOM_IDS: readonly RoomId[] = [
   'inventor_balcony', 'inventor_service', 'bully_transom', 'bully_kitchen', 'band_hatch', 'band_canopy',
   // v4 1122
   'rodney_flap', 'rodney_loft', 'black_knight_arch', 'black_knight_loft', 'tom_stair', 'tom_smoke',
+  // v4 1953
+  'forester_kitchen', 'forester_attic', 'van_bell_staff', 'van_bell_vent', 'collier_vestry', 'collier_bell',
 ];
 
 export function isRoomId(s: string): s is RoomId {

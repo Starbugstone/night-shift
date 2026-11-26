@@ -2,6 +2,7 @@ import { ART } from '../art-manifest';
 import { VIEW_H, VIEW_W, type AbductAutopilotIntent, type AbductResult, type AbductRules, type Audio, type UpgradeId } from '../contracts';
 import { AbductPilot } from './autopilot';
 import { bodyPlanFor } from './body-plan';
+import { WitnessReactions } from './invasion1953';
 import { MoistureSim } from './moisture';
 import { PhotoCapture } from './photo';
 import { POINT, pointReach } from './point';
@@ -36,6 +37,8 @@ const HUMAN_NAMES = {
   rodney: 'Sir Rodney the Not-Quite-So-Brave', black_knight: 'The Black Knight', tom_enchanter: 'Tom the Enchanter',
   artie: 'Artie Duvet', penny: 'Penny Thumb', moe: 'Moe Dread',
   doc: 'Doc', buff: 'Buff Tanner', marvin: 'Marvin Cherry',
+  // v4 1953
+  forester: 'Clive Forester', van_bell: 'Sylvie Van Bell', collier: 'Pastor Matt Collier',
 } as const;
 const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
 /** Pop-culture decor and the sleep-talk it sets off when the specimen floats past it (once). */
@@ -173,6 +176,7 @@ export class AbductSimulation {
   private pendingSulk = -1;
   private liftAt = -1;
   private squashed = false;
+  private readonly witness?: WitnessReactions;
   private lift = 0;
 
   constructor(
@@ -247,6 +251,9 @@ export class AbductSimulation {
     this.photo = new PhotoCapture(this.body.x.length);
     this.wake = new WakeMeter(hush, rules.hard, plan.bonkGain);
     this.subjectName = HUMAN_NAMES[room.human];
+    if (room.human === 'forester' || room.human === 'van_bell' || room.human === 'collier') {
+      this.witness = new WitnessReactions(room.human, audio, room.interior?.exitName === 'Bell hatch');
+    }
     this.snoozeOwned = upgrades.has('snooze_ray');
     this.pilot = new AbductPilot(room);
     if (this.interior) {
@@ -360,6 +367,7 @@ export class AbductSimulation {
   private step(): void {
     this.elapsed += STEP;
     this.snoozePulse = Math.max(0, this.snoozePulse - STEP / SNOOZE_SECONDS);
+    const beforeWake = this.wake.value;
     this.wake.tick(STEP, this.body.gripActive);
     this.catCooldown = Math.max(0, this.catCooldown - STEP);
     this.catAwake = Math.max(0, this.catAwake - STEP);
@@ -425,6 +433,9 @@ export class AbductSimulation {
       this.sleepTalk(tr().dispatch2199.sulks[this.pendingSulk]);
       this.pendingSulk = -1;
     }
+    const reaction = this.witness?.step(this.elapsed, beforeWake, this.wake.value, this.beamMoved);
+    if (reaction) this.sleepTalk(reaction);
+
     const cue = this.propCue;
     if (this.beamMoved && this.liftAt < 0) this.liftAt = this.elapsed;
     if (cue && this.liftAt >= 0 && this.elapsed - this.liftAt >= PROP_CUE_DELAY && this.wake.awake === 0 && this.mumbleFx === 0) {
@@ -473,8 +484,9 @@ export class AbductSimulation {
     this.interior?.noise((cat ? 46 : clamp((speed - 40) * 0.29, 0, 70)), x, y);
     this.grail?.impact(this.body, x, this.elapsed);
     this.onWake(wasAwake);
+    const line = this.witness?.bonkLine(this.bonkSeq);
     if (this.room.human === 'moe') this.pendingSulk = Math.min(2, this.bonkSeq - 1);
-    else if (!this.grail?.knight && this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
+    else if (!this.grail?.knight && this.wake.awake === 0 && !cat && (line || speed >= 120)) this.sleepTalk(line);
   }
 
   /** L5: splashes wake people up; a dolphin that dries out wakes squeaking. */

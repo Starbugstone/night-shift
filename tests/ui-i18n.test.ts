@@ -53,6 +53,8 @@ const SAME_IN_FRENCH = new Set([
   'Artie Duvet', 'Penny Thumb', 'Moe Dread', 'Artie', 'Penny', 'Moe', 'Grimsby · 2199',
   // v4 L9 1955: names and a loanword
   'Doc', 'Buff', 'Buff Tanner', 'Marvin', 'Marvin Cherry', 'Lyle', 'Jukebox',
+  // v4 1953: local names
+  'Clive', 'Clive Forester', 'Sylvie', 'Sylvie Van Bell', 'Matt',
 ]);
 
 afterEach(() => setLang('en'));

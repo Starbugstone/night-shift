@@ -224,6 +224,17 @@ function krixIntern(): Graphics {
   return g;
 }
 
+function tripodLegFallback(): Graphics {
+  return new Graphics()
+    .moveTo(-27, -50).lineTo(18, -14).lineTo(12, 34)
+    .stroke({ color: '#482c37', width: 26, join: 'round', cap: 'round' })
+    .moveTo(-27, -50).lineTo(18, -14).lineTo(12, 34)
+    .stroke({ color: '#cc825c', width: 17, join: 'round', cap: 'round' })
+    .ellipse(18, -14, 14, 12).fill('#efb77f').stroke({ color: '#482c37', width: 3 })
+    .poly([8, 23, 24, 31, 39, 42, 31, 49, 17, 45, 22, 56, 11, 58, 0, 47, -15, 48, -18, 39])
+    .fill('#c27b58').stroke({ color: '#482c37', width: 3 });
+}
+
 /** Each sketch, its own bounding box and its tilt. */
 const FALLBACK: Record<MapCollectibleId, { draw: () => Graphics; w: number; h: number; rot: number }> = {
   cherry_pie: { draw: () => new Graphics().ellipse(0, 6, 50, 30).fill('#b4d7db')
@@ -236,6 +247,7 @@ const FALLBACK: Record<MapCollectibleId, { draw: () => Graphics; w: number; h: n
     .quadraticCurveTo(38, -30, 44, -23).lineTo(44, 24).stroke({ color: '#ac876f', width: 3 }), w: 91, h: 113, rot: 0 },
   shrubbery: { draw: () => new Graphics().poly([-24, 24, 24, 24, 18, 55, -18, 55]).fill('#bd7555')
     .rect(-4, -25, 8, 52).fill('#906449').ellipse(0, 6, 46, 17).ellipse(0, -18, 33, 16).ellipse(0, -40, 19, 13).fill('#659956'), w: 106, h: 116, rot: 0 },
+  tripod_leg: { draw: tripodLegFallback, w: 104, h: 124, rot: 0 },
   bypass_towel: { draw: () => new Graphics().roundRect(-48, -36, 96, 72, 7).fill(0xffda76).rect(-44, 15, 88, 8).fill(0x74518e), w: 96, h: 72, rot: 0 },
   time_car: { draw: () => timeCarWedge(true), w: 96, h: 172, rot: 0 },
   slipper_flyer: { draw: slipperFlyer, w: 46, h: 58, rot: -0.14 },

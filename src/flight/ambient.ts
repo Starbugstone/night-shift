@@ -43,7 +43,7 @@ export class Ambient {
 
   constructor(map: DeepMap) {
     this.suburb = map.theme === 'suburb';
-    const modern = map.theme !== 'storm55';
+    const modern = map.theme !== 'storm55' && map.theme !== 'invasion53';
     const targets = new Set<PropDef>(map.targets.map((t) => t.building));
     const all = [...map.props, ...targets];
 

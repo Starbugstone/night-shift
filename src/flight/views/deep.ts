@@ -23,6 +23,7 @@ import { AmbientView } from './ambient';
 import { EntryRingView, RING_CLEAR, SaucerView } from './craft';
 import { placePills, type Box, type PillAsk } from './clear-of';
 import { DeepFlightHud } from './deep-hud';
+import { DriveInScenery } from './invasion1953';
 import { HazardViews } from './hazards';
 import { FLIGHT_BUBBLES, FlightTintView, abovePlayer, tick } from './overlays';
 import { ProgressArc, RED, dashedArc } from './tells';
@@ -313,6 +314,7 @@ export class DeepFlightView implements SceneView {
   private readonly checkpoint = new CheckpointView();
   private readonly recitals?: RecitalView;
   private readonly hazards: HazardViews;
+  private readonly driveIn: DriveInScenery | null;
   private readonly lights: Glow[];
   private readonly rings: (EntryRingView | RoamView)[];
   /** v4 council: scratch obstacles for route pills (HUD boxes, the entry rings on screen, then the pills placed). */
@@ -350,6 +352,9 @@ export class DeepFlightView implements SceneView {
           basicGround(g, assets, 'flight/ground_farm', x, y, w, h, '#374c42', '#4e6350', s.speckles, true);
           grailTerrain(g);
           break;
+        case 'invasion53':
+          basicGround(g, assets, 'flight/ground_invasion53', x, y, w, h, '#2e2946', '#403652', s.speckles, false);
+          break;
         case 'grimsby2199':
           basicGround(g, assets, 'flight/ground_grimsby2199', x, y, w, h, '#29323d', '#34424c', s.speckles, false);
           break;
@@ -379,6 +384,7 @@ export class DeepFlightView implements SceneView {
     this.targets = m.targets.map((tg) => new DeepTargetView(assets, tg));
     this.ambient = new AmbientView(s.ambient);
     this.hazards = new HazardViews(s);
+    this.driveIn = m.theme === 'invasion53' ? new DriveInScenery(assets) : null;
     this.saucer = new SaucerView(assets);
     this.fx = new ParticleView(s.fx);
     this.lights = m.lamps.map((l) => mapLamp(l.x, l.y));
@@ -401,6 +407,10 @@ export class DeepFlightView implements SceneView {
       world.addChild(this.crestValley.scenery);
     }
     if (this.birch) world.addChild(this.birch.foreground);
+    if (this.driveIn) {
+      world.addChildAt(this.driveIn.ground, 2);
+      world.addChild(this.driveIn.root);
+    }
     world.addChild(this.checkpoint.root, this.hazards.ground, this.ambient.steam, this.saucer.shadow);
     for (const light of this.lights) this.upperWorld.addChild(light);
     this.upperWorld.addChild(this.eggs.lights); // v4 easter eggs
@@ -415,6 +425,7 @@ export class DeepFlightView implements SceneView {
     if (this.grail) bubbles.addChild(this.grail.root);
     for (const target of this.targets) bubbles.addChild(target.bubble);
     bubbles.addChild(this.hazards.bubbles);
+    if (this.driveIn) bubbles.addChild(this.driveIn.bubbles);
     if (this.collectible) bubbles.addChild(this.collectible.bubbles);
     this.upperWorld.addChild(bubbles);
     this.clear = Array.from({ length: this.rings.length * 2 + 7 }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
@@ -474,6 +485,7 @@ export class DeepFlightView implements SceneView {
     this.grail?.sync(s);
     this.recitals?.sync(cam);
     this.hazards.sync(cam, t, rm);
+    this.driveIn?.sync(cam, sim.field.t, rm, sim.collectible?.collected ?? false, sim.st.cause === 0, s.queueBarkT);
     // v4 council: route pills keep clear of the HUD boxes and of every entry ring on screen
     const quietPills = !!strike && strike.age < 1.12;
     const striking = !!strike && strike.age >= -0.12 && strike.age < 0.75;

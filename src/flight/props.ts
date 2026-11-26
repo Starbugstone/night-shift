@@ -92,6 +92,20 @@ export function drawFallback(g: CanvasRenderingContext2D, kind: PropKind, w: num
       g.fill();
       break;
     }
+    case 'footprint53':
+      g.fillStyle = '#433349';
+      g.beginPath();
+      g.ellipse(0, h * 0.1, w * 0.24, h * 0.29, 0, 0, Math.PI * 2);
+      for (const toe of [-1, 0, 1]) g.ellipse(toe * w * 0.25, -h * 0.19, w * 0.09, h * 0.22, toe * 0.45, 0, Math.PI * 2);
+      g.fill();
+      break;
+    case 'coopBlock53':
+      box(g, x + 2, y + 5, w - 4, h - 10, 5, '#8b7165');
+      break;
+    case 'coop53':
+      box(g, x + 3, y + h * 0.58, w - 6, h * 0.38, 6, '#735056');
+      box(g, x + 4, y + 3, w - 8, h * 0.68, 8, '#958382');
+      break;
     case 'farmhouse': {
       box(g, x + 4, y + h * 0.72, w - 8, h * 0.26, 6, '#a7876a'); // south wall
       box(g, x + 4, y + 4, w - 8, h * 0.74, 10, '#8a4a3c');

@@ -11,6 +11,7 @@ import type { DeepLevelDef, LevelDef, TutorialLevelDef } from '../../src/levels/
 import { BakeryFirstRead, BirchPickupFirst, isBirch, NeighboursCut } from './birch';
 import { shrubberyDetour } from './grail';
 import { towelDetour } from './towel';
+import { LegFirst } from './drive-in';
 import { CarFirst, type CarAttempt } from './time-car';
 import { humanFlightController, humanSteering, playAbduction, rng, type AbductRun, type HumanProfile } from './human';
 
@@ -40,6 +41,7 @@ interface StarRun {
   peakSuspicion: number;
   car?: CarAttempt;
   legs?: readonly { seconds: number; room: RoomId }[];
+  tripodLeg?: boolean;
 }
 
 type FirstAbduction = (room: RoomId, profile: HumanProfile, seed: number) => AbductRun;
@@ -70,7 +72,7 @@ function steer(pointer: PointerState, hand?: FlightAutopilotIntent): void {
   }
 }
 
-function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, detour?: 'birch' | 'shrubbery' | 'car' | 'towel', order?: number[]): StarRun {
+function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, detour?: 'birch' | 'shrubbery' | 'car' | 'towel' | 'tripod', order?: number[]): StarRun {
   const ctx = flightContext();
   const shift = new DeepRun(level, LEVELS.findIndex(l => l.id === level.id));
   shift.tick(rng(seed)() * 9);
@@ -79,6 +81,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
   const roomFailures: string[] = [];
   let peakSuspicion = 0;
   let car: CarFirst | undefined;
+  let tripod: LegFirst | undefined;
   let birch: BirchPickupFirst | undefined;
   const legs: { seconds: number; room: RoomId }[] = [];
   const limit = level.clockMode === 'elapsed' ? 180 : Infinity;
@@ -94,6 +97,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     const controller = orderedPilot ? () => orderedPilot.intent() : humanFlightController(profile, seed + shift.legs * 1009)(sim);
     if (detour === 'car' && !car && sim.collectible?.timeCar) car = new CarFirst(sim, profile, seed);
     if (detour === 'birch' && !birch && isBirch(level.id)) birch = new BirchPickupFirst(sim, profile, seed);
+    if (detour === 'tripod' && !tripod) tripod = new LegFirst(sim, profile, seed);
     const firstLeg = !detour && shift.legs === 0 && profile.name !== 'bot';
     const read = firstLeg && level.id === 'birch_bakery' ? new BakeryFirstRead(sim, profile, seed)
       : firstLeg && level.id === 'birch_neighbours' ? new NeighboursCut(sim, profile, seed) : undefined;
@@ -104,7 +108,8 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     while (shift.phase === 'flight' && shift.elapsed < limit) {
       const wasFlying = flight.state === 'fly';
       // the SPOTTED card waits for a tap: the player taps when it used to close by itself
-      const chase = wasFlying && car?.active ? car : undefined;
+      const pursuit = car ?? tripod;
+      const chase = wasFlying && pursuit?.active ? pursuit : undefined;
       steer(ctx.pointer, wasFlying ? (hedge && sim.collectible?.available ? hedge() : chase?.steer() ?? (towel && !sim.collectible!.collected ? towel() : birch?.active ? birch.steer() : read?.active ? read.steer() : controller(sim))) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
       ctx.time += DT;
       flight.update(DT);
@@ -152,6 +157,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     peakSuspicion,
     ...(car ? { car: car.result() } : {}),
     ...(isBirch(level.id) || level.id === 'level3' ? { legs } : {}),
+    ...(tripod ? { tripodLeg: tripod.caught } : {}),
   };
 }
 
@@ -288,4 +294,23 @@ export function evaluateCarFirst(level: DeepLevelDef, profile: HumanProfile, see
 export function evaluateTowelFirst(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction) {
   const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, 'towel'));
   return { profile: profile.name, attempts: seeds, fourthStars: runs.filter(r => r.stars[3]).length, runs };
+}
+
+export interface TripodReport {
+  profile: string;
+  attempts: number;
+  catches: number;
+  fourthStars: number;
+  runs: StarRun[];
+}
+
+export function evaluateTripodFirst(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction): TripodReport {
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 301, play, 'tripod'));
+  return {
+    profile: profile.name,
+    attempts: seeds,
+    catches: runs.filter(run => run.tripodLeg).length,
+    fourthStars: runs.filter(run => run.stars[3]).length,
+    runs,
+  };
 }

@@ -31,7 +31,9 @@ export type PropKind =
   // v4 easter eggs: decor only (src/flight/easter-eggs.ts), never a detector or a collider
   | 'timecar' | 'iceberg'
   // v4 L9 1955
-  | 'sedan55';
+  | 'sedan55'
+  // v4 1953
+  | 'coop53' | 'coopBlock53' | 'footprint53';
 
 /** A sprite placed by its centre. Size defaults to the manifest size. */
 export interface PropDef {
@@ -167,7 +169,7 @@ type MapTarget = DeepTarget<EntryDef[]>;
 
 export interface DeepMap {
   /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
-  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55' | 'grail' | 'grimsby2199';
+  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55' | 'grail' | 'grimsby2199' | 'invasion53';
   collectible?: MapCollectibleDef;
   w: number;
   h: number;

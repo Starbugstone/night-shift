@@ -22,6 +22,8 @@ export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'ke
   | 'mabel' | 'nora' | 'len'
   // v4 1122
   | 'rodney' | 'black_knight' | 'tom_enchanter'
+  // v4 1953
+  | 'forester' | 'van_bell' | 'collier'
   // v4 2199
   | 'artie' | 'penny' | 'moe';
 

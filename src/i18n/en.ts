@@ -32,6 +32,13 @@ const routes = {
   moe_vent: { route: "Voice vent", difficulty: "short & timed" },
   inventor_balcony: { route: "Clock balcony", difficulty: "gears & cable" },
   inventor_service: { route: "Service door", difficulty: "bell & gate" },
+  // v4 1953
+  forester_kitchen: { route: "Kitchen window", difficulty: "trolley & creaks" },
+  forester_attic: { route: "Attic hatch", difficulty: "searching probe" },
+  van_bell_staff: { route: "Staff door", difficulty: "rail & castors" },
+  van_bell_vent: { route: "Booth vent", difficulty: "timed shutter" },
+  collier_vestry: { route: "Vestry door", difficulty: "pew & loose boards" },
+  collier_bell: { route: "Bell hatch", difficulty: "swinging clapper" },
   bully_transom: { route: "Awning transom", difficulty: "jukebox & fan" },
   bully_kitchen: { route: "Kitchen door", difficulty: "cart & sleeping Lyle" },
   band_hatch: { route: "Bandstand hatch", difficulty: "mic stand & balloons" },
@@ -156,6 +163,11 @@ const deepZib = {
   // v4 L9 1955
   // v4 1122
   start10: ["No horses. Just coconuts. Vrell, is that what you meant by a company car?"],
+  // v4 1953
+  start1953: ["Vrell, the special effects are in the car park."],
+  queue1953: ["Is that… Vrell? With a clipboard? Of course it’s Vrell."],
+  projector1953: ["They spotted me and clapped. They think I’m the 3-D."],
+  sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
   // v4 2199
   start12: ["They’ve sent poets. Vrell, are their books loaded?"],
   demolition: ["Demolition in thirty seconds!"],
@@ -270,6 +282,9 @@ const spotCaptions = {
   cow: ["A cow has identified you at a line-up."],
   clop: ["The cavalry is on foot. They are still faster than Legal."],
   rabbit: ["The rabbit has taken the minutes. In teeth marks."],
+  // v4 1953
+  projector1953: ["They spotted me and clapped. They think I’m the 3-D."],
+  sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
   // v4 2199
   poetry: ["The guard insists everyone stayed for the encore. Most of them were unconscious."],
   dozer: ["The driver marks the saucer as an obstruction. Artie’s house already has a file."],
@@ -506,6 +521,18 @@ export const en = {
       joke: "The French are throwing cows. If the road moos, move.",
       signoff: "— Vrell. No jousting on Bureau time.",
     },
+    // v4 1953
+    level11: {
+      title: "The War of the Colds",
+      location: "Route 9 Drive-In · 1953",
+      blurb: "Please remain seated for the evacuation.",
+      human: "Clive, Sylvie & Matt",
+      collect: "Clive, Sylvie & Matt",
+      re: "Work Order #{num} · The War of the Colds",
+      body: "Agent Zib, the drive-in is showing an invasion. The machine out front is ours. It was supposed to be counting people. Bring in three witnesses by dawn. In the west farmyard, a tripod leg props up the coop.",
+      joke: "I was a rookie pilot that night. Half the division had colds. I’ll tell you what I did about it when you get back.",
+      signoff: "— Vrell. Keep your windows up.",
+    },
     // v4 2199
     level12: {
       title: "Your Town Is in the Way",
@@ -653,6 +680,16 @@ export const en = {
     greenery: "Knights fall quiet at last. Neighbours suspect a shrubbery.",
     retreat: "Bravely… back the way we came!",
     knight: ["‘Tis but a dent.", "Merely a flesh wound.", "Fine. We’ll call it a draw."],
+  },
+  // v4 1953
+  invasion1953: {
+    archive: "1953 ARCHIVE",
+    firstCover: "The fever log became Form 7-B. Compliance classified the method.",
+    legCover: "Coop loses a leg overnight. Farmer blames a very tall fox.",
+    bless: "Bless you!",
+    inhale: "Ah… ah…",
+    sneeze: "CHOO!",
+    mumbles: ["It blinked first… I win…", "It’s only a meteor… meteors don’t unscrew…", "If the screen comes down… that’s the interval…", "Row by row… you first, sir, you’re on fire…", "We come in peace… mind the step…", "That was the shortbread…", "Those were for the Martians…", "AAAAH! …Oh, it’s you."] as readonly [string, string, string, string, string, string, string, string],
   },
   // v4 2199
   dispatch2199: {
@@ -821,6 +858,8 @@ export const en = {
       birch_bakery: ["a cloud of flour"],
       birch_neighbours: ["a blue bin lid"],
       // v4 L9 1955
+      // v4 1953
+      level11: ["a projector malfunction"],
       level9: ["ball lightning off the courthouse", "a prototype tailfin reflection", "too many chocolate malts"],
       level1: ['swamp gas', 'a very tall barn owl', 'a combine harvester with ambitions'],
       level2: ['a washing machine on spin', 'reflections off the diner sign', 'static from a lost sock'],
@@ -841,6 +880,8 @@ export const en = {
       // v4 L9 1955
       // v4 1122
       level10: ["COW CLEARS CASTLE WALL. LANDING SCORES A FOUR.", "COWS STILL DENY ALL KNOWLEDGE"],
+      // v4 1953
+      level11: ["SAUCER SEEN OVER DRIVE-IN. AUDIENCE DEMANDS SEQUEL."],
       level9: [
         'LIGHTNING STOPS COURTHOUSE CLOCK AT 10:04 — FLYING HUBCAP BLAMED',
         'CHROME HUBCAP OVER MAIN ST — LOCAL BULLY STILL OUT COLD IN BOOTH',
@@ -950,6 +991,9 @@ export const en = {
         cow: "Exhibit A · hoof print",
         clop: "Exhibit A · coconut cavalry",
         rabbit: "Exhibit A · bite marks",
+        // v4 1953
+        projector1953: "Exhibit A · drive-in still",
+        sneeze1953: "Exhibit A · heat-ray still",
         // v4 2199
         poetry: "Recital Division",
         dozer: "Demolition fleet",
@@ -1075,6 +1119,9 @@ export const en = {
       cow: ["MOO!"],
       clop: ["CLOP CLOP!"],
       rabbit: ["SNAP!"],
+      // v4 1953
+      projector1953: ["A FLYING SAUCER!"],
+      sneeze1953: ["Bless you!"],
       // v4 2199
       poetry: ["AN ENCORE!"],
       dozer: ["CLEAR THE ROAD!"],
@@ -1107,6 +1154,9 @@ export const en = {
       cow: ["That cow just grounded a spaceship."],
       clop: ["I have been overtaken by a pedestrian horse."],
       rabbit: ["I preferred it with its mouth shut."],
+      // v4 1953
+      projector1953: ["They spotted me and clapped. They think I’m the 3-D."],
+      sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
       // v4 2199
       poetry: ["I’ll take my chances in the airlock."],
       dozer: ["Artie stopped one of those in his dressing gown. Is that what I was supposed to wear?"],
@@ -1206,6 +1256,8 @@ export const en = {
       // v4 L9 1955
       // v4 1122
       level10: "Claim denied. Krix called his toaster to the stand. The court gave it two minutes to pop.",
+      // v4 1953
+      level11: "Grandpa Doyle lent me his brass thermometer. I took temperatures from behind. The whole drive-in thought it was a probe.",
       // v4 2199
       level12: "Three residents. Grimsby stays. Your mother called, Zib. I told her: adequate.",
       level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Why is it blinking two more dates?",
@@ -1258,6 +1310,13 @@ export const en = {
     "enchanter’s horns": {"one": "{n} Enchanter’s horns", "other": "{n} sets of enchanter’s horns"},
     "spare flex capacitor": { one: "{n} spare flex capacitor", other: "{n} spare flex capacitors" },
     "yellow hazmat suit": { one: "{n} yellow hazmat suit", other: "{n} yellow hazmat suits" },
+    // v4 1953
+    "meteor fragment": { one: "{n} Meteor fragment", other: "{n} Meteor fragments" },
+    "three-colour martian lens": { one: "{n} Three-colour Martian lens", other: "{n} Three-colour Martian lenses" },
+    "drive-in programme": { one: "{n} Drive-in programme", other: "{n} Drive-in programmes" },
+    "invasion reel": { one: "{n} Invasion reel", other: "{n} Invasion reels" },
+    "white truce flag": { one: "{n} White truce flag", other: "{n} White truce flags" },
+    "church bell clapper": { one: "{n} Church bell clapper", other: "{n} Church bell clappers" },
     "red puffy vest": { one: "{n} red puffy vest", other: "{n} red puffy vests" },
     // v4 2199
     "bowl of petunias": { one: "{n} bowl of petunias", other: "{n} bowls of petunias" },
@@ -1873,6 +1932,45 @@ export const en = {
     "Baggage cart": "Baggage cart",
     "Luggage shutter": "Luggage shutter",
     "Stamp counterweight": "Stamp counterweight",
+    // v4 1953
+    "Clive": "Clive",
+    "Clive Forester": "Clive Forester",
+    "Sylvie": "Sylvie",
+    "Sylvie Van Bell": "Sylvie Van Bell",
+    "Matt": "Matt",
+    "Farmhouse laboratory": "Farmhouse laboratory",
+    "Kitchen passage": "Kitchen passage",
+    "Attic laboratory": "Attic laboratory",
+    "Attic rafters": "Attic rafters",
+    "Ticket office": "Ticket office",
+    "Office service passage": "Office service passage",
+    "Projection booth": "Projection booth",
+    "Projector duct": "Projector duct",
+    "Church vestry": "Church vestry",
+    "Vestry passage": "Vestry passage",
+    "Church belfry": "Church belfry",
+    "Bell loft": "Bell loft",
+    "Creaky boards": "Creaky boards",
+    "Loose boards": "Loose boards",
+    "Film-can trolley": "Film-can trolley",
+    "Bell clapper": "Bell clapper",
+    "Kitchen window": "Kitchen window",
+    "Attic hatch": "Attic hatch",
+    "Staff door": "Staff door",
+    "Booth vent": "Booth vent",
+    "Vestry door": "Vestry door",
+    "Bell hatch": "Bell hatch",
+    "It blinked first… I win…": "It blinked first… I win…",
+    "It’s only a meteor… meteors don’t unscrew…": "It’s only a meteor… meteors don’t unscrew…",
+    "If the screen comes down… that’s the interval…": "If the screen comes down… that’s the interval…",
+    "Row by row… you first, sir, you’re on fire…": "Row by row… you first, sir, you’re on fire…",
+    "We come in peace… mind the step…": "We come in peace… mind the step…",
+    "That was the shortbread…": "That was the shortbread…",
+    "Those were for the Martians…": "Those were for the Martians…",
+    "AAAAH! …Oh, it’s you.": "AAAAH! …Oh, it’s you.",
+    "Pastor Matt Collier": "Pastor Matt Collier",
+    "Martian probe": "Martian probe",
+    "Inspection lamp": "Inspection lamp",
     // v4 2199
     "Tea first. Then the end of the world.": "Tea first. Then the end of the world.",
     "I’m decent. It’s a dressing gown.": "I’m decent. It’s a dressing gown.",
@@ -2398,6 +2496,13 @@ export const en = {
         comment: "You brought a shrubbery. Now they want a tree cut down with a herring. I’m hanging up.",
         missedComment: "No shrubbery. The knights are saying Ni to Accounting. Accounting is saying it back.",
       },
+      // v4 1953
+      tripod_leg: {
+        name: "Tripod leg",
+        memoHint: "a tripod leg",
+        comment: "The leg goes in the cabinet. The Division asked if we could lend it a broom handle.",
+        missedComment: "Leave the leg, then. Without it, every egg rolls into the crater.",
+      },
       // v4 2199
       bypass_towel: { name: "Bypass towel", memoHint: "your towel", comment: "Good. For once the emergency equipment is machine washable.", missedComment: "On the west harbour rack." },
       time_car: {
@@ -2671,6 +2776,10 @@ export const en = {
           weight: "74 kg",
           desc: "Insisted on lighting his own birthday candles. We held it outdoors.",
         },
+        // v4 1953
+        forester: { name: "Clive Forester", age: "38", height: "181 cm", weight: "79 kg", desc: "Published the first scientific paper to ask a meteor what the hell it wanted." },
+        van_bell: { name: "Sylvie Van Bell", age: "29", height: "164 cm", weight: "58 kg", desc: "Got the whole drive-in to leave. Had to promise the invasion would wait until after the credits." },
+        collier: { name: "Pastor Matt Collier", age: "57", height: "176 cm", weight: "83 kg", desc: "Offered sanctuary to the whole town. The congregation arrived with popcorn." },
         doc: {
           name: 'Doc',
           age: '65',
@@ -2818,6 +2927,10 @@ export const en = {
           at3: "Warned the intake nurse about the rabbit. Showed her the size of the teeth with his hands.",
           at10: "Points at the canteen and whispers ‘Look at the bones!’ It’s chicken night.",
         },
+        // v4 1953
+        forester: { at3: "Brought a handkerchief to his intake interview. It was for us.", at10: "Asked the meteor for a second sample. It closed the lid." },
+        van_bell: { at3: "Screamed when she saw the probe. Screamed again when she saw the form.", at10: "Put the saucers in the back row. Then had to tell them to stop steaming up the windows." },
+        collier: { at3: "Blessed our probe. Lab 4 says it’s never worked better.", at10: "Put a collection plate under the hole in the roof. We paid half. He thanked the Martians." },
         doc: {
           at3: "Taped three kitchen timers to his coat to measure our tractor beam's exact gigawatt draw on lift-off.",
           at10: "Lost a whole year between visits—just scribbled \"temporal drift\" and blamed the courthouse lightning.",
@@ -2859,6 +2972,8 @@ export const en = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "The knights wanted a nice one. Not too expensive. The beam took it for free.",
+        // v4 1953
+        tripod_leg: "Grandpa Doyle put it under a chicken coop. For years it was the only working part of the Division.",
         // v4 2199
         bypass_towel: "The most useful thing a traveller can carry. Zib has used it as a cape, a pillow and a white flag. All tonight.",
         time_car: 'Brushed stainless coupe with gull-wing doors, scorched tyres and zero permits. Propulsion refuses to let Zib test what happens at 88.',
@@ -2877,6 +2992,8 @@ export const en = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Repotted · Nicer than the Hendersons’ hedge. Don’t tell them.",
+        // v4 1953
+        tripod_leg: "The Division now fields one bipod. It leans on things.",
         // v4 2199
         bypass_towel: "Issue standard. Laundering optional.",
         time_car: "Impounded · Capped at 87 mph",
@@ -2895,6 +3012,8 @@ export const en = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "The loudest voices on the west bank want a little greenery.",
+        // v4 1953
+        tripod_leg: "Look under the coop in the west farmyard.",
         // v4 2199
         bypass_towel: "On the west harbour rack.",
         time_car: "Check the shift memo for an unlicensed gull-wing coupe racing the clock tower before 10:04.",
@@ -2925,6 +3044,13 @@ export const en = {
       "enchanter’s horns": "Ram’s horns on a skullcap. Slightly singed. Everything Tom owns is slightly singed.",
       "spare flex capacitor": "Three blinking tubes wired inside a metal box. Makes time travel possible—and voids every warranty in the galaxy.",
       "yellow hazmat suit": "Blinding canary vinyl with a hairdryer holster. Officially listed in Earth folklore as \"typical Martian evening wear\".",
+      // v4 1953
+      "meteor fragment": "The biggest thing ever to hit Grimsby. The drive-in billed it as a coming attraction.",
+      "three-colour martian lens": "Red means stop. Green means go. Blue means it’s already behind you.",
+      "drive-in programme": "The bill promised an invasion. The audience asked for a refund when it actually arrived.",
+      "invasion reel": "The last reel. The Martians lose to germs. Vrell won’t let us show it at the Bureau.",
+      "white truce flag": "Pastor Matt waved it at ‘the Martians’. We’re not from Mars. We waved back anyway. With the heat ray.",
+      "church bell clapper": "Rang all night. Half the Division thought it was last orders.",
       "red puffy vest": "Quilted crimson waistcoat from thirty years in the future. Every 1955 local assumed its owner fell off a boat.",
       // v4 2199
       "bowl of petunias": "Fell from a great height. Its only comment: “Oh no, not again.”",

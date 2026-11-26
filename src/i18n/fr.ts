@@ -228,6 +228,18 @@ export const fr: Strings = {
       joke: "Les Français lancent des vaches. Si la route meugle, dégagez.",
       signoff: "— Vrell. Pas de joute pendant le service.",
     },
+    // v4 1953
+    level11: {
+      title: "La Guerre des rhumes",
+      location: "Drive-in de la route 9 · 1953",
+      blurb: "Veuillez rester assis pendant l’évacuation.",
+      human: "Clive, Sylvie et Matt",
+      collect: "Clive, Sylvie et Matt",
+      re: "Ordre n°{num} · La Guerre des rhumes",
+      body: "Agent Zib, le drive-in projette un film d’invasion. Notre engin, devant l’écran, devait compter les gens. Ramenez trois témoins avant l’aube. Dans la cour à l’ouest, une patte de tripode soutient le poulailler.",
+      joke: "J’étais jeune pilote, ce soir-là. La moitié de la division était enrhumée. Je vous raconterai ce que j’ai fait à votre retour.",
+      signoff: "— Vrell. Gardez les vitres fermées.",
+    },
     // v4 2199
     level12: {
       title: "Votre ville gêne le passage",
@@ -373,6 +385,13 @@ export const fr: Strings = {
     moe_vent: { route: "Conduit vocal", difficulty: "court et cadencé" },
     inventor_balcony: { route: "Balcon de l'horloge", difficulty: "engrenages et câble" },
     inventor_service: { route: "Porte de service", difficulty: "cloche et grille" },
+    // v4 1953
+    forester_kitchen: { route: "Fenêtre de la cuisine", difficulty: "chariot et craquements" },
+    forester_attic: { route: "Trappe du grenier", difficulty: "sonde en patrouille" },
+    van_bell_staff: { route: "Porte de service", difficulty: "barrière et roulettes" },
+    van_bell_vent: { route: "Aération de la cabine", difficulty: "obturateur temporisé" },
+    collier_vestry: { route: "Porte de la sacristie", difficulty: "banc et planches" },
+    collier_bell: { route: "Trappe du clocher", difficulty: "battant oscillant" },
     bully_transom: { route: "Imposte de l'auvent", difficulty: "jukebox et ventilo" },
     bully_kitchen: { route: "Porte de la cuisine", difficulty: "chariot et Lyle endormi" },
     band_hatch: { route: "Trappe de l'estrade", difficulty: "pied de micro et ballons" },
@@ -441,6 +460,16 @@ export const fr: Strings = {
     greenery: "Les chevaliers se taisent enfin. Les voisins soupçonnent un jardinet.",
     retreat: "Courage… on repart par où on est venus !",
     knight: ["Ce n’est qu’une bosse.", "Une blessure superficielle.", "Bon. Disons match nul."],
+  },
+  // v4 1953
+  invasion1953: {
+    archive: "ARCHIVES DE 1953",
+    firstCover: "Le relevé est devenu le Cerfa 7-B. La Conformité a mis la méthode sous scellés.",
+    legCover: "Le poulailler perd un pied dans la nuit. Le fermier accuse un renard très grand.",
+    bless: "À vos souhaits !",
+    inhale: "A… a…",
+    sneeze: "TCHOUM !",
+    mumbles: ["C’est lui qui a cligné des yeux… j’ai gagné…", "Ce n’est qu’un météore… ça ne se dévisse pas, un météore…", "Si l’écran s’écroule… c’est l’entracte…", "Rangée par rangée… vous d’abord, monsieur, vous êtes en feu…", "Nous venons en paix… attention à la marche…", "C’était le sablé…", "C’était pour les Martiens…", "AAAAH !… Ah, c’est vous."] as const,
   },
   // v4 2199
   dispatch2199: {
@@ -622,6 +651,8 @@ export const fr: Strings = {
       birch_bakery: ["un nuage de farine"],
       birch_neighbours: ["un couvercle de poubelle"],
       // v4 L9 1955
+      // v4 1953
+      level11: ["une panne de projecteur"],
       level9: ["la foudre en boule sur le tribunal", "un reflet sur un pare-chocs chromé", "un abus de milk-shakes au chocolat"],
       level1: ['des gaz des marais', 'une très grande chouette effraie', 'une moissonneuse-batteuse ambitieuse'],
       level2: ['un lave-linge en plein essorage', "des reflets de l'enseigne du snack", "l'électricité statique d'une chaussette perdue"],
@@ -641,6 +672,8 @@ export const fr: Strings = {
       // v4 L9 1955
       // v4 1122
       level10: ["UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.", "LES VACHES NIENT TOUT EN BLOC"],
+      // v4 1953
+      level11: ["SOUCOUPE AU DRIVE-IN. LE PUBLIC RÉCLAME UNE SUITE."],
       level9: [
         "LA FOUDRE FIGE L'HORLOGE À 22 H 04 — UN ENJOLIVEUR VOLANT ACCUSÉ",
         'ENJOLIVEUR CHROMÉ GRANDE RUE — LA BRUTE LOCALE TOUJOURS K.O. AU CAFÉ',
@@ -747,6 +780,9 @@ export const fr: Strings = {
         cow: "Pièce A · trace de sabot",
         clop: "Pièce A · cavalerie à noix de coco",
         rabbit: "Pièce A · morsures",
+        // v4 1953
+        projector1953: "Pièce A · photo du drive-in",
+        sneeze1953: "Pièce A · image du rayon thermique",
         // v4 2199
         poetry: "Division des gardes-poètes",
         dozer: "Flotte de démolition",
@@ -898,6 +934,11 @@ export const fr: Strings = {
       // v4 L9 1955
       // v4 1122
       start10: ["Pas de chevaux. Des noix de coco. Vrell, c’est ça, la voiture de fonction ?"],
+      // v4 1953
+      start1953: ["Vrell, les effets spéciaux sont sur le parking."],
+      queue1953: ["C’est… Vrell ? Avec un porte-bloc ? Évidemment que c’est Vrell."],
+      projector1953: ["Ils m’ont repéré et ils applaudissent. Ils croient que c’est moi, la 3D."],
+      sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
       // v4 2199
       start12: ["Ils ont envoyé des poètes. Vrell, leurs livres sont chargés ?"],
       demolition: ["Démolition dans trente secondes !"],
@@ -1010,6 +1051,9 @@ export const fr: Strings = {
       cow: ["Une vache vous a identifié lors d’une confrontation."],
       clop: ["Les cavaliers sont à pied. Ils vont quand même plus vite que le service juridique."],
       rabbit: ["Le lapin a pris des notes. Avec les dents."],
+      // v4 1953
+      projector1953: ["Ils m’ont repéré et ils applaudissent. Ils croient que c’est moi, la 3D."],
+      sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
       // v4 2199
       poetry: ["Selon le garde-poète, tout le monde est resté pour le rappel. La plupart des gens étaient évanouis."],
       dozer: ["Le conducteur signale que la soucoupe gêne le passage. La maison d’Artie a déjà son dossier."],
@@ -1038,6 +1082,9 @@ export const fr: Strings = {
       cow: ["MEUH !"],
       clop: ["CLOP CLOP !"],
       rabbit: ["CRAC !"],
+      // v4 1953
+      projector1953: ["UNE SOUCOUPE !"],
+      sneeze1953: ["À vos souhaits !"],
       // v4 2199
       poetry: ["UN RAPPEL !"],
       dozer: ["DÉGAGEZ LA ROUTE !"],
@@ -1070,6 +1117,9 @@ export const fr: Strings = {
       cow: ["Une vache vient de clouer une soucoupe au sol."],
       clop: ["Un cheval à pied vient de me doubler."],
       rabbit: ["Je le préférais la gueule fermée."],
+      // v4 1953
+      projector1953: ["Ils m’ont repéré et ils applaudissent. Ils croient que c’est moi, la 3D."],
+      sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
       // v4 2199
       poetry: ["Je préfère tenter ma chance dans le sas."],
       dozer: ["Artie en a arrêté un en robe de chambre. C’était la tenue réglementaire ?"],
@@ -1167,6 +1217,8 @@ export const fr: Strings = {
       // v4 L9 1955
       // v4 1122
       level10: "Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal lui a donné deux minutes pour sortir une tartine.",
+      // v4 1953
+      level11: "Papy Doyle m’a prêté son thermomètre en laiton. J’ai pris leur température par derrière. Tout le drive-in a cru voir une sonde.",
       // v4 2199
       level12: "Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : convenable.",
       level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
@@ -1217,6 +1269,13 @@ export const fr: Strings = {
     "enchanter’s horns": {"one": "{n} Cornes de l’enchanteur", "other": "{n} paires de cornes de l’enchanteur"},
     "spare flex capacitor": { one: "{n} convecteur temporaire", other: "{n} convecteurs temporaires" },
     "yellow hazmat suit": { one: "{n} combinaison jaune", other: "{n} combinaisons jaunes" },
+    // v4 1953
+    "meteor fragment": { one: "{n} Fragment de météore", other: "{n} Fragments de météore" },
+    "three-colour martian lens": { one: "{n} Lentille martienne tricolore", other: "{n} Lentilles martiennes tricolores" },
+    "drive-in programme": { one: "{n} Programme du drive-in", other: "{n} Programmes du drive-in" },
+    "invasion reel": { one: "{n} Bobine de l’invasion", other: "{n} Bobines de l’invasion" },
+    "white truce flag": { one: "{n} Drapeau blanc", other: "{n} Drapeaux blancs" },
+    "church bell clapper": { one: "{n} Battant de cloche", other: "{n} Battants de cloche" },
     "red puffy vest": { one: "{n} doudoune rouge", other: "{n} doudounes rouges" },
     // v4 2199
     "bowl of petunias": { one: "{n} pot de pétunias", other: "{n} pots de pétunias" },
@@ -1830,6 +1889,45 @@ export const fr: Strings = {
     "Brain the size of a planet. They want me to nap.": "Un cerveau gros comme une planète. Et on me demande de faire la sieste.",
 
     // v4 L9 1955
+    // v4 1953
+    "Clive": "Clive",
+    "Clive Forester": "Clive Forester",
+    "Sylvie": "Sylvie",
+    "Sylvie Van Bell": "Sylvie Van Bell",
+    "Matt": "Matt",
+    "Farmhouse laboratory": "Laboratoire de la ferme",
+    "Kitchen passage": "Couloir de la cuisine",
+    "Attic laboratory": "Laboratoire du grenier",
+    "Attic rafters": "Combles",
+    "Ticket office": "Billetterie",
+    "Office service passage": "Couloir de service",
+    "Projection booth": "Cabine de projection",
+    "Projector duct": "Conduit de la cabine",
+    "Church vestry": "Sacristie",
+    "Vestry passage": "Couloir de la sacristie",
+    "Church belfry": "Clocher",
+    "Bell loft": "Chambre des cloches",
+    "Creaky boards": "Planches qui grincent",
+    "Loose boards": "Planches branlantes",
+    "Film-can trolley": "Chariot à bobines",
+    "Bell clapper": "Battant de cloche",
+    "Kitchen window": "Fenêtre de la cuisine",
+    "Attic hatch": "Trappe du grenier",
+    "Staff door": "Porte de service",
+    "Booth vent": "Aération de la cabine",
+    "Vestry door": "Porte de la sacristie",
+    "Bell hatch": "Trappe du clocher",
+    "It blinked first… I win…": "C’est lui qui a cligné des yeux… j’ai gagné…",
+    "It’s only a meteor… meteors don’t unscrew…": "Ce n’est qu’un météore… ça ne se dévisse pas, un météore…",
+    "If the screen comes down… that’s the interval…": "Si l’écran s’écroule… c’est l’entracte…",
+    "Row by row… you first, sir, you’re on fire…": "Rangée par rangée… vous d’abord, monsieur, vous êtes en feu…",
+    "We come in peace… mind the step…": "Nous venons en paix… attention à la marche…",
+    "That was the shortbread…": "C’était le sablé…",
+    "Those were for the Martians…": "C’était pour les Martiens…",
+    "AAAAH! …Oh, it’s you.": "AAAAH !… Ah, c’est vous.",
+    "Pastor Matt Collier": "Pasteur Matt Collier",
+    "Martian probe": "Sonde martienne",
+    "Inspection lamp": "Lampe d’inspection",
     Doc: "Doc",
     Buff: "Buff",
     Marvin: "Marvin",
@@ -2336,6 +2434,13 @@ export const fr: Strings = {
         comment: "Vous avez rapporté un jardinet. Maintenant ils veulent qu’on abatte un arbre avec un hareng. Je raccroche.",
         missedComment: "Pas de jardinet. Les chevaliers disent Ni à la compta. La compta répond Ni.",
       },
+      // v4 1953
+      tripod_leg: {
+        name: "Patte de tripode",
+        memoHint: "une patte de tripode",
+        comment: "La patte va en vitrine. La division demande si on peut lui prêter un manche à balai.",
+        missedComment: "Laissez la patte, alors. Sans elle, tous les œufs roulent dans le cratère.",
+      },
       // v4 2199
       bypass_towel: { name: "Serviette de la déviation", memoHint: "votre serviette", comment: "Parfait. Pour une fois, le matériel de secours passe en machine.", missedComment: "Sur le portant à l’ouest du port." },
       time_car: {
@@ -2609,6 +2714,10 @@ export const fr: Strings = {
           weight: "74 kg",
           desc: "A tenu à allumer lui-même ses bougies d’anniversaire. On a fait la fête dehors.",
         },
+        // v4 1953
+        forester: { name: "Clive Forester", age: "38 ans", height: "181 cm", weight: "79 kg", desc: "A publié le premier article scientifique à demander à un météore ce qu’il foutait là." },
+        van_bell: { name: "Sylvie Van Bell", age: "29 ans", height: "164 cm", weight: "58 kg", desc: "A fait évacuer tout le drive-in. Elle a dû promettre que l’invasion attendrait la fin du générique." },
+        collier: { name: "Pasteur Matt Collier", age: "57 ans", height: "176 cm", weight: "83 kg", desc: "A ouvert son église à toute la ville. Les fidèles sont arrivés avec du pop-corn." },
         doc: {
           name: 'Doc',
           age: '65 ans',
@@ -2756,6 +2865,10 @@ export const fr: Strings = {
           at3: "A mis l’infirmière en garde contre le lapin. Il lui a montré avec les mains la taille des dents.",
           at10: "Montre la cantine du doigt et chuchote « Regardez les os ! » Ce soir, c’est poulet.",
         },
+        // v4 1953
+        forester: { at3: "A apporté un mouchoir à son entretien. C’était pour nous.", at10: "A demandé un deuxième échantillon au météore. Il a refermé le couvercle." },
+        van_bell: { at3: "A hurlé en voyant la sonde. Puis encore en voyant le formulaire.", at10: "A envoyé les soucoupes au dernier rang. Puis a dû leur dire d’arrêter d’embuer les vitres." },
+        collier: { at3: "A béni notre sonde. Le labo 4 dit qu’elle n’a jamais aussi bien marché.", at10: "A posé la corbeille de la quête sous le trou du toit. On a payé la moitié. Il a remercié les Martiens." },
         doc: {
           at3: "Il a scotché trois minuteurs de cuisine sur sa blouse pour calculer nos gigowatts exacts au décollage.",
           at10: "Il a perdu une année entière entre deux visites, griffonné « dérive temporelle » et accusé la foudre du tribunal.",
@@ -2797,6 +2910,8 @@ export const fr: Strings = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer.",
+        // v4 1953
+        tripod_leg: "Grand-père Doyle l’a calée sous son poulailler. Des années durant, c’était la seule pièce de la division encore en service.",
         // v4 2199
         bypass_towel: "L’objet le plus utile en voyage. Zib s’en est servi comme cape, oreiller et drapeau blanc. Tout ça ce soir.",
         time_car: "Coupé en inox brossé à portes papillon, pneus cramés et zéro permis. La Propulsion interdit à Zib de voir ce qui se passe à 88.",
@@ -2815,6 +2930,8 @@ export const fr: Strings = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Rempoté · Plus joli que la haie des Henderson. Ne leur dites rien.",
+        // v4 1953
+        tripod_leg: "La division compte désormais un bipode. Il s’appuie où il peut.",
         // v4 2199
         bypass_towel: "Modèle réglementaire. Lavage facultatif.",
         time_car: "En fourrière · Bridée à 87 miles à l'heure",
@@ -2833,6 +2950,8 @@ export const fr: Strings = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Sur la rive ouest, les plus bruyants réclament un peu de verdure.",
+        // v4 1953
+        tripod_leg: "Regardez sous le poulailler, dans la cour à l’ouest.",
         // v4 2199
         bypass_towel: "Sur le portant à l’ouest du port.",
         time_car: "Relisez la note : une voiture à portes papillon non déclarée fonce vers l'horloge avant 22 h 04.",
@@ -2863,6 +2982,13 @@ export const fr: Strings = {
       "enchanter’s horns": "Des cornes de bélier sur une calotte. Un peu roussies. Chez Tom, tout est un peu roussi.",
       "spare flex capacitor": "Trois tubes qui clignotent dans un boîtier en métal. Ouvre le voyage dans le temps — et annule toute garantie galactique.",
       "yellow hazmat suit": "Vinyle jaune canari avec étui à sèche-cheveux. Entré dans le folklore terrien comme « tenue de soirée martienne ».",
+      // v4 1953
+      "meteor fragment": "Rien d’aussi gros n’était jamais tombé sur Grimsby. Le drive-in l’a mis à l’affiche sous « Prochainement ».",
+      "three-colour martian lens": "Au rouge, arrêtez-vous. Au vert, avancez. Au bleu, le Martien est déjà derrière vous.",
+      "drive-in programme": "L’affiche promettait une invasion. Quand elle a commencé pour de vrai, le public a demandé à être remboursé.",
+      "invasion reel": "La dernière. Les microbes ont raison des Martiens. Vrell interdit de la projeter au Bureau.",
+      "white truce flag": "Le pasteur Matt l’a agité devant « les Martiens ». On ne vient pas de Mars. On a répondu quand même. Au rayon thermique.",
+      "church bell clapper": "A sonné toute la nuit. La moitié de la division a cru que le bar fermait.",
       "red puffy vest": "Doudoune rouge venue de trente ans dans le futur. En 1955, toute la ville pense que son proprio est tombé d'un bateau.",
       // v4 2199
       "bowl of petunias": "Pot tombé de très haut. Son seul commentaire : « Oh non, pas encore. »",

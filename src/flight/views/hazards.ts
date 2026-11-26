@@ -10,6 +10,7 @@ import { pointInCone } from '../geometry';
 import { TRAFFIC_SCALE, type CarKey, type CarRT, type GagHazard, type HazardDef } from '../hazards';
 import { DogView } from './craft';
 import { BarkTell, BeaconView, CameraTell, PorchTell, SearchlightView, WatcherTell, WindowTell } from './detectors';
+import { DriveInDetectorView, SpectatorView } from './invasion1953';
 import { MonolithView } from './monolith';
 import { LighthouseView } from './lighthouse';
 import { NeonView } from './overlays';
@@ -284,6 +285,13 @@ export class HazardViews {
         };
       }
       case 'camera': {
+        if (d.skin === 'invasion_projector_top' || d.skin === 'invasion_sick_tripod_top') {
+          const driveIn = new DriveInDetectorView(assets, d);
+          this.ground.addChild(driveIn.body);
+          this.detectors.addChild(driveIn.detector);
+          this.bubbles.addChild(driveIn.speech);
+          return (cam, _t, rm, hot) => driveIn.sync(cam, f, i, hot, rm);
+        }
         const body = d.skin ? new Container() : cameraHead(assets, d.x, d.y, d.mount);
         let turn = d.mount === 'radar' ? 0 : Math.PI / 2;
         if (d.skin) {
@@ -382,6 +390,12 @@ export class HazardViews {
         return (cam, t, rm, hot) => camera.sync(cam, f, i, t, rm, hot);
       }
       case 'steward': {
+        if (d.skin === 'invasion') {
+          const crowd = new SpectatorView(assets, d);
+          this.ground.addChild(crowd.body);
+          this.detectors.addChild(crowd.detectors);
+          return (cam, _t, _rm, hot) => crowd.sync(cam, f, i, hot);
+        }
         const steward = new StewardView(assets, d);
         this.ground.addChild(steward.body);
         this.detectors.addChild(steward.detectors);

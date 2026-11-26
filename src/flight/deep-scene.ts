@@ -16,6 +16,8 @@ import { binLid } from '../levels/deep-birch-neighbours';
 import { deepStartEvent, deepZibLine, spotCaption, spotShout, spotZibLine, type DeepZibEvent } from '../levels/humor'; // v4 story
 import { EggCues } from './easter-eggs'; // v4 easter eggs
 import { mapPickupFeedback } from './collectible';
+import { TripodLegPilot } from './invasion1953-pilot';
+import { greetedPilotQueues, PILOT_QUEUE } from './invasion1953';
 import { TIME_CAR } from './time-car';
 import { TimeCarPilot } from './time-car-pilot';
 import { fmt, tr } from '../i18n'; // v4 voices
@@ -79,6 +81,7 @@ export class DeepFlightScene implements Scene {
   readonly ambient: Ambient;
   private autopilot: FlightAutopilot | null = null;
   private timeCarPilot?: TimeCarPilot;
+  private tripodLegPilot?: TripodLegPilot;
   st = 0;
   shake = 0;
   zibText = '';
@@ -86,6 +89,7 @@ export class DeepFlightScene implements Scene {
   /** How long the current Zib line stays up (s): its reading time. */
   zibFor = 0;
   collectibleToastT = 0;
+  queueBarkT = 0;
   private zibCd = 0;
   private zibN = 0;
   private zibEvent?: DeepZibEvent;
@@ -187,11 +191,12 @@ export class DeepFlightScene implements Scene {
   }
 
   /** For test scripts: window.__nightShift.active.debug */
-  get debug(): { autopilot: () => FlightAutopilotIntent; timeCarAutopilot: () => FlightAutopilotIntent; sim: DeepFlightSim; run: DeepRun; state: string; ap: FlightAutopilot | null } {
+  get debug(): { autopilot: () => FlightAutopilotIntent; timeCarAutopilot: () => FlightAutopilotIntent; tripodLegAutopilot: () => FlightAutopilotIntent; sim: DeepFlightSim; run: DeepRun; state: string; ap: FlightAutopilot | null } {
     const self = this;
     return {
       autopilot: () => self.autopilotIntent(),
       timeCarAutopilot: () => (self.timeCarPilot ??= new TimeCarPilot(self.sim)).intent(),
+      tripodLegAutopilot: () => (self.tripodLegPilot ??= new TripodLegPilot(self.sim)).intent(),
       sim: self.sim,
       run: self.run,
       state: self.state,
@@ -242,6 +247,7 @@ export class DeepFlightScene implements Scene {
     const audio = this.ctx.audio;
     this.zibT = Math.max(0, this.zibT - dt);
     this.collectibleToastT = Math.max(0, this.collectibleToastT - dt);
+    this.queueBarkT = Math.max(0, this.queueBarkT - dt);
     this.zibCd = Math.max(0, this.zibCd - dt);
     this.shake = Math.max(0, this.shake - dt * 3);
     this.flashT = Math.max(0, this.flashT - dt);
@@ -430,6 +436,15 @@ export class DeepFlightScene implements Scene {
         !!field.on[field.rabbitIndex], !!sim.collectible?.collectedId);
       grail.sound(field, previousTime, audio, s.x, s.y);
     }
+    // v4 1953: Zib recognizes the first pilot as the east wing comes into view.
+    if (this.level.id === 'level11' && st.cause < 0 && !greetedPilotQueues.has(this.run) &&
+        Math.hypot(s.x - PILOT_QUEUE.x, s.y - PILOT_QUEUE.y) < 265) {
+      greetedPilotQueues.add(this.run);
+      const line = deepZibLine('queue1953', 0);
+      this.queueBarkT = readSeconds(line);
+      if (!this.pendingOpener && this.zibT <= 0) audio.speak?.(line, 'zib', { within: this.queueBarkT });
+    }
+
     // ---- the fuse
     const exposed = st.cause >= 0;
     if (exposed) {
