@@ -57,7 +57,7 @@ const WARD: PropDef = { key: 'flight/recovery_ward_top', kind: 'civic', x: 600, 
 const ANNEX_SE = annex(1620, 2200);
 const ANNEX_MID = annex(600, 1300);
 const ANNEX_NE = annex(1420, 640);
-const ANNEX_E = annex(1980, 2480);
+const ANNEX_E = annex(2040, 2470);
 
 const L6_TARGETS: [DeepTarget, DeepTarget, DeepTarget] = [
   {
@@ -125,18 +125,20 @@ const L6_HAZARDS: HazardDef[] = [
     ...AMB,
     trigger: 195,
   },
-  // Ward bay (doors south): out onto the ward road, east, then up the pharmacy drive to the hatch.
+  // East bay (doors west): the night crew's bay off the east service road. A run up the east lawn
+  // scrambles it, and it races north up the service road to the pharmacy drive.
   {
     type: 'ambulance',
-    bayX: 1290,
-    bayY: 1520,
+    bayX: 2030,
+    bayY: 1900,
     path: [
-      { x: 1240, y: 1520 },
-      { x: 1240, y: 1608 },
-      { x: 1760, y: 1608 },
-      { x: 1760, y: 1225 },
+      { x: 1980, y: 1900 },
+      { x: 1892, y: 1900 },
+      { x: 1892, y: 1260 },
+      { x: 1760, y: 1260 },
     ],
     ...AMB,
+    trigger: 260,
     dwell: 1.6,
   },
   // North bay (doors north): west along the north road, then down to the laundry chute.
@@ -162,10 +164,14 @@ const L6_HAZARDS: HazardDef[] = [
   // v4 difficulty curve: the sweep (was 1.25) now stops just short of the helipad ring, which is the
   // medevac searchlight's job; the two together filled a 0.9 s fuse on the lock
   { type: 'camera', x: 1462, y: 1002, range: 300, half: 0.28, base: 1.9, amp: 0.8, rate: 0.9, phase: 1.3 },
-  // car-park pole by the Endoscopy Wing: the rear entrance and the spine
-  { type: 'camera', x: 880, y: 2080, range: 290, half: 0.3, base: PI * 0.95, amp: 0.75, rate: 1.0, phase: 2.2, mount: 'pole' },
+  // the Endoscopy Wing's north-east corner, looking east along the approach to the rear entrance
+  { type: 'camera', x: 712, y: 2208, range: 560, half: 0.25, base: 0.42, amp: 0.1, rate: 0.7, phase: 2.2 },
   // a pole on the west lawn: the laundry chute
   { type: 'camera', x: 360, y: 980, range: 280, half: 0.28, base: -1.0, amp: 0.6, rate: 1.15, phase: 0.7, mount: 'pole' },
+  // a pole on the ward's front lawn, looking south-east down the approach from the spine
+  { type: 'camera', x: 760, y: 1000, range: 650, half: 0.42, base: 0.9, amp: 0.08, rate: 0.5, phase: 0.5, mount: 'pole' },
+  // the on-call block's south-east corner, looking back down the east lawn: the way in to Osei
+  { type: 'camera', x: 1700, y: 1206, range: 640, half: 0.38, base: 1.56, amp: 0.08, rate: 0.5, phase: 1.1 },
   // ---- insomniac patients at their windows
   win(WARD, 's', 560, 4.8, 2.0, 0.4),
   win(ONCALL, 'e', 1150, 5.0, 2.0, 1.2, 110),
@@ -198,7 +204,7 @@ export const LEVEL6: DeepLevelDef = {
   human: 'Hank, Dr. Osei & Mr. Pemberton',
   mugshot: 'human/hank_head',
   budgetSec: 450,
-  parMarginSec: 140,
+  parMarginSec: 190, // v4 difficulty curve (Neon P5): par 260 s (was 310)
   hours: [1, 6],
   memo: {
     re: 'Work Order #{num} — Mandatory Form 7-B Audit',
@@ -215,7 +221,7 @@ export const LEVEL6: DeepLevelDef = {
     collectible: { id: 'defibrillator', x: 495, y: 2675, shout: { x: 470, y: 2428 } },
     w: 2160,
     h: 3120,
-    start: { x: 1080, y: 2960 },
+    start: { x: 2060, y: 2780 },
     roads: [
       { dir: 'h', at: 2780, from: 0, to: 2160 },
       // the drop-off lane under the Endoscopy Wing's front doors, out of the A&E bay
@@ -224,7 +230,7 @@ export const LEVEL6: DeepLevelDef = {
       { dir: 'h', at: 1640, from: 240, to: 1920 },
       { dir: 'h', at: 400, from: 240, to: 1920 },
       { dir: 'v', at: 300, from: 340, to: 1700 },
-      { dir: 'v', at: 1860, from: 340, to: 1700 },
+      { dir: 'v', at: 1860, from: 340, to: 2780 },
     ],
     groundProps: [],
     props: [
@@ -242,10 +248,10 @@ export const LEVEL6: DeepLevelDef = {
       pine(900, 1900),
       pine(420, 1960),
       pine(1300, 2000),
-      pine(1880, 2140),
+      pine(1960, 2160),
       pine(2060, 2000),
       pine(1460, 2700),
-      pine(1860, 2700),
+      pine(1720, 2690),
       pine(120, 1200),
       pine(150, 800),
       pine(2040, 1300),

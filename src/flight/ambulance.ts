@@ -35,7 +35,7 @@ export interface AmbulanceHazard {
 
 export const AMBULANCE = {
   /** Bay door up + amber lane arrows, before the launch. */
-  tell: 1.2,
+  tell: 0.9, // v4 difficulty curve (Neon P5): was 1.2; the scramble should be able to catch a careless pass
   /** Sprite length (flight/ambulance_top is 80x160, nose north). */
   len: 160,
   w: 80,

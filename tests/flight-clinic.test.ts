@@ -5,6 +5,9 @@ import { copyFlightState, DeepFlightSim, newFlightState, stepFlight } from '../s
 import { HazardField, Route } from '../src/flight/hazards';
 import { LOCK, RING_R } from '../src/flight/sim';
 import { LEVEL6 } from '../src/levels/deep-clinic';
+import type { PointerState, Vec2 } from '../src/contracts';
+import { BEELINE_DELAYS } from './difficulty/beeline';
+import { beelineController, runHeadless } from './flight-deep-harness';
 
 const DT = 1 / 60;
 const AMB: AmbulanceHazard = {
@@ -36,7 +39,7 @@ describe('ambulance scramble', () => {
     }
   });
 
-  it('a saucer within the trigger scrambles it: 1.2 s amber tell that sees nothing, then it drives out lit', () => {
+  it('a saucer within the trigger scrambles it: a short amber tell that sees nothing, then it drives out lit', () => {
     const f = new HazardField([AMB]);
     expect(f.stepAmbulances(500, 500, 2)).toBe(-1); // too far
     expect(f.stepAmbulances(150, 50, 2)).toBe(0);
@@ -111,11 +114,11 @@ describe('L6 St. Mildred’s map', () => {
   const m = LEVEL6.map;
   const ambulances = m.hazards.filter((h): h is AmbulanceHazard => h.type === 'ambulance');
 
-  it('has the GDD-3 frame: clinic theme, 2160x3120, 450 s to sunrise, Night owl margin 140 s', () => {
+  it('has the GDD-3 frame: clinic theme, 2160x3120, 450 s to sunrise, Night owl margin 190 s', () => {
     expect(m.theme).toBe('clinic');
     expect([m.w, m.h]).toEqual([2160, 3120]);
     expect(LEVEL6.budgetSec).toBe(450);
-    expect(LEVEL6.parMarginSec).toBe(140);
+    expect(LEVEL6.parMarginSec).toBe(190);
     expect(ambulances.length).toBeGreaterThanOrEqual(3);
     expect(m.hazards.some((h) => h.type === 'heli')).toBe(true);
     expect(m.hazards.some((h) => h.type === 'neon' && h.text === 'NOW SERVING 12')).toBe(true);
@@ -145,3 +148,64 @@ describe('L6 St. Mildred’s map', () => {
     for (const a of ambulances) expect(Math.hypot(m.start.x - a.bayX, m.start.y - a.bayY)).toBeGreaterThan(a.trigger + 60);
   });
 });
+
+// 2026-11-26 openings: Zib comes in along the entry road from the east (zone E-south). No spawn gate and no
+// free straight line: a finger held straight at any of the six rings is caught on the way, beyond the
+// opening. The A&E scramble races to Hank's front doors, the Endoscopy Wing's corner camera watches the
+// way to his rear entrance, the on-call block's camera looks back down the east lawn at Osei's two doors,
+// and the pole on the ward's front lawn watches the diagonal to Pemberton.
+describe('L6 openings: caught on the way, not at the spawn', () => {
+  const m = LEVEL6.map;
+  const idle: PointerState = { down: false, x: 0, y: 0, pressed: false, released: false };
+  const press = (sim: DeepFlightSim, goal: Vec2): PointerState => {
+    const s = sim.saucer;
+    const distance = Math.hypot(goal.x - s.x, goal.y - s.y);
+    const scale = Math.min(186, distance * 1.4) / Math.max(1, distance);
+    return {
+      ...idle, down: distance > 12 || Math.hypot(s.vx, s.vy) > 60,
+      x: s.x - sim.camX + (goal.x - s.x) * scale - s.vx * (distance < 130 ? 0.35 : 0.1),
+      y: s.y - sim.camY + (goal.y - s.y) * scale - s.vy * (distance < 130 ? 0.35 : 0.1),
+    };
+  };
+
+  it('catches a straight run from the launch to every ring at every tested phase, beyond the opening', () => {
+    const opening = new DeepFlightSim(m, new Set(), 0);
+    const screen = { x: opening.camX, y: opening.camY };
+    for (const entry of m.targets.flatMap((t) => t.entries)) {
+      for (const delay of BEELINE_DELAYS) {
+        const sim = new DeepFlightSim(m, new Set(), delay);
+        while (sim.phase === 'fly' && sim.t < delay + 16) sim.update(DT, press(sim, entry));
+        const at = `${entry.roomId} from ${delay}s`;
+        expect(sim.phase, at).toBe('spotted');
+        const { x, y } = sim.saucer;
+        expect(Math.hypot(x - m.start.x, y - m.start.y), at).toBeGreaterThan(600);
+        expect(x >= screen.x && x <= screen.x + 540 && y >= screen.y && y <= screen.y + 960, `${at}: caught on the first screen`).toBe(false);
+      }
+    }
+  });
+
+  it('the naive beeline is caught at every tested phase, beyond the opening', () => {
+    for (const delay of BEELINE_DELAYS) {
+      const run = runHeadless(m, [], beelineController, LEVEL6.budgetSec, true, delay);
+      expect(run.done, `beeline from ${delay}s`).toBe(false);
+      const spot = run.spots[0]!;
+      expect(spot, `beeline from ${delay}s`).toBeDefined();
+      expect(Math.hypot(spot.x - m.start.x, spot.y - m.start.y)).toBeGreaterThan(600);
+    }
+  });
+
+  it('no detector reaches the first screen at launch', () => {
+    const opening = new DeepFlightSim(m, new Set(), 0);
+    const field = new HazardField(m.hazards);
+    const lit = new Float64Array(8).fill(1);
+    for (let t = 0; t < 20; t += 0.1) {
+      field.sample(t);
+      for (let x = opening.camX; x <= opening.camX + 540; x += 20) {
+        for (let y = opening.camY; y <= opening.camY + 960; y += 20) {
+          expect(field.detect(x, y, lit), `${x},${y} at t=${t.toFixed(1)}`).toBe(-1);
+        }
+      }
+    }
+  });
+});
+

@@ -28,12 +28,12 @@ describe('town pickup star', () => {
   });
 
   it('on a deep shift needs all three delivered before sunrise, and stays earned once won', () => {
-    const won = applyDeepRun(defaultSave(), 'level6', { delivered: 3, elapsedSec: 300, spotted: 2, failedAbductions: 1, sunrise: false, mapCollectible: 'defibrillator' });
+    const won = applyDeepRun(defaultSave(), 'level6', { delivered: 3, elapsedSec: 250, spotted: 2, failedAbductions: 1, sunrise: false, mapCollectible: 'defibrillator' });
     expect(won.stars[3]).toBe(true);
     expect(won.newStarFlags[3]).toBe(true);
     const sunrise = applyDeepRun(defaultSave(), 'level6', { delivered: 2, elapsedSec: 450, spotted: 0, failedAbductions: 0, sunrise: true, mapCollectible: 'defibrillator' });
     expect(sunrise.stars[3]).toBe(false);
-    const again = applyDeepRun(won.save, 'level6', { delivered: 3, elapsedSec: 300, spotted: 0, failedAbductions: 0, sunrise: false });
+    const again = applyDeepRun(won.save, 'level6', { delivered: 3, elapsedSec: 250, spotted: 0, failedAbductions: 0, sunrise: false });
     expect(again.save.levels.level6.stars[3]).toBe(true);
     expect(countStars(again.save.levels.level6.stars)).toBe(4);
     expect(totalStars(again.save)).toBe(4);

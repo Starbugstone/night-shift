@@ -87,7 +87,16 @@ fin over the rim. Souvenir item: a sardine tin.
 
 ## L6 "Probe Compliance" / « Contrôle technique » (St. Mildred's General, Endoscopy Wing)
 
-Map ~2160×3120, theme `clinic`. Sunrise budget 450 s, par margin 140 s.
+Map ~2160×3120, theme `clinic`. Sunrise budget 450 s, par margin 190 s (was 140; difficulty curve, Neon P5).
+
+**Arrival (2026-11-26 openings rework).** Zib comes in along the entry road from the east, at **(2060, 2780)**
+(zone E-south), from Barnacle Bay's townward road. The opening screen shows the east service road, an annex
+and pines, with no detector. Every straight run at a ring is caught on the way, beyond the opening:
+the A&E scramble races to Hank's front doors, a camera on the Endoscopy Wing's north-east corner looks
+along the way to his rear entrance, a camera on the on-call block's south-east corner looks back down the
+east lawn at Osei's two doors, and a pole on the ward's front lawn watches the diagonal to Pemberton. The
+old ward bay is now the **east bay** at (2030, 1900): it races north up the new east service road
+(x 1860, from the entry road) to the pharmacy drive.
 
 **Premise (the probe joke, PG-13).** Bureau Compliance has noticed zero probes logged this quarter.
 Worse, intelligence reports that **humans queue up to be probed. Voluntarily.** They book
@@ -105,7 +114,7 @@ reads. Outside: dark pines, a lit crescent-moon canopy (no red cross), white roa
 **Flight signature: the ambulance scramble.** Ambulances wait dark in their bays, then launch down
 the access road with a headlight cone and a beacon radius. They are **triggered** (the saucer
 coming within range of a bay, deterministic) rather than looping. Tell: the bay door rolls up and the
-lane arrows flash amber 1.2 s before launch. Also: a medevac `heli` on a loop, rooftop `camera`s,
+lane arrows flash amber 0.9 s before launch (was 1.2 s). Also: a medevac `heli` on a loop, rooftop `camera`s,
 insomniac patient `window`s, one `neon` sign ("NOW SERVING 12").
 
 **Abduction signature: Form 7-B probe drones.** Each route has **two** small mint Bureau drones from
@@ -216,7 +225,7 @@ will assume they went to early yoga. Nobody checks early yoga."*
   the proof bot. Human-model players see amber on the roof route every run but never dry out; real
   dawdling and bonks will. Lighthouse turn 7 s, half-angle 0.6 rad, ten shadow-casting props.
 - **L6:** drone rings 54/56/60 px (thermometer/hammer/feather), hold 0.8 s, leaving drains twice as fast.
-  Feather kick 300 px/s, hammer 170 px/s. Ambulances: 1.2 s tell, 230 px trigger (A&E bay 350 px), 4 s
+  Feather kick 300 px/s, hammer 170 px/s. Ambulances: 0.9 s tell, 230 px trigger (A&E bay 350 px, east bay 260 px), 4 s
   rest. Human-model players deliver every route: tighten after playtests if it feels soft.
 - **L7:** photographer iris 0.9 s (1.0 s never threatened a crisp stop), exposure 1.0 s, 1.4 s wind-on.
   Swell 7 s period, 230 px/s² pull. Castors roll up to a doorway and park there rather than across a corridor.
