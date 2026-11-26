@@ -51,8 +51,10 @@ function flyL2(detour: boolean): FlightResult {
   const onLocked = vi.fn<(result: FlightResult) => void>();
   const flight = new FlightScene({ ctx, level, spotted: 0, onLocked, onQuit: vi.fn() });
   const route = [
-    { point: { x: 540, y: 1400 }, hover: false },
-    { point: { x: 540, y: 700 }, hover: false },
+    // from the Route 9 launch: up the west side, through the gap by the diner, east under the EAT neon
+    { point: { x: 300, y: 1400 }, hover: false },
+    { point: { x: 300, y: 785 }, hover: false },
+    { point: { x: 640, y: 785 }, hover: false },
     ...(detour ? [{ point: flyer, hover: true }] : []),
     { point: level.map.entries[0], hover: true },
   ];

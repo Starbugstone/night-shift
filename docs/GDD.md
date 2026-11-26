@@ -91,6 +91,13 @@ lifting a snoring man past a ceiling fan without bonking him is hard.
   flickering neon sign (inside its glow: steering scrambles slightly), a
   delivery van whose headlight cone patrols the road, rooftops, power lines
   (solid in flight: bumping into them stops you briefly).
+- **Layout (2026-11-26 openings rework):** Zib rolls in off Route 9 from Doyle's farm, at the
+  west end of the lower cross street **(150, 1460)**. The wire gap is at the west end of Main
+  St's first block, by the diner (streetlights at x **200** and **405**). The long span runs
+  **405 → 870**, and the east yard (east of x 870) stays the second way north. The EAT sign
+  hangs high on the diner's east wall **(420, 560)**, just north of the way out of the gap. A
+  straight hold at either ring hits the long span and slides along it. The east house's dog
+  **(880, 1080)**, pulse **100–140 px**, catches the hold that slips off its end.
 - **Entry A — Skylight** (short, risky): a slowly turning ceiling fan sits
   right under the skylight; time the gap between blades.
 - **Entry B — Loading door** (long, safer): route over rows of washers,

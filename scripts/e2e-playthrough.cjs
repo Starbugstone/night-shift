@@ -411,8 +411,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   const runs = [
     { level: 1, ring: 1, via: [{ x: 150, y: 1500 }, { x: 150, y: 450 }], name: 'L1-chimney' },
     { level: 1, ring: 0, via: [{ x: 150, y: 1400 }, { x: 150, y: 590 }], name: 'L1-window' },
-    { level: 2, ring: 0, via: [{ x: 540, y: 1400 }, { x: 540, y: 700 }], name: 'L2-skylight' },
-    { level: 2, ring: 1, via: [{ x: 540, y: 1500 }, { x: 540, y: 700 }, { x: 640, y: 330 }], name: 'L2-loading' },
+    { level: 2, ring: 0, via: [{ x: 300, y: 1400 }, { x: 300, y: 785 }, { x: 640, y: 785 }], name: 'L2-skylight' },
+    { level: 2, ring: 1, via: [{ x: 300, y: 1500 }, { x: 300, y: 785 }, { x: 640, y: 785 }, { x: 640, y: 330 }], name: 'L2-loading' },
   ];
   for (const r of runs) {
     if (ONLY_RUNS && !ONLY_RUNS.includes(r.name)) continue;

@@ -165,8 +165,9 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
 const APPROACHES: Partial<Record<RoomId, Vec2[]>> = {
   farm_chimney: [{ x: 150, y: 1500 }, { x: 150, y: 450 }],
   farm_window: [{ x: 150, y: 1400 }, { x: 150, y: 590 }],
-  laundry_skylight: [{ x: 540, y: 1400 }, { x: 540, y: 700 }],
-  laundry_loading: [{ x: 540, y: 1500 }, { x: 540, y: 700 }, { x: 640, y: 330 }],
+  // L2 from the Route 9 launch: up the west side, through the gap by the diner, east under the EAT neon
+  laundry_skylight: [{ x: 300, y: 1400 }, { x: 300, y: 785 }, { x: 640, y: 785 }],
+  laundry_loading: [{ x: 300, y: 1500 }, { x: 300, y: 785 }, { x: 640, y: 785 }, { x: 640, y: 330 }],
 };
 
 function tutorialAttempt(level: TutorialLevelDef, entry: TutorialLevelDef['map']['entries'][number], profile: HumanProfile, seed: number): StarRun {

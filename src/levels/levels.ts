@@ -126,7 +126,8 @@ export const LEVELS: readonly LevelDef[] = [
       collectible: { id: 'slipper_flyer', x: 616, y: 496 },
       w: 1080,
       h: 1920,
-      start: { x: 540, y: 1600 },
+      // 2026-11-26 openings: Zib rolls in off Route 9 from Doyle's farm, at the west end of the lower cross street
+      start: { x: 150, y: 1460 },
       roads: [
         { dir: 'h', at: 860, from: 0, to: 1080 },
         { dir: 'h', at: 1460, from: 0, to: 1080 },
@@ -147,8 +148,8 @@ export const LEVELS: readonly LevelDef[] = [
         { key: 'flight/tree_top', kind: 'tree', x: 690, y: 1650 },
         { key: 'flight/tree_top', kind: 'tree', x: 400, y: 120 },
         { key: 'flight/tree_top', kind: 'tree', x: 680, y: 130 },
-        { key: 'flight/streetlight_top', kind: 'streetlight', x: 420, y: 950 },
-        { key: 'flight/streetlight_top', kind: 'streetlight', x: 625, y: 950 },
+        { key: 'flight/streetlight_top', kind: 'streetlight', x: 200, y: 950 },
+        { key: 'flight/streetlight_top', kind: 'streetlight', x: 405, y: 950 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 90, y: 950 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 990, y: 950 },
         { key: 'flight/streetlight_top', kind: 'streetlight', x: 455, y: 1550 },
@@ -180,20 +181,23 @@ export const LEVELS: readonly LevelDef[] = [
           sweepRate: 1.4,
         },
       ],
-      dogs: [],
-      neons: [{ x: 420, y: 615, r: 145, text: 'EAT' }],
+      // the east house's dog sleeps by the end of the long span: a hold that slides off the wire wakes it
+      dogs: [{ x: 880, y: 1080, rMin: 100, rMax: 140, period: 3.2 }],
+      // EAT sign high on the diner's east wall: its glow sits just north of the way out of the wire gap
+      neons: [{ x: 420, y: 560, r: 145, text: 'EAT' }],
       // Strung along the south kerb of Main St's first block, pole to streetlight.
-      // Main St has a wide first gap. The east yard still offers a second crossing.
+      // The wide gap is at the west end, by the diner; the east yard still offers a second crossing.
+      // A straight hold from the Route 9 launch hits the long span and stays pinned under it.
       powerLines: [
         { ax: 16, ay: 950, bx: 90, by: 950 },
-        { ax: 90, ay: 950, bx: 420, by: 950 },
-        { ax: 625, ay: 950, bx: 870, by: 950 },
+        { ax: 90, ay: 950, bx: 200, by: 950 },
+        { ax: 405, ay: 950, bx: 870, by: 950 },
         // service drop to the diner
         { ax: 160, ay: 475, bx: 30, by: 340 },
       ],
       lamps: [
-        { x: 420, y: 950 },
-        { x: 625, y: 950 },
+        { x: 200, y: 950 },
+        { x: 405, y: 950 },
         { x: 90, y: 950 },
         { x: 990, y: 950 },
         { x: 455, y: 1550 },
