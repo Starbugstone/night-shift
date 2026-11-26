@@ -1,5 +1,4 @@
-import type { AmbientBed, Audio, SfxName, SpeakOptions, VoiceId } from '../contracts';
-import { AmbientMixer } from './ambient';
+import type { Audio, SfxName, SpeakOptions, VoiceId } from '../contracts';
 import { GainRamp } from './gain-ramp';
 import { SoundVoices } from './sfx-voices';
 import { VoiceEngine } from './voice';
@@ -12,8 +11,6 @@ export class SynthAudio implements Audio {
   private ac: AudioContext | null = null;
   private master: GainNode | null = null;
   private masterFade: GainRamp | null = null;
-  private mixer: AmbientMixer | null = null;
-  private requestedBed: AmbientBed | null = null;
   private noiseBuf: AudioBuffer | null = null;
   private voices: SoundVoices | null = null;
   private last = new Map<SfxName, number>();
@@ -34,7 +31,6 @@ export class SynthAudio implements Audio {
         this.masterFade = new GainRamp(this.master.gain, this.muted ? 0 : MASTER_LEVEL);
         this.master.connect(comp);
         comp.connect(this.ac.destination);
-        this.mixer = new AmbientMixer(this.ac, this.master);
         const len = Math.floor(this.ac.sampleRate * 1.5);
         this.noiseBuf = this.ac.createBuffer(1, len, this.ac.sampleRate);
         const d = this.noiseBuf.getChannelData(0);
@@ -61,18 +57,7 @@ export class SynthAudio implements Audio {
 
   private startAudio(): void {
     const ac = this.ac;
-    if (!ac) return;
-    if (ac.state === 'running') this.syncAmbient();
-    else void ac.resume().then(() => this.syncAmbient(), () => {});
-  }
-
-  ambient(bed: AmbientBed | null): void {
-    this.requestedBed = bed;
-    this.syncAmbient();
-  }
-
-  private syncAmbient(): void {
-    if (!this.hidden && this.ac?.state === 'running') this.mixer?.select(this.muted ? null : this.requestedBed);
+    if (ac && ac.state !== 'running') void ac.resume().catch(() => {});
   }
 
   setMuted(m: boolean): void {
@@ -80,7 +65,6 @@ export class SynthAudio implements Audio {
     this.muted = m;
     if (this.ac) this.masterFade?.fadeTo(m ? 0 : MASTER_LEVEL, this.ac.currentTime, 0.04);
     if (m) this.hush();
-    this.syncAmbient();
   }
 
   // ---- v4 voices: alien babble for lines of text (src/audio/voice.ts)
@@ -107,153 +91,185 @@ export class SynthAudio implements Audio {
     const t = now + 0.005;
     switch (name) {
       case 'beam_on':
-        voices.tone('sine', 225, 690, t, 0.32, 0.24 * v, { vibrato: 7, depth: 12 });
-        voices.tone('triangle', 130, 345, t, 0.32, 0.12 * v);
+        voices.tone('sine', 175, 620, t, 0.28, 0.15 * v, BEAM_RISE);
+        voices.tone('sine', 313, 830, t + 0.09, 0.24, 0.05 * v, BEAM_RISE);
         break;
       case 'beam_off':
-        voices.tone('sine', 650, 190, t, 0.25, 0.2 * v, { vibrato: 7, depth: 9 });
+        voices.tone('sine', 605, 167, t, 0.26, 0.15 * v, BEAM_FALL);
+        voices.tone('sine', 835, 280, t, 0.18, 0.05 * v, BEAM_FALL);
         break;
       case 'bonk':
-        voices.tone('sine', 510, 135, t, 0.21, 0.43 * v);
-        voices.tone('triangle', 720, 265, t, 0.085, 0.16 * v);
-        voices.noise('lowpass', 950, t, 0.065, 0.23 * v);
-        voices.tone('sine', 275, 320, t + 0.055, 0.26, 0.12 * v, { vibrato: 17, depth: 28 });
+        voices.tone('sine', 230, 88, t, 0.083, 0.3 * v);
+        voices.noise('lowpass', 770, t, 0.048, 0.22 * v);
+        voices.tone('triangle', 330, 247, t + 0.025, 0.14, 0.23 * v, SPRING);
         break;
       case 'clop':
-        voices.tone('triangle', 530, 185, t, 0.075, 0.33 * v);
-        voices.tone('triangle', 445, 154, t + 0.07, 0.09, 0.36 * v);
+        voices.tone('triangle', 480, 196, t, 0.065, 0.18 * v, WOOD);
+        voices.tone('triangle', 320, 133, t + 0.077, 0.074, 0.24 * v, WOOD);
+        voices.noise('bandpass', 995, t + 0.077, 0.048, 0.16 * v);
         break;
       case 'moo':
-        voices.tone('triangle', 144, 88, t, 0.7, 0.23 * v, { vibrato: 4, depth: 5, swell: true, cutoff: 570 });
-        voices.tone('sine', 288, 177, t + 0.02, 0.62, 0.13 * v, { swell: true });
-        voices.noise('bandpass', 490, t + 0.08, 0.52, 0.11 * v, { q: 2.5, end: 265, swell: true });
+        voices.tone('triangle', 154, 105, t, 0.55, 0.135 * v, MOO);
+        voices.tone('sine', 462, 315, t + 0.055, 0.46, 0.07 * v, MOO_FORMANT);
+        voices.tone('sine', 770, 525, t + 0.11, 0.34, 0.038 * v, MOO_FORMANT);
         break;
       case 'snore':
-        voices.noise('bandpass', 380, t, 0.9, 0.34 * v, { q: 2.5, end: 220, swell: true });
-        voices.tone('triangle', 85, 62, t, 0.9, 0.095 * v, { swell: true, cutoff: 300 });
-        voices.tone('sine', 155, 105, t + 0.19, 0.65, 0.048 * v, { swell: true, vibrato: 11, depth: 6 });
+        voices.noise('bandpass', 360, t, 0.38, 0.58 * v, SNORE_IN);
+        voices.tone('triangle', 112, 71, t, 0.38, 0.20 * v, RASP);
+        voices.noise('bandpass', 880, t + 0.32, 0.36, 0.28 * v, BREATH_OUT);
+        voices.tone('sine', 860, 650, t + 0.35, 0.31, 0.12 * v, BREATH_WHISTLE);
         break;
       case 'mumble':
-        for (let i = 0; i < 4; i++) {
-          const f = 145 + Math.random() * 72;
-          voices.tone('triangle', f, f * 0.83, t + i * 0.11, 0.12, 0.11 * v, { cutoff: 780 });
-        }
+        voices.tone('triangle', 163, 193, t, 0.10, 0.16 * v, MURMUR);
+        voices.tone('triangle', 192, 142, t + 0.093, 0.12, 0.19 * v, MURMUR);
+        voices.tone('triangle', 148, 113, t + 0.205, 0.13, 0.17 * v, MURMUR);
+        voices.tone('sine', 560, 432, t + 0.095, 0.14, 0.08 * v, SWELL);
         break;
       case 'wake':
-        voices.noise('bandpass', 790, t, 0.16, 0.23 * v, { q: 0.8, end: 360 });
-        voices.tone('triangle', 235, 590, t, 0.18, 0.21 * v);
-        voices.tone('sine', 610, 765, t + 0.145, 0.15, 0.16 * v);
+        voices.noise('bandpass', 760, t, 0.075, 0.32 * v, GASP);
+        voices.tone('triangle', 180, 460, t, 0.13, 0.25 * v, RASP);
+        voices.tone('sine', 653, 510, t + 0.09, 0.16, 0.16 * v, SHIVER);
         break;
       case 'yowl':
-        voices.tone('triangle', 440, 895, t, 0.25, 0.23 * v, { vibrato: 9, depth: 26 });
-        voices.tone('triangle', 895, 455, t + 0.21, 0.42, 0.21 * v, { vibrato: 9, depth: 36 });
-        voices.tone('sine', 237, 458, t + 0.03, 0.35, 0.075 * v, { swell: true });
+        voices.tone('triangle', 365, 592, t, 0.17, 0.105 * v, MEOW_UP);
+        voices.tone('triangle', 585, 268, t + 0.12, 0.36, 0.158 * v, MEOW_DOWN);
+        voices.tone('sine', 1170, 536, t + 0.12, 0.28, 0.059 * v, SWELL);
         break;
       case 'bark':
-        for (let i = 0; i < 2; i++) {
-          const at = t + i * 0.145;
-          voices.tone('triangle', 322 - i * 43, 155, at, 0.095, 0.18 * v, { cutoff: 920 });
-          voices.noise('bandpass', 765, at, 0.084, 0.25 * v, { q: 1.2, end: 530 });
-        }
+        voices.tone('triangle', 318, 176, t, 0.10, 0.21 * v, WOOD);
+        voices.noise('bandpass', 835, t, 0.086, 0.29 * v, WOOF);
+        voices.tone('triangle', 272, 141, t + 0.128, 0.11, 0.20 * v, WOOD);
+        voices.noise('bandpass', 740, t + 0.128, 0.074, 0.24 * v, WOOF);
         break;
       case 'spotted':
-        voices.tone('triangle', 280, 165, t, 0.16, 0.21 * v, { cutoff: 860 });
-        voices.tone('triangle', 255, 142, t + 0.15, 0.16, 0.19 * v, { cutoff: 860 });
-        voices.tone('sine', 465, 690, t + 0.27, 0.27, 0.13 * v, { vibrato: 8, depth: 24, swell: true });
+        voices.tone('triangle', 510, 455, t, 0.14, 0.14 * v, MUTED_BRASS);
+        voices.tone('sine', 1030, 910, t, 0.105, 0.048 * v);
+        voices.tone('triangle', 378, 245, t + 0.14, 0.31, 0.17 * v, WAH);
+        voices.tone('sine', 756, 490, t + 0.14, 0.23, 0.055 * v, SWELL);
         break;
       case 'lock_progress': {
-        const f = 385 + 300 * v;
-        voices.tone('sine', f, f * 1.18, t, 0.13, 0.089, { swell: true });
+        const f = 370 + 310 * v;
+        voices.tone('sine', f, f * 1.10, t, 0.10, 0.155, SWELL);
         break;
       }
       case 'porch_light':
-        voices.tone('triangle', 232, 309, t, 0.22, 0.087, { swell: true, cutoff: 850 });
-        voices.noise('bandpass', 450, t, 0.17, 0.11, { q: 1.1, swell: true });
+        voices.tone('triangle', 228, 319, t, 0.23, 0.14, LAMP);
+        voices.noise('bandpass', 520, t + 0.02, 0.18, 0.20, BREATH_OUT);
         break;
       case 'camera_focus':
-        voices.tone('sine', 535, 386, t, 0.15, 0.090);
-        voices.tone('sine', 440, 575, t + 0.085, 0.14, 0.069);
+        voices.tone('sine', 488, 398, t, 0.093, 0.145);
+        voices.tone('sine', 520, 592, t + 0.082, 0.109, 0.165);
         break;
       case 'clock_tick':
-        voices.tone('sine', 640, 455, t, 0.085, 0.045);
+        voices.tone('sine', 640, 470, t, 0.063, 0.36);
+        voices.noise('lowpass', 1120, t, 0.039, 0.21);
         break;
       case 'clapper':
-        voices.tone('triangle', 324, 315, t, 0.35, 0.100, { cutoff: 940 });
-        voices.tone('sine', 487, 482, t + 0.007, 0.23, 0.039);
+        voices.tone('triangle', 325, 316, t, 0.29, 0.28, MUTED_BRASS);
+        voices.tone('sine', 490, 485, t + 0.006, 0.21, 0.16);
+        voices.noise('lowpass', 1280, t, 0.043, 0.23);
         break;
       case 'lock_on':
-        voices.tone('sine', 494, 494, t, 0.14, 0.21 * v);
-        voices.tone('sine', 659, 659, t + 0.09, 0.14, 0.21 * v);
-        voices.tone('sine', 988, 988, t + 0.18, 0.26, 0.20 * v, { vibrato: 5, depth: 6 });
+        voices.notes(LOCK, t, 0.073, 0.14, 0.14, 0.19 * v);
+        for (let i = 0; i < LOCK.length; i++) {
+          const f = LOCK[i]!;
+          const at = t + i * 0.073;
+          voices.tone('sine', f * 2, f * 2, at, 0.055, 0.045 * v);
+        }
         break;
       case 'success':
-        voices.notes(SUCCESS, t, 0.09, 0.16, 0.45, 0.23 * v);
+        for (let i = 0; i < SUCCESS.length; i++) {
+          const f = SUCCESS[i]!;
+          const at = t + i * 0.082;
+          voices.tone('sine', f, f, at, i === SUCCESS.length - 1 ? 0.30 : 0.15, 0.164 * v);
+          voices.tone('sine', f * 2.76, f * 2.76, at, 0.051, 0.077 * v);
+        }
         break;
       case 'fail':
-        voices.notes(FAIL, t, 0.17, 0.22, 0.58, 0.18 * v, { bend: 0.92, vibrato: 6, depth: 8, cutoff: 1000 });
+        voices.tone('triangle', 395, 352, t, 0.21, 0.135 * v, MUTED_BRASS);
+        voices.tone('sine', 1185, 1056, t, 0.11, 0.046 * v);
+        voices.tone('triangle', 351, 263, t + 0.19, 0.31, 0.155 * v, WAH);
+        voices.tone('sine', 1053, 789, t + 0.19, 0.26, 0.063 * v, SWELL);
+        voices.tone('triangle', 260, 145, t + 0.46, 0.38, 0.147 * v, WAH);
+        voices.tone('sine', 780, 435, t + 0.46, 0.31, 0.046 * v, SWELL);
         break;
       case 'stamp':
-        voices.noise('lowpass', 610, t, 0.13, 0.43 * v);
-        voices.tone('sine', 138, 65, t, 0.17, 0.43 * v);
+        voices.tone('sine', 208, 94, t, 0.09, 0.34 * v);
+        voices.noise('lowpass', 840, t, 0.065, 0.32 * v);
+        voices.noise('bandpass', 480, t + 0.042, 0.10, 0.49 * v, STAMP_PUFF);
         break;
       case 'alert': {
-        // Volume also encodes how far the fuse has filled.
-        const intensity = Math.min(1, Math.max(0, (volume - 0.4) / 0.8));
-        const f = 460 + intensity * 530;
-        voices.tone('sine', f, f * 1.18, t, 0.064, (0.086 + intensity * 0.080) * Math.min(1, v));
+        // Flight passes 0.4–1.2 and room exposure passes 0.25–0.8.
+        const urgency = Math.min(1, Math.max(0, (v - 0.25) / 0.95));
+        const f = 405 + 470 * urgency;
+        const gain = (0.065 + 0.30 * urgency) * Math.min(1, v / 0.25);
+        voices.tone('sine', f, f * 1.14, t, 0.065, gain, SWELL);
         break;
       }
       case 'laser':
-        voices.tone('triangle', 1120, 410, t, 0.10, 0.105 * v, { cutoff: 1250 });
-        voices.noise('bandpass', 1320, t, 0.065, 0.13 * v, { q: 1.2, end: 610 });
+        voices.tone('sine', 1170, 340, t, 0.107, 0.32 * v, LASER);
+        voices.noise('bandpass', 1390, t, 0.071, 0.40 * v, LASER_AIR);
         break;
       case 'alarm':
         for (let i = 0; i < 3; i++) {
-          const from = i % 2 === 0 ? 620 : 478;
-          voices.tone('triangle', from, from * 0.93, t + i * 0.125, 0.11, 0.14 * v, { cutoff: 1320 });
+          const f = i === 1 ? 313 : 420;
+          const at = t + i * 0.114;
+          voices.tone('triangle', f, f * 0.58, at, 0.101, 0.24 * v, MUTED_BRASS);
+          voices.tone('sine', f * 2.1, f * 1.5, at, 0.072, 0.065 * v);
         }
         break;
       case 'crash':
-        voices.noise('lowpass', 1750, t, 0.39, 0.64 * v, { q: 0.6, end: 540 });
-        voices.noise('bandpass', 1460, t, 0.16, 0.34 * v, { q: 1.0, end: 800 });
-        for (let i = 0; i < 4; i++) {
-          const f = 1180 + Math.random() * 1300;
-          voices.tone('sine', f, f * 0.93, t + 0.03 + i * 0.045, 0.12, 0.056 * v);
+        voices.noise('lowpass', 1470, t, 0.14, 0.40 * v, CLATTER);
+        for (let i = 0; i < CLATTER_NOTES.length; i++) {
+          const f = CLATTER_NOTES[i]!;
+          const at = t + CLATTER_TIMES[i]!;
+          voices.tone('triangle', f, f * 0.82, at, 0.092, 0.18 * v, WOOD);
+          voices.tone('sine', f * 2.4, f * 2.2, at, 0.062, 0.09 * v);
         }
         break;
       case 'creak':
-        voices.tone('triangle', 147, 237, t, 0.32, 0.12 * v, { vibrato: 11, depth: 17, swell: true, cutoff: 850 });
-        voices.noise('bandpass', 575, t, 0.3, 0.13 * v, { q: 4.6, swell: true });
+        voices.noise('bandpass', 750, t, 0.27, 0.37 * v, CREAK_GRAIN);
+        voices.tone('triangle', 148, 384, t, 0.19, 0.18 * v, CREAK_STICK);
+        voices.tone('triangle', 350, 147, t + 0.15, 0.21, 0.16 * v, CREAK_STICK);
         break;
       case 'scream':
-        voices.tone('triangle', 530, 1020, t, 0.25, 0.21 * v, { vibrato: 7, depth: 40, cutoff: 2050 });
-        voices.tone('triangle', 1020, 715, t + 0.19, 0.48, 0.19 * v, { vibrato: 9, depth: 51, cutoff: 2050 });
-        voices.noise('bandpass', 870, t + 0.05, 0.38, 0.14 * v, { q: 2.2, swell: true });
+        voices.tone('triangle', 502, 817, t, 0.11, 0.21 * v, EEK);
+        voices.tone('triangle', 816, 645, t + 0.072, 0.20, 0.25 * v, EEK);
+        voices.noise('bandpass', 1170, t + 0.046, 0.13, 0.19 * v, GASP);
         break;
       case 'siren':
-        voices.tone('triangle', 470, 635, t, 0.24, 0.16 * v, { swell: true, cutoff: 1050 });
-        voices.tone('triangle', 605, 425, t + 0.21, 0.25, 0.14 * v, { swell: true, cutoff: 1050 });
+        voices.tone('triangle', 393, 625, t, 0.18, 0.13 * v, SIREN);
+        voices.tone('triangle', 625, 370, t + 0.13, 0.20, 0.15 * v, SIREN);
+        voices.tone('triangle', 366, 553, t + 0.30, 0.18, 0.12 * v, SIREN);
         break;
       case 'pickup':
-        voices.tone('sine', 315, 955, t, 0.16, 0.24 * v);
-        voices.tone('sine', 920, 1190, t + 0.11, 0.16, 0.17 * v);
+        voices.tone('sine', 345, 830, t, 0.14, 0.24 * v, SWELL);
+        voices.tone('sine', 758, 1109, t + 0.089, 0.10, 0.095 * v);
         break;
       case 'monolith_hum':
-        voices.tone('triangle', 147, 147, t, 0.8, 0.17 * v, { swell: true });
-        voices.tone('sine', 220, 220, t + 0.12, 0.72, 0.13 * v, { swell: true });
-        voices.tone('sine', 294, 291, t + 0.24, 0.58, 0.09 * v, { swell: true });
+        voices.tone('triangle', 147, 146, t, 0.84, 0.102 * v, CHOIR_LOW);
+        voices.tone('triangle', 222, 220, t + 0.045, 0.77, 0.084 * v, CHOIR_HIGH);
+        voices.tone('sine', 444, 440, t + 0.09, 0.70, 0.057 * v, CHOIR_HIGH);
+        voices.tone('sine', 733, 730, t + 0.12, 0.64, 0.03 * v, SWELL);
         break;
       case 'lullaby':
         for (let i = 0; i < LULLABY.length; i++) {
           const f = LULLABY[i]!;
-          voices.tone('sine', f, f, t + i * 0.22, 0.4, 0.14 * v, { vibrato: 5, depth: 3, swell: true });
+          const at = t + i * 0.16;
+          voices.tone('sine', f, f, at, 0.34, 0.14 * v);
+          voices.tone('sine', f * 2.01, f * 2.01, at, 0.13, 0.039 * v);
         }
         break;
       case 'checkpoint':
-        voices.notes(CHECKPOINT, t, 0.08, 0.13, 0.36, 0.19 * v);
+        voices.tone('sine', 587, 587, t, 0.31, 0.17 * v);
+        voices.tone('sine', 880, 880, t + 0.076, 0.40, 0.18 * v);
+        voices.tone('sine', 1762, 1758, t + 0.076, 0.19, 0.075 * v);
         break;
       case 'sunrise':
-        voices.notes(SUNRISE, t, 0.15, 0.18, 0.52, 0.16 * v, { bend: 0.96, vibrato: 6, depth: 8, cutoff: 1340 });
+        voices.tone('triangle', 299, 391, t, 0.13, 0.125 * v, ROOSTER);
+        voices.tone('triangle', 401, 367, t + 0.12, 0.10, 0.11 * v, ROOSTER);
+        voices.tone('triangle', 524, 352, t + 0.24, 0.40, 0.157 * v, ROOSTER);
+        voices.tone('sine', 1082, 724, t + 0.24, 0.33, 0.054 * v, SWELL);
         break;
       default: {
         const unhandled: never = name;
@@ -263,8 +279,40 @@ export class SynthAudio implements Audio {
   }
 }
 
-const SUCCESS = [440, 554, 659, 880];
-const FAIL = [392, 370, 349, 330];
-const LULLABY = [784, 659, 698, 587, 659, 523];
-const CHECKPOINT = [494, 740, 988];
-const SUNRISE = [392, 494, 587, 554];
+const LOCK = [494, 659, 784];
+const SUCCESS = [392, 494, 587, 784, 988];
+const LULLABY = [659, 784, 659, 587, 523, 392, 523];
+const CLATTER_NOTES = [350, 590, 468, 261, 198];
+const CLATTER_TIMES = [0, 0.05, 0.105, 0.165, 0.24];
+
+const SWELL = { swell: true };
+const BEAM_RISE = { vibrato: 9, depth: 35, swell: true };
+const BEAM_FALL = { vibrato: 10, depth: 30, swell: true };
+const SPRING = { vibrato: 23, depth: 54, cutoff: 1050 };
+const WOOD = { cutoff: 960 };
+const MOO = { vibrato: 5, depth: 7, swell: true, cutoff: 660 };
+const MOO_FORMANT = { vibrato: 5, depth: 17, swell: true };
+const SNORE_IN = { q: 2.2, end: 235, swell: true };
+const RASP = { vibrato: 24, depth: 14, cutoff: 870 };
+const BREATH_OUT = { q: 1.5, end: 360, swell: true };
+const BREATH_WHISTLE = { vibrato: 6, depth: 16, swell: true };
+const MURMUR = { vibrato: 19, depth: 8, cutoff: 680 };
+const GASP = { q: 1.4, end: 540 };
+const SHIVER = { vibrato: 15, depth: 45 };
+const MEOW_UP = { vibrato: 8, depth: 16, cutoff: 1300 };
+const MEOW_DOWN = { vibrato: 7, depth: 22, cutoff: 1350, swell: true };
+const WOOF = { q: 1.0, end: 455 };
+const MUTED_BRASS = { cutoff: 1160 };
+const WAH = { cutoff: 920, vibrato: 7, depth: 26, swell: true };
+const LAMP = { cutoff: 860, swell: true };
+const STAMP_PUFF = { q: 1.1, end: 380, swell: true };
+const LASER = { vibrato: 16, depth: 22 };
+const LASER_AIR = { q: 1.4, end: 520 };
+const CLATTER = { end: 690 };
+const CREAK_GRAIN = { q: 2.3, end: 410, swell: true };
+const CREAK_STICK = { vibrato: 24, depth: 27, swell: true, cutoff: 1090 };
+const EEK = { vibrato: 11, depth: 22, cutoff: 1540 };
+const SIREN = { swell: true, cutoff: 880 };
+const CHOIR_LOW = { vibrato: 4.3, depth: 2.5, cutoff: 1200, swell: true };
+const CHOIR_HIGH = { vibrato: 5.1, depth: 4.5, cutoff: 1360, swell: true };
+const ROOSTER = { vibrato: 11, depth: 22, cutoff: 1220, swell: true };
