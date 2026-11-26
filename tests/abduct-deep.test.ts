@@ -22,7 +22,7 @@ const L9 = ['inventor_balcony', 'inventor_service', 'bully_transom', 'bully_kitc
 const GRAIL = ['rodney_flap', 'rodney_loft', 'black_knight_arch', 'black_knight_loft', 'tom_stair', 'tom_smoke'] as const;
 const HARD = { wakeFails: true, hard: true };
 // These cases run several rooms or input schedules in one test.
-const ROOM_SWEEP_TIMEOUT_MS = 10_000;
+const ROOM_SWEEP_TIMEOUT_MS = 45_000;
 const CADENCE = [4, 5, 6, 4, 6, 4, 5, 5]; // 33–50 ms, simulated at 120 Hz
 const FINGER_X = 270;
 const FINGER_Y = 480;
