@@ -1,6 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import type { Assets } from '../../contracts';
 import { artSprite } from '../../ui/views/art';
+import { Label } from '../../core/gfx/text';
 import type { HumSlab } from '../monolith';
 
 export class MonolithView {
@@ -16,7 +17,10 @@ export class MonolithView {
       .stroke({ width: d.outer - d.inner, color: 0xffffff });
     this.edges = new Graphics().circle(0, 0, d.inner).circle(0, 0, d.outer)
       .stroke({ width: 3, color: 0xffffff });
-    this.root.addChild(this.belt, this.edges, stone);
+    // Krix's employer brands its slabs: a faint O™ under the top bevel, tilted with the face
+    const brand = new Label({ size: 12, color: '#9a8bb5', weight: 900 }).set('O™', -9, -19, 28);
+    brand.rotation = -0.32;
+    this.root.addChild(this.belt, this.edges, stone, brand);
     this.root.position.set(d.x, d.y);
   }
 

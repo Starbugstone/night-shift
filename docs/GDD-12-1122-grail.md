@@ -12,7 +12,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Work Order #0012 · Ni!**
 >
-> Agent Zib, Krix is out on appeal. OBELISK™ is claiming the Holy Grail so it can charge by the month for eternal life. His three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery. The time window only takes still passengers: let go in the exit and wait for the bar, or they arrive in instalments.
+> Agent Zib, Krix is out on appeal and back with OBELISK™. Our rivals want the Holy Grail to charge by the month for eternal life. Their three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery. The time window only takes still passengers: let go in the exit and wait for the bar, or they arrive in instalments.
 >
 > The French are throwing cows. If the road moos, move.
 >
@@ -20,7 +20,7 @@ Three sleeping signatures are all Krix has. Filing the witnesses voids his claim
 
 > **Ordre n°0012 · Sacré Graal !**
 >
-> Agent Zib, Krix est libre en attendant son appel. OBELISK™ revendique le Saint Graal pour vendre la vie éternelle par abonnement. Ses trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le service juridique annule les signatures. Près de la haie à l’ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux.
+> Agent Zib, Krix a fait appel et retravaille chez OBELISK™. Nos concurrents revendiquent le Saint Graal pour vendre la vie éternelle par abonnement. Leurs trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le juridique annule les signatures. À la haie ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux.
 >
 > Les Français lancent des vaches. Si la route meugle, dégagez.
 >
