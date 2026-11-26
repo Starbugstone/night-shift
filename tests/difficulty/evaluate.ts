@@ -9,7 +9,7 @@ import { starLabels } from '../../src/levels/progress';
 import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
 import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
-import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateStars, type CarReport, type StarReport } from './stars';
+import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateStars, type CarReport, type StarReport } from './stars';
 import { naiveCarCatches } from './time-car';
 
 // Minimum shares of full attempts, in the game's star order. The beeline and wake
@@ -126,6 +126,8 @@ export const BANDS: Record<string, Band | undefined> = {
     skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: 120 / 330, tension: 20,
   },
+  level12: { skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.8, casualBudgetShare: 0.8, tension: 20 },
   level9: {
     skilledRoute: 0.8, casualRoute: 0.5, casualBuilding: 0.8, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: L9_SHIFT_SEC.max / 380, tension: 20,
@@ -177,6 +179,7 @@ export interface LevelReport extends StarLevelReport {
   tension: number;
   birchDetours?: ReturnType<typeof evaluateBirchDetours>[];
   shrubbery?: ReturnType<typeof evaluateShrubbery>[];
+  towelFirst?: ReturnType<typeof evaluateTowelFirst>[];
   carFirst?: CarReport[];
   carBeelines?: ReturnType<typeof naiveCarCatches>;
 }
@@ -351,6 +354,7 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
       if (row.fourthStars < Math.floor(seeds * floor)) report.violations.push(`Shrubbery (${row.profile}) earned ${row.fourthStars}/${seeds}`);
     }
   }
+  if (level.id === 'level12') report.towelFirst = profiles.map(p => evaluateTowelFirst(level, p, seeds, play));
   if (level.id === 'level9') {
     if (seeds >= 6) {
       for (const row of stars) {
@@ -464,7 +468,7 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
     lines.push(`| ${f.profile} | ${pct(f.done)} | ${f.medianSpots} | ${f.medianSec.toFixed(0)} | ${Object.entries(f.causes).map(([k, n]) => `${n}× ${k}`).join(', ') || '–'} |`);
   lines.push('');
   lines.push(`Tension (casual mean peak wake): ${r.tension}.`);
-  const deadline = r.levelId === 'level9' ? 'storm passes at' : 'sunrise';
+  const deadline = r.levelId === 'level9' ? 'storm passes at' : r.levelId === 'level12' ? 'demolition' : 'sunrise';
   lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')}${Number.isFinite(r.budgetSec) ? ` · ${deadline} ${r.budgetSec} s` : ''} · Night owl by ${r.parSec} s.`);
   if (r.birchDetours) for (const row of r.birchDetours) {
     lines.push(`${row.profile} pickup detour: ${row.fourth}/${row.attempts} fourth stars, ${row.allFour}/${row.attempts} four-star shifts.`);
@@ -476,6 +480,10 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
       for (const [profile, ranges] of Object.entries(GRAIL_TARGETS))
         lines.push(`| ${profile} | ${ranges.map(([min, max]) => `${min}–${max}%`).join(' | ')} |`);
     }
+  }
+  if (r.towelFirst) {
+    lines.push('', '| West harbour detour | Filed with towel |', '| --- | --- |');
+    for (const row of r.towelFirst) lines.push(`| ${row.profile} | ${row.fourthStars}/${row.attempts} |`);
   }
   if (r.carFirst && r.carBeelines) {
     lines.push('', '| Car-first | Catches | Delivered | Pickup star | All four |', '| --- | --- | --- | --- | --- |');

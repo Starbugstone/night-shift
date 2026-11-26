@@ -231,9 +231,10 @@ export class DeepFlightHud {
     const m = s.level.map;
     this.delivered = new DeliveredBanner(m.targets.length);
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
+    const demolition = s.level.id === 'level12';
     const storm = s.level.id === 'level9';
-    this.sun = s.level.clockMode === 'elapsed' ? new HudTimer() : new HudSunClock(storm ? null : artTex(assets, 'ui/sunrise_clock'),
-      storm ? tr().crestValley.left : s.level.id === 'level8' ? tr().timeTrial.left : undefined, storm);
+    this.sun = s.level.clockMode === 'elapsed' ? new HudTimer() : new HudSunClock(storm || demolition ? null : artTex(assets, 'ui/sunrise_clock'),
+      demolition ? tr().dispatch2199.deadline : storm ? tr().crestValley.left : s.level.id === 'level8' ? tr().timeTrial.left : undefined, storm || demolition);
     this.fuseState.seconds = 1 / (SUSPICION.rate * s.sim.mult);
     const fuse = Math.round(this.fuseState.seconds * 10) / 10;
     this.banner = new FlightBanner(400, 86,
@@ -258,8 +259,9 @@ export class DeepFlightHud {
     this.root.addChild(this.banner.root, this.delivered.root, this.zib.root, this.hint);
     this.avoid = [this.map.box, { x: 10, y: HUD_Y - 4, w: x - 14, h: 42 }];
     if (s.practice) {
-      this.root.addChild(new Label(SHIFT).set(tr().fieldCheck.badge, 270, 158, 350));
-      const w = Math.min(350, measure(tr().fieldCheck.badge, 14, 900));
+      const badge = s.level.id === 'level12' ? tr().dispatch2199.practice : tr().fieldCheck.badge;
+      this.root.addChild(new Label(SHIFT).set(badge, 270, 158, 350));
+      const w = Math.min(350, measure(badge, 14, 900));
       this.avoid.push({ x: 270 - w / 2 - 6, y: 148, w: w + 12, h: 20 });
     }
   }
@@ -283,7 +285,7 @@ export class DeepFlightHud {
       this.clock = run.clockText(getLang());
     }
     if (this.sun instanceof HudTimer) this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock);
-    else this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.deadlineWarning, t, rm);
+    else this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.deadlineWarning, t, rm || s.level.id === 'level12');
     const targets = s.level.map.targets;
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i]!;

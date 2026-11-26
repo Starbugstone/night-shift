@@ -4,6 +4,7 @@
 // field can be sampled at future times (the autopilot looks ahead this way) and the drawn shape
 // is always the hit shape: render code reads the positions/angles sampled here.
 import { COW, CLOP, RABBIT, cycleTime, rabbitStart, inRabbitRun, type GrailHazard } from './grail';
+import { cameraHeading } from './recital';
 import type { Vec2 } from '../contracts';
 import { circleSegment, pointInCircle, pointInCone, wrapAngle, type SegHit } from './geometry';
 import { POWER_LINE, SAUCER, barkRadius, neonOn, neonScramble, type Saucer } from './sim';
@@ -151,7 +152,7 @@ export interface CameraHazard {
   /** L7 cruise code: turn steadily at this many rad/s from `base` instead of sweeping (a radar). */
   spin?: number;
   /** v4 L9 1955: era fixture at the cone origin. */
-  skin?: 'marshal55_torch' | 'dance_spot55' | 'worklamp55' | 'grail_sentry_top';
+  skin?: 'marshal55_torch' | 'dance_spot55' | 'worklamp55' | 'grail_sentry_top' | 'reciter2199_top';
 }
 
 /** Neon sign / billboard: inside the glow, steering is scrambled while it is lit. */
@@ -328,6 +329,7 @@ export const SPOT_CAUSES = [
   // v4 L8
   'hum',
   // v4 L9 1955
+  'poetry', 'dozer',
   'eraLight', 'eraWatcher', 'eraPolice',
   'grailSentry', 'cow', 'clop', 'rabbit',
 ] as const;
@@ -580,7 +582,7 @@ export class HazardField {
         case 'camera':
           this.x[i] = d.x;
           this.y[i] = d.y;
-          this.a[i] = d.spin ? d.base + d.spin * t : d.base + d.amp * Math.sin(t * d.rate + d.phase);
+          this.a[i] = cameraHeading(d, t);
           break;
         // L5 pier code: a = the beam's centre angle
         case 'lighthouse':
@@ -880,7 +882,7 @@ export class HazardField {
       case 'heli':
         return 'heli';
       case 'camera':
-        return d.skin === 'grail_sentry_top' ? 'grailSentry' : d.skin ? 'eraLight' : 'camera';
+        return d.skin === 'grail_sentry_top' ? 'grailSentry' : d.skin === 'reciter2199_top' ? 'poetry' : d.skin ? 'eraLight' : 'camera';
       case 'squire': return 'clop';
       case 'cow':
       case 'rabbit': return d.type;
@@ -893,7 +895,7 @@ export class HazardField {
       case 'photographer':
         return 'photographer';
       case 'steward':
-        return 'steward';
+        return d.skin ? 'dozer' : 'steward';
       default:
         return 'window';
     }

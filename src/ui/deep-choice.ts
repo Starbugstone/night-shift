@@ -62,7 +62,7 @@ export class DeepChoiceScene implements Scene {
     const sec = Math.floor(left % 60);
     this.status = run.level.clockMode === 'elapsed'
       ? fmt(tr().birch.timeAgainstPar, { used: run.clockText(), par: fmtTime(deepPar(run.level)) })
-      : fmt(run.level.id === 'level9' ? d.stormIn : d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
+      : fmt(run.level.id === 'level12' ? tr().dispatch2199.duration : run.level.id === 'level9' ? d.stormIn : d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
   }
 
   update(dt: number): void {

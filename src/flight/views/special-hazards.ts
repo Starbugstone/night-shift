@@ -159,7 +159,10 @@ export class StewardView {
   private readonly torch = new Glow(glowTexture(GLOW.warm), true).place(0, 0, 20, 20, 0.8);
 
   constructor(assets: Assets, private readonly d: StewardHazard) {
-    this.body = crewBody(assets, false);
+    this.body = d.skin === 'dozer2199'
+      ? artSprite(assets, 'flight/demolition_dozer2199_top') ?? new Graphics().roundRect(-35, -22, 70, 59, 6).fill('#a18a65')
+        .roundRect(-48, -36, 96, 19, 5).fill('#d6c498').stroke({ color: C.ink, width: 3 })
+      : crewBody(assets, false);
     this.cone = new ConeView(d.coneHalf, d.coneRange, '255,236,190');
     this.detectors.addChild(this.cone.root, this.torch);
   }

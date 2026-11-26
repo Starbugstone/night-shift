@@ -23,6 +23,13 @@ const routes = {
   black_knight_loft: {"route": "Portcullis loft", "difficulty": "wheel & gate"},
   tom_stair: {"route": "Stone stair", "difficulty": "lectern & sparks"},
   tom_smoke: {"route": "Smoke hole", "difficulty": "flue & sparks"},
+  // v4 2199
+  artie_garden: { route: "Garden door", difficulty: "long & clear" },
+  artie_bath: { route: "Bathroom hatch", difficulty: "short & timed" },
+  penny_service: { route: "Service door", difficulty: "long & clear" },
+  penny_loft: { route: "Ticket loft", difficulty: "short & timed" },
+  moe_returns: { route: "Side returns", difficulty: "long & clear" },
+  moe_vent: { route: "Voice vent", difficulty: "short & timed" },
   inventor_balcony: { route: "Clock balcony", difficulty: "gears & cable" },
   inventor_service: { route: "Service door", difficulty: "bell & gate" },
   bully_transom: { route: "Awning transom", difficulty: "jukebox & fan" },
@@ -149,6 +156,9 @@ const deepZib = {
   // v4 L9 1955
   // v4 1122
   start10: ["No horses. Just coconuts. Vrell, is that what you meant by a company car?"],
+  // v4 2199
+  start12: ["They’ve sent poets. Vrell, are their books loaded?"],
+  demolition: ["Demolition in thirty seconds!"],
   start9: [
     "1955! Where we're flying, we don't need roads—just the west turnout!",
     'Nov 12, 1955! Three witnesses—and intercept that time car from the west turnout!',
@@ -179,6 +189,9 @@ const deepZib = {
   cow: ["Incoming dairy!"],
   clop: ["Those hooves are nuts."],
   rabbit: ["Look at the teeth!"],
+  // v4 2199
+  poetry: ["Poetry ahead. Ears shut!"],
+  dozer: ["Mind the blade!"],
   eraLight: ["That lamp's looking at ME. Back into the dark!", 'Spotlight! Act like a cloud. A completely ordinary cloud.'],
   eraWatcher: ["That regular's looking straight out the window!"],
   eraPolice: ['1955 patrol car. Its headlights can see just fine!'],
@@ -257,6 +270,9 @@ const spotCaptions = {
   cow: ["A cow has identified you at a line-up."],
   clop: ["The cavalry is on foot. They are still faster than Legal."],
   rabbit: ["The rabbit has taken the minutes. In teeth marks."],
+  // v4 2199
+  poetry: ["The guard insists everyone stayed for the encore. Most of them were unconscious."],
+  dozer: ["The driver marks the saucer as an obstruction. Artie’s house already has a file."],
   eraLight: ['The storm lamp pins you in mid-air. Three teens on Main Street blame a flying Buick.', 'Caught in the dance spotlight. Tomorrow morning the Gazette runs "HUBCAP OVER PROM".'],
   eraWatcher: ["A regular at Lyle's drops his malt and swears the pie case is haunted.", "Someone at Lyle's window sketches your saucer on a napkin. Surprisingly accurate."],
   eraPolice: ['A 1955 patrolman radios in "one shiny pie tin, heading north". Dispatch tells him to lay off the coffee.', 'Caught in chrome high beams. The sheriff puts out an APB on "a very rude weather balloon".'],
@@ -490,6 +506,18 @@ export const en = {
       joke: "The French are throwing cows. If the road moos, move.",
       signoff: "— Vrell. No jousting on Bureau time.",
     },
+    // v4 2199
+    level12: {
+      title: "Your Town Is in the Way",
+      location: "Grimsby · 2199",
+      blurb: "Artie’s house was in the way. Then they zoomed out.",
+      human: "Artie, Penny & Moe",
+      collect: "Artie, Penny & Moe",
+      re: "Work Order #{num} · Grimsby, 2199",
+      body: "Agent Zib, Bubbles found Krix’s hyperspace bypass notice. He sold Grimsby as vacant. File Artie, Penny and Moe before the fleet starts digging. Always know where your towel is. Yours is on the west harbour rack.",
+      joke: "The plans were on display at the planning office in Alpha Centauri. For fifty years.",
+      signoff: "— Vrell. On Form 12-C, tick WHOLE TOWN.",
+    },
     level9: {
       title: "Clocking Out at 10:04",
       location: "Crest Valley · Nov 12, 1955",
@@ -625,6 +653,41 @@ export const en = {
     greenery: "Knights fall quiet at last. Neighbours suspect a shrubbery.",
     retreat: "Bravely… back the way we came!",
     knight: ["‘Tis but a dent.", "Merely a flesh wound.", "Fine. We’ll call it a draw."],
+  },
+  // v4 2199
+  dispatch2199: {
+    parking: "Parking ring: Zib. Pool included.",
+    sign: "DON’T PANIC",
+    agent: "TO: Agent Zib",
+    deadline: "DEMOLITION",
+    duration: "Demolition in {time}",
+    deliverGoal: "{star} — all 3 before demolition ({time})",
+    owlGoal: "{star} — {time} left before demolition",
+    lost: "The demolition went ahead. We’ve been invited to comment on the rubble.",
+    cover: "TOWN FOUND IN AREA MARKED VACANT",
+    ghost: "POETRY GUARDS PRAISE AUDIENCE FOR SITTING VERY STILL.",
+    gazette: "WITNESSES SAW SAUCER. WITNESSES WOULD NOW LIKE A LIFT.",
+    poetry: "I’ll take my chances in the airlock.",
+    dozer: "Artie stopped one of those in his dressing gown. Is that what I was supposed to wear?",
+    verses: ["Ode, verse 1 of 300:\nO squat and crumbly house of brown,\nI’ll pave you flat. And all the town.", "O bypass, gleaming slab of tar.\nI paved my heart. There’s room for a car.", "Roses are red, your roof is slate.\nKindly vacate by half past eight."],
+    sulks: ["Ow.", "That’s all right. I’m used to it.", "Don’t pretend you care."],
+    void: "ORDER VOID",
+    bill: "DEMOLITION CHARGES · BILL TO KRIX",
+    received: "RECEIVED",
+    note: "So long, and thanks for all the fish.",
+    transfer: "Nobody coached me. I’m just that good.",
+    vested: "PENSION VESTED",
+    later: "LATER",
+    pool: "It has a POOL.",
+    tray: "HOME ADDRESS: THIS DESK",
+    practice: "Try the fork",
+    replay: "Bureau epilogue",
+    skip: "Skip",
+    permit: "PARKING TRANSFER",
+    towel: "Towel",
+    artie: ["Tea first. Then the end of the world.", "I’m decent. It’s a dressing gown."],
+    penny: ["Ch. 1: Leave Grimsby. Ch. 2: See ch. 1…", "Local delicacy… bring your own…"],
+    moe: ["Life. Don’t talk to me about life.", "Brain the size of a planet. They want me to nap."],
   },
   crestValley: {
     left: "PM",
@@ -887,6 +950,9 @@ export const en = {
         cow: "Exhibit A · hoof print",
         clop: "Exhibit A · coconut cavalry",
         rabbit: "Exhibit A · bite marks",
+        // v4 2199
+        poetry: "Recital Division",
+        dozer: "Demolition fleet",
         eraLight: "Exhibit A · searchlight lookout",
         eraWatcher: 'Exhibit A · through the café window',
         eraPolice: "Exhibit A · from the sheriff's cruiser",
@@ -1009,6 +1075,9 @@ export const en = {
       cow: ["MOO!"],
       clop: ["CLOP CLOP!"],
       rabbit: ["SNAP!"],
+      // v4 2199
+      poetry: ["AN ENCORE!"],
+      dozer: ["CLEAR THE ROAD!"],
       eraLight: ['WHAT THE—?!', 'A FLYING SAUCER!'],
       eraWatcher: ['HEY, LYLE! LOOK!', 'MY MALT!'],
       eraPolice: ['PULL OVER, HUBCAP!', 'CALL THE SHERIFF!'],
@@ -1038,6 +1107,9 @@ export const en = {
       cow: ["That cow just grounded a spaceship."],
       clop: ["I have been overtaken by a pedestrian horse."],
       rabbit: ["I preferred it with its mouth shut."],
+      // v4 2199
+      poetry: ["I’ll take my chances in the airlock."],
+      dozer: ["Artie stopped one of those in his dressing gown. Is that what I was supposed to wear?"],
       eraLight: ['Caught in a 1955 floodlight. Act like a thundercloud, Zib—a quiet one.', 'Spotted under the beam! Resetting before anyone writes a sci-fi paperback about me.'],
       eraWatcher: ["The diner regular saw me! Keep wide of Lyle's front window next pass.", "Caught through the café glass! Next time I'm taking the alley."],
       eraPolice: ['A 1955 cruiser caught me! Even their vintage headlights are too bright!', 'Spotted by the patrol car. Back to the last witness—nobody saw a thing.'],
@@ -1134,6 +1206,8 @@ export const en = {
       // v4 L9 1955
       // v4 1122
       level10: "Claim denied. Krix called his toaster to the stand. The court gave it two minutes to pop.",
+      // v4 2199
+      level12: "Three residents. Grimsby stays. Your mother called, Zib. I told her: adequate.",
       level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Why is it blinking two more dates?",
       level1: "Not dead, not fired, and Doyle is in the hold. Take Route 9 into town—Spin City's night clerk is next.",
       level2: "Larry is logged and Accounting traced forty socks to your saucer. Temporary lanyard’s in the tray. Two calls on Birch Lane, then the bulk order.",
@@ -1185,6 +1259,13 @@ export const en = {
     "spare flex capacitor": { one: "{n} spare flex capacitor", other: "{n} spare flex capacitors" },
     "yellow hazmat suit": { one: "{n} yellow hazmat suit", other: "{n} yellow hazmat suits" },
     "red puffy vest": { one: "{n} red puffy vest", other: "{n} red puffy vests" },
+    // v4 2199
+    "bowl of petunias": { one: "{n} bowl of petunias", other: "{n} bowls of petunias" },
+    "spare dressing gown": { one: "{n} spare dressing gown", other: "{n} spare dressing gowns" },
+    "ear fish": { one: "{n} ear fish", other: "{n} ear fish" },
+    "electronic travel guide": { one: "{n} electronic travel guide", other: "{n} electronic travel guides" },
+    "complaint stamp": { one: "{n} complaint stamp", other: "{n} complaint stamps" },
+    "answer display": { one: "{n} answer display", other: "{n} answer displays" },
     "retro skateboard": { one: "{n} retro skateboard", other: "{n} retro skateboards" },
     "cherry electric guitar": { one: "{n} cherry electric guitar", other: "{n} cherry electric guitars" },
     "clock-tower flyer": { one: "{n} clock-tower flyer", other: "{n} clock-tower flyers" },
@@ -1260,6 +1341,13 @@ export const en = {
         got: ["A red quilted vest from a crate at the dance. Everyone in 1955 kept asking why the kid jumped ship in a life preserver. Honestly, fair question.", "Red puffy vest, logged under 'buoyancy aids, suspiciously heavy'. Zib is wearing it over three sweaters and sweating.", "One 1985 puffy vest, stranded in 1955. Temporal fashion crime—and we don't even have a form for that."],
         missed: ["You left the red puffy vest behind the gym. The chaperone will keep it handy in case the Coast Guard crashes the prom.", "No puffy vest. Fine. Zib already has enough questionable jackets in the hold."],
       },
+      // v4 2199
+      "bowl of petunias": { got: ["Fell from a great height. Its only comment: “Oh no, not again.”"], missed: ["Still on the shelf: bowl of petunias."] },
+      "spare dressing gown": { got: ["Artie’s formal one. Identical to the other, but he’s ironed the belt."], missed: ["Still on the shelf: spare dressing gown."] },
+      "ear fish": { got: ["Fits in one ear. Zib tried it at a recital. It translated three stanzas as ‘Move your car.’"], missed: ["Still on the shelf: ear fish."] },
+      "electronic travel guide": { got: ["Grimsby’s entry reads, in full: “Mostly harmless.” The author was trying to leave when she wrote it."], missed: ["Still on the shelf: electronic travel guide."] },
+      "complaint stamp": { got: ["Worn smooth on the side that says RECEIVED. The reply side is pristine."], missed: ["Still on the shelf: complaint stamp."] },
+      "answer display": { got: ["It displays 42. The customer is expected to supply the question."], missed: ["Still on the shelf: answer display."] },
       "retro skateboard": {
         got: ["A purple-and-yellow wooden skateboard, clearly snapped off a kid's crate scooter. Lyle says skating past the till still counts as dining and dashing.", "Retro skateboard, logged. Zib tried to ollie down the saucer ramp and invented three new bruise forms.", "One homemade skateboard. Humans invented extreme sports purely to escape one guy in a convertible."],
         missed: ["You left the skateboard by the counter. Buff will trip over it in the morning and blame the sky anyway.", "No skateboard. Good. Our medical plan does not cover alien ankle sprains."],
@@ -1769,6 +1857,30 @@ export const en = {
     "I knead five more minutes…": "I knead five more minutes…",
     "I’m asleep for security reasons…": "I’m asleep for security reasons…",
     "There’s the tick… oh. It’s my watch…": "There’s the tick… oh. It’s my watch…",
+    "Artie Duvet": "Artie Duvet",
+    "Penny Thumb": "Penny Thumb",
+    "Moe Dread": "Moe Dread",
+    "Artie": "Artie",
+    "Penny": "Penny",
+    "Moe": "Moe",
+    "Garden door": "Garden door",
+    "Bathroom hatch": "Bathroom hatch",
+    "Service door": "Service door",
+    "Ticket loft": "Ticket loft",
+    "Side returns": "Side returns",
+    "Voice vent": "Voice vent",
+    "Shower rail": "Shower rail",
+    "Baggage cart": "Baggage cart",
+    "Luggage shutter": "Luggage shutter",
+    "Stamp counterweight": "Stamp counterweight",
+    // v4 2199
+    "Tea first. Then the end of the world.": "Tea first. Then the end of the world.",
+    "I’m decent. It’s a dressing gown.": "I’m decent. It’s a dressing gown.",
+    "Ch. 1: Leave Grimsby. Ch. 2: See ch. 1…": "Ch. 1: Leave Grimsby. Ch. 2: See ch. 1…",
+    "Local delicacy… bring your own…": "Local delicacy… bring your own…",
+    "Life. Don’t talk to me about life.": "Life. Don’t talk to me about life.",
+    "Brain the size of a planet. They want me to nap.": "Brain the size of a planet. They want me to nap.",
+
     // v4 L9 1955
     Doc: "Doc",
     Buff: "Buff",
@@ -2286,6 +2398,8 @@ export const en = {
         comment: "You brought a shrubbery. Now they want a tree cut down with a herring. I’m hanging up.",
         missedComment: "No shrubbery. The knights are saying Ni to Accounting. Accounting is saying it back.",
       },
+      // v4 2199
+      bypass_towel: { name: "Bypass towel", memoHint: "your towel", comment: "Good. For once the emergency equipment is machine washable.", missedComment: "On the west harbour rack." },
       time_car: {
         name: "Time car",
         memoHint: "gull-wing time car",
@@ -2571,6 +2685,28 @@ export const en = {
           weight: '214 lb · 97 kg',
           desc: '1955 diner bully with a bulletproof pompadour and a deep hatred of manure trucks. Swung at the tractor beam and missed.',
         },
+        // v4 2199
+        artie: {
+          name: "Artie Duvet",
+          age: "39",
+          height: "5′10″ · 178 cm",
+          weight: "161 lb · 73 kg",
+          desc: "Asked our machine for tea. Got something almost, but not quite, entirely unlike tea.",
+        },
+        penny: {
+          name: "Penny Thumb",
+          age: "33",
+          height: "5′7″ · 170 cm",
+          weight: "143 lb · 65 kg",
+          desc: "Hitchhiked to her own driving test. The examiner made her get out and walk back.",
+        },
+        moe: {
+          name: "Moe Dread",
+          age: "16",
+          height: "5′5″ · 165 cm",
+          weight: "229 lb · 104 kg",
+          desc: "His off switch is labelled NOT NOW. It is the only part of the manual he agrees with.",
+        },
         marvin: {
           name: 'Marvin Cherry',
           age: '29',
@@ -2690,6 +2826,10 @@ export const en = {
           at3: "Tucks a pocket comb in his leather jacket before napping so he can fix his pompadour mid-beam.",
           at10: "After ten visits and heavy probing, he sits on a doughnut cushion at Lyle's. Blames varsity football.",
         },
+        // v4 2199
+        artie: { at3: "Complained that the demolition fleet parked on his rhubarb. The fleet replied. In verse.", at10: "Still in the dressing gown. Says he’ll change when the universe makes sense." },
+        penny: { at3: "Reviewed our saucer. Two stars. Said the minibar was full of evidence.", at10: "Thumbs a lift off every saucer that passes. Ours has started taking the long way round." },
+        moe: { at3: "Filed a noise complaint against his own reboot chime. Refuses to meet with the accused.", at10: "“I live at this desk. They still make me book it.”" },
         marvin: {
           at3: "Keeps a spare amp and velvet cushion in his car trunk, treating every abduction like a tour bus.",
           at10: "Tuned his cherry guitar to our beam's hum. Half the prom floated two inches off the gym floor.",
@@ -2719,6 +2859,8 @@ export const en = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "The knights wanted a nice one. Not too expensive. The beam took it for free.",
+        // v4 2199
+        bypass_towel: "The most useful thing a traveller can carry. Zib has used it as a cape, a pillow and a white flag. All tonight.",
         time_car: 'Brushed stainless coupe with gull-wing doors, scorched tyres and zero permits. Propulsion refuses to let Zib test what happens at 88.',
         slipper_flyer: 'Photocopied in frantic Comic Sans with one tear-off tab already missing. Whoever took that number is about to be very disappointed.',
         astronomer: 'Spent twelve years aiming a dish at deep space; got beamed up mid-sip of cocoa. Asked if we could drop him off at Mars.',
@@ -2735,6 +2877,8 @@ export const en = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Repotted · Nicer than the Hendersons’ hedge. Don’t tell them.",
+        // v4 2199
+        bypass_towel: "Issue standard. Laundering optional.",
         time_car: "Impounded · Capped at 87 mph",
         slipper_flyer: "Pinned to Vrell's corkboard",
         astronomer: 'Debriefed; refuses to leave',
@@ -2751,6 +2895,8 @@ export const en = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "The loudest voices on the west bank want a little greenery.",
+        // v4 2199
+        bypass_towel: "On the west harbour rack.",
         time_car: "Check the shift memo for an unlicensed gull-wing coupe racing the clock tower before 10:04.",
         slipper_flyer: 'The shift memo mentions a desperate missing-footwear notice near the laundromat.',
         astronomer: 'Check the shift memo: someone in suburbia set up an optimistic backyard dish.',
@@ -2780,6 +2926,13 @@ export const en = {
       "spare flex capacitor": "Three blinking tubes wired inside a metal box. Makes time travel possible—and voids every warranty in the galaxy.",
       "yellow hazmat suit": "Blinding canary vinyl with a hairdryer holster. Officially listed in Earth folklore as \"typical Martian evening wear\".",
       "red puffy vest": "Quilted crimson waistcoat from thirty years in the future. Every 1955 local assumed its owner fell off a boat.",
+      // v4 2199
+      "bowl of petunias": "Fell from a great height. Its only comment: “Oh no, not again.”",
+      "spare dressing gown": "Artie’s formal one. Identical to the other, but he’s ironed the belt.",
+      "ear fish": "Fits in one ear. Zib tried it at a recital. It translated three stanzas as ‘Move your car.’",
+      "electronic travel guide": "Grimsby’s entry reads, in full: “Mostly harmless.” The author was trying to leave when she wrote it.",
+      "complaint stamp": "Worn smooth on the side that says RECEIVED. The reply side is pristine.",
+      "answer display": "It displays 42. The customer is expected to supply the question.",
       "retro skateboard": "Purple-and-yellow plank stripped off a crate scooter. Four steel wheels, zero brakes, and a 1955 diner receipt stuck to the deck.",
       "cherry electric guitar": "Semi-hollow 1950s beauty with a singed pickup. Played so loud at prom it briefly cracked the space-time continuum.",
       "clock-tower flyer": "Reads \"SAVE THE CLOCK TOWER!\" in bold 1955 ink. Someone wrote a frantic phone number and \"10:04 PM\" on the back.",

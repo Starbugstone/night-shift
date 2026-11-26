@@ -24,6 +24,7 @@ export const PICKUP_SIZE: Record<MapCollectibleId, readonly [w: number, h: numbe
   krix: [92, 116],
   // v4 L9 1955
   shrubbery: [106, 116],
+  bypass_towel: [96, 72],
   time_car: [96, 172],
 };
 

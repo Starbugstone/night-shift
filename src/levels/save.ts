@@ -10,7 +10,7 @@ export const V2_SAVE_KEY = 'night-shift-save-v2';
 export const LEGACY_SAVE_KEY = 'night-shift-save-v1';
 export const SAVE_VERSION = 3;
 
-export const LEVEL_IDS = ['level1', 'level2', 'birch_bakery', 'birch_neighbours', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9', 'level10'] as const;
+export const LEVEL_IDS = ['level1', 'level2', 'birch_bakery', 'birch_neighbours', 'level3', 'level4', 'level5', 'level6', 'level7', 'level8', 'level9', 'level10', 'level12'] as const;
 export type LevelId = (typeof LEVEL_IDS)[number];
 
 export const LEGACY_DISPATCH_IDS = ['level3', 'level4', 'level5', 'level6', 'level7'] as const;
@@ -54,6 +54,7 @@ export interface SaveData {
   /** Preserve the old open access to L3–L7 once a player had started playing. */
   legacyDispatch: boolean;
   /** The player finished or skipped the Field Check offer. */
+  dispatch2199Finale?: true;
   fieldCheckSeen: boolean;
   /** Access to the inserted bridge and Maple Court for returning players. */
   bridgeAccess: boolean;
@@ -238,6 +239,7 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   });
   out.legacyDispatch = raw.legacyDispatch === true || (oldDispatch && played);
   out.fieldCheckSeen = raw.fieldCheckSeen === true || (oldDispatch && out.levels.level2.delivered);
+  if (raw.dispatch2199Finale === true) out.dispatch2199Finale = true;
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
   out.trophies = readTrophies(raw.trophies);
   out.specimens = readSpecimens(raw.specimens);

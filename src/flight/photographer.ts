@@ -31,6 +31,7 @@ export interface PhotographerHazard {
 }
 
 export interface StewardHazard {
+  skin?: 'dozer2199';
   type: 'steward';
   /** Walked back and forth. */
   path: Vec2[];

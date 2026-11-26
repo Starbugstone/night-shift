@@ -99,11 +99,12 @@ export class SaucerView {
    * What the pilot should react to this frame, besides the saucer itself: the scene phase, whether
    * a detector sees the saucer, the fuse (0..1) and whether Zib is talking. Call before `sync`.
    */
-  cue(phase: PilotPhase, exposed: boolean, sus: number, talking: boolean): void {
+  cue(phase: PilotPhase, exposed: boolean, sus: number, talking: boolean, coverEars = false): void {
     const p = this.pilotIn;
     p.phase = phase;
     p.exposed = exposed;
     p.sus = sus;
+    this.pilotView.coverEars = coverEars;
     p.talking = talking;
   }
 

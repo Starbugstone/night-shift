@@ -228,6 +228,18 @@ export const fr: Strings = {
       joke: "Les Français lancent des vaches. Si la route meugle, dégagez.",
       signoff: "— Vrell. Pas de joute pendant le service.",
     },
+    // v4 2199
+    level12: {
+      title: "Votre ville gêne le passage",
+      location: "Grimsby · 2199",
+      blurb: "La maison d’Artie gênait. Puis ils ont dézoomé.",
+      human: "Artie, Penny et Moe",
+      collect: "Artie, Penny et Moe",
+      re: "Ordre n°{num} · Grimsby, 2199",
+      body: "Agent Zib, Bubulle a trouvé l’avis de déviation hyperspatiale. Krix a vendu Grimsby, soi-disant vide. Vite, recensez Artie, Penny et Moe. Sachez toujours où est votre serviette. La vôtre est sur le portant à l’ouest du port.",
+      joke: "Les plans étaient affichés au bureau de l’urbanisme d’Alpha du Centaure. Depuis cinquante ans.",
+      signoff: "— Vrell. Sur le formulaire 12-C, cochez VILLE ENTIÈRE.",
+    },
     level9: {
       title: "Fin de quart à 22 h 04",
       location: "Crest Valley · 12 nov. 1955",
@@ -352,6 +364,13 @@ export const fr: Strings = {
     black_knight_loft: {"route": "Combles de la herse", "difficulty": "roue et herse"},
     tom_stair: {"route": "Escalier de pierre", "difficulty": "lutrin et étincelles"},
     tom_smoke: {"route": "Trou de fumée", "difficulty": "conduit et étincelles"},
+    // v4 2199
+    artie_garden: { route: "Porte du jardin", difficulty: "long et dégagé" },
+    artie_bath: { route: "Trappe de la salle de bains", difficulty: "court et cadencé" },
+    penny_service: { route: "Porte de service", difficulty: "long et dégagé" },
+    penny_loft: { route: "Mezzanine des billets", difficulty: "court et cadencé" },
+    moe_returns: { route: "Accès aux retours", difficulty: "long et dégagé" },
+    moe_vent: { route: "Conduit vocal", difficulty: "court et cadencé" },
     inventor_balcony: { route: "Balcon de l'horloge", difficulty: "engrenages et câble" },
     inventor_service: { route: "Porte de service", difficulty: "cloche et grille" },
     bully_transom: { route: "Imposte de l'auvent", difficulty: "jukebox et ventilo" },
@@ -422,6 +441,41 @@ export const fr: Strings = {
     greenery: "Les chevaliers se taisent enfin. Les voisins soupçonnent un jardinet.",
     retreat: "Courage… on repart par où on est venus !",
     knight: ["Ce n’est qu’une bosse.", "Une blessure superficielle.", "Bon. Disons match nul."],
+  },
+  // v4 2199
+  dispatch2199: {
+    parking: "Anneau de stationnement : Zib. Piscine comprise.",
+    sign: "Pas de panique",
+    agent: "À : Agent Zib",
+    deadline: "DÉMOLITION",
+    duration: "Démolition dans {time}",
+    deliverGoal: "{star} — les trois avant la démolition ({time})",
+    owlGoal: "{star} — {time} de marge avant la démolition",
+    lost: "La démolition a eu lieu. On nous invite à donner notre avis sur les gravats.",
+    cover: "UNE VILLE DÉCOUVERTE EN ZONE DÉCLARÉE INHABITÉE",
+    ghost: "LES GARDES-POÈTES SALUENT UN PUBLIC IMMOBILE.",
+    gazette: "DES TÉMOINS ONT VU LA SOUCOUPE. ILS FONT DU STOP.",
+    poetry: "Je préfère tenter ma chance dans le sas.",
+    dozer: "Artie en a arrêté un en robe de chambre. C’était la tenue réglementaire ?",
+    verses: ["Ode, strophe 1 sur 300 :\nÔ maison trapue et marron,\nje vous aplatis. Et le canton.", "Ô déviation, mon beau goudron.\nJ’ai bitumé mon cœur. Garez-vous donc.", "Roses rouges, toit d’ardoise.\nÀ huit heures et demie, on vous rase."],
+    sulks: ["Aïe.", "C’est rien. J’ai l’habitude.", "Faites pas semblant de vous en faire pour moi."],
+    void: "ORDRE ANNULÉ",
+    bill: "FRAIS DE DÉMOLITION · À PAYER PAR KRIX",
+    received: "REÇU",
+    note: "Salut, et encore merci pour le poisson.",
+    transfer: "Personne ne m’a donné de cours. Je suis douée, c’est tout.",
+    vested: "DROITS À LA RETRAITE ACQUIS",
+    later: "PLUS TARD",
+    pool: "Il y a une PISCINE.",
+    tray: "DOMICILE : CE BUREAU",
+    practice: "Essayer la bifurcation",
+    replay: "Épilogue du Bureau",
+    skip: "Passer",
+    permit: "TRANSFERT DE STATIONNEMENT",
+    towel: "Serviette",
+    artie: ["D’abord le thé. La fin du monde après.", "Je suis habillé. C’est une robe de chambre."],
+    penny: ["Ch. 1 : partir. Ch. 2 : voir ch. 1…", "Spécialité locale… à apporter…"],
+    moe: ["La vie… ne me parlez pas de la vie.", "Un cerveau gros comme une planète. Et on me demande de faire la sieste."],
   },
   crestValley: {
     left: 'HEURE',
@@ -693,6 +747,9 @@ export const fr: Strings = {
         cow: "Pièce A · trace de sabot",
         clop: "Pièce A · cavalerie à noix de coco",
         rabbit: "Pièce A · morsures",
+        // v4 2199
+        poetry: "Division des gardes-poètes",
+        dozer: "Flotte de démolition",
         eraLight: 'Pièce A · photo du guetteur',
         eraWatcher: 'Pièce A · depuis la vitre du café',
         eraPolice: 'Pièce A · depuis la voiture du shérif',
@@ -841,6 +898,9 @@ export const fr: Strings = {
       // v4 L9 1955
       // v4 1122
       start10: ["Pas de chevaux. Des noix de coco. Vrell, c’est ça, la voiture de fonction ?"],
+      // v4 2199
+      start12: ["Ils ont envoyé des poètes. Vrell, leurs livres sont chargés ?"],
+      demolition: ["Démolition dans trente secondes !"],
       start9: [
         "Nom de Zeus, 1955 ! Là où on vole, pas besoin de route. File à l'ouest, Zib !",
         "12 nov. 1955 ! Trois témoins — et coupe la route à la voiture par l'ouest !",
@@ -871,6 +931,9 @@ export const fr: Strings = {
       cow: ["Du lait en chute libre !"],
       clop: ["Ces sabots sont des noix."],
       rabbit: ["Vous avez vu ses dents ?"],
+      // v4 2199
+      poetry: ["Des gardes-poètes. Bouchez-vous les oreilles !"],
+      dozer: ["Attention à la lame !"],
       eraLight: ["Cette lampe ME suit ! Dans l'ombre, vite !", 'Un projecteur ! Fais le nuage. Un nuage tout à fait ordinaire.'],
       eraWatcher: ['Le client du café regarde droit par la fenêtre !'],
       eraPolice: ['Une voiture de police de 1955. Ses phares y voient très bien !'],
@@ -947,6 +1010,9 @@ export const fr: Strings = {
       cow: ["Une vache vous a identifié lors d’une confrontation."],
       clop: ["Les cavaliers sont à pied. Ils vont quand même plus vite que le service juridique."],
       rabbit: ["Le lapin a pris des notes. Avec les dents."],
+      // v4 2199
+      poetry: ["Selon le garde-poète, tout le monde est resté pour le rappel. La plupart des gens étaient évanouis."],
+      dozer: ["Le conducteur signale que la soucoupe gêne le passage. La maison d’Artie a déjà son dossier."],
       eraLight: ['Le projecteur vous épingle en plein vol. Trois lycéens jurent avoir vu une Buick volante.', 'Pris sous le spot du bal. Demain matin, la Gazette titre « ENJOLIVEUR AU BAL ».'],
       eraWatcher: ['Un habitué du Café Lyle lâche son milk-shake et jure que la vitrine à tartes est hantée.', 'Un client à la fenêtre dessine votre soucoupe sur une serviette. Plutôt ressemblant.'],
       eraPolice: ['Un policier de 1955 signale « un plat à tarte volant, cap au nord ». Le central lui conseille le déca.', 'Pris dans des phares chromés. Le shérif lance un avis sur « un ballon-sonde très impoli ».'],
@@ -972,6 +1038,9 @@ export const fr: Strings = {
       cow: ["MEUH !"],
       clop: ["CLOP CLOP !"],
       rabbit: ["CRAC !"],
+      // v4 2199
+      poetry: ["UN RAPPEL !"],
+      dozer: ["DÉGAGEZ LA ROUTE !"],
       eraLight: ["C'EST QUOI ÇA ?!", 'UNE SOUCOUPE !'],
       eraWatcher: ['HÉ, LYLE ! REGARDE !', 'MON MILK-SHAKE !'],
       eraPolice: ['RANGEZ-VOUS, ENJOLIVEUR !', 'APPELEZ LE SHÉRIF !'],
@@ -1001,6 +1070,9 @@ export const fr: Strings = {
       cow: ["Une vache vient de clouer une soucoupe au sol."],
       clop: ["Un cheval à pied vient de me doubler."],
       rabbit: ["Je le préférais la gueule fermée."],
+      // v4 2199
+      poetry: ["Je préfère tenter ma chance dans le sas."],
+      dozer: ["Artie en a arrêté un en robe de chambre. C’était la tenue réglementaire ?"],
       eraLight: ["Pris dans un projecteur de 1955. Fais le nuage d'orage, Zib — un nuage discret.", "Grillé sous le faisceau ! On reprend avant que quelqu'un écrive un roman de SF sur moi."],
       eraWatcher: ["Le client du café m'a vu ! Reste loin de la vitrine de Lyle au prochain passage.", "Vu par la fenêtre du café ! La prochaine fois, je passe par l'allée."],
       eraPolice: ["Une patrouille de 1955 m'a eu ! Même leurs phares d'époque éclairent trop !", "Repéré par la voiture de police. Retour au dernier témoin — personne n'a rien vu."],
@@ -1095,6 +1167,8 @@ export const fr: Strings = {
       // v4 L9 1955
       // v4 1122
       level10: "Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal lui a donné deux minutes pour sortir une tartine.",
+      // v4 2199
+      level12: "Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : convenable.",
       level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
       level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la D9 vers la ville : le veilleur de Spin City vous attend.',
       level2: "Larry est recensé. La compta a remonté la piste de quarante chaussettes jusqu’à votre soucoupe. Votre badge provisoire est dans le bac. Deux missions chemin des Bouleaux, puis la commande en gros.",
@@ -1144,6 +1218,13 @@ export const fr: Strings = {
     "spare flex capacitor": { one: "{n} convecteur temporaire", other: "{n} convecteurs temporaires" },
     "yellow hazmat suit": { one: "{n} combinaison jaune", other: "{n} combinaisons jaunes" },
     "red puffy vest": { one: "{n} doudoune rouge", other: "{n} doudounes rouges" },
+    // v4 2199
+    "bowl of petunias": { one: "{n} pot de pétunias", other: "{n} pots de pétunias" },
+    "spare dressing gown": { one: "{n} robe de chambre de rechange", other: "{n} robes de chambre de rechange" },
+    "ear fish": { one: "{n} poisson d’oreille", other: "{n} poissons d’oreille" },
+    "electronic travel guide": { one: "{n} guide de voyage électronique", other: "{n} guides de voyage électroniques" },
+    "complaint stamp": { one: "{n} tampon à réclamations", other: "{n} tampons à réclamations" },
+    "answer display": { one: "{n} afficheur de réponses", other: "{n} afficheurs de réponses" },
     "retro skateboard": { one: "{n} skate rétro", other: "{n} skates rétro" },
     "cherry electric guitar": { one: "{n} guitare électrique rouge", other: "{n} guitares électriques rouges" },
     "clock-tower flyer": { one: "{n} tract de l'horloge", other: "{n} tracts de l'horloge" },
@@ -1215,6 +1296,13 @@ export const fr: Strings = {
         got: ["Une doudoune rouge sans manches prise derrière le gymnase. En 1955, tout le monde demande pourquoi le gamin porte un gilet de sauvetage. Bonne question.", "Doudoune rouge classée en « bouée suspecte, encombrante ». Zib la porte sur trois pulls et fond sur place.", "Une doudoune de 1985 égarée en 1955. Crime de mode temporel — et on n'a même pas de Cerfa pour ça."],
         missed: ["Vous avez laissé la doudoune rouge derrière le gymnase. Le chaperon la garde au cas où les garde-côtes débarquent au bal.", "Pas de doudoune rouge. Tant mieux : Zib a déjà bien assez de vestes douteuses en soute."],
       },
+      // v4 2199
+      "bowl of petunias": { got: ["Pot tombé de très haut. Son seul commentaire : « Oh non, pas encore. »"], missed: ["Toujours sur l’étagère : pot de pétunias."] },
+      "spare dressing gown": { got: ["La tenue de cérémonie d’Artie. La même que l’autre, mais il a repassé la ceinture."], missed: ["Toujours sur l’étagère : robe de chambre de rechange."] },
+      "ear fish": { got: ["Se glisse dans l’oreille. Au récital, il a traduit trois strophes par « Déplacez votre véhicule. »"], missed: ["Toujours sur l’étagère : poisson d’oreille."] },
+      "electronic travel guide": { got: ["La fiche de Grimsby, en entier : « Globalement inoffensive. » L’autrice essayait de quitter la ville quand elle l’a rédigée."], missed: ["Toujours sur l’étagère : guide de voyage électronique."] },
+      "complaint stamp": { got: ["La face REÇU est complètement usée. La face RÉPONDU est intacte."], missed: ["Toujours sur l’étagère : tampon à réclamations."] },
+      "answer display": { got: ["Il affiche 42. Au client de fournir la question."], missed: ["Toujours sur l’étagère : afficheur de réponses."] },
       "retro skateboard": {
         got: ["Un skate en bois violet et jaune, visiblement arraché à une trottinette. Lyle dit que filer en skate sans payer, c'est quand même un resto-basket.", "Skate rétro enregistré. Zib a tenté un saut sur la rampe de la soucoupe et inventé trois nouvelles fiches d'hématome.", "Une planche à roulettes maison. Les humains ont inventé la glisse juste pour semer une brute en décapotable."],
         missed: ["Vous avez laissé le skate près du comptoir. Buff trébuchera dessus demain matin et accusera le ciel de toute façon.", "Pas de skate. Tant mieux : notre mutuelle ne couvre pas les entorses d'antenne."],
@@ -1717,6 +1805,30 @@ export const fr: Strings = {
     "I knead five more minutes…": "Encore cinq minutes… je suis pas encore levée…",
     "I’m asleep for security reasons…": "Je dors pour des raisons de sécurité…",
     "There’s the tick… oh. It’s my watch…": "Ce tic-tac… ah, c’est ma montre…",
+    "Artie Duvet": "Artie Duvet",
+    "Penny Thumb": "Penny Thumb",
+    "Moe Dread": "Moe Dread",
+    "Artie": "Artie",
+    "Penny": "Penny",
+    "Moe": "Moe",
+    "Garden door": "Porte du jardin",
+    "Bathroom hatch": "Trappe de la salle de bains",
+    "Service door": "Porte de service",
+    "Ticket loft": "Mezzanine des billets",
+    "Side returns": "Accès aux retours",
+    "Voice vent": "Conduit vocal",
+    "Shower rail": "Tringle de douche",
+    "Baggage cart": "Chariot à bagages",
+    "Luggage shutter": "Rideau à bagages",
+    "Stamp counterweight": "Contrepoids du tampon",
+    // v4 2199
+    "Tea first. Then the end of the world.": "D’abord le thé. La fin du monde après.",
+    "I’m decent. It’s a dressing gown.": "Je suis habillé. C’est une robe de chambre.",
+    "Ch. 1: Leave Grimsby. Ch. 2: See ch. 1…": "Ch. 1 : partir. Ch. 2 : voir ch. 1…",
+    "Local delicacy… bring your own…": "Spécialité locale… à apporter…",
+    "Life. Don’t talk to me about life.": "La vie… ne me parlez pas de la vie.",
+    "Brain the size of a planet. They want me to nap.": "Un cerveau gros comme une planète. Et on me demande de faire la sieste.",
+
     // v4 L9 1955
     Doc: "Doc",
     Buff: "Buff",
@@ -2224,6 +2336,8 @@ export const fr: Strings = {
         comment: "Vous avez rapporté un jardinet. Maintenant ils veulent qu’on abatte un arbre avec un hareng. Je raccroche.",
         missedComment: "Pas de jardinet. Les chevaliers disent Ni à la compta. La compta répond Ni.",
       },
+      // v4 2199
+      bypass_towel: { name: "Serviette de la déviation", memoHint: "votre serviette", comment: "Parfait. Pour une fois, le matériel de secours passe en machine.", missedComment: "Sur le portant à l’ouest du port." },
       time_car: {
         name: "Voiture temporelle",
         memoHint: "voiture temporelle",
@@ -2509,6 +2623,28 @@ export const fr: Strings = {
           weight: '97 kg',
           desc: "Petite frappe de 1955 à la banane en béton, phobique des camions de fumier. Il a envoyé une droite au rayon et l'a raté.",
         },
+        // v4 2199
+        artie: {
+          name: "Artie Duvet",
+          age: "39 ans",
+          height: "178 cm",
+          weight: "73 kg",
+          desc: "A demandé du thé à notre distributeur. Il a reçu quelque chose de presque, mais pas tout à fait, complètement différent du thé.",
+        },
+        penny: {
+          name: "Penny Thumb",
+          age: "33 ans",
+          height: "170 cm",
+          weight: "65 kg",
+          desc: "Est venue à son permis en stop. L’examinateur l’a fait descendre et revenir à pied.",
+        },
+        moe: {
+          name: "Moe Dread",
+          age: "16 ans",
+          height: "165 cm",
+          weight: "104 kg",
+          desc: "Son interrupteur porte la mention PAS MAINTENANT. C’est le seul point du manuel sur lequel il est d’accord.",
+        },
         marvin: {
           name: 'Marvin Cherry',
           age: '29 ans',
@@ -2628,6 +2764,10 @@ export const fr: Strings = {
           at3: "Glisse un peigne dans son blouson avant de dormir pour recoiffer sa banane en plein rayon.",
           at10: "Après dix visites et pas mal de sondes, il s'assoit sur une bouée chez Lyle et jure s'être blessé au sport.",
         },
+        // v4 2199
+        artie: { at3: "S’est plaint que la flotte de démolition s’était garée sur sa rhubarbe. La flotte a répondu. En vers.", at10: "Toujours en robe de chambre. Il se changera quand l’univers aura un sens." },
+        penny: { at3: "A testé notre soucoupe. Deux étoiles. Le minibar était plein de pièces à conviction.", at10: "Fait du stop dès qu’une soucoupe passe. La nôtre fait désormais un détour." },
+        moe: { at3: "A porté plainte contre sa propre sonnerie de redémarrage. Refuse de rencontrer l’accusé.", at10: "« Je vis à ce bureau. Ils m’obligent quand même à le réserver. »" },
         marvin: {
           at3: "Garde un ampli et un coussin en velours dans son coffre : pour lui, nos enlèvements sont un bus de tournée.",
           at10: "Il a accordé sa guitare rouge sur le bourdonnement du rayon. La moitié du bal a flotté à cinq centimètres du sol.",
@@ -2657,6 +2797,8 @@ export const fr: Strings = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer.",
+        // v4 2199
+        bypass_towel: "L’objet le plus utile en voyage. Zib s’en est servi comme cape, oreiller et drapeau blanc. Tout ça ce soir.",
         time_car: "Coupé en inox brossé à portes papillon, pneus cramés et zéro permis. La Propulsion interdit à Zib de voir ce qui se passe à 88.",
         slipper_flyer: "Photocopié en gros Comic Sans, un numéro déjà arraché en bas. Celui qui l'a pris risque d'être sacrément déçu.",
         astronomer: 'Douze ans à guetter le ciel avec sa parabole, enlevé en pleine gorgée de chocolat chaud. Il a réclamé un crochet par Mars.',
@@ -2673,6 +2815,8 @@ export const fr: Strings = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Rempoté · Plus joli que la haie des Henderson. Ne leur dites rien.",
+        // v4 2199
+        bypass_towel: "Modèle réglementaire. Lavage facultatif.",
         time_car: "En fourrière · Bridée à 87 miles à l'heure",
         slipper_flyer: 'Épinglé sur le tableau de Vrell',
         astronomer: 'Débriefé ; refuse de partir',
@@ -2689,6 +2833,8 @@ export const fr: Strings = {
         // v4 L9 1955
         // v4 1122
         shrubbery: "Sur la rive ouest, les plus bruyants réclament un peu de verdure.",
+        // v4 2199
+        bypass_towel: "Sur le portant à l’ouest du port.",
         time_car: "Relisez la note : une voiture à portes papillon non déclarée fonce vers l'horloge avant 22 h 04.",
         slipper_flyer: 'La note de service évoque un avis de chausson perdu près de la laverie.',
         astronomer: "Relisez la note : quelqu'un en banlieue a sorti une parabole pleine d'espoir.",
@@ -2718,6 +2864,13 @@ export const fr: Strings = {
       "spare flex capacitor": "Trois tubes qui clignotent dans un boîtier en métal. Ouvre le voyage dans le temps — et annule toute garantie galactique.",
       "yellow hazmat suit": "Vinyle jaune canari avec étui à sèche-cheveux. Entré dans le folklore terrien comme « tenue de soirée martienne ».",
       "red puffy vest": "Doudoune rouge venue de trente ans dans le futur. En 1955, toute la ville pense que son proprio est tombé d'un bateau.",
+      // v4 2199
+      "bowl of petunias": "Pot tombé de très haut. Son seul commentaire : « Oh non, pas encore. »",
+      "spare dressing gown": "La tenue de cérémonie d’Artie. La même que l’autre, mais il a repassé la ceinture.",
+      "ear fish": "Se glisse dans l’oreille. Au récital, il a traduit trois strophes par « Déplacez votre véhicule. »",
+      "electronic travel guide": "La fiche de Grimsby, en entier : « Globalement inoffensive. » L’autrice essayait de quitter la ville quand elle l’a rédigée.",
+      "complaint stamp": "La face REÇU est complètement usée. La face RÉPONDU est intacte.",
+      "answer display": "Il affiche 42. Au client de fournir la question.",
       "retro skateboard": "Planche violette et jaune arrachée à une trottinette. Quatre roulettes en fer, zéro frein et une addition de 1955 collée dessus.",
       "cherry electric guitar": "Demi-caisse rouge cerise au micro roussi. Poussée si fort au bal qu'elle a brièvement fissuré le continuum espace-temps.",
       "clock-tower flyer": "Clame « SAUVEZ L'HORLOGE ! » en gros caractères de 1955. Au dos, quelqu'un a griffonné en panique un numéro et « 22 h 04 ».",

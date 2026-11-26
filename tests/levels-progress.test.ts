@@ -90,19 +90,20 @@ describe('glorbs and ranks', () => {
 });
 
 describe('unlocks', () => {
-  it('opens each next district on its predecessor’s delivery star alone', () => {
+  it('opens each sequential district on its predecessor’s delivery star alone', () => {
     let save = defaultSave();
     for (const [index, level] of LEVELS.entries()) {
+      if (level.requires) continue;
       expect(nextDispatchIndex(save)).toBe(index);
-      expect(LEVELS.map((_, i) => isLevelUnlocked(save, i))).toEqual(LEVELS.map((_, i) => i <= index));
+      expect(LEVELS.map((_, i) => isLevelUnlocked(save, i))).toEqual(LEVELS.map((lv, i) => lv.requires ? lv.requires.every(id => save.levels[id]?.delivered) : i <= index));
       const outcome = level.kind === 'tutorial'
         ? applyRun(save, level.id, abduct({ woke: true, timeSec: 999 }), flight())
         : applyDeepRun(save, level.id, { delivered: 3, spotted: 1, failedAbductions: 1, elapsedSec: level.budgetSec - 1, sunrise: false });
       expect(outcome.stars).toEqual([true, false, false, false]);
-      expect(outcome.unlockedNext).toBe(index < LEVELS.length - 1);
+      expect(outcome.unlockedNext).toBe(LEVELS.some((_, i) => !isLevelUnlocked(save, i) && isLevelUnlocked(outcome.save, i)));
       save = outcome.save;
     }
-    expect(nextDispatchIndex(save)).toBe(-1);
+    expect(LEVELS.filter(l => !l.requires).every(l => save.levels[l.id].delivered)).toBe(true);
   });
 
   it('level 2 unlocks only after level 1 is delivered', () => {

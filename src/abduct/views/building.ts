@@ -1,9 +1,11 @@
+import { paintDispatchProp } from '../dispatch-art';
 import { caveBackdrop, paintCaveProp } from '../monolith-art';
 import { Container, Graphics, type Sprite as PixiSprite } from 'pixi.js';
 import { ART } from '../../art-manifest';
 import { VIEW_H, VIEW_W, type Assets } from '../../contracts';
 import { GLOW, Glow, ScreenTint, glowTexture } from '../../core/gfx/glow';
 import { artSprite } from '../../ui/views/art';
+import { Label } from '../../core/gfx/text';
 import { getLang } from '../../i18n';
 import { letteredKey } from '../probe-draw';
 import type { Building, InteriorRoom, Opening } from '../rooms/interior';
@@ -238,7 +240,7 @@ export function roomArt(assets: Assets, key: string, x: number, y: number, w: nu
     root.addChild(image);
   } else {
     root.addChild(bitmap(`room|${drawKey}|${lang}|${w}|${h}|${solid}`, 0, 0, w, h, g => {
-      if (paintCaveProp(g, key, w, h) || paintRoom55(g, key, w, h)) return;
+      if (paintDispatchProp(g, key, w, h) || paintCaveProp(g, key, w, h) || paintRoom55(g, key, w, h)) return;
       const fallback = DECOR_FALLBACKS[key];
       if (fallback) {
         g.lineWidth = 2.5;
@@ -266,6 +268,12 @@ export function roomArt(assets: Assets, key: string, x: number, y: number, w: nu
         if (w >= 87 && h >= 30) label(g, FALLBACK_NAMES.get(key) ?? '', w / 2, h * 0.52, '750 12px system-ui', '#e2cce3', w - 14);
       }
     }));
+  }
+  if (key === 'room/answer_display2199' || key === 'room/electronic_guide2199') {
+    const guide = key === 'room/electronic_guide2199';
+    const look = { size: guide ? 10 : 19, color: guide ? '#394945' : '#f1cb78', weight: 900 };
+    root.addChild(new Label(look).set(guide ? 'GRIMSBY' : '42', w / 2, h * (guide ? 0.29 : 0.44), w * 0.73));
+    if (guide) root.addChild(new Label(look).set('★☆☆☆☆', w / 2, h * 0.47, w * 0.72));
   }
   if (solid) root.addChild(new Graphics().rect(0.7, 0.7, w - 1.4, h - 1.4).stroke({ color: 'rgba(235,207,172,0.38)', width: 1.4 }));
   return root;

@@ -10,5 +10,6 @@ export function shownStarLabels(lv: LevelDef): string[] {
     : isDeep(lv) && lv.map.targets.length < 3 ? [starLabels.tutorial[0]!, starLabels.deep[1]!, starLabels.deep[2]!]
     : isDeep(lv) ? starLabels.deep : starLabels.tutorial;
   const id = lv.map.collectible?.id;
+  if (id === 'bypass_towel') return [...base, tr().dispatch2199.towel];
   return id ? [...base, tr().mapCollectibles.items[id].name] : [...base];
 }

@@ -21,7 +21,9 @@ export type Human = 'doyle' | 'larry' | 'dave' | 'barb' | 'gary' | 'nigel' | 'ke
   // v4 Birch Lane
   | 'mabel' | 'nora' | 'len'
   // v4 1122
-  | 'rodney' | 'black_knight' | 'tom_enchanter';
+  | 'rodney' | 'black_knight' | 'tom_enchanter'
+  // v4 2199
+  | 'artie' | 'penny' | 'moe';
 
 export interface Sprite {
   key: string;

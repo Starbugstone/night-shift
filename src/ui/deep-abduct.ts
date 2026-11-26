@@ -90,11 +90,12 @@ class DeepShiftView implements SceneView {
     private readonly reduced: () => boolean,
     private readonly time: () => number,
   ) {
+    const demolition = run.level.id === 'level12';
     const storm = run.level.id === 'level9';
     const room = run.current?.roomId;
     this.clockX = room === 'inventor_balcony' || room === 'bully_transom' || room === 'band_hatch' ? 14 : DEEP_HUD_SUNRISE_SLOT.x;
-    this.sun = run.level.clockMode === 'elapsed' ? new HudTimer() : new HudSunClock(storm ? null : artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h),
-      storm ? tr().crestValley.left : run.level.id === 'level8' ? tr().timeTrial.left : undefined, storm);
+    this.sun = run.level.clockMode === 'elapsed' ? new HudTimer() : new HudSunClock(storm || demolition ? null : artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h),
+      demolition ? tr().dispatch2199.deadline : storm ? tr().crestValley.left : run.level.id === 'level8' ? tr().timeTrial.left : undefined, storm || demolition);
     this.sun.alpha = 0.92;
     this.warning.position.set(DEEP_HUD_WARNING_SLOT.x, DEEP_HUD_WARNING_SLOT.y);
     this.warning.addChild(this.panel, this.caption);
@@ -113,14 +114,14 @@ class DeepShiftView implements SceneView {
     }
     const { y, w, h } = DEEP_HUD_SUNRISE_SLOT;
     if (this.sun instanceof HudTimer) this.sun.sync(this.clockX, y, w, h, this.clock);
-    else this.sun.sync(this.clockX, y, w, h, this.clock, elapsed / budget, deadlineWarning, t, rm);
-    this.warning.visible = deadlineWarning > 0.5;
+    else this.sun.sync(this.clockX, y, w, h, this.clock, elapsed / budget, deadlineWarning, t, rm || this.run.level.id === 'level12');
+    this.warning.visible = deadlineWarning > (this.run.level.id === 'level12' ? 0 : 0.5);
     if (this.warning.visible) {
       const warn = DEEP_HUD_WARNING_SLOT;
-      const on = rm || Math.floor(t * 2) % 2 === 0;
+      const on = this.run.level.id === 'level12' || rm || Math.floor(t * 2) % 2 === 0;
       this.panel.set(warn.w, warn.h, on ? C.amber : C.ink);
       this.caption.tint = on ? C.amberHi : C.muted;
-      this.caption.set(this.run.level.id === 'level9' ? tr().crestValley.deadline : tr().hud.sunComing, warn.w / 2, warn.h / 2, warn.w - 20);
+      this.caption.set(this.run.level.id === 'level12' ? tr().dispatch2199.deadline : this.run.level.id === 'level9' ? tr().crestValley.deadline : tr().hud.sunComing, warn.w / 2, warn.h / 2, warn.w - 20);
     }
   }
 

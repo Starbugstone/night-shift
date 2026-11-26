@@ -1,3 +1,4 @@
+import { paintDispatchProp } from '../../abduct/dispatch-art';
 // v4 trophy room: cached Pixi textures for souvenir exhibits (full-colour art or painted fallback),
 // animated town pickup figures via Fable's `PickupFigure` (`src/flight/views/collectible.ts`),
 // crisp dark-lavender silhouettes for unfound slots, and the Work Orders trophy-cup / Field Finds icons.
@@ -21,7 +22,7 @@ const SILHOUETTE_COLOR = '#463c7a';
 
 /** Paint any souvenir's primitive fallback into a w×h Canvas 2D context. */
 export function paintTrophyFallback(g: CanvasRenderingContext2D, key: string, w: number, h: number): void {
-  if (paintSouvenir(g, key, w, h)) return;
+  if (paintDispatchProp(g, key, w, h) || paintSouvenir(g, key, w, h)) return;
   if (paintCaveProp(g, key, w, h)) return;
 
   g.save();
@@ -146,6 +147,20 @@ export function fitArtSize(artW: number, artH: number, maxW: number, maxH: numbe
 /** Full-colour exhibit texture (SVG art if loaded, else crisp painted fallback) at w×h. */
 export function trophyArtTexture(assets: Assets, key: string, w: number, h: number): Texture {
   const img = assets.get(key);
+  if (key === 'room/answer_display2199' || key === 'room/electronic_guide2199') {
+    const guide = key === 'room/electronic_guide2199';
+    const ready = !!img && img.complete && img.naturalWidth > 0;
+    return paintedTexture(`trophy|display|${key}|${ready}|${w}x${h}`, w, h, g => {
+      if (ready) g.drawImage(img, 0, 0, w, h);
+      else paintTrophyFallback(g, key, w, h);
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillStyle = guide ? '#394945' : '#f1cb78';
+      g.font = `900 ${h * (guide ? 0.15 : 0.47)}px sans-serif`;
+      g.fillText(guide ? 'GRIMSBY' : '42', w / 2, h * (guide ? 0.29 : 0.44), w * 0.73);
+      if (guide) g.fillText('★☆☆☆☆', w / 2, h * 0.47, w * 0.72);
+    });
+  }
   const svgTex = artTexture(img, w, h);
   if (svgTex) return svgTex;
   return paintedTexture(`trophy|art|${key}|${w}x${h}`, w, h, (g, ww, hh) => {

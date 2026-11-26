@@ -112,6 +112,7 @@ export class PilotView {
   private readonly sweat: Graphics;
   private readonly note: Graphics;
   private readonly stars: Graphics[] = [];
+  coverEars = false;
   private mouthOn: PilotMouth = 'tongue';
 
   constructor() {
@@ -270,6 +271,10 @@ export class PilotView {
     const dig = rm ? 0 : Math.sin(t * 15) * 0.7 * pick;
     lx += (noseX - 2 - lx) * pick;
     ly += (noseY + 3 + dig - ly) * pick;
+    if (this.coverEars) {
+      lx = bx - 17; rx = bx + 17;
+      ly = ry = by + HEAD_Y - 1;
+    }
     this.handL.position.set(lx, ly);
     this.handR.position.set(rx, ry);
     this.handL.rotation = pick * -0.6;

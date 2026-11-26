@@ -377,6 +377,8 @@ export class DeepAbductView implements SceneView {
   private readonly reticle = new Reticle(true);
   private readonly delivery = new DeliveryView();
   private readonly exposure = new ExposureView();
+  private readonly thumb?: Graphics;
+  private thumbUntil = -1;
   private readonly speech = new SpeechBubble(true);
   private readonly bang = new WakeBurst(true);
   private readonly snore: SnoreView;
@@ -415,7 +417,14 @@ export class DeepAbductView implements SceneView {
     this.roomPaths = navigation(building, sim.exitX, sim.exitY);
     this.specimen = sim.body.plan.kind === 'dolphin' ? new DolphinArt(ctx, sim.wet) : new HumanArt(sim.room.human, ctx);
     this.item = prop(assets, sim.room.item.sprite);
+    if (sim.room.human === 'penny') {
+      this.thumb = new Graphics().moveTo(-6, 5).lineTo(-6, -3).lineTo(-1, -4).lineTo(2, -15)
+        .quadraticCurveTo(8, -17, 7, -7).lineTo(7, -3).quadraticCurveTo(13, -3, 12, 2)
+        .lineTo(9, 7).closePath().fill('#c78e70').stroke({ color: INK, width: 2 });
+      this.thumb.visible = false;
+    }
     this.subject.addChild(this.specimen.root);
+    if (this.thumb) this.subject.addChild(this.thumb);
     if (sim.wet) this.wet = new WetView(sim.wet);
     if (probes) this.paperwork = new ProbePaperwork(probes, assets, sim.room.exitZone);
     this.night = new DeepNight(building.bounds.y + building.bounds.h - 14);
@@ -433,6 +442,8 @@ export class DeepAbductView implements SceneView {
 
     const world = this.world;
     world.addChild(this.building.root, this.exit.root);
+    if (sim.room.item.name === 'complaint stamp') world.addChild(new Label({ size: 13, color: '#ffe3bb', weight: 700 })
+      .set(tr().dispatch2199.tray, 473, 460, 210));
     if (this.crestValley) world.addChild(this.crestValley.back);
     if (this.birch) world.addChild(this.birch.root);
     for (let i = 0; i < hazards.length; i++) {
@@ -541,6 +552,15 @@ export class DeepAbductView implements SceneView {
     const awake = wake.awake > 0;
     const breath = rm ? 0 : awake ? 0.5 + 0.5 * Math.sin(elapsed * 15)
       : snoreFx > 0 ? Math.sin(Math.PI * clamp((1.1 - snoreFx) / 1.1, 0, 1)) : 0;
+    if (this.thumb) {
+      if (this.thumbUntil < 0 && sim.moved && wake.value >= 55) this.thumbUntil = elapsed + 0.5;
+      this.thumb.visible = this.thumbUntil > elapsed && !delivered;
+      if (this.thumb.visible) {
+        const hx = body.x[Joint.NearHand]!, hy = body.y[Joint.NearHand]!;
+        this.thumb.position.set(hx, hy);
+        this.thumb.rotation = Math.atan2(sim.exitY - hy, sim.exitX - hx) + Math.PI / 2;
+      }
+    }
     this.specimen.sync(body, awake, breath);
     const x = body.x[Joint.Head]!;
     const y = body.y[Joint.Head]!;

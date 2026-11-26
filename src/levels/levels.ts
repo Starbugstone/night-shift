@@ -12,6 +12,8 @@ import { LEVEL8 } from './deep-monolith';
 import { LEVEL9 } from './deep-1955';
 // v4 1122
 import { LEVEL10 } from './deep-grail';
+// v4 2199
+import { LEVEL12 } from './deep-2199';
 // L7 cruise code
 import { LEVEL7 } from './deep-ship';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from './types';
@@ -210,6 +212,8 @@ export const LEVELS: readonly LevelDef[] = [
   LEVEL9,
   // v4 1122
   LEVEL10,
+  // v4 2199
+  LEVEL12,
 ];
 
 export function workOrderNumber(id: string, order: readonly { id: string }[] = LEVELS): number {
@@ -271,6 +275,7 @@ export const ROOM_IDS: readonly RoomId[] = [
   // v4 L8
   'echo_appeal',
   // v4 L9 1955
+  'artie_garden', 'artie_bath', 'penny_service', 'penny_loft', 'moe_returns', 'moe_vent',
   'inventor_balcony', 'inventor_service', 'bully_transom', 'bully_kitchen', 'band_hatch', 'band_canopy',
   // v4 1122
   'rodney_flap', 'rodney_loft', 'black_knight_arch', 'black_knight_loft', 'tom_stair', 'tom_smoke',

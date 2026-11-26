@@ -1,3 +1,4 @@
+import { readSeconds } from '../core/read-time';
 import { Container, Graphics } from 'pixi.js';
 import type { AbductResult, Assets, FlightResult, Scene } from '../contracts';
 import { deepComment, storyFirstClear, sunriseMemo } from '../levels/humor'; // v4 story
@@ -53,7 +54,7 @@ export interface ReportModel {
   /** Small line under the title. */
   subtitle: string;
   rows: Array<[string, string]>;
-  stamp: 'delivered' | 'failed' | 'sunrise' | 'storm';
+  stamp: 'delivered' | 'failed' | 'sunrise' | 'storm' | 'demolition';
   archive?: string;
   bakerySign?: boolean;
   starLabels: readonly string[];
@@ -115,7 +116,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   if (lv.clockMode === 'elapsed') {
     time = fmt(tr().birch.timeAgainstPar, { used: fmtTime(Math.ceil(run.elapsed)), par: fmtTime(deepPar(lv)) });
   } else if (sunrise) {
-    time = lv.id === 'level9' ? tr().crestValley.ranOut
+    time = lv.id === 'level12' ? tr().dispatch2199.deadline : lv.id === 'level9' ? tr().crestValley.ranOut
       : lv.id === 'level8' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] });
   } else {
     // Round down the spare time so a missed par cannot appear to have been met.
@@ -134,7 +135,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
       [r.items, itemsPhrase(run.totals.items)],
       ...(pickup ? [pickup.row] : []),
     ],
-    stamp: sunrise ? (lv.id === 'level9' ? 'storm' : 'sunrise') : 'delivered',
+    stamp: sunrise ? (lv.id === 'level12' ? 'demolition' : lv.id === 'level9' ? 'storm' : 'sunrise') : 'delivered',
     archive: lv.id === 'level9' ? tr().crestValley.archive : lv.id === 'level10' ? tr().grail.archive : undefined,
     bakerySign: lv.id === 'birch_bakery' && outcome.stars[0],
     starLabels: shownStarLabels(lv),
@@ -148,8 +149,9 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
     ...(run.photo ? { photo: run.photo } : {}),
     cover: lv.id === 'level10' && !sunrise && run.collectible?.collectedId ? tr().grail.greenery
       : lv.id === 'level10' && outcome.stars[1] ? tr().grail.ghost
+      : lv.id === 'level12' ? sunrise ? tr().dispatch2199.deadline : outcome.stars[1] ? tr().dispatch2199.ghost : tr().dispatch2199.cover
       : coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, firstClear, seed: outcome.save.reports }),
-    headline: tabloidHeadline(lv.id, run.spotted, outcome.save.reports),
+    headline: lv.id === 'level12' && sunrise && run.spotted >= 2 ? tr().dispatch2199.gazette : tabloidHeadline(lv.id, run.spotted, outcome.save.reports),
     readings: run.probeReadings,
   };
 }
@@ -179,13 +181,14 @@ export class ReportScene implements Scene {
     readonly model: ReportModel,
     readonly outcome: RunOutcome,
     private readonly advance?: () => void,
+    private readonly finale?: () => void,
   ) {
     this.end = model.headline ? TABLOID_END : END;
     const successor = levelIndex + 1;
     const branching = LEVELS[levelIndex]?.requires || LEVELS[successor]?.requires;
     // At a fork the report returns to Work Orders so the player chooses the date.
     this.hasNext = !branching && isLevelUnlocked(outcome.save, successor);
-    this.next.label = advance ? tr().fieldCheckControls.short : model.delivered && this.hasNext ? tr().common.next : tr().common.workOrders;
+    this.next.label = finale ? tr().dispatch2199.replay : advance ? tr().fieldCheckControls.short : model.delivered && this.hasNext ? tr().common.next : tr().common.workOrders;
     if (this.next.label.length > 9) this.next.size = 26;
   }
 
@@ -198,11 +201,13 @@ export class ReportScene implements Scene {
     const p = this.shell.ctx.pointer;
     const audio = this.shell.audio;
     const rm = this.shell.ctx.reducedMotion;
-    const ready = this.t > 0.8;
+    const ready = this.t > (this.finale ? COMMENT_AT : 0.8);
     this.retry.enabled = ready;
     this.next.enabled = ready;
+    if (this.finale && this.t >= this.end + readSeconds(this.model.comment)) return this.finale();
     if (this.retry.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
     if (this.next.update(p, dt, audio)) {
+      if (this.finale) return this.finale();
       if (this.advance) return this.advance();
       if (this.model.delivered && this.hasNext) return this.shell.toMemo(this.levelIndex + 1);
       return this.shell.toWorkOrders();
@@ -509,12 +514,12 @@ function approvedStamp(assets: Assets, ap: ReportLayout['approved'], caption: st
 
 function resultStamp(assets: Assets, result: ReportModel['stamp']): Container {
   const key = result === 'delivered' ? 'ui/stamp_delivered' : result === 'sunrise' ? 'ui/stamp_sunrise' : 'ui/stamp_failed';
-  const art = result === 'storm' ? null : artSprite(assets, localArt(key), 240, 120);
+  const art = result === 'demolition' || result === 'storm' ? null : artSprite(assets, localArt(key), 240, 120);
   if (art) return art;
   const root = new Container();
   const col = result === 'delivered' ? '#1f9a6c' : result === 'failed' ? '#d33a52' : '#d9782a';
   const r = tr().report;
-  const caption = result === 'storm' ? tr().crestValley.stamp : result === 'delivered' ? r.stampDelivered : result === 'sunrise' ? r.stampSunrise : r.stampRejected;
+  const caption = result === 'demolition' ? tr().dispatch2199.deadline : result === 'storm' ? tr().crestValley.stamp : result === 'delivered' ? r.stampDelivered : result === 'sunrise' ? r.stampSunrise : r.stampRejected;
   const outline = roundRect(new Graphics(), -120, -46, 240, 92, 14).stroke({ color: col, width: 8 });
   roundRect(outline, -108, -35, 216, 70, 8).stroke({ color: col, width: 3 });
   root.addChild(outline, new Label({ size: 40, color: col, weight: 900 }).set(caption, 0, 2, 196));

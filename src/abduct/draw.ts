@@ -246,6 +246,7 @@ const SHIRTS: Record<Human, string> = {
   hank: '#b98b5e', osei: '#4f8f8a', pemberton: '#c9cfe0',
   // v4 L9 1955
   rodney: '#8a9254', black_knight: '#4e3e48', tom_enchanter: '#815e7b',
+  artie: '#965b78', penny: '#a57d48', moe: '#90a5ab',
   doc: '#e0d6b1', buff: '#533752', marvin: '#88516c',
 };
 const PANTS: Record<Human, string> = {
@@ -262,6 +263,7 @@ const PANTS: Record<Human, string> = {
   hank: '#7f8aa8', osei: '#3f7773', pemberton: '#c9cfe0',
   // v4 L9 1955
   rodney: '#634a43', black_knight: '#574657', tom_enchanter: '#554353',
+  artie: '#784960', penny: '#415063', moe: '#54576a',
   doc: '#8b7258', buff: '#5b536b', marvin: '#39304e',
 };
 
@@ -310,10 +312,11 @@ export class HumanArt implements SpecimenArt {
     const head = part(key + '_head', skin);
     const awakeHead = part(key + '_head_awake', skin);
     const torso = part(key + '_torso', SHIRTS[human]);
-    const upperArm = part(key + '_upper_arm', SHIRTS[human]);
-    const lowerArm = part(key + '_lower_arm', human === 'marvin' ? skin : '#c18b77');
-    const upperLeg = part(key + '_upper_leg', PANTS[human]);
-    const lowerLeg = part(key + '_lower_leg', PANTS[human]);
+    const limbs = human === 'artie' ? 'human/doc' : human === 'penny' ? 'human/larry' : human === 'moe' ? 'human/buff' : key;
+    const upperArm = part(limbs + '_upper_arm', SHIRTS[human]);
+    const lowerArm = part(limbs + '_lower_arm', human === 'marvin' ? skin : '#c18b77');
+    const upperLeg = part(limbs + '_upper_leg', PANTS[human]);
+    const lowerLeg = part(limbs + '_lower_leg', PANTS[human]);
     this.ape = human === 'echo' || human === 'flint' || human === 'reed' ? new ApeLimbProjection() : null; // v4 L8
     const parts = [
       [upperArm, Joint.Neck, Joint.FarElbow], [lowerArm, Joint.FarElbow, Joint.FarHand],

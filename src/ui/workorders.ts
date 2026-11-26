@@ -35,6 +35,14 @@ function rankText(r: Rank): { title: string; flavour: string } {
   return tr().ranks[RANKS.indexOf(r)] ?? r;
 }
 
+function outstandingOrders(save: Shell['save'], index: number): string {
+  const eras: Record<string, string> = { level10: '1122', level11: '1953' };
+  const levels: Record<string, { human: string }> = tr().levels;
+  return dispatchRequirements(LEVELS, index)
+    .filter(id => !save.levels[id]?.delivered)
+    .map(id => levels[id]?.human ?? eras[id] ?? id).join(tr().report.listSep);
+}
+
 interface Card {
   kind: 'level' | 'concept';
   index: number;
@@ -132,8 +140,7 @@ export class WorkOrdersScene implements Scene {
     card.shake = 1;
     this.shell.audio.sfx('bonk', 0.4);
     const w = tr().workOrders;
-    const prev = LEVELS[card.index - 1];
-    this.toast = fmt(w.deliverFirst, { name: prev ? tr().levels[prev.id].human : w.lastSpecimen });
+    this.toast = fmt(w.deliverFirst, { name: outstandingOrders(this.shell.save, card.index) || w.lastSpecimen });
     this.toastT = 2.4;
   }
 
@@ -211,7 +218,7 @@ class WorkOrdersView implements SceneView {
     );
     if (nr) this.root.addChild(new Label({ size: 15, color: C.muted, align: 'left', weight: 700 }).set(fmt(strings.nextRank, { n: nr.minStars }), 44, 224, colW));
     const flavour = new Label({ size: nr ? 14 : 15, color: nr ? 'rgba(169,162,214,0.8)' : C.muted, align: 'left', italic: true });
-    this.root.addChild(flavour.set(rank.flavour, 44, nr ? 244 : 232, colW), this.upgrades, this.toast);
+    this.root.addChild(flavour.set(save.levels.level12.delivered && rank.title === tr().ranks[3]!.title ? tr().dispatch2199.parking : rank.flavour, 44, nr ? 244 : 232, colW), this.upgrades, this.toast);
   }
 
   sync(): void {
@@ -287,7 +294,7 @@ class LevelCard {
     roundRect(card, 4, 4, 12, CARD_H - 8, 6).fill(!unlocked ? '#4a4470' : training ? C.mint : C.amber);
     if (unlocked && !training) roundRect(card, 4, CARD_H / 2, 12, (CARD_H - 8) / 2, 6).fill(C.red);
     this.root.addChild(card);
-    if (lv.kind === 'deep') {
+    if (lv.kind === 'deep' && lv.id !== 'level12') {
       const cx = CARD_W - 66;
       const anchors = [[cx - 26, 46], [cx + 24, 44], [cx - 2, 84]] as const;
       for (const [i, target] of lv.map.targets.entries()) {
@@ -323,14 +330,13 @@ class LevelCard {
     this.root.addChild(new Label({ size: 16, color: unlocked ? C.muted : C.amber, align: 'left', weight: 700 })
       .set(lt.location, 34, 56 + lines * 28, CARD_W - 150));
 
-    this.sun = unlocked && lv.kind === 'deep' && lv.clockMode !== 'elapsed' && lv.id !== 'level9' ? new SunIcon(5.5, 8, 11.5) : null;
+    this.sun = unlocked && lv.kind === 'deep' && lv.clockMode !== 'elapsed' && lv.id !== 'level9' && lv.id !== 'level12' ? new SunIcon(5.5, 8, 11.5) : null;
     this.arrow = unlocked ? this.openBadge(training) : null;
     if (!unlocked) {
-      const missing = dispatchRequirements(LEVELS, index).filter(id => !save.levels[id].delivered);
       this.root.addChild(
         padlock(CARD_W - 34, 84),
         new Label({ size: 17, color: C.amberHi, align: 'left', weight: 700 })
-          .set(fmt(strings.deliverToUnlock, { name: missing.map(id => levels[id].human).join(tr().report.listSep) }), 34, CARD_H - 30, CARD_W - 110),
+          .set(fmt(strings.deliverToUnlock, { name: outstandingOrders(save, index) }), 34, CARD_H - 30, CARD_W - 110),
       );
       return;
     }
@@ -347,7 +353,7 @@ class LevelCard {
       this.root.addChild(star);
     }
     if (lv.kind === 'deep' && lv.clockMode !== 'elapsed') {
-      const label = fmt(lv.id === 'level9' ? tr().crestValley.duration : strings.sunriseIn, { time: fmtTime(lv.budgetSec) });
+      const label = fmt(lv.id === 'level12' ? tr().dispatch2199.duration : lv.id === 'level9' ? tr().crestValley.duration : strings.sunriseIn, { time: fmtTime(lv.budgetSec) });
       this.root.addChild(new Label({ size: 16, color: C.amberHi, align: 'right', weight: 800 }).set(label, CARD_W - 24, CARD_H - 44, CARD_W - 230));
       if (this.sun) {
         this.sun.root.position.set(CARD_W - 42 - measure(label, 16, 800), CARD_H - 43);

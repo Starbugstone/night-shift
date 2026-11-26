@@ -10,6 +10,7 @@ import { clamp, Contact, Ragdoll, STEP, type Blade, type Circle, type Rect, type
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
 import { GrailExit, GrailReaction } from './grail';
 import { AWAKE_SECONDS, WakeMeter } from './wake';
+import { tr } from '../i18n';
 import { readSeconds } from '../core/read-time';
 
 export const BEAM_BOUNDS = { left: 47, top: 146, right: 491, bottom: 800 };
@@ -33,6 +34,7 @@ const HUMAN_NAMES = {
   hank: 'Hank', osei: 'Dr. Osei', pemberton: 'Mr. Pemberton',
   // v4 L9 1955
   rodney: 'Sir Rodney the Not-Quite-So-Brave', black_knight: 'The Black Knight', tom_enchanter: 'Tom the Enchanter',
+  artie: 'Artie Duvet', penny: 'Penny Thumb', moe: 'Moe Dread',
   doc: 'Doc', buff: 'Buff Tanner', marvin: 'Marvin Cherry',
 } as const;
 const HOLD_INTENT: AbductAutopilotIntent = { dx: 0, dy: 0 };
@@ -168,6 +170,7 @@ export class AbductSimulation {
   private beamMoved = false;
   /** The room's pop-culture prop (centre) and its line, until it has been said. */
   private propCue: { room: Area; line: string } | undefined;
+  private pendingSulk = -1;
   private liftAt = -1;
   private squashed = false;
   private lift = 0;
@@ -418,6 +421,10 @@ export class AbductSimulation {
 
     const grailLine = this.grail?.step(this.body, this.beamMoved, this.wake.value, this.mumbleFx > 0);
     if (grailLine) this.sleepTalk(grailLine);
+    if (this.pendingSulk >= 0 && this.wake.awake === 0 && this.mumbleFx === 0) {
+      this.sleepTalk(tr().dispatch2199.sulks[this.pendingSulk]);
+      this.pendingSulk = -1;
+    }
     const cue = this.propCue;
     if (this.beamMoved && this.liftAt < 0) this.liftAt = this.elapsed;
     if (cue && this.liftAt >= 0 && this.elapsed - this.liftAt >= PROP_CUE_DELAY && this.wake.awake === 0 && this.mumbleFx === 0) {
@@ -466,7 +473,8 @@ export class AbductSimulation {
     this.interior?.noise((cat ? 46 : clamp((speed - 40) * 0.29, 0, 70)), x, y);
     this.grail?.impact(this.body, x, this.elapsed);
     this.onWake(wasAwake);
-    if (!this.grail?.knight && this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
+    if (this.room.human === 'moe') this.pendingSulk = Math.min(2, this.bonkSeq - 1);
+    else if (!this.grail?.knight && this.wake.awake === 0 && !cat && speed >= 120) this.sleepTalk();
   }
 
   /** L5: splashes wake people up; a dolphin that dries out wakes squeaking. */

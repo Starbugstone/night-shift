@@ -1,3 +1,4 @@
+import { dispatchCrossing } from './dispatch-crossing';
 import { moveBone, canPassBone, tossTime } from './monolith';
 import { CameraCone } from './camera-cone';
 import type { AbductFailReason, Audio } from '../contracts';
@@ -403,6 +404,7 @@ export class InteriorSimulation {
       const duration = Math.hypot(target.x - from.x, target.y - from.y) / speed;
       return p >= margin && p + duration + 0.62 < spec.cycle.open - margin;
     }
+    if (spec.kind === 'patrol' || spec.kind === 'swing') return dispatchCrossing(spec, from, target, time, speed) ?? true;
     if (spec.kind === 'fan') {
       const dx = target.x - from.x;
       const dy = target.y - from.y;

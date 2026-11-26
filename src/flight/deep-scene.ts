@@ -103,6 +103,10 @@ export class DeepFlightScene implements Scene {
   private done = false;
   bannerT = 0;
   private pendingOpener: DeepZibEvent | null = null; // v4 story
+  verseT = 0;
+  verse = '';
+  private reciterNear = false;
+  private versePending = false;
   private gagNear = -1;
   /** Seconds since the last respawn at a checkpoint, or -1. */
   cpT = -1;
@@ -143,7 +147,10 @@ export class DeepFlightScene implements Scene {
       this.bannerT = 3;
       this.pendingOpener = deepStartEvent(this.level.id); // v4 story
       // v4 voices: Bureau dispatch reads the work order banner over the PA
-      this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.bannerBody}.`, 'bureau', { within: 2.9 });
+      if (this.pendingOpener === 'start12') {
+        this.pendingOpener = null;
+        this.say('start12', true);
+      } else this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.bannerBody}.`, 'bureau', { within: 2.9 });
     }
     else if (this.run.legs > 0 && this.run.deliveredCount > 0 && this.run.lastFail === null) {
       this.say(this.level.id === 'birch_neighbours' ? 'birchReturned'
@@ -169,8 +176,10 @@ export class DeepFlightScene implements Scene {
 
   get bannerHeading(): string {
     const words = tr();
+    if (this.practice && this.level.id === 'level12') return words.dispatch2199.practice;
     if (this.practice) return fmt(words.fieldCheck.re, { num: formatOrderNumber(workOrderNumber('level2')) });
     const num = formatOrderNumber(this.run.levelIndex + 1);
+    if (this.level.id === 'level12') return fmt(words.levels.level12.re, { num });
     if (this.level.id === 'level9') return fmt(words.crestValley.order, { num });
     return this.level.id === 'level8' || this.level.clockMode === 'elapsed'
       ? fmt(words.workOrders.orderNo, { num })
@@ -206,6 +215,7 @@ export class DeepFlightScene implements Scene {
   }
 
   private say(evt: DeepZibEvent, force = false, panic = false): void {
+    if (evt !== 'start12' && (this.pendingOpener === 'start12' || this.zibEvent === 'start12' && this.zibT > 0)) return;
     if (!force && this.zibCd > 0) return;
     // flavour lines wait their turn: they don't cut a line the player is still reading
     if (force && !panic && FLAVOUR.has(evt) && this.zibT > 0 && this.zibFor - this.zibT < FRESH_LINE_SECONDS) return;
@@ -262,7 +272,7 @@ export class DeepFlightScene implements Scene {
       return;
     }
     if (!wasWarning && this.run.deadlineWarning > 0) {
-      this.say(this.level.id === 'level9' ? 'stormClosing' : 'dawn', true, true);
+      this.say(this.level.id === 'level12' ? 'demolition' : this.level.id === 'level9' ? 'stormClosing' : 'dawn', true, true);
       audio.sfx('sunrise', 0.6);
     }
     if (car?.visible && this.state === 'fly') {
@@ -288,6 +298,11 @@ export class DeepFlightScene implements Scene {
     }
 
     const sim = this.sim;
+    if (this.practice && this.level.id === 'level12' && Math.abs(sim.saucer.x - 900) >= 552) {
+      this.done = true;
+      this.opts.onQuit();
+      return;
+    }
     const previousTime = sim.st.t;
     sim.update(dt, p, !this.quit.pressedDown);
     if (sim.justCollected && sim.collectible) {
@@ -328,6 +343,20 @@ export class DeepFlightScene implements Scene {
     const field = sim.field;
     const rm = this.ctx.reducedMotion;
     if (this.level.map.theme === 'badlands' && nearHumOnset(field.defs, s.x, s.y, previousTime, st.t)) audio.sfx('monolith_hum');
+    if (this.level.id === 'level12') {
+      this.verseT = Math.max(0, this.verseT - dt);
+      const near = Math.hypot(s.x - 900, s.y - 1350) <= 780;
+      if (near && !this.reciterNear) this.versePending = true;
+      this.reciterNear = near;
+      if (near && this.versePending && !this.pendingOpener && this.zibCd === 0 && this.verseT === 0) {
+        const verses = tr().dispatch2199.verses;
+        this.verse = verses[this.run.recitalVerse++ % verses.length]!;
+        this.verseT = readSeconds(this.verse);
+        this.zibCd = this.verseT + 0.4;
+        this.versePending = false;
+        audio.speak?.(this.verse, 'bureau', { within: this.verseT });
+      }
+    }
     // ---- events
     if (st.click >= 0) {
       audio.sfx('click', 0.9);
@@ -408,7 +437,7 @@ export class DeepFlightScene implements Scene {
       const cause = field.spotCause(st.cause);
       if (!this.seen.has(cause)) {
         this.seen.add(cause);
-        this.say(cause, true, true);
+        if (cause !== 'poetry' || this.zibT <= 0 && this.verseT <= 0) this.say(cause, true, true);
         if (cause === 'police' || cause === 'patrol' || cause === 'heli') audio.sfx('siren', 0.5);
       }
       if (cause === 'dog' && this.barkT <= 0) {

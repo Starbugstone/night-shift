@@ -29,7 +29,7 @@ const IRIS_MAX = Math.hypot(VIEW_W, VIEW_H);
  * With reduced motion everything is a plain fade.
  */
 export interface Transition {
-  style: 'fade' | 'iris' | 'flash' | 'sunrise';
+  style: 'fade' | 'iris' | 'flash' | 'sunrise' | 'demolition';
   x?: number;
   y?: number;
   toX?: number;
@@ -90,7 +90,7 @@ export class SceneManager {
 
   private get outDur(): number {
     const s = this.tr.style;
-    return s === 'iris' ? IRIS_OUT : s === 'flash' ? FLASH_OUT : s === 'sunrise' ? SUNRISE_OUT : FADE;
+    return s === 'demolition' ? 0.85 : s === 'iris' ? IRIS_OUT : s === 'flash' ? FLASH_OUT : s === 'sunrise' ? SUNRISE_OUT : FADE;
   }
 
   private get inDur(): number {
@@ -181,7 +181,9 @@ export class SceneManager {
     if (!this.cover) return;
     this.cover.hide();
     if (cover <= 0) return;
-    if (this.tr.style === 'iris') {
+    if (this.tr.style === 'demolition' && this.phase === 'out') {
+      this.cover.demolition(cover);
+    } else if (this.tr.style === 'iris') {
       const { x, y, r } = this.irisAt(cover);
       this.cover.iris(x, y, r);
     } else this.cover.fill(this.fillColor, this.fillAlpha(cover));
@@ -225,22 +227,39 @@ class TransitionCover {
   /** Rebuilt every frame of an iris: three shapes, only while a transition runs. */
   private readonly ring = new Graphics();
 
+  private readonly seal = new Graphics().circle(0, 0, 115).fill('#342d3f')
+    .circle(0, 0, 107).stroke({ color: '#cf785e', width: 6 })
+    .circle(0, 0, 96).stroke({ color: '#cf785e', width: 2 })
+    .moveTo(-54, -18).lineTo(-39, -45).lineTo(15, -45).lineTo(32, -17).lineTo(32, 20).lineTo(-54, 20).closePath().fill('#cf785e')
+    .roundRect(-62, 25, 107, 19, 9).fill('#cf785e')
+    .moveTo(35, 7).lineTo(61, 27).lineTo(59, -4).lineTo(69, -8).lineTo(78, 40).lineTo(62, 42).lineTo(31, 19).closePath().fill('#cf785e');
+
   constructor(layer: Container) {
     this.sheet.width = VIEW_W;
     this.sheet.height = VIEW_H;
-    layer.addChild(this.sheet, this.ring);
+    this.seal.position.set(VIEW_W / 2, VIEW_H / 2);
+    this.seal.rotation = -0.12;
+    layer.addChild(this.sheet, this.ring, this.seal);
     this.hide();
   }
 
   hide(): void {
     this.sheet.visible = false;
     this.ring.visible = false;
+    this.seal.visible = false;
   }
 
   fill(color: string, alpha: number): void {
     this.sheet.visible = true;
     this.sheet.tint = color;
     this.sheet.alpha = alpha;
+  }
+
+  demolition(cover: number): void {
+    this.fill(NIGHT, cover * cover);
+    this.seal.visible = true;
+    this.seal.scale.set(0.7 + 0.45 * Math.min(1, cover * 3));
+    this.seal.alpha = Math.min(1, cover * 7, (1 - cover) * 6);
   }
 
   iris(x: number, y: number, r: number): void {

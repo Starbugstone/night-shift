@@ -1,3 +1,4 @@
+import { RecitalView } from './recital';
 import { Container, Graphics } from 'pixi.js';
 import type { Assets } from '../../contracts';
 import { VIEW_W } from '../../contracts';
@@ -41,6 +42,7 @@ const COLLECTED = { size: 14, color: C.mint, weight: 900 } as const;
 const MISSED = { size: 15, color: C.paperInk, weight: 800, italic: true } as const;
 const CHECKPOINT = { size: 15, color: C.mint, weight: 900 } as const;
 const FUSE_R = FLIGHT_HUD.saucer / 2 + 21;
+
 
 type Target = DeepMap['targets'][number];
 
@@ -309,6 +311,7 @@ export class DeepFlightView implements SceneView {
   private readonly pickupToast: MapCollectibleToast | null;
   private readonly targets: DeepTargetView[];
   private readonly checkpoint = new CheckpointView();
+  private readonly recitals?: RecitalView;
   private readonly hazards: HazardViews;
   private readonly lights: Glow[];
   private readonly rings: (EntryRingView | RoamView)[];
@@ -347,6 +350,9 @@ export class DeepFlightView implements SceneView {
           basicGround(g, assets, 'flight/ground_farm', x, y, w, h, '#374c42', '#4e6350', s.speckles, true);
           grailTerrain(g);
           break;
+        case 'grimsby2199':
+          basicGround(g, assets, 'flight/ground_grimsby2199', x, y, w, h, '#29323d', '#34424c', s.speckles, false);
+          break;
         case 'storm55':
           basicGround(g, assets, 'flight/ground_storm55', x, y, w, h, '#303849', '#3b4253', s.speckles, false);
           break;
@@ -379,9 +385,15 @@ export class DeepFlightView implements SceneView {
     this.rings = s.sim.ringRef.map((r) => r.ape ? new RoamView(assets, r.ape, m.targets[r.target]!.short) : new EntryRingView(assets, m.targets[r.target]!.entries[r.entry]!));
     const world = this.camera.world;
     world.addChild(this.ground.root);
+    if (m.theme === 'grimsby2199') {
+      this.recitals = new RecitalView(s);
+      this.hazards.detectors.addChildAt(this.recitals.sectors, 0);
+      this.hazards.bubbles.addChild(this.recitals.bubble);
+    }
     if (this.ship) world.addChild(this.ship.root);
     if (this.birch) world.addChild(this.birch.ground);
     world.addChild(this.groundProps.root, this.ambient.ground, this.eggs.ground, this.shadows.root, this.props.root); // v4 easter eggs: streaks
+    if (this.recitals) world.addChild(this.recitals.ground);
     for (const target of this.targets) world.addChild(target.root);
     if (this.crestValley) {
       this.camera.root.addChildAt(this.crestValley.strike.sky, 0);
@@ -460,6 +472,7 @@ export class DeepFlightView implements SceneView {
       l.alpha = 1 - dawn * 0.6;
     }
     this.grail?.sync(s);
+    this.recitals?.sync(cam);
     this.hazards.sync(cam, t, rm);
     // v4 council: route pills keep clear of the HUD boxes and of every entry ring on screen
     const quietPills = !!strike && strike.age < 1.12;
@@ -532,7 +545,7 @@ export class DeepFlightView implements SceneView {
       ring.showPill(this.moved[k] !== 2);
       ring.putPill(this.spots[k]!.x, this.spots[k]!.y, cam.x, cam.y);
     }
-    this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0); // v4 UFO pilot
+    this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0, this.recitals?.coverEars); // v4 UFO pilot
     this.saucer.sync(saucer, t, rm, locking, s.st, lock, sim.field.scramble(saucer.x, saucer.y), sim.st.safe, SAFE_WINDOW);
     if (lifting && !rm) this.saucer.root.y -= Math.min(1, s.st * 6) * 36;
     this.saucer.root.alpha = lifting ? 0.32 : sim.ringRef[sim.inRing]?.ape ? 0.65 : 1;

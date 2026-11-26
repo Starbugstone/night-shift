@@ -654,6 +654,8 @@ function gateOrPop(state: HazardState, spec: Extract<Hazard, { kind: 'gate' | 'p
   root.addChild(fill, ...edge);
   if (spec.kind === 'gate') {
     const panel = new Shutter(w, h, vertical);
+    const face = spec.artKey ? roomArt(assets, spec.artKey, 0, 0, w, h, true) : undefined;
+    if (face) root.addChild(face);
     root.addChild(panel.root,
       vertical ? box(x - 4, y - 8, w + 8, 11, '#796b89') : box(x - 8, y - 4, 11, h + 8, '#796b89'), dial.root);
     return {
@@ -665,7 +667,12 @@ function gateOrPop(state: HazardState, spec: Extract<Hazard, { kind: 'gate' | 'p
         const flash = tell && (rm || Math.floor(t * 9) % 2 === 0);
         fill.tint = tell ? AMBER : '#8870ba';
         fill.alpha = flash ? 0.3 : 0.14;
-        panel.root.visible = !!shape.active;
+        panel.root.visible = !face && !!shape.active;
+        if (face) {
+          face.visible = !!shape.active;
+          face.position.set(shape.x, shape.y);
+          face.scale.set(shape.w / w, shape.h / h);
+        }
         edge[0]!.visible = !shape.active && !tell;
         edge[1]!.visible = !shape.active && tell;
         if (shape.active) panel.sync(shape.x, shape.y, shape.w, shape.h, tell, true);

@@ -41,6 +41,7 @@ export class MemoScene implements Scene {
   chars = 0;
   readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
   readonly start = new Button(90, 852, VIEW_W - 180, 84, tr().memo.startShift, 'primary', 32);
+  readonly replay?: Button;
   readonly practice?: Button;
   readonly totalChars: number;
   private readonly look = new ViewSlot(() => new MemoView(this));
@@ -49,18 +50,27 @@ export class MemoScene implements Scene {
     readonly shell: Shell,
     private readonly levelIndex: number,
     private readonly openPractice?: () => void,
+    private readonly openReplay?: () => void,
   ) {
     const level = tr().levels[this.level.id];
     this.totalChars = level.body.length + level.joke.length;
+    if (openReplay) this.replay = new Button(16, 852, 145, 84, tr().dispatch2199.replay, 'secondary', 18);
     if (openPractice) {
       const words = tr().fieldCheck;
-      const label = shell.save.fieldCheckSeen ? words.replay : words.start;
+      const label = this.level.id === 'level12' ? tr().dispatch2199.practice : shell.save.fieldCheckSeen ? words.replay : words.start;
       // v4 council: a long label (« Lancer le test terrain ») gets a smaller size, not a squeeze
       const size = Math.max(17, Math.min(22, Math.floor(22 * 208 / measure(label, 22, 800))));
       this.practice = new Button(24, 852, 236, 84, label, 'secondary', size);
       this.start.x = 272;
       this.start.w = 244;
       this.start.size = 24;
+      if (this.replay) {
+        this.practice.x = 169;
+        this.practice.w = 159;
+        this.practice.size = 18;
+        this.start.x = 336;
+        this.start.w = 188;
+      }
     }
   }
 
@@ -74,6 +84,7 @@ export class MemoScene implements Scene {
     const audio = this.shell.audio;
     if (this.back.update(p, dt, audio)) return this.shell.toWorkOrders();
     if (this.start.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
+    if (this.replay?.update(p, dt, audio)) return this.openReplay?.();
     if (this.practice?.update(p, dt, audio)) return this.openPractice?.();
     // v4 voices: Vrell babbles the memo while it types (in place of the old key clicks)
     if (this.chars === 0 && this.totalChars > 0) {
@@ -145,6 +156,7 @@ class MemoView implements SceneView {
   private readonly cursor = new Graphics().rect(PX + PW - 44, PAPER_Y + PAPER_H - 40, 12, 3).fill(C.paperInk);
   private readonly back: ButtonView;
   private readonly start: ButtonView;
+  private readonly replay?: ButtonView;
   private readonly practice?: ButtonView;
   private readonly skip = new Label({ size: 14, color: C.muted, weight: 600 }).set(tr().common.tapToSkip, VIEW_W / 2, 838);
   private typedCount = -1;
@@ -156,6 +168,7 @@ class MemoView implements SceneView {
     const lt = tr().levels[lv.id];
     this.back = new ButtonView(s.back);
     this.start = new ButtonView(s.start);
+    if (s.replay) this.replay = new ButtonView(s.replay);
     if (s.practice) this.practice = new ButtonView(s.practice);
     const page = panelPath(new Graphics(), PX, PAPER_Y, PW, PAPER_H, { fill: C.paper, r: 20, shadow: 8 });
     panelPath(page, VIEW_W / 2 - 70, PAPER_Y - 14, 140, 30, { fill: '#b9a58a', r: 10, lineW: 3, shadow: 0 });
@@ -212,6 +225,7 @@ class MemoView implements SceneView {
     const birch = tr().birch;
     const deepGoals = lv.id === 'birch_bakery' ? [birch.deliverGoal, m.deepGoals[1]!, birch.owlGoal]
       : lv.id === 'birch_neighbours' ? [birch.neighboursGoal, m.deepGoals[1]!, m.deepGoals[2]!]
+      : lv.id === 'level12' ? [tr().dispatch2199.deliverGoal, m.deepGoals[1]!, tr().dispatch2199.owlGoal]
       : lv.id === 'level9' ? [words.deliverGoal, m.deepGoals[1]!, words.owlGoal]
       : lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : m.deepGoals;
     const lines = [...(lv.kind === 'deep' ? deepGoals : m.tutorialGoals), lv.id === 'level9' ? words.carGoal : m.pickupGoal];
@@ -233,6 +247,7 @@ class MemoView implements SceneView {
       new Label({ size: 22, color: C.mint, weight: 900 }).set(m.incoming, VIEW_W / 2 + 20, 48, 230),
       this.dot, this.paper, this.start, this.skip,
     );
+    if (this.replay) this.root.addChild(this.replay);
     if (this.practice) this.root.addChild(this.practice);
   }
 
@@ -243,6 +258,7 @@ class MemoView implements SceneView {
     this.sky.sync(t, reduced);
     this.back.sync();
     this.start.sync();
+    this.replay?.sync();
     this.practice?.sync();
     this.portrait.sync(t, reduced);
     this.dot.alpha = reduced ? 1 : 0.55 + 0.45 * Math.sin(t * 5);

@@ -131,7 +131,7 @@ export interface FlightMap {
 interface LevelBase {
   id: LevelId;
   /** All listed orders must be delivered. Omit to use the preceding order. */
-  requires?: readonly LevelId[];
+  requires?: readonly (LevelId | 'level10' | 'level11')[];
   title: string;
   location: string;
   /** Card blurb on Work Orders. */
@@ -167,7 +167,7 @@ type MapTarget = DeepTarget<EntryDef[]>;
 
 export interface DeepMap {
   /** v3 (docs/GDD-3-new-shifts.md): pier = L5 seaside, clinic = L6 hospital campus, ship = L7 cruise ship at sea. */
-  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55' | 'grail';
+  theme: 'suburb' | 'city' | 'pier' | 'clinic' | 'ship' | 'badlands' | 'storm55' | 'grail' | 'grimsby2199';
   collectible?: MapCollectibleDef;
   w: number;
   h: number;

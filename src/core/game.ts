@@ -16,6 +16,7 @@ import { DeepAbductScene } from '../ui/deep-abduct';
 import { DeepChoiceScene } from '../ui/deep-choice';
 import { FieldCheckAbduction, FieldCheckCard } from '../ui/field-check';
 import { LoadingScene } from '../ui/loading';
+import { DispatchFinale, FINALE_BEAT } from '../ui/dispatch-finale';
 import { MemoScene } from '../ui/memo';
 import { ReportScene, deepReport, tutorialReport } from '../ui/report';
 import { TitleScene } from '../ui/title';
@@ -40,6 +41,7 @@ export type SceneName =
   | 'workorders'
   | 'upgrades'
   | 'trophies'
+  | 'dispatch-finale'
   | 'memo'
   | 'field-check'
   | 'flight'
@@ -279,7 +281,26 @@ export class Game implements Shell {
 
   toMemo(levelIndex: number): void {
     const i = clampLevel(levelIndex);
-    this.scenes.go('memo', () => new MemoScene(this, i, i === FIELD_CHECK_INDEX ? () => this.toFieldCheck() : undefined));
+    const finale = LEVELS[i]!.id === 'level12';
+    const practice = finale ? () => this.practiceRecital(i) : i === FIELD_CHECK_INDEX ? () => this.toFieldCheck() : undefined;
+    const replay = finale && this.save.levels.level12.delivered ? () => this.showDispatchFinale(() => this.toMemo(i)) : undefined;
+    this.scenes.go('memo', () => new MemoScene(this, i, practice, replay));
+  }
+
+  private practiceRecital(i: number): void {
+    const level = LEVELS[i]!;
+    if (!isDeep(level)) return;
+    const run = new DeepRun(level, i);
+    const finish = () => this.toMemo(i);
+    this.scenes.go('flight', () => new DeepFlightScene({ ctx: this.ctx, level, run, practice: true,
+      onLocked: finish, onSunrise: finish, onQuit: finish }));
+  }
+
+  private showDispatchFinale(finish: () => void): void {
+    this.scenes.go('dispatch-finale', () => {
+      if (!this.save[FINALE_BEAT]) this.setSave({ ...this.save, [FINALE_BEAT]: true });
+      return new DispatchFinale(this, finish);
+    });
   }
 
   private toFieldCheck(): void {
@@ -457,7 +478,7 @@ export class Game implements Shell {
             if (done) return;
             done = true;
             // the sun comes up over everything
-            this.toDeepReport(run, { style: level.id === 'level9' ? 'fade' : 'sunrise' });
+            this.toDeepReport(run, { style: level.id === 'level12' ? 'demolition' : level.id === 'level9' ? 'fade' : 'sunrise' });
           },
           onQuit: () => {
             if (done) return;
@@ -496,7 +517,7 @@ export class Game implements Shell {
         return new DeepAbductScene(inner, run, this.assets, () => this.ctx.reducedMotion, () => {
           if (done) return;
           done = true;
-          this.toDeepReport(run, { style: level.id === 'level9' ? 'fade' : 'sunrise' });
+          this.toDeepReport(run, { style: level.id === 'level12' ? 'demolition' : level.id === 'level9' ? 'fade' : 'sunrise' });
         });
       },
       false,
@@ -527,7 +548,9 @@ export class Game implements Shell {
     const outcome = applyDeepRun(this._save, run.level.id, run.summary());
     this.setSave(outcome.save);
     this.run = null;
-    this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome), false, transition);
+    const finale = run.level.id === 'level12' && run.phase === 'done' && !this.save[FINALE_BEAT]
+      ? () => this.showDispatchFinale(() => this.toWorkOrders()) : undefined;
+    this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome, undefined, finale), false, transition);
   }
 
   // ---------------------------------------------------------------- debug

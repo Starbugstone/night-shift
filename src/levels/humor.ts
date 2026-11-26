@@ -150,6 +150,7 @@ export type DeepZibEvent =
   | 'start8'
   // v4 L9 1955
   | 'start10' | 'grailSentry' | 'cow' | 'clop' | 'rabbit'
+  | 'start12' | 'demolition' | 'poetry' | 'dozer'
   | 'start9' | 'timeCarWarn' | 'timeCarLaunch' | 'lightning' | 'timeCarMissed' | 'timeCarCaught'
   | 'stormClosing' | 'eraLight' | 'eraWatcher' | 'eraPolice'
   | 'twoOfThree'
@@ -208,6 +209,7 @@ export const SUNRISE_MEMOS: readonly string[] = en.humor.sunriseMemos;
 
 export function sunriseMemo(rotation: number, levelId?: LevelId): string {
   const words = tr().humor;
+  if (levelId === 'level12') return tr().dispatch2199.lost;
   return pick(levelId === 'level9' ? words.deepComments.clocktowerExpired : words.sunriseMemos, rotation);
 }
 
@@ -263,6 +265,7 @@ const DEEP_START: Readonly<Record<string, DeepZibEvent>> = {
   level6: 'start6',
   level7: 'start7',
   level8: 'start8',
+  level12: 'start12',
   level9: 'start9',
   level10: 'start10',
 };

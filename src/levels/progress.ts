@@ -16,6 +16,7 @@ export function starLabels(l: LevelDef): readonly string[] {
     : isDeep(l) && l.map.targets.length < 3 ? ['Delivered', DEEP_STAR_LABELS[1]!, DEEP_STAR_LABELS[2]!]
     : isDeep(l) ? DEEP_STAR_LABELS : STAR_LABELS;
   const id = l.map.collectible?.id;
+  if (id === 'bypass_towel') return [...base, en.dispatch2199.towel];
   return id ? [...base, en.mapCollectibles.items[id].name] : base;
 }
 

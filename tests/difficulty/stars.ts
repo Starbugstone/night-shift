@@ -10,6 +10,7 @@ import type { Stars } from '../../src/levels/save';
 import type { DeepLevelDef, LevelDef, TutorialLevelDef } from '../../src/levels/types';
 import { BakeryFirstRead, BirchPickupFirst, isBirch, NeighboursCut } from './birch';
 import { shrubberyDetour } from './grail';
+import { towelDetour } from './towel';
 import { CarFirst, type CarAttempt } from './time-car';
 import { humanFlightController, humanSteering, playAbduction, rng, type AbductRun, type HumanProfile } from './human';
 
@@ -69,7 +70,7 @@ function steer(pointer: PointerState, hand?: FlightAutopilotIntent): void {
   }
 }
 
-function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, detour = false, order?: number[]): StarRun {
+function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, firstAbduction: FirstAbduction, detour?: 'birch' | 'shrubbery' | 'car' | 'towel', order?: number[]): StarRun {
   const ctx = flightContext();
   const shift = new DeepRun(level, LEVELS.findIndex(l => l.id === level.id));
   shift.tick(rng(seed)() * 9);
@@ -91,19 +92,20 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     const { sim } = flight;
     const orderedPilot = order && new FlightAutopilot(sim, order);
     const controller = orderedPilot ? () => orderedPilot.intent() : humanFlightController(profile, seed + shift.legs * 1009)(sim);
-    if (detour && !car && sim.collectible?.timeCar) car = new CarFirst(sim, profile, seed);
-    if (detour && !birch && isBirch(level.id)) birch = new BirchPickupFirst(sim, profile, seed);
+    if (detour === 'car' && !car && sim.collectible?.timeCar) car = new CarFirst(sim, profile, seed);
+    if (detour === 'birch' && !birch && isBirch(level.id)) birch = new BirchPickupFirst(sim, profile, seed);
     const firstLeg = !detour && shift.legs === 0 && profile.name !== 'bot';
     const read = firstLeg && level.id === 'birch_bakery' ? new BakeryFirstRead(sim, profile, seed)
       : firstLeg && level.id === 'birch_neighbours' ? new NeighboursCut(sim, profile, seed) : undefined;
     const legStart = shift.elapsed;
-    const hedge = detour && level.id === 'level10' && sim.collectible?.available ? shrubberyDetour(sim, profile, seed) : undefined;
+    const hedge = detour === 'shrubbery' && level.id === 'level10' && sim.collectible?.available ? shrubberyDetour(sim, profile, seed) : undefined;
+    const towel = detour === 'towel' && !sim.collectible!.collected ? towelDetour(sim, profile, seed) : undefined;
     let exposure: Record<number, number> | undefined;
     while (shift.phase === 'flight' && shift.elapsed < limit) {
       const wasFlying = flight.state === 'fly';
       // the SPOTTED card waits for a tap: the player taps when it used to close by itself
       const chase = wasFlying && car?.active ? car : undefined;
-      steer(ctx.pointer, wasFlying ? (hedge && sim.collectible?.available ? hedge() : chase?.steer() ?? (birch?.active ? birch.steer() : read?.active ? read.steer() : controller(sim))) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
+      steer(ctx.pointer, wasFlying ? (hedge && sim.collectible?.available ? hedge() : chase?.steer() ?? (towel && !sim.collectible!.collected ? towel() : birch?.active ? birch.steer() : read?.active ? read.steer() : controller(sim))) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
       ctx.time += DT;
       flight.update(DT);
       chase?.record();
@@ -222,7 +224,7 @@ function tutorialAttempt(level: TutorialLevelDef, entry: TutorialLevelDef['map']
 }
 
 export function evaluateBirchDetours(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction) {
-  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, true));
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, 'birch'));
   return {
     profile: profile.name,
     attempts: runs.length,
@@ -243,7 +245,7 @@ export interface StarReport {
 export function evaluateStars(level: LevelDef, profile: HumanProfile, seeds: number, firstAbduction: FirstAbduction, order?: number[]): StarReport {
   const runs: StarRun[] = [];
   for (let seed = 1; seed <= seeds; seed++) {
-    if (level.kind === 'deep') runs.push(deepShift(level, profile, seed, firstAbduction, false, order));
+    if (level.kind === 'deep') runs.push(deepShift(level, profile, seed, firstAbduction, undefined, order));
     else for (const entry of level.map.entries) runs.push(tutorialAttempt(level, entry, profile, seed));
   }
   const earned: StarReport['earned'] = [0, 0, 0];
@@ -256,7 +258,7 @@ export function evaluateStars(level: LevelDef, profile: HumanProfile, seeds: num
 }
 
 export function evaluateShrubbery(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction) {
-  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, true));
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, 'shrubbery'));
   return { profile: profile.name, fourthStars: runs.filter(run => run.stars[3]).length, attempts: seeds };
 }
 
@@ -271,7 +273,7 @@ export interface CarReport {
 }
 
 export function evaluateCarFirst(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction): CarReport {
-  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, true));
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, 'car'));
   return {
     profile: profile.name,
     attempts: seeds,
@@ -281,4 +283,9 @@ export function evaluateCarFirst(level: DeepLevelDef, profile: HumanProfile, see
     allFour: runs.filter(r => r.stars.every(Boolean)).length,
     runs,
   };
+}
+
+export function evaluateTowelFirst(level: DeepLevelDef, profile: HumanProfile, seeds: number, play: FirstAbduction) {
+  const runs = Array.from({ length: seeds }, (_, i) => deepShift(level, profile, i + 1, play, 'towel'));
+  return { profile: profile.name, attempts: seeds, fourthStars: runs.filter(r => r.stars[3]).length, runs };
 }

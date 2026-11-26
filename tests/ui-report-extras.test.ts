@@ -287,6 +287,7 @@ describe('report scene', () => {
       expect(model.headline).toBeTruthy();
       if (lv.id === 'birch_bakery') expect(model.cover).toBe(tr().birch.bakeryCover);
       else if (lv.id === 'birch_neighbours') expect(model.cover).toBe(tr().birch.neighboursCover);
+      else if (lv.id === 'level12') expect(model.cover).toBe(tr().dispatch2199.cover);
       else expect(model.cover).toMatch(/3/);
       const { layout } = reportContent(model, outcome(), measure);
       expect(layout.cover.lines.some((t) => model.cover.startsWith(t)), lv.id).toBe(true);

@@ -297,6 +297,8 @@ export class HazardViews {
             .circle(0, 3, 15).fill('#625163').stroke({ color: C.ink, width: 3 })
             .roundRect(-13, -15, 26, 18, 4).fill('#8e7772').stroke({ color: C.ink, width: 3 })
             .roundRect(-11, -17, 22, 7, 3).fill('#ffe5ac');
+          if (d.skin === 'reciter2199_top') body.addChild(new Graphics().roundRect(-29, -18, 58, 42, 6)
+            .fill('#866d70').stroke({ color: C.ink, width: 3 }));
           body.addChild(fixture);
         }
         const head = body.children[body.children.length - 1]!;
@@ -308,7 +310,7 @@ export class HazardViews {
           body.visible = cam.sees(d.x, d.y, 60);
           head.rotation = d.skin === 'grail_sentry_top' ? 0 : a + turn;
           camera.root.visible = cam.sees(d.x, d.y, d.range + 20);
-          if (camera.root.visible) camera.sync(a, hot, this.lead[i]!, t, i, rm);
+          if (camera.root.visible) camera.sync(a, hot, d.skin === 'reciter2199_top' ? 0 : this.lead[i]!, t, i, rm);
         };
       }
       case 'window': {
@@ -383,7 +385,7 @@ export class HazardViews {
         const steward = new StewardView(assets, d);
         this.ground.addChild(steward.body);
         this.detectors.addChild(steward.detectors);
-        return (cam, _t, _rm, hot) => steward.sync(cam, f, i, hot, this.lead[i]!);
+        return (cam, _t, _rm, hot) => steward.sync(cam, f, i, hot, d.skin === 'dozer2199' ? 0 : this.lead[i]!);
       }
     }
   }

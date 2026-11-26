@@ -33,7 +33,7 @@ export type Hazard =
   | { kind: 'swing'; name: string; sprite: Sprite; amplitude: number; speed: number; phase: number; mountY?: number }
   | { kind: 'fan'; name: string; x: number; y: number; length: number; speed: number; phase: number; duct: boolean; mountY?: number }
   | { kind: 'laser'; name: string; area: Area; cycle: Cycle; mountY?: number }
-  | { kind: 'gate'; name: string; area: Area; axis: 'x' | 'y'; cycle: Cycle; hinged?: boolean; dialX?: number }
+  | { kind: 'gate'; name: string; artKey?: string; area: Area; axis: 'x' | 'y'; cycle: Cycle; hinged?: boolean; dialX?: number }
   | { kind: 'patrol'; name: string; sprite: Sprite; dx: number; dy: number; speed: number; phase: number; barks?: boolean }
   | { kind: 'pop'; name: string; area: Area; cycle: Cycle; artKey?: string }
   | { kind: 'camera'; name: string; x: number; y: number; mountY?: number; angle: number; spread: number; range: number; sweep: number; speed: number; phase: number

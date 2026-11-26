@@ -64,6 +64,7 @@ export class DeepRun {
   /** v4 specimens: each specimen delivered this shift, with its route (if abducted indoors). */
   readonly specimens: SpecimenFind[] = [];
   readonly totals: RunTotals = { bonks: 0, snores: 0, items: [], rooms: [], dignity: 0, beamSec: 0 };
+  recitalVerse = 0;
   /** Flight legs started (for Zib's lines). */
   legs = 0;
   /** v3 report: ID photo of the last delivered specimen (else the first attempt's). */
@@ -101,7 +102,7 @@ export class DeepRun {
 
   /** 0 = night, 1 = sunrise; ramps over the last SUNRISE_WARN seconds. */
   get dawn(): number {
-    return this.level.id === 'level9' ? 0 : this.deadlineWarning;
+    return this.level.id === 'level9' || this.level.id === 'level12' ? 0 : this.deadlineWarning;
   }
 
   get deadlineWarning(): number {
@@ -132,7 +133,7 @@ export class DeepRun {
       const minutes = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
       return `${hour}:${minutes}:${String(seconds % 60).padStart(2, '0')}`;
     }
-    if (this.level.id === 'level8') {
+    if (this.level.id === 'level8' || this.level.id === 'level12') {
       const sec = Math.ceil(this.remaining);
       return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
     }
