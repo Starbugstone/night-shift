@@ -3,18 +3,21 @@
 // a noise loop makes the pops, clicks and hisses. One small graph per line, every syllable is
 // AudioParam automation (no nodes per syllable, nothing per frame). At most MAX_LINES at once.
 import type { SpeakOptions, VoiceId } from '../contracts';
+import { GainRamp } from './gain-ramp';
 import { VOICES, VOWELS, planSpeech, type SpeechPlan, type VoiceProfile } from './voice-plan';
 
 /** Lines that may babble at once; the oldest stops when a new one would go over. */
 const MAX_LINES = 2;
 /** Overall voice level into the master bus: under the SFX, it plays for every line. */
 const LEVEL = 0.5;
+const PLAY_LEAD = 0.02;
+const STOP_FADE = 0.014;
 const Q = [7, 10, 13] as const;
 const FORMANT_GAIN = [1, 0.62, 0.3] as const;
 
 interface Line {
   voice: VoiceId;
-  out: GainNode;
+  fade: GainRamp;
   sources: AudioScheduledSourceNode[];
   nodes: AudioNode[];
   end: number;
@@ -33,11 +36,12 @@ export class VoiceEngine {
 
   /** Babble `text` in `voice`; replaces that voice's current line. */
   speak(text: string, voice: VoiceId, opts: SpeakOptions = {}): SpeechPlan | null {
-    const plan = planSpeech(text, voice, opts);
+    const within = voice === 'vrell' && opts.within !== undefined ? opts.within - PLAY_LEAD : opts.within;
+    const plan = planSpeech(text, voice, { within, panic: opts.panic });
     if (plan.syllables.length === 0) return null;
     this.stop(voice);
     this.prune();
-    while (this.lines.length >= MAX_LINES) this.kill(this.lines.shift()!, 0.03);
+    while (this.lines.length >= MAX_LINES) this.kill(this.lines.shift()!);
     this.lines.push(this.play(plan, VOICES[voice], Math.max(0, Math.min(1.5, opts.volume ?? 1))));
     return plan;
   }
@@ -47,7 +51,7 @@ export class VoiceEngine {
     for (let i = this.lines.length - 1; i >= 0; i--) {
       const l = this.lines[i]!;
       if (voice && l.voice !== voice) continue;
-      this.kill(l, 0.025);
+      this.kill(l);
       this.lines.splice(i, 1);
     }
   }
@@ -57,28 +61,20 @@ export class VoiceEngine {
     for (let i = this.lines.length - 1; i >= 0; i--) if (this.lines[i]!.done || this.lines[i]!.end < now) this.lines.splice(i, 1);
   }
 
-  private kill(l: Line, tau: number): void {
-    if (l.done) return;
+  private kill(l: Line): void {
     const now = this.ac.currentTime;
-    const g = l.out.gain;
-    g.cancelScheduledValues(now);
-    g.setValueAtTime(g.value, now);
-    g.setTargetAtTime(0, now, tau);
-    const at = now + tau * 6;
-    for (const s of l.sources) {
-      try {
-        s.stop(at);
-      } catch {
-        // already stopped
-      }
-    }
-    l.end = Math.min(l.end, at);
+    if (l.done || l.end <= now) return;
+    const at = Math.min(l.end, now + STOP_FADE);
+    l.fade.fadeTo(0, now, at - now);
+    for (const s of l.sources) s.stop(at);
+    l.end = at;
   }
 
   private play(plan: SpeechPlan, v: VoiceProfile, volume: number): Line {
     const ac = this.ac;
-    const t0 = ac.currentTime + 0.02;
-    const end = t0 + plan.duration + 0.25;
+    const t0 = ac.currentTime + PLAY_LEAD;
+    const finish = t0 + plan.duration;
+    const end = plan.voice === 'vrell' ? finish : finish + 0.25;
     const sources: AudioScheduledSourceNode[] = [];
     const nodes: AudioNode[] = [];
     const keep = <T extends AudioNode>(n: T): T => {
@@ -188,7 +184,8 @@ export class VoiceEngine {
     thump?.connect(hp);
     hp.connect(lp);
     const out = keep(ac.createGain());
-    out.gain.value = LEVEL * v.gain * volume;
+    const fade = new GainRamp(out.gain, LEVEL * v.gain * volume);
+    if (plan.voice === 'vrell') fade.fadeTo(0, finish - 0.025, 0.025);
     if (v.pa) {
       const shaper = keep(ac.createWaveShaper());
       shaper.curve = this.paCurve ??= softClip();
@@ -209,7 +206,7 @@ export class VoiceEngine {
       s.start(t0);
       s.stop(end);
     }
-    const line: Line = { voice: plan.voice, out, sources, nodes, end, done: false };
+    const line: Line = { voice: plan.voice, fade, sources, nodes, end, done: false };
     buzz.onended = () => {
       line.done = true;
       for (const n of nodes) n.disconnect();

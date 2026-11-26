@@ -196,7 +196,6 @@ export class FlightScene implements Scene {
     this.zibText = zibLine(evt, this.zibN++ + (evt.length % 2));
     this.zibFor = this.zibT = readSeconds(this.zibText);
     this.zibCd = this.zibT + 0.6;
-    this.ctx.audio.speak?.(this.zibText, 'zib'); // v4 voices
   }
 
   /** v4 easter eggs: a scenery line, said like any other. */
@@ -204,7 +203,6 @@ export class FlightScene implements Scene {
     this.zibText = text;
     this.zibFor = this.zibT = readSeconds(text);
     this.zibCd = this.zibT + 0.6;
-    this.ctx.audio.speak?.(text, 'zib');
   }
 
   /** Where the saucer is on screen (the scene transition irises in on it). */
@@ -244,7 +242,7 @@ export class FlightScene implements Scene {
       return;
     }
 
-    if (this.quit.update(p, dt, this.ctx.audio)) {
+    if (this.quit.update(p, dt)) {
       this.opts.onQuit();
       return;
     }
@@ -404,7 +402,7 @@ export class FlightScene implements Scene {
       if (this.tutStep < 3) this.tutStep = 3;
       this.lockBurst(this.ringPts[idx]!);
     } else if (idx >= 0 && Math.floor(before01 * 4) !== Math.floor(this.lock.fraction * 4)) {
-      this.ctx.audio.sfx('click', 0.4);
+      this.ctx.audio.sfx('lock_progress', this.lock.fraction);
     }
 
     // tutorial
@@ -446,7 +444,6 @@ export class FlightScene implements Scene {
   }
 
   dispose(): void {
-    this.ctx.audio.hush?.(); // v4 voices
     this.look.destroy();
   }
 }

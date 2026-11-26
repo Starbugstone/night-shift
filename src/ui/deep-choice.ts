@@ -69,15 +69,14 @@ export class DeepChoiceScene implements Scene {
     if (this.t === 0) this.shell.audio.speak(this.line, 'vrell', { within: 3 }); // v4 voices: Vrell says it
     this.t += dt;
     const p = this.shell.ctx.pointer;
-    const a = this.shell.audio;
     // a short beat so a panicked tap from the room doesn't land on a button
     const ready = this.t > 0.35;
     this.retry.enabled = ready;
     this.back.enabled = ready;
     this.quit.enabled = ready;
-    if (this.retry.update(p, dt, a)) return this.actions.retry();
-    if (this.back.update(p, dt, a)) return this.actions.backToFlight();
-    if (this.quit.update(p, dt, a)) return this.actions.quit();
+    if (this.retry.update(p, dt)) return this.actions.retry();
+    if (this.back.update(p, dt)) return this.actions.backToFlight();
+    if (this.quit.update(p, dt)) return this.actions.quit();
   }
 
   get view(): Container {

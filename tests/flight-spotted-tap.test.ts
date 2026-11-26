@@ -3,6 +3,7 @@ import { workOrderNumber } from '../src/levels/levels';
 // the first SPOT_HOLD seconds of it, the same penalty as when the card closed by itself.
 import { describe, expect, it, vi } from 'vitest';
 import type { GameContext } from '../src/contracts';
+import { readSeconds } from '../src/core/read-time';
 import { DeepFlightScene, SPOT_HOLD } from '../src/flight/deep-scene';
 import { FlightScene } from '../src/flight/scene';
 import { tr } from '../src/i18n';
@@ -60,23 +61,27 @@ describe('SPOTTED card', () => {
 });
 
 it.each([
-  [LEVEL3, 'dawn'],
-  [LEVEL9, 'stormClosing'],
-] as const)('$0.id only announces its deadline when the clock crosses the warning', (level, key) => {
+  [LEVEL3.id, LEVEL3, 'dawn'],
+  [LEVEL9.id, LEVEL9, 'stormClosing'],
+] as const)('announces the %s deadline only when the clock crosses the warning', (_id, level, key) => {
   const base = context();
   const speak = vi.fn();
-  const ctx = { ...base, audio: { ...base.audio, speak } };
+  const sfx = vi.fn();
+  const ctx = { ...base, audio: { speak, sfx } };
   const run = new DeepRun(level, LEVELS.findIndex(l => l.id === level.id));
   const start = () => new DeepFlightScene({ run, level, ctx, onLocked: vi.fn(), onSunrise: vi.fn(), onQuit: vi.fn() });
-  const saysWarning = () => speak.mock.calls.filter(([text]) =>
-    (tr().humor.deepZib[key] as readonly string[]).includes(text));
+  const warnings = () => sfx.mock.calls.filter(([name, volume]) => name === 'sunrise' && volume === 0.6);
 
   const flight = start();
   run.elapsed = run.budget - SUNRISE_WARN - DT / 2;
+  run.collectible?.timeCar?.advance(run.elapsed);
   flight.update(DT);
+  expect(tr().humor.deepZib[key]).toContain(flight.zibText);
+  expect(flight.zibT).toBe(readSeconds(flight.zibText));
   flight.update(DT);
-  expect(saysWarning()).toHaveLength(1);
+  expect(warnings()).toHaveLength(1);
   run.elapsed = run.budget - 5;
   start().update(DT);
-  expect(saysWarning()).toHaveLength(1);
+  expect(warnings()).toHaveLength(1);
+  expect(speak).not.toHaveBeenCalled();
 });

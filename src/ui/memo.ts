@@ -82,10 +82,10 @@ export class MemoScene implements Scene {
     this.t += dt;
     const p = this.shell.ctx.pointer;
     const audio = this.shell.audio;
-    if (this.back.update(p, dt, audio)) return this.shell.toWorkOrders();
-    if (this.start.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
-    if (this.replay?.update(p, dt, audio)) return this.openReplay?.();
-    if (this.practice?.update(p, dt, audio)) return this.openPractice?.();
+    if (this.back.update(p, dt)) return this.shell.toWorkOrders();
+    if (this.start.update(p, dt)) return this.shell.toFlight(this.levelIndex);
+    if (this.replay?.update(p, dt)) return this.openReplay?.();
+    if (this.practice?.update(p, dt)) return this.openPractice?.();
     // v4 voices: Vrell babbles the memo while it types (in place of the old key clicks)
     if (this.chars === 0 && this.totalChars > 0) {
       const lt = tr().levels[this.level.id];

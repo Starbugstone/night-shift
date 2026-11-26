@@ -32,9 +32,9 @@ export class FieldCheckCard implements Scene {
 
   update(dt: number): void {
     this.t += dt;
-    const { pointer, audio } = this.ctx;
-    if (this.primary.update(pointer, dt, audio)) this.advance();
-    else if (this.phase !== 'done' && this.skip.update(pointer, dt, audio)) this.leave();
+    const { pointer } = this.ctx;
+    if (this.primary.update(pointer, dt)) this.advance();
+    else if (this.phase !== 'done' && this.skip.update(pointer, dt)) this.leave();
   }
 }
 

@@ -198,8 +198,8 @@ export class DispatchFinale implements Scene {
   update(dt: number): void {
     this.age += dt;
     const { pointer, audio } = this.shell.ctx;
-    if (this.skip.update(pointer, dt, audio)) return this.finish();
-    if (!this.next.update(pointer, dt, audio) && this.age < this.timings[this.page]!) return;
+    if (this.skip.update(pointer, dt)) return this.finish();
+    if (!this.next.update(pointer, dt) && this.age < this.timings[this.page]!) return;
     if (this.page === 2) return this.finish();
     this.page++;
     this.age = 0;

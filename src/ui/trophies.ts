@@ -432,7 +432,6 @@ export class TrophiesScene implements Scene, ModalNavLook {
     for (let i = 0; i < stops.length; i++) {
       if (stops[i]!.sel.item === item) {
         this.openStop(i, false);
-        this.shell.audio.sfx('click');
         return;
       }
     }
@@ -541,7 +540,7 @@ export class TrophiesScene implements Scene, ModalNavLook {
       const horizontal = ax > SWIPE_RATIO * Math.abs(dy);
       const flick = ax >= SWIPE_FLICK_MIN && Math.abs(this.swVel) >= SWIPE_FLICK_SPEED && Math.sign(this.swVel) === Math.sign(dx);
       if (horizontal && (ax >= SWIPE_MIN || flick)) {
-        if (this.step(dx < 0 ? 1 : -1)) this.shell.audio.sfx('click');
+        this.step(dx < 0 ? 1 : -1);
       }
     }
     return true;
@@ -583,7 +582,6 @@ export class TrophiesScene implements Scene, ModalNavLook {
   update(dt: number): void {
     this.t += dt;
     const p = this.shell.ctx.pointer;
-    const audio = this.shell.audio;
 
     // Modal intercepts all input while open
     if (this.selected) {
@@ -591,16 +589,16 @@ export class TrophiesScene implements Scene, ModalNavLook {
       const swiped = this.trackSwipe(p, dt);
       this.animateSwipe(dt);
       if (swiped) return;
-      if (this.closeBtn.update(p, dt, audio)) {
+      if (this.closeBtn.update(p, dt)) {
         this.closeModal();
         return;
       }
-      if (this.prevExhibit.update(p, dt, audio)) {
+      if (this.prevExhibit.update(p, dt)) {
         this.scrimArmed = false;
         this.step(-1);
         return;
       }
-      if (this.nextExhibit.update(p, dt, audio)) {
+      if (this.nextExhibit.update(p, dt)) {
         this.scrimArmed = false;
         this.step(1);
         return;
@@ -610,7 +608,6 @@ export class TrophiesScene implements Scene, ModalNavLook {
       if (p.pressed && !inCard) this.scrimArmed = true;
       if (p.released) {
         if (this.scrimArmed && !inCard) {
-          audio.sfx('click');
           this.closeModal();
         }
         this.scrimArmed = false;
@@ -618,20 +615,20 @@ export class TrophiesScene implements Scene, ModalNavLook {
       return;
     }
 
-    if (this.back.update(p, dt, audio)) return this.goBack();
-    if (this.shell.preprod && this.previewBtn.update(p, dt, audio)) {
+    if (this.back.update(p, dt)) return this.goBack();
+    if (this.shell.preprod && this.previewBtn.update(p, dt)) {
       this.shell.toTrophies(this.returnTo, { preview: !this.preview, room: this.activeRoom });
       return;
     }
-    if (this.tabSouvenirs.update(p, dt, audio)) {
+    if (this.tabSouvenirs.update(p, dt)) {
       this.switchRoom('souvenirs');
       return;
     }
-    if (this.tabTown.update(p, dt, audio)) {
+    if (this.tabTown.update(p, dt)) {
       this.switchRoom('town');
       return;
     }
-    if (this.tabSpecimens.update(p, dt, audio)) {
+    if (this.tabSpecimens.update(p, dt)) {
       this.switchRoom('specimens');
       return;
     }
@@ -648,14 +645,14 @@ export class TrophiesScene implements Scene, ModalNavLook {
       this.nextWing.visible = true;
       this.prevWing.enabled = curIdx > 0;
       this.nextWing.enabled = curIdx < activePages - 1;
-      if (this.prevWing.update(p, dt, audio)) {
+      if (this.prevWing.update(p, dt)) {
         if (this.activeRoom === 'specimens') this.specimenPageIndex = Math.max(0, this.specimenPageIndex - 1);
         else this.pageIndex = Math.max(0, this.pageIndex - 1);
         this.scroll = 0;
         this.vel = 0;
         return;
       }
-      if (this.nextWing.update(p, dt, audio)) {
+      if (this.nextWing.update(p, dt)) {
         if (this.activeRoom === 'specimens') this.specimenPageIndex = Math.min(activePages - 1, this.specimenPageIndex + 1);
         else this.pageIndex = Math.min(activePages - 1, this.pageIndex + 1);
         this.scroll = 0;

@@ -128,9 +128,9 @@ export const VOICES: Record<VoiceId, VoiceProfile> = {
     pitch: 96, range: 1.2, declination: 2.5, ask: 3, bang: 1.5,
     syl: 0.1, jitter: 0.06, wordGap: 0.05, beat: 0.12,
     comma: 0.2, stop: 0.3, trail: 0.45,
-    minScale: 0.7, maxSylPerWord: 2, maxDur: 3.4, yelp: 0, gurgle: 0.08, chime: 0,
-    formant: 0.84, vibHz: 4.5, vibDepth: 0.008, ring: 0.22, ringRatio: 0.5, ringHz: 0,
-    fry: 0.22, noise: 0.35, lo: 90, hi: 3800, pa: false, gain: 0.9,
+    minScale: 1, maxSylPerWord: 1, maxDur: 1.4, yelp: 0, gurgle: 0.04, chime: 0,
+    formant: 0.84, vibHz: 4.5, vibDepth: 0.008, ring: 0.16, ringRatio: 0.5, ringHz: 0,
+    fry: 0.15, noise: 0.19, lo: 90, hi: 2700, pa: false, gain: 0.40,
   },
   /** The Bureau's PA announcer: flat, even, band-limited horn with a hum-ring and an echo. */
   bureau: {
@@ -405,7 +405,10 @@ export function planSpeech(text: string, id: VoiceId, opts: PlanOptions = {}): S
   const words = tokenize(text);
   const seed = (hashText(normalize(text)) ^ VOICE_SEED[id]) >>> 0;
   const panic = opts.panic === true;
-  const limit = Math.max(0.2, Math.min(opts.within ?? v.maxDur, v.maxDur * 2));
+  // Vrell gives a short impression of the memo even when the text takes longer to reveal.
+  const limit = id === 'vrell'
+    ? Math.max(0, Math.min(opts.within ?? v.maxDur, v.maxDur))
+    : Math.max(0.2, Math.min(opts.within ?? v.maxDur, v.maxDur * 2));
   let plan = layout(words, id, v, seed, { maxSyl: v.maxSylPerWord, scale: 1, keep: null }, panic);
   if (plan.duration > limit) plan = layout(words, id, v, seed, { maxSyl: 1, scale: 1, keep: null }, panic);
   if (plan.duration > limit) {

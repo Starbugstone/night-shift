@@ -128,7 +128,9 @@ describe('voice plans', () => {
         const within = text.length / 70; // the memo's typewriter speed
         const p = planSpeech(text, 'vrell', { within });
         expect(p.duration).toBeLessThanOrEqual(within + 1e-9);
-        expect(p.syllables.length).toBeGreaterThan(Math.min(12, text.length / 12));
+        expect(p.duration).toBeLessThanOrEqual(1.4);
+        expect(p.syllables.length).toBeGreaterThanOrEqual(3);
+        expect(p.syllables.length).toBeLessThanOrEqual(10);
       }
       for (const line of lang.abort.lines) expect(planSpeech(line, 'vrell', { within: 3 }).duration).toBeLessThanOrEqual(3);
     }

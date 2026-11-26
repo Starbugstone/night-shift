@@ -131,7 +131,7 @@ describe('1955 time car', () => {
     expect(new DeepRun(LEVEL9, workOrderNumber(LEVEL9.id) - 1).collectible?.timeCar?.phase).toBe('parked');
   });
 
-  it('keeps a late catch line visible and audible through the strike', () => {
+  it('keeps a late catch line visible through the strike with no babble', () => {
     const audio = { speak: vi.fn(), sfx: vi.fn() };
     const scene = flightAt(18.9, audio);
     audio.speak.mockClear();
@@ -152,7 +152,7 @@ describe('1955 time car', () => {
     expect(scene.zibText).toBe(line);
     expect(scene.zibT).toBeGreaterThan(0);
     expect(audio.sfx).toHaveBeenCalledWith('crash', 0.36);
-    expect(audio.speak).toHaveBeenCalledExactlyOnceWith(line, 'zib', { panic: false });
+    expect(audio.speak).not.toHaveBeenCalled();
   });
 
   it.each([0.35, DT])('skips strike audio when a sighting is imminent %s seconds before the deadline', (lead) => {

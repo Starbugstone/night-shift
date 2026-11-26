@@ -1,6 +1,6 @@
 // Button logic (hit testing, press / release, the tap flash). ButtonView in src/ui/views/button.ts
 // draws it.
-import type { Audio, PointerState } from '../contracts';
+import type { PointerState } from '../contracts';
 
 export type ButtonKind = 'primary' | 'secondary' | 'ghost' | 'amber' | 'danger';
 
@@ -35,13 +35,13 @@ export class Button {
   }
 
   /** Returns true when tapped. */
-  update(p: PointerState, dt: number, audio?: Audio, dy = 0): boolean {
+  update(p: PointerState, dt: number): boolean {
     this.flash = Math.max(0, this.flash - dt * 4);
     if (!this.visible || !this.enabled) {
       this.armed = false;
       return false;
     }
-    const inside = this.contains(p.x, p.y + dy);
+    const inside = this.contains(p.x, p.y);
     if (p.pressed && inside) this.armed = true;
     if (this.armed && p.down && !inside) this.armed = false;
     if (p.released) {
@@ -49,7 +49,6 @@ export class Button {
       this.armed = false;
       if (hit) {
         this.flash = 1;
-        audio?.sfx('click');
         return true;
       }
     }

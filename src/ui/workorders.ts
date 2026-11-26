@@ -82,10 +82,9 @@ export class WorkOrdersScene implements Scene {
   update(dt: number): void {
     this.t += dt;
     const p = this.shell.ctx.pointer;
-    const audio = this.shell.audio;
-    if (this.back.update(p, dt, audio)) return this.shell.toTitle();
-    if (this.trophies.update(p, dt, audio)) return this.shell.toTrophies('workorders');
-    if (this.upgrades.update(p, dt, audio)) return this.shell.toUpgrades();
+    if (this.back.update(p, dt)) return this.shell.toTitle();
+    if (this.trophies.update(p, dt)) return this.shell.toTrophies('workorders');
+    if (this.upgrades.update(p, dt)) return this.shell.toUpgrades();
 
     if (p.pressed && p.y >= LIST_TOP) {
       this.tracking = true;
@@ -133,12 +132,10 @@ export class WorkOrdersScene implements Scene {
     const card = this.cards[i]!;
     if (card.kind === 'concept') return;
     if (isLevelUnlocked(this.shell.save, card.index)) {
-      this.shell.audio.sfx('click');
       this.shell.toMemo(card.index);
       return;
     }
     card.shake = 1;
-    this.shell.audio.sfx('bonk', 0.4);
     const w = tr().workOrders;
     this.toast = fmt(w.deliverFirst, { name: outstandingOrders(this.shell.save, card.index) || w.lastSpecimen });
     this.toastT = 2.4;

@@ -207,8 +207,8 @@ export class ReportScene implements Scene {
     this.retry.enabled = ready;
     this.next.enabled = ready;
     if (this.finale && this.t >= this.end + readSeconds(this.model.comment)) return this.finale();
-    if (this.retry.update(p, dt, audio)) return this.shell.toFlight(this.levelIndex);
-    if (this.next.update(p, dt, audio)) {
+    if (this.retry.update(p, dt)) return this.shell.toFlight(this.levelIndex);
+    if (this.next.update(p, dt)) {
       if (this.finale) return this.finale();
       if (this.advance) return this.advance();
       if (this.model.delivered && this.hasNext) return this.shell.toMemo(this.levelIndex + 1);
@@ -269,13 +269,13 @@ export class ReportScene implements Scene {
     // v4 voices: Vrell's comment, babbled as it appears (a skip lands here too: it is read then)
     if (!this.spoke && this.t >= COMMENT_AT) {
       this.spoke = true;
-      audio.speak(this.model.comment, 'vrell', { within: 3.2 });
+      audio.speak(this.model.comment, 'vrell', { within: readSeconds(this.model.comment) });
     }
     if (!this.played.glorbs && this.t >= GLORB_AT) {
       this.played.glorbs = true;
       if (this.model.delivered) audio.sfx('success', 0.7);
     }
-    // Glorb counter ticks up (with a click per step, capped so big payouts don't machine-gun)
+    // Glorb counter rolls up to the final payout
     if (this.t >= GLORB_AT) {
       const k = Math.min(1, (this.t - GLORB_AT) / GLORB_COUNT);
       const shown = Math.round(this.outcome.glorbs * easeOutCubic(k));
@@ -284,7 +284,6 @@ export class ReportScene implements Scene {
         this.shownGlorbs = shown;
         if (!first && !skipped) {
           this.coinHop = 1;
-          audio.sfx('click', 0.3);
           if (shown === this.outcome.glorbs && shown > 0 && !rm) {
             this.fx.burst(P_TWINKLE, VIEW_W / 2 - 74, GLORB_Y, 6, 60, 170, 0.55, 9, PC.mint, 0, 2);
           }

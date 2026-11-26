@@ -1,6 +1,7 @@
 import { Container } from 'pixi.js';
-import type { AbductResult, AbductRules, FlightResult, PointerState, RoomId } from '../contracts';
+import type { AbductResult, AbductRules, AmbientBed, FlightResult, PointerState, RoomId, Scene } from '../contracts';
 import { createAbductScene, emitterPoint } from '../abduct';
+import { nightBed } from '../audio/ambient';
 import { SynthAudio } from '../audio/sfx';
 import { DeepFlightScene } from '../flight/deep-scene';
 import { FlightScene } from '../flight/scene';
@@ -163,7 +164,6 @@ export class Game implements Shell {
 
   toggleMute(): void {
     this.setSave({ ...this._save, muted: !this._save.muted });
-    if (!this._save.muted) this.audio.sfx('click');
   }
 
   resetProgress(): void {
@@ -204,8 +204,8 @@ export class Game implements Shell {
     }
     this.langOverride = params.get('lang');
     this.applyLanguage();
-    this.scenes.go(
-      'loading',
+    this.showScene(
+      'loading', null,
       () => new LoadingScene(this.assets, () => {
         if (TEST_FIXTURES) this.routeFromParams(params);
         else this.toTitle();
@@ -261,22 +261,30 @@ export class Game implements Shell {
 
   // ---------------------------------------------------------------- navigation
 
+  private showScene(name: SceneName, bed: AmbientBed | null, make: () => Scene, instant = false, transition?: Transition): void {
+    this.scenes.go(name, () => {
+      const scene = make();
+      this.audio.ambient(bed);
+      return scene;
+    }, instant, transition);
+  }
+
   toTitle(): void {
     this.flight = null;
-    this.scenes.go('title', () => new TitleScene(this));
+    this.showScene('title', 'menu', () => new TitleScene(this));
   }
 
   toWorkOrders(): void {
     this.flight = null;
-    this.scenes.go('workorders', () => new WorkOrdersScene(this));
+    this.showScene('workorders', 'menu', () => new WorkOrdersScene(this));
   }
 
   toUpgrades(): void {
-    this.scenes.go('upgrades', () => new UpgradesScene(this));
+    this.showScene('upgrades', 'menu', () => new UpgradesScene(this));
   }
 
   toTrophies(from: TrophyReturnTarget = 'title', view?: { preview: boolean; room: TrophyRoomTab }): void {
-    this.scenes.go('trophies', () => new TrophiesScene(this, from, view), view !== undefined);
+    this.showScene('trophies', 'menu', () => new TrophiesScene(this, from, view), view !== undefined);
   }
 
   toMemo(levelIndex: number): void {
@@ -284,7 +292,7 @@ export class Game implements Shell {
     const finale = LEVELS[i]!.id === 'level12';
     const practice = finale ? () => this.practiceRecital(i) : i === FIELD_CHECK_INDEX ? () => this.toFieldCheck() : undefined;
     const replay = finale && this.save.levels.level12.delivered ? () => this.showDispatchFinale(() => this.toMemo(i)) : undefined;
-    this.scenes.go('memo', () => new MemoScene(this, i, practice, replay));
+    this.showScene('memo', 'menu', () => new MemoScene(this, i, practice, replay));
   }
 
   private practiceRecital(i: number): void {
@@ -292,12 +300,12 @@ export class Game implements Shell {
     if (!isDeep(level)) return;
     const run = new DeepRun(level, i);
     const finish = () => this.toMemo(i);
-    this.scenes.go('flight', () => new DeepFlightScene({ ctx: this.ctx, level, run, practice: true,
+    this.showScene('flight', nightBed(level.id), () => new DeepFlightScene({ ctx: this.ctx, level, run, practice: true,
       onLocked: finish, onSunrise: finish, onQuit: finish }));
   }
 
   private showDispatchFinale(finish: () => void): void {
-    this.scenes.go('dispatch-finale', () => {
+    this.showScene('dispatch-finale', 'menu', () => {
       if (!this.save[FINALE_BEAT]) this.setSave({ ...this.save, [FINALE_BEAT]: true });
       return new DispatchFinale(this, finish);
     });
@@ -306,12 +314,12 @@ export class Game implements Shell {
   private toFieldCheck(): void {
     this.flight = null;
     this.run = null;
-    this.scenes.go('field-check', () => new FieldCheckCard(this.ctx, 'memo', () => this.startFieldCheck(), () => this.leaveFieldCheck()));
+    this.showScene('field-check', 'menu', () => new FieldCheckCard(this.ctx, 'memo', () => this.startFieldCheck(), () => this.leaveFieldCheck()));
   }
 
   private startFieldCheck(): void {
     const practice = new DeepRun(FIELD_CHECK, FIELD_CHECK_INDEX);
-    this.scenes.go('flight', () => {
+    this.showScene('flight', 'night', () => {
       this.ctx.tutorial = false;
       this.flight = new DeepFlightScene({
         ctx: this.ctx, level: FIELD_CHECK, run: practice, practice: true,
@@ -328,15 +336,15 @@ export class Game implements Shell {
 
   private fieldCheckRoom(practice: DeepRun): void {
     const { roomId } = practice.current!;
-    this.scenes.go('abduct', () => {
+    this.showScene('abduct', 'room', () => {
       this.flight = null;
       const inner = createAbductScene(this.ctx, { levelId: 'level3', roomId, rules: FIELD_CHECK_RULES }, (result) => {
         if (practice.finishAbduct(result) === 'done') {
           this.markFieldCheckSeen();
           this.audio.sfx('checkpoint');
-          this.scenes.go('field-check', () => new FieldCheckCard(this.ctx, 'done', () => this.leaveFieldCheck(), () => this.leaveFieldCheck()), false, { style: 'flash' });
+          this.showScene('field-check', 'menu', () => new FieldCheckCard(this.ctx, 'done', () => this.leaveFieldCheck(), () => this.leaveFieldCheck()), false, { style: 'flash' });
         } else {
-          this.scenes.go('field-check', () => new FieldCheckCard(this.ctx, 'retry', () => {
+          this.showScene('field-check', 'menu', () => new FieldCheckCard(this.ctx, 'retry', () => {
             practice.retry();
             this.fieldCheckRoom(practice);
           }, () => this.leaveFieldCheck()));
@@ -366,7 +374,7 @@ export class Game implements Shell {
       return;
     }
     this.run = null;
-    this.scenes.go('flight', () => {
+    this.showScene('flight', 'night', () => {
       this.ctx.tutorial = i === 0 && !this._save.levels.level1.delivered;
       let done = false;
       const scene = new FlightScene({
@@ -400,8 +408,8 @@ export class Game implements Shell {
       this.startRoom(room);
       return;
     }
-    this.scenes.go(
-      'abduct',
+    this.showScene(
+      'abduct', 'room',
       () => {
         this.flight = null;
         this.ctx.tutorial = i === 0 && !this._save.levels.level1.delivered;
@@ -424,12 +432,12 @@ export class Game implements Shell {
     const outcome = applyRun(this._save, LEVELS[i]!.id, abduct, flight);
     if (persist) this.setSave(outcome.save);
     const practiceNext = persist && LEVELS[i]?.id === 'level2' && outcome.stars[0] && !outcome.save.fieldCheckSeen;
-    this.scenes.go('report', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome,
+    this.showScene('report', 'menu', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome,
       practiceNext ? () => this.toFieldCheck() : undefined), false, transition);
   }
 
   toAbortChoice(levelIndex: number, room: RoomId, flight: FlightResult): void {
-    this.scenes.go('abort', () => new AbortScene(this, clampLevel(levelIndex), room, flight));
+    this.showScene('abort', 'menu', () => new AbortScene(this, clampLevel(levelIndex), room, flight));
   }
 
   // ---------------------------------------------------------------- deep shifts (L3+)
@@ -452,8 +460,8 @@ export class Game implements Shell {
 
   toDeepFlight(run: DeepRun, transition?: Transition): void {
     const level = run.level;
-    this.scenes.go(
-      'flight',
+    this.showScene(
+      'flight', nightBed(level.id),
       () => {
         this.ctx.tutorial = false;
         let done = false;
@@ -498,8 +506,8 @@ export class Game implements Shell {
   toDeepAbduct(run: DeepRun, transition?: Transition): void {
     const cur = run.current!;
     const level: DeepLevelDef = run.level;
-    this.scenes.go(
-      'abduct',
+    this.showScene(
+      'abduct', 'room',
       () => {
         this.flight = null;
         this.ctx.tutorial = false;
@@ -526,7 +534,7 @@ export class Game implements Shell {
   }
 
   toDeepChoice(run: DeepRun): void {
-    this.scenes.go('choice', () =>
+    this.showScene('choice', 'menu', () =>
       new DeepChoiceScene(this, run, {
         retry: () => {
           run.retry();
@@ -550,7 +558,7 @@ export class Game implements Shell {
     this.run = null;
     const finale = run.level.id === 'level12' && run.phase === 'done' && !this.save[FINALE_BEAT]
       ? () => this.showDispatchFinale(() => this.toWorkOrders()) : undefined;
-    this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome, undefined, finale), false, transition);
+    this.showScene('report', 'menu', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome, undefined, finale), false, transition);
   }
 
   // ---------------------------------------------------------------- debug

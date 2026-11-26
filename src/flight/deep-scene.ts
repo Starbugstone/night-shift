@@ -151,11 +151,10 @@ export class DeepFlightScene implements Scene {
     if (!this.practice && this.run.legs === 0 && this.run.spotted === 0) {
       this.bannerT = 3;
       this.pendingOpener = deepStartEvent(this.level.id); // v4 story
-      // v4 voices: Bureau dispatch reads the work order banner over the PA
       if (this.pendingOpener === 'start12') {
         this.pendingOpener = null;
         this.say('start12', true);
-      } else this.ctx.audio.speak?.(`${this.bannerHeading}. ${this.bannerBody}.`, 'bureau', { within: 2.9 });
+      }
     }
     else if (this.run.legs > 0 && this.run.deliveredCount > 0 && this.run.lastFail === null) {
       this.say(this.level.id === 'birch_neighbours' ? 'birchReturned'
@@ -230,7 +229,6 @@ export class DeepFlightScene implements Scene {
     this.zibFor = this.zibT = readSeconds(this.zibText);
     this.zibCd = this.zibT + 0.4;
     this.zibPanic = panic;
-    this.ctx.audio.speak?.(this.zibText, 'zib', { panic }); // v4 voices
   }
 
   /** v4 easter eggs: a scenery line, said like any other. */
@@ -240,7 +238,6 @@ export class DeepFlightScene implements Scene {
     this.zibFor = this.zibT = readSeconds(text);
     this.zibCd = this.zibT + 0.4;
     this.zibPanic = false;
-    this.ctx.audio.speak?.(text, 'zib');
   }
 
   update(dt: number): void {
@@ -288,8 +285,6 @@ export class DeepFlightScene implements Scene {
     }
 
     if (this.state === 'spotted') {
-      // v4 voices: Zib's excuse on the SPOTTED card (shown from 0.35 s), once the alarm has rung
-      if (this.st >= 0.5 && this.st - dt < 0.5) this.ctx.audio.speak?.(this.spotLine, 'zib', { panic: true, within: 2.2 });
       if (this.st > SPOT_SKIP && p.pressed) this.respawn();
       return;
     }
@@ -298,7 +293,7 @@ export class DeepFlightScene implements Scene {
       this.state = 'fly';
       this.st = 0;
     }
-    if (this.state !== 'locking' && this.quit.update(p, dt, audio)) {
+    if (this.state !== 'locking' && this.quit.update(p, dt)) {
       this.done = true;
       this.opts.onQuit();
       return;
@@ -371,17 +366,16 @@ export class DeepFlightScene implements Scene {
         this.verseT = readSeconds(this.verse);
         this.zibCd = this.verseT + 0.4;
         this.versePending = false;
-        audio.speak?.(this.verse, 'bureau', { within: this.verseT });
       }
     }
     // ---- events
     if (st.click >= 0) {
-      audio.sfx('click', 0.9);
+      audio.sfx('porch_light');
       if (!this.seen.has('porch')) {
         this.seen.add('porch');
         this.say(this.level.id === 'birch_bakery' ? 'birchHandprint' : 'porch', true, true);
       }
-      // the click: a ring snaps out to the edge of the light
+      // a ring snaps out to the edge of the light
       const d = field.defs[st.click]!;
       if (d.type === 'porch') {
         this.fx.spawn(P_RING, d.x, d.y, 0, 0, 0.34, d.r, PC.amber);
@@ -396,7 +390,7 @@ export class DeepFlightScene implements Scene {
     }
     // L7 cruise code: a photographer half-presses on the saucer
     if (photoHalfPressed(field, this.photoPrev) >= 0) {
-      audio.sfx('click', 0.5);
+      audio.sfx('camera_focus');
       this.say('framed', !this.seen.has('framed'), true);
       this.seen.add('framed');
     }
@@ -453,7 +447,6 @@ export class DeepFlightScene implements Scene {
       greetedPilotQueues.add(this.run);
       const line = deepZibLine('queue1953', 0);
       this.queueBarkT = readSeconds(line);
-      if (!this.pendingOpener && this.zibT <= 0) audio.speak?.(line, 'zib', { within: this.queueBarkT });
     }
 
     // ---- the fuse
@@ -564,7 +557,6 @@ export class DeepFlightScene implements Scene {
   }
 
   dispose(): void {
-    this.ctx.audio.hush?.(); // v4 voices
     this.look.destroy();
   }
 }

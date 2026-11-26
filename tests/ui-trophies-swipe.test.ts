@@ -183,7 +183,7 @@ describe('trophy swipe gesture', () => {
     expect(scene.cardFade).toBe(1);
     swipeRight(r);
     expect(scene.selectedIndex).toBe(3);
-    expect(r.sfx.filter((s) => s === 'click').length).toBe(2);
+    expect(r.sfx).toEqual([]);
   });
 
   it('a swipe that starts on the scrim or on Close is not a tap', () => {

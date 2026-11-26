@@ -63,7 +63,11 @@ export type SfxName =
   | 'lock_on'
   | 'success'
   | 'fail'
-  | 'click'
+  | 'lock_progress'
+  | 'porch_light'
+  | 'camera_focus'
+  | 'clock_tick'
+  | 'clapper'
   | 'stamp'
   /** Soft rising 'uh-oh' tick while a meter climbs (added by shell). */
   | 'alert'
@@ -94,8 +98,13 @@ export interface SpeakOptions {
   volume?: number;
 }
 
+export type AmbientBed = 'menu' | 'room' | 'night' | 'night-coast' | 'night-primate' | 'night-storm'
+  | 'night-medieval' | 'night-1953' | 'night-2199';
+
 export interface Audio {
   sfx(name: SfxName, volume?: number): void;
+  /** Select the looping background, or fade it out. */
+  ambient?(bed: AmbientBed | null): void;
   /** v4: alien babble for a line of text as it appears. Optional so test doubles can skip it. */
   speak?(text: string, voice: VoiceId, opts?: SpeakOptions): void;
   /** v4: stop a voice (or every voice) now, e.g. when the text is skipped or the scene ends. */

@@ -59,7 +59,7 @@ export class UpgradesScene implements Scene {
       this.shown += Math.sign(target - this.shown) * Math.min(step, Math.abs(target - this.shown));
     }
     const p = this.shell.ctx.pointer;
-    if (this.back.update(p, dt, this.shell.audio)) return this.shell.toWorkOrders();
+    if (this.back.update(p, dt)) return this.shell.toWorkOrders();
     for (let i = 0; i < UPGRADES.length; i++) {
       const u = UPGRADES[i]!;
       const b = this.buys[i]!;
@@ -68,7 +68,7 @@ export class UpgradesScene implements Scene {
       b.enabled = canBuy(this.shell.save, u.id);
       const labels = this.buyLabels[i]!;
       b.label = b.enabled ? labels.buy : labels.need;
-      if (b.update(p, dt, this.shell.audio)) {
+      if (b.update(p, dt)) {
         const next = buyUpgrade(this.shell.save, u.id);
         if (next) {
           this.shell.setSave(next);

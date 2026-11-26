@@ -75,11 +75,11 @@ export class TitleScene implements Scene {
     this.shreddedT = Math.max(0, this.shreddedT - dt);
     if (this.confirming) return this.updateConfirm(dt);
     if (this.mute.update(p, dt)) this.shell.toggleMute();
-    for (const { lang, b } of this.langs) if (b.update(p, dt, this.shell.audio) && lang !== getLang()) this.shell.setLanguage(lang);
+    for (const { lang, b } of this.langs) if (b.update(p, dt) && lang !== getLang()) this.shell.setLanguage(lang);
     this.relabel();
-    if (this.start.update(p, dt, this.shell.audio)) this.shell.toWorkOrders();
-    if (this.trophies.update(p, dt, this.shell.audio)) this.shell.toTrophies('title');
-    if (this.reset.update(p, dt, this.shell.audio)) this.openConfirm();
+    if (this.start.update(p, dt)) this.shell.toWorkOrders();
+    if (this.trophies.update(p, dt)) this.shell.toTrophies('title');
+    if (this.reset.update(p, dt)) this.openConfirm();
   }
 
   // v4 reset: the confirmation takes every tap while it is open
@@ -100,9 +100,8 @@ export class TitleScene implements Scene {
 
   private updateConfirm(dt: number): void {
     const p = this.shell.ctx.pointer;
-    const audio = this.shell.audio;
     this.confirmT = Math.min(1, this.confirmT + dt * 4.5);
-    if (this.erase.update(p, dt, audio)) {
+    if (this.erase.update(p, dt)) {
       this.shell.resetProgress();
       this.closeConfirm();
       this.reset.visible = hasProgress(this.shell.save);
@@ -110,17 +109,14 @@ export class TitleScene implements Scene {
       this.shreddedT = readSeconds(tr().title.reset.done);
       return;
     }
-    if (this.keep.update(p, dt, audio)) return this.closeConfirm();
+    if (this.keep.update(p, dt)) return this.closeConfirm();
     const c = RESET_CARD;
     const inCard = p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h;
     if (p.pressed && !inCard) this.scrimArmed = true;
     if (p.released) {
       const out = this.scrimArmed && !inCard;
       this.scrimArmed = false;
-      if (out) {
-        audio.sfx('click');
-        this.closeConfirm();
-      }
+      if (out) this.closeConfirm();
     }
   }
 

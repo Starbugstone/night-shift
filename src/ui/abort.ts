@@ -38,10 +38,9 @@ export class AbortScene implements Scene {
     }
     this.t += dt;
     const p = this.shell.ctx.pointer;
-    const a = this.shell.audio;
-    if (this.retryRoom.update(p, dt, a)) return this.shell.toAbduct(this.levelIndex, this.room, this.flight);
-    if (this.backFlight.update(p, dt, a)) return this.shell.toFlight(this.levelIndex);
-    if (this.orders.update(p, dt, a)) return this.shell.toWorkOrders();
+    if (this.retryRoom.update(p, dt)) return this.shell.toAbduct(this.levelIndex, this.room, this.flight);
+    if (this.backFlight.update(p, dt)) return this.shell.toFlight(this.levelIndex);
+    if (this.orders.update(p, dt)) return this.shell.toWorkOrders();
   }
 
   get view(): Container {
