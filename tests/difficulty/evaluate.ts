@@ -29,6 +29,7 @@ const MIN_CASUAL_PAR_SHARE = 0.30;
 const MIN_CASUAL_PEAK_SUSPICION = 0.05;
 const L9_OWL_CAP = 0.9;
 const L9_SHIFT_SEC = { min: 90, max: 110 } as const;
+const L11_SHIFT_SEC = { min: 110, max: 125 } as const;
 
 /** What "fair but not trivial" means for one level. Rates are 0..1. */
 export interface Band {
@@ -124,7 +125,7 @@ export const BANDS: Record<string, Band | undefined> = {
   // v4 1953: the two timed crossings sit one tier above the 1955 introductions.
   level11: {
     skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
-    flightDone: 0.8, casualBudgetShare: 125 / 315, tension: 20,
+    flightDone: 0.8, casualBudgetShare: L11_SHIFT_SEC.max / 292, tension: 20,
   },
   // v4 L9 1955: late-tier stars and a tighter standard-shift estimate.
   // v4 1122
@@ -366,6 +367,8 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     report.violations.push(...checkDispatchFinale(report));
   }
   if (level.id === 'level11') {
+    if (seeds >= 20 && shiftEstimate.casual !== undefined && shiftEstimate.casual < L11_SHIFT_SEC.min)
+      report.violations.push(`casual shift estimate ${shiftEstimate.casual} s, band wants ≥ ${L11_SHIFT_SEC.min} s`);
     report.tripodFirst = profiles.map(profile => evaluateTripodFirst(level, profile, seeds, play));
     for (const row of report.tripodFirst) {
       if (row.profile !== 'skilled' && row.profile !== 'casual') continue;

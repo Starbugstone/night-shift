@@ -102,19 +102,21 @@ describe('1953 · Route 9 Drive-In', () => {
   it('shows a warning with no exposure and catches the full-speed cut in its live window, including Hush Drive', () => {
     const ray = TRIPOD_SNEEZE;
     const field = new HazardField([ray]);
-    field.sample(5);
+    const { period, warning, live } = ray.burst;
+    field.sample(period - warning / 2);
     expect(field.tell[0]).toBe(1);
     expect(field.detect(550, 1300, noPorches)).toBe(-1);
-    field.sample(6.1);
+    field.sample(period + live / 2);
     expect(field.tell[0]).toBe(0);
     expect(field.detect(550, 1300, noPorches)).toBe(0);
     const bend = SNEEZE_SHORTCUT[1];
     const finish = SNEEZE_SHORTCUT[2];
     const angle = Math.atan2(finish.y - bend.y, finish.x - bend.x);
+    const fuseSec = map.fuseSec ?? 1;
     for (const offset of [-28, -21, -14, -7, 0, 7, 14, 21, 28]) {
       const y = bend.y + offset;
       const capX = ray.x - Math.sqrt(ray.range ** 2 - (ray.y - y) ** 2);
-      for (const fuse of [0.8, 1]) {
+      for (const fuse of [fuseSec, fuseSec / 0.8]) {
         let exposure = 0;
         let clearExposure = 0;
         for (let i = 0; i < 1000; i++) {
@@ -123,9 +125,9 @@ describe('1953 · Route 9 Drive-In', () => {
           const pastBend = Math.max(0, dx - (bend.x - capX));
           const wx = Math.min(bend.x, capX + dx) + pastBend * Math.cos(angle);
           const wy = y + pastBend * Math.sin(angle);
-          field.sample(6 + sec);
+          field.sample(period + sec);
           if (field.on[0] && pointInCone(wx, wy, ray.x, ray.y, ray.base, ray.half, ray.range)) exposure += 0.0015;
-          field.sample(8 + sec);
+          field.sample(period + live + 0.1 + sec);
           if (field.on[0] && pointInCone(wx, wy, ray.x, ray.y, ray.base, ray.half, ray.range)) clearExposure += 0.0015;
         }
         expect(exposure, `offset ${offset}, fuse ${fuse}`).toBeGreaterThan(fuse);
@@ -150,7 +152,7 @@ describe('1953 · Route 9 Drive-In', () => {
 
   it('files three real room results in a full shift, with and without the west-farm detour', () => {
     const standard = evaluateStars(LEVEL11, PROFILES.bot, 1, playAbduction).runs[0]!;
-    expect(standard.stars.slice(0, 2)).toEqual([true, true]);
+    expect(standard.stars.slice(0, 2), JSON.stringify(standard)).toEqual([true, true]);
     expect(standard.rooms).toHaveLength(3);
     expect(standard.roomFailures).toEqual([]);
     const detour = evaluateTripodFirst(LEVEL11, PROFILES.bot, 1, playAbduction).runs[0]!;

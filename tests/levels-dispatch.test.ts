@@ -72,6 +72,19 @@ describe('work order insertion', () => {
 });
 
 describe('Temporal Dispatch prerequisites', () => {
+  it('numbers 1122, 1953 and 2199 in order and registers the finale prerequisites', () => {
+    expect(LEVELS.slice(11, 14).map(level => level.id)).toEqual(['level10', 'level11', 'level12']);
+    expect(LEVELS[13]?.requires).toEqual(['level10', 'level11']);
+    for (const [id, expected] of [['level10', '0012'], ['level11', '0013'], ['level12', '0014']] as const) {
+      const num = formatOrderNumber(workOrderNumber(id));
+      expect(num).toBe(expected);
+      for (const t of Object.values(TABLES)) {
+        expect(fmt(t.workOrders.orderNo, { num })).toMatch(new RegExp(`[#°]${expected}\\b`));
+        expect(fmt(t.levels[id].re, { num })).toMatch(new RegExp(`[#°]${expected}\\b`));
+      }
+    }
+  });
+
   const eras = [{ id: 'level9', requires: [] }, { id: '1122', requires: ['level9'] },
     { id: '1953', requires: ['level9'] }, { id: '2199', requires: ['1122', '1953'] }];
   it.each([['1122', '1953'], ['1953', '1122']])('allows %s first and opens the finale after %s', (first, second) => {

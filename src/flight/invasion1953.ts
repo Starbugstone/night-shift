@@ -8,7 +8,7 @@ export const DRIVE_IN_PROJECTOR = {
 export const TRIPOD_SNEEZE = {
   type: 'camera', skin: 'invasion_sick_tripod_top', x: 900, y: 1650,
   range: 640, half: 0.47, base: -2.25, amp: 0, rate: 0, phase: 0,
-  burst: { period: 6, warning: 1.2, live: 1.22 },
+  burst: { period: 5.5, warning: 1.2, live: 1.32 },
 } satisfies CameraHazard;
 
 export const greetedPilotQueues = new WeakSet<object>();

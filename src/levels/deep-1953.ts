@@ -21,9 +21,9 @@ export const LEVEL11: DeepLevelDef = {
   kind: 'deep', id: 'level11', requires: ['level9'], title: copy.title, location: copy.location,
   blurb: copy.blurb, human: copy.human, mugshot: 'human/forester_head',
   memo: { re: copy.re, body: copy.body, joke: copy.joke },
-  hours: [1, 6], budgetSec: 315, parMarginSec: 190,
+  hours: [1, 6], budgetSec: 292, parMarginSec: 118,
   map: {
-    theme: 'invasion53', w: 1800, h: 2280, start: { x: 900, y: 2185 }, fuseSec: 0.8,
+    theme: 'invasion53', w: 1800, h: 2280, start: { x: 900, y: 2185 }, fuseSec: 0.64,
     collectible: TRIPOD_LEG,
     roads: [
       { dir: 'v', at: 255, from: 295, to: 2180 },

@@ -182,7 +182,7 @@ export class DeepFlightScene implements Scene {
     const words = tr();
     if (this.practice && this.level.id === 'level12') return words.dispatch2199.practice;
     if (this.practice) return fmt(words.fieldCheck.re, { num: formatOrderNumber(workOrderNumber('level2')) });
-    const num = formatOrderNumber(this.run.levelIndex + 1);
+    const num = formatOrderNumber(workOrderNumber(this.level.id));
     if (this.level.id === 'level12') return fmt(words.levels.level12.re, { num });
     if (this.level.id === 'level9') return fmt(words.crestValley.order, { num });
     return this.level.id === 'level8' || this.level.clockMode === 'elapsed'

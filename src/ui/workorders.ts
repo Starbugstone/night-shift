@@ -5,7 +5,7 @@ import type { Assets, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { deepPar } from '../levels/types';
-import { LEVELS, formatOrderNumber } from '../levels/levels';
+import { LEVELS, formatOrderNumber, workOrderNumber } from '../levels/levels';
 import { MAX_STARS, RANKS, dispatchRequirements, isLevelUnlocked, levelStarCount, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, tr } from '../i18n';
 import { easeOutCubic } from '../core/fx';
@@ -308,7 +308,7 @@ class LevelCard {
     } else this.photos.push(new Mugshot(assets, lv.mugshot, CARD_W - 62, 58, unlocked, index, 38));
     for (const photo of this.photos) this.root.addChild(photo.root);
 
-    const order = fmt(strings.orderNo, { num: formatOrderNumber(index + 1) });
+    const order = fmt(strings.orderNo, { num: formatOrderNumber(workOrderNumber(lv.id)) });
     const tagX = 44 + measure(order, 14, 800);
     const learner = training && !recommended;
     const mint = training || recommended;
