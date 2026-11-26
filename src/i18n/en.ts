@@ -776,6 +776,15 @@ export const en = {
     stars: ["Quota met", "Ghost", "Night owl"],
     ranOut: "ran out: time's up",
     badge: "TIME TRIAL ×5",
+    // 2026-11-26: L8 keeps Echo's in-story dawn; its screens count down like its HUD (src/ui/deadline.ts)
+    duration: "Time limit: {time}",
+    timeLeft: "{time} left",
+    warning: "TIME'S ALMOST UP!",
+    deliverGoal: "{star} — all 5 before dawn ({time})",
+    expired: [
+      "Dawn. Echo filed the patent. OBELISK™ now owns the beam for the next three million years.",
+      "Sunrise, and the paperwork won. The apes are already invoicing us for the bone.",
+    ],
   },
 
   starLabels: {

@@ -333,7 +333,7 @@ Most jokes translate straight (corporate deadpan, *2001*, *Star Trek*, *The Godf
 | --- | --- | --- |
 | **L1: "sleeps like a log"** | Idiom mismatch (*dormir comme une bûche* works, or *comme un loir*). | « dort comme une souche, ronfle comme une tronçonneuse » (keeps the rural timber rhythm). |
 | **L5 title: "Pier Pressure"** | Pun on *peer pressure* / *pier*. Already localised in `GDD-3`. | Keep existing « Dauphin de quart » (or « Pression à quai » for subtitle). |
-| **L6: "Form 7-B"** | British/US bureaucratic number. | Keep existing « Cerfa 7-B » (lands the bureaucratic joke instantly in FR). |
+| **L6: "Form 7-B"** | British/US bureaucratic number. | « Formulaire 7-B » (2026-11-26: « Cerfa » is France-only; every French speaker reads « formulaire »). |
 | **L6: "Rear entrance" route** | Double-entendre on back door / endoscopy. | « Accès par l'arrière » or « Porte de derrière » (preserves the dry PG-13 wink without getting crude). |
 | **L8: "Prior Art" / "Prior Contact"** | Patent-law term *prior art* (*antériorité*) + *first contact*. | « Antériorité de contact » / « Premier contact, deuxième passage » (keep GDD-4 title; use « brevet d'antériorité » in `re`). |
 | **L8: "The rock just put me on hold."** | Phone-queue idiom (*put on hold*). | « Le caillou vient de me mettre sur liste d'attente. » / « Le rocher m'a mis en attente musicale. » |

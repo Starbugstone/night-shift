@@ -28,10 +28,9 @@ Comedy and feel beat realism. Instant restart.
 | `public/art/**` | art |
 | `src/contracts.ts`, `src/art-manifest.ts`, `docs/**`, `AGENTS.md`, config | coordinator (additive edits allowed, report them) |
 
-Edit only your area. Tests go in `tests/<area>-*.test.ts`. Do **not** run
-`git commit`, `git add`, `git stash`, `git checkout` or anything that changes
-the index or other agents' files — the coordinator commits. Do not run
-`npm install` of new packages without saying why in your report.
+Edit only your area. Tests go in `tests/<area>-*.test.ts`. Commit only as
+"Git and committing" at the end of this file says. Do not run `npm install`
+of new packages without saying why in your report.
 
 ## Shared rendering helpers (use these before drawing your own)
 
@@ -184,4 +183,50 @@ Ownership while the v4 agents run (one checkout, several agents):
 New strings: add them to both `en.ts` and `fr.ts` under a `// v4 <area>` anchor comment; the
 translation review only rewrites existing lines and will do a second pass on the new ones. The v3
 rules for shared files still apply: re-read right before each edit, keep edits small, never reformat,
-never undo another agent's lines. Don't commit; the coordinator commits to `preprod`.
+never undo another agent's lines. Commit only as "Git and committing" says.
+
+## Regression guards (2026-11-26)
+
+`docs/REGRESSIONS.md` lists every bug class the player or a review has reported, its rule and the test that
+guards it. Read the rows your change touches before you finish, and run their guards.
+
+- **A reported bug gets a guard.** When the user reports a new kind of bug, add a row to `docs/REGRESSIONS.md`
+  and a test that walks every level in `LEVELS` and every room in `ROOMS`, never a fixed list.
+- **Never narrow a guard to pass.** If a test fails, fix the level or the code, not the assertion. Covering
+  fewer levels, rings, start delays, seeds or rooms needs the user's OK, and your report gives the before
+  and after numbers.
+- **PENDING lists only shrink.** Never add an entry for content you are adding; fix the content. When a pending
+  entry starts passing, take it off the list.
+- **A new mechanic is taught.** A new room field or hazard kind fails `tests/abduct-mechanic-taught.test.ts`
+  until it is registered with the level that introduces it and the EN+FR memo line or prompt that teaches it,
+  with a reason the story gives.
+- **Copy follows the story.** A new lore term, payoff or deadline word gets a token in
+  `tests/ui-copy-continuity.test.ts`. Repeated phrases and France-only references fail
+  `tests/ui-copy-repeats.test.ts`.
+- **Prove failures are not yours.** Name every failing file. Before calling a failure another agent's, show it
+  fails without your change, for example on your staged snapshot.
+- **Evidence shows the change.** Capture on a fresh build after the change, at 1× phone size, in EN and FR for
+  text, after the memo typewriter has finished. The final report lists the tests run and what is still pending.
+
+## Git and committing (shared checkout)
+
+Several sessions edit this checkout at once, with uncommitted hunks in the same files (`en.ts`, `fr.ts`,
+`deep-view.ts`...), and some keep local commits they have not pushed yet. (2026-11-26, advised by Neon and Sol.)
+
+- **Who commits.** Delegated children never run `git add`, `git commit`, `git stash`, `git checkout` or
+  `git reset`: they report their files and hunks, and the parent commits. A top-level thread commits only
+  when the user asks ("commit and push").
+- **Never in the shared checkout:** `git stash` (it takes other sessions' edits off the disk), `git checkout`,
+  `git switch`, `git restore` or `git reset` on files that aren't yours, `git add -A`, `git add .`,
+  `git commit -a`, and force-pushing.
+- **Stage only your own hunks.** Add new files by name, and use `git add -p` in shared files. Read the whole
+  `git diff --cached` and run `git diff --cached --check`: no hunk from another session.
+- **Check the commit, not the working tree.** After committing, build a scratch checkout of that exact commit
+  (`git worktree add <scratchpad>/check HEAD`, then link `node_modules` into it) and run `npm run typecheck` and
+  the guards your change touches there. If something fails, fix it with a new commit before pushing.
+- **Push only what is yours.** `git fetch origin`, then read `git log --oneline origin/preprod..HEAD`. Push
+  when every outgoing commit is yours, or the user asked to ship it. Otherwise, or if the push is rejected,
+  don't rebase the shared checkout: cherry-pick your commits onto `origin/preprod` in a scratch worktree, run
+  the checks there, `git push origin HEAD:preprod`, and tell the user the shared branch needs reconciling.
+- **Branches.** Work ships to `preprod`. Merge or push to `main` only when the user says so.
+- **Report** the pushed SHA, what it contains and the checks you ran.

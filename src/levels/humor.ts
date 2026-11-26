@@ -216,6 +216,7 @@ export const SUNRISE_MEMOS: readonly string[] = en.humor.sunriseMemos;
 export function sunriseMemo(rotation: number, levelId?: LevelId): string {
   const words = tr().humor;
   if (levelId === 'level12') return tr().dispatch2199.lost;
+  if (levelId === 'level8') return pick(tr().timeTrial.expired, rotation);
   return pick(levelId === 'level9' ? words.deepComments.clocktowerExpired : words.sunriseMemos, rotation);
 }
 

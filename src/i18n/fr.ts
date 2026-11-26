@@ -76,7 +76,7 @@ export const fr: Strings = {
       // v4 L9 1955
       afterL8: [
         "Astuce : si une voiture en inox atteint 88 miles à l'heure sous l'orage, écartez-vous. Notre assurance plafonne à 85.",
-        'Astuce : le Dispatch temporel tourne au Cerfa 88-MPH. Déclarez vos frais avant hier.',
+        'Astuce : le Dispatch temporel tourne au formulaire 88-MPH. Déclarez vos frais avant hier.',
       ],
       afterL2: [
         "Astuce : chaque chaussette orpheline de Spin City depuis 1998 dort dans l'entrepôt 4.",
@@ -87,7 +87,7 @@ export const fr: Strings = {
       ],
       afterL5: [
         'Astuce : Bubulle le dauphin a son anneau de parking au Bureau. Le sien a une piscine.',
-        'Astuce : le Cerfa 7-B est strictement médical. Cessez de glousser en endoscopie.',
+        'Astuce : le formulaire 7-B est strictement médical. Cessez de glousser en endoscopie.',
       ],
       afterL7: [
         "Astuce : OBELISK™ facture la musique dramatique. Notre rayon est silencieux et gratuit.",
@@ -261,7 +261,7 @@ export const fr: Strings = {
       human: "Doc, Buff et Marvin",
       collect: "Doc, Buff et Marvin",
       re: 'Ordre n°{num} — 12 nov. 1955 (22 h 04)',
-      body: "Le Dispatch temporel a capté 2,21 gigowatts en 1955 : quelqu'un bricole le temps sans Cerfa 88-MPH. En 1955, la Gazette de Grimsby couvrait aussi Crest Valley, la vallée voisine. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, fin de l'orage.",
+      body: "Le Dispatch temporel a capté 2,21 gigowatts en 1955 : quelqu'un bricole le temps sans formulaire 88-MPH. En 1955, la Gazette de Grimsby couvrait aussi Crest Valley, la vallée voisine. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, fin de l'orage.",
       joke: "Une voiture temporelle est attendue devant l'horloge à 22 h 04 pile. Guettez-la à la sortie ouest, puis calez-vous sur sa vitesse pour la saisir avant la foudre.",
       signoff: "— Vrell. J'avais dit : pas touche au cadran.",
     },
@@ -306,7 +306,7 @@ export const fr: Strings = {
       collect: 'Nigel, Kévin et le maire',
       re: 'Ordre n°{num} — Grimsby Centre (confinement)',
       body: "À cause de la plainte de Gary et de la photo de Mme Pruitt à la mairie, le siège exige un audit civique : Nigel au musée, DJ Kévin au Bass-Fond et le maire Whitlock. Attention à l'hélico de la police, à la circulation et aux néons.",
-      joke: "Le maire est un élu : remplissez le Cerfa 9-V (Vote, Extraterrestre). Vérifiez aussi le registre de Nigel : quelqu'un a expédié une pierre noire hors inventaire du musée la semaine dernière.",
+      joke: "Le maire est un élu : remplissez le formulaire 9-V (Vote, Extraterrestre). Vérifiez aussi le registre de Nigel : quelqu'un a expédié une pierre noire hors inventaire du musée la semaine dernière.",
       signoff: '— Vrell. Ma paupière tremble.', // v4 story
     },
     level5: {
@@ -323,11 +323,11 @@ export const fr: Strings = {
     level6: {
       title: 'Contrôle technique',
       location: "Hôpital Sainte-Mildred · service d'endoscopie",
-      blurb: 'Cerfa 7-B. Deux relevés chacun. Personne ne se réveille.',
+      blurb: 'Formulaire 7-B. Deux relevés chacun. Zéro réveil.',
       human: 'Hank, le Dr Osei et M. Pemberton',
       collect: 'Hank, le Dr Osei et M. Pemberton',
-      re: 'Ordre n°{num} — Audit obligatoire Cerfa 7-B',
-      body: "Le registre du phare de Pete est arrivé au siège, et la Conformité a relevé zéro sondage ce trimestre. Pire : ici, les humains font la queue volontairement et laissent quatre étoiles. Embarquez Hank, le Dr Osei et M. Pemberton avec le Cerfa 7-B coché en chemin.",
+      re: 'Ordre n°{num} — Audit du formulaire 7-B',
+      body: "Le registre du phare de Pete est arrivé au siège, et la Conformité a relevé zéro sondage ce trimestre. Pire : ici, les humains font la queue volontairement et laissent quatre étoiles. Embarquez Hank, le Dr Osei et M. Pemberton avec le formulaire 7-B coché en chemin.",
       joke: "Notre sonde est un thermomètre en laiton et un porte-bloc depuis 1953. Leurs autres théories sont vexantes. (Un défibrillateur marqué IL EST VIVANT ! traîne près du dépose-minute — à prendre seulement si vous avez le temps.)",
       signoff: '— Vrell. Signé en triple exemplaire (au secours).', // v4 story
     },
@@ -444,7 +444,7 @@ export const fr: Strings = {
     { title: "Ravisseur à l'essai", flavour: 'Prometteur, malgré les bosses. Pas de grille-pain.' },
     { title: 'Ravisseur', flavour: 'Droit au tour de cou débloqué.' },
     { title: 'Ravisseur confirmé', flavour: "Anneau de parking : sur liste d'attente. Derrière Bubulle." },
-    { title: 'Chef ravisseur', flavour: 'Signe les Cerfa des autres. Les lit rarement.' },
+    { title: 'Chef ravisseur', flavour: 'Signe les formulaires des autres. Les lit rarement.' },
     { title: 'Chef des Affaires internes', flavour: 'Habilité au thermomètre en laiton de 1953.' },
     { title: 'Grand amiral de la sieste', flavour: "Salaire à l'étude. Vrell « s'en occupe »." },
   ],
@@ -468,7 +468,7 @@ export const fr: Strings = {
   // v4 1953
   invasion1953: {
     archive: "ARCHIVES DE 1953",
-    firstCover: "Le relevé est devenu le Cerfa 7-B. La Conformité a mis la méthode sous scellés.",
+    firstCover: "Le relevé est devenu le formulaire 7-B. La Conformité a mis la méthode sous scellés.",
     legCover: "Le poulailler perd un pied dans la nuit. Le fermier accuse un renard très grand.",
     bless: "À vos souhaits !",
     inhale: "A… a…",
@@ -548,6 +548,15 @@ export const fr: Strings = {
     stars: ["Quota atteint", "Fantôme", "Oiseau de nuit"],
     ranOut: "épuisée : temps écoulé",
     badge: "CHRONO ×5",
+    // 2026-11-26 : L8 garde l'aube d'Écho ; ses écrans décomptent comme son HUD (src/ui/deadline.ts)
+    duration: "Chrono : {time}",
+    timeLeft: "Il reste {time}",
+    warning: "DERNIÈRES SECONDES !",
+    deliverGoal: "{star} — les 5 avant l'aube ({time})",
+    expired: [
+      "L'aube. Écho a déposé le brevet. OBELISK™ possède notre rayon pour les trois prochains millions d'années.",
+      "Lever du soleil, et la paperasse a gagné. Les singes nous facturent déjà l'os.",
+    ],
   },
 
   starLabels: {
@@ -610,8 +619,8 @@ export const fr: Strings = {
 
   report: {
     title: 'RAPPORT DE SPÉCIMEN',
-    subtitle: 'Cerfa 27-B/6 · Sujet : {name} · Via : {route}',
-    subtitleDeep: 'Cerfa 27-B/6 (groupé) · {location}',
+    subtitle: 'Formulaire 27-B/6 · Sujet : {name} · Via : {route}',
+    subtitleDeep: 'Formulaire 27-B/6 (groupé) · {location}',
     totalTime: 'Temps total',
     totalTimeValue: '{total}  (vol {fly} · rayon {beam})',
     bonked: 'Gnons reçus',
@@ -641,7 +650,7 @@ export const fr: Strings = {
   reportExtras: {
     approved: 'APPROUVÉ',
     masthead: 'LA GAZETTE DE GRIMSBY',
-    readings: 'Relevés du Cerfa 7-B',
+    readings: 'Relevés du formulaire 7-B',
     cover: {
       // v4 L9 1955
       storm: ['Classé : {cause}. Le Dispatch temporel a clos le dossier à 22 h 10.', "Classé : {cause}. L'orage est passé ; le laissez-passer a expiré à l'heure."],
@@ -918,7 +927,7 @@ export const fr: Strings = {
       bonks: [
         "{bonks} gnons. Le spécimen est désormais plus bleu qu'humain.",
         "J'ai demandé un spécimen, pas une piñata.",
-        'Chaque gnon vaut un Cerfa. Vous me devez {bonks} Cerfa.',
+        "Chaque gnon vaut un formulaire. Vous m'en devez {bonks}.",
       ],
       stole: [
         "Vous avez aussi rapporté : {item}. La comptabilité est ravie. La comptabilité n'est jamais ravie.",
@@ -972,7 +981,7 @@ export const fr: Strings = {
       ],
       timeCarMissed: [
         "Volatilisée en deux traînées de feu ! Rendez-vous en 1985, j'imagine.",
-        "88 miles à l'heure et pouf ! Vrell va me coller le Cerfa 88-MPH.",
+        "88 miles à l'heure et pouf ! Vrell va me coller le formulaire 88-MPH.",
       ],
       timeCarCaught: [
         "Saisie à 87 miles à l'heure ! Ça annule la garantie ?",
@@ -994,7 +1003,7 @@ export const fr: Strings = {
       start4: ['Grimsby centre-ville. Maman dit que les villes mettent les soucoupes en fourrière.', 'OK. Le centre-ville. Du calme. Fais le pigeon.'],
       // v4 story
       start5: ["Barnacle Bay ! Attends — j'enlève un DAUPHIN ? Je prends un seau ?", 'Service en bord de mer. Cache-toi du phare. Garde le mammifère humide.'],
-      start6: ['Sainte-Mildred. Les humains paient pour se faire sonder ? Quelle planète bizarre.', 'Audit Cerfa 7-B. Thermomètre en laiton prêt. Que personne ne se réveille.'],
+      start6: ['Sainte-Mildred. Les humains paient pour se faire sonder ? Quelle planète bizarre.', 'Audit du formulaire 7-B. Thermomètre en laiton prêt. Que personne ne se réveille.'],
       start7: ['Un paquebot entier, hors budget. Vrell va finir par nous faire virer tous les deux.', 'SS Buffet Royal. Chope le commandant, évite le flash, oublie les crevettes.'],
       start8: ["Trois millions d'années plus tôt et c'est ENCORE Grimsby. Vite, avant Écho !", 'Des singes en liberté, des dalles noires et un chrono. Il est où, Krix ?!'],
       twoOfThree: [
@@ -1217,7 +1226,7 @@ export const fr: Strings = {
       ],
       // L6 clinic code
       clinic: [
-        'Cerfa 7-B déposé en trois exemplaires. Températures conformes, réflexes vifs, zéro plainte.',
+        'Formulaire 7-B déposé en trois exemplaires. Températures conformes, réflexes vifs, zéro plainte.',
         "Roland a noté l'ergonomie de notre porte-bloc 8,5 sur 10 en dormant. Encadrez ça.",
       ],
       // L7 cruise code
@@ -1251,7 +1260,7 @@ export const fr: Strings = {
       level3: 'Banlieue bouclée, mais Gary a porté plainte et Mme Pruitt a envoyé votre photo à la mairie. Direction le centre-ville.',
       level4: "Maire livré, presque intact. Le registre de Nigel note une pierre noire vendue à un « cabinet de conseil offshore », et le bureau du maire a suivi sa caisse jusqu'à Barnacle Bay. Suivez la côte.",
       level5: "Bubulle a laissé un mot poli — qui apprend à écrire à un dauphin ? — et le registre de Pete a déclenché un audit. Sortez le thermomètre en laiton.",
-      level6: 'Cerfa 7-B validé, dignité quasi intacte. Attendez : un dossier nomme le paquebot qui transporte la pierre noire. On embarque.',
+      level6: 'Formulaire 7-B validé, dignité quasi intacte. Attendez : un dossier nomme le paquebot qui transporte la pierre noire. On embarque.',
       level7: "Le manifeste du commandant nomme nos concurrents : OBELISK™ — signé Krix, l'ex-stagiaire au grille-pain. Il a changé de bord. Le Dispatch temporel est au sous-sol : prenez un pied-de-biche.",
       level8: 'Brevets annulés, frais facturés à OBELISK™, Krix en plein audit. Vous êtes embauché, Zib. Vrai salaire. Ne touchez pas au cadran.',
     },
@@ -1369,14 +1378,14 @@ export const fr: Strings = {
       // v4 L9 1955
       "spare flex capacitor": {
         got: ["Un convecteur temporaire qui clignote dans une boîte à biscuits. Nos scientifiques disent que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur temporaire enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
-        missed: ["Vous avez laissé le convecteur temporaire dans la cage d'horloge. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur. Dommage, le Dispatch temporel voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
+        missed: ["Vous avez laissé le convecteur temporaire dans la cage d'horloge. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur. Dommage, le Dispatch temporel voulait voir comment ils plient le temps sans formulaire 88-MPH."],
       },
       "yellow hazmat suit": {
         got: ["Une combinaison jaune fluo, avec un sèche-cheveux à la ceinture. Les humains croient qu'on s'habille comme ça. C'est presque flatteur.", "Combinaison jaune enregistrée. Zib l'a mise à la compta en se prétendant envoyé de la planète Vulcain. Ils y ont cru.", "Tenue antiradiation de 1955. Sent légèrement l'ozone et les cassettes de hard rock mal rembobinées."],
         missed: ["Vous avez laissé la combinaison jaune sur le banc de service. Un fermier de 1955 va encore croire que nous sommes des bananes géantes.", "Pas de combinaison. Dommage, elle était plus propre que nos uniformes officiels."],
       },
       "red puffy vest": {
-        got: ["Une doudoune rouge sans manches prise derrière le gymnase. En 1955, tout le monde demande pourquoi le gamin porte un gilet de sauvetage. Bonne question.", "Doudoune rouge classée en « bouée suspecte, encombrante ». Zib la porte sur trois pulls et fond sur place.", "Une doudoune de 1985 égarée en 1955. Crime de mode temporel — et on n'a même pas de Cerfa pour ça."],
+        got: ["Une doudoune rouge sans manches prise derrière le gymnase. En 1955, tout le monde demande pourquoi le gamin porte un gilet de sauvetage. Bonne question.", "Doudoune rouge classée en « bouée suspecte, encombrante ». Zib la porte sur trois pulls et fond sur place.", "Une doudoune de 1985 égarée en 1955. Crime de mode temporel — et on n'a même pas de formulaire pour ça."],
         missed: ["Vous avez laissé la doudoune rouge derrière le gymnase. Le chaperon la garde au cas où les garde-côtes débarquent au bal.", "Pas de doudoune rouge. Tant mieux : Zib a déjà bien assez de vestes douteuses en soute."],
       },
       // v4 2199
@@ -1680,7 +1689,7 @@ export const fr: Strings = {
           "Un plug anal en argent, trouvé dans le couloir des Affaires internes. Zib, ce n'est pas une très bonne sonde.",
           "Ce n'est pas une très bonne sonde, Zib. Ça ne prend même pas la température. Arrêtez de le faire briller.",
           "Un « dispositif » en argent, classé objet trouvé, Affaires internes. Personne ne viendra le réclamer.",
-          "Plug en argent, annexe du Cerfa 7-B. À « usage », Zib a écrit « décoratif ? ». Oh, Zib. Non.",
+          "Plug en argent, annexe du formulaire 7-B. À « usage », Zib a écrit « décoratif ? ». Oh, Zib. Non.",
         ],
         missed: [
           "Vous avez laissé le… truc en argent dans le couloir. Sage décision. Certaines affaires doivent rester internes.",
@@ -2323,8 +2332,8 @@ export const fr: Strings = {
     'Four stars. Would sleep again.': 'Quatre étoiles. Je reviendrai dormir.',
     'No, the other arm.': "Non, l'autre bras.",
     'Initial here to continue dreaming.': 'Parapher ici pour continuer à rêver.',
-    'FORM 7-B': 'CERFA 7-B',
-    'Form 7-B first': "Cerfa 7-B d'abord",
+    'FORM 7-B': 'FORM. 7-B',
+    'Form 7-B first': "Formulaire 7-B d'abord",
     'Temperature': 'Température',
     'Reflexes': 'Réflexes',
     'Ticklishness': 'Chatouilles',

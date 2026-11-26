@@ -19,6 +19,7 @@ import { ButtonView } from './views/button';
 import { highlightedPanel, SunIcon } from './views/menu-decor';
 import { VrellPortrait } from './views/portrait';
 import { C } from './theme';
+import { deadlineLabel } from './deadline';
 import { Button } from './widgets';
 
 import { fmt, gt, tr } from '../i18n';
@@ -62,7 +63,7 @@ export class DeepChoiceScene implements Scene {
     const sec = Math.floor(left % 60);
     this.status = run.level.clockMode === 'elapsed'
       ? fmt(tr().birch.timeAgainstPar, { used: run.clockText(), par: fmtTime(deepPar(run.level)) })
-      : fmt(run.level.id === 'level12' ? tr().dispatch2199.duration : run.level.id === 'level9' ? d.stormIn : d.sunriseIn, { time: `${m}:${sec < 10 ? '0' : ''}${sec}` });
+      : deadlineLabel(run.level, `${m}:${sec < 10 ? '0' : ''}${sec}`, 'retry');
   }
 
   update(dt: number): void {

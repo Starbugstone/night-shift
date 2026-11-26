@@ -10,6 +10,7 @@ import type { DeepRun } from '../levels/run';
 import { artTex } from './views/art';
 import { HudPanel, HudSunClock, HudTimer } from './views/hud';
 import { C } from './theme';
+import { deadlineWarning as deadlineCaption } from './deadline';
 
 export interface InnerScene extends Scene {
   readonly view: Container;
@@ -121,7 +122,7 @@ class DeepShiftView implements SceneView {
       const on = this.run.level.id === 'level12' || rm || Math.floor(t * 2) % 2 === 0;
       this.panel.set(warn.w, warn.h, on ? C.amber : C.ink);
       this.caption.tint = on ? C.amberHi : C.muted;
-      this.caption.set(this.run.level.id === 'level12' ? tr().dispatch2199.deadline : this.run.level.id === 'level9' ? tr().crestValley.deadline : tr().hud.sunComing, warn.w / 2, warn.h / 2, warn.w - 20);
+      this.caption.set(deadlineCaption(this.run.level), warn.w / 2, warn.h / 2, warn.w - 20);
     }
   }
 

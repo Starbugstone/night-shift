@@ -229,7 +229,7 @@ class MemoView implements SceneView {
       : lv.id === 'birch_neighbours' ? [birch.neighboursGoal, m.deepGoals[1]!, m.deepGoals[2]!]
       : lv.id === 'level12' ? [tr().dispatch2199.deliverGoal, m.deepGoals[1]!, tr().dispatch2199.owlGoal]
       : lv.id === 'level9' ? [words.deliverGoal, m.deepGoals[1]!, words.owlGoal]
-      : lv.id === 'level8' ? [m.deepGoals[0]!, tr().timeTrial.ghost, m.deepGoals[2]!] : m.deepGoals;
+      : lv.id === 'level8' ? [tr().timeTrial.deliverGoal, tr().timeTrial.ghost, m.deepGoals[2]!] : m.deepGoals;
     const lines = [...(lv.kind === 'deep' ? deepGoals : m.tutorialGoals), lv.id === 'level9' ? words.carGoal : m.pickupGoal];
     const times = lv.kind === 'deep' && lv.clockMode !== 'elapsed'
       ? [fmtTime(lv.budgetSec), '', fmtTime(lv.parMarginSec), '']

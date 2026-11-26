@@ -16,6 +16,7 @@ import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
 import { clamp, fmtTime, targetHeadKey } from './draw';
 import { C } from './theme';
+import { deadlineLabel } from './deadline';
 import { Button } from './widgets';
 import { artSprite } from './views/art';
 import { NightSky } from './views/backdrop';
@@ -351,7 +352,7 @@ class LevelCard {
       this.root.addChild(star);
     }
     if (lv.kind === 'deep' && lv.clockMode !== 'elapsed') {
-      const label = fmt(lv.id === 'level12' ? tr().dispatch2199.duration : lv.id === 'level9' ? tr().crestValley.duration : strings.sunriseIn, { time: fmtTime(lv.budgetSec) });
+      const label = deadlineLabel(lv, fmtTime(lv.budgetSec), 'card');
       this.root.addChild(new Label({ size: 16, color: C.amberHi, align: 'right', weight: 800 }).set(label, CARD_W - 24, CARD_H - 44, CARD_W - 230));
       if (this.sun) {
         this.sun.root.position.set(CARD_W - 42 - measure(label, 16, 800), CARD_H - 43);
