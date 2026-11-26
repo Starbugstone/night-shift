@@ -36,7 +36,7 @@ export const LEVELS: readonly LevelDef[] = [
     memo: { re: en.levels.level1.re, body: en.levels.level1.body, joke: en.levels.level1.joke },
     map: {
       theme: 'farm',
-      fuseSec: 0.72,
+      fuseSec: 1, // v4 difficulty curve (Neon P1): was 0.72, harsher than L2 and the Birch Lane shifts
       w: 1080,
       h: 1920,
       start: { x: 540, y: 1600 },
@@ -98,7 +98,8 @@ export const LEVELS: readonly LevelDef[] = [
           sweepRate: 0.9,
         },
       ],
-      dogs: [{ x: 427, y: 848, rMin: 202, rMax: 225, period: 3.2 }],
+      // v4 difficulty curve: a slightly bigger dog keeps the straight run caught on the kinder 1 s fuse
+      dogs: [{ x: 440, y: 880, rMin: 225, rMax: 250, period: 3.2 }],
       neons: [],
       powerLines: [],
       // light spilling from the lit west bedroom window and the two south windows

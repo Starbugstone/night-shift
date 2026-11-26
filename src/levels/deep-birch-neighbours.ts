@@ -10,7 +10,7 @@ export const BIRCH_NEIGHBOURS: DeepLevelDef = {
   memo: { re: copy.re, body: copy.body, joke: copy.joke },
   hours: [2, 6], budgetSec: 210, parMarginSec: 110,
   map: {
-    theme: 'suburb', w: 1440, h: 1680, start: { x: 720, y: 1570 }, fuseSec: 0.9,
+    theme: 'suburb', w: 1440, h: 1680, start: { x: 720, y: 1570 }, fuseSec: 0.95,
     collectible: { id: 'garden_gnome', x: 1255, y: 610 },
     targets: [
       { human: 'Nora Finch', short: 'Nora', building: birchProp('henderson_garage_top', 'suburb_house', 460, 620),

@@ -13,7 +13,7 @@ export const LEVEL8: DeepLevelDef = {
   human: copy.human, mugshot: 'human/flint_head', memo: { re: copy.re, body: copy.body, joke: copy.joke },
   hours: [5, 6], budgetSec: 100, parMarginSec: 25,
   map: {
-    theme: 'badlands', w: 1440, h: 1920, start: { x: 520, y: 1700 },
+    theme: 'badlands', w: 1440, h: 1920, start: { x: 520, y: 1700 }, fuseSec: 0.9,
     // v4 map collectibles: Krix, the ex-intern in a black turtleneck clutching his toaster, on the east ridge north of Reed.
     collectible: { id: 'krix', x: 1290, y: 570 },
     targets: [

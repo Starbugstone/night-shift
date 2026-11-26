@@ -117,13 +117,15 @@ const L7_HAZARDS: HazardDef[] = [
   { type: 'camera', x: 1080, y: 1540, range: 300, half: 0.3, base: PI / 2, amp: 1.15, rate: 0.95, phase: 0 },
   { type: 'camera', x: 1080, y: 2190, range: 300, half: 0.3, base: -PI / 2, amp: 1.15, rate: 1.05, phase: 1.7 },
   // the galley's own CCTV on its roof corner, sweeping the promenade door (the skylight is the photographer's)
-  { type: 'camera', x: 1010, y: 1762, range: 280, half: 0.28, base: 1.65, amp: 0.5, rate: 0.9, phase: 0.6 },
+  // v4 difficulty curve (Neon P7): 245 px so it no longer stacks onto the aft funnel camera's sweep
+  { type: 'camera', x: 1010, y: 1762, range: 245, half: 0.28, base: 1.65, amp: 0.5, rate: 0.9, phase: 0.6 },
   // Greg's neighbour in the next cabin keeps switching the light on: it lights the porthole ring
   { type: 'window', wx: 1372, wy: 2752, x: 1360, y: 2740, r: 95, period: 5.0, on: 4.15, phase: 1.1 },
   { type: 'camera', ...RADAR, base: 0 },
   { type: 'camera', ...RADAR, base: PI },
   // photographers: on the foredeck by the bridge, midships by the galley, aft by the lido
-  photographer(1080, 760, 340, PI / 2),
+  // v4 difficulty curve (Neon P7): the foredeck frame stops at 275 px, clear of the bridge radar's sweep
+  photographer(1080, 760, 275, PI / 2),
   photographer(720, 1640, 320, 0),
   photographer(1180, 3190, 290, PI / 2),
   // stewards on both promenades, out of step
@@ -166,6 +168,7 @@ export const LEVEL7: DeepLevelDef = {
   memo: { re: L7.re, body: L7.body, joke: L7.joke },
   map: {
     theme: 'ship',
+    fuseSec: 0.9, // v4 difficulty curve (Neon P1)
     // v4 map collectibles: the shrimp tower buffet cart on the aft port promenade.
     collectible: { id: 'shrimp_tower', x: 758, y: 2962 },
     w: 2160,

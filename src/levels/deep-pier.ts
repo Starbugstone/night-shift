@@ -193,6 +193,7 @@ export const LEVEL5: DeepLevelDef = {
   },
   map: {
     theme: 'pier',
+    fuseSec: 0.9, // v4 difficulty curve (Neon P1)
     // v4 map collectibles: the unaccounted OBELISK™ shipping crate on the boardwalk slip in a boat's lighthouse shadow.
     collectible: { id: 'obelisk_crate', x: 1225, y: 2505 },
     w: W,

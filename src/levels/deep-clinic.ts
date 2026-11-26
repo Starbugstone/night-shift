@@ -159,7 +159,9 @@ const L6_HAZARDS: HazardDef[] = [
   // the ward's south-west corner, sweeping the south lawn and the recovery window
   { type: 'camera', x: 462, y: 862, range: 280, half: 0.3, base: 0.35, amp: 0.6, rate: 1.1, phase: 0 },
   // the on-call block's north-west corner, sweeping from the west lawn round onto the helipad
-  { type: 'camera', x: 1462, y: 1002, range: 300, half: 0.28, base: 1.9, amp: 1.25, rate: 0.9, phase: 1.3 },
+  // v4 difficulty curve: the sweep (was 1.25) now stops just short of the helipad ring, which is the
+  // medevac searchlight's job; the two together filled a 0.9 s fuse on the lock
+  { type: 'camera', x: 1462, y: 1002, range: 300, half: 0.28, base: 1.9, amp: 0.8, rate: 0.9, phase: 1.3 },
   // car-park pole by the Endoscopy Wing: the rear entrance and the spine
   { type: 'camera', x: 880, y: 2080, range: 290, half: 0.3, base: PI * 0.95, amp: 0.75, rate: 1.0, phase: 2.2, mount: 'pole' },
   // a pole on the west lawn: the laundry chute
@@ -207,6 +209,7 @@ export const LEVEL6: DeepLevelDef = {
   },
   map: {
     theme: 'clinic',
+    fuseSec: 0.9, // v4 difficulty curve (Neon P1)
     // v4 map collectibles: stray defibrillator trolley off the southern drop-off lane across from the Endoscopy Wing.
     // "It's alive!" from the Endoscopy Wing's south windows, across the lane, so the Frankenstein nod reads
     collectible: { id: 'defibrillator', x: 495, y: 2675, shout: { x: 470, y: 2428 } },

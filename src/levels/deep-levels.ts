@@ -145,25 +145,26 @@ const L3_HAZARDS: HazardDef[] = [
   // Guard the obvious driveway approach. The skylight approach stays above the cone.
   { type: 'camera', x: 1440, y: 1930, range: 295, half: 0.26, base: 0.69, amp: 0.13, rate: 1.25, phase: 0 },
   // motion-sensor lights on the walls along the way (none on Maple Court itself, the way north)
-  porch(SW_B, 'n', 820),
-  porch(SE_B, 'n', 1370),
+  // v4 difficulty curve (Neon P4): the SW/SE Birch Lane lights and East St's second light are gone.
+  // They sat away from every ring and made L3 the busiest map before L4.
   yardLight(860, 560, 72, 148),
   porch(N_A, 'e', 1250),
-  porch(E_B, 'n', 2000),
   porch(PRUITT, 'w', 1300),
   // Lights by the doors: each lights its ring (~170-200 px) without being tripped from it, and its
   // trigger sits across the obvious way in. Come in from the side or wait out the 3 s.
   yardLight(905, 842),
-  porch(DAVE, 'e', 741),
+  porch(DAVE, 'e', 712), // v4 difficulty curve: 29 px north so the roof ring sits outside its lit edge (planner stall)
   yardLight(1560, 961),
   porch(BARB, 'e', 840),
   // Gary's own motion lights on posts. The drive light is the one door trap left on the map: it
   // lights the garage-door ring, so come in over the side return, not straight up the drive.
   { type: 'porch', x: 1515, y: 2205, trigger: 110, r: 200, mount: 'post' },
-  yardLight(1600, 1785),
+  // v4 difficulty curve (Neon P4): his north yard light chained into the CCTV and the drive light on
+  // one approach (two of the casual sightings), so it is gone.
   // yard dogs: one in Dave's garden by the patio, one on Barb's back step between her chimney and back door
   { type: 'dog', x: 818, y: 1010, rMin: 55, rMax: 175, period: 1.9, phase: 0 },
-  { type: 'dog', x: 1589, y: 620, rMin: 55, rMax: 175, period: 2.0, phase: 0.8 },
+  // v4 difficulty curve: Barb's dog no longer pulses over both of her rings (the GDD-11 west-of-Barb stall)
+  { type: 'dog', x: 1600, y: 570, rMin: 55, rMax: 140, period: 2.0, phase: 0.8 },
   // bats: one loop round the north houses, one zig-zag over the south blocks
   {
     type: 'flock',
@@ -228,8 +229,8 @@ export const LEVEL3 = {
     collectible: { id: 'astronomer', x: 2055, y: 1580 },
     w: 2160,
     h: 2880,
-    // The first deep level gives a beat longer to react than L4's 1 s fuse.
-    fuseSec: 1.3,
+    // v4 difficulty curve: the fuse never grows from one level to the next (see GDD-5, fuse staircase).
+    fuseSec: 0.9, // v4 difficulty curve (Neon P1): was 1.3
     start: { x: 1020, y: 2700 },
     roads: [
       { dir: 'h', at: 2460, from: 0, to: 2160 },
@@ -523,7 +524,7 @@ export const LEVEL4 = {
     collectible: { id: 'saucer_photo', x: 1420, y: 460 },
     w: 2160,
     h: 3840,
-    fuseSec: 0.8,
+    fuseSec: 0.9, // v4 difficulty curve (Neon P1): was 0.8
     start: { x: 1080, y: 3640 },
     roads: [
       { dir: 'h', at: 3420, from: 0, to: 2160 },

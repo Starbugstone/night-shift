@@ -17,7 +17,7 @@ export const LEVEL12: DeepLevelDef = {
   map: {
     // v4 openings: Zib slips in from the north under the west demolition barge and flies south. The big
     // recital no longer faces the launch: it guards Moe's bureau at the far end of the avenue.
-    theme: 'grimsby2199', w: 1800, h: 2320, start: { x: 300, y: 250 }, fuseSec: 0.8,
+    theme: 'grimsby2199', w: 1800, h: 2320, start: { x: 300, y: 250 }, fuseSec: 0.72,
     collectible: { id: 'bypass_towel', x: 180, y: 430 },
     roads: [
       { dir: 'h', at: 130, from: 310, to: 1490 },
