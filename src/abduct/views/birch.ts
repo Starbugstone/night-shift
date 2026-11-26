@@ -28,11 +28,15 @@ export class BirchRoomDecor {
         new Graphics().ellipse(0, 0, 38, 15).fill('#a36484'));
       this.dough = piece(assets, 'bakery_dough', 338, 614, () =>
         new Graphics().ellipse(0, 0, 32, 15).fill('#e6c997'));
+      // a wooden spoon left in the dough, so the bowl reads as baking and not as a pie
+      const spoon = new Graphics().moveTo(344, 618).lineTo(381, 576).stroke({ color: '#3a2a3c', width: 7, cap: 'round' })
+        .moveTo(344, 618).lineTo(381, 576).stroke({ color: '#c99a62', width: 4, cap: 'round' })
+        .ellipse(341, 621, 8, 5).fill('#c99a62').stroke({ color: '#3a2a3c', width: 2 });
       const keys = new Graphics().circle(510, 663, 7).stroke({ color: '#f0cc8a', width: 3 })
         .moveTo(515, 664).lineTo(532, 657).lineTo(533, 662).moveTo(525, 661).lineTo(527, 666)
         .stroke({ color: '#f0cc8a', width: 4 });
       const bag = new Label({ size: 11, weight: 900, color: '#624555' }).set('LARRY', 552, 644, 42);
-      this.root.addChild(this.imprint, bowl, this.dough, keys, bag);
+      this.root.addChild(this.imprint, bowl, spoon, this.dough, keys, bag);
     } else if (human === 'nora') {
       const { x, y } = roofExit ? { x: 685, y: 177 } : item.sprite;
       const note = new Label({ size: 9, weight: 900, color: '#503547' }).set(tr().birch.alarm, x + 24, y + 11, 34);
