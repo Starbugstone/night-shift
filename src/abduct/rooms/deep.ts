@@ -96,8 +96,8 @@ const SUBJECTS = {
   },
   nigel: {
     pose: { ...CHAIR_POSE, neckX: 120, neckY: 507 },
-    // v4 items: on the first display case in the Laser vault, before the grid
-    item: { sprite: art('coffee_mug', 1882, 496), name: 'fossilized coffee' },
+    // v4 items: on the near corner of the security desk, before the dinosaur hall
+    item: { sprite: art('coffee_mug', 265, 562), name: 'fossilized coffee' },
     caption: 'The museum has added you to its Incident Collection.',
     mumbles: ['The mummy has a parking pass.', 'Stop feeding the fossils.', 'The T. rex owes me a tenner.', 'Please don’t tap on the sarcophagus.', "Lost property. One umbrella. Still wet."],
   },

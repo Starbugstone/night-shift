@@ -58,10 +58,10 @@ const gregLounger = support('lounger', 40, 586, box(10, 38, 262, 26), box(20, 64
 const EXITS = {
   captainMast: art('exit_roof_hatch', 1290, -886),
   captainFunnel: art('exit_chimney_top', -274, -286),
-  marcoSkylight: art('exit_skylight', 600, -1086),
+  marcoSkylight: art('exit_skylight', 1170, -1506),
   marcoPromenade: art('exit_patio_door', 1826, 446),
   gregAwning: fit('exit_skylight', 1300, -706, 220, 80),
-  gregCabin: art('exit_porthole', 1726, 966),
+  gregCabin: art('exit_porthole', 2480, 966),
 } as const;
 
 const SUBJECTS = {
@@ -147,12 +147,13 @@ const marcoHome = building([
   room('Galley', 'galley', box(0, 0, 900, 700),
     [art('soup_pot', 310, 466), art('porthole', 640, 150)],
     [art('counter', 240, 576)], [marcoCrate]),
-  room('Galley hood', 'duct', box(380, -1100, 640, 1100),
-    [EXITS.marcoSkylight]),
+  room('Galley hood', 'duct', box(380, -1100, 640, 1100)),
+  room('Vent duct', 'duct', box(380, -1520, 1080, 420),
+    [EXITS.marcoSkylight], [fit('duct_fan', 925, -1510, 142, 142)]),
   room('Dining room', 'dining_room', box(900, 0, 1100, 700),
     [art('porthole', 1060, 150), art('porthole', 1640, 150)],
     [art('counter', 1450, 576)]),
-], [hatch(0, 560, 'vent', 180), door(900, 260)], [
+], [hatch(0, 560, 'vent', 180), door(900, 260), hatch(-1100, 584, 'vent', 280)], [
   swell(230, 2.1),
   castor('Dessert trolley', art('dessert_trolley', 626, 566), 120, 2.1),
   swing('Hanging ladles', art('hanging_ladles', 300, 96), 0.35, 2.0, 14),
@@ -166,9 +167,10 @@ const marcoHome = building([
 ]);
 
 export const marcoSkylight = route(marcoHome, 'marco', 'GALLEY SKYLIGHT', EXITS.marcoSkylight,
-  box(642, -1010, 116, 70), [
+  box(1212, -1476, 116, 70), [
     point(196, 340), point(420, 320), point(650, 330), point(650, 40), point(650, -200), point(720, -330),
-    point(740, -560), point(700, -970, 'Hood damper', 190),
+    point(740, -560), point(700, -970, 'Hood damper', 190), point(711, -1220),
+    point(935, -1260), point(1090, -1260), point(1265, -1444),
   ], true);
 export const marcoPromenade = route(marcoHome, 'marco', 'PROMENADE DOOR', EXITS.marcoPromenade,
   box(1860, 488, 90, 150), [
@@ -189,10 +191,12 @@ const gregHome = building([
     [EXITS.gregAwning, fit('ladder', 1540, -300, 56, 986)]),
   room('Cabin corridor', 'cabin_corridor', box(0, 700, 1240, 700),
     [art('porthole', 300, 860), art('porthole', 700, 860)]),
-  room('Cabin 404', 'cabin_corridor', box(1240, 700, 660, 700),
-    [EXITS.gregCabin], [fit('double_bed', 1566, 1246, 320, 140)]),
+  room('Cabin corridor', 'cabin_corridor', box(1240, 700, 660, 700),
+    [art('porthole', 1560, 860)]),
+  room('Cabin 404', 'cabin_corridor', box(1900, 700, 770, 700),
+    [EXITS.gregCabin], [art('bunk_bed', 2135, 1166)]),
 ], [
-  door(1200, 260), hatch(700, 330, 'stairs', 200), door(1240, 960, 1386),
+  door(1200, 260), hatch(700, 330, 'stairs', 200), door(1240, 960, 1386), door(1900, 1060, 1386),
 ], [
   swell(230, 1.2),
   castor('Deckchair stack', art('deckchair_stack', 946, 546), 120, 1.2),
@@ -210,7 +214,8 @@ export const gregAwning = route(gregHome, 'greg', 'SUN-DECK AWNING', EXITS.gregA
     point(1410, 0), point(1410, -260), point(1410, -500, 'Awning flap', 200), point(1410, -660),
   ], true);
 export const gregCabin = route(gregHome, 'greg', 'PORTHOLE', EXITS.gregCabin,
-  box(1746, 986, 80, 80), [
+  box(2500, 986, 80, 80), [
     ...gregBar, point(430, 860), point(470, 1000), point(1000, 1010, 'Steward camera', 240),
-    point(1110, 1000), point(1340, 1170, 'Room-service trolley', 170), point(1340, 1040, undefined, 120), point(1500, 1030), point(1786, 1026),
+    point(1110, 1000), point(1340, 1170, 'Room-service trolley', 170), point(1340, 1040, undefined, 120), point(1560, 1040),
+    point(1770, 1160), point(2005, 1160), point(2080, 975), point(2390, 974), point(2540, 1026),
   ]);

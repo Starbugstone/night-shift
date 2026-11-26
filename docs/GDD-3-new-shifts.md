@@ -143,8 +143,8 @@ brisk, zero dignity complaints."* Roland mumbles *"Initial here to continue drea
 
 ## L7 "A Whole Cruise Ship" / « Vogue la soucoupe ! » (the SS Buffet Royale, at sea)
 
-Map ~2160×3600, theme `ship`. Sunrise budget 480 s, par margin 150 s. Graduates the "A Whole Cruise
-Ship" mission concept card. The ship runs bow-north down the middle of the map; open sea around it.
+Map ~2160×3600, theme `ship`. Sunrise budget 480 s, par margin 134 s (346 s elapsed, including the galley duct and
+Cabin 404 approaches). Graduates the "A Whole Cruise Ship" mission concept card. The ship runs bow-north down the middle of the map; open sea around it.
 
 **Look.** Cream bow against ink-blue sea, moonlit Mist decks, a Teal lido pool, strings of deck bulbs
 (decor only), a foam wake trailing south. Interiors in ballroom Brick and Gold with brass rails.

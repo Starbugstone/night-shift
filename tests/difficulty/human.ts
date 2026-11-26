@@ -8,6 +8,7 @@
 //   - jitter: smooth tremor/wobble added to the finger or beam position (px),
 //   - fresh hazard phase on every run (start delay) and a seeded RNG, so runs are repeatable.
 import type { AbductResult, AbductRules, FlightAutopilotIntent, RoomId, UpgradeId } from '../../src/contracts';
+import { SouvenirAttempt } from './souvenir';
 import { AbductPilot } from '../../src/abduct/autopilot';
 import { solidRect } from '../../src/abduct/interior';
 import { ROOMS } from '../../src/abduct/rooms';
@@ -73,6 +74,7 @@ function tremor(random: () => number, amplitude: number, hz = 1): (t: number) =>
 export interface AbductRun {
   result: AbductResult;
   delivered: boolean;
+  captured: boolean;
   failReason?: string;
   failBy?: string;
   timeSec: number;
@@ -102,6 +104,7 @@ const DT = 1 / 60;
 
 export function playAbduction(
   id: RoomId | Room, profile: HumanProfile, seed: number, rules: AbductRules = HARD_RULES, upgrades: readonly UpgradeId[] = [],
+  goal: 'exit' | 'souvenir' = 'exit',
 ): AbductRun {
   const random = rng(seed * 7919 + 17);
   const room = typeof id === 'string' ? ROOMS[id] : id;
@@ -121,6 +124,7 @@ export function playAbduction(
   // Hand plan (where the player means the beam to be) and the queue of what the hand actually does.
   let planX = sim.body.beamX;
   let planY = sim.body.beamY;
+  const detour = goal === 'souvenir' ? new SouvenirAttempt(room, { x: planX, y: planY }) : undefined;
   const queue: { x: number; y: number }[] = Array.from({ length: lag }, () => ({ x: planX, y: planY }));
   // Fresh hazard phase: the player looks at the room for a moment before grabbing.
   const wait = Math.floor(random() * 8 * 60);
@@ -146,7 +150,9 @@ export function playAbduction(
     // Plan from where the hand is heading, not where the lagging beam is.
     body.beamX = planX;
     body.beamY = planY;
-    const { dx, dy } = sim.delivered || sim.failure ? { dx: 0, dy: 0 } : pilot.move(body, sim.elapsed, sim.interior);
+    const { dx, dy } = sim.delivered || sim.failure
+      ? { dx: 0, dy: 0 }
+      : detour?.move(sim, pilot.pace, DT) ?? pilot.move(body, sim.elapsed, sim.interior);
     body.beamX = realX;
     body.beamY = realY;
     planX += dx;
@@ -196,6 +202,7 @@ export function playAbduction(
   return {
     result,
     delivered: result.delivered,
+    captured: sim.item.captured,
     failReason: result.failReason ?? (result.delivered ? undefined : 'timeout'),
     failBy: result.failBy,
     timeSec: sim.elapsed - t0,

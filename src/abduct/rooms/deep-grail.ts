@@ -24,8 +24,9 @@ function make(human: keyof typeof subjects, upper: boolean, route: keyof typeof 
   const seatY = human === 'black_knight' ? 590 : 580;
   const seat = prop(fit(who.rest, 48, seatY - (human === 'black_knight' ? 95 : 0), 270, human === 'black_knight' ? 170 : 98),
     [box(56, seatY, human === 'black_knight' ? 162 : 260, 30)]);
-  const shelfX = upper ? 415 : 1010;
-  const shelfY = upper ? (human === 'tom_enchanter' ? -46 : -285) : 495;
+  const smokeShelf = upper && human === 'tom_enchanter';
+  const shelfX = smokeShelf ? 735 : upper ? 415 : 1010;
+  const shelfY = upper ? (smokeShelf ? -373 : -285) : 495;
   const shelf = prop(fit('shelf', shelfX, shelfY, 108, 20));
   const bay = section(who.bay, who.backdrop, box(0, 0, 740, 700), [
     ...(upper && !westLoft ? [prop(fit('shelf', 223, 350, 175, 25))] : []),

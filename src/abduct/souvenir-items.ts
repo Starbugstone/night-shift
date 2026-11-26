@@ -46,7 +46,7 @@ export const SOUVENIR_SWAPS: Readonly<Partial<Record<RoomId, Souvenir>>> = {
   // v4 items: hung on the top of the flag stand
   mayor_elevator: { key: 'room/toupee', name: 'mayoral toupee', at: { x: 604, bottom: 466 } },
   // L5 Barnacle Bay
-  bubbles_tunnel: { key: 'room/rubber_duck', name: 'rubber duck' },
+  bubbles_tunnel: { key: 'room/rubber_duck', name: 'rubber duck', at: { x: 96, bottom: 686 } },
   // v4 items: on the boat-shed floor on the way to the slipway door
   pete_slipway: { key: 'room/ship_bottle', name: 'ship in a bottle', at: { x: 1650, bottom: 1786 } },
   // v4 items: on the fish crates by the crate tower and Kipper, near the dock door

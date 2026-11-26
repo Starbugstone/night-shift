@@ -161,7 +161,7 @@ export const LEVEL7: DeepLevelDef = {
   human: L7.human,
   mugshot: 'human/sterling_head',
   budgetSec: 480,
-  parMarginSec: 150,
+  parMarginSec: 134,
   hours: [1, 6],
   memo: { re: L7.re, body: L7.body, joke: L7.joke },
   map: {
