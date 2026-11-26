@@ -2,6 +2,7 @@ import { VIEW_H, VIEW_W, type AbductResult, type AbductStart, type GameContext, 
 import { ViewSlot } from '../core/gfx/scene';
 import { tr } from '../i18n';
 import { DeepAbductView } from './deep-view';
+import { BeamCue } from './beam-cue';
 import { AbductView, RESTART } from './draw';
 import { ROOMS } from './rooms';
 import { FOLLOW } from './ragdoll';
@@ -55,11 +56,12 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
   const turnHintWait = simulation.interior ? 0 : SOUVENIR_HINT.delay + SOUVENIR_HINT.seconds;
   /** This press steers by pointing (touch, mouse, pen: see ./point.ts); headless input keeps the 1:1 drag. */
   let pointing = false;
+  const beamCue = new BeamCue();
 
   function endDrag(): void {
     if (!dragging) return;
     dragging = false;
-    ctx.audio.sfx('beam_off');
+    if (beamCue.release(clock)) ctx.audio.sfx('beam_off');
   }
 
   return {
@@ -89,7 +91,7 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
           // A mouse or pen aims with the eye: the body has to stop where the cursor stops.
           simulation.body.follow = pointer.kind === 'mouse' || pointer.kind === 'pen' ? FOLLOW.mouse : FOLLOW.touch;
           pointing = pointer.kind !== undefined;
-          ctx.audio.sfx('beam_on');
+          if (beamCue.grab(clock)) ctx.audio.sfx('beam_on');
         }
       }
 

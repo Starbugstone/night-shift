@@ -3,8 +3,12 @@ import { GainRamp } from './gain-ramp';
 import { SoundVoices } from './sfx-voices';
 import { VoiceEngine } from './voice';
 const MASTER_LEVEL = 0.55;
+/** Recorded cues in public/sound/ (credits there). Until a file has loaded, or if it fails, the synth plays. */
+const SAMPLES: Partial<Record<SfxName, { file: string; gain: number }>> = {
+  snore: { file: 'snore.mp3', gain: 1.1 },
+};
 
-/** All SFX synthesized with WebAudio; no files. Silent until unlocked by a gesture. */
+/** SFX synthesized with WebAudio, plus the few recorded cues in SAMPLES. Silent until unlocked by a gesture. */
 export class SynthAudio implements Audio {
   private muted = false;
   private hidden = false;
@@ -15,6 +19,7 @@ export class SynthAudio implements Audio {
   private voices: SoundVoices | null = null;
   private last = new Map<SfxName, number>();
   private voice: VoiceEngine | null = null; // v4 voices
+  private readonly samples = new Map<SfxName, AudioBuffer>();
 
   /** Create/resume the AudioContext. Must be called from a user gesture. */
   unlock(): void {
@@ -37,6 +42,7 @@ export class SynthAudio implements Audio {
         for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
         d[len - 1] = d[0]!;
         this.voices = new SoundVoices(this.ac, this.master, this.noiseBuf);
+        this.loadSamples(this.ac);
       }
       if (!this.hidden) this.startAudio();
     } catch {
@@ -58,6 +64,28 @@ export class SynthAudio implements Audio {
   private startAudio(): void {
     const ac = this.ac;
     if (ac && ac.state !== 'running') void ac.resume().catch(() => {});
+  }
+
+  private loadSamples(ac: AudioContext): void {
+    if (typeof fetch !== 'function') return;
+    for (const [name, sample] of Object.entries(SAMPLES) as [SfxName, { file: string }][]) {
+      fetch(import.meta.env.BASE_URL + 'sound/' + sample.file)
+        .then(res => res.ok ? res.arrayBuffer() : Promise.reject(new Error(String(res.status))))
+        .then(bytes => ac.decodeAudioData(bytes))
+        .then(buffer => { this.samples.set(name, buffer); })
+        .catch(() => {});
+    }
+  }
+
+  private playSample(ac: AudioContext, buffer: AudioBuffer, at: number, gain: number): void {
+    if (!this.master) return;
+    const source = ac.createBufferSource();
+    source.buffer = buffer;
+    const level = ac.createGain();
+    level.gain.value = gain;
+    source.connect(level).connect(this.master);
+    source.onended = () => level.disconnect();
+    source.start(at);
   }
 
   setMuted(m: boolean): void {
@@ -89,14 +117,20 @@ export class SynthAudio implements Audio {
     if (now - prev < 0.045) return; // de-dupe same-frame spam
     this.last.set(name, now);
     const t = now + 0.005;
+    const sample = this.samples.get(name);
+    if (sample) {
+      this.playSample(ac, sample, t, v * (SAMPLES[name]?.gain ?? 1));
+      return;
+    }
     switch (name) {
+      // A soft low "vwoom", not a siren: narrow sweep, slow shallow wobble (2026-11-26).
       case 'beam_on':
-        voices.tone('sine', 175, 620, t, 0.28, 0.15 * v, BEAM_RISE);
-        voices.tone('sine', 313, 830, t + 0.09, 0.24, 0.05 * v, BEAM_RISE);
+        voices.tone('sine', 150, 260, t, 0.32, 0.11 * v, BEAM_RISE);
+        voices.tone('sine', 300, 520, t + 0.06, 0.26, 0.025 * v, BEAM_RISE);
         break;
       case 'beam_off':
-        voices.tone('sine', 605, 167, t, 0.26, 0.15 * v, BEAM_FALL);
-        voices.tone('sine', 835, 280, t, 0.18, 0.05 * v, BEAM_FALL);
+        voices.tone('sine', 255, 140, t, 0.28, 0.09 * v, BEAM_FALL);
+        voices.tone('sine', 510, 280, t, 0.18, 0.02 * v, BEAM_FALL);
         break;
       case 'bonk':
         voices.tone('sine', 230, 88, t, 0.083, 0.3 * v);
@@ -113,11 +147,11 @@ export class SynthAudio implements Audio {
         voices.tone('sine', 462, 315, t + 0.055, 0.46, 0.07 * v, MOO_FORMANT);
         voices.tone('sine', 770, 525, t + 0.11, 0.34, 0.038 * v, MOO_FORMANT);
         break;
+      // A soft, slow cartoon snore: a low muffled breath in and a gentle sigh out, no rasp or whistle (2026-11-26).
       case 'snore':
-        voices.noise('bandpass', 360, t, 0.38, 0.58 * v, SNORE_IN);
-        voices.tone('triangle', 112, 71, t, 0.38, 0.20 * v, RASP);
-        voices.noise('bandpass', 880, t + 0.32, 0.36, 0.28 * v, BREATH_OUT);
-        voices.tone('sine', 860, 650, t + 0.35, 0.31, 0.12 * v, BREATH_WHISTLE);
+        voices.noise('lowpass', 420, t, 0.55, 0.26 * v, SNORE_IN);
+        voices.tone('sine', 92, 78, t + 0.05, 0.5, 0.09 * v, SNORE_HUM);
+        voices.noise('lowpass', 520, t + 0.55, 0.5, 0.13 * v, BREATH_OUT);
         break;
       case 'mumble':
         voices.tone('triangle', 163, 193, t, 0.10, 0.16 * v, MURMUR);
@@ -286,16 +320,16 @@ const CLATTER_NOTES = [350, 590, 468, 261, 198];
 const CLATTER_TIMES = [0, 0.05, 0.105, 0.165, 0.24];
 
 const SWELL = { swell: true };
-const BEAM_RISE = { vibrato: 9, depth: 35, swell: true };
-const BEAM_FALL = { vibrato: 10, depth: 30, swell: true };
+const BEAM_RISE = { vibrato: 5, depth: 6, swell: true, cutoff: 900 };
+const BEAM_FALL = { vibrato: 5, depth: 5, swell: true, cutoff: 800 };
 const SPRING = { vibrato: 23, depth: 54, cutoff: 1050 };
 const WOOD = { cutoff: 960 };
 const MOO = { vibrato: 5, depth: 7, swell: true, cutoff: 660 };
 const MOO_FORMANT = { vibrato: 5, depth: 17, swell: true };
-const SNORE_IN = { q: 2.2, end: 235, swell: true };
+const SNORE_IN = { q: 0.8, end: 300, swell: true };
+const SNORE_HUM = { vibrato: 12, depth: 4, swell: true, cutoff: 360 };
 const RASP = { vibrato: 24, depth: 14, cutoff: 870 };
 const BREATH_OUT = { q: 1.5, end: 360, swell: true };
-const BREATH_WHISTLE = { vibrato: 6, depth: 16, swell: true };
 const MURMUR = { vibrato: 19, depth: 8, cutoff: 680 };
 const GASP = { q: 1.4, end: 540 };
 const SHIVER = { vibrato: 15, depth: 45 };
