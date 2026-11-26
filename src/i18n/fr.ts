@@ -74,7 +74,10 @@ export const fr: Strings = {
     // v4 story: progress-gated loading tips (unlocked by delivered milestones)
     tierTips: {
       // v4 L9 1955
-      afterL8: ["Astuce : si une voiture en inox atteint 88 miles à l'heure sous l'orage, écartez-vous. Notre assurance plafonne à 85."],
+      afterL8: [
+        "Astuce : si une voiture en inox atteint 88 miles à l'heure sous l'orage, écartez-vous. Notre assurance plafonne à 85.",
+        'Astuce : le Dispatch temporel tourne au Cerfa 88-MPH. Déclarez vos frais avant hier.',
+      ],
       afterL2: [
         "Astuce : chaque chaussette orpheline de Spin City depuis 1998 dort dans l'entrepôt 4.",
       ],
@@ -88,7 +91,6 @@ export const fr: Strings = {
       ],
       afterL7: [
         "Astuce : OBELISK™ facture la musique dramatique. Notre rayon est silencieux et gratuit.",
-        'Astuce : le Dispatch temporel tourne au Cerfa 88-MPH. Déclarez vos frais avant hier.',
       ],
     },
   },
@@ -200,7 +202,7 @@ export const fr: Strings = {
       human: "Mabel la boulangère",
       collect: "Mabel",
       body: "Zib, votre première vraie mission vous attend à la boulangerie du chemin des Bouleaux. Ramenez Mabel. Sur le rebord de la fenêtre arrière, une tarte aux cerises refroidit. Si elle monte à bord, je la pèserai avant la compta.",
-      joke: "Miettes dort sur les clés de la boulangerie. Mabel doit lui demander la permission d’ouvrir.",
+      joke: "Son chat Miettes dort sur les clés. Mabel doit lui demander la permission d’ouvrir.",
       signoff: "— Vrell. Laissez la caisse.",
       re: "Ordre n°{num} · La première fournée de Mabel",
     },
@@ -259,7 +261,7 @@ export const fr: Strings = {
       human: "Doc, Buff et Marvin",
       collect: "Doc, Buff et Marvin",
       re: 'Ordre n°{num} — 12 nov. 1955 (22 h 04)',
-      body: "Le sous-sol B-4 a sonné sur un pic de 2,21 gigowatts en 1955 : quelqu'un bricole le temps sans Cerfa 88-MPH. En 1955, la Gazette de Grimsby couvrait aussi Crest Valley, la vallée voisine. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, fin de l'orage.",
+      body: "Le Dispatch temporel a capté 2,21 gigowatts en 1955 : quelqu'un bricole le temps sans Cerfa 88-MPH. En 1955, la Gazette de Grimsby couvrait aussi Crest Valley, la vallée voisine. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, fin de l'orage.",
       joke: "Une voiture temporelle est attendue devant l'horloge à 22 h 04 pile. Guettez-la à la sortie ouest, puis calez-vous sur sa vitesse pour la saisir avant la foudre.",
       signoff: "— Vrell. J'avais dit : pas touche au cadran.",
     },
@@ -348,7 +350,7 @@ export const fr: Strings = {
       human: 'le commandant Sterling, le chef Marco et Greg',
       collect: 'le commandant Sterling, le chef Marco et Greg',
       re: 'Ordre n°{num} — SS Buffet Royal (hors budget)',
-      body: "Le Cerfa 7-B signale un passager monté à bord au port de Pete — justement sur le paquebot qui transporte la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg, le client tout compris. Le commandant fait la sieste avec le manifeste dans sa veste : on videra ses poches au débriefing. Esquivez le photographe et tenez bon dans la houle.",
+      body: "Un dossier de la clinique signale un passager embarqué chez Pete — sur le paquebot qui transporte la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg, le client tout compris. Le commandant fait la sieste avec le manifeste dans sa veste : on videra ses poches au débriefing. Esquivez le photographe et tenez bon dans la houle.",
       joke: "Budget validé par personne : on facture en recherche maritime. Doris, la sœur de Mme Pruitt, est sur le pont avec le même classeur. Ne téléportez pas la tour de crevettes.",
       signoff: '— Vrell. Détruisez cette note après lecture.', // v4 story
     },
@@ -363,7 +365,7 @@ export const fr: Strings = {
   routes: {
     // v4 L9 1955
     // v4 Birch Lane
-    mabel_stockroom: { route: "Porte de la réserve", difficulty: "miettes et grille" },
+    mabel_stockroom: { route: "Porte de la réserve", difficulty: "grille et Miettes" },
     mabel_vent: { route: "Aération du toit", difficulty: "chariot et conduit" },
     nora_side: { route: "Porte latérale", difficulty: "établi et laser" },
     nora_loft: { route: "Trappe du grenier", difficulty: "coffre et laser" },
@@ -854,7 +856,7 @@ export const fr: Strings = {
       Anchovy: 'MIAOU ! AUX POSTES !',
       // v4 L9 1955
       Lyle: 'CONSOMMEZ OU DÉGAGEZ !',
-      Chaperone: 'LAISSEZ PASSER LA GRAVITÉ !',
+      Chaperone: 'LES DEUX PIEDS AU SOL !',
     },
     noSleeping: 'INTERDIT DE DORMIR',
     onDuty: 'EN SERVICE',
@@ -970,7 +972,7 @@ export const fr: Strings = {
       // v4 1122
       grailSentry: ["À couvert derrière le rempart !"],
       cow: ["Du lait en chute libre !"],
-      clop: ["Ces sabots sont des noix."],
+      clop: ["Des sabots à la noix !"],
       rabbit: ["Vous avez vu ses dents ?"],
       // v4 2199
       poetry: ["Des gardes-poètes. Bouchez-vous les oreilles !"],
@@ -1052,8 +1054,8 @@ export const fr: Strings = {
       clop: ["Les cavaliers sont à pied. Ils vont quand même plus vite que le service juridique."],
       rabbit: ["Le lapin a pris des notes. Avec les dents."],
       // v4 1953
-      projector1953: ["Ils m’ont repéré et ils applaudissent. Ils croient que c’est moi, la 3D."],
-      sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
+      projector1953: ["Le public du drive-in vous repère et applaudit les « effets 3D »."],
+      sneeze1953: ["Un tripode éternue sur votre coque. Toute la rangée avant a tout vu."],
       // v4 2199
       poetry: ["Selon le garde-poète, tout le monde est resté pour le rappel. La plupart des gens étaient évanouis."],
       dozer: ["Le conducteur signale que la soucoupe gêne le passage. La maison d’Artie a déjà son dossier."],
@@ -1218,7 +1220,7 @@ export const fr: Strings = {
       // v4 1122
       level10: "Demande rejetée. Krix a appelé son grille-pain à la barre. Le tribunal lui a donné deux minutes pour sortir une tartine.",
       // v4 1953
-      level11: "Papy Doyle m’a prêté son thermomètre en laiton. J’ai pris leur température par derrière. Tout le drive-in a cru voir une sonde.",
+      level11: "Papy Doyle m’a prêté son thermomètre en laiton. J’ai pris la fièvre de l’équipage par derrière. Le drive-in a cru voir une sonde.",
       // v4 2199
       level12: "Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : convenable.",
       level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, Krix ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
@@ -1344,8 +1346,8 @@ export const fr: Strings = {
     "biscuit tin": { got: ["Contient des boulons. La boîte marquée BOULONS contient des biscuits. Len dit que ça marche très bien comme ça."], missed: ["Resté sur place : boîte à biscuits."] },
       // v4 L9 1955
       "spare flex capacitor": {
-        got: ["Un convecteur temporaire de rechange, qui clignote dans une boîte à biscuits. La Propulsion dit que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur temporaire enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
-        missed: ["Vous avez laissé le convecteur temporaire dans la cage d'horloge. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur temporaire. Dommage, la Propulsion voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
+        got: ["Un convecteur temporaire qui clignote dans une boîte à biscuits. Nos scientifiques disent que c'est impossible. Il réchauffe mon déjeuner d'hier.", "Convecteur temporaire enregistré. Trois ampoules et zéro norme de sécurité : du grand génie terrien.", "Doc tord le temps avec des pièces de casse. Pendant ce temps, notre serveur comptable met quatre heures à ouvrir un PDF."],
+        missed: ["Vous avez laissé le convecteur temporaire dans la cage d'horloge. Tant mieux : si Zib l'avait fait tomber, on devrait encore les heures sup de jeudi dernier.", "Pas de convecteur. Dommage, le Dispatch temporel voulait voir comment ils plient le temps sans Cerfa 88-MPH."],
       },
       "yellow hazmat suit": {
         got: ["Une combinaison jaune fluo, avec un sèche-cheveux à la ceinture. Les humains croient qu'on s'habille comme ça. C'est presque flatteur.", "Combinaison jaune enregistrée. Zib l'a mise à la compta en se prétendant envoyé de la planète Vulcain. Ils y ont cru.", "Tenue antiradiation de 1955. Sent légèrement l'ozone et les cassettes de hard rock mal rembobinées."],
@@ -1367,7 +1369,7 @@ export const fr: Strings = {
         missed: ["Vous avez laissé le skate près du comptoir. Buff trébuchera dessus demain matin et accusera le ciel de toute façon.", "Pas de skate. Tant mieux : notre mutuelle ne couvre pas les entorses d'antenne."],
       },
       "cherry electric guitar": {
-        got: ["Une guitare rouge cerise encore brûlante d'un solo qui ne devrait pas exister avant vingt ans. La compta a confisqué l'ampli.", "Guitare électrique enregistrée. Zib a plaqué un accord dans le hangar et brisé quatre bocaux. Par contre, vos gosses vont adorer ça.", "La guitare rouge de Marvin. La moitié du gymnase a fait un malaise ; l'autre cherche encore ce qui est arrivé au slow."],
+        got: ["Une guitare rouge cerise encore brûlante d'un solo qui ne devrait pas exister avant vingt ans. La Sécurité a confisqué l'ampli.", "Guitare électrique enregistrée. Zib a plaqué un accord dans le hangar et brisé quatre bocaux. Par contre, vos gosses vont adorer ça.", "La guitare rouge de Marvin. La moitié du gymnase a fait un malaise ; l'autre cherche encore ce qui est arrivé au slow."],
         missed: ["Vous avez laissé la guitare rouge sur scène. Tant mieux : Zib aurait monté un groupe et passé la tournée en frais de mission.", "Pas de guitare. Marvin garde son instrument et la chronologie garde le rock'n'roll. Match nul."],
       },
       "clock-tower flyer": {
@@ -1466,7 +1468,7 @@ export const fr: Strings = {
         ],
         missed: [
           "Le dentier est resté sur la tablette, tout sourire. Il a tout vu. Il ne dira rien.",
-          "Pas de dentier. Dommage, la division Sondes voulait étudier la morsure de près.",
+          "Pas de dentier. Dommage, nos scientifiques voulaient étudier la morsure de près.",
         ],
       },
       'team-issued slipper': {
@@ -1632,7 +1634,7 @@ export const fr: Strings = {
         got: [
           "La caisse noire de Sal. Quatorze euros et un bouton. Nous voilà le service le plus solvable du Bureau.",
           "Caisse noire enregistrée. Le grand livre de Sal indique désormais « deux impayés ».",
-          "La caisse noire. Kipper dit qu'elle n'a jamais été très noire. Kipper est un chat. Kipper a des avis.",
+          "La caisse noire. Kipper jure qu'elle n'a rien de louche. Kipper est un chat. Kipper a des avis.",
         ],
         missed: [
           "La caisse noire est restée. Tant mieux : Sal la compte deux fois par nuit, et une fois de plus en dormant.",
@@ -2438,15 +2440,15 @@ export const fr: Strings = {
       tripod_leg: {
         name: "Patte de tripode",
         memoHint: "une patte de tripode",
-        comment: "La patte va en vitrine. La division demande si on peut lui prêter un manche à balai.",
-        missedComment: "Laissez la patte, alors. Sans elle, tous les œufs roulent dans le cratère.",
+        comment: "La patte va en vitrine. L'équipe de 1953 réclame un manche à balai pour le tripode.",
+        missedComment: "Laissez la patte, alors. Sans elle, tous les œufs rouleraient au cratère.",
       },
       // v4 2199
-      bypass_towel: { name: "Serviette de la déviation", memoHint: "votre serviette", comment: "Parfait. Pour une fois, le matériel de secours passe en machine.", missedComment: "Sur le portant à l’ouest du port." },
+      bypass_towel: { name: "Serviette de la déviation", memoHint: "votre serviette", comment: "Parfait. Pour une fois, le matériel de secours passe en machine.", missedComment: "Serviette oubliée sur le portant. Règle n°1 du voyage spatial, Zib." },
       time_car: {
         name: "Voiture temporelle",
         memoHint: "voiture temporelle",
-        comment: "Vous avez saisi une voiture temporelle lancée à fond sous l'orage. La Propulsion la démonte déjà. Le juridique jure qu'on n'a jamais mis un pied en 1955.",
+        comment: "Vous avez saisi une voiture temporelle sous l'orage. Les mécanos du hangar la démontent déjà. Le juridique nie qu'on ait mis un pied en 1955.",
         missedComment: "Une voiture de sport a semé une soucoupe jusqu'en 1985. Voilà d'où viennent les traces de pneus brûlés derrière Spin City. Et ma migraine.",
       },
       slipper_flyer: {
@@ -2866,7 +2868,7 @@ export const fr: Strings = {
           at10: "Montre la cantine du doigt et chuchote « Regardez les os ! » Ce soir, c’est poulet.",
         },
         // v4 1953
-        forester: { at3: "A apporté un mouchoir à son entretien. C’était pour nous.", at10: "A demandé un deuxième échantillon au météore. Il a refermé le couvercle." },
+        forester: { at3: "A apporté un mouchoir à son entretien. C’était pour nous.", at10: "A demandé un deuxième échantillon au météore. Le couvercle s’est refermé." },
         van_bell: { at3: "A hurlé en voyant la sonde. Puis encore en voyant le formulaire.", at10: "A envoyé les soucoupes au dernier rang. Puis a dû leur dire d’arrêter d’embuer les vitres." },
         collier: { at3: "A béni notre sonde. Le labo 4 dit qu’elle n’a jamais aussi bien marché.", at10: "A posé la corbeille de la quête sous le trou du toit. On a payé la moitié. Il a remercié les Martiens." },
         doc: {
@@ -2911,17 +2913,17 @@ export const fr: Strings = {
         // v4 1122
         shrubbery: "Les chevaliers en voulaient un joli. Pas trop cher. Le rayon l’a emporté sans payer.",
         // v4 1953
-        tripod_leg: "Grand-père Doyle l’a calée sous son poulailler. Des années durant, c’était la seule pièce de la division encore en service.",
+        tripod_leg: "Grand-père Doyle l’a calée sous son poulailler. Longtemps, la seule pièce intacte de notre tripode de 1953.",
         // v4 2199
         bypass_towel: "L’objet le plus utile en voyage. Zib s’en est servi comme cape, oreiller et drapeau blanc. Tout ça ce soir.",
-        time_car: "Coupé en inox brossé à portes papillon, pneus cramés et zéro permis. La Propulsion interdit à Zib de voir ce qui se passe à 88.",
+        time_car: "Coupé en inox brossé à portes papillon, pneus cramés et zéro permis. La direction a caché les clés : Zib ne doit jamais atteindre 88.",
         slipper_flyer: "Photocopié en gros Comic Sans, un numéro déjà arraché en bas. Celui qui l'a pris risque d'être sacrément déçu.",
         astronomer: 'Douze ans à guetter le ciel avec sa parabole, enlevé en pleine gorgée de chocolat chaud. Il a réclamé un crochet par Mars.',
         saucer_photo: "Floue, de travers, mais plus nette que toutes les photos d'OVNI depuis 1947. Le juridique a payé cash pour enterrer les négatifs.",
         obelisk_crate: "À réexpédier au SS Buffet Royal. Même la paille a droit à sa musique d'entrée.",
-        defibrillator: "Piqué sur un chariot d'urgence et marqué « IL EST VIVANT ! » au feutre rouge. La Propulsion jure qu'il a redémarré une soucoupe à plat.",
+        defibrillator: "Piqué sur un chariot d'urgence et marqué « IL EST VIVANT ! » au feutre rouge. Les mécanos jurent qu'il a relancé une soucoupe à plat.",
         shrimp_tower: "Trois étages d'arrogance crustacée à volonté sur glace pilée. Zib jure qu'elle a sauté de son plein gré dans le rayon.",
-        krix: "Notre fameux ex-stagiaire, toujours accroché au grille-pain de Doyle. Jure qu'un appareil noir brillant, c'est de la techno alien.",
+        krix: "Notre fameux ex-stagiaire, toujours accroché à ce grille-pain. Jure qu'un appareil noir brillant, c'est de la techno alien.",
       },
       statuses: {
         // v4 Birch Lane
@@ -2931,7 +2933,7 @@ export const fr: Strings = {
         // v4 1122
         shrubbery: "Rempoté · Plus joli que la haie des Henderson. Ne leur dites rien.",
         // v4 1953
-        tripod_leg: "La division compte désormais un bipode. Il s’appuie où il peut.",
+        tripod_leg: "Le Bureau possède désormais un bipode. Il s’appuie où il peut.",
         // v4 2199
         bypass_towel: "Modèle réglementaire. Lavage facultatif.",
         time_car: "En fourrière · Bridée à 87 miles à l'heure",
@@ -2988,7 +2990,7 @@ export const fr: Strings = {
       "drive-in programme": "L’affiche promettait une invasion. Quand elle a commencé pour de vrai, le public a demandé à être remboursé.",
       "invasion reel": "La dernière. Les microbes ont raison des Martiens. Vrell interdit de la projeter au Bureau.",
       "white truce flag": "Le pasteur Matt l’a agité devant « les Martiens ». On ne vient pas de Mars. On a répondu quand même. Au rayon thermique.",
-      "church bell clapper": "A sonné toute la nuit. La moitié de la division a cru que le bar fermait.",
+      "church bell clapper": "A sonné toute la nuit. La moitié de l’équipage a cru que le bar fermait.",
       "red puffy vest": "Doudoune rouge venue de trente ans dans le futur. En 1955, toute la ville pense que son proprio est tombé d'un bateau.",
       // v4 2199
       "bowl of petunias": "Pot tombé de très haut. Son seul commentaire : « Oh non, pas encore. »",
@@ -3028,12 +3030,12 @@ export const fr: Strings = {
       'accounts mug': "Le mug de compta de Sal. Elle a déjà facturé l'usure et le préjudice moral au Bureau.",
       'petty cash tin': "Quatorze euros, deux trombones et une ardoise signée d'une empreinte de patte par Kipper, le chat du port.",
       // L6 Hôpital Sainte-Mildred
-      'jug of prep drink': "Quatre litres de purge médicale au citron. La Propulsion l'a reclassée en carburant de fusée.",
+      'jug of prep drink': "Quatre litres de purge au citron. Nos ingénieurs l'ont reclassée en carburant de fusée.",
       'silver butt plug': "Saisi aux Affaires internes. Base évasée, finition miroir… et pourtant pas aux normes de sondage du Bureau.",
       'on-call coffee': 'Plus noir que le vide spatial, assez épais pour faire tenir une cuillère debout. Gants de plomb requis.',
       'inflated rubber glove': 'Mascotte de garde à cinq doigts et sourire au marqueur. Le moral en soute a bondi de 14 %.',
       'hospital sock': 'Picots antidérapants recto-verso. Adhérence maximale, dignité en chute libre.',
-      bedpan: "Inox brossé, propre à en devenir suspect. Zib jure que c'est un casque viking ; les RH refusent.",
+      bedpan: "Inox brossé, propre à en devenir suspect. Zib l'a mis en casque viking ; les RH ont dit non.",
       // L7 SS Buffet Royal
       'blue heart pendant': 'Émail de boutique souvenirs sur chaîne presque en or. Interdiction de le jeter à la mer : la compta veille.',
       "captain's log": 'Une vraie bûche avec plaque en laiton. Date stellaire confidentielle ; échardes bien réelles.',

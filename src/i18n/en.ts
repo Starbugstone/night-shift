@@ -283,8 +283,8 @@ const spotCaptions = {
   clop: ["The cavalry is on foot. They are still faster than Legal."],
   rabbit: ["The rabbit has taken the minutes. In teeth marks."],
   // v4 1953
-  projector1953: ["They spotted me and clapped. They think I’m the 3-D."],
-  sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
+  projector1953: ['The drive-in crowd spots you and claps for the "3-D".'],
+  sneeze1953: ["A tripod sneezes straight on your hull. You are now on camera."],
   // v4 2199
   poetry: ["The guard insists everyone stayed for the encore. Most of them were unconscious."],
   dozer: ["The driver marks the saucer as an obstruction. Artie’s house already has a file."],
@@ -366,7 +366,10 @@ export const en = {
     // v4 story: progress-gated loading tips (unlocked by delivered milestones)
     tierTips: {
       // v4 L9 1955
-      afterL8: ['Tip: if a stainless car hits 88 mph in a thunderstorm, step aside. Our hull insurance stops at 85.'],
+      afterL8: [
+        'Tip: if a stainless car hits 88 mph in a thunderstorm, step aside. Our hull insurance stops at 85.',
+        'Tip: Temporal Dispatch runs on Form 88-MPH. File expenses before yesterday.',
+      ],
       afterL2: [
         'Tip: every odd sock lost in Spin City since 1998 is in Bureau Warehouse 4.',
       ],
@@ -380,7 +383,6 @@ export const en = {
       ],
       afterL7: [
         'Tip: OBELISK™ charges for dramatic music. Our beam is silent and costs nothing.',
-        'Tip: Temporal Dispatch runs on Form 88-MPH. File expenses before yesterday.',
       ],
     },
   },
@@ -493,7 +495,7 @@ export const en = {
       human: "Baker Mabel",
       collect: "Mabel",
       body: "Zib, your first live call is the bakery on Birch Lane. Collect Mabel. There’s a cherry pie cooling on the back windowsill. If it comes aboard, I’ll weigh it before Accounting does.",
-      joke: "Crumb sleeps on the bakery keys. Mabel has to ask permission to open.",
+      joke: "Her cat Crumb sleeps on the keys. Mabel must ask permission to open.",
       signoff: "— Vrell. Leave the till.",
       re: "Work Order #{num} · Baker Mabel’s First Batch",
     },
@@ -552,7 +554,7 @@ export const en = {
       human: "Doc, Buff & Marvin",
       collect: "Doc, Buff & Marvin",
       re: 'Work Order #{num} — Nov 12, 1955 (10:04)',
-      body: "Basement B-4 tripped a 1.21-gigawatt alarm in 1955. Someone built a time machine without Form 88-MPH. In 1955 the Grimsby Gazette covered the next valley over, Crest Valley. Grab Doc off the clock tower, Buff from Lyle's Coffee Shop and Marvin Cherry behind the school dance. Be out by 10:10, when the storm passes.",
+      body: "Temporal Dispatch picked up 1.21 gigawatts in 1955. Someone built a time machine without Form 88-MPH. In 1955 the Grimsby Gazette covered the next valley over, Crest Valley. Grab Doc off the clock tower, Buff from Lyle's Coffee Shop and Marvin Cherry behind the school dance. Be out by 10:10, when the storm passes.",
       joke: "A gull-wing time car is due at the clock tower at 10:04 sharp. Wait at the west turnout, then match its speed to impound it before the lightning hits.",
       signoff: "— Vrell. I told you to leave the dial alone.",
     },
@@ -641,7 +643,7 @@ export const en = {
       human: 'Captain Sterling, Chef Marco & Greg',
       collect: 'Captain Sterling, Chef Marco & Greg',
       re: 'Work Order #{num} — SS Buffet Royale (off-books)',
-      body: "Form 7-B flagged a passenger boarding out of Pete's harbour—on the exact ship carrying Grimsby Museum's missing black stone. Grab Captain Sterling, Chef Marco and all-inclusive Greg. The Captain naps with the manifest in his jacket; we'll check his pockets at debrief. Dodge the deck photographer and brace for the swell.",
+      body: "A clinic chart flagged a passenger sailing from Pete's harbour—on the exact ship carrying Grimsby's missing black stone. Grab Captain Sterling, Chef Marco and all-inclusive Greg. The Captain naps with the manifest in his jacket; we'll check his pockets at debrief. Dodge the deck photographer and brace for the swell.",
       joke: "Budget approved by nobody; we're billing this as maritime research. Mrs. Pruitt's sister Doris is on deck with the same binder. Do not beam up the shrimp tower.",
       signoff: '— Vrell. Burn this memo after reading.', // v4 story
     },
@@ -1257,7 +1259,7 @@ export const en = {
       // v4 1122
       level10: "Claim denied. Krix called his toaster to the stand. The court gave it two minutes to pop.",
       // v4 1953
-      level11: "Grandpa Doyle lent me his brass thermometer. I took temperatures from behind. The whole drive-in thought it was a probe.",
+      level11: "Grandpa Doyle lent me his brass thermometer. I checked my sick crew from behind. The drive-in thought it was a probe.",
       // v4 2199
       level12: "Three residents. Grimsby stays. Your mother called, Zib. I told her: adequate.",
       level9: "Three 1955 witnesses logged and the timeline didn't implode. Bonus: Krix's lawyers can't patent time travel now. Why is it blinking two more dates?",
@@ -1389,8 +1391,8 @@ export const en = {
     "biscuit tin": { got: ["Contains bolts. The tin marked BOLTS contains biscuits. Len says the system works."], missed: ["Left behind: biscuit tin."] },
       // v4 L9 1955
       "spare flex capacitor": {
-        got: ["A spare flex capacitor, pulsing gently in a biscuit tin. Propulsion says it shouldn't work. It's currently heating my lunch from yesterday.", "Spare flex capacitor, logged. Three blinking tubes and zero safety certification—classic Earth engineering.", "Doc built a time-bending capacitor out of junkyard relays. Meanwhile our Accounting server takes four hours to open a PDF."],
-        missed: ["You left the spare capacitor in the clock riser. Good. If Zib had dropped it, we'd have owed last Thursday's overtime.", "No flex capacitor. Shame—Propulsion wanted to see how humans bent time without filing Form 88-MPH."],
+        got: ["A spare flex capacitor, pulsing gently in a biscuit tin. Our scientists say it shouldn't work. It's heating my lunch from yesterday.", "Spare flex capacitor, logged. Three blinking tubes and zero safety certification—classic Earth engineering.", "Doc built a time-bending capacitor out of junkyard relays. Meanwhile our Accounting server takes four hours to open a PDF."],
+        missed: ["You left the spare capacitor in the clock riser. Good. If Zib had dropped it, we'd have owed last Thursday's overtime.", "No flex capacitor. Shame—Temporal Dispatch wanted to see how humans bent time without Form 88-MPH."],
       },
       "yellow hazmat suit": {
         got: ["A bright yellow radiation suit, complete with hairdryer tucked in the belt. Humans think we dress like this. Frankly, it's flattering.", "Yellow hazmat suit, logged. Zib wore it into Accounting and claimed to be a visitor from Planet Vulcan. Accounting believed them.", "Radiation suit from 1955. Smells faintly of storm ozone and terrible heavy-metal cassette tapes."],
@@ -1412,7 +1414,7 @@ export const en = {
         missed: ["You left the skateboard by the counter. Buff will trip over it in the morning and blame the sky anyway.", "No skateboard. Good. Our medical plan does not cover alien ankle sprains."],
       },
       "cherry electric guitar": {
-        got: ["A cherry-red hollow-body guitar, still warm from a solo that shouldn't exist for another twenty years. Accounting has confiscated the amp.", "Electric guitar, logged. Zib played one power chord in the hangar and shattered four specimen jars. Your kids are gonna love it.", "Marvin's cherry guitar. Half the gym fainted; the other half is still trying to figure out what happened to the prom playlist."],
+        got: ["A cherry-red hollow-body guitar, still warm from a solo that shouldn't exist for another twenty years. Security has confiscated the amp.", "Electric guitar, logged. Zib played one power chord in the hangar and shattered four specimen jars. Your kids are gonna love it.", "Marvin's cherry guitar. Half the gym fainted; the other half is still trying to figure out what happened to the prom playlist."],
         missed: ["You left the cherry guitar by the stage. Good. Zib would have started a band and billed the tour as fieldwork.", "No guitar. Marvin keeps his axe, and the timeline keeps rock and roll. Call it a draw."],
       },
       "clock-tower flyer": {
@@ -1511,7 +1513,7 @@ export const en = {
         ],
         missed: [
           'You left the demo dentures grinning on the side. They saw everything. They will tell no one.',
-          'No dentures. Pity. The probe division wanted a closer look at the bite.',
+          'No dentures. Pity. Our scientists wanted a closer look at the bite.',
         ],
       },
       'team-issued slipper': {
@@ -2500,15 +2502,15 @@ export const en = {
       tripod_leg: {
         name: "Tripod leg",
         memoHint: "a tripod leg",
-        comment: "The leg goes in the cabinet. The Division asked if we could lend it a broom handle.",
-        missedComment: "Leave the leg, then. Without it, every egg rolls into the crater.",
+        comment: "Into the cabinet. Our 1953 crew asked for a broom handle to prop the tripod.",
+        missedComment: "Leave the leg, then. Without it, every egg would roll into the crater.",
       },
       // v4 2199
-      bypass_towel: { name: "Bypass towel", memoHint: "your towel", comment: "Good. For once the emergency equipment is machine washable.", missedComment: "On the west harbour rack." },
+      bypass_towel: { name: "Bypass towel", memoHint: "your towel", comment: "Good. For once the emergency equipment is machine washable.", missedComment: "Left your towel on the rack. Space travel rule one, Zib." },
       time_car: {
         name: "Time car",
         memoHint: "gull-wing time car",
-        comment: "You impounded a speeding time car mid-thunderstorm. Propulsion is stripping it for parts. Legal is pretending we never owned 1955.",
+        comment: "You impounded a speeding time car mid-thunderstorm. The hangar crew is stripping it for parts. Legal says we never owned 1955.",
         missedComment: "You let a sports car outrun a saucer into 1985. That explains the scorched tyres behind Spin City. And my migraine.",
       },
       slipper_flyer: {
@@ -2973,17 +2975,17 @@ export const en = {
         // v4 1122
         shrubbery: "The knights wanted a nice one. Not too expensive. The beam took it for free.",
         // v4 1953
-        tripod_leg: "Grandpa Doyle put it under a chicken coop. For years it was the only working part of the Division.",
+        tripod_leg: "Grandpa Doyle put it under a coop. For years it was the only working part of our 1953 tripod.",
         // v4 2199
         bypass_towel: "The most useful thing a traveller can carry. Zib has used it as a cape, a pillow and a white flag. All tonight.",
-        time_car: 'Brushed stainless coupe with gull-wing doors, scorched tyres and zero permits. Propulsion refuses to let Zib test what happens at 88.',
+        time_car: 'Brushed stainless coupe with gull-wing doors, scorched tyres and zero permits. Management hid the keys. Zib must never reach 88.',
         slipper_flyer: 'Photocopied in frantic Comic Sans with one tear-off tab already missing. Whoever took that number is about to be very disappointed.',
         astronomer: 'Spent twelve years aiming a dish at deep space; got beamed up mid-sip of cocoa. Asked if we could drop him off at Mars.',
         saucer_photo: 'Out of focus, tilted twenty degrees, and somehow still clearer than every UFO tabloid since 1947. Legal paid cash to bury the negatives.',
         obelisk_crate: 'Forward to SS Buffet Royale. Even the packing straw gets its own theme music.',
-        defibrillator: 'Swiped off a hospital crash cart and labelled "IT\'S ALIVE!" in red marker. Propulsion swears it jump-started a dead saucer battery.',
+        defibrillator: 'Swiped off a hospital crash cart and labelled "IT\'S ALIVE!" in red marker. The mechanics swear it jump-started a dead saucer.',
         shrimp_tower: 'Three tiers of all-you-can-eat crustacean arrogance on crushed ice. Zib claims it jumped into the tractor beam of its own free will.',
-        krix: "Our infamous ex-intern, still clutching Farmer Doyle's toaster. Insists a shiny black appliance counts as alien technology.",
+        krix: "Our infamous ex-intern, still clutching that toaster. Insists a shiny black appliance counts as alien technology.",
       } satisfies Record<string, string>,
       statuses: {
         // v4 Birch Lane
@@ -2993,7 +2995,7 @@ export const en = {
         // v4 1122
         shrubbery: "Repotted · Nicer than the Hendersons’ hedge. Don’t tell them.",
         // v4 1953
-        tripod_leg: "The Division now fields one bipod. It leans on things.",
+        tripod_leg: "The Bureau now fields one bipod. It leans on things.",
         // v4 2199
         bypass_towel: "Issue standard. Laundering optional.",
         time_car: "Impounded · Capped at 87 mph",
@@ -3050,7 +3052,7 @@ export const en = {
       "drive-in programme": "The bill promised an invasion. The audience asked for a refund when it actually arrived.",
       "invasion reel": "The last reel. The Martians lose to germs. Vrell won’t let us show it at the Bureau.",
       "white truce flag": "Pastor Matt waved it at ‘the Martians’. We’re not from Mars. We waved back anyway. With the heat ray.",
-      "church bell clapper": "Rang all night. Half the Division thought it was last orders.",
+      "church bell clapper": "Rang all night. Half the crew thought it was last orders.",
       "red puffy vest": "Quilted crimson waistcoat from thirty years in the future. Every 1955 local assumed its owner fell off a boat.",
       // v4 2199
       "bowl of petunias": "Fell from a great height. Its only comment: “Oh no, not again.”",
@@ -3090,12 +3092,12 @@ export const en = {
       'accounts mug': "Sal's bookkeeping mug. She already billed the Bureau for wear, tear and emotional distress.",
       'petty cash tin': 'Fourteen quid, two paperclips and a stern IOU signed with a paw print by Kipper the dock cat.',
       // L6 St. Mildred's General
-      'jug of prep drink': 'Four litres of lemon-flavoured clinic prep juice. Propulsion reclassified it as rocket fuel.',
+      'jug of prep drink': 'Four litres of lemon clinic prep juice. Our engineers reclassified it as rocket fuel.',
       'silver butt plug': "Seized in Internal Affairs. Flared base, mirror polish, and it still didn't pass our probe standards.",
       'on-call coffee': 'Darker than deep space, thick enough to hold a spoon upright. Handle with lead gloves.',
       'inflated rubber glove': 'Five-fingered night-shift mascot with a Sharpie grin. Morale in the hold jumped 14%.',
       'hospital sock': 'Treaded on both sides for peak hallway traction. Zero style, maximum dignity loss.',
-      bedpan: "Brushed steel, suspiciously gleaming. Zib insists it's a Viking helmet; HR disagrees.",
+      bedpan: "Brushed steel, suspiciously gleaming. Zib wore it as a Viking helmet; HR said no.",
       // L7 SS Buffet Royale
       'blue heart pendant': "Souvenir-deck enamel on a gold-ish chain. Please don't toss it overboard; Accounting is watching.",
       "captain's log": 'A literal timber log with a brass plaque. Stardate classified; splinters very real.',
@@ -3104,7 +3106,7 @@ export const en = {
       'complimentary towel swan': 'Origami terrycloth that survived re-entry. Greg has already asked for it back.',
       'lime mankini': 'Radioactive-lime sling stored behind double blast glass. Very nice—from two parsecs away.',
       // L8 Patent Valley
-      'first-edition bone': "Humanity's very first tool—a heavy bone picked up by an ape. Bureau Safety immediately filed it as an unlicensed weapon.",
+      'first-edition bone': "Humanity's very first tool—a heavy bone picked up by an ape. Security immediately filed it as an unlicensed weapon.",
     } satisfies Record<string, string>,
   },
 };
