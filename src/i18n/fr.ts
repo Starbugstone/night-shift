@@ -789,6 +789,7 @@ export const fr: Strings = {
         sneeze1953: "Pièce A · image du rayon thermique",
         // v4 openings
         evacuees1953: 'Pièce A · photo de l’évacuation',
+        cruisers1955: 'Pièce A · photo prise d’une décapotable',
         spotter1953: 'Pièce A · carnet du guet aérien',
         // v4 2199
         poetry: "Division des gardes-poètes",
@@ -798,7 +799,6 @@ export const fr: Strings = {
         eraPolice: 'Pièce A · depuis la voiture du shérif',
       },
       fare: 'COURSE 12,40',
-        cruisers1955: 'Pièce A · photo prise d’une décapotable',
       unit4: 'UNITÉ 4',
       patrol2: 'PATROUILLE 2',
       rec: 'ENR',
@@ -949,6 +949,7 @@ export const fr: Strings = {
       sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
       // v4 openings
       evacuees1953: ['Des phares ! On ne double jamais une évacuation. C’est malpoli, et c’est une preuve.'],
+      cruisers1955: ['Des voitures qui paradent ! J’attends un trou, comme un enjoliveur bien élevé.'],
       spotter1953: ['Des jumelles sur le clocher ! C’est une Pruitt ? Elles guettent depuis 1953 ?!'],
       // v4 2199
       start12: ["Ils ont envoyé des poètes. Vrell, leurs livres sont chargés ?"],
@@ -958,7 +959,6 @@ export const fr: Strings = {
         "12 nov. 1955 ! Trois témoins — et coupe la route à la voiture par l'ouest !",
       ],
       timeCarWarn: [
-      cruisers1955: ['Des voitures qui paradent ! J’attends un trou, comme un enjoliveur bien élevé.'],
         "Tu entends ce moteur ? Coupe-lui la route par la sortie à l'ouest !",
         "Les phares s'allument ! File par l'ouest pour lui couper la route !",
       ],
@@ -1068,6 +1068,7 @@ export const fr: Strings = {
       sneeze1953: ["Un tripode éternue sur votre coque. Toute la rangée avant a tout vu."],
       // v4 openings
       evacuees1953: ['Un break plein d’évacués fait une embardée, klaxonne et signale une soucoupe volante, à peine servie.'],
+      cruisers1955: ['Une décapotable pleine d’ados pile net. Lundi, tout le lycée « l’a vu en premier ».'],
       spotter1953: ['Edna Pruitt, guetteuse bénévole du ciel, note « une soucoupe, chromes bon marché ». Sa fille reprendra le carnet.'],
       // v4 2199
       poetry: ["Selon le garde-poète, tout le monde est resté pour le rappel. La plupart des gens étaient évanouis."],
@@ -1077,7 +1078,6 @@ export const fr: Strings = {
       eraPolice: ['Un policier de 1955 signale « un plat à tarte volant, cap au nord ». Le central lui conseille le déca.', 'Pris dans des phares chromés. Le shérif lance un avis sur « un ballon-sonde très impoli ».'],
     },
     spotShouts: {
-      cruisers1955: ['Une décapotable pleine d’ados pile net. Lundi, tout le lycée « l’a vu en premier ».'],
       police: ['UNITÉ 4, OVNI !', 'HALTE ! …SVP ?'],
       patrol: ['REÇU, SOUCOUPE !', 'RENFORTS !'],
       watcher: ['JE LE SAVAIS !', 'DOROTHÉE ! LE CARNET !'],
@@ -1103,6 +1103,7 @@ export const fr: Strings = {
       sneeze1953: ["À vos souhaits !"],
       // v4 openings
       evacuees1953: ['ILS SONT LÀ ! ACCÉLÈRE, HAROLD !'],
+      cruisers1955: ['EH, JOLIE CAISSE !', 'QUI CONDUIT UN ENJOLIVEUR ?'],
       spotter1953: ['ENGIN NON IDENTIFIÉ, CAP AU SUD !', 'EDNA L’A VU EN PREMIER !'],
       // v4 2199
       poetry: ["UN RAPPEL !"],
@@ -1112,7 +1113,6 @@ export const fr: Strings = {
       eraPolice: ['RANGEZ-VOUS, ENJOLIVEUR !', 'APPELEZ LE SHÉRIF !'],
     },
     spotZib: {
-      cruisers1955: ['EH, JOLIE CAISSE !', 'QUI CONDUIT UN ENJOLIVEUR ?'],
       police: ["Le flic m'a vu. Retour au dernier spécimen. Fais comme si c'était une autre soucoupe.", "Encore l'unité 4 ! À ce stade, on devrait s'envoyer des cartes de vœux."],
       patrol: ["La patrouille m'a eu. Retour à l'étape. Autre soucoupe, autre soucoupe."],
       traffic: ["Un TAXI m'a vu. Fallait vraiment que ce soit un TAXI."],
@@ -1142,6 +1142,7 @@ export const fr: Strings = {
       sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
       // v4 openings
       evacuees1953: ['J’ai doublé l’évacuation. La prochaine fois, j’attends mon tour comme un envahisseur civilisé.'],
+      cruisers1955: ['Repéré en traversant un samedi soir. La prochaine fois, je regarde des deux côtés. Deux fois.'],
       spotter1953: ['Une Pruitt m’a repéré. En 1953. Évidemment.'],
       // v4 2199
       poetry: ["Je préfère tenter ma chance dans le sas."],
@@ -1151,7 +1152,6 @@ export const fr: Strings = {
       eraPolice: ["Une patrouille de 1955 m'a eu ! Même leurs phares d'époque éclairent trop !", "Repéré par la voiture de police. Retour au dernier témoin — personne n'a rien vu."],
     },
     abductFail: {
-      cruisers1955: ['Repéré en traversant un samedi soir. La prochaine fois, je regarde des deux côtés. Deux fois.'],
       woke: [
         "{by} a tout vu en se réveillant. {by} « digère l'expérience » sur un forum.",
         "{by} a ouvert un œil. Puis l'autre. Puis la bouche. Ensuite, ça s'est gâté.",

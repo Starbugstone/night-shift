@@ -1008,6 +1008,7 @@ export const en = {
         sneeze1953: "Exhibit A · heat-ray still",
         // v4 openings
         evacuees1953: 'Exhibit A · evacuation snapshot',
+        cruisers1955: 'Exhibit A · snapshot from a convertible',
         spotter1953: 'Exhibit A · the sky-watch logbook',
         // v4 2199
         poetry: "Recital Division",
@@ -1017,7 +1018,6 @@ export const en = {
         eraPolice: "Exhibit A · from the sheriff's cruiser",
       },
       fare: 'FARE 12.40',
-        cruisers1955: 'Exhibit A · snapshot from a convertible',
       unit4: 'UNIT 4',
       patrol2: 'PATROL 2',
       rec: 'REC',
@@ -1140,6 +1140,7 @@ export const en = {
       sneeze1953: ["Bless you!"],
       // v4 openings
       evacuees1953: ["THEY'RE HERE! FLOOR IT, HAROLD!"],
+      cruisers1955: ['HEY, NICE RIDE!', 'WHO DRIVES A HUBCAP?'],
       spotter1953: ['UNIDENTIFIED CRAFT, BEARING SOUTH!', 'EDNA SAW IT FIRST!'],
       // v4 2199
       poetry: ["AN ENCORE!"],
@@ -1149,7 +1150,6 @@ export const en = {
       eraPolice: ['PULL OVER, HUBCAP!', 'CALL THE SHERIFF!'],
     } satisfies Record<string, Lines>,
     spotZib: {
-      cruisers1955: ['HEY, NICE RIDE!', 'WHO DRIVES A HUBCAP?'],
       police: ['The cop saw me. Respawning at the last specimen. Act like it was a different saucer.', 'Unit 4 again! At this point we should exchange Christmas cards.'],
       patrol: ['Patrol car got me. Back to the checkpoint. Different saucer, different saucer.'],
       traffic: ['A TAXI saw me. Of all the things to be seen by.'],
@@ -1179,6 +1179,7 @@ export const en = {
       sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
       // v4 openings
       evacuees1953: ['I overtook the evacuation. Next time I wait my turn like a civilised invader.'],
+      cruisers1955: ['Caught crossing on a Saturday night. Next time I look both ways. Twice.'],
       spotter1953: ['A Pruitt spotted me. In 1953. Of course she did.'],
       // v4 2199
       poetry: ["I’ll take my chances in the airlock."],
@@ -1188,7 +1189,6 @@ export const en = {
       eraPolice: ['A 1955 cruiser caught me! Even their vintage headlights are too bright!', 'Spotted by the patrol car. Back to the last witness—nobody saw a thing.'],
     } satisfies Record<string, Lines>,
     /** `{by}` = what failed you (already translated). */
-      cruisers1955: ['Caught crossing on a Saturday night. Next time I look both ways. Twice.'],
     abductFail: {
       woke: [
         '{by} woke up and saw everything. {by} is now "processing it" on a forum.',
