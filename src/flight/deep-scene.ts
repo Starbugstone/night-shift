@@ -5,6 +5,8 @@ import { pointInCone } from './geometry';
 // Everything drawn for a detector reads its shape from the sampled HazardField, so the drawn
 // shape is the hit shape; the tells layered on top (ghost cones, arming arcs, countdown rings,
 // the tether to whoever sees you) are decoration and never move a detector.
+import { huntPickup } from './hunt';
+import { deepSlot } from '../levels/levels';
 import type { Container } from 'pixi.js';
 import { FRESH_LINE_SECONDS, readSeconds } from '../core/read-time';
 
@@ -67,6 +69,16 @@ type SceneState = 'fly' | 'spotted' | 'locking';
 
 export class DeepFlightScene implements Scene {
   state: SceneState = 'fly';
+  private readonly huntRing: number;
+
+  get huntPosition() {
+    if (this.ctx.hunt?.kind === 'souvenir') {
+      const ring = this.sim.rings[this.huntRing];
+      return ring && ring.x >= 0 ? ring : undefined;
+    }
+    return huntPickup(this.ctx.hunt, this.sim.collectible);
+  }
+
   readonly sim: DeepFlightSim;
   readonly ctx: GameContext;
   readonly level: DeepLevelDef;
@@ -133,6 +145,9 @@ export class DeepFlightScene implements Scene {
     this.practice = opts.practice ?? false;
     this.sim = new DeepFlightSim(this.level.map, this.ctx.upgrades, this.run.elapsed, this.run.troops, this.run.collectible);
     for (let i = 0; i < this.run.delivered.length; i++) if (this.run.delivered[i]) this.sim.markDelivered(i);
+    const hunt = this.ctx.hunt;
+    const slot = hunt?.kind === 'souvenir' ? deepSlot(this.level, hunt.room) : null;
+    this.huntRing = slot ? this.sim.ringRef.findIndex(ref => ref.target === slot.target && ref.entry === slot.entry) : -1;
     const sp = this.run.spawn;
     this.sim.place(sp.x, sp.y, this.run.legs === 0 && this.run.spotted === 0 ? 0.4 : SAFE_WINDOW);
     if (this.practice && this.level.id === 'level12') this.sim.place(GRIMSBY_SET.practice.x, GRIMSBY_SET.practice.y, 0.4); // v4 openings

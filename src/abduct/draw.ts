@@ -804,7 +804,7 @@ export class AbductView implements SceneView {
     this.item.visible = !this.leftItem.visible;
     const itemView = this.leftItem.visible ? this.leftItem : this.item;
     itemView.position.set(sim.item.x - item.w / 2, sim.item.y - item.h / 2);
-    this.sparkle.sync(!sim.item.captured && !delivered, sim.item.x, sim.item.y, item.w, item.h, elapsed, rm); // v4 items
+    this.sparkle.sync(!sim.item.captured && !delivered, sim.item.x, sim.item.y, item.w, item.h, elapsed, rm, ctx.hunt?.kind === 'souvenir' && ctx.hunt.itemId === sim.room.item.name); // v4 items
     this.human.sync(body, sim.wake.awake > 0, this.breath());
     this.delivery.sync(sim, rm);
     this.sleepEffects();

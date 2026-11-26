@@ -1,3 +1,4 @@
+import { ItemSparkle } from '../../abduct/views/item-sparkle';
 import { COW } from '../grail';
 import { RecitalView } from './recital';
 import { Container, Graphics } from 'pixi.js';
@@ -294,6 +295,7 @@ class ShipDecor {
 }
 
 export class DeepFlightView implements SceneView {
+  private readonly huntSparkle = new ItemSparkle();
   readonly root = new Container();
   private readonly camera = new CameraView();
   private readonly upperWorld = new Container();
@@ -410,6 +412,7 @@ export class DeepFlightView implements SceneView {
     this.upperWorld.addChild(this.ambient.lights, this.saucer.groundGlow, this.ambient.critters, this.hazards.detectors, this.hazards.sky);
     for (const ring of this.rings) this.upperWorld.addChild(ring.root);
     if (this.collectible) this.upperWorld.addChild(this.collectible.root);
+    this.upperWorld.addChild(this.huntSparkle.root);
     if (this.crestValley) this.upperWorld.addChild(this.crestValley.car.root, this.crestValley.strike.world);
     // speech bubbles above every map object (houses, dogs, critters, rings), under the saucer
     const bubbles = new Container();
@@ -437,6 +440,8 @@ export class DeepFlightView implements SceneView {
 
   sync(): void {
     const s = this.s;
+    const hunt = s.huntPosition;
+    this.huntSparkle.sync(!!hunt, hunt?.x ?? 0, hunt?.y ?? 0, 112, 112, s.ctx.time, s.ctx.reducedMotion, true);
     const { sim, run } = s;
     const t = s.ctx.time;
     const rm = s.ctx.reducedMotion;

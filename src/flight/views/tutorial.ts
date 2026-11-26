@@ -1,3 +1,4 @@
+import { ItemSparkle } from '../../abduct/views/item-sparkle';
 import { Container, Graphics } from 'pixi.js';
 import { formatOrderNumber, workOrderNumber } from '../../levels/levels';
 import type { PropKind } from '../../levels/types';
@@ -40,6 +41,7 @@ const RETRY = { size: 26, color: C.mint, weight: 900 } as const;
 const SHOUT = { size: 30, color: C.red, weight: 900 } as const;
 
 export class TutorialFlightView implements SceneView {
+  private readonly huntSparkle = new ItemSparkle();
   readonly root = new Container();
   private readonly camera = new CameraView();
   private readonly hud = new Container();
@@ -129,6 +131,7 @@ export class TutorialFlightView implements SceneView {
     this.upperWorld.addChild(poles);
     for (const r of this.rings) this.upperWorld.addChild(r.root);
     if (this.collectible) this.upperWorld.addChild(this.collectible.root);
+    this.upperWorld.addChild(this.huntSparkle.root);
     // speech bubbles above every map object, under the saucer
     const bubbles = new Container();
     bubbles.label = FLIGHT_BUBBLES;
@@ -160,6 +163,8 @@ export class TutorialFlightView implements SceneView {
 
   sync(): void {
     const s = this.s;
+    const hunt = s.huntPosition;
+    this.huntSparkle.sync(!!hunt, hunt?.x ?? 0, hunt?.y ?? 0, 112, 112, s.ctx.time, s.ctx.reducedMotion, true);
     const { time: t, reducedMotion: rm } = s.ctx;
     const m = s.level.map;
     const cam = this.camera;

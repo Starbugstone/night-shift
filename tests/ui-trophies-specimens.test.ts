@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { ART } from '../src/art-manifest';
 import { ROOMS } from '../src/abduct/rooms';
 import { VIEW_H, VIEW_W, type AbductResult, type FlightResult, type RoomId } from '../src/contracts';
-import { setLang, type Lang } from '../src/i18n';
+import { setLang, tr, type Lang } from '../src/i18n';
 import { en } from '../src/i18n/en';
 import { fr } from '../src/i18n/fr';
 import { FIELD_CHECK_ROOM } from '../src/levels/field-check';
@@ -142,6 +142,26 @@ describe('HARD RULE: every abductable specimen belongs in Room 3 (Specimen Archi
         expect(info.desc.length).toBeGreaterThan(20);
         expect(info.at3.length).toBeGreaterThan(20);
         expect(info.at10.length).toBeGreaterThan(20);
+      }
+    }
+  });
+
+  it('shows a short, distinct probed note for every specimen in both languages', () => {
+    for (const lang of ['en', 'fr'] as const) {
+      setLang(lang);
+      const { probedNote, unprobedNote } = tr().trophies.specimens;
+      const seen = new Set([probedNote]);
+      for (const id of expectedIds) {
+        const slot = byId.get(id)!;
+        const entry = { count: 1, first: 0, probed: true, probes: 1 };
+        const { probeNote } = specimenDetailState({ slot, found: true, entry });
+        expect(probeNote.trim(), `${lang} note for ${id}`).not.toBe('');
+        expect(probeNote.length).toBeLessThanOrEqual(80);
+        expect(seen.has(probeNote), `${lang} reused note for ${id}`).toBe(false);
+        seen.add(probeNote);
+        expect(specimenDetailState({
+          slot, found: true, entry: { ...entry, probed: false, probes: 0 },
+        }).probeNote).toBe(unprobedNote);
       }
     }
   });

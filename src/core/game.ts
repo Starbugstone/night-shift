@@ -1,3 +1,4 @@
+import type { HuntTarget } from '../flight/hunt';
 import { Container } from 'pixi.js';
 import type { AbductResult, AbductRules, FlightResult, PointerState, RoomId } from '../contracts';
 import { createAbductScene, emitterPoint } from '../abduct';
@@ -261,11 +262,13 @@ export class Game implements Shell {
   // ---------------------------------------------------------------- navigation
 
   toTitle(): void {
+    this.ctx.hunt = undefined;
     this.flight = null;
     this.scenes.go('title', () => new TitleScene(this));
   }
 
   toWorkOrders(): void {
+    this.ctx.hunt = undefined;
     this.flight = null;
     this.scenes.go('workorders', () => new WorkOrdersScene(this));
   }
@@ -278,15 +281,16 @@ export class Game implements Shell {
     this.scenes.go('trophies', () => new TrophiesScene(this, from, view), view !== undefined);
   }
 
-  toMemo(levelIndex: number): void {
+  toMemo(levelIndex: number, hunt?: HuntTarget): void {
     const i = clampLevel(levelIndex);
     const finale = LEVELS[i]!.id === 'level12';
     const practice = finale ? () => this.practiceRecital(i) : i === FIELD_CHECK_INDEX ? () => this.toFieldCheck() : undefined;
     const replay = finale && this.save.levels.level12.delivered ? () => this.showDispatchFinale(() => this.toMemo(i)) : undefined;
-    this.scenes.go('memo', () => new MemoScene(this, i, practice, replay));
+    this.scenes.go('memo', () => new MemoScene(this, i, practice, replay, hunt));
   }
 
   private practiceRecital(i: number): void {
+    this.ctx.hunt = undefined;
     const level = LEVELS[i]!;
     if (!isDeep(level)) return;
     const run = new DeepRun(level, i);
@@ -309,6 +313,7 @@ export class Game implements Shell {
   }
 
   private startFieldCheck(): void {
+    this.ctx.hunt = undefined;
     const practice = new DeepRun(FIELD_CHECK, FIELD_CHECK_INDEX);
     this.scenes.go('flight', () => {
       this.ctx.tutorial = false;
@@ -355,7 +360,8 @@ export class Game implements Shell {
     if (!this.save.fieldCheckSeen) this.setSave({ ...this.save, fieldCheckSeen: true });
   }
 
-  toFlight(levelIndex: number, spotted = 0): void {
+  toFlight(levelIndex: number, spotted = 0, hunt?: HuntTarget): void {
+    this.ctx.hunt = hunt;
     const i = clampLevel(levelIndex);
     const level = LEVELS[i]!;
     if (isDeep(level)) {
@@ -435,6 +441,7 @@ export class Game implements Shell {
 
   /** Jump straight into a room (?room=, debug). Deep routes get a fresh shift around them. */
   startRoom(room: RoomId): void {
+    this.ctx.hunt = undefined;
     const li = levelIndexForRoom(room);
     const level = LEVELS[li]!;
     if (!isDeep(level)) {
@@ -506,6 +513,7 @@ export class Game implements Shell {
         const inner = createAbductScene(this.ctx, { levelId: level.id, roomId: cur.roomId, rules: DEEP_RULES }, (res) => {
           if (done) return;
           done = true;
+          if (res.delivered && this.ctx.hunt?.kind === 'souvenir' && res.itemsStolen.includes(this.ctx.hunt.itemId)) this.ctx.hunt = undefined;
           const next = run.finishAbduct(res);
           if (next === 'done') this.toDeepReport(run, { style: 'flash' });
           else if (next === 'flight') {

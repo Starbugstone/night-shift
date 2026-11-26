@@ -1,3 +1,4 @@
+import type { HuntTarget } from '../flight/hunt';
 import type { TrophyRoomTab } from '../ui/trophy-data';
 import type { AbductResult, FlightResult, GameContext, RoomId, UpgradeId } from '../contracts';
 import type { SaveData } from '../levels/save';
@@ -32,8 +33,8 @@ export interface Shell {
   toUpgrades(): void;
   /** `view`: preprod's preview of every exhibit, and the room to open on. */
   toTrophies(from?: 'title' | 'workorders', view?: { preview: boolean; room: TrophyRoomTab }): void;
-  toMemo(levelIndex: number): void;
-  toFlight(levelIndex: number, spotted?: number): void;
+  toMemo(levelIndex: number, hunt?: HuntTarget): void;
+  toFlight(levelIndex: number, spotted?: number, hunt?: HuntTarget): void;
   toAbduct(levelIndex: number, room: RoomId, flight: FlightResult): void;
   toReport(levelIndex: number, abduct: AbductResult, flight: FlightResult): void;
   toAbortChoice(levelIndex: number, room: RoomId, flight: FlightResult): void;

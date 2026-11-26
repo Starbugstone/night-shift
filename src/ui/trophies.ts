@@ -14,6 +14,8 @@ import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Shape, keyOf, roundRect } from '../core/gfx/shapes';
 import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
+import { trophyHunt } from '../flight/hunt';
+import { isLevelUnlocked } from '../levels/progress';
 import { formatOrderNumber } from '../levels/levels';
 import { clamp } from './draw';
 import { C } from './theme';
@@ -250,6 +252,8 @@ export class TrophiesScene implements Scene, ModalNavLook {
   readonly nextWing = new Button(VIEW_W - 24 - 88, HEADER_BASE_H + 4, 88, 36, '›', 'ghost', 26);
   /** Preprod only: preview every exhibit as found (display only, never saved). */
   readonly previewBtn = new Button(VIEW_W - 24 - 196, VIEW_H - 24 - 52, 196, 52, '', 'ghost', 16);
+  huntLaunch: ReturnType<typeof trophyHunt> = null;
+  readonly huntBtn = new Button(MODAL_X + (MODAL_W - 220) / 2, 0, 220, 56, tr().trophies.hunt, 'primary', 22);
   readonly closeBtn = new Button(MODAL_X + (MODAL_W - 220) / 2, MODAL_Y + MODAL_H - 74, 220, 56, '', 'primary', 24);
   /** Previous / next exhibit chevrons on the modal's edges (the card is always centred on the screen). */
   readonly prevExhibit = new Button(0, (VIEW_H - CHEVRON_H) / 2, CHEVRON_W, CHEVRON_H, '', 'ghost');
@@ -390,6 +394,7 @@ export class TrophiesScene implements Scene, ModalNavLook {
     this.modalY = y;
     this.modalH = h;
     this.closeBtn.y = y + h - 74;
+    this.huntBtn.y = this.closeBtn.y - 62;
   }
 
   private closeModal(): void {
@@ -442,6 +447,11 @@ export class TrophiesScene implements Scene, ModalNavLook {
     const stop = this.nav[this.activeRoom][index];
     if (!stop) return;
     this.selected = stop.sel;
+    this.huntBtn.cancel();
+    this.huntLaunch = stop.sel.kind !== 'specimen' && !stop.sel.item.found
+      ? trophyHunt(stop.sel.item.slot, index => isLevelUnlocked(this.shell.save, index))
+      : null;
+    this.huntBtn.visible = !!this.huntLaunch;
     this.selectedIndex = index;
     if (this.activeRoom === 'souvenirs') this.pageIndex = stop.page;
     else if (this.activeRoom === 'specimens') this.specimenPageIndex = stop.page;
@@ -524,6 +534,7 @@ export class TrophiesScene implements Scene, ModalNavLook {
       if (p.released) this.swTracking = false;
       return false;
     }
+    this.huntBtn.cancel();
     // A horizontal drag is never a tap: disarm Close, the chevrons and the scrim.
     this.closeBtn.cancel();
     this.prevExhibit.cancel();
@@ -589,6 +600,9 @@ export class TrophiesScene implements Scene, ModalNavLook {
       const swiped = this.trackSwipe(p, dt);
       this.animateSwipe(dt);
       if (swiped) return;
+      if (this.huntLaunch && this.huntBtn.update(p, dt)) {
+        return this.shell.toMemo(this.huntLaunch.index, this.huntLaunch.target);
+      }
       if (this.closeBtn.update(p, dt)) {
         this.closeModal();
         return;
@@ -865,7 +879,7 @@ class TrophiesView implements SceneView {
       this.wingLabel = null;
     }
 
-    this.modal = new DetailModalView(assets, s.closeBtn, s.prevExhibit, s.nextExhibit, (y, h) => s.setModalBox(y, h));
+    this.modal = new DetailModalView(assets, s.closeBtn, s.huntBtn, s.prevExhibit, s.nextExhibit, (y, h) => s.setModalBox(y, h));
     this.root.addChild(this.modal.root);
   }
 
@@ -1570,6 +1584,7 @@ class DetailModalView {
   private readonly postcards = new Paragraph({ size: 16, lineHeight: 22, color: C.text, weight: 650 });
   private readonly row3Key = new Label(PROV_KEY);
   private readonly row3Val = new Label(PROV_VAL);
+  private readonly huntView: ButtonView;
   private readonly closeView: ButtonView;
   private readonly counterLabel = new Label(NAV_COUNTER);
   private readonly prevChevron: ExhibitChevron;
@@ -1583,6 +1598,7 @@ class DetailModalView {
   constructor(
     private readonly assets: Assets,
     closeBtn: Button,
+    huntBtn: Button,
     prevBtn: Button,
     nextBtn: Button,
     private readonly onResize: (y: number, h: number) => void,
@@ -1657,6 +1673,7 @@ class DetailModalView {
     this.abductedBadgeLabel.visible = false;
     this.probeNoteLabel.visible = false;
 
+    this.huntView = new ButtonView(huntBtn);
     this.closeView = new ButtonView(closeBtn);
     // closeBtn uses screen-space coords; shift into card-local space
     this.closeView.position.set(-MODAL_X, -MODAL_Y);
@@ -1696,6 +1713,7 @@ class DetailModalView {
       this.postcards,
       this.row3Key,
       this.row3Val,
+      this.huntView,
       this.closeView,
       this.counterLabel,
     );
@@ -1708,13 +1726,14 @@ class DetailModalView {
   }
 
   private applyModalHeight(h: number): void {
-    const clampedH = Math.min(VIEW_H - 32, Math.max(MODAL_H, Math.ceil(h)));
+    const clampedH = Math.min(VIEW_H - 32, Math.max(MODAL_H, Math.ceil(h + (this.huntView.visible ? 62 : 0))));
     const my = Math.round((VIEW_H - clampedH) / 2);
     this.curModalH = clampedH;
     this.card.pivot.set(MODAL_W / 2, clampedH / 2);
     this.card.position.set(MODAL_X + MODAL_W / 2, my + clampedH / 2);
     this.onResize(my, clampedH);
     this.closeView.position.set(-MODAL_X, -my);
+    this.huntView.position.set(-MODAL_X, -my);
     // Counter in the free corner right of Close, on the Close button's centre line
     this.counterLabel.position.y = clampedH - 46;
     this.shownCounter = '';
@@ -2099,7 +2118,7 @@ class DetailModalView {
 
       this.probeNoteLabel
         .restyle(probed ? PROBE_NOTE_RED : PROBE_NOTE_MINT)
-        .set(probed ? specStr.probedNote : specStr.unprobedNote, 38, provY + 50, MODAL_W - 76);
+        .set(detail.probeNote, 38, provY + 50, MODAL_W - 76);
 
       this.row1Key.set(specStr.capturedVia, leftX, provY + 89, 136);
       this.row1Val.restyle(PROV_VAL).set(specimenCaptureText(entry), rightX, provY + 89, 250);
@@ -2118,7 +2137,7 @@ class DetailModalView {
     }
   }
 
-  sync(selected: SelectedExhibit | null, modalT: number, t: number, reduced: boolean, nav: ModalNavLook): void {
+  sync(selected: SelectedExhibit | null, modalT: number, t: number, reduced: boolean, nav: ModalNavLook & Pick<TrophiesScene, 'huntLaunch'>): void {
     const show = selected !== null;
     if (this.root.visible !== show) this.root.visible = show;
     if (!show || !selected) {
@@ -2128,6 +2147,7 @@ class DetailModalView {
       return;
     }
 
+    this.huntView.visible = !!nav.huntLaunch;
     const key = selected.kind === 'souvenir'
       ? `s|${selected.item.slot.itemId}|${selected.item.found ? selected.item.entry?.count ?? 0 : -1}`
       : selected.kind === 'specimen'
@@ -2159,6 +2179,7 @@ class DetailModalView {
     } else if (selected.item.found && this.activeTownFig) {
       this.activeTownFig.sync(t, reduced);
     }
+    this.huntView.sync();
     this.closeView.sync();
   }
 }

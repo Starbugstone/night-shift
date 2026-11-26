@@ -1,6 +1,6 @@
 // v4 items & recap humour: the loose souvenir reads as collectable. Until the beam grabs it, the item
 // has a faint mint halo (mint = your goals) and three small white twinkles at its corners that
-// blink in turn. Reduced motion keeps a still halo and no twinkles. Built once; sync() only sets
+// blink in turn. Reduced motion keeps a still halo and static stars for hunts. Built once; sync() only sets
 // position and alpha, and `visible` changes only when the item is grabbed, delivered or culled.
 // Halo and twinkles use the normal blend and sit just behind the item, so they batch with it (an
 // additive run there cost 3-4 draw calls per frame).
@@ -45,7 +45,6 @@ export class ItemSparkle {
   private readonly halo = new Glow(glowTexture(GLOW.mint));
   private readonly stars: Sprite[] = [];
   private shown = true;
-  private still: boolean | undefined;
 
   constructor() {
     this.root.addChild(this.halo);
@@ -61,34 +60,29 @@ export class ItemSparkle {
 
   /**
    * Item centre (x, y) and art size; `on` while the item lies loose and in view. `time` drives the
-   * blink (seconds); `reducedMotion` holds a still halo with no twinkles.
+   * blink (seconds); `reducedMotion` holds the marker still.
    */
-  sync(on: boolean, x: number, y: number, w: number, h: number, time: number, reducedMotion: boolean): void {
+  sync(on: boolean, x: number, y: number, w: number, h: number, time: number, reducedMotion: boolean, highlighted = false): void {
     if (on !== this.shown) {
       this.shown = on;
       this.root.visible = on;
     }
     if (!on) return;
-    if (reducedMotion !== this.still) {
-      this.still = reducedMotion;
-      for (const star of this.stars) star.visible = !reducedMotion;
-    }
     const r = Math.max(w, h) * 0.95;
     const pulse = reducedMotion ? 0 : Math.sin(time * 2.3);
     this.halo.position.set(x, y);
     this.halo.width = r * 2;
     this.halo.height = r * 2;
-    this.halo.alpha = 0.34 + pulse * 0.08;
-    if (reducedMotion) return;
+    this.halo.alpha = (highlighted ? 0.57 : 0.34) + pulse * 0.08;
     for (let i = 0; i < TWINKLES.length; i++) {
       const spec = TWINKLES[i]!;
       const star = this.stars[i]!;
       // a short flash every ~2.7 s per star, staggered
-      const s = Math.sin(time * 2.3 + spec.phase);
+      const s = reducedMotion ? 0 : Math.sin(time * 2.3 + spec.phase);
       const flash = s > 0 ? s * s * s * s * s * s : 0;
       star.position.set(x + spec.dx * w * 0.5, y + spec.dy * h * 0.5);
-      star.alpha = TWINKLE_FLOOR + flash * 0.85;
-      star.scale.set(0.55 + flash * 0.45);
+      star.alpha = reducedMotion ? (highlighted ? 0.9 : 0) : highlighted ? 0.42 + flash * 0.58 : TWINKLE_FLOOR + flash * 0.85;
+      star.scale.set(highlighted ? 1.15 + flash * 0.45 : 0.55 + flash * 0.45);
     }
   }
 }

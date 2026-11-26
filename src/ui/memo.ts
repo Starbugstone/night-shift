@@ -1,3 +1,4 @@
+import type { HuntTarget } from '../flight/hunt';
 import { Container, Graphics } from 'pixi.js';
 import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
@@ -51,6 +52,7 @@ export class MemoScene implements Scene {
     private readonly levelIndex: number,
     private readonly openPractice?: () => void,
     private readonly openReplay?: () => void,
+    private readonly hunt?: HuntTarget,
   ) {
     const level = tr().levels[this.level.id];
     this.totalChars = level.body.length + level.joke.length;
@@ -83,7 +85,7 @@ export class MemoScene implements Scene {
     const p = this.shell.ctx.pointer;
     const audio = this.shell.audio;
     if (this.back.update(p, dt)) return this.shell.toWorkOrders();
-    if (this.start.update(p, dt)) return this.shell.toFlight(this.levelIndex);
+    if (this.start.update(p, dt)) return this.shell.toFlight(this.levelIndex, 0, this.hunt);
     if (this.replay?.update(p, dt)) return this.openReplay?.();
     if (this.practice?.update(p, dt)) return this.openPractice?.();
     // v4 voices: Vrell babbles the memo while it types (in place of the old key clicks)

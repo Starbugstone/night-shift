@@ -1,3 +1,4 @@
+import { huntEntry, huntPickup } from './hunt';
 import type { FlightResult, GameContext, Scene, Vec2 } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import { ART } from '../art-manifest';
@@ -66,6 +67,12 @@ export class FlightScene implements Scene {
   readonly saucer: Saucer = { x: 0, y: 0, vx: 0, vy: 0, stun: 0 };
   readonly sus = new SuspicionMeter();
   readonly lock = new LockOn();
+  private readonly huntRing: Vec2 | undefined;
+
+  get huntPosition() {
+    return huntPickup(this.ctx.hunt, this.collectible) ?? this.huntRing;
+  }
+
   readonly collectible: MapCollectible | null;
   collectibleToastT = 0;
   vehicles: VehicleRT[] = [];
@@ -115,6 +122,7 @@ export class FlightScene implements Scene {
   constructor(private readonly opts: FlightOptions) {
     this.ctx = opts.ctx;
     this.level = opts.level;
+    this.huntRing = huntEntry(this.level, this.ctx.hunt);
     this.collectible = this.level.map.collectible ? new MapCollectible(this.level.map.collectible) : null;
     this.eggs = new EggCues(this.level.map.props, this); // v4 easter eggs
     this.spotted = opts.spotted;

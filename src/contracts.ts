@@ -113,6 +113,7 @@ export type UpgradeId =
   | 'snooze_ray';
 
 export interface GameContext {
+  hunt?: import('./flight/hunt').HuntTarget;
   pointer: PointerState;
   assets: Assets;
   audio: Audio;

@@ -620,6 +620,7 @@ export interface SpecimenDetailState {
   readonly probes: number;
   readonly probed: boolean;
   readonly abductedLabel: string;
+  readonly probeNote: string;
   readonly probeTagLabel: string;
   readonly probeStampLabel: string;
   readonly addenda: readonly SpecimenAddendum[];
@@ -661,6 +662,7 @@ export function specimenDetailState(item: SpecimenSlotState): SpecimenDetailStat
       probes: 0,
       probed: false,
       abductedLabel: '',
+      probeNote: '',
       probeTagLabel: specStr.unprobedTag,
       probeStampLabel: specStr.probedStamp,
       addenda: [],
@@ -668,6 +670,7 @@ export function specimenDetailState(item: SpecimenSlotState): SpecimenDetailStat
   }
   const probes = entry.probes;
   const probed = probes > 0;
+  const notes: Readonly<Record<string, string | undefined>> = specStr.probeNotes;
   const stampLabel = probes > 1 ? fmt(specStr.probedStampCount, { count: probes }) : specStr.probedStamp;
   return {
     found: true,
@@ -675,6 +678,7 @@ export function specimenDetailState(item: SpecimenSlotState): SpecimenDetailStat
     probes,
     probed,
     abductedLabel: fmt(specStr.abductedCount, { count: entry.count }),
+    probeNote: probed ? (notes[item.slot.id] ?? specStr.probedNote) : specStr.unprobedNote,
     probeTagLabel: probed ? stampLabel : specStr.unprobedTag,
     probeStampLabel: stampLabel,
     addenda: specimenAddenda(item.slot.id, entry.count),

@@ -557,7 +557,7 @@ export class DeepAbductView implements SceneView {
       item.x + (sim.exitX - item.x) * p - sprite.w / 2,
       item.y + (sim.exitY - item.y) * p - sprite.h / 2,
     );
-    this.sparkle.sync(this.item.visible && !item.captured && !delivered, item.x, item.y, sprite.w, sprite.h, elapsed, rm); // v4 items
+    this.sparkle.sync(this.item.visible && !item.captured && !delivered, item.x, item.y, sprite.w, sprite.h, elapsed, rm, this.ctx.hunt?.kind === 'souvenir' && this.ctx.hunt.itemId === sim.room.item.name); // v4 items
     this.subject.pivot.set(chestX, chestY);
     this.subject.position.set(chestX + (sim.exitX - chestX) * p, chestY + (sim.exitY - chestY) * p);
     const q = rm ? 0 : this.squash * 0.1;

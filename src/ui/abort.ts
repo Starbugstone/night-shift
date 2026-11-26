@@ -39,7 +39,7 @@ export class AbortScene implements Scene {
     this.t += dt;
     const p = this.shell.ctx.pointer;
     if (this.retryRoom.update(p, dt)) return this.shell.toAbduct(this.levelIndex, this.room, this.flight);
-    if (this.backFlight.update(p, dt)) return this.shell.toFlight(this.levelIndex);
+    if (this.backFlight.update(p, dt)) return this.shell.toFlight(this.levelIndex, 0, this.shell.ctx.hunt);
     if (this.orders.update(p, dt)) return this.shell.toWorkOrders();
   }
 
