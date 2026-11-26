@@ -29,6 +29,9 @@ function at(root: Container, node: Container, x: number, y: number): Container {
   return node;
 }
 
+/** v4 openings: a parked car joins the evacuation queue at the drive-in's north exit (traffic starts at its nose). */
+const DEPART = { x: 1118, y: 1830, run: 130 } as const;
+
 function sign(size: number, color: string): Label {
   return new Label({ size, color, weight: 900, align: 'center' });
 }
@@ -202,8 +205,7 @@ export class DriveInScenery {
     this.child = at(this.root, artSprite(assets, 'flight/invasion_child_clap_top') ?? new Graphics()
       .ellipse(0, 7, 15, 11).fill('#7775a6').stroke(edge).circle(0, -9, 8).fill('#c79073').stroke(edge), 1130, 1915);
     this.car = at(this.root, artSprite(assets, 'flight/sedan55_top', 58, 106) ?? new Graphics()
-      .roundRect(-28, -49, 56, 98, 12).fill('#6b8299').stroke(edge).rect(-21, -24, 42, 42).fill('#413c57'), 1230, 1790); // v4 openings: queues at the drive-in exit
-    this.car.rotation = Math.PI / 2;
+      .roundRect(-28, -49, 56, 98, 12).fill('#6b8299').stroke(edge).rect(-21, -24, 42, 42).fill('#413c57'), DEPART.x, DEPART.y); // v4 openings: pulls out for the north exit
     for (let i = 0; i < 3; i++) {
       const parked = new Graphics()
         .moveTo(0, 2).lineTo(-17, 11).moveTo(0, 2).lineTo(16, 12).moveTo(0, 0).lineTo(1, 16)
@@ -238,6 +240,6 @@ export class DriveInScenery {
     this.child.rotation = reduced ? 0 : 0.12 * Math.sin(t * 10);
     this.applause.alpha = exposed ? 1 : 0.42;
     this.applause.rotation = reduced ? 0 : 0.15 * Math.sin(t * 12);
-    this.car.x = 1230 + (reduced ? 0 : Math.max(0, Math.min(1, (t - 4) / 6)) * 290);
+    this.car.y = DEPART.y - (reduced ? 0 : Math.max(0, Math.min(1, (t - 4) / 6)) * DEPART.run);
   }
 }

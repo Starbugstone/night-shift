@@ -89,7 +89,7 @@ export interface WatcherHazard {
   hold: number;
   sweepAmp: number;
   sweepRate: number;
-  skin?: 'cafe55';
+  skin?: 'cafe55' | 'spotter53'; // v4 openings: spotter53 = 1953 sky-watch volunteer
 }
 
 export interface DogHazard {
@@ -341,6 +341,8 @@ export const SPOT_CAUSES = [
   'projector1953', 'sneeze1953',
   // v4 openings: 1953 evacuees (traffic and torch crowds)
   'evacuees1953',
+  // v4 openings: the 1953 sky-watch volunteer on the church tower
+  'spotter1953',
 ] as const;
 export type SpotCause = (typeof SPOT_CAUSES)[number];
 
@@ -890,7 +892,7 @@ export class HazardField {
         return 'porch';
       case 'hum': return 'hum';
       case 'watcher':
-        return d.skin ? 'eraWatcher' : 'watcher';
+        return d.skin === 'spotter53' ? 'spotter1953' : d.skin ? 'eraWatcher' : 'watcher'; // v4 openings
       case 'dog':
         return 'dog';
       case 'heli':

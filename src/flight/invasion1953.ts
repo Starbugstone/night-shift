@@ -2,7 +2,7 @@ import type { CameraHazard } from './hazards';
 
 export const DRIVE_IN_PROJECTOR = {
   type: 'camera', skin: 'invasion_projector_top', x: 900, y: 1460,
-  range: 640, half: 0.76, base: Math.PI / 2, amp: 0, rate: 0, phase: 0,
+  range: 600, half: 0.76, base: Math.PI / 2, amp: 0, rate: 0, phase: 0,
 } satisfies CameraHazard;
 
 export const TRIPOD_SNEEZE = {

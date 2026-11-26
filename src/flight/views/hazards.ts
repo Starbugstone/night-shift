@@ -278,7 +278,7 @@ export class HazardViews {
         };
       }
       case 'watcher': {
-        const neighbour = s.level.id === 'birch_neighbours' ? artSprite(assets, 'flight/pruitt_binoculars') ??
+        const neighbour = s.level.id === 'birch_neighbours' || d.skin === 'spotter53' ? artSprite(assets, 'flight/pruitt_binoculars') ?? // v4 openings
           new Graphics().ellipse(0, 14, 27, 19).fill('#ac86a3').circle(0, -5, 18).fill('#e5bb9e')
             .circle(-9, -5, 8).circle(9, -5, 8).fill('#92bdca').stroke({ color: C.ink, width: 4 }) : undefined;
         const watcher = new WatcherTell(d, neighbour);

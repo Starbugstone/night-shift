@@ -170,6 +170,7 @@ const deepZib = {
   sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
   // v4 openings
   evacuees1953: ["Headlights! Never overtake an evacuation. It's rude, and it's evidence."],
+  spotter1953: ['Binoculars on the church tower! Is that a Pruitt? They’ve been watching since 1953?!'],
   // v4 2199
   start12: ["They’ve sent poets. Vrell, are their books loaded?"],
   demolition: ["Demolition in thirty seconds!"],
@@ -289,6 +290,7 @@ const spotCaptions = {
   sneeze1953: ["A tripod sneezes straight on your hull. You are now on camera."],
   // v4 openings
   evacuees1953: ['A station wagon full of evacuees swerves, honks and reports one flying saucer, barely used.'],
+  spotter1953: ['Edna Pruitt of the volunteer sky watch logs “one saucer, cheap chrome”. Her daughter will keep the logbook going.'],
   // v4 2199
   poetry: ["The guard insists everyone stayed for the encore. Most of them were unconscious."],
   dozer: ["The driver marks the saucer as an obstruction. Artie’s house already has a file."],
@@ -1004,6 +1006,7 @@ export const en = {
         sneeze1953: "Exhibit A · heat-ray still",
         // v4 openings
         evacuees1953: 'Exhibit A · evacuation snapshot',
+        spotter1953: 'Exhibit A · the sky-watch logbook',
         // v4 2199
         poetry: "Recital Division",
         dozer: "Demolition fleet",
@@ -1134,6 +1137,7 @@ export const en = {
       sneeze1953: ["Bless you!"],
       // v4 openings
       evacuees1953: ["THEY'RE HERE! FLOOR IT, HAROLD!"],
+      spotter1953: ['UNIDENTIFIED CRAFT, BEARING SOUTH!', 'EDNA SAW IT FIRST!'],
       // v4 2199
       poetry: ["AN ENCORE!"],
       dozer: ["CLEAR THE ROAD!"],
@@ -1171,6 +1175,7 @@ export const en = {
       sneeze1953: ["A war machine just sneezed on me. Does that count as a sick day?"],
       // v4 openings
       evacuees1953: ['I overtook the evacuation. Next time I wait my turn like a civilised invader.'],
+      spotter1953: ['A Pruitt spotted me. In 1953. Of course she did.'],
       // v4 2199
       poetry: ["I’ll take my chances in the airlock."],
       dozer: ["Artie stopped one of those in his dressing gown. Is that what I was supposed to wear?"],
@@ -2046,6 +2051,8 @@ export const en = {
     "Loading door": "Loading door",
     "Chaperone": "Chaperone",
     "Café watcher": "Café watcher",
+    // v4 openings
+    'Edna Pruitt': 'Edna Pruitt',
     // v4 1122
     "Supply flap": "Supply flap",
     "Banner loft": "Banner loft",

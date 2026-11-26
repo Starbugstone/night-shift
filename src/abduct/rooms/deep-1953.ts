@@ -126,7 +126,7 @@ export const ROOMS_1953 = {
   ], windowExit, box(1815, 370, 80, 142), [
     point(168, 333), point(335, 250), point(507, 241), point(650, 281), point(815, 371), point(1245, 381), point(1369, 235),
     point(1585, 229), point(1740, 319), point(1855, 417),
-  ], 'meteor_fragment', 'meteor fragment', 636, 377, { lintel: 506 }),
+  ], 'meteor_fragment', 'meteor fragment', 636, 377, { lintel: 410 }),
 
   forester_attic: route('forester', en.routes.forester_attic.route, [
     section('Attic laboratory', subjects.forester.room, box(0, -832, 820, 1532), [
@@ -153,7 +153,7 @@ export const ROOMS_1953 = {
       []),
     gallery('Office service passage', 'booth', 965, 'invasion_queue_rail', staffExit),
   ], [side(965, 280, 561), side(1945, 339, 546)], [
-    { kind: 'castor', name: 'Film-can trolley', sprite: fit('amp_trolley55', 2365, 484, 99, 194), travel: 54, period: 3.8, phase: 0.8, lag: 0.12 },
+    { kind: 'castor', name: 'Film-can trolley', sprite: fit('amp_trolley55', 2365, 484, 99, 194), travel: 42, period: 3.8, phase: 0.8, lag: 0.12 },
   ], staffExit, box(1854, 369, 85, 140), [
     point(179, 301), point(325, 221), point(521, 219), point(733, 285), point(870, 378), point(1284, 380), point(1430, 237),
     point(1658, 223), point(1795, 330), point(1899, 410),
@@ -186,7 +186,7 @@ export const ROOMS_1953 = {
   ], vestryExit, box(1815, 348, 85, 144), [
     point(171, 333), point(314, 221), point(503, 231), point(673, 323), point(832, 350), point(1249, 379), point(1382, 232),
     point(1588, 227), point(1752, 320), point(1857, 400),
-  ], 'truce_flag', 'white truce flag', 765, 530, { lintel: 482 }),
+  ], 'truce_flag', 'white truce flag', 765, 530, { lintel: 420 }),
 
   collier_bell: route('collier', en.routes.collier_bell.route, [
     section('Church belfry', subjects.collier.room, box(0, -92, 820, 792),
@@ -198,7 +198,7 @@ export const ROOMS_1953 = {
     ], [bellExit]),
   ], [top(-92, 522, 731), top(-888, 412, 606)], [
     { kind: 'swing', name: 'Bell clapper', sprite: art('invasion_bell_clapper', 579, 33),
-      amplitude: 0.96, speed: 1.51, phase: 0.6, mountY: -76 },
+      amplitude: 0.62, speed: 1.2, phase: 0.6, mountY: -76 },
   ], bellExit, box(435, -850, 156, 62), [
     point(176, 414), point(330, 407), point(647, 402), point(681, 237),
     point(680, 104), point(634, -135), point(654, -252), point(654, -485),

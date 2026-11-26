@@ -789,6 +789,7 @@ export const fr: Strings = {
         sneeze1953: "Pièce A · image du rayon thermique",
         // v4 openings
         evacuees1953: 'Pièce A · photo de l’évacuation',
+        spotter1953: 'Pièce A · carnet du guet aérien',
         // v4 2199
         poetry: "Division des gardes-poètes",
         dozer: "Flotte de démolition",
@@ -947,6 +948,7 @@ export const fr: Strings = {
       sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
       // v4 openings
       evacuees1953: ['Des phares ! On ne double jamais une évacuation. C’est malpoli, et c’est une preuve.'],
+      spotter1953: ['Des jumelles sur le clocher ! C’est une Pruitt ? Elles guettent depuis 1953 ?!'],
       // v4 2199
       start12: ["Ils ont envoyé des poètes. Vrell, leurs livres sont chargés ?"],
       demolition: ["Démolition dans trente secondes !"],
@@ -1064,6 +1066,7 @@ export const fr: Strings = {
       sneeze1953: ["Un tripode éternue sur votre coque. Toute la rangée avant a tout vu."],
       // v4 openings
       evacuees1953: ['Un break plein d’évacués fait une embardée, klaxonne et signale une soucoupe volante, à peine servie.'],
+      spotter1953: ['Edna Pruitt, guetteuse bénévole du ciel, note « une soucoupe, chromes bon marché ». Sa fille reprendra le carnet.'],
       // v4 2199
       poetry: ["Selon le garde-poète, tout le monde est resté pour le rappel. La plupart des gens étaient évanouis."],
       dozer: ["Le conducteur signale que la soucoupe gêne le passage. La maison d’Artie a déjà son dossier."],
@@ -1097,6 +1100,7 @@ export const fr: Strings = {
       sneeze1953: ["À vos souhaits !"],
       // v4 openings
       evacuees1953: ['ILS SONT LÀ ! ACCÉLÈRE, HAROLD !'],
+      spotter1953: ['ENGIN NON IDENTIFIÉ, CAP AU SUD !', 'EDNA L’A VU EN PREMIER !'],
       // v4 2199
       poetry: ["UN RAPPEL !"],
       dozer: ["DÉGAGEZ LA ROUTE !"],
@@ -1134,6 +1138,7 @@ export const fr: Strings = {
       sneeze1953: ["Une machine de guerre vient de m’éternuer dessus. Ça compte comme un arrêt maladie ?"],
       // v4 openings
       evacuees1953: ['J’ai doublé l’évacuation. La prochaine fois, j’attends mon tour comme un envahisseur civilisé.'],
+      spotter1953: ['Une Pruitt m’a repéré. En 1953. Évidemment.'],
       // v4 2199
       poetry: ["Je préfère tenter ma chance dans le sas."],
       dozer: ["Artie en a arrêté un en robe de chambre. C’était la tenue réglementaire ?"],
@@ -1994,6 +1999,8 @@ export const fr: Strings = {
     "Loading door": "Porte de livraison",
     "Chaperone": "Chaperon",
     "Café watcher": "Client du café",
+    // v4 openings
+    'Edna Pruitt': 'Edna Pruitt',
     // v4 1122
     "Supply flap": "Rabat de service",
     "Banner loft": "Grenier aux bannières",

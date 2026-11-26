@@ -455,7 +455,8 @@ export class DeepFlightScene implements Scene {
       grail.sound(field, previousTime, audio, s.x, s.y);
     }
     // v4 1953: Zib recognizes the first pilot as the east wing comes into view.
-    if (this.level.id === 'level11' && st.cause < 0 && !greetedPilotQueues.has(this.run) &&
+    // v4 openings: the launch sits by the queue, so the bark waits for the launch banner to clear.
+    if (this.level.id === 'level11' && st.cause < 0 && this.bannerT <= 0 && !greetedPilotQueues.has(this.run) &&
         Math.hypot(s.x - PILOT_QUEUE.x, s.y - PILOT_QUEUE.y) < 265) {
       greetedPilotQueues.add(this.run);
       const line = deepZibLine('queue1953', 0);

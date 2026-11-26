@@ -42,7 +42,7 @@ describe('1953 · Route 9 Drive-In', () => {
     expect(isLevelUnlocked(save, index)).toBe(true);
   });
 
-  it('cues Zib’s recognition on the first queue approach, even during the launch banner', () => {
+  it('cues Zib’s recognition at the queue once the launch banner clears, once per shift', () => {
     const run = new DeepRun(LEVEL11, LEVELS.indexOf(LEVEL11));
     const ctx = {
       pointer: { ...idle }, assets: { get: () => undefined }, audio: { sfx() {} },
@@ -52,35 +52,66 @@ describe('1953 · Route 9 Drive-In', () => {
     const first = new DeepFlightScene(opts);
     first.sim.place(PILOT_QUEUE.x, PILOT_QUEUE.y, 0);
     first.update(DT);
+    // v4 openings: the launch sits beside the queue, so the bubble waits for the banner instead of hiding under it.
     expect(first.bannerT).toBeGreaterThan(0);
+    expect(first.queueBarkT).toBe(0);
+    for (let i = 0; i < 400 && first.queueBarkT === 0; i++) {
+      first.sim.place(PILOT_QUEUE.x, PILOT_QUEUE.y, 0);
+      first.update(DT);
+    }
+    expect(first.bannerT).toBe(0);
     expect(first.queueBarkT).toBeGreaterThan(0);
     const next = new DeepFlightScene(opts);
-    next.sim.place(PILOT_QUEUE.x, PILOT_QUEUE.y, 0);
-    next.update(DT);
+    for (let i = 0; i < 400; i++) {
+      next.sim.place(PILOT_QUEUE.x, PILOT_QUEUE.y, 0);
+      next.update(DT);
+    }
     expect(next.queueBarkT).toBe(0);
   });
 
-  // v4 openings: no spawn gate. The evacuation pulls out of the drive-in ahead of the launch; overtaking
-  // it up the service road is the obvious line and it gets you caught.
-  it('the evacuation traffic alone catches a straight run to Sylvie’s staff door at every tested phase', () => {
-    const traffic = map.hazards.findIndex(h => h.type === 'traffic');
-    expect(traffic).toBeGreaterThanOrEqual(0);
-    const staff = map.targets[1]!.entries[0]!;
-    for (const delay of BEELINE_DELAYS) {
-      const sim = new DeepFlightSim({ ...map, hazards: [map.hazards[traffic]!] }, new Set(), delay);
-      while (sim.phase === 'fly' && sim.t < delay + 14) sim.update(DT, press(sim, staff));
-      expect(sim.phase, `${staff.roomId} from ${delay}s`).toBe('spotted');
-      expect(sim.spottedBy).toBe(0);
+  // v4 openings (2026-11-26): no spawn gate, and no free straight line either. A finger held straight at any
+  // of the six rings is caught on the way, beyond the opening: the sky-watch on the church tower covers the
+  // middle fields (Clive and Matt), the evacuation desk's dog covers the approach to Sylvie.
+  it('catches a straight run from the launch to every ring at every tested phase, beyond the opening', () => {
+    const { start } = map;
+    const opening = new DeepFlightSim(map, new Set(), 0);
+    const screen = { x: opening.camX, y: opening.camY };
+    for (const entry of map.targets.flatMap(t => t.entries)) {
+      for (const delay of BEELINE_DELAYS) {
+        const sim = new DeepFlightSim(map, new Set(), delay);
+        while (sim.phase === 'fly' && sim.t < delay + 16) sim.update(DT, press(sim, entry));
+        const at = `${entry.roomId} from ${delay}s`;
+        expect(sim.phase, at).toBe('spotted');
+        const { x, y } = sim.saucer;
+        expect(Math.hypot(x - start.x, y - start.y), at).toBeGreaterThan(600);
+        expect(x >= screen.x && x <= screen.x + 540 && y >= screen.y && y <= screen.y + 960, `${at}: caught on the first screen`).toBe(false);
+      }
     }
   });
 
-  it('the naive beeline is caught by the evacuation at every tested phase', () => {
-    const traffic = map.hazards.findIndex(h => h.type === 'traffic');
+  it('the naive beeline is caught at every tested phase, beyond the opening', () => {
+    const { start } = map;
     for (const delay of BEELINE_DELAYS) {
       const run = runHeadless(map, [], beelineController, LEVEL11.budgetSec, true, delay);
       expect(run.done, `beeline from ${delay}s`).toBe(false);
-      expect(run.spots[0]?.hazard, `beeline from ${delay}s`).toBe(traffic);
-      expect(run.spots[0]?.cause).toBe('evacuees1953');
+      const spot = run.spots[0]!;
+      expect(spot, `beeline from ${delay}s`).toBeDefined();
+      expect(Math.hypot(spot.x - start.x, spot.y - start.y)).toBeGreaterThan(600);
+    }
+  });
+
+  it('shows no detector ahead of the saucer on the first screen at launch', () => {
+    const { start } = map;
+    const opening = new DeepFlightSim(map, new Set(), 0);
+    const field = new HazardField(map.hazards);
+    const lit = new Float64Array(8).fill(1);
+    for (let t = 0; t < 12; t += 0.1) {
+      field.sample(t);
+      for (let x = start.x - 160; x <= start.x + 160; x += 16) {
+        for (let y = opening.camY; y <= start.y; y += 16) {
+          if (field.detect(x, y, lit) !== -1) throw new Error(`detector ahead of the launch at ${x},${y}, t=${t.toFixed(1)}`);
+        }
+      }
     }
   });
 
@@ -115,11 +146,11 @@ describe('1953 · Route 9 Drive-In', () => {
     for (let x = 195; x <= 315; x += 12) {
       for (let y = 295; y <= 2185; y += 12) points.push({ x, y });
     }
-    // Church Lane up to the service-road kerb (the evacuation crosses its east end), and the east verge.
+    // Church Lane up to Sylvie's desk (the evacuation crosses its east end), and the east verge.
     for (let y = 235; y <= 355; y += 12) {
-      for (let x = 255; x <= 1500; x += 15) points.push({ x, y });
+      for (let x = 255; x <= 1440; x += 15) points.push({ x, y });
     }
-    for (let x = 1690; x <= 1780; x += 15) {
+    for (let x = 1710; x <= 1780; x += 14) {
       for (let y = 300; y <= 2200; y += 15) points.push({ x, y });
     }
     for (let t = 0; t < 25; t += 0.05) {
