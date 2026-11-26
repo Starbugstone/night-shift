@@ -1947,6 +1947,13 @@ export const fr: Strings = {
     "Clock riser": "Cage d'horloge",
     "Winch gallery": "Galerie du treuil",
     "Lyle's booth": "Banquette chez Lyle",
+    // v4 abduction room extensions
+    'Surveillance bay': 'Poste de surveillance',
+    'Fossil packing room': 'Emballage des fossiles',
+    'Dial room': 'Salle du cadran',
+    'Outlet duct': 'Conduit de sortie',
+    'Discharge lounge': 'Salon de sortie',
+    'Pie loft': 'Réserve de tartes',
     "Awning gallery": "Galerie de l'auvent",
     "Back kitchen": "Arrière-cuisine",
     "Trunk bay": "Coffre de la berline",

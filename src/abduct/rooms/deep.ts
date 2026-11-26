@@ -56,15 +56,15 @@ const mayorDesk = support('mayor_desk', 234, 556, box(10, 18, 259, 94));
 const EXITS = {
   daveRoof: art('exit_roof_hatch', 857, -766),
   davePatio: art('exit_patio_door', 1584, 1146),
-  barbChimney: art('exit_chimney_top', 639, -1206),
+  barbChimney: art('exit_chimney_top', -91, -1656),
   barbBackdoor: art('exit_back_door', 2244, 466),
   garySkylight: art('exit_skylight', 434, -906),
-  garyGaragedoor: art('exit_loading_door', 2044, 446),
+  garyGaragedoor: art('exit_loading_door', 2904, 446),
   nigelSkylight: fit('exit_skylight', 2354, 14, 240, 96),
-  nigelLoading: art('exit_loading_door', 1574, 1146),
-  kevVent: art('exit_vent', 966, -986),
+  nigelLoading: art('exit_loading_door', 2404, 1146),
+  kevVent: art('exit_vent', 1706, -1266),
   kevFireescape: art('exit_fire_escape', 2282, 486),
-  mayorClocktower: art('clock_face_back', 1260, -1050),
+  mayorClocktower: art('clock_face_back', 586, -1520),
   mayorElevator: art('exit_roof_hatch', 1761, -1316),
 } as const;
 
@@ -176,12 +176,14 @@ const barbHome = building([
   room('Living room', 'living_room', box(0, 0, 800, 700),
     [fit('chimney_stack', 516, 0, 201, 477), art('roswell_pennant', 156, 253)], [art('tv_static', 357, 586), art('fireplace', 486, 466)], [barbCouch]),
   room('Fireplace flue', 'duct', box(465, -1220, 370, 1220),
-    [EXITS.barbChimney, fit('ladder', 479, -519, 44, 505)]),
+    [fit('ladder', 479, -519, 44, 505)]),
+  room('Attic', 'attic', box(-180, -1670, 1015, 450),
+    [EXITS.barbChimney], [art('boxes', 208, -1344), art('boxes', 208, -1454)]),
   room('Kitchen', 'kitchen', box(800, 0, 760, 700),
     [], [art('counter', 1014, 576), art('fridge', 1350, 486)], [], [art('hanging_pans', 1180, 77)]),
   room('Utility room', 'utility', box(1560, 0, 820, 700),
     [EXITS.barbBackdoor], [art('dryer', 1580, 556)]),
-], [hatch(0, 535, 'flue'), door(800, 190), door(1560, 321)], [
+], [hatch(-1220, 540, 'flue', 250), hatch(0, 535, 'flue'), door(800, 190), door(1560, 321)], [
   draft('Soot draft', box(479, -1180, 340, 1170), -105, 310),
   gate('Soot damper', box(479, -547, 342, 28), 'x', 7.3, 3.95, 1.25),
   swing('Hanging pans', art('hanging_pans', 964, 115), 0.4, 2.15, 14),
@@ -191,9 +193,10 @@ const barbHome = building([
 ], [sleeper('Biscuit', 1710, 686, 380)]);
 
 export const barbChimney = route(barbHome, 'barb', 'CHIMNEY', EXITS.barbChimney,
-  box(662, -1164, 92, 70), [
+  box(-68, -1614, 92, 70), [
     point(282, 350), point(471, 286), point(620, 198), point(620, -114), point(673, -392),
-    point(673, -792, 'Soot damper', 200), point(723, -957), point(708, -1140),
+    point(673, -792, 'Soot damper', 200), point(708, -957), point(665, -1380),
+    point(520, -1540), point(100, -1545), point(-22, -1585),
   ], true);
 export const barbBackdoor = route(barbHome, 'barb', 'BACK DOOR', EXITS.barbBackdoor,
   box(2260, 503, 88, 141), [
@@ -211,8 +214,11 @@ const garyHome = building([
   room('Loft storage', 'attic', box(370, -920, 630, 920),
     [EXITS.garySkylight, fit('ladder', 745, -240, 54, 240)], [art('boxes', 489, -124), art('bookcase', 866, -234)]),
   room('Side workshop', 'garage', box(1000, 0, 1240, 700),
-    [EXITS.garyGaragedoor, art('power_tools', 1306, 118)], [art('workbench', 1205, 576), art('boxes', 1524, 576), art('boxes', 1666, 576)]),
-], [hatch(0, 694, 'ladder'), door(1000, 282)], [
+    [art('power_tools', 1306, 118)], [art('workbench', 1205, 576), art('boxes', 1524, 576), art('boxes', 1666, 576)]),
+  room('Surveillance bay', 'garage', box(2240, 0, 860, 700),
+    [EXITS.garyGaragedoor, art('power_tools', 2600, 112)],
+    [art('workbench', 2470, 576), art('monitor_bank', 2500, 436)]),
+], [hatch(0, 694, 'ladder'), door(1000, 282), door(2240, 320)], [
   laser("Gary's laser", box(535, 14, 10, 672), 6.4, 3.35, 0.4),
   swing('Work lamp', art('work_lamp', 862, 30), 0.65, 2.3, 14),
   camera("Gary's camera", 1226, 14, 1.29, 0.82, 1.38, 355),
@@ -226,10 +232,11 @@ export const garySkylight = route(garyHome, 'gary', 'GARAGE SKYLIGHT', EXITS.gar
     point(535, -705), point(535, -865),
   ], true);
 export const garyGaragedoor = route(garyHome, 'gary', 'GARAGE DOOR', EXITS.garyGaragedoor,
-  box(2080, 489, 106, 148), [
+  box(2940, 489, 106, 148), [
     ...garyGarage, point(771, 469), point(945, 440), point(1629, 448, "Gary's camera", 240),
     // Wait for the door with Gary's trailing feet above the dog's patrol.
-    point(1670, 354, undefined, 29), point(1796, 320, undefined, 29), point(1930, 363, undefined, 29), point(2144, 541, 'Garage door', 186),
+    point(1670, 354, undefined, 29), point(1796, 320, undefined, 29), point(1930, 363, undefined, 29), point(2144, 491, 'Garage door', 186),
+    point(2325, 439), point(2430, 272), point(2770, 272), point(2993, 550),
   ]);
 
 const nigelSkull = art('dino_skull', 938, 345);
@@ -243,8 +250,10 @@ const nigelHome = building([
   room('Gift shop', 'museum', box(0, 700, 760, 700),
     [fit('ladder', 608, 700, 55, 686)], [art('shelf', 232, 1135), art('bookcase', 416, 1166), art('postcard_rack', 36, 1206)]),
   room('Loading bay', 'garage', box(760, 700, 1010, 700),
-    [EXITS.nigelLoading], [art('boxes', 905, 1276), art('boxes', 1315, 1276)]),
-], [door(760, 175), door(1700, 212), hatch(700, 555, 'ladder'), door(760, 890, 1386)], [
+    [], [art('boxes', 905, 1276), art('boxes', 1315, 1276)]),
+  room('Fossil packing room', 'museum', box(1770, 700, 830, 700),
+    [EXITS.nigelLoading], [art('dino_ribs', 2010, 1166), art('dino_legs', 2190, 1166)]),
+], [door(1770, 1030, 1386), door(760, 175), door(1700, 212), hatch(700, 555, 'ladder'), door(760, 890, 1386)], [
   swing('Pterodactyl', art('pterodactyl', 1145, 83), 0.58, 2.0, 14),
   laser('Vault grid', box(2058, 14, 10, 672), 6.1, 3.2, 0.95),
   laser('Skylight grid', box(2298, 178, 318, 10), 5.8, 3.2, 1.8, 14),
@@ -260,9 +269,10 @@ export const nigelSkylight = route(nigelHome, 'nigel', 'MUSEUM SKYLIGHT', EXITS.
     point(2467, 301), point(2474, 78, 'Skylight grid', 220),
   ], true);
 export const nigelLoading = route(nigelHome, 'nigel', 'LOADING BAY', EXITS.nigelLoading,
-  box(1619, 1192, 106, 151), [
+  box(2449, 1192, 106, 151), [
     point(305, 372), point(635, 365), point(635, 955), point(858, 1001),
-    point(1100, 1020), point(1186, 899), point(1395, 994), point(1666, 1090, 'Cargo shutter', 188), point(1674, 1224),
+    point(1100, 1020), point(1186, 899), point(1395, 994), point(1666, 1090, 'Cargo shutter', 188), point(1840, 1125),
+    point(1940, 975), point(2340, 975), point(2502, 1240),
   ]);
 
 const kevDance = [point(244, 331), point(526, 271), point(760, 271)] as const;
@@ -272,10 +282,12 @@ const kevHome = building([
   room('Dance floor', 'club', box(660, 0, 900, 700),
     [], [art('speaker_stack', 1350, 466)]),
   room('Vent duct', 'duct', box(880, -1000, 500, 1000),
-    [EXITS.kevVent, fit('ladder', 898, -647, 46, 633)]),
+    [fit('ladder', 898, -647, 46, 633)]),
+  room('Outlet duct', 'duct', box(1380, -1280, 525, 690),
+    [EXITS.kevVent], [fit('duct_fan', 1520, -765, 160, 160)]),
   room('Green room', 'club', box(1560, 0, 900, 700),
     [EXITS.kevFireescape], [art('coat_rack', 1691, 486), art('nightstand', 1990, 576), fit('couch', 2090, 626, 140, 60)]),
-], [door(660, 185), hatch(0, 1041, 'vent'), door(1560, 274)], [
+], [hatch(-1280, 1670, 'vent', 215), opening('vertical', 1380, -976, -616, 'vent'), door(660, 185), hatch(0, 1041, 'vent'), door(1560, 274)], [
   swing('Disco ball', art('disco_ball', 1250, 74), 0.69, 1.9, 14),
   { kind: 'speaker', name: 'Bass stack', sprite: art('speaker_stack', 805, 466), radius: 267, period: 1.44 },
   fan('Duct fan', 1245, -451, 102, -2.35, true),
@@ -285,10 +297,11 @@ const kevHome = building([
   gate('Fire-escape sash', box(2242, 261, 32, 425), 'y', 7.25, 3.88, 4.15),
 ], [sleeper('Tiny', 1855, 686, 390)]);
 export const kevVent = route(kevHome, 'kev', 'ROOF VENT', EXITS.kevVent,
-  box(995, -958, 102, 62), [
+  box(1735, -1238, 102, 62), [
     ...kevDance, point(950, 244), point(1123, 190), point(1123, -139),
     point(978, -250), point(975, -500),
-    point(1050, -854, 'Roof vent flap', 181), point(1046, -944),
+    point(1050, -854, 'Roof vent flap', 181), point(1240, -823), point(1445, -836),
+    point(1515, -926), point(1760, -940), point(1786, -1224),
   ], true);
 export const kevFireescape = route(kevHome, 'kev', 'FIRE ESCAPE', EXITS.kevFireescape,
   box(2325, 527, 98, 122), [
@@ -305,16 +318,18 @@ const mayorHome = building([
   room('City hall corridor', 'corridor', box(760, 0, 880, 700),
     [], [art('water_cooler', 1038, 536)]),
   room('Clock tower', 'clocktower', box(1120, -1070, 520, 1070),
-    [EXITS.mayorClocktower, fit('ladder', 1244, -230, 56, 230)]),
+    [fit('ladder', 1244, -230, 56, 230)]),
+  room('Dial room', 'clocktower', box(520, -1540, 1120, 470), [EXITS.mayorClocktower]),
   room('Elevator shaft', 'shaft', box(1640, -1330, 480, 2030),
     [EXITS.mayorElevator, fit('ladder', 1674, -453, 46, 1139)]),
-], [door(760, 174), hatch(0, 1190, 'ladder'), opening('vertical', 1640, 300, 686, 'shaft')], [
+], [hatch(-1070, 1200, 'ladder', 292), door(760, 174), hatch(0, 1190, 'ladder'), opening('vertical', 1640, 300, 686, 'shaft')], [
   fragile('Vase', art('vase', 1404, 616)),
   camera('City hall camera', 1021, 14, 1.63, 0.67, 2.36, 322),
   camera('Elevator lobby camera', 1568, 14, 1.3, 0.65, 1.47, 335),
   { kind: 'gear', name: 'Drive gear', sprite: art('gear_big', 1379, -435), speed: 1.8 },
   { kind: 'gear', name: 'Idle gear', sprite: art('gear_small', 1138, -472), speed: -3.6 },
-  swing('Tower pendulum', art('pendulum', 1370, -920), 0.87, 2.05),
+  { kind: 'gear', name: 'Idle gear', sprite: art('gear_small', 993, -1205), speed: -1.2 },
+  swing('Tower pendulum', art('pendulum', 1480, -920), 0.87, 2.05),
   gate('Clock service hatch', box(1134, -671, 492, 27), 'x', 7.5, 4.05, 1.1),
   gate('Shaft safety shutter', box(1654, -488, 452, 35), 'x', 7.35, 4.05, 1.9),
   // Car and counterweight travel on separate tracks on opposite sides of the shutter.
@@ -323,9 +338,10 @@ const mayorHome = building([
   { kind: 'pop', name: 'Cuckoo bird', area: box(1514, -841, 86, 44), cycle: { period: 3.6, open: 2.52, phase: 2.5 } },
 ]);
 export const mayorClocktower = route(mayorHome, 'mayor', 'CLOCK TOWER', EXITS.mayorClocktower,
-  box(1332, -1004, 106, 92), [
+  box(658, -1474, 106, 92), [
     ...mayorHall, point(1272, 175), point(1272, -199), point(1304, -410), point(1311, -524),
-    point(1330, -843, 'Clock service hatch', 185), point(1382, -969),
+    point(1330, -843, 'Clock service hatch', 185), point(1382, -969), point(1382, -1300),
+    point(1180, -1380), point(928, -1380), point(711, -1428),
   ], true);
 export const mayorElevator = route(mayorHome, 'mayor', 'ELEVATOR ROOF', EXITS.mayorElevator,
   box(1784, -1296, 114, 61), [

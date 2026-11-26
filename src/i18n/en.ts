@@ -1999,6 +1999,13 @@ export const en = {
     "Clock riser": "Clock riser",
     "Winch gallery": "Winch gallery",
     "Lyle's booth": "Lyle's booth",
+    // v4 abduction room extensions
+    'Surveillance bay': 'Surveillance bay',
+    'Fossil packing room': 'Fossil packing room',
+    'Dial room': 'Dial room',
+    'Outlet duct': 'Outlet duct',
+    'Discharge lounge': 'Discharge lounge',
+    'Pie loft': 'Pie loft',
     "Awning gallery": "Awning gallery",
     "Back kitchen": "Back kitchen",
     "Trunk bay": "Trunk bay",

@@ -99,7 +99,7 @@ function route(
 const hankChairs = support('waiting_chairs', 560, 576, box(8, 62, 284, 20), box(20, 82, 12, 28), box(268, 82, 12, 28));
 const HANK_POSE: Pose = { ...BED_POSE, neckX: 650, neckY: 602 };
 const HANK_EXITS = {
-  front: art('exit_patio_door', 2390, 446),
+  front: art('exit_patio_door', 3230, 446),
   rear: art('exit_back_door', -1626, 466),
 } as const;
 
@@ -114,8 +114,11 @@ const hankHome = building([
   room('Lobby', 'waiting_room', box(940, 0, 880, 700),
     [art('internal_affairs_sign', 1300, 92)], [art('vending_machine', 1640, 466)]),
   room('Vestibule', 'hallway', box(1820, 0, 760, 700),
-    [art('revolving_door', 1960, 446), HANK_EXITS.front]),
-], [door(-840, 210), door(0, 210), door(940, 210), door(1820, 150)], [
+    [art('revolving_door', 1960, 446)]),
+  room('Discharge lounge', 'waiting_room', box(2580, 0, 840, 700),
+    [HANK_EXITS.front, art('xray_lightbox', 2750, 110)],
+    [art('waiting_chairs', 2690, 576), art('vending_machine', 2920, 466)]),
+], [door(2580, 380), door(-840, 210), door(0, 210), door(940, 210), door(1820, 150)], [
   // rear: the laundry cart rolls up and down the corridor under you
   patrol('Laundry cart', art('laundry_cart', -470, 576), 150, 0, 1.0),
   { kind: 'creak', name: 'Squeaky lino', area: box(-820, 200, 800, 470) },
@@ -128,14 +131,15 @@ const hankHome = building([
 export const hankFront = route(hankHome, 'hank', HANK_POSE,
   // v4 items: on top of the lobby vending machine
   { sprite: art('prep_jug', 1675, 406), name: 'jug of prep drink' },
-  'FRONT DOORS', HANK_EXITS.front, box(2430, 490, 90, 160), [
+  'FRONT DOORS', HANK_EXITS.front, box(3270, 490, 90, 160), [
     point(700, 420), point(780, 340),
     probeAt(860, 340, 0),
     point(1080, 340), point(1260, 330),
     probeAt(1330, 330, 1),
     point(1520, 270), point(1600, 245), point(1820, 245), point(1900, 290),
     point(2240, 290, 'Revolving door', 160),
-    point(2400, 360), point(2470, 560),
+    point(2430, 400), point(2635, 465), point(2830, 286),
+    point(3100, 283), point(3315, 555),
   ], [
     drone('hank', 'thermo', 860, 340),
     // the feather kick swings the foot back up and away from the water cooler
