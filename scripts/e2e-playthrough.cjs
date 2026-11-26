@@ -230,8 +230,9 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
           drv.flight = { down: it.down, x: it.x, y: it.y };
         } else drv.flight = null;
         if (ns && ns.scene === 'abduct' && a && a.debug && typeof a.debug.autopilot === 'function' && drv.on && p && p.down) {
-          // The four-star chase uses the skilled drag pace from the difficulty evaluator.
-          if (carFirst) a.debug.pilot.pace = 2.2;
+          // Use the practiced drag pace on the timed crossings. Artie's blade needs a steady lift.
+          const dispatchCrossing = ns.run?.level.id === 'level12' && a.debug.room.human !== 'artie';
+          if (carFirst || dispatchCrossing) a.debug.pilot.pace = 2.2;
           const f = a.debug.autopilotFinger(1 / 60);
           drv.fx = f.x;
           drv.fy = f.y;
@@ -377,6 +378,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       if (JSON.stringify(reloaded) !== JSON.stringify(result)) throw new Error('Birch Lane save changed on reload');
       log.push({ reloaded });
     }
+    if (id === 'level12' && (end.scene !== 'report' || !end.level.level12.delivered))
+      throw new Error('The census missed demolition: ' + JSON.stringify({ end, log }));
     return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), renderer, end, log };
   }
 

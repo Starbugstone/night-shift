@@ -13,7 +13,7 @@ export const LEVEL12: DeepLevelDef = {
   kind: 'deep', id: 'level12', requires: ['level10', 'level11'], title: words.title,
   location: words.location, blurb: words.blurb, human: words.human, mugshot: 'human/artie_head',
   memo: { re: words.re, body: words.body, joke: words.joke },
-  hours: [0, 0], budgetSec: 240, parMarginSec: 102,
+  hours: [0, 0], budgetSec: 188, parMarginSec: 26,
   map: {
     theme: 'grimsby2199', w: 1800, h: 2320, start: { x: 900, y: 2140 }, fuseSec: 0.8,
     collectible: { id: 'bypass_towel', x: 190, y: 1380 },
@@ -38,11 +38,11 @@ export const LEVEL12: DeepLevelDef = {
         entries: [entry('moe_returns', 1080, 380, 'above', true), entry('moe_vent', 900, 470, 'below')] },
     ],
     hazards: [
-      recital(900, 1350, 660, 0.91, 1.57, 0.14, 0.72, 0),
-      recital(655, 965, 340, 0.36, -2.17, 0.55, 0.84, 0.2),
-      recital(900, 690, 285, 0.32, -1.36, 0.58, 0.82, 4.4),
+      recital(900, 1350, 660, 0.91, 1.57, 0.14, 0.65, 0.35),
+      recital(655, 965, 340, 0.36, -2.17, 0.55, 0.70, 0.4),
+      recital(900, 690, 285, 0.32, -1.36, 0.58, 0.70, 4.3),
       { type: 'steward', skin: 'dozer2199', path: [{ x: 1270, y: 400 }, { x: 1270, y: 600 }],
-        speed: 72, dwell: 1, phase: 0, coneRange: 195, coneHalf: 0.80, sweepAmp: 0, sweepRate: 0 },
+        speed: 72, dwell: 1.35, phase: 220, coneRange: 195, coneHalf: 0.80, sweepAmp: 0, sweepRate: 0 },
     ],
   },
 };

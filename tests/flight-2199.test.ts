@@ -8,6 +8,7 @@ import { defaultSave, validateSave } from '../src/levels/save';
 import { applyDeepRun, isLevelUnlocked } from '../src/levels/progress';
 import { LEVELS } from '../src/levels/levels';
 import { HazardField } from '../src/flight/hazards';
+import { STEWARD_REACH } from '../src/flight/photographer';
 import { recitalAt } from '../src/flight/recital';
 import { pointInCone } from '../src/flight/geometry';
 import { deepReport } from '../src/ui/report';
@@ -79,7 +80,14 @@ describe('2199 harbour approaches', () => {
         longest = Math.max(longest, live);
       }
       expect(longest).toBeGreaterThan(1);
-      expect(longest).toBeCloseTo(1.1, 1);
+      // On the pass the full lock disc must clear both cone edges and the range arc.
+      // Exposure at the old crossing continues into the north turn until the lamp rotates past it.
+      const distanceToCrossing = d.path[0]!.y - y;
+      const expected = radius > 0
+        ? (d.coneRange - radius - radius / Math.sin(d.coneHalf)) / d.speed
+        : (d.coneRange + STEWARD_REACH - distanceToCrossing) / d.speed +
+          d.dwell * (d.coneHalf - Math.asin(STEWARD_REACH * Math.sin(d.coneHalf) / distanceToCrossing)) / Math.PI;
+      expect(longest).toBeCloseTo(expected, 1);
     }
   });
 
@@ -151,14 +159,14 @@ describe('Dispatch census filing', () => {
         run.finishAbduct(delivery);
       }
       run.startAbduct(2, 1);
-      run.tick(240 - margin);
+      run.tick(LEVEL12.budgetSec - margin);
       run.finishAbduct(delivery);
       const filed = applyDeepRun(defaultSave(), 'level12', run.summary());
       expect(filed.stars).toEqual([margin > 0, margin > 0, false, margin > 0]);
       expect(run.deliveredCount).toBe(margin > 0 ? 3 : 2);
     }
     const replay = new DeepRun(LEVEL12, index);
-    expect(replay.clockText()).toBe('4:00');
+    expect(replay.remaining).toBe(LEVEL12.budgetSec);
     expect(replay.deliveredCount).toBe(0);
     expect(replay.recitalVerse).toBe(0);
     expect(replay.collectible!.collected).toBe(false);
@@ -169,7 +177,7 @@ describe('Dispatch census filing', () => {
     run.collectible!.collected = true;
     run.spotted = 2;
     if (phase === 'abduct') run.startAbduct(0, 0);
-    run.tick(239);
+    run.tick(LEVEL12.budgetSec - 1);
     expect(run.dawn).toBe(0);
     expect(run.clockText()).toBe('0:01');
     expect(run.tick(1)).toBe(true);

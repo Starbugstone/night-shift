@@ -10,6 +10,7 @@ import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
 import { OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
 import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateStars, type CarReport, type StarReport } from './stars';
+import { checkDispatchFinale } from './dispatch2199';
 import { naiveCarCatches } from './time-car';
 
 // Minimum shares of full attempts, in the game's star order. The beeline and wake
@@ -354,7 +355,10 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
       if (row.fourthStars < Math.floor(seeds * floor)) report.violations.push(`Shrubbery (${row.profile}) earned ${row.fourthStars}/${seeds}`);
     }
   }
-  if (level.id === 'level12') report.towelFirst = profiles.map(p => evaluateTowelFirst(level, p, seeds, play));
+  if (level.id === 'level12') {
+    report.towelFirst = profiles.map(p => evaluateTowelFirst(level, p, seeds, play));
+    report.violations.push(...checkDispatchFinale(report));
+  }
   if (level.id === 'level9') {
     if (seeds >= 6) {
       for (const row of stars) {
