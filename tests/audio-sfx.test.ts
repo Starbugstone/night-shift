@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AmbientMixer, BED_FADE_SECONDS } from '../src/audio/ambient';
 import { SynthAudio } from '../src/audio/sfx';
 import { VoiceEngine } from '../src/audio/voice';
 
@@ -8,7 +7,7 @@ class Param {
   events: [kind: string, time: number, value?: number][] = [];
   setValueAtTime(value: number, time: number) { this.events.push(['set', time, value]); }
   linearRampToValueAtTime(value: number, time: number) { this.events.push(['ramp', time, value]); }
-  exponentialRampToValueAtTime() {}
+  exponentialRampToValueAtTime(value: number, time: number) { this.events.push(['exp', time, value]); }
   setTargetAtTime() {}
   cancelScheduledValues(time: number) { this.events.push(['cancel', time]); }
 }
@@ -51,75 +50,78 @@ class Context {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('ambient mixer', () => {
-  it('cross-fades over 1.5 seconds and holds an interrupted ramp at its current gain', () => {
-    const ac = new Context();
-    const mixer = new AmbientMixer(ac as unknown as BaseAudioContext, ac.destination as unknown as AudioNode);
-    mixer.select('menu');
-    const menu = ac.gains[0]!.gain;
-    expect(menu.value).toBe(0);
-    expect(menu.events).toEqual([['cancel', 0], ['set', 0, 0], ['ramp', BED_FADE_SECONDS, 1]]);
-    const gains = ac.gains.length;
-    mixer.select('menu');
-    expect(ac.gains).toHaveLength(gains);
+function setup() {
+  const ac = new Context();
+  const openContext = vi.fn(function () { return ac; });
+  vi.stubGlobal('window', { AudioContext: openContext });
+  return { ac, audio: new SynthAudio(), openContext };
+}
 
-    ac.currentTime = BED_FADE_SECONDS / 2;
-    mixer.select('night');
-    expect(menu.events.slice(-3)).toEqual([['cancel', 0.75], ['set', 0.75, 0.5], ['ramp', 2.25, 0]]);
-    expect(ac.sources[0]!.stop).toHaveBeenCalledExactlyOnceWith(2.25);
-    const night = ac.gains[gains]!.gain;
-    expect(night.events).toEqual([['cancel', 0.75], ['set', 0.75, 0], ['ramp', 2.25, 1]]);
-
-    ac.currentTime = 1.5;
-    mixer.select(null);
-    expect(night.events.slice(-3)).toEqual([['cancel', 1.5], ['set', 1.5, 0.5], ['ramp', 3, 0]]);
-    expect(ac.sources[1]!.stop).toHaveBeenCalledExactlyOnceWith(3);
-  });
-
-  it('defers playback to a gesture and suspends in the background', async () => {
-    const ac = new Context();
-    const openContext = vi.fn(function () { return ac; });
-    vi.stubGlobal('window', { AudioContext: openContext });
-    const audio = new SynthAudio();
-
+describe('game sound effects', () => {
+  it('waits for unlock, starts silent, and gates cues when muted or hidden', () => {
+    const { ac, audio, openContext } = setup();
     audio.setMuted(true);
-    audio.ambient('menu');
     audio.resume();
+    audio.sfx('bark');
     expect(openContext).not.toHaveBeenCalled();
     audio.unlock();
-    await Promise.resolve();
     expect(openContext).toHaveBeenCalledTimes(1);
-    expect(ac.sources).toHaveLength(0);
     expect(ac.gains[0]!.gain.value).toBe(0);
+    audio.sfx('bark');
+    expect(ac.sources).toHaveLength(0);
 
     audio.setMuted(false);
-    expect(ac.sources).toHaveLength(1);
     expect(ac.gains[0]!.gain.events.at(-1)).toEqual(['ramp', 0.04, 0.55]);
     audio.suspend();
-    audio.ambient('night-2199');
+    audio.sfx('bark');
     expect(ac.suspend).toHaveBeenCalledTimes(1);
-    expect(ac.sources).toHaveLength(1);
+    expect(ac.sources).toHaveLength(0);
+
     audio.resume();
-    await Promise.resolve();
-    expect(ac.sources).toHaveLength(2);
+    audio.sfx('bark');
+    expect(ac.sources).toHaveLength(1);
     audio.setMuted(true);
     expect(ac.gains[0]!.gain.events.at(-1)).toEqual(['ramp', 0.04, 0]);
-    expect(ac.sources[1]!.stop).toHaveBeenCalledExactlyOnceWith(BED_FADE_SECONDS);
   });
 
-  it('reuses the tone and noise nodes for repeated effects after their envelopes end', async () => {
-    const ac = new Context();
-    vi.stubGlobal('window', { AudioContext: function () { return ac; } });
-    const audio = new SynthAudio();
+  it('reuses tone and noise nodes and coalesces same-frame repeats', () => {
+    const { ac, audio } = setup();
     audio.unlock();
-    await Promise.resolve();
     audio.sfx('bark');
-    const { sources, oscillators, gains } = ac;
-    const initial = [sources.length, oscillators.length, gains.length];
-    expect(initial).toEqual([1, 1, 3]);
+    expect(ac.sources).toHaveLength(1);
+    expect(ac.oscillators).toHaveLength(1);
+    const bark = ac.gains[1]!.gain.events;
+    const firstEvents = bark.length;
+    audio.sfx('bark');
+    expect(bark).toHaveLength(firstEvents);
     ac.currentTime = 1;
     audio.sfx('bark');
-    expect([sources.length, oscillators.length, gains.length]).toEqual(initial);
+    expect(bark).toHaveLength(firstEvents * 2);
+    expect(ac.sources).toHaveLength(1);
+    expect(ac.oscillators).toHaveLength(1);
+  });
+
+  it('raises the fuse tick pitch and gain through room and flight urgency', () => {
+    const { ac, audio } = setup();
+    audio.unlock();
+    let lastPitch = 0;
+    let lastGain = 0;
+    // Room exposure runs from 0.25 to 0.8 and flight suspicion runs from 0.4 to 1.2.
+    for (const volume of [0.25, 0.4, 0.55, 0.8, 1, 1.2]) {
+      audio.sfx('alert', volume);
+      const pitch = ac.oscillators[0]!.frequency.events.at(-2)![2]!;
+      const envelope = ac.gains[1]!.gain.events.slice(-4);
+      const gain = envelope[1]![2]!;
+      expect(pitch).toBeGreaterThan(lastPitch);
+      expect(gain).toBeGreaterThan(lastGain);
+      expect(envelope[0]![2]).toBe(0);
+      expect(envelope[1]![1]).toBeGreaterThan(envelope[0]![1]);
+      expect(envelope[3]![2]).toBe(0);
+      lastPitch = pitch;
+      lastGain = gain;
+      ac.currentTime += 0.2;
+    }
+    expect(ac.oscillators).toHaveLength(1);
   });
 });
 
