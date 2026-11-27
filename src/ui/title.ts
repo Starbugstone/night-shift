@@ -4,7 +4,7 @@ import { VIEW_H, VIEW_W } from '../contracts';
 import { easeOutBack, easeOutCubic } from '../core/fx';
 import { GLOW, Glow, ScreenTint, glowTexture } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
-import { Shape, ellipseArc } from '../core/gfx/shapes';
+import { Shape, ellipseArc, roundRect } from '../core/gfx/shapes';
 import { Label, Paragraph, measure } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
 import { readSeconds } from '../core/read-time';
@@ -18,6 +18,7 @@ import { ButtonView } from './views/button';
 import { SpeakerIcon } from './views/icons';
 import { highlightedPanel } from './views/menu-decor';
 import { fmt, getLang, langVersion, localArt, tr, type Lang } from '../i18n';
+import type { SaveStatus } from '../levels/save';
 import { trophyProgress } from './trophy-data';
 
 /** Moon, top-left; the logo box spans y 130..330 and its built-in saucer sits top-right. */
@@ -37,6 +38,9 @@ const CLOUDS = [
 /** v4 reset: the "start over?" card, centred over the title. */
 export const RESET_CARD = { x: 32, y: 284, w: VIEW_W - 64, h: 392 } as const;
 
+/** v0.2 damaged save: the one-line notice between the trophies and reset buttons; a tap dismisses it. */
+export const SAVE_NOTICE = { x: 20, y: 812, w: VIEW_W - 40, h: 46 } as const;
+
 export class TitleScene implements Scene {
   t = 0;
   readonly start = new Button(110, 640, 320, 92, '', 'primary', 36);
@@ -51,6 +55,10 @@ export class TitleScene implements Scene {
   readonly reset = new Button(24, VIEW_H - 94, 236, 56, '', 'ghost', 17);
   readonly erase = new Button(RESET_CARD.x + 32, RESET_CARD.y + RESET_CARD.h - 176, RESET_CARD.w - 64, 68, '', 'danger', 24);
   readonly keep = new Button(RESET_CARD.x + 32, RESET_CARD.y + RESET_CARD.h - 92, RESET_CARD.w - 64, 68, '', 'primary', 24);
+  /** v0.2 damaged save: the notice's tap target (drawn by SaveNoticeView); shown while the loader's status is not 'ok'. */
+  readonly notice = new Button(SAVE_NOTICE.x, SAVE_NOTICE.y, SAVE_NOTICE.w, SAVE_NOTICE.h, '', 'ghost', 17);
+  /** What the loader found at boot; 'ok' once the notice is dismissed or the progress reset. */
+  saveStatus: SaveStatus;
   /** The confirmation card is open; `confirmT` runs 0..1 as it pops in. */
   confirming = false;
   confirmT = 0;
@@ -62,7 +70,14 @@ export class TitleScene implements Scene {
   private readonly look = new ViewSlot(() => new TitleView(this));
 
   constructor(readonly shell: Shell) {
-    this.reset.visible = hasProgress(shell.save);
+    this.saveStatus = shell.saveStatus ?? 'ok';
+    this.notice.visible = this.saveStatus !== 'ok';
+    this.reset.visible = this.notice.visible || hasProgress(shell.save);
+  }
+
+  /** v0.2 damaged save: the file the title offers to reset was damaged on load. */
+  get damaged(): boolean {
+    return this.saveStatus !== 'ok';
   }
 
   get view(): Container {
@@ -80,6 +95,15 @@ export class TitleScene implements Scene {
     if (this.start.update(p, dt)) this.shell.toWorkOrders();
     if (this.trophies.update(p, dt)) this.shell.toTrophies('title');
     if (this.reset.update(p, dt)) this.openConfirm();
+    if (this.notice.update(p, dt)) this.dismissNotice();
+  }
+
+  // v0.2 damaged save: read and waved away; the reset button stays only while there is progress to lose
+  dismissNotice(): void {
+    this.shell.dismissSaveNotice();
+    this.saveStatus = 'ok';
+    this.notice.visible = false;
+    this.reset.visible = hasProgress(this.shell.save);
   }
 
   // v4 reset: the confirmation takes every tap while it is open
@@ -89,6 +113,7 @@ export class TitleScene implements Scene {
     this.scrimArmed = false;
     this.erase.cancel();
     this.keep.cancel();
+    this.notice.cancel();
   }
 
   closeConfirm(): void {
@@ -104,6 +129,8 @@ export class TitleScene implements Scene {
     if (this.erase.update(p, dt)) {
       this.shell.resetProgress();
       this.closeConfirm();
+      this.saveStatus = 'ok';
+      this.notice.visible = false;
       this.reset.visible = hasProgress(this.shell.save);
       this.labelsFor = -1; // the trophy count starts again from zero
       this.shreddedT = readSeconds(tr().title.reset.done);
@@ -159,6 +186,10 @@ const ZZ_BIG = { size: 20, color: C.mint, weight: 900, align: 'left' } as const;
 const SHREDDED = { size: 19, color: C.mint, weight: 800, outline: C.night } as const;
 const CONFIRM_TITLE = { size: 26, color: C.text, weight: 900, outline: C.ink } as const;
 const CONFIRM_BODY = { size: 17, color: '#e6e0ff', italic: true, weight: 500, lineHeight: 23 } as const;
+// v0.2 damaged save
+export const NOTICE_TEXT = { size: 17, color: C.amberHi, weight: 800, align: 'left' } as const;
+/** Room the notice keeps on its right for the dismiss cross. */
+export const NOTICE_CROSS_W = 40;
 
 class TitleView implements SceneView {
   readonly root = new Container();
@@ -186,6 +217,7 @@ class TitleView implements SceneView {
   private readonly build = new Label(BUILD);
   private readonly resetBtn: ButtonView;
   private readonly shredded = new Label(SHREDDED);
+  private readonly notice: SaveNoticeView;
   private readonly confirm: ResetConfirmView;
 
   constructor(private readonly s: TitleScene) {
@@ -233,8 +265,9 @@ class TitleView implements SceneView {
     this.muteBtn = new ButtonView(s.mute);
     this.langBtns = s.langs.map(({ b: lb }) => new ButtonView(lb));
     this.resetBtn = new ButtonView(s.reset);
+    this.notice = new SaveNoticeView(s);
     this.confirm = new ResetConfirmView(s);
-    r.addChild(this.vignette, this.trophiesBtn, this.muteBtn, this.speaker, ...this.langBtns, this.build, this.resetBtn, this.shredded, this.confirm.root);
+    r.addChild(this.vignette, this.trophiesBtn, this.muteBtn, this.speaker, ...this.langBtns, this.build, this.resetBtn, this.shredded, this.notice.root, this.confirm.root);
     this.vignette.strength = 0.7;
   }
 
@@ -341,8 +374,54 @@ class TitleView implements SceneView {
       this.shredded.set(str.reset.done, VIEW_W / 2, 836, VIEW_W - 40);
       this.shredded.alpha = rm ? 1 : Math.min(1, s.shreddedT / 0.5);
     }
+    this.notice.sync(fade);
     this.confirm.sync(rm);
   }
+}
+
+// ---------------------------------------------------------------- v0.2 damaged save notice
+
+/** "Your file got chewed…": an amber-rimmed strip with a dismiss cross; the whole strip is the tap target. */
+class SaveNoticeView {
+  readonly root = new Container();
+  private readonly label = new Label(NOTICE_TEXT);
+  private readonly press = new Graphics();
+  private textFor = -1;
+
+  constructor(private readonly s: TitleScene) {
+    const n = SAVE_NOTICE;
+    const strip = new Graphics();
+    roundRect(strip, n.x, n.y, n.w, n.h, n.h / 2).fill('rgba(18,13,43,0.88)').stroke({ color: C.amber, width: 2 });
+    roundRect(this.press, n.x, n.y, n.w, n.h, n.h / 2).fill('rgba(255,210,122,0.14)');
+    const cx = n.x + n.w - NOTICE_CROSS_W / 2 - 6;
+    const cy = n.y + n.h / 2;
+    const cross = new Graphics()
+      .moveTo(cx - 7, cy - 7).lineTo(cx + 7, cy + 7)
+      .moveTo(cx + 7, cy - 7).lineTo(cx - 7, cy + 7)
+      .stroke({ color: C.amberHi, width: 3, cap: 'round' });
+    this.root.addChild(strip, this.press, this.label, cross);
+    this.root.visible = false;
+  }
+
+  sync(fade: number): void {
+    const s = this.s;
+    this.root.visible = s.notice.visible;
+    if (!s.notice.visible) return;
+    const key = langVersion() * 2 + (s.saveStatus === 'unreadable' ? 1 : 0);
+    if (this.textFor !== key) {
+      this.textFor = key;
+      const n = SAVE_NOTICE;
+      this.label.set(noticeText(s.saveStatus), n.x + 22, n.y + n.h / 2, n.w - 22 - NOTICE_CROSS_W - 8);
+    }
+    this.press.visible = s.notice.pressedDown;
+    this.root.alpha = fade;
+  }
+}
+
+/** The notice line for what the loader found: whatever survived was kept, or nothing could be read. */
+export function noticeText(status: SaveStatus): string {
+  const str = tr().title.reset;
+  return status === 'unreadable' ? str.damagedLost : str.damagedKept;
 }
 
 // ---------------------------------------------------------------- v4 reset confirmation
@@ -379,12 +458,14 @@ class ResetConfirmView {
     const s = this.s;
     this.root.visible = s.confirming;
     if (!s.confirming) return;
-    if (this.textFor !== langVersion()) {
-      this.textFor = langVersion();
+    const textFor = langVersion() * 2 + (s.damaged ? 1 : 0);
+    if (this.textFor !== textFor) {
+      this.textFor = textFor;
       const str = tr().title.reset;
       const w = RESET_CARD.w;
       this.title.set(str.title, w / 2, 58, w - 48);
-      this.body.setBlock(str.body, 32, 98, w - 64);
+      // v0.2 damaged save: the card says the file was damaged
+      this.body.setBlock(s.damaged ? str.damagedBody : str.body, 32, 98, w - 64);
     }
     const k = rm ? 1 : easeOutBack(s.confirmT, 1.3);
     this.card.scale.set(0.86 + 0.14 * k);

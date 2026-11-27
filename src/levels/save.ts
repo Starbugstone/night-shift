@@ -341,6 +341,25 @@ export function isStoredSave(stored: string | null): boolean {
   return readSaveShape(stored) !== null;
 }
 
+// v0.2 damaged save (2026-11-27): the loader says what it found, so the title can offer a reset for a damaged file.
+/**
+ * `ok`: a save loaded as stored (or an older save migrated with nothing broken in the way), or there was nothing
+ * stored at all. `repaired`: the current save was damaged and loaded repaired. `recovered`: an older save loaded
+ * past a newer stored value that was not a save. `unreadable`: something is stored but nothing in it is usable, so
+ * the game starts fresh.
+ */
+export type SaveStatus = 'ok' | 'repaired' | 'recovered' | 'unreadable';
+
+/** A store that answers one key from several stored keys (preprod) says when it passed over a stored non-save. */
+export interface MergingStore extends KeyValueStore {
+  passedOverDamage(key: string): boolean;
+}
+
+function passedOverDamage(storage: KeyValueStore, key: string): boolean {
+  const merged = (storage as Partial<MergingStore>).passedOverDamage;
+  return typeof merged === 'function' && merged.call(storage, key) === true;
+}
+
 /**
  * The current key wins whenever it holds a save, including the default record a reset stores, or a damaged save
  * whose level records survive (salvageCurrent; it is stored back repaired). Otherwise the newest older save is
@@ -348,32 +367,51 @@ export function isStoredSave(stored: string | null): boolean {
  * damaged current save that still holds any usable value is repaired rather than thrown away (Opus O6).
  */
 export function loadSave(storage: KeyValueStore | null): SaveData {
-  if (!storage) return defaultSave();
+  return loadSaveWithStatus(storage).save;
+}
+
+/** `loadSave`, plus what the loader found on the way (see SaveStatus). */
+export function loadSaveWithStatus(storage: KeyValueStore | null): { save: SaveData; status: SaveStatus } {
+  if (!storage) return { save: defaultSave(), status: 'ok' };
+  // a stored value that was not a save, passed over on the way; anything stored at all (a throw past it is damage)
+  let damaged = false;
+  let seen = false;
+  const read = (key: string): string | null => {
+    const value = storage.getItem(key);
+    if (value !== null) seen = true;
+    return value;
+  };
   try {
-    const stored = storage.getItem(SAVE_KEY);
+    const stored = read(SAVE_KEY);
     const sound = readSaveShape(stored);
     const own = sound ?? salvageCurrent(stored);
     if (own) {
       const current = validateSave(own);
       if (!sound || (isObj(own.levels) && !Object.hasOwn(own.levels, 'birch_bakery'))) writeSave(storage, current);
-      return current;
+      return { save: current, status: sound ? 'ok' : 'repaired' };
     }
+    if (stored !== null) damaged = true;
     for (const key of [V2_SAVE_KEY, LEGACY_SAVE_KEY]) {
-      const raw = readSaveShape(storage.getItem(key));
-      if (!raw) continue;
+      const value = read(key);
+      if (passedOverDamage(storage, key)) damaged = true;
+      const raw = readSaveShape(value);
+      if (!raw) {
+        if (value !== null) damaged = true;
+        continue;
+      }
       const imported = validateSave(raw);
       writeSave(storage, imported);
-      return imported;
+      return { save: imported, status: damaged ? 'recovered' : 'ok' };
     }
     const repaired = salvageCurrent(stored, true);
     if (repaired) {
       const current = validateSave(repaired);
       writeSave(storage, current);
-      return current;
+      return { save: current, status: 'repaired' };
     }
-    return defaultSave();
+    return { save: defaultSave(), status: damaged ? 'unreadable' : 'ok' };
   } catch {
-    return defaultSave();
+    return { save: defaultSave(), status: damaged || seen ? 'unreadable' : 'ok' };
   }
 }
 

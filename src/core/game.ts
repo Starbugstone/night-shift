@@ -11,7 +11,7 @@ import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom, levelRooms } fro
 import { applyDeepRun, applyRun, backfillSpecimens, isLevelUnlocked, setUnlockEverything } from '../levels/progress';
 import { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
-import { clearSave, loadSave, writeSave, type KeyValueStore, type SaveData } from '../levels/save';
+import { clearSave, loadSave, loadSaveWithStatus, writeSave, type KeyValueStore, type SaveData, type SaveStatus } from '../levels/save';
 import { getLang, resolveLang, setLang, tr, type Lang } from '../i18n';
 import { AbortScene } from '../ui/abort';
 import { DeepAbductScene } from '../ui/deep-abduct';
@@ -118,6 +118,8 @@ export class Game implements Shell {
   private storage: KeyValueStore | null;
   readonly preprod: boolean;
   private _save: SaveData;
+  /** v0.2 damaged save: what the loader found at boot, until a reset or the player dismisses the notice. */
+  private _saveStatus: SaveStatus;
   /** Live flight scene (for debug/tests). */
   flight: FlightScene | DeepFlightScene | null = null;
   /** The deep shift in progress (L3+), if any. */
@@ -136,7 +138,9 @@ export class Game implements Shell {
     this.preprod = isPreprodPath(window.location.pathname);
     setUnlockEverything(this.preprod);
     this.storage = this.preprod ? preprodStorage(browserStorage()) : browserStorage();
-    this._save = loadSave(this.storage);
+    const loaded = loadSaveWithStatus(this.storage);
+    this._save = loaded.save;
+    this._saveStatus = loaded.status;
     backfillSpecimens(this._save); // v4 specimens: older saves get their archive from past deliveries
     this.audio.setMuted(this._save.muted);
     this.ctx = {
@@ -174,6 +178,17 @@ export class Game implements Shell {
     // v4 reset: through setSave, so preprod's store writes only its own key
     this.run = null;
     this.setSave(resetSave(this._save));
+    this._saveStatus = 'ok';
+  }
+
+  get saveStatus(): SaveStatus {
+    return this._saveStatus;
+  }
+
+  dismissSaveNotice(): void {
+    // v0.2 damaged save: storing the loaded save replaces the damaged value, so the next load is clean
+    this._saveStatus = 'ok';
+    writeSave(this.storage, this._save);
   }
 
   /** `?lang=fr|en` for testing: beats the saved choice until the player picks one. */
@@ -200,6 +215,7 @@ export class Game implements Shell {
       if (params.get('reset') === '1') {
         clearSave(this.storage);
         this.setSave(loadSave(this.storage));
+        this._saveStatus = 'ok';
       }
       if (params.get('unlock') === '1') {
         this.setSave({ ...this._save, allUnlocked: true, glorbs: Math.max(this._save.glorbs, 999) });

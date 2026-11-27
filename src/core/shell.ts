@@ -1,7 +1,7 @@
 import type { HuntTarget } from '../flight/hunt';
 import type { TrophyRoomTab } from '../ui/trophy-data';
 import type { AbductResult, FlightResult, GameContext, RoomId, UpgradeId } from '../contracts';
-import type { SaveData } from '../levels/save';
+import type { SaveData, SaveStatus } from '../levels/save';
 import type { Lang } from '../i18n';
 import type { SynthAudio } from '../audio/sfx';
 import type { PointerInput } from './input';
@@ -27,6 +27,10 @@ export interface Shell {
   setLanguage(lang: Lang): void;
   /** v4 reset: erase all progress (a fresh save), keeping sound and language. */
   resetProgress(): void;
+  /** v0.2 damaged save: what the loader found at boot ('ok' once reset or dismissed). */
+  readonly saveStatus: SaveStatus;
+  /** v0.2 damaged save: the player read the notice; the loaded save is stored so the next load is clean. */
+  dismissSaveNotice(): void;
 
   toTitle(): void;
   toWorkOrders(): void;

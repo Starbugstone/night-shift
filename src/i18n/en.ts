@@ -353,6 +353,10 @@ export const en = {
       erase: 'Erase everything',
       keep: 'Keep my progress',
       done: 'File shredded. Welcome aboard, intern.',
+      // v0.2 damaged save
+      damagedKept: 'Your file got chewed. We kept what we could.',
+      damagedLost: 'File chewed to bits. Here’s a fresh one.',
+      damagedBody: 'Your file came back damaged and the Bureau patched what it could. Shredding it erases whatever survived. Sound and language settings stay.',
     },
   },
 

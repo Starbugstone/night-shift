@@ -1,4 +1,4 @@
-import { SAVE_KEY, V2_SAVE_KEY, isStoredSave, type KeyValueStore } from '../levels/save';
+import { SAVE_KEY, V2_SAVE_KEY, isStoredSave, type KeyValueStore, type MergingStore } from '../levels/save';
 
 /** localStorage, or null when blocked (private mode, sandboxed iframe…). */
 export function browserStorage(): KeyValueStore | null {
@@ -36,17 +36,21 @@ export function isPreprodPath(pathname: string): boolean {
  * Preprod's view of storage: the save lives under its own key. The first load starts from a copy
  * of the shared save (read only), and every write goes to the preprod key.
  */
-export function preprodStorage(inner: KeyValueStore | null): KeyValueStore | null {
+export function preprodStorage(inner: KeyValueStore | null): MergingStore | null {
   if (!inner) return null;
   const map = (key: string): string => (key === SAVE_KEY ? PREPROD_SAVE_KEY : key);
+  // v0.2 damaged save: the last V2_SAVE_KEY read passed over a stored value that was not a save
+  let passedOver = false;
   return {
     getItem: (key) => {
       if (key === SAVE_KEY) return inner.getItem(PREPROD_SAVE_KEY);
       if (key === V2_SAVE_KEY) {
+        passedOver = false;
         // The first loadable candidate: an unreadable or empty newer value must not hide an intact older save.
         for (const k of [PREPROD_V2_KEY, SAVE_KEY, V2_SAVE_KEY]) {
           const v = inner.getItem(k);
           if (isStoredSave(v)) return v;
+          if (v !== null) passedOver = true;
         }
         return null;
       }
@@ -54,5 +58,6 @@ export function preprodStorage(inner: KeyValueStore | null): KeyValueStore | nul
     },
     setItem: (key, value) => inner.setItem(map(key), value),
     removeItem: (key) => inner.removeItem(map(key)),
+    passedOverDamage: (key) => key === V2_SAVE_KEY && passedOver,
   };
 }

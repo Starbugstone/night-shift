@@ -51,6 +51,10 @@ export const fr: Strings = {
       erase: 'Tout effacer',
       keep: 'Garder ma progression',
       done: 'Dossier broyé. Bienvenue à bord, stagiaire.',
+      // v0.2 damaged save
+      damagedKept: 'Dossier mâchouillé. On a sauvé ce qu’on a pu.',
+      damagedLost: 'Dossier réduit en miettes. En voici un neuf.',
+      damagedBody: 'Votre dossier est revenu abîmé et le Bureau a rafistolé ce qu’il a pu. Le broyer efface tout ce qui a survécu. Vos réglages de son et de langue sont conservés.',
     },
   },
 
