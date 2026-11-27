@@ -29,7 +29,9 @@ const EXIT_OFF = 0;
 const EVACUATION: TrafficHazard[] = [
   lane('v', 1150 - TRAFFIC_LANE, 1307, 1530, -1, EXIT_OFF, 260),
   lane('h', 1125 + TRAFFIC_LANE, 1268, 1438, 1, EXIT_OFF + 37, 70), // dipped lights through the turn: the east verge stays dark
-  lane('v', 1620 - TRAFFIC_LANE, 0, 1007, -1, EXIT_OFF + 37 - 110 + 360, 300),
+  // v0.2 difficulty: 270 px headlights (was 300). At 300 the 0.55 s gaps between cars left a saucer on the east
+  // verge no safe crossing to Sylvie, and 5 of 20 casual flights held there until sunrise.
+  lane('v', 1620 - TRAFFIC_LANE, 0, 1007, -1, EXIT_OFF + 37 - 110 + 360, 270),
 ];
 
 export const LEVEL11: DeepLevelDef = {

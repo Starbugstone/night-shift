@@ -50,7 +50,7 @@ The patrol cycle is `2 × (200 / 72 + 1.0) ≈ 7.56 s`. Measured from the start 
 
 **Quay crossing exposure.** At the old crossing **(1270, 250)**, a hovering saucer enters range when the northbound chassis reaches `y = 250 + 18 + 195 = 463`. It stays lit for `(463 − 400) / 72 = 0.875 s` on the straight. At the turn the saucer is **150 px** from the chassis. With the **18 px** lamp offset, the cone turns through `0.80 − asin((18 / 150) × sin(0.80))` before its edge clears the saucer. At **π rad/s** that adds **0.227 s**, for **1.102 s** of continuous exposure against the **0.72 s** base fuse and **0.90 s** Hush Drive fuse. The lamp reaches north to `400 − 18 − 195 = 187`. At **y = 130** the rail has **57 px** of clearance, leaving **9 px** at the edge of a **48 px** pocket and **0 s** of exposure across the full cycle.
 
-**No straight-line win.** The launch is open: no fixed detector covers every line out of it. A blind shortest-path controller takes the nearest rings first (Artie's bathroom hatch and Penny's ticket loft, under the west lectern and the dozer), then heads for Moe. The cordon funnels every blind run into Moe's block, from the launch or either fast door, through the avenue gap and into the recital (`flight-2199` proves it with the recital and the cordon alone). Prove the full controller runs at **0, 2.5, 5 and 8 s**. Keep both outside lanes, the quay street and Moe's rail free of exposure over a full cycle: they are the clear way round after a sighting or a delivery. Time the inner lecterns and the east dozer to save travel.
+**No straight-line win.** The launch is open: no fixed detector covers every line out of it. The rule is the every-ring matrix (v0.2, 2026-11-27): a thumb held straight from the launch at **each** of the six entry rings must be spotted or fail to lock at **0, 2.5, 5 and 8 s** (`directApproaches` in `tests/difficulty/beeline.ts`). It replaces the earlier standard, which only asked that the blind shortest-path controller's whole itinerary be caught at Moe's. That itinerary check still runs: the controller takes the nearest rings first (Artie's bathroom hatch and Penny's ticket loft, under the west lectern and the dozer), then heads for Moe, and the cordon funnels every blind run into Moe's block, from the launch or either fast door, through the avenue gap and into the recital (`flight-2199` proves it with the recital and the cordon alone). Both of Moe's rings meet the every-ring rule. Artie's and Penny's four rings do not yet: straight holds lock cleanly at 14 of their 16 entry/delay pairs (Artie's garden and Penny's service door at all four delays, the bathroom hatch at 0, 2.5 and 5 s, the ticket loft at 0, 2.5 and 8 s). They are pinned in `PENDING_DIRECT` and wait for a rework. The garden is 545 px straight down the lane from the launch, on the opening screen. Timed door guards that catch every tested delay (lamps lighting a ring 75–80% of each cycle, with 2.5–3.1 s quiet windows) cut casual Ghost to 2–5/20 against the 7/20 target below. The rework needs a launch further from those rings, or pressure on the way that a careful route can wait out in a quiet pocket. Keep both outside lanes, the quay street and Moe's rail free of exposure over a full cycle: they are the clear way round after a sighting or a delivery. Time the inner lecterns and the east dozer to save travel.
 
 ## Three sleepers and six exits
 
@@ -126,13 +126,13 @@ Use archive IDs `artie`, `penny` and `moe`. The dossier and repeat addenda fit t
 
 ## The clock and the stars
 
-The fleet’s demolition timer starts at **4:00** (**240 s**) and counts down in both flight and rooms. Drive it from `DeepRun.remaining` and reuse the countdown HUD and the last **30 s** deadline warning. Use a steady amber HUD at 30 s even in reduced motion. Keep the sky dark. The barges’ running lights pick up a charge at the warning, using the same elapsed time. They are scenery. At zero, show the demolition seal closing over the map and cut to the failure report. The retry choice pauses the clock as usual. A whole-shift restart resets the clock, the hazard phases and all run-local progress. Success requires the third room result to reach the runner before the timer hits zero. The last second has the same rules in either phase.
+The fleet’s demolition timer starts at **3:12** (**192 s**; the greybox proposal was 4:00, and the openings rework moved the shipped clock from 188 s to 192 s) and counts down in both flight and rooms. Drive it from `DeepRun.remaining` and reuse the countdown HUD and the last **30 s** deadline warning. Use a steady amber HUD at 30 s even in reduced motion. Keep the sky dark. The barges’ running lights pick up a charge at the warning, using the same elapsed time. They are scenery. At zero, show the demolition seal closing over the map and cut to the failure report. The retry choice pauses the clock as usual. A whole-shift restart resets the clock, the hazard phases and all run-local progress. Success requires the third room result to reach the runner before the timer hits zero. The last second has the same rules in either phase.
 
 | Star | Rule |
 | --- | --- |
 | Delivered / Livré | File all three residents before the fleet’s deadline. |
 | Ghost / Fantôme | Deliver with zero full sightings and zero failed room attempts. Partial suspicion can drain. |
-| Night owl / Oiseau de nuit | Deliver with **102 s** left (**138 s** elapsed). Start `parMarginSec` at 102. |
+| Night owl / Oiseau de nuit | Deliver with **26 s** left (**166 s** elapsed, **2:46**). `parMarginSec` is 26 (the greybox proposal was 102 s left at 2:18 elapsed). |
 | Towel / Serviette | Take the towel and complete the shift on that run. |
 
 Greybox targets over **20 matched no-upgrade seeds**, out of all whole-shift attempts. Measure ordinary runs and towel detour runs separately. Make this the hardest of the three new dates by asking for more timing decisions per flight and a tighter clean-run recovery budget. Aim for a **120–140 s** casual independent shift estimate. Check the ordering against the two earlier dates on the same seeds. Use actual Ghost rates, par headroom and where players fail to tune that ordering. Retain the earlier dates’ easy opening approach and reserve the demanding timing for the faster branches. [Progression curve](GDD-5-progression.md#target-curve) · [Difficulty evaluator](../.claude/skills/evaluate-difficulty/SKILL.md)
@@ -142,7 +142,7 @@ Greybox targets over **20 matched no-upgrade seeds**, out of all whole-shift att
 | Casual | 75–85% | 33–38% | 50–55% | 55–75% |
 | Skilled | 85–92% | 50–65% | 67–75% | 80–95% |
 
-At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual and **5/6, 3/6, 4/6** skilled. Skilled Ghost must exceed casual Ghost. The casual Ghost ceiling stays **90%**. Per room require at least **75% skilled / 40% casual** delivery, with one **≥65% casual** route per sleeper. Keep ≥80% flight completion for both models, median sightings ≤1 skilled and ≤2 casual, and casual room median peak wake averaging ≥20. Bring the casual estimate under 80% of the 240 s budget. These are proposed targets. The greybox needs full-route evidence before the clock and geometry are set for release.
+At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual and **5/6, 3/6, 4/6** skilled. Skilled Ghost must exceed casual Ghost. The casual Ghost ceiling stays **90%**. Per room require at least **75% skilled / 40% casual** delivery, with one **≥65% casual** route per sleeper. Keep ≥80% flight completion for both models, median sightings ≤1 skilled and ≤2 casual, and casual room median peak wake averaging ≥20. Bring the casual estimate under 80% of the 192 s budget. These are proposed targets. The greybox needs full-route evidence before the clock and geometry are set for release.
 
 ## Copy
 
@@ -162,7 +162,7 @@ At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual 
 >
 > — Vrell. Sur le formulaire 12-C, cochez VILLE ENTIÈRE.
 
-Override the memo’s Delivered and Night owl goals. Use the demolition timer of **4:00** and the required margin of **1:42**, respectively, for `{time}`.
+Override the memo’s Delivered and Night owl goals. Use the demolition timer of **3:12** and the required margin of **0:26**, respectively, for `{time}` (the shipped `budgetSec` and `parMarginSec`).
 
 | Memo goal | EN | FR |
 | --- | --- | --- |

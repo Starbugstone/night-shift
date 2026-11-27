@@ -1,9 +1,9 @@
 import type { GameContext, RoomId } from '../../src/contracts';
 import { ROOMS } from '../../src/abduct/rooms';
 import { AbductSimulation } from '../../src/abduct/simulation';
-import { isBirch, steerTo } from './birch';
+import { steerTo } from './birch';
 import { FlightScene } from '../../src/flight/scene';
-import type { LevelDef, TutorialLevelDef } from '../../src/levels/types';
+import type { DeepLevelDef, LevelDef, TutorialLevelDef } from '../../src/levels/types';
 import { beelineController, runHeadless } from '../flight-deep-harness';
 
 export const BEELINE_DELAYS = [0, 2.5, 5, 8] as const;
@@ -35,20 +35,78 @@ function cleanTutorialBeeline(level: TutorialLevelDef, entry: TutorialLevelDef['
   return delivered;
 }
 
-export function beelineFlight(level: LevelDef): number {
+/** One straight hold from the launch to one entry ring at one start delay. */
+export interface DirectApproach {
+  roomId: RoomId;
+  delay: number;
+  /** Spotted, or no ring locked within the minute: the straight line does not win. */
+  caught: boolean;
+  /** Still clean and listed in PENDING_DIRECT: known, waiting for its level's rework. */
+  pending?: boolean;
+}
+
+/**
+ * Straight holds that still lock cleanly, by level, as `roomId@delay`. They were found when the
+ * every-ring matrix replaced the nearest-ring itinerary (v0.2 council, 2026-11-27) and wait for a
+ * rework of their level: the nearest rings sit 0.5–0.75 screens from the launch, and the timed
+ * guards that catch them at every tested delay cost both star bands far more than they allow
+ * (see .claude/skills/evaluate-difficulty/SKILL.md, "Every-ring matrix"). The list may only shrink:
+ * a listed hold that is caught fails the gate until it is removed, and any other clean hold fails.
+ */
+export const PENDING_DIRECT: Readonly<Record<string, readonly string[]>> = {
+  level5: [
+    'bubbles_roof@0', 'bubbles_roof@8', 'bubbles_tunnel@0', 'bubbles_tunnel@2.5', 'bubbles_tunnel@8',
+    'pete_gallery@0', 'pete_gallery@2.5', 'pete_gallery@8', 'pete_slipway@0', 'pete_slipway@8',
+    'sal_loft@0', 'sal_loft@2.5', 'sal_loft@5', 'sal_loft@8', 'sal_dock@0', 'sal_dock@2.5', 'sal_dock@5', 'sal_dock@8',
+  ],
+  level12: [
+    'artie_garden@0', 'artie_garden@2.5', 'artie_garden@5', 'artie_garden@8', 'artie_bath@0', 'artie_bath@2.5', 'artie_bath@5',
+    'penny_service@0', 'penny_service@2.5', 'penny_service@5', 'penny_service@8', 'penny_loft@0', 'penny_loft@2.5', 'penny_loft@8',
+  ],
+};
+
+/**
+ * The every-ring matrix: a thumb held straight from the launch at each entry ring of a deep shift,
+ * at every tested start delay, ignoring detectors, timing and walls. Each must be spotted or fail
+ * to lock within 60 s (AGENTS.md "no straight-line win").
+ */
+export function directApproaches(level: DeepLevelDef): DirectApproach[] {
+  const pending = new Set(PENDING_DIRECT[level.id] ?? []);
+  return level.map.targets.flatMap(target => target.entries).flatMap(entry => BEELINE_DELAYS.map(delay => {
+    const run = runHeadless(level.map, [], sim => () => steerTo(sim, entry, true), 60, true, delay);
+    const caught = run.legs.length === 0;
+    return { roomId: entry.roomId, delay, caught, ...(!caught && pending.has(`${entry.roomId}@${delay}`) ? { pending: true } : {}) };
+  }));
+}
+
+/** Ratchet on PENDING_DIRECT: clean holds that are not listed, and listed holds that are now caught. */
+export function directViolations(level: DeepLevelDef, direct: readonly DirectApproach[]): string[] {
+  const out: string[] = [];
+  for (const run of direct) {
+    if (!run.caught && !run.pending) out.push(`too open: a straight hold from the launch locks ${run.roomId} at ${run.delay} s`);
+  }
+  for (const key of PENDING_DIRECT[level.id] ?? []) {
+    const [roomId, delay] = key.split('@');
+    const run = direct.find(r => r.roomId === roomId && r.delay === Number(delay));
+    if (!run) out.push(`PENDING_DIRECT names ${key}, which ${level.id} does not test`);
+    else if (run.caught) out.push(`${key} is caught now: remove it from PENDING_DIRECT`);
+  }
+  return out;
+}
+
+/**
+ * Start delays at which no naive flight wins. Tutorials: a straight hold at either ring. Deep
+ * shifts: the planner's nearest-ring itinerary and the straight hold at every entry ring
+ * (PENDING_DIRECT holds aside, which directViolations ratchets).
+ */
+export function beelineFlight(level: LevelDef, direct = level.kind === 'deep' ? directApproaches(level) : []): number {
   let stopped = 0;
   for (const delay of BEELINE_DELAYS) {
     if (level.kind === 'tutorial') {
       if (level.map.entries.every(entry => !cleanTutorialBeeline(level, entry, delay))) stopped++;
     } else {
       const route = runHeadless(level.map, [], beelineController, level.clockMode === 'elapsed' ? 60 : level.budgetSec, true, delay);
-      const direct = isBirch(level.id) ? level.map.targets.flatMap(target => target.entries) : [];
-      const allCaught = direct.every(entry => {
-        // On a two-target shift the direct holds must fail before the first lock.
-        const firstLeg = runHeadless(level.map, [], sim => () => steerTo(sim, entry, true), 60, true, delay);
-        return firstLeg.legs.length === 0;
-      });
-      if (!route.done && allCaught) stopped++;
+      if (!route.done && direct.every(run => run.delay !== delay || run.caught || run.pending)) stopped++;
     }
   }
   return stopped;

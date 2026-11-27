@@ -9,7 +9,7 @@ import { ROOMS } from '../../src/abduct/rooms';
 import { workOrderNumber } from '../../src/levels/levels';
 import { starLabels } from '../../src/levels/progress';
 import { isBirch } from './birch';
-import { BEELINE_DELAYS, beelineFlight, naiveRoomWins } from './beeline';
+import { BEELINE_DELAYS, beelineFlight, directApproaches, directViolations, naiveRoomWins, type DirectApproach } from './beeline';
 import { HARD_RULES, OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
 import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateTripodFirst, evaluateStars, type CarReport, type StarReport, type TripodReport } from './stars';
 import { checkDispatchFinale } from './dispatch2199';
@@ -172,6 +172,8 @@ interface StarLevelReport {
   starLabels: readonly string[];
   stars: StarReport[];
   beelineCaught: number;
+  /** Deep shifts: the straight hold from the launch to every entry ring at every start delay. */
+  directApproaches: DirectApproach[];
   roomBeelines: { roomId: RoomId; clean: number }[];
   souvenirs: { roomId: RoomId | 'field_check'; grabbed: number; delivered: number; medianSec: number }[];
   casualMedianParShare: number;
@@ -262,6 +264,7 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     }
     return { roomId: id, grabbed, delivered, medianSec: median(times) };
   });
+  const direct = level.kind === 'deep' ? directApproaches(level) : [];
   const base: StarLevelReport = {
     levelId: level.id,
     title: level.title,
@@ -269,7 +272,8 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     starLabels: starLabels(level),
     stars,
     souvenirs,
-    beelineCaught: beelineFlight(level),
+    beelineCaught: beelineFlight(level, direct),
+    directApproaches: direct,
     roomBeelines: entries.map(entry => ({ roomId: entry.roomId, clean: naiveRoomWins(entry.roomId, level.kind === 'deep') })),
     casualMedianParShare: median(casualRuns.filter(run => run.stars[0]).map(run => run.seconds / par)),
     casualMedianPeakSuspicion: median(casualRuns.map(run => run.peakSuspicion)),
@@ -299,6 +303,7 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
   if (base.beelineCaught !== BEELINE_DELAYS.length) {
     base.violations.push(`too open: a naive flight is stopped at ${base.beelineCaught}/${BEELINE_DELAYS.length} start times`);
   }
+  if (level.kind === 'deep') base.violations.push(...directViolations(level, direct));
   for (const room of base.roomBeelines) {
     if (room.clean > 0) base.violations.push(`too open: ${room.roomId} delivers asleep on a direct drag at ${room.clean}/${BEELINE_DELAYS.length} start times`);
   }
@@ -439,6 +444,13 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
   return report;
 }
 
+/** Entry rings a straight hold from the launch locks, with the start delays that let it. */
+function cleanDirect(direct: readonly DirectApproach[]): Map<RoomId, number[]> {
+  const clean = new Map<RoomId, number[]>();
+  for (const run of direct) if (!run.caught) clean.set(run.roomId, [...clean.get(run.roomId) ?? [], run.delay]);
+  return clean;
+}
+
 function noObstacle(room: RoomId): string {
   return `too open: no casual ${room} run approached within ${OBSTACLE_NEAR_PX} px of an obstacle or engaged a hazard`;
 }
@@ -497,6 +509,12 @@ export function formatReport(r: StarLevelReport | LevelReport): string {
   }
   lines.push('');
   lines.push(`Naive flight stopped: ${r.beelineCaught}/${BEELINE_DELAYS.length} start times. Casual median par used: ${pct(r.casualMedianParShare)}. Casual median peak suspicion: ${pct(r.casualMedianPeakSuspicion)}.`);
+  if (r.directApproaches.length) {
+    const clean = cleanDirect(r.directApproaches);
+    const caught = r.directApproaches.filter(run => run.caught).length;
+    const pending = r.directApproaches.filter(run => run.pending).length;
+    lines.push(`Straight holds from the launch caught: ${caught}/${r.directApproaches.length} (every entry ring × ${BEELINE_DELAYS.join('/')} s)${clean.size ? `; clean: ${[...clean].map(([id, delays]) => `${id} at ${delays.join('/')} s`).join(', ')}${pending ? ` (${pending} in PENDING_DIRECT)` : ''}` : ''}.`);
+  }
   const directWins = r.roomBeelines.filter(room => room.clean > 0);
   if (directWins.length) lines.push(`Clean direct room drags: ${directWins.map(room => `${room.roomId} ${room.clean}/${BEELINE_DELAYS.length}`).join(', ')}.`);
   lines.push('');

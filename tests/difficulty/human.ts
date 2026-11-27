@@ -15,6 +15,7 @@ import { ROOMS } from '../../src/abduct/rooms';
 import type { Room } from '../../src/abduct/rooms/layout';
 import { AbductSimulation } from '../../src/abduct/simulation';
 import { Contact } from '../../src/abduct/ragdoll';
+import { POINT, pointReach, pointStep } from '../../src/abduct/point';
 import { FlightAutopilot } from '../../src/flight/autopilot';
 import type { DeepFlightSim } from '../../src/flight/deep-sim';
 import type { DeepMap } from '../../src/levels/types';
@@ -98,6 +99,24 @@ export interface AbductRun {
   driedOut: boolean;
 }
 
+/**
+ * Move the beam toward where the hand means it to be, through the live touch path
+ * (src/abduct/index.ts pointing): the finger is held ahead of the beam and the beam heads for it
+ * at `pointStep`, so it never beats the `POINT.max` touch speed cap. The finger placement is the
+ * one `AbductSimulation.autopilotFinger` uses.
+ */
+function touchBeam(sim: AbductSimulation, x: number, y: number): void {
+  const { body } = sim;
+  const dx = x - body.beamX;
+  const dy = y - body.beamY;
+  const d = Math.hypot(dx, dy);
+  if (d === 0) return;
+  const speed = Math.min(d / DT, POINT.max);
+  const finger = speed < POINT.min ? POINT.dead + d : pointReach(speed);
+  const step = pointStep(finger, DT);
+  if (step > 0) sim.moveBeam(body.beamX + dx / d * step, body.beamY + dy / d * step);
+}
+
 export const HARD_RULES: AbductRules = { wakeFails: true, hard: true };
 export const OBSTACLE_NEAR_PX = 80;
 const DT = 1 / 60;
@@ -179,7 +198,7 @@ export function playAbduction(
       queue.fill({ x: planX, y: planY });
     }
     const w = wobble(sim.elapsed);
-    sim.moveBeam(hand.x + w.x, hand.y + w.y);
+    touchBeam(sim, hand.x + w.x, hand.y + w.y);
     sim.update(DT);
     frames++;
     peakWake = Math.max(peakWake, sim.wake.value);

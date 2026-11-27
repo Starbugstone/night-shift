@@ -55,6 +55,7 @@ export const BIRCH_BAKERY: DeepLevelDef = {
         .map(([x, y]) => birchProp('tree_top', 'tree', x!, y!)),
     ],
     lamps: [{ x: 615, y: 525 }, { x: 390, y: 1230 }, { x: 140, y: 1000 }, { x: 140, y: 1640 }, { x: 760, y: 2030 }],
-    hazards: [{ type: 'porch', ...bakeryGate, trigger: 310, r: 360, mount: 'post' }],
+    // v0.2 difficulty: 330 px lit radius (was 360): 20-seed casual Ghost 14/20 → 17/20, every straight hold still caught.
+    hazards: [{ type: 'porch', ...bakeryGate, trigger: 310, r: 330, mount: 'post' }],
   },
 };

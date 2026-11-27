@@ -156,10 +156,12 @@ const L6_HAZARDS: HazardDef[] = [
     dwell: 1.6,
   },
   // ---- the medevac helicopter, circling the on-call block: its searchlight crosses the helipad
-  { type: 'heli', cx: 1560, cy: 1090, rx: 220, ry: 250, period: 22, phase: 0.6, spotR: 136, spotDist: 165, spotRate: 1.4 },
+  // v0.2 difficulty: 120 px spot (was 136) and the ward camera's sweep centred 0.15 rad further from the window:
+  // 20-seed casual Ghost 7/20 → 10/20 under the touch speed cap, every straight hold still caught.
+  { type: 'heli', cx: 1560, cy: 1090, rx: 220, ry: 250, period: 22, phase: 0.6, spotR: 120, spotDist: 165, spotRate: 1.4 },
   // ---- CCTV
   // the ward's south-west corner, sweeping the south lawn and the recovery window
-  { type: 'camera', x: 462, y: 862, range: 280, half: 0.3, base: 0.35, amp: 0.6, rate: 1.1, phase: 0 },
+  { type: 'camera', x: 462, y: 862, range: 280, half: 0.3, base: 0.5, amp: 0.6, rate: 1.1, phase: 0 },
   // the on-call block's north-west corner, sweeping from the west lawn round onto the helipad
   // v4 difficulty curve: the sweep (was 1.25) now stops just short of the helipad ring, which is the
   // medevac searchlight's job; the two together filled a 0.9 s fuse on the lock

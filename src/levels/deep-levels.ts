@@ -431,7 +431,8 @@ const L4_HAZARDS: HazardDef[] = [
   { type: 'traffic', dir: 'h', at: 1600 - TRAFFIC_LANE, from: 0, to: 2160, sign: 1, speed: 360, gap: 720, offset: 120, coneRange: 200, coneHalf: 0.32, keys: ['flight/taxi_top'] },
   { type: 'traffic', dir: 'h', at: 1600 + TRAFFIC_LANE, from: 0, to: 2160, sign: -1, speed: 360, gap: 740, offset: 400, coneRange: 200, coneHalf: 0.32, keys: ['flight/sedan_top'] },
   // rooftop cameras: the museum roof (sweeps skylight and loading bay), City Hall, and the route
-  roofCam(MUSEUM, 'ne', { range: 290, half: 0.26, base: 2.48, amp: 0.65, rate: 1.65, phase: 0 }, 15),
+  // v0.2 difficulty: sweep 1.4 rad/s (was 1.65): 20-seed casual Ghost 9/20 → 12/20 under the touch speed cap.
+  roofCam(MUSEUM, 'ne', { range: 290, half: 0.26, base: 2.48, amp: 0.65, rate: 1.4, phase: 0 }, 15),
   roofCam(CITYHALL, 'se', { range: 285, half: 0.29, base: -1.96, amp: 0.35, rate: 1.3, phase: 1.3 }),
   // v4 openings: from the west spawn the Mayor is the first call. City Hall's south-west camera watches the
   // diagonal from the west avenue to his elevator; come in from the north-west, along the north side.

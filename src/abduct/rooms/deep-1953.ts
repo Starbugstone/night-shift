@@ -147,7 +147,8 @@ export const ROOMS_1953 = {
       range: 233, sweep: 1.08, speed: 0.67, phase: 0.4 },
   ], atticExit, box(411, -1603, 155, 62), [
     point(175, 426), point(315, 450), point(588, 460), point(604, 146), point(621, -91), point(588, -280),
-    point(606, -850, 'Martian probe', 282), point(615, -986), point(632, -1281),
+    // v0.2 difficulty: 260 px/s (was 282), the touch speed cap POINT.max; tests/levels-difficulty-touch.test.ts
+    point(606, -850, 'Martian probe', 260), point(615, -986), point(632, -1281),
     point(496, -1329, undefined, 29), point(477, -1495), point(480, -1565),
   ], 'martian_lens', 'three-colour martian lens', 697, -1221, { roof: true, length: 780, rafterPace: 60 }),
 

@@ -95,7 +95,8 @@ const cafeUpper = building([
 ], [hatch(0, 465, 685), hatch(-455, 440, 695), hatch(-815, 799, 1009)], [
   jukebox,
   { kind: 'fan', name: 'Ceiling fan', x: 693, y: 155, length: 46, speed: 1.9, phase: 0.6, duct: false, mountY: 28 },
-  gate('Hinged sash', box(369, -210, 357, 25), 'x', 20, 4.4, 16),
+  // v0.2 difficulty: phase 16.6 (was 16): under the touch speed cap the casual median was 27.3 s, band 19–27 s.
+  gate('Hinged sash', box(369, -210, 357, 25), 'x', 20, 4.4, 16.6),
 ]);
 
 const kitchen = fit('door_frame', 1380, 260, 120, 210);
@@ -109,7 +110,8 @@ const cafeSide = building([
   gate('Kitchen swing door', box(740, 230, 24, 300), 'y', 16, 4.3, 10),
   patrol('Bus cart', art('bus_cart55', 865, 472), 50, 0),
   { kind: 'fragile', name: 'Pie case', sprite: art('pie_case55', 1030, 520) },
-  { kind: 'creak', name: 'Loose kitchen tiles', area: box(1040, 328, 348, 334) },
+  // v0.2 difficulty: 20 px taller (was y 328, h 334) so the capped casual drag still stirs Lyle (20-seed median was 0).
+  { kind: 'creak', name: 'Loose kitchen tiles', area: box(1040, 308, 348, 354) },
 ], [sleeper('Lyle', 'lyle55', 1235, 452, 365)]);
 
 const trunkBay = section('Trunk bay', 'dance_lot', box(0, 0, 740, 700), [

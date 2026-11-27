@@ -17,8 +17,11 @@ and hand wobble to measure route difficulty and full-shift star rates.
 | `skilled` | 2.2× | 0.18 s | 4 px | 10 px | a practised player |
 | `casual` | 3× | 0.28 s | 7 px | 20 px | a first evening |
 
-- **Abduction**: `AbductPilot` with a pace multiplier (darts capped at 320 px/s). The hand plays the
-  plan `reaction` s late, with a few-Hz tremor and a slow drift off the ideal line. It eases off for
+- **Abduction**: `AbductPilot` with a pace multiplier (darts capped at the touch speed cap,
+  `POINT.max` = 260 px/s). The hand plays the plan `reaction` s late, with a few-Hz tremor and a slow
+  drift off the ideal line. The beam follows the hand through the live touch path: the finger sits
+  ahead of the beam and `pointStep` moves it, so no frame beats `POINT.max`, the same limit a phone
+  enforces (`tests/levels-difficulty-touch.test.ts` checks every room). It eases off for
   2.5 s after hearing a creak or a crash. When the body snags and the beam runs on (lead > 150 px and
   the chest still for 0.5 s), it drags back to the body and rewinds to the last checkpoint reached.
   Each run starts 0–8 s into the hazard cycles, under the deep rules (`wakeFails`, `hard`).
@@ -42,10 +45,24 @@ and hand wobble to measure route difficulty and full-shift star rates.
 ## Run it
 
 ```bash
-npm run difficulty                                    # all levels, 6 seeds each
+npm run difficulty                                    # all levels, 6 seeds each (part of npm test)
+npm run difficulty:release                            # release candidate: every level, 20 seeds
 DIFFICULTY_SEEDS=20 npm run difficulty                 # steadier rates for tuning
 DIFFICULTY_LEVELS=level3,level4 DIFFICULTY_OUT=review/difficulty npm run difficulty
 ```
+
+**Release candidates.** Before a merge to `main`, run `npm run difficulty:release`: every level in
+`LEVELS` at 20 seeds, with the 20-seed-only bands (the 2199 finale bands, 1953 and 1955 shift
+estimates, the Grail targets) switched on. Six seeds hide misses: the v0.2 council found Bakery, L4,
+L5, L6, L11 and L12 out of band at 20 seeds while the default sweep was green. The sweep runs one
+level after another and takes about an hour on a loaded 8-core machine. To spread it out, run groups
+in parallel shells with `DIFFICULTY_SEEDS=20 DIFFICULTY_LEVELS=<ids> npm run difficulty` and cover
+every level. Keep the default sweep at six seeds; never shrink it.
+
+**Chaotic rates.** Deep-shift Ghost rates move with the hazard phase at each leg start, and that
+phase depends on how long the rooms took. A change to a room or to the input model can move a
+level's Ghost count by several seeds out of 20 (L5 casual went from 6/20 to 15/20 when only room
+timing changed). Tune with margin, and re-run the 20-seed sweep after any shared change.
 
 Each level lists the stars earned out of all attempts for each profile. The denominator includes
 missed deliveries and sunrise. Deep levels also show route delivery, median time, peak wake, flight
@@ -148,6 +165,19 @@ whatever the bands say.
   get spotted or fail to lock within 60 s. On deep shifts a pilot takes the shortest geometrically
   open path and ignores detection and timing. It must get spotted or fail to reach the full quota
   before the shift budget at all four delays. This leaves careful routes room to work around a threat.
+- **Every-ring matrix (deep shifts).** A thumb held straight from the launch at *each* entry ring,
+  at each of the four delays, ignoring detectors, timing and walls, must be spotted or fail to lock
+  within 60 s (`directApproaches` in `tests/difficulty/beeline.ts`; the report prints the matrix).
+  The holds still clean on L5 and L12 are listed in `PENDING_DIRECT` and wait for a rework of those
+  levels. That list may only shrink: a listed hold that gets caught, or any other clean hold, fails.
+  What the 2026-11-27 attempt measured: the near rings (Sal's market and Artie's garden sit 0.5–0.75
+  screens from the launch, the garden straight down the lane) can only be caught at all four delays
+  by a timed guard at the door that lights the ring about 70–80% of the time, because a short hop's
+  clean slot is wider than the 2.5–3 s gaps between the tested delays. With guards like that on
+  every clean ring, L5 Ghost fell to 6/20 skilled and 3/20 casual (waiting out a guard leaves the
+  saucer in the lighthouse sweep), and L12 casual Ghost fell to 2–5/20 against its 7/20 target.
+  A rework needs either a launch further from the nearest rings, so the catch can sit on the way
+  beyond the opening screen, or a guard plus a shadowed waiting pocket outside its sweep.
 - **Rooms.** At the same delays, a steady 270 px/s drag straight at the exit must wake the specimen,
   trip an alarm or fail to deliver within 45 s. This catches usable shortcuts through scenery or
   across timing obstacles even when the authored route is challenging. Use the side route or wait
@@ -165,6 +195,42 @@ whatever the bands say.
 - **Par headroom.** The median successful casual run must use at least 30% of the Night owl par.
   By using par instead of the sunrise budget, the check leaves time for a recovery or room retry.
   The Night owl floor still protects players from a par that is too tight.
+
+## v0.2 release sweep (2026-11-27)
+
+20 seeds per cell, **Delivered / Ghost / Night owl** out of 20, before → after. *Before* is preprod
+c6b483a with the old input model (L3–L8 measured for this retune; Birch, L9–L12 from the council's
+logs). *After* adds the touch speed cap in the model, the route pilot's dart capped at `POINT.max`
+(it was 320 px/s and committed to timed crossings a phone cannot make), and the level changes listed.
+
+| Level | Skilled | Casual | Change |
+| --- | --- | --- | --- |
+| Bakery | 20/20/20 → 20/20/20 | 20/**14**/20 → 20/17/20 | gate light active radius 360 → 330 px |
+| Neighbours | 20/20/20 → 20/20/20 | 20/16/20 → 20/15/20 | – |
+| L3 | 19/18/19 → 19/19/19 | 17/13/17 → 17/15/17 | – |
+| L4 | 20/17/20 → 20/16/20 | 20/**11**/20 → 20/12/20 | museum NE camera sweep 1.65 → 1.4 rad/s |
+| L5 | 20/16/20 → 20/12/20 | 20/**6**/20 → 20/11/20 | none (room timing moved the beam phase) |
+| L6 | 20/18/20 → 20/20/20 | 20/12/20 → 20/10/20 | ward camera centre +0.15 rad, medevac spot 136 → 120 px |
+| L7 | 20/15/20 → 20/16/20 | 20/14/20 → 20/12/20 | – |
+| L8 | 20/20/20 → 20/20/20 | 18/18/18 → 18/18/18 | – |
+| L9 | 20/19/16 → 20/19/18 | 19/17/16 → 17/15/14 | kitchen creak tiles 20 px taller, transom sash phase +0.6 s |
+| L10 | 20/16/15 → 20/16/15 | 18/9/11 → 18/**7**/10 | none: still out (casual Ghost wants 8–9) |
+| L11 | 18/18/18 → 19/17/18 | 16/8/11 → 18/9/14 | east-lane headlights 300 → 270 px, attic probe crossing 282 → 260 px/s |
+| L12 | 17/**14**/14 → **19/17/18** | 15/7/11 → 15/**8/12** | none: still out (finale bands) |
+
+Bold marks a miss. The tutorials stay at 100% Delivered and Still asleep for both profiles.
+
+- **L11 flight stall.** At 300 px the east-lane cars left 0.55 s gaps, and a saucer east of the lane
+  held until sunrise in 5 of 20 casual flights (casual flight finishes 75% → 100%; estimate
+  108 → 111 s). The stall threshold sits near 290 px; 270 keeps a margin.
+- **L10, still out.** Tom's smoke-hole sleep-sparks cause most casual failures. Widening the open
+  window by 0.15–0.2 s gives casual 8–9 Ghost but skilled 17/20, over the 80% ceiling. Moving the
+  phase trades casual Night owl. Two casual timeouts (`rodney_flap` and `rodney_loft`, seed 5)
+  hold inside the exit zone for 180 s without delivering: look at the Grail exit settle first.
+- **L12, still out.** After the dart fix the skilled model delivers every room except the ticket loft
+  and is almost never spotted, so its Ghost and Night owl sit far above 50–65% and 67–75%. Neither
+  the clock (186–192 s) nor the fuse (0.64–0.72 s) moves skilled Ghost; room changes move only room
+  times. The finale needs a room or flight change that a practised player can still fail.
 
 ## Retune results (2026-11-24)
 

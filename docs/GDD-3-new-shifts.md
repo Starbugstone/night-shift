@@ -43,6 +43,14 @@ enough together for plain drag, and every entry ring has a full second of cover 
 Also: gull flocks (solid, bumping), a harbour patrol boat with a headlight (`car` on a water path),
 bunting (`wire`), one `neon` chip-kiosk sign.
 
+**Every-ring rule (v0.2, 2026-11-27): pending.** A straight hold from the launch locks 18 of the 24
+entry/delay pairs cleanly (both of Sal's doors at all four delays, a 3 s hop from the launch; Pete's
+and Bubbles' rings when the beam passes while the saucer is shaded). The lighthouse alone cannot catch
+them at every delay whatever its period or phase. Door cameras that do (one per building, lighting the
+rings 70–80% of each sweep) cut 20-seed Ghost to 6/20 skilled and 3/20 casual, because waiting out a
+camera leaves the saucer in the beam. The holds are pinned in `PENDING_DIRECT`
+(`tests/difficulty/beeline.ts`) until a rework adds shadowed waiting pockets or moves the launch.
+
 **Abduction signature: the dolphin.**
 - **Body plan.** The ragdoll gets a per-specimen body plan. The dolphin plan: 7 joints, 6 bones
   (snout, chest [beam holds this], belly, tail stock, fluke, near and far flipper; starting radii,

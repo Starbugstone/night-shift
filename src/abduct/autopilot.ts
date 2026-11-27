@@ -1,10 +1,12 @@
 import type { AbductAutopilotIntent } from '../contracts';
 import type { InteriorSimulation } from './interior';
+import { POINT } from './point';
 import { clamp, type Ragdoll } from './ragdoll';
 import type { Room } from './rooms/layout';
 
 export const PILOT_CRUISE = 41;
-const PILOT_DART = 320;
+// v0.2 difficulty: the live touch path caps the beam at POINT.max, so the pilot never plans a faster dart.
+const PILOT_DART = POINT.max;
 
 export class AbductPilot {
   private index = 0;
@@ -84,7 +86,7 @@ export class AbductPilot {
       }
       if (!checkpoint) return intent;
       const base = checkpoint.speed ?? PILOT_CRUISE;
-      // A faster hand speeds up the cruise, but nobody darts much faster than ~320 px/s.
+      // A faster hand speeds up the cruise, but no dart beats the touch speed cap (POINT.max).
       const speed = Math.max(base, Math.min(base * this.pace, PILOT_DART));
       if (checkpoint.cross && !this.committed) {
         const from = checkpoints[this.index - 1]!;
