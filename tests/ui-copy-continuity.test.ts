@@ -43,7 +43,7 @@ import { defaultSave, type LevelId } from '../src/levels/save';
 import type { DeepLevelDef } from '../src/levels/types';
 import type { Shell } from '../src/core/shell';
 import { DeepChoiceScene } from '../src/ui/deep-choice';
-import { deadlineLabel, deadlineWarning } from '../src/ui/deadline';
+import { clockLook, deadlineLabel, deadlineWarning } from '../src/ui/deadline';
 import { deepReport } from '../src/ui/report';
 import { leaves, momentOf, tiedStrings, type TiedString, type When } from './ui-copy-helpers';
 
@@ -229,7 +229,16 @@ function deadlineLabels(lv: DeepLevelDef): Record<string, string> {
   const late = new DeepRun(lv, index);
   late.phase = 'sunrise';
   const report = deepReport(late, outcome());
-  return { 'flight banner': scene.bannerHeading, 'flight banner body': scene.bannerBody, 'retry screen': choice.status, 'report time': report.rows[0]![1] };
+  const later = outcome();
+  later.save.reports = 1;
+  // the stamp is an id ('sunrise', 'storm', 'demolition'): the English pattern catches a sunrise stamp
+  const labels: Record<string, string> = { 'flight banner': scene.bannerHeading, 'flight banner body': scene.bannerBody, 'retry screen': choice.status, 'report time': report.rows[0]![1] };
+  // a stopwatch shift never runs out, so it never shows a deadline stamp or cover
+  if (lv.clockMode === 'elapsed') return labels;
+  return {
+    ...labels,
+    'report stamp': report.stamp, 'report cover': report.cover ?? '', 'report cover, next run': deepReport(late, later).cover ?? '',
+  };
 }
 
 describe('2. sunrise and dawn only where the deadline is dawn', () => {
@@ -335,11 +344,18 @@ describe('2. sunrise and dawn only where the deadline is dawn', () => {
     expect(wrong).toEqual([]);
   });
 
+  // Every countdown level in LEVELS is a time trial; TIME_TRIAL only carries each one's story reason.
+  const COUNTDOWN = LEVELS.filter((l) => isDeep(l) && l.clockMode === 'countdown').map((l) => l.id as string);
+
+  it('TIME_TRIAL names every countdown level (a new one needs its story reason)', () => {
+    expect(Object.keys(TIME_TRIAL).sort()).toEqual([...COUNTDOWN].sort());
+  });
+
   it('time trials count down on every screen, never "sunrise"', () => {
     const wrong: string[] = [];
     for (const lang of LANGS) {
       setLang(lang);
-      for (const id of Object.keys(TIME_TRIAL)) {
+      for (const id of COUNTDOWN) {
         const lv = LEVELS.find((l) => l.id === id)!;
         if (!isDeep(lv)) { wrong.push(`${id} is not a deep level`); continue; }
         const labels = {
@@ -347,12 +363,61 @@ describe('2. sunrise and dawn only where the deadline is dawn', () => {
           retry: deadlineLabel(lv, '1:40', 'retry'),
           warning: deadlineWarning(lv),
           'retry screen': deadlineLabels(lv)['retry screen']!,
+          'flight banner': deadlineLabels(lv)['flight banner']!,
         };
         for (const [screen, label] of Object.entries(labels)) {
           if (DAWN_WORDS[lang].test(label)) wrong.push(`${lang} ${screen} ${id}: ${label}`);
         }
         if (labels.retry !== fmt(tr().timeTrial.timeLeft, { time: '1:40' })) wrong.push(`${lang} retry ${id}: ${labels.retry}`);
       }
+    }
+    expect(wrong).toEqual([]);
+  });
+
+  // v0.2 follow-up: both HUD clocks (flight src/flight/views/deep-hud.ts, rooms src/ui/deep-abduct.ts) and the
+  // Work Orders card sun used to pick their look with `level.id === 'level12'` lists that a new level fell
+  // through. They now build it from clockLook (src/ui/deadline.ts), keyed on clockMode.
+  it('the HUD clock looks like its deadline on every level, in both HUDs', () => {
+    const wrong: string[] = [];
+    for (const lang of LANGS) {
+      setLang(lang);
+      for (const lv of LEVELS) {
+        if (!isDeep(lv)) continue;
+        const look = clockLook(lv);
+        const dawn = dawnDeadline(lv.id);
+        const at = `${lang} ${lv.id} (${lv.clockMode ?? 'dawn'})`;
+        if (look.timer !== (clockFace(lv) === 'stopwatch')) wrong.push(`${at}: stopwatch ${look.timer} on a ${clockFace(lv)} clock`);
+        if (look.timer) continue;
+        if (look.sunFace !== dawn) wrong.push(`${at}: sun face ${look.sunFace}, dawn deadline ${dawn}`);
+        if (!dawn && (look.label === undefined || !look.noDawnGlow)) wrong.push(`${at}: a non-dawn dial needs its own caption and no sunrise glow`);
+        if (dawn && look.noDawnGlow) wrong.push(`${at}: a dawn clock lost its sunrise glow`);
+        // the caption the dial shows, calm and with the deadline close
+        for (const hot of [false, true]) {
+          const caption = look.label ?? (hot ? tr().hud.sunrise : tr().hud.shift);
+          if (!dawn && DAWN_WORDS[lang].test(caption)) wrong.push(`${at}: HUD caption "${caption}"`);
+        }
+        for (const label of [deadlineLabel(lv, '1:40', 'card'), deadlineLabel(lv, '1:40', 'retry'), deadlineWarning(lv)]) {
+          if (!dawn && DAWN_WORDS[lang].test(label)) wrong.push(`${at}: "${label}"`);
+        }
+      }
+    }
+    expect(wrong).toEqual([]);
+  });
+
+  it('every deadline view builds its clock from clockLook / endsAtSunrise, never from clockMode or level ids', () => {
+    const views = import.meta.glob(['../src/flight/views/deep-hud.ts', '../src/ui/deep-abduct.ts', '../src/ui/workorders.ts', '../src/ui/deep-choice.ts'],
+      { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+    expect(Object.keys(views).length).toBe(4);
+    const wrong: string[] = [];
+    for (const [file, src] of Object.entries(views)) {
+      // the sunrise-clock art and the sun icon appear only behind clockLook().sunFace or endsAtSunrise()
+      for (const m of src.matchAll(/^.*(?:'ui\/sunrise_clock'|new SunIcon\().*$/gm)) {
+        if (!/sunFace|endsAtSunrise|sunIcon/.test(m[0])) wrong.push(`${file}: ${m[0].trim()}`);
+      }
+    }
+    for (const file of ['../src/flight/views/deep-hud.ts', '../src/ui/deep-abduct.ts']) {
+      expect(views[file], `${file} builds its clock from clockLook`).toContain('clockLook(');
+      expect(views[file], `${file} reads clockMode itself`).not.toMatch(/\.clockMode\b/);
     }
     expect(wrong).toEqual([]);
   });

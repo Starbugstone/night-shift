@@ -14,6 +14,7 @@ import { HUD_ROW, type FuseState } from '../../ui/hud';
 import { C } from '../../ui/theme';
 import { artSprite, artTex } from '../../ui/views/art';
 import { HudButton, HudFuse, HudPanel, HudPrompt, HudSunClock, HudTimer } from '../../ui/views/hud';
+import { clockLook, type ClockLook } from '../../ui/deadline';
 import type { DeepFlightScene } from '../deep-scene';
 import { propSize } from '../props';
 import { RING_R, SUSPICION } from '../sim';
@@ -209,6 +210,7 @@ export class DeepFlightHud {
   private readonly quit = new HudButton('close');
   private readonly fuse: HudFuse;
   private readonly sun: HudSunClock | HudTimer;
+  private readonly look: ClockLook;
   private readonly fuseState: FuseState = { value: 0, exposed: false, t: 0, reduced: false, seconds: 1 };
   private readonly chips: TargetChip[];
   private readonly map: MiniMap;
@@ -231,12 +233,10 @@ export class DeepFlightHud {
     const m = s.level.map;
     this.delivered = new DeliveredBanner(m.targets.length);
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
-    // v0.2: the clock's look comes from the level's clockMode, not its id
-    const mode = s.level.clockMode;
-    const demolition = mode === 'demolition';
-    const storm = mode === 'storm';
-    this.sun = mode === 'elapsed' ? new HudTimer() : new HudSunClock(storm || demolition ? null : artTex(assets, 'ui/sunrise_clock'),
-      demolition ? tr().dispatch2199.deadline : storm ? tr().crestValley.left : mode === 'countdown' ? tr().timeTrial.left : undefined, storm || demolition);
+    // v0.2: the clock's look comes from the level's clockMode, not its id (one source for both HUDs)
+    this.look = clockLook(s.level);
+    const look = this.look;
+    this.sun = look.timer ? new HudTimer() : new HudSunClock(look.sunFace ? artTex(assets, 'ui/sunrise_clock') : null, look.label, look.noDawnGlow);
     this.fuseState.seconds = 1 / (SUSPICION.rate * s.sim.mult);
     const fuse = Math.round(this.fuseState.seconds * 10) / 10;
     this.banner = new FlightBanner(400, 86,
@@ -287,7 +287,7 @@ export class DeepFlightHud {
       this.clock = run.clockText(getLang());
     }
     if (this.sun instanceof HudTimer) this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock);
-    else this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.deadlineWarning, t, rm || s.level.id === 'level12');
+    else this.sun.sync(396, HUD_ROW.y, 130, HUD_ROW.h, this.clock, run.elapsed / run.budget, run.deadlineWarning, t, rm || this.look.steady);
     const targets = s.level.map.targets;
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i]!;

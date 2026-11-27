@@ -5,6 +5,7 @@ import type { Assets, Scene } from '../contracts';
 import { VIEW_H, VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { deepPar } from '../levels/types';
+import { endsAtSunrise } from '../levels/run';
 import { LEVELS, formatOrderNumber, workOrderNumber } from '../levels/levels';
 import { MAX_STARS, RANKS, dispatchRequirements, isLevelUnlocked, levelStarCount, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, tr } from '../i18n';
@@ -287,7 +288,8 @@ function dispatchRoute(save: Shell['save'], recommended: number): Graphics {
     const y = i * stride + CARD_H / 2;
     const unlocked = isLevelUnlocked(save, i);
     if (i > 0) {
-      const color = LEVELS[i]!.id === 'level8' ? C.amber : C.mint;
+      const next = LEVELS[i]!;
+      const color = next.kind === 'deep' && next.clockMode === 'countdown' ? C.amber : C.mint; // a time trial's route is amber
       for (let t = y - stride + 12; t < y - 9; t += 11) route.circle(x, t, 1.9).fill({ color, alpha: unlocked ? 0.65 : 0.28 });
     }
     const delivered = save.levels[LEVELS[i]!.id].delivered;
@@ -353,7 +355,7 @@ class LevelCard {
     this.root.addChild(new Label({ size: 16, color: unlocked ? C.muted : C.amber, align: 'left', weight: 700 })
       .set(lt.location, 34, 56 + lines * 28, CARD_W - 150));
 
-    this.sun = unlocked && lv.kind === 'deep' && lv.clockMode !== 'elapsed' && lv.id !== 'level9' && lv.id !== 'level12' ? new SunIcon(5.5, 8, 11.5) : null;
+    this.sun = unlocked && lv.kind === 'deep' && endsAtSunrise(lv) ? new SunIcon(5.5, 8, 11.5) : null;
     this.arrow = unlocked ? this.openBadge(training) : null;
     if (!unlocked) {
       this.root.addChild(

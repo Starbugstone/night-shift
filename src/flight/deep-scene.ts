@@ -208,7 +208,7 @@ export class DeepFlightScene implements Scene {
     const num = formatOrderNumber(workOrderNumber(this.level.id));
     if (this.level.id === 'level12') return fmt(words.levels.level12.re, { num });
     if (this.level.id === 'level9') return fmt(words.crestValley.order, { num });
-    return this.level.id === 'level8' || this.level.clockMode === 'elapsed'
+    return this.level.clockMode === 'countdown' || this.level.clockMode === 'elapsed'
       ? fmt(words.workOrders.orderNo, { num })
       : fmt(words.flight.banner, { num, h: this.level.hours[1] });
   }

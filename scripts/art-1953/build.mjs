@@ -200,9 +200,3 @@ write('flight/ground_invasion53', 540, 540,
     const y = (i * 41 + i * i * 13) % 533;
     return R(x, y, 4 + i % 9, 1 + i % 3, 1, i % 4 ? '#37314e' : '#403751', 0);
   }).join(''));
-write('flight/invasion_field_rows', 330, 360,
-  R(4, 3, 322, 354, 13, '#3c3552', 0) +
-  Array.from({ length: 12 }, (_, i) =>
-    R(12, 14 + i * 28, 306, 12, 6, i % 2 ? '#585064' : '#443951', 0) +
-    S(`M18 ${20 + i * 28}h289`, '#695766', 1.3, { 'stroke-dasharray': '11 13' }),
-  ).join(''));

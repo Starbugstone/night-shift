@@ -116,8 +116,9 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
   if (lv.clockMode === 'elapsed') {
     time = fmt(tr().birch.timeAgainstPar, { used: fmtTime(Math.ceil(run.elapsed)), par: fmtTime(deepPar(lv)) });
   } else if (sunrise) {
-    time = lv.id === 'level12' ? tr().dispatch2199.deadline : lv.id === 'level9' ? tr().crestValley.ranOut
-      : lv.id === 'level8' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] });
+    // the deadline row follows the clock (clockMode); 1955's "pass expired at 10:10" is its own story line
+    time = lv.clockMode === 'demolition' ? tr().dispatch2199.deadline : lv.id === 'level9' ? tr().crestValley.ranOut
+      : lv.clockMode === 'countdown' ? tr().timeTrial.ranOut : fmt(r.ranOut, { h: lv.hours[1] });
   } else {
     // Round down the spare time so a missed par cannot appear to have been met.
     const spare = Math.floor(run.remaining);
@@ -135,7 +136,7 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
       [r.items, itemsPhrase(run.totals.items)],
       ...(pickup ? [pickup.row] : []),
     ],
-    stamp: sunrise ? (lv.id === 'level12' ? 'demolition' : lv.id === 'level9' ? 'storm' : 'sunrise') : 'delivered',
+    stamp: sunrise ? (lv.clockMode === 'demolition' ? 'demolition' : lv.clockMode === 'storm' ? 'storm' : 'sunrise') : 'delivered',
     archive: lv.id === 'level9' ? tr().crestValley.archive : lv.id === 'level10' ? tr().grail.archive : lv.id === 'level11' ? tr().invasion1953.archive : undefined,
     bakerySign: lv.id === 'birch_bakery' && outcome.stars[0],
     starLabels: shownStarLabels(lv),

@@ -53,14 +53,5 @@ export function souvenirs() {
   o += F('M31 13l-4 6h3l-3 6l7 -8h-3l2 -4Z', '#e0a43a', 1.2);
   o += S('M26 38V41', '#c9b58f', 1.2);
   write('room/clock_flyer', 40, 44, o);
-
-  // lightning-struck clock hand (54×26): charred spade hand, open brass hub, jagged tip, a chip of enamel
-  o = F('M10 20Q4 20 4 14Q4 8 10 8Q14 8 16 11L30 10Q35 4 41 6L39 10L51 9L46 13L50 16L40 17Q36 21 30 17L16 17Q14 20 10 20Z', '#3a2f44', 2.6);
-  o += E(10, 14, 4.6, 4.6, C.gold, 2.2) + E(10, 14, 1.9, 1.9, '#241c2e', 0) + S('M7.4 12q1.4 -2 3.4 -2', '#fff2c8', 1.3);
-  o += S('M18 13.6H30M34 11.6q3 -2.4 5 -2', '#6d6480', 1.6) + F('M22 11l5 -0.4l-1 3.4l-4 0.6Z', C.custard, 1.2);
-  o += S('M41 12l3 1.6M45 10.6l-2.4 1', '#ff9d5c', 1.5);
-  // it rests on its hub and the spade; a last curl of smoke off the tip
-  o = G(o, { transform: 'translate(0 4.6)' }) + S('M40 8q-3 -3 0 -6M46 9q-2 -2 0 -4', '#8792a6', 1.4, { opacity: 0.8 });
-  write('room/clock_hand', 54, 26, o);
 }
 if (import.meta.url === `file://${process.argv[1]}`) souvenirs();

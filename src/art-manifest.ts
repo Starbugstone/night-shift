@@ -53,7 +53,6 @@ export const ART: Record<string, ArtSpec> = {
   'room/fan_blade': { w: 220, h: 28 }, // one blade, hub end at left-middle
   'room/fan_hub': { w: 50, h: 50 },
   'room/washer': { w: 120, h: 130 },
-  'room/towel_cart': { w: 140, h: 130 },
   'room/sign_no_sleeping': { w: 200, h: 70 },
   'room/office_chair': { w: 110, h: 150 },
   'room/coffee_mug': { w: 30, h: 30 },
@@ -102,8 +101,6 @@ export const ART: Record<string, ArtSpec> = {
   // ---- v2 flight: suburbia (L3) and downtown (L4)
   'flight/ground_suburb': { w: 540, h: 540 }, // seamless lawn/garden tile, low contrast
   'flight/ground_city': { w: 540, h: 540 }, // seamless pavement/plaza tile, low contrast
-  'flight/sidewalk_v': { w: 40, h: 540 }, // kerb strip, tiles vertically
-  'flight/sidewalk_h': { w: 540, h: 40 },
   'flight/house_suburb_a': { w: 200, h: 180 },
   'flight/house_suburb_b': { w: 220, h: 170 },
   'flight/house_suburb_c': { w: 180, h: 200 },
@@ -135,7 +132,6 @@ export const ART: Record<string, ArtSpec> = {
   'flight/pigeon_flock': { w: 120, h: 90 }, // 6-8 pigeons, wings out
   'flight/bat_flock': { w: 120, h: 90 },
   'flight/park_top': { w: 400, h: 300 }, // little plaza park: paths, fountain, benches
-  'flight/tram_wire_h': { w: 540, h: 20 }, // overhead wires, tiles horizontally
 
   // ---- v2 humans: same rig and conventions as doyle/larry.
   // dave: thin dentist, striped pyjamas with tooth print, teeth-whitening tray, comb-over.
@@ -234,14 +230,11 @@ export const ART: Record<string, ArtSpec> = {
   'room/ladder': { w: 60, h: 240 },
   'room/door_frame': { w: 120, h: 220 }, // open doorway trim
   'room/bookcase': { w: 120, h: 220 },
-  'room/wardrobe': { w: 140, h: 240 },
   'room/boxes': { w: 140, h: 110 }, // stacked cardboard boxes
   'room/fridge': { w: 100, h: 200 },
   'room/counter': { w: 260, h: 110 }, // kitchen counter with cupboards
   'room/hanging_pans': { w: 200, h: 90 },
   'room/dryer': { w: 120, h: 130 }, // drum drawn separately
-  'room/dryer_drum': { w: 80, h: 80 }, // spins
-  'room/dog_bed': { w: 120, h: 40 },
   'room/laser_emitter': { w: 24, h: 36 }, // wall-mounted, beam drawn by code
   'room/security_camera': { w: 70, h: 40 }, // side view, wall bracket at left, lens right
   'room/monitor_bank': { w: 200, h: 140 }, // Gary's CCTV monitors on a desk
@@ -249,8 +242,6 @@ export const ART: Record<string, ArtSpec> = {
   'room/workbench': { w: 260, h: 110 },
   'room/power_tools': { w: 200, h: 80 }, // pegboard with tools
   'room/work_lamp': { w: 60, h: 100 }, // swinging, pivot at top-centre
-  'room/garage_door': { w: 200, h: 240 }, // closed panel; code slides it up
-  'room/swing_door': { w: 30, h: 200 }, // a door seen edge-on, pivot at top
   'room/dino_skull': { w: 200, h: 140 },
   'room/dino_ribs': { w: 260, h: 200 },
   'room/dino_legs': { w: 160, h: 260 },
@@ -258,7 +249,6 @@ export const ART: Record<string, ArtSpec> = {
   'room/display_case': { w: 140, h: 160 }, // gem on a plinth under glass
   'room/postcard_rack': { w: 70, h: 180 }, // spins
   'room/security_desk': { w: 260, h: 120 },
-  'room/cargo_shutter': { w: 200, h: 240 },
   'room/disco_ball': { w: 80, h: 80 },
   'room/speaker_stack': { w: 110, h: 220 },
   'room/dj_booth': { w: 240, h: 130 },
@@ -281,7 +271,6 @@ export const ART: Record<string, ArtSpec> = {
 
   // ---- v2 UI
   'ui/sunrise_clock': { w: 120, h: 120 }, // clock face, hands drawn by code
-  'ui/sun': { w: 80, h: 80 },
   'ui/target_marker': { w: 48, h: 48 }, // off-screen arrow pointing up (rotated by code)
   'ui/eye_closed': { w: 64, h: 40 }, // suspicion "eye" fuse: closed
   'ui/eye_open': { w: 64, h: 40 }, // fully open, alarmed
@@ -389,8 +378,6 @@ export const ART: Record<string, ArtSpec> = {
   'room/freezer_hook': { w: 60, h: 120 }, // hook on a rail trolley with a frozen fish
   'room/ledger_desk': { w: 260, h: 130 }, // Sal's desk with the open ledger, adding machine, lamp
   'room/sardine_tin': { w: 50, h: 30 }, // souvenir: an empty sardine tin
-  'room/penguin': { w: 50, h: 70 }, // sleepy penguin (decor)
-  'room/porthole_tank': { w: 180, h: 180 }, // delivery picture: round Bureau porthole tank, dolphin fin over the rim
 
   // ---- v3 L6 "Probe Compliance" (St. Mildred's General) — flight. No red cross anywhere.
   'flight/ground_campus': { w: 540, h: 540 }, // seamless hospital-campus lawn with pine needles, low contrast
@@ -470,7 +457,6 @@ export const ART: Record<string, ArtSpec> = {
   'flight/lifeboat_top': { w: 60, h: 130 }, // orange lifeboat under a cover
   'flight/photographer_top': { w: 50, h: 50 }, // ship photographer from above: hat, big camera with flash
   'flight/radar_mast_top': { w: 60, h: 60 }, // radar mast top (code draws the two cones)
-  'flight/deck_lights_h': { w: 540, h: 20 }, // string of deck bulbs, tiles horizontally (decor, no light pools)
 
   // ---- v3 L7 — humans
   // sterling: ship's captain, white uniform jacket, peaked cap, magnificent beard (no real insignia).
@@ -531,7 +517,6 @@ export const ART: Record<string, ArtSpec> = {
   'ui/tabloid_masthead': { w: 300, h: 60 }, // tabloid masthead "THE GRIMSBY GAZETTE" in a red banner
   'ui/tabloid_masthead_fr': { w: 300, h: 60 }, // « LA GAZETTE DE GRIMSBY »
   'ui/clipboard_7b': { w: 120, h: 150 }, // small clipboard (code writes the Form 7-B lines and ticks)
-  'ui/droplet': { w: 40, h: 48 }, // mint water droplet icon (moisture meter)
 
   // ---- v4 L8 Prior Contact
   'flight/ape_roaming': { w: 54, h: 54 }, // Knuckle-walking ape from above, nose north; warm muzzle and big hands.
@@ -647,15 +632,7 @@ export const ART: Record<string, ArtSpec> = {
   'room/black_knight_shield': { w: 57, h: 62 },
   'room/holy_hand_grenade': { w: 48, h: 64 },
   'room/enchanter_horns': { w: 60, h: 42 },
-  'room/grail_bench': { w: 120, h: 96 },
-  'room/grail_stand': { w: 120, h: 96 },
-  'room/grail_settle': { w: 120, h: 96 },
   'room/grail_hay': { w: 160, h: 96 },
-  'room/grail_rack': { w: 120, h: 96 },
-  'room/grail_chest': { w: 120, h: 96 },
-  'room/grail_counter': { w: 120, h: 96 },
-  'room/grail_lectern': { w: 120, h: 96 },
-  'room/grail_flue': { w: 120, h: 96 },
   'human/rodney_head': { w: 70, h: 80 },
   'human/rodney_head_awake': { w: 70, h: 80 },
   'human/rodney_torso': { w: 80, h: 120 },
@@ -715,11 +692,9 @@ export const ART: Record<string, ArtSpec> = {
   'room/tower_ledge55': { w: 322, h: 72 },
   'room/tower_cable55': { w: 426, h: 56 },
   'room/booth55': { w: 300, h: 192 },
-  'room/counter55': { w: 178, h: 120 },
   'room/stool55': { w: 56, h: 80 },
   'room/jukebox55': { w: 92, h: 160 },
   'room/pie_case55': { w: 84, h: 64 },
-  'room/trunk_body55': { w: 336, h: 194 },
   'room/trunk_lid55': { w: 88, h: 160 },
   'room/gym_doors55': { w: 180, h: 196 },
   'room/amp_case55': { w: 122, h: 84 },
@@ -743,7 +718,6 @@ export const ART: Record<string, ArtSpec> = {
   'room/hazmat_suit': { w: 46, h: 40 },
   'room/puffy_vest': { w: 46, h: 38 },
   'room/clock_flyer': { w: 40, h: 44 },
-  'room/clock_hand': { w: 54, h: 26 },
   'human/doc_head': { w: 70, h: 80 },
   'human/doc_head_awake': { w: 70, h: 80 },
   'human/doc_torso': { w: 80, h: 120 },
@@ -802,7 +776,6 @@ export const ART: Record<string, ArtSpec> = {
   'room/bg_birch_bakery': { w: 540, h: 960 },
   'room/bg_birch_workshop': { w: 540, h: 960 },
   'room/bicycle_bell': { w: 48, h: 44 },
-  'room/bike_repair_stand': { w: 180, h: 110 },
   'room/biscuit_tin': { w: 56, h: 38 },
   'room/cooling_rack': { w: 220, h: 120 },
   'room/flour_trolley': { w: 140, h: 120 },
@@ -816,7 +789,6 @@ export const ART: Record<string, ArtSpec> = {
 
   // ---- APPEND: 1953 · The War of the Colds
   'flight/ground_invasion53': { w: 540, h: 540 },
-  'flight/invasion_field_rows': { w: 330, h: 360 },
   'flight/doyle_coop_block_top': { w: 72, h: 38 },
   'flight/doyle_coop_print_top': { w: 58, h: 50 },
   'flight/doyle_coop_top': { w: 130, h: 94 },
@@ -888,11 +860,8 @@ export const ART: Record<string, ArtSpec> = {
   'room/bg_duvet2199': { w: 540, h: 960 },
   'room/bg_transit2199': { w: 540, h: 960 },
   'room/bg_complaints2199': { w: 540, h: 960 },
-  'room/robe_sofa2199': { w: 256, h: 113 },
   'room/charge_cradle2199': { w: 244, h: 112 },
   'room/demolition_blade2199': { w: 246, h: 115 },
-  'room/voice_cabinet2199': { w: 114, h: 268 },
-  'room/luggage_shutter2199': { w: 240, h: 30 },
   'human/artie_head': { w: 64, h: 66 },
   'human/artie_head_awake': { w: 64, h: 66 },
   'human/artie_torso': { w: 80, h: 120 },
@@ -1009,6 +978,21 @@ export const RETIRED_ART: Record<string, ArtSpec> = {
   'room/bg_reed_cave': { w: 540, h: 720 }, // Plum cavern with fine reed impressions in the clay, a few score-like tally marks.
   'room/understudy_asleep': { w: 110, h: 84 }, // Young ape asleep on her drum.
   'room/understudy_awake': { w: 110, h: 112 }, // Same drummer awake, sticks raised.
+};
+
+/**
+ * Build sources only: nothing in the game draws these keys any more, but scripts/art-shapes/build.mjs reads their
+ * SVGs to redraw each prop at the shape a room places it (v0.2 unstretched art). They are not preloaded. Move one
+ * back into ART to draw it again (tests/shell-art-orphans.test.ts).
+ */
+export const SOURCE_ART: Record<string, ArtSpec> = {
+  'room/counter55': { w: 178, h: 120 },
+  'room/trunk_body55': { w: 336, h: 194 },
+  'room/towel_cart': { w: 140, h: 130 },
+  'room/wardrobe': { w: 140, h: 240 },
+  'room/robe_sofa2199': { w: 256, h: 113 },
+  'room/voice_cabinet2199': { w: 114, h: 268 },
+  'room/luggage_shutter2199': { w: 240, h: 30 },
 };
 
 /**
