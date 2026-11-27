@@ -202,15 +202,7 @@ class MemoView implements SceneView {
     // Step down the body size when the copy would reach the goals block.
     const bodyOffset = first ? 24 : 0;
     const bodyY = BODY_Y + bodyOffset;
-    const joke = wrapLines(lt.joke, PW - 84, JOKE_SIZE, 600, true);
-    let bodySize = BODY_SIZE;
-    let bodyLH = BODY_LH;
-    let body = wrapLines(lt.body, PW - 56, bodySize, 500);
-    while (bodySize > 16 && 228 + bodyOffset + body.length * bodyLH + 12 + joke.length * JOKE_LH > PAPER_H - 160 - 22) {
-      bodySize--;
-      bodyLH = Math.round(bodySize * 1.35);
-      body = wrapLines(lt.body, PW - 56, bodySize, 500);
-    }
+    const { joke, bodySize, bodyLH, body } = memoBodyLayout(lt.body, lt.joke, bodyOffset);
     this.body = typedLines(this.paper, body, { size: bodySize, color: C.paperInk, align: 'left', weight: 500 }, PX + 28, bodyY, bodyLH);
     const jokeTop = bodyY + body.length * bodyLH + 6;
     this.jokeBox.addChild(panelPath(new Graphics(), PX + 18, jokeTop - 14, PW - 36, joke.length * JOKE_LH + 20, { fill: '#fff6c9', r: 12, stroke: '#d8c48a', lineW: 2, shadow: 0 }));
@@ -277,4 +269,26 @@ class MemoView implements SceneView {
     this.cursor.visible = typing && (reduced || Math.floor(t * 3) % 2 === 0);
     this.skip.visible = typing;
   }
+}
+
+/** Space the memo body and joke box may use before the goals block (v0.2: guarded by tests/ui-memo-fit.test.ts). */
+export const MEMO_TEXT_BUDGET = PAPER_H - 160 - 22;
+export const MEMO_BODY_FLOOR = 16;
+
+/**
+ * The memo body steps its font down until body + joke clear the goals block, never below MEMO_BODY_FLOOR.
+ * `overflow` > 0 means the copy still reaches the goals block at the floor: the copy must be cut.
+ */
+export function memoBodyLayout(bodyText: string, jokeText: string, bodyOffset: number) {
+  const joke = wrapLines(jokeText, PW - 84, JOKE_SIZE, 600, true);
+  let bodySize = BODY_SIZE;
+  let bodyLH = BODY_LH;
+  let body = wrapLines(bodyText, PW - 56, bodySize, 500);
+  const used = () => 228 + bodyOffset + body.length * bodyLH + 12 + joke.length * JOKE_LH;
+  while (bodySize > MEMO_BODY_FLOOR && used() > MEMO_TEXT_BUDGET) {
+    bodySize--;
+    bodyLH = Math.round(bodySize * 1.35);
+    body = wrapLines(bodyText, PW - 56, bodySize, 500);
+  }
+  return { joke, bodySize, bodyLH, body, used: used(), overflow: used() - MEMO_TEXT_BUDGET };
 }

@@ -91,6 +91,7 @@ Status: **guarded** = a test fails on regression; **pending** = guarded, with cu
 | C12 | A literal translation loses a souvenir's reference | Keep the reference recognizable in both languages: the captain's log stays « log du capitaine » in French, with the same numeric stardate in its EN/FR descriptions and report lines. | `tests/ui-souvenir-reference.test.ts` walks every level and room, Field Check included | guarded for the captain's log. |
 | C15 | Report line no level can show | Every deep comment, first-clear, sunrise and pickup line comes out on at least one level in `LEVELS` for some report state and rotation, EN and FR; a pickup or level pool never holds the slot for good. | `tests/ui-report-comment-reach.test.ts` | guarded (v0.2: 30+ lines were unreachable, including every specimen-count line). |
 | C16 | Rank text squeezed sideways | Every rank title, flavour, next-rank line and payoff fits `RANK_BOX` at its normal font next to a 4-digit purse, EN and FR; French says "anneau de parking" throughout. | `tests/ui-workorders-rank-fit.test.ts` | guarded (v0.2). |
+| C17 | Memo copy runs into the goals block | Every level's memo body and joke box clear the goals block at or above the 16 px font floor, EN and FR; cut the copy, never shrink the floor. | `tests/ui-memo-fit.test.ts` (`memoBodyLayout`, shared with the view) | guarded (v0.2: EN L4, FR L4 and FR L7 overflowed after new teaching lines). |
 
 ## Engine, rendering and sound
 

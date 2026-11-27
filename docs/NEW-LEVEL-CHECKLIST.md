@@ -24,6 +24,7 @@ run at the end of this page.
 | Problem | Rule | Guard | Command |
 |---|---|---|---|
 | A flight hazard nobody explains | Walking `LEVELS` in play order, every flight hazard kind and optional hazard field is classified, and taught on the first level that uses it: by that level's `FLIGHT_LESSONS` entry (`src/flight/views/progression-hint.ts`) or by registered EN+FR memo or prompt strings. Seven hazards from before the rule wait in its `PENDING` list (`docs/REGRESSIONS.md` L13). | `tests/flight-hazard-taught.test.ts` | `npm test` |
+| A room prompt the route never triggers | Every room prompt kind shows on an autopilot route of the level that introduces it; an unseen kind takes the slot over one already shown. | `tests/abduct-room-lessons.test.ts` | `npm test` |
 | A flight lesson left behind when the map moves | Each lesson shows on the autopilot shift no later than the first meeting with its hazard, and never at a spawn far from it; prompts use hysteresis. | `tests/flight-lesson-route.test.ts`, `tests/flight-lesson-hysteresis.test.ts` | `npm test` |
 | A room mechanic nobody explains | Every room field, hazard kind and sleeper-keyed behaviour is classified and taught on its first level, in EN and FR. | `tests/abduct-mechanic-taught.test.ts`, `tests/abduct-room-lessons.test.ts` | `npm test` |
 | A lesson the obvious route skips | The lesson's hazard sits on the beeline. | `tests/levels-field-check.test.ts` | `npm test` |
@@ -68,6 +69,10 @@ run at the end of this page.
 | Missing French | FR mirrors EN. | `tests/ui-i18n.test.ts` | `npm test` |
 | Story out of order, lore before its level | Story tokens only after their level; era levels name only the years of eras they require. A new lore term gets a token. | `tests/ui-copy-continuity.test.ts` (sections 1 and 3) | `npm test` |
 | A rank payoff nobody can reach | The ladder spans every star; the parking-ring payoff shows once L12 is delivered at any rank. | `tests/levels-progress-ranks.test.ts` | `npm test` |
+| A report line nobody can see | Every deep comment, first-clear, sunrise and pickup line comes out on at least one level for some report state and rotation; a pickup or level pool never holds the slot for good. | `tests/ui-report-comment-reach.test.ts` | `npm test` |
+| Rank text squeezed sideways | Every rank title, flavour and payoff fits `RANK_BOX` at its normal font beside a 4-digit purse, EN and FR. | `tests/ui-workorders-rank-fit.test.ts` | `npm test` |
+| A memo that runs into the goals | Body and joke box clear the goals block at or above the 16 px floor, EN and FR; cut the copy, never the floor. | `tests/ui-memo-fit.test.ts` | `npm test` |
+| An exit sign off screen | Every interior room's exit tag stays inside the view wherever the exit shows, EN and FR. | `tests/abduct-exit-tag.test.ts` | `npm test` |
 | A souvenir, specimen or town pickup with no trophy slot | Every room item, swap, specimen and town pickup has its slot and EN+FR text; each level after L1 has one pickup hinted in its memo. | `tests/ui-trophies*.test.ts`, `tests/ui-trophies-specimens.test.ts`, `tests/flight-collectible*.test.ts`, `tests/ui-trophies-hunt-star.test.ts` | `npm test` |
 
 ## Save and release
