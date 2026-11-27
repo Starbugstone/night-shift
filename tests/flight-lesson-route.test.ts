@@ -11,7 +11,8 @@ import type { PointerState } from '../src/contracts';
 import { FlightAutopilot } from '../src/flight/autopilot';
 import type { DeepFlightScene } from '../src/flight/deep-scene';
 import { DeepFlightSim, SAFE_WINDOW } from '../src/flight/deep-sim';
-import { FLIGHT_LESSONS, flightLesson, type FlightLesson } from '../src/flight/views/progression-hint';
+import { FLIGHT_LESSONS, flightLesson, flightLessonState, type FlightLesson } from '../src/flight/views/progression-hint';
+import { readSeconds } from '../src/core/read-time';
 import { setLang } from '../src/i18n';
 import { LEVELS, isDeep } from '../src/levels/levels';
 import type { DeepLevelDef } from '../src/levels/types';
@@ -137,6 +138,34 @@ describe('flight lessons follow their hazards', () => {
         const log = playRoute(level, lesson);
         expect(log.shown, `never shown on the autopilot shift (met at ${log.met?.toFixed(2)} s, ${log.where})`).not.toBeNull();
         if (log.met !== null) expect(log.shown!, `met at ${log.met.toFixed(2)} s (${log.where}) before the tip showed`).toBeLessThanOrEqual(log.met);
+      });
+
+      // v0.2 council R2 (Fable): L5 spawns in a lighthouse shadow, so the tip flashed for 0.48 s and retired
+      it('never retires before its tip has been on screen for its reading time', () => {
+        const sim = new DeepFlightSim(level.map, new Set(), 0);
+        sim.place(level.map.start.x, level.map.start.y, 0.4);
+        const ap = new FlightAutopilot(sim);
+        const run = { legs: 0 };
+        const scene = fakeScene(level, sim, run);
+        const p: PointerState = { down: false, x: 0, y: 0, pressed: false, released: false };
+        const need = readSeconds(lesson.tip());
+        let active = '';
+        for (let f = 0; f < 240 * 60 && sim.phase !== 'locking'; f++) {
+          const it = ap.intent();
+          p.pressed = it.down && !p.down;
+          p.released = !it.down && p.down;
+          p.down = it.down;
+          p.x = it.x;
+          p.y = it.y;
+          sim.update(1 / 60, p);
+          (scene as { state: string }).state = sim.phase === 'fly' ? 'fly' : 'locking';
+          active = flightLesson(scene, active);
+          const st = flightLessonState(run);
+          if (st?.spent) {
+            expect(st.shownSec, `retired after ${st.shownSec.toFixed(2)} s of ${need.toFixed(1)} s`).toBeGreaterThanOrEqual(need - 0.05);
+            return;
+          }
+        }
       });
 
       it('stays quiet at the spawn when the spawn is far from the hazard', () => {

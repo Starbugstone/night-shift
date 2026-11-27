@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { setLang, tr } from '../src/i18n';
 import type { DeepFlightScene } from '../src/flight/deep-scene';
 import { LESSON_EXIT_PAD, flightLesson } from '../src/flight/views/progression-hint';
+import { readSeconds } from '../src/core/read-time';
 import { LEVELS } from '../src/levels/levels';
 import type { HazardDef } from '../src/flight/hazards';
 
@@ -41,9 +42,11 @@ describe('flight lessons', () => {
 
   it('teaches each hazard once a run: it waits for the encounter, then retires after it', () => {
     const run = { legs: 0 };
+    let t = 0;
     const at = (y: number): string => {
       const s = scene('level4', 270, y);
       (s as unknown as { run: object }).run = run;
+      (s.sim as { t: number }).t = (t += 1 / 60);
       return flightLesson(s);
     };
     const near = 1460;
@@ -53,7 +56,11 @@ describe('flight lessons', () => {
     expect(at(near), 'still waiting on a later leg').toBe(traffic);
     expect(at(1568), 'on the lane').toBe(traffic);
     expect(at(900)).toBe('');
-    expect(at(near), 'met and flown clear: retired').toBe('');
+    // v0.2 council R2: met but seen for two frames only, so it is still owed
+    expect(at(near), 'met and flown clear too soon: still owed').toBe(traffic);
+    for (let i = 0; i < readSeconds(traffic) * 60 + 2; i++) at(1568);
+    expect(at(900)).toBe('');
+    expect(at(near), 'met, read in full and flown clear: retired').toBe('');
   });
 
   it('holds the Field Check prompt on either side of its switch line', () => {

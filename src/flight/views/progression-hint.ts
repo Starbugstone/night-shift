@@ -1,4 +1,5 @@
 import { tr } from '../../i18n';
+import { readSeconds } from '../../core/read-time';
 import type { AmbulanceHazard } from '../ambulance';
 import type { DeepFlightScene } from '../deep-scene';
 import { wrapAngle } from '../geometry';
@@ -98,7 +99,16 @@ const SPENT = 2;
  * Per run (a new flight scene starts each leg): has the saucer met the lesson's hazard, and has it left the
  * zone since with the tip seen? Until then the lesson keeps its place on later legs.
  */
-const encounters = new WeakMap<object, { stage: number; shown: boolean }>();
+const encounters = new WeakMap<object, LessonRun>();
+
+/** v0.2 council R2: the lesson retires only once its tip has been on screen for its reading time in total. */
+interface LessonRun { stage: number; shownSec: number; lastT: number }
+
+/** For tests: whether this run's lesson has retired, and how long its tip has been on screen. */
+export function flightLessonState(run: object): { spent: boolean; shownSec: number } | null {
+  const seen = encounters.get(run);
+  return seen ? { spent: seen.stage === SPENT, shownSec: seen.shownSec } : null;
+}
 
 /**
  * The flight lesson for this frame, or ''. `active` is the lesson shown last frame: it keeps its
@@ -111,19 +121,18 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
   if (scene.state !== 'fly') return '';
   const { x, y } = sim.saucer;
   const { lessons } = tr();
-  const pad = (tip: string): number => (tip === active ? LESSON_EXIT_PAD : 0);
   if (scene.practice) {
     if (scene.bannerT > 0 || run.legs > 0) return '';
     if (sim.suspicion > 0) return lessons.coolOff;
     const { ring, porch } = tr().fieldCheck.prompts;
-    return sim.inRing >= 0 || y < 575 + pad(ring) - pad(porch) ? ring : porch;
+    return sim.inRing >= 0 || y < 575 + padFor(ring, active) - padFor(porch, active) ? ring : porch;
   }
   const lesson = FLIGHT_LESSONS[level.id];
   if (!lesson) return '';
   let seen = encounters.get(run);
-  if (!seen) encounters.set(run, (seen = { stage: FRESH, shown: false }));
+  if (!seen) encounters.set(run, (seen = { stage: FRESH, shownSec: 0, lastT: -1 }));
   const tip = lesson.tip();
-  const p = pad(tip);
+  const p = padFor(tip, active);
   const cool = lesson.coolOff !== undefined && run.legs === 0 && sim.suspicion > 0;
   let cooling = cool && lesson.coolOff === 'anywhere';
   let inZone = false;
@@ -131,11 +140,24 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
     if (def.type !== lesson.hazard) continue;
     if (seen.stage === FRESH && lesson.meets(def, x, y, sim.t)) seen.stage = MET;
     if (lesson.zone(def, x, y, p)) inZone = true;
-    if (cool && !cooling && lesson.zone(def, x, y, pad(lessons.coolOff))) cooling = true;
+    if (cool && !cooling && lesson.zone(def, x, y, padFor(lessons.coolOff, active))) cooling = true;
   }
-  if (!inZone && seen.stage === MET && seen.shown) seen.stage = SPENT;
-  if (cooling) return lessons.coolOff;
-  if (!inZone || seen.stage === SPENT || (lesson.quietInRing && sim.inRing >= 0)) return '';
-  seen.shown = true;
+  // v0.2 council R2: a tip flashed for a frame (L5 spawns in a lighthouse shadow) used to retire the lesson
+  if (!inZone && seen.stage === MET && seen.shownSec >= readSeconds(tip)) seen.stage = SPENT;
+  if (cooling) {
+    seen.lastT = -1;
+    return lessons.coolOff;
+  }
+  if (!inZone || seen.stage === SPENT || (lesson.quietInRing && sim.inRing >= 0)) {
+    seen.lastT = -1;
+    return '';
+  }
+  if (seen.lastT >= 0 && sim.t > seen.lastT) seen.shownSec += Math.min(sim.t - seen.lastT, 0.1);
+  seen.lastT = sim.t;
   return tip;
+}
+
+/** The zone of the tip already on screen is LESSON_EXIT_PAD px wider (no per-frame closure). */
+function padFor(tip: string, active: string): number {
+  return tip === active ? LESSON_EXIT_PAD : 0;
 }
