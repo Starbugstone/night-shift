@@ -400,7 +400,7 @@ export const en = {
   // v4 progression
   routeAdvice: {
     farm_window: 'open lift',
-    farm_chimney: 'tight flue',
+    farm_chimney: 'tight flue, sleeping cat', // v0.2 teaching: the cat on the shelf (room.cat)
     laundry_skylight: 'one slow fan',
     laundry_loading: 'longer, moving cart',
   },
@@ -422,6 +422,12 @@ export const en = {
     probe: 'Hold {joint} in the ring for {seconds} s',
     // v4 council: {joint} in the probe prompt, with its article
     probeJoint: { thermo: 'the head', hammer: 'the knee', feather: 'the foot' },
+    // v0.2 teaching: first-encounter room prompts (src/abduct/room-lessons.ts)
+    patrol: 'It does its rounds. Let it pass, then go.',
+    fragile: 'Fragile! One crash wakes the whole house.',
+    draft: 'The chimney draught pushes up. Ride it.',
+    camera: 'Gary’s camera fills its own fuse. Dodge the cone.',
+    pop: 'The cuckoo pops out on a timer. Go while it hides.',
   },
   // v4 progression
   fieldCheckControls: {
@@ -529,7 +535,7 @@ export const en = {
       human: "Rodney, the Knight & Tom",
       collect: "Three witnesses",
       re: "Work Order #{num} · Ni!",
-      body: "Agent Zib, Krix is out on appeal and back with OBELISK™. Our rivals want the Holy Grail to charge by the month for eternal life. Their three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery. The time window only takes still passengers: let go in the exit and wait for the bar, or they arrive in instalments.",
+      body: "Agent Zib, Krix is out on appeal and back with OBELISK™. Our rivals want the Holy Grail to charge by the month for eternal life. Their three witnesses signed in their sleep. Bring them in by dawn so Legal can void the signatures. The knights by the west hedge demand a shrubbery. The time window only takes still passengers: let go in the exit and wait for the bar, or they arrive in instalments. Half-wake Sir Rodney and he bravely runs away.",
       joke: "The French are throwing cows. If the road moos, move.",
       signoff: "— Vrell. No jousting on Bureau time.",
     },

@@ -33,7 +33,7 @@ Status: **guarded** = a test fails on regression; **pending** = guarded, with cu
 | L8 | Abduction rooms too short | After the tutorials, a casual room takes about 25 s or more. | none | rule only. |
 | L9 | A lesson the obvious route skips | Each lesson's hazard sits on the beeline. | `tests/levels-field-check.test.ts` | guarded for Field Check. |
 | L10 | Reduced motion changes outcomes | Same autopilot, same stars and time with reduced motion on or off. | `tests/levels-monolith.test.ts` | partial (L8 only). |
-| L11 | Mechanic introduced without teaching | Every room mechanic is registered with the level that introduces it and the EN+FR strings that teach it; a new room field fails until classified. | `tests/abduct-mechanic-taught.test.ts` | pending: `room.cat` (L1), `hazard.patrol`, `hazard.fragile`, `hazard.draft`, `hazard.camera` (L3), `hazard.pop` (L4). |
+| L11 | Mechanic introduced without teaching | Every room mechanic is registered with the level that introduces it and the EN+FR strings that teach it; a new room field fails until classified. Behaviour keyed on one sleeper or room in the abduction runtime (`=== 'rodney'`) counts as a field (v0.2). Room prompts for patrols, fragile props, drafts, cameras and pop-ups show in the rooms of the level that introduces them. | `tests/abduct-mechanic-taught.test.ts`, `tests/abduct-room-lessons.test.ts` | guarded (PENDING empty since v0.2). |
 
 ## Abduction rooms
 
@@ -59,6 +59,7 @@ Status: **guarded** = a test fails on regression; **pending** = guarded, with cu
 | F6 | Spotted card vanishing before you read it | Failure cards wait for a tap. | `tests/flight-spotted-tap.test.ts` | guarded. |
 | F7 | Route labels on rings or the minimap | Labels may slide or flip, never cross a ring. | `tests/flight-route-pill.test.ts` | guarded. |
 | F8 | Lessons flickering | Lesson prompts use hysteresis. | `tests/flight-lesson-hysteresis.test.ts` | guarded. |
+| F9 | Flight lesson left behind when the map moves | Each flight lesson's trigger comes from its hazards on the map; on every level in `LEVELS` it shows on the autopilot shift no later than the first meeting with its hazard, and never at a spawn far from it. | `tests/flight-lesson-route.test.ts` | guarded (v0.2). |
 
 ## Copy, story and translation
 

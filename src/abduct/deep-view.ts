@@ -30,6 +30,7 @@ import { hazardView } from './views/hazards';
 import { BiscuitDrops } from './views/invasion1953';
 import { AMBER, DashedLine, DashedRect, INK, LIGHT, MINT, RED, TAU, box, circleInView, intersects } from './views/pieces';
 import { SleeperView } from './views/sleeper';
+import { roomHazardLesson } from './room-lessons'; // v0.2 teaching
 
 /** Sunrise clock, between the sleeper meter and the camera fuse on row two. */
 export const DEEP_HUD_SUNRISE_SLOT = { x: 202, y: 86, w: 132, h: 64 } as const;
@@ -160,6 +161,7 @@ class DeepHud {
     else if (sim.room.human === 'gary' && chestX > 270 - pad && chestX < 505 + pad && chestY > 175 - pad) tip = tips.laser;
     else if (sim.room.human === 'dave' && chestX > 280 - pad && chestX < 480 + pad && chestY < 490 + pad) tip = tips.settle;
     else if ((sim.room.human === 'sterling' || sim.room.human === 'marco' || sim.room.human === 'greg') && chestX < 390 + pad && chestY > -pad && chestY < 680 + pad && elapsed < 10) tip = tips.roll;
+    else tip = roomHazardLesson(sim.room, chestX, chestY, pad); // v0.2 teaching
     this.lessonActive = tip.length > 0;
     this.lesson.visible = this.lessonActive && !sim.delivered && !sim.failure;
     if (this.lesson.visible) this.lesson.sync(VIEW_W / 2, 756, 49, tip, 20, 'release', elapsed, rm);

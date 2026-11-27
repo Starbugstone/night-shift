@@ -2,12 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { setLang, tr } from '../src/i18n';
 import type { DeepFlightScene } from '../src/flight/deep-scene';
 import { LESSON_EXIT_PAD, flightLesson } from '../src/flight/views/progression-hint';
+import { LEVELS } from '../src/levels/levels';
+import type { HazardDef } from '../src/flight/hazards';
+
+const hazardsOf = (levelId: string): readonly HazardDef[] => {
+  const level = LEVELS.find(l => l.id === levelId);
+  return level?.kind === 'deep' ? level.map.hazards : [];
+};
 
 function scene(levelId: string, x: number, y: number, extra: Partial<{ practice: boolean; inRing: number }> = {}): DeepFlightScene {
   return {
     state: 'fly', bannerT: 0, practice: extra.practice ?? false,
     run: { legs: 0 }, level: { id: levelId },
-    sim: { saucer: { x, y }, suspicion: 0, inRing: extra.inRing ?? -1, field: { defs: [] } },
+    sim: { saucer: { x, y }, suspicion: 0, inRing: extra.inRing ?? -1, t: 0, field: { defs: hazardsOf(levelId) } },
   } as unknown as DeepFlightScene;
 }
 
@@ -17,15 +24,36 @@ describe('flight lessons', () => {
 
   it('enter on the hard edge and leave only 12 px past it', () => {
     expect(LESSON_EXIT_PAD).toBe(12);
-    // outside the L4 traffic band: no lesson until the edge is crossed
-    expect(flightLesson(scene('level4', 270, 3395))).toBe('');
-    expect(flightLesson(scene('level4', 270, 3401))).toBe(traffic);
+    // the L4 traffic zone's north edge above the Old Town lanes, wherever the map puts them
+    let edge = 0;
+    for (let y = 900; y < 1600 && !edge; y++) if (flightLesson(scene('level4', 270, y)) === traffic) edge = y;
+    expect(edge, 'the traffic lesson shows somewhere north of the lanes').toBeGreaterThan(900);
+    // outside the band: no lesson until the edge is crossed
+    expect(flightLesson(scene('level4', 270, edge - 1))).toBe('');
+    expect(flightLesson(scene('level4', 270, edge))).toBe(traffic);
     // drifting back out across the edge keeps it up within the pad, then drops it
-    expect(flightLesson(scene('level4', 270, 3395), traffic)).toBe(traffic);
-    expect(flightLesson(scene('level4', 270, 3389), traffic)).toBe(traffic);
-    expect(flightLesson(scene('level4', 270, 3387), traffic)).toBe('');
+    expect(flightLesson(scene('level4', 270, edge - 6), traffic)).toBe(traffic);
+    expect(flightLesson(scene('level4', 270, edge - 11), traffic)).toBe(traffic);
+    expect(flightLesson(scene('level4', 270, edge - 13), traffic)).toBe('');
     // a lesson that isn't showing gets no pad
-    expect(flightLesson(scene('level4', 270, 3395), '')).toBe('');
+    expect(flightLesson(scene('level4', 270, edge - 6), '')).toBe('');
+  });
+
+  it('teaches each hazard once a run: it waits for the encounter, then retires after it', () => {
+    const run = { legs: 0 };
+    const at = (y: number): string => {
+      const s = scene('level4', 270, y);
+      (s as unknown as { run: object }).run = run;
+      return flightLesson(s);
+    };
+    const near = 1460;
+    expect(at(near)).toBe(traffic);
+    expect(at(900), 'left before meeting the lanes: not spent').toBe('');
+    run.legs = 1;
+    expect(at(near), 'still waiting on a later leg').toBe(traffic);
+    expect(at(1568), 'on the lane').toBe(traffic);
+    expect(at(900)).toBe('');
+    expect(at(near), 'met and flown clear: retired').toBe('');
   });
 
   it('holds the Field Check prompt on either side of its switch line', () => {

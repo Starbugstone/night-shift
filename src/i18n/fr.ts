@@ -98,7 +98,7 @@ export const fr: Strings = {
   // v4 progression
   routeAdvice: {
     farm_window: 'montée dégagée',
-    farm_chimney: 'conduit étroit',
+    farm_chimney: 'conduit étroit, chat endormi', // v0.2 teaching: the cat on the shelf (room.cat)
     laundry_skylight: 'ventilateur lent',
     laundry_loading: 'plus long, chariot mobile',
   },
@@ -120,6 +120,12 @@ export const fr: Strings = {
     probe: 'Maintenez {joint} dans le cercle {seconds} s',
     // v4 council: {joint} in the probe prompt, with its article
     probeJoint: { thermo: 'la tête', hammer: 'le genou', feather: 'le pied' },
+    // v0.2 teaching: first-encounter room prompts (src/abduct/room-lessons.ts)
+    patrol: 'Il fait sa ronde. Laissez-le passer, puis allez-y.',
+    fragile: 'Fragile ! Un fracas réveille toute la maison.',
+    draft: 'L’air chaud monte. Laissez-vous porter.',
+    camera: 'La caméra de Gary a sa jauge. Évitez son cône.',
+    pop: 'Le coucou sort à heure fixe. Passez quand il rentre.',
   },
   // v4 progression
   fieldCheckControls: {
@@ -226,7 +232,7 @@ export const fr: Strings = {
       human: "Rodney, le Chevalier et Tom",
       collect: "Trois témoins",
       re: "Ordre n°{num} · Sacré Graal !",
-      body: "Agent Zib, Krix a fait appel et retravaille chez OBELISK™. Nos concurrents revendiquent le Saint Graal pour vendre la vie éternelle par abonnement. Leurs trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le juridique annule les signatures. À la haie ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux.",
+      body: "Agent Zib, Krix a fait appel et retravaille chez OBELISK™. Nos concurrents revendiquent le Saint Graal pour vendre la vie éternelle par abonnement. Leurs trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le juridique annule les signatures. À la haie ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux. À demi réveillé, Rodney s’enfuit.",
       joke: "Les Français lancent des vaches. Si la route meugle, dégagez.",
       signoff: "— Vrell. Pas de joute pendant le service.",
     },

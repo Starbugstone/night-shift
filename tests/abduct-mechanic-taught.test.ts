@@ -13,6 +13,13 @@
 //
 // PENDING lists the mechanics that shipped before this rule with nothing that teaches them. It shrinks to
 // empty: move an entry to MECHANICS once its strings exist (an id may not sit in both).
+//
+// v0.2 teaching (council item 11): a behaviour keyed on one sleeper or one room in the abduction runtime
+// (Rodney's retreat at half wake, `src/abduct/grail.ts`) hid behind `room.human`, which is not a mechanic.
+// The runtime sources are now scanned for comparisons with a human or room id (`=== 'rodney'`,
+// `case 'gary_skylight':`); each id found becomes a feature `human.<id>` / `roomid.<id>` of the rooms it
+// names, and must be classified like any other field. Room builders (`src/abduct/rooms/`) only shape room
+// data, which the fields above already cover; views and art only draw.
 import { describe, expect, it } from 'vitest';
 import type { Room } from '../src/abduct/rooms/layout';
 import { en } from '../src/i18n/en';
@@ -73,6 +80,20 @@ const MECHANICS: Readonly<Record<string, Taught>> = {
     teach: [{ key: 'routes.marco_promenade.difficulty', cue: { en: 'trolley', fr: 'chariot' } }, { key: 'lessons.roll' }],
   },
   'hazard.toss': { level: 'level8', teach: [{ key: 'levels.level8.joke', cue: { en: 'bone', fr: 'os' } }] },
+  // v0.2 teaching: Sir Rodney flees a step at half wake (src/abduct/grail.ts); the memo warns, his mumble cues it.
+  'human.rodney': {
+    level: 'level10',
+    teach: [{ key: 'levels.level10.body', cue: { en: 'runs away', fr: 's’enfuit' } }, { key: 'grail.retreat' }],
+  },
+  // A dolphin body plan (no arms to grab, flukes): the memo names her.
+  'human.bubbles': { level: 'level5', teach: [{ key: 'levels.level5.body', cue: { en: 'dolphin', fr: 'dauphin' } }] },
+  // v0.2 teaching: route advice and first-encounter room prompts (src/abduct/room-lessons.ts)
+  'room.cat': { level: 'level1', teach: [{ key: 'routeAdvice.farm_chimney', cue: { en: 'cat', fr: 'chat' } }] },
+  'hazard.patrol': { level: 'level3', teach: [{ key: 'lessons.patrol', cue: { en: 'rounds', fr: 'ronde' } }] },
+  'hazard.fragile': { level: 'level3', teach: [{ key: 'lessons.fragile', cue: { en: 'crash', fr: 'fracas' } }] },
+  'hazard.draft': { level: 'level3', teach: [{ key: 'lessons.draft', cue: { en: 'Ride it', fr: 'porter' } }] },
+  'hazard.camera': { level: 'level3', teach: [{ key: 'lessons.camera', cue: { en: 'camera', fr: 'caméra' } }] },
+  'hazard.pop': { level: 'level4', teach: [{ key: 'lessons.pop', cue: { en: 'cuckoo', fr: 'coucou' } }] },
   'room.exitSettleSec': {
     level: 'level10',
     teach: [
@@ -85,14 +106,7 @@ const MECHANICS: Readonly<Record<string, Taught>> = {
 };
 
 /** Mechanics that shipped untaught: the level that introduces them, and what is missing. */
-const PENDING: Readonly<Record<string, { level: string; note: string }>> = {
-  'room.cat': { level: 'level1', note: "farm_chimney's sleeping cat is a big bonk on contact; no memo line, route label or prompt says so" },
-  'hazard.patrol': { level: 'level3', note: 'the hall and kitchen vacuums and the barking watch dog move on their own; no string introduces them' },
-  'hazard.fragile': { level: 'level3', note: 'knocking the dental trophy, fish tank or plates crashes and wakes the house; nothing warns before' },
-  'hazard.draft': { level: 'level3', note: "Barb's soot draft pushes the body up the chimney; the label only says 'short, sooty'" },
-  'hazard.camera': { level: 'level3', note: "Gary's camera fills a camera fuse; the L3 labels say 'lasers' and 'timed door', the memo only 'Gary's been shopping'" },
-  'hazard.pop': { level: 'level4', note: "the clock tower's cuckoo bird pops out on a cycle; nothing introduces it" },
-};
+const PENDING: Readonly<Record<string, { level: string; note: string }>> = {};
 
 /** Fields and kinds that do not change what the player must do, with why. */
 const NOT_A_MECHANIC: Readonly<Record<string, string>> = {
@@ -113,7 +127,38 @@ const NOT_A_MECHANIC: Readonly<Record<string, string>> = {
   'section.name': 'label', 'section.backdrop': 'art', 'section.x': 'geometry', 'section.y': 'geometry', 'section.w': 'geometry',
   'section.h': 'geometry', 'section.decor': 'decor', 'section.furniture': 'solid props', 'section.supports': 'solid props',
   'section.mounts': 'hung props', 'section.wallOnly': 'draws the backdrop without a floor strip',
+  // v0.2 teaching: sleeper-keyed runtime behaviour that changes nothing the player must do
+  'human.black_knight': 'armour plates drop off on bonks and he quips; wake and bonks work as for anyone',
+  'human.tom_enchanter': "snores on the spark's charge: a sound cue for the spark hazard, classified on its own",
+  'human.forester': 'his clock ticks faster as wake rises: a sound cue on the wake meter',
+  'human.van_bell': 'screams one line at half wake: speech only',
+  'human.collier': 'bonk lines: speech only',
+  'human.doyle': 'a quieter snore: sound only',
+  'human.moe': 'sulks after bonks: speech only',
 };
+
+/** Abduction runtime sources: everything under src/abduct except room builders, views and art. */
+const SOURCES = import.meta.glob('../src/abduct/**/*.ts', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const RUNTIME = Object.keys(SOURCES).map(p => p.replace('../src/', ''))
+  .filter(p => !p.startsWith('abduct/rooms/') && !p.startsWith('abduct/views/') && !/(^|[-/])(draw|view|art)\.ts$/.test(p));
+
+const HUMANS = new Set(ROOM_ENTRIES.map(([, r]) => r.human as string));
+const ROOM_IDS = new Set(ROOM_ENTRIES.map(([id]) => id as string));
+const ROOM_ID_OF = new Map<Room, string>(ROOM_ENTRIES.map(([id, r]) => [r, id]));
+
+/** Human and room ids the runtime compares against, with the files that do. */
+const KEYED = (() => {
+  const out = new Map<string, Set<string>>();
+  const re = /(?:===|!==)\s*'([a-z][a-z0-9_]*)'|'([a-z][a-z0-9_]*)'\s*(?:===|!==)|case\s+'([a-z][a-z0-9_]*)'\s*:/g;
+  for (const file of RUNTIME) {
+    for (const m of SOURCES[`../src/${file}`]!.matchAll(re)) {
+      const id = m[1] ?? m[2] ?? m[3]!;
+      const feature = HUMANS.has(id) ? `human.${id}` : ROOM_IDS.has(id) ? `roomid.${id}` : '';
+      if (feature) out.set(feature, (out.get(feature) ?? new Set()).add(file));
+    }
+  }
+  return out;
+})();
 
 function present(v: unknown): boolean {
   return v !== undefined && v !== false && !(Array.isArray(v) && v.length === 0);
@@ -126,6 +171,9 @@ function keysOf(prefix: string, o: object): string[] {
 /** Every classified field and hazard kind a room uses. */
 function featuresOf(room: Room): Set<string> {
   const out = new Set(keysOf('room', room));
+  if (KEYED.has(`human.${room.human}`)) out.add(`human.${room.human}`);
+  const id = ROOM_ID_OF.get(room);
+  if (id && KEYED.has(`roomid.${id}`)) out.add(`roomid.${id}`);
   const route = room.interior;
   if (route) {
     for (const k of keysOf('interior', route)) out.add(k);
@@ -147,6 +195,11 @@ describe('a new mechanic is taught before it is needed', () => {
     const found = new Set(ROOM_ENTRIES.flatMap(([, r]) => [...featuresOf(r)]));
     const open = [...found].filter(f => !registered(f) && !(f in NOT_A_MECHANIC)).sort();
     expect(open, 'add each to MECHANICS (with its teaching level and strings) or NOT_A_MECHANIC').toEqual([]);
+  });
+
+  it('finds the sleeper-keyed runtime behaviour (the scan still works)', () => {
+    expect(RUNTIME, 'the runtime is scanned').toContain('abduct/simulation.ts');
+    expect([...(KEYED.get('human.rodney') ?? [])], "Rodney's retreat is keyed in the runtime").toContain('abduct/simulation.ts');
   });
 
   it('keeps the lists apart and every mechanic in use', () => {
