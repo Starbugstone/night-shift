@@ -1289,7 +1289,7 @@ export const en = {
           default: ['Two specimens. Twice the paperwork, none of the excuses.'],
         },
         3: {
-          perfect: ['Three specimens, no sightings, home before dawn. I have nothing to complain about and I resent it.'],
+          perfect: ['Three specimens, no sightings, not a second wasted. I have nothing to complain about and I resent it.'],
           spotted: ['All three delivered, and spotted {times}. The local paper ran a special edition. You are on page one.'],
           failed: ['All three, eventually. After {failed} retries. Persistence is a virtue. Efficiency is a bigger one.'],
           default: ['Three specimens. Adequate. My favourite word, as you know.'],

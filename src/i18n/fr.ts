@@ -1250,7 +1250,7 @@ export const fr: Strings = {
           default: ['Deux spécimens. Deux fois plus de paperasse, zéro excuse.'],
         },
         3: {
-          perfect: ["Trois spécimens, zéro témoin, rentré avant l'aube. Je n'ai rien à redire et je vous en veux."],
+          perfect: ["Trois spécimens, zéro témoin, pas une seconde perdue. Je n'ai rien à redire et je vous en veux."],
           spotted: ['Les trois livrés, et repéré {times}. Le journal local a sorti une édition spéciale. Vous faites la une.'],
           failed: ["Les trois, finalement. Après {failed} essais. La persévérance est une vertu. L'efficacité en est une plus grande."],
           default: ['Trois spécimens. Correct. Mon mot préféré, vous le savez.'],

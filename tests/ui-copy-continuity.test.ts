@@ -38,6 +38,7 @@ import { formatOrderNumber, isDeep, LEVELS, workOrderNumber } from '../src/level
 import { isLevelUnlocked, RANKS, type RunOutcome } from '../src/levels/progress';
 import { clockFace, DeepRun, endsAtSunrise } from '../src/levels/run';
 import { photoClock, photoStampFor } from '../src/flight/spotted';
+import { deepComment } from '../src/levels/humor';
 import { defaultSave, type LevelId } from '../src/levels/save';
 import type { DeepLevelDef } from '../src/levels/types';
 import type { Shell } from '../src/core/shell';
@@ -273,6 +274,32 @@ describe('2. sunrise and dawn only where the deadline is dawn', () => {
   // bar, "0:55 AM" stamped on a countdown. Each level's clock comes from its data (clockMode).
   it('clockMode matches the hours: sunrise levels run to 6:00, the others have no dawn', () => {
     for (const lv of LEVELS) if (isDeep(lv)) expect(endsAtSunrise(lv), lv.id).toBe(dawnDeadline(lv.id));
+  });
+
+  // v0.2: the three-specimen "home before dawn" report line reached 2199's demolition shift.
+  it('report comments for levels without a dawn deadline never mention sunrise or dawn', () => {
+    const wrong = new Set<string>();
+    for (const lang of LANGS) {
+      setLang(lang);
+      for (const lv of LEVELS) {
+        if (!isDeep(lv) || dawnDeadline(lv.id)) continue;
+        const shapes = [
+          { stars: 3, spotted: 0, failed: 0, remaining: 60 },
+          { stars: 2, spotted: 0, failed: 0, remaining: 60 },
+          { stars: 1, spotted: 4, failed: 0, remaining: 60 },
+          { stars: 1, spotted: 1, failed: 3, remaining: 60 },
+          { stars: 1, spotted: 1, failed: 1, remaining: 10 },
+          { stars: 1, spotted: 1, failed: 1, remaining: 60 },
+        ];
+        for (const shape of shapes) {
+          for (let rotation = 0; rotation < 24; rotation++) {
+            const line = deepComment({ levelId: lv.id, bonks: 0, order: [], ...shape }, rotation);
+            if (DAWN_WORDS[lang].test(line)) wrong.add(`${lang} ${lv.id}: ${line}`);
+          }
+        }
+      }
+    }
+    expect([...wrong]).toEqual([]);
   });
 
   it('the retry screen shows a sun only when the deadline is sunrise', () => {
