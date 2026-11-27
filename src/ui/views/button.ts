@@ -62,7 +62,7 @@ export class ButtonView extends Container {
       fg = '#a09bc4';
     }
     const r = Math.min(22, h / 2);
-    this.body.draw(keyOf(x, y, w, h, KINDS[b.kind], b.enabled ? 1 : 0), (g) => {
+    if (this.body.stale(keyOf(x, y, w, h, KINDS[b.kind], b.enabled ? 1 : 0))) this.body.redraw((g) => {
       panelPath(g, x, y, w, h, { fill, r, stroke, lineW: 4, shadow: b.kind === 'ghost' ? 0 : 6 - push });
       if (b.kind === 'primary' && b.enabled) roundRect(g, x + 10, y + 6, w - 20, h * 0.28, h * 0.14).fill('rgba(255,255,255,0.28)');
     });
@@ -76,7 +76,7 @@ export class ButtonView extends Container {
     const f = b.flashLevel;
     this.flash.visible = f > 0;
     if (f > 0) {
-      this.flash.draw(keyOf(x, y, w, h), (g) => roundRect(g, x, y, w, h, r).fill('#ffffff'));
+      if (this.flash.stale(keyOf(x, y, w, h))) this.flash.redraw((g) => roundRect(g, x, y, w, h, r).fill('#ffffff'));
       this.flash.alpha = f * 0.35;
     }
   }

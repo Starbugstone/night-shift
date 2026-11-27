@@ -267,13 +267,13 @@ export class PhotographerView {
     if (iris) {
       this.brackets.alpha = 0.75 + 0.25 * k;
       const r = this.diagonal * (1 - k) + 6;
-      this.iris.draw(keyOf(r), (g) => g.circle(0, 0, r).stroke({ color: C.amber, width: 2.5, alpha: 0.55 }));
+      if (this.iris.stale(keyOf(r))) this.iris.redraw((g) => g.circle(0, 0, r).stroke({ color: C.amber, width: 2.5, alpha: 0.55 }));
       this.blades.visible = !rm;
       this.blades.rotation = k * 1.4;
       this.blades.scale.set(r / 100);
       const dx = d.x - fx;
       const dy = d.y - fy;
-      this.sight.draw(keyOf(dx, dy), (g) => dashedLine(g, dx, dy, 0, 0, 4, 10)
+      if (this.sight.stale(keyOf(dx, dy))) this.sight.redraw((g) => dashedLine(g, dx, dy, 0, 0, 4, 10)
         .stroke({ color: C.amber, width: 1.5, alpha: 0.5 }));
     } else {
       const e = (tau - PHOTO.iris) / PHOTO.expose;

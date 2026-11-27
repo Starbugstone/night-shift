@@ -42,23 +42,42 @@ export class Shape extends Graphics {
    */
   canGoSolo = true;
   private key: number | string | undefined;
+  /** The key `stale()` last reported as new: `redraw` builds for it. */
+  private pending: number | string | undefined;
   /** Clock at the last redraw and the one before it. */
   private last = -Infinity;
   private before = -Infinity;
   private solo = false;
 
-  draw(key: number | string, build: (g: Graphics) => void): this {
-    if (key === this.key) {
-      // settled: back into the batch (one rebuild now saves a draw call every frame after)
-      if (this.solo && clock - this.last > QUIET_MS) {
-        this.solo = false;
-        this.context.batchMode = 'auto';
-        // same geometry, but Pixi must rebuild the gpu context to see the new batch mode
-        (this.context as unknown as { onUpdate(): void }).onUpdate();
-      }
-      return this;
+  /**
+   * True when `draw(key, …)` would rebuild; `redraw(build)` then rebuilds for that key. A view that draws every
+   * frame asks first, so its build closure is only made when the geometry changes (v0.2 council R2: no per-frame
+   * closures, tests/shell-hot-alloc.test.ts):
+   *
+   *   if (this.bar.stale(keyOf(fillW))) this.bar.redraw((g) => g.roundRect(0, 0, fillW, 18, 9).fill(C.mint));
+   */
+  stale(key: number | string): boolean {
+    if (key !== this.key) {
+      this.pending = key;
+      return true;
     }
-    this.key = key;
+    // settled: back into the batch (one rebuild now saves a draw call every frame after)
+    if (this.solo && clock - this.last > QUIET_MS) {
+      this.solo = false;
+      this.context.batchMode = 'auto';
+      // same geometry, but Pixi must rebuild the gpu context to see the new batch mode
+      (this.context as unknown as { onUpdate(): void }).onUpdate();
+    }
+    return false;
+  }
+
+  draw(key: number | string, build: (g: Graphics) => void): this {
+    return this.stale(key) ? this.redraw(build) : this;
+  }
+
+  /** Rebuild for the key the last `stale()` call reported as new. */
+  redraw(build: (g: Graphics) => void): this {
+    this.key = this.pending;
     this.clear();
     build(this);
     // When a batched Graphics changes geometry, Pixi rebuilds every batch of its render group on the

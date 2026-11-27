@@ -32,7 +32,8 @@ export type Hazard =
   | BoneToss
   | { kind: 'swing'; name: string; sprite: Sprite; amplitude: number; speed: number; phase: number; mountY?: number }
   | { kind: 'fan'; name: string; x: number; y: number; length: number; speed: number; phase: number; duct: boolean; mountY?: number }
-  | { kind: 'laser'; name: string; area: Area; cycle: Cycle; mountY?: number; skin?: 'invasion' }
+  /** `skin: 'staff'` (v0.2 council R2): the L10 enchanter's staff sparks; the sleeper snores on their charge. */
+  | { kind: 'laser'; name: string; area: Area; cycle: Cycle; mountY?: number; skin?: 'invasion' | 'staff' }
   | { kind: 'gate'; name: string; artKey?: string; area: Area; axis: 'x' | 'y'; cycle: Cycle; hinged?: boolean; dialX?: number }
   | { kind: 'patrol'; name: string; sprite: Sprite; dx: number; dy: number; speed: number; phase: number; barks?: boolean }
   | { kind: 'pop'; name: string; area: Area; cycle: Cycle; artKey?: string }
@@ -50,6 +51,8 @@ export type Hazard =
 
 export interface Sleeper {
   name: string;
+  /** A dog: wakes with a bark, not a scream (v0.2 council R2: by data, not by the name 'Biscuit'). */
+  barks?: boolean;
   asleep: Sprite;
   awake: Sprite;
   radius: number;

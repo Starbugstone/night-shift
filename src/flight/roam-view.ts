@@ -46,9 +46,9 @@ export class RoamView {
   private readonly arc = new ProgressArc(RING_R + 4, 7);
   private readonly ring = batched(new Graphics()).circle(0, 0, RING_R).stroke({ color: C.mint, width: 3 });
 
-  constructor(assets: Assets, private readonly ape: RoamingApe, troopName: string) {
-    this.body = troopPose(assets, 'flight/ape_roaming', troopName === 'Reed');
-    this.lifted = troopPose(assets, 'flight/ape_beamed', troopName === 'Reed');
+  constructor(assets: Assets, private readonly ape: RoamingApe, troopName: string, light: boolean) {
+    this.body = troopPose(assets, 'flight/ape_roaming', light);
+    this.lifted = troopPose(assets, 'flight/ape_beamed', light);
     const badge = new Label({ size: 15, weight: 800, color: C.mint, outline: C.ink });
     this.root.addChild(this.ring, this.body, this.lifted, this.arc.root, badge.set(gt(troopName), 0, RING_R + 12));
   }

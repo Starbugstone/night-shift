@@ -3,6 +3,8 @@ import { LOCK, RING_R } from './sim';
 
 export interface RoamingTroop {
   quota: number;
+  /** Lighter fur, matching the troop's HUD chip (Reed's troop). Round 3: by data, not by the troop's name. */
+  fur?: 'light';
   trails: readonly { home: Vec2; lookout: Vec2 }[];
 }
 

@@ -6,6 +6,9 @@ import type { Checkpoint, Hazard } from './rooms/interior';
  */
 export const DISPATCH_CROSSING_ART = { cart: 'baggage_cart2199', stamp: 'stamp_weight2199', rail: 'shower_rail2199' } as const;
 
+/** The souvenir that sits in the returns tray (its room view labels the tray). Round 3: by art key, not its English name. */
+export const COMPLAINT_STAMP_ART = 'complaint_stamp2199';
+
 /** The trailing feet reach the moving fixture just after the beam crosses its track. */
 export function dispatchCrossing(spec: Hazard, from: Checkpoint, to: Checkpoint, time: number, speed: number): boolean | undefined {
   const key = 'sprite' in spec ? spec.sprite.key : '';

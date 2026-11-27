@@ -1,4 +1,4 @@
-import { DISPATCH_CROSSING_ART } from '../dispatch-crossing';
+import { COMPLAINT_STAMP_ART, DISPATCH_CROSSING_ART } from '../dispatch-crossing';
 import { GATE_TRAVEL } from '../interior';
 import { en } from '../../i18n/en';
 import { building, type Checkpoint, type Hazard, type InteriorRoom, type Opening } from './interior';
@@ -84,7 +84,7 @@ export const ROOMS_2199 = {
   moe_returns: room('moe_returns', 'moe', false, fit('counter_tall55', 349, 390, 236, 230), [
     { kind: 'patrol', name: 'Stamp counterweight', sprite: fit(DISPATCH_CROSSING_ART.stamp, 2730, 290, 83, 99), dx: 0, dy: 95, speed: 0.31, phase: 0.8 },
   ], [...sideApproach(455, 277, 232), step(2380, 250, 60), step(2385, 242), step(2604, 254, 115),
-    step(2650, 250), step(2851, 278, 110, 'Stamp counterweight'), ...outerDoor], 'complaint_stamp2199', 'complaint stamp', 455, 394),
+    step(2650, 250), step(2851, 278, 110, 'Stamp counterweight'), ...outerDoor], COMPLAINT_STAMP_ART, 'complaint stamp', 455, 394),
   moe_vent: room('moe_vent', 'moe', true, cabinet('voice_cabinet_tall2199'), [
     { kind: 'fan', name: 'Duct fan', x: 693, y: -2625, length: 79, speed: 0.17, phase: 2.1, duct: true },
   ], [...upperSteps(565, shaftRise.moe), step(550, -2538), step(558, -2773, 125, 'Duct fan'), step(588, -2955)], 'answer_display2199', 'answer display', 413, 395),

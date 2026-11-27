@@ -43,7 +43,7 @@ run at the end of this page.
 
 | Problem | Rule | Guard | Command |
 |---|---|---|---|
-| A cue repeating like an ambient loop | No sfx more than 16 times in any minute of a room's autopilot or idle run, or of a flight parked or flown; timed cues play only when they matter; every cue honours its volume argument. | `tests/audio-repeats.test.ts`, `tests/audio-sound-rules.test.ts` | `npm test` |
+| A cue repeating like an ambient loop | No sfx more than 16 times in any minute of a room's autopilot, idle or casual human-model run, or of a flight parked or flown; timed cues play only when they matter; the camera `alert` plays only while a camera watches; every cue honours its volume argument. | `tests/audio-repeats.test.ts`, `tests/audio-sound-rules.test.ts` | `npm test` |
 | Beam whoosh and snore all through a room | The beam sounds once after a rest; only the first and every twelfth snore is heard, quietly. | `tests/abduct-beam-cue.test.ts` | `npm test` |
 
 ## Reading time
@@ -79,6 +79,9 @@ run at the end of this page.
 | An exit sign off screen | Every interior room's exit tag stays inside the view wherever the exit shows, EN and FR. | `tests/abduct-exit-tag.test.ts` | `npm test` |
 | A route pill over a cable | Route pills keep off every solid line on screen (wires, bunting, survey cables, crane booms) as drawn. A new solid hazard returns its segment from `HazardField.solidLine`. | `tests/flight-pill-lines.test.ts` | `npm test` |
 | Behaviour keyed on display text | Find a prop, a route or a hazard by an id, an art key or a shared constant, never by comparing with English text (it is a translation key too). | `tests/shell-display-strings.test.ts` | `npm test` |
+| Behaviour keyed on a hazard's place in its list | Find a hazard by a data field (a skin, an art key), never `hazards[0]` or `cause === 0`; reordering a room's hazards or a map's detectors changes nothing. | `tests/shell-data-couplings.test.ts` | `npm test` |
+| A route pill over a detector edge | Route pills draw in the `ROUTE_PILLS` layer under every `DETECTOR_TELLS` layer; a new detector view adds its tells to the view's detector layer. | `tests/flight-pill-edges.test.ts` | `npm test` |
+| A view that allocates every frame | `sync()` paths allocate nothing: `if (shape.stale(key)) shape.redraw(…)`, helpers fill an `out` object. | `tests/shell-hot-alloc.test.ts` | `npm test` |
 | A souvenir, specimen or town pickup with no trophy slot | Every room item, swap, specimen and town pickup has its slot and EN+FR text; each level after L1 has one pickup hinted in its memo. | `tests/ui-trophies*.test.ts`, `tests/ui-trophies-specimens.test.ts`, `tests/flight-collectible*.test.ts`, `tests/ui-trophies-hunt-star.test.ts` | `npm test` |
 
 ## Save and release

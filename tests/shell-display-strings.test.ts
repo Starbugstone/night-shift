@@ -13,12 +13,7 @@ import { en } from '../src/i18n/en';
 const SOURCES = import.meta.glob(['../src/**/*.ts', '!../src/i18n/**'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 
 /** Matches from before the rule, by file and literal, with the count. Only shrinks. */
-const PENDING: Readonly<Record<string, Readonly<Record<string, number>>>> = {
-  'abduct/deep-view.ts': { 'complaint stamp': 1 },
-  'abduct/interior.ts': { Biscuit: 1 },
-  'abduct/views/hazards.ts': { 'Sleep-sparks': 1 },
-  'flight/roam-view.ts': { Reed: 2 },
-};
+const PENDING: Readonly<Record<string, Readonly<Record<string, number>>>> = {};
 
 /** Text a player reads: a capital letter or a space, and not a camelCase code key like `timeCarCaught`. */
 const isDisplay = (s: string): boolean => s.length >= 3 && /[A-Z ]/.test(s) && !/^[a-z][A-Za-z0-9_]*$/.test(s);

@@ -144,7 +144,7 @@ export class ProgressArc {
   sync(fraction: number): void {
     this.root.visible = fraction > 0;
     if (!this.root.visible) return;
-    this.line.draw(keyOf(fraction * 360), (g) => {
+    if (this.line.stale(keyOf(fraction * 360))) this.line.redraw((g) => {
       arc(g, this.r, -Math.PI / 2, -Math.PI / 2 + TAU * Math.min(1, fraction))
         .stroke({ color: this.color, width: this.width, cap: 'round' });
     });

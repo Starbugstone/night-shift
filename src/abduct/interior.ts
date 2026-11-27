@@ -130,6 +130,8 @@ export class InteriorSimulation {
   failure: InteriorFailure | undefined;
   /** L6 clinic code: Form 7-B probe drones, when the route has any. */
   readonly probes: ProbeSim | undefined;
+  /** v0.2 council R2: the enchanter's staff sparks (a laser with `skin: 'staff'`), found by data, not by index. */
+  readonly staffSpark: HazardState | undefined;
 
   private readonly namedHazards = new Map<string, HazardState>();
   private x: number;
@@ -148,6 +150,7 @@ export class InteriorSimulation {
     this.probes = probes && probes.length > 0 ? new ProbeSim(probes, audio) : undefined;
     this.hazards = building.hazards.map(spec => new HazardState(spec, building));
     this.sleepers = building.sleepers.map(spec => new SleeperState(spec));
+    this.staffSpark = this.hazards.find(h => h.spec.kind === 'laser' && h.spec.skin === 'staff');
     for (const state of this.hazards) {
       this.namedHazards.set(state.spec.name, state);
       if (state.spec.kind !== 'laser' && state.shapes.length > 0) {
@@ -384,7 +387,7 @@ export class InteriorSimulation {
       if (falloff === 0) continue;
       sleeper.pulse = Math.max(sleeper.pulse, Math.min(1, power * falloff / 29));
       sleeper.wake = Math.min(100, sleeper.wake + power * falloff * (this.hush ? 0.75 : 1));
-      if (sleeper.wake === 100) this.trip('sleeper', sleeper.spec.name);
+      if (sleeper.wake === 100) this.trip('sleeper', sleeper.spec.name, sleeper.spec.barks);
     }
   }
 
@@ -447,11 +450,11 @@ export class InteriorSimulation {
     return true;
   }
 
-  private trip(reason: InteriorFailure['reason'], by: string): void {
+  private trip(reason: InteriorFailure['reason'], by: string, barks = false): void {
     if (this.failure) return;
     this.failure = { reason, by };
     if (reason === 'alarm') this.audio.sfx('alarm');
-    else this.audio.sfx(by === 'Biscuit' ? 'bark' : 'scream');
+    else this.audio.sfx(barks ? 'bark' : 'scream');
   }
 }
 

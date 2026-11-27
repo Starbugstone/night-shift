@@ -190,7 +190,7 @@ const barbHome = building([
   fragile('Dinner plates', art('plate_stack', 1176, 516)),
   patrol('Kitchen vacuum', art('robot_vacuum', 878, 662), 56, 0, 1.7),
   gate('Swinging back door', box(2158, 368, 32, 318), 'y', 7, 3.7, 0.7, true),
-], [sleeper('Biscuit', 1710, 686, 380)]);
+], [{ ...sleeper('Biscuit', 1710, 686, 380), barks: true }]);
 
 export const barbChimney = route(barbHome, 'barb', 'CHIMNEY', EXITS.barbChimney,
   box(-68, -1614, 92, 70), [

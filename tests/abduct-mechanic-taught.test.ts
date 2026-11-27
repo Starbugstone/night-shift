@@ -129,7 +129,6 @@ const NOT_A_MECHANIC: Readonly<Record<string, string>> = {
   'section.mounts': 'hung props', 'section.wallOnly': 'draws the backdrop without a floor strip',
   // v0.2 teaching: sleeper-keyed runtime behaviour that changes nothing the player must do
   'human.black_knight': 'armour plates drop off on bonks and he quips; wake and bonks work as for anyone',
-  'human.tom_enchanter': "snores on the spark's charge: a sound cue for the spark hazard, classified on its own",
   'human.forester': 'his clock ticks faster as wake rises: a sound cue on the wake meter',
   'human.van_bell': 'screams one line at half wake: speech only',
   'human.collier': 'bonk lines: speech only',

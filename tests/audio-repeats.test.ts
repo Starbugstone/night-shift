@@ -1,6 +1,9 @@
 // v0.2 sound repeats (council item 5, 2026-11-27): no cue may repeat like an ambient loop. Every room in ROOMS
 // (an autopilot run and an idle run) and every flight level in LEVELS (parked at the launch, then flown along a
 // route) is played headlessly with a recording audio. Each sfx name is capped per 60 s window.
+// v0.2 council round 2 (Fable item 5): the perfect autopilot rarely wakes anyone, so wake-driven cues (the Geiger
+// tick, alarms, screams) were never heard by this guard. Every room is also played by the casual human model of
+// the difficulty evaluator (tests/difficulty/human.ts, through the live touch path), under the same cap.
 import { describe, expect, it } from 'vitest';
 import type { Audio, GameContext, PointerState, RoomId, SfxName } from '../src/contracts';
 import { GEIGER, WitnessReactions } from '../src/abduct/invasion1953';
@@ -11,6 +14,7 @@ import { FlightScene } from '../src/flight/scene';
 import { isDeep, LEVELS, workOrderNumber } from '../src/levels/levels';
 import { DeepRun } from '../src/levels/run';
 import type { DeepLevelDef, TutorialLevelDef } from '../src/levels/types';
+import { playAbduction, PROFILES, simulationHost, type RoomSetup } from './difficulty/human';
 
 declare const process: { stdout: { write(s: string): void } };
 const DT = 1 / 60;
@@ -58,6 +62,40 @@ function roomRun(id: RoomId, drive: boolean, limit: number): Recorder {
     sim.update(DT);
   }
   return audio;
+}
+
+/**
+ * Cues that answer the player being seen right now, with the room state that proves it. A casual hand that
+ * keeps straying into a camera hears the camera's fuse tick each time: that is the hazard tell, not a loop, so
+ * these are exempt from the count cap in casual runs, and instead every play must happen while it is true.
+ * (Round 3: gary_garagedoor casual seed 1 strays into the garage camera every 2.2 s for 160 s, 81 ticks a
+ * minute, each one while the camera watches.)
+ */
+const SEEN_TELLS: Partial<Record<SfxName, (sim: AbductSimulation) => boolean>> = {
+  alert: sim => !!sim.interior?.watching,
+};
+
+/** The casual human model plays the room (seed `seed`), heard by a recorder on the room's own clock. */
+function casualRun(id: RoomId, seed: number): { audio: Recorder; delivered: boolean; peakWake: number; dishonest: string[] } {
+  const audio = new Recorder();
+  const dishonest: string[] = [];
+  const host = (setup: RoomSetup) => {
+    const stage = simulationHost({
+      ...setup,
+      audio: {
+        sfx(name: string, volume?: number) {
+          setup.audio.sfx(name);
+          audio.t = stage.sim.elapsed;
+          audio.sfx(name as SfxName, volume);
+          const seen = SEEN_TELLS[name as SfxName];
+          if (seen && !seen(stage.sim)) dishonest.push(`${name} at ${stage.sim.elapsed.toFixed(2)} s with nothing watching`);
+        },
+      } as RoomSetup['audio'],
+    });
+    return stage;
+  };
+  const run = playAbduction(id, PROFILES.casual, seed, undefined, undefined, 'exit', host);
+  return { audio, delivered: run.delivered, peakWake: run.peakWake, dishonest };
 }
 
 function context(audio: Audio): GameContext {
@@ -160,6 +198,13 @@ describe('no cue repeats like an ambient loop', () => {
     const idle = roomRun(id, false, 120);
     process.stdout.write(`[room ${id}] auto ${fmt(auto.peaks())} | idle ${fmt(idle.peaks())}\n`);
     expect({ auto: over(auto.peaks()), idle: over(idle.peaks()) }).toEqual({ auto: [], idle: [] });
+  }, 60_000);
+
+  it.each(Object.keys(ROOMS) as RoomId[])('room %s: casual human-model run', (id) => {
+    const casual = casualRun(id, 1);
+    process.stdout.write(`[casual ${id}] ${casual.delivered ? 'delivered' : 'failed'} wake ${casual.peakWake} ${fmt(casual.audio.peaks())}\n`);
+    const seen = new Set(Object.keys(SEEN_TELLS) as SfxName[]);
+    expect({ over: over(casual.audio.peaks(), seen), dishonest: casual.dishonest.slice(0, 3) }).toEqual({ over: [], dishonest: [] });
   }, 60_000);
 
   it.each(LEVELS.map(l => l.id))('flight %s: parked at the launch for 60 s, then flown', (id) => {

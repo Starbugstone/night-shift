@@ -469,8 +469,10 @@ export class AbductSimulation {
       if (contains(cue.room, this.body.chestX, this.body.chestY)) this.sleepTalk(cue.line);
     }
 
-    const charge = this.room.human === 'tom_enchanter' && !!interior?.hazards[0]?.tell;
-    const snore = this.room.human === 'tom_enchanter' ? charge && !this.sparkCharge : this.elapsed >= this.nextSnore;
+    // v0.2 council R2: the staff sparks are found by their skin, so reordering a room's hazards can't move the cue
+    const spark = interior?.staffSpark;
+    const charge = !!spark?.tell;
+    const snore = spark ? charge && !this.sparkCharge : this.elapsed >= this.nextSnore;
     this.sparkCharge = charge;
     if (this.wake.awake === 0 && snore) {
       this.snores++;

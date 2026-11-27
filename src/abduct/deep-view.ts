@@ -12,7 +12,8 @@ import { HudButton, HudMeter, HudPanel, HudPrompt, HudTimer, HUD_ROW, type Meter
 import { HumanArt, RESTART, type SpecimenArt } from './draw';
 import { DolphinArt } from './dolphin-art';
 import { inside } from './interior';
-import { EXIT_TAG, exitTagBox } from './exit-tag'; // v0.2 follow-up
+import { COMPLAINT_STAMP_ART } from './dispatch-crossing';
+import { EXIT_TAG, exitTagBox, type TagBox } from './exit-tag'; // v0.2 follow-up
 import { ProbePaperwork } from './probe-draw';
 import { clamp, Joint } from './ragdoll';
 import type { Building, InteriorRoom, Opening } from './rooms/interior';
@@ -230,6 +231,8 @@ class DeepExit {
   private readonly tagPanel = new HudPanel();
   private readonly tagLabel = new Label({ size: EXIT_TAG.size, weight: EXIT_TAG.weight, color: MINT });
   private readonly tagTextW: number;
+  /** Reused every frame by placeTag (no per-frame box). */
+  private readonly tag: TagBox = { x: 0, y: 0, w: 0, h: 0 };
 
   constructor(private readonly sim: AbductSimulation, ctx: GameContext, private readonly paperwork?: ProbePaperwork) {
     const { room, exitX, exitY } = sim;
@@ -272,7 +275,7 @@ class DeepExit {
   }
 
   private placeTag(cx: number, cy: number): void {
-    const tag = exitTagBox(this.sim.room, this.sim.exitX, this.tagTextW, cx, cy);
+    const tag = exitTagBox(this.sim.room, this.sim.exitX, this.tagTextW, cx, cy, this.tag);
     this.tagPanel.position.set(tag.x, tag.y);
     this.tagLabel.position.set(tag.x + tag.w / 2, tag.y + tag.h / 2);
   }
@@ -466,7 +469,7 @@ export class DeepAbductView implements SceneView {
 
     const world = this.world;
     world.addChild(this.building.root, this.exit.root);
-    if (sim.room.item.name === 'complaint stamp') world.addChild(new Label({ size: 13, color: '#ffe3bb', weight: 700 })
+    if (sim.room.item.sprite.key === `room/${COMPLAINT_STAMP_ART}`) world.addChild(new Label({ size: 13, color: '#ffe3bb', weight: 700 })
       .set(tr().dispatch2199.tray, 473, 460, 210));
     if (this.crestValley) world.addChild(this.crestValley.back);
     if (this.birch) world.addChild(this.birch.root);
@@ -484,7 +487,7 @@ export class DeepAbductView implements SceneView {
     world.addChild(this.beam.root);
     if (this.wet) world.addChild(this.wet.back);
     world.addChild(this.sparkle.root, this.item, this.subject);
-    if (sim.room.human === 'tom_enchanter') {
+    if (sim.interior?.staffSpark) {
       this.staff = new EnchanterStaffView();
       world.addChild(this.staff.root);
     }
@@ -526,7 +529,7 @@ export class DeepAbductView implements SceneView {
     this.night.sync(cx, cy, deepShift.dawn);
     this.building.sync(cx, cy, t, rm, deepShift.dawn);
     this.building.scan(body.x, body.y);
-    this.staff?.sync(body, !!sim.interior?.hazards[0]?.tell, !!sim.failure || sim.delivered);
+    this.staff?.sync(body, !!sim.interior?.staffSpark?.tell, !!sim.failure || sim.delivered);
     this.grail?.sync(body, sim.elapsed, rm, !!sim.failure || sim.delivered);
     this.crestValley?.sync(deepShift.elapsed ?? t, rm);
     this.birch?.sync(rm);

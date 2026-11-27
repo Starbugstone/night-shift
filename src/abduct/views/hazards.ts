@@ -527,7 +527,7 @@ class LaserView implements HazardView {
       const ey = i === 0 ? this.nearY : this.farY;
       emitter.position.set(ex, ey);
       emitter.rotation = vertical ? (i === 0 ? Math.PI / 2 : -Math.PI / 2) : i * Math.PI;
-      if (spec.name === 'Sleep-sparks') {
+      if (spec.skin === 'staff') {
         emitter.rotation = 0;
         emitter.addChild(new Graphics().moveTo(0, 0).lineTo(0, 48).moveTo(-13, 57).lineTo(0, 41).lineTo(13, 57)
           .stroke({ color: '#936d53', width: 6 }).roundRect(-5, -2, 10, 16, 3).fill('#ffe7ad')

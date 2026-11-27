@@ -77,8 +77,12 @@ class TitleView implements SceneView {
 2. **Build once, sync properties.** Make every display object in the view constructor. `sync()` only
    sets `position`, `rotation`, `scale`, `alpha`, `tint`, `visible`, `texture` and text. Create no
    objects in `sync()`: no `new`, no object or array literals, and no string building you can avoid
-   (cache strings, as the old code did). The one accepted exception is the small build callback
-   passed to `Shape.draw` (it only runs when the key changes).
+   (cache strings, as the old code did). A shape that redraws in `sync()` asks first, so its build
+   callback is only made when the key changes: `if (shape.stale(key)) shape.redraw((g) => …)`. Pass a
+   helper your own `out` object instead of having it return a new one. Work done only on a change
+   (`if (text !== this.last)`, `if (!cached)`) may allocate. `tests/shell-hot-alloc.test.ts` follows
+   every view's `sync`/`update`/`tick` (and the methods and view-file functions they call) and fails
+   on any other allocation (v0.2 council R3).
 3. **Toggle, don't rebuild.** Use `visible` for things that come and go, and pools for repeated
    things (one sprite per slot, made up front). Each real change of `visible` makes Pixi rebuild
    every batch of the render group on the next render, so set it once per frame to its final value
@@ -101,7 +105,9 @@ class TitleView implements SceneView {
 6. **Clips** become masks (`container.mask = graphics`). Axis-aligned rectangles are cheap (scissor).
 7. **Honest tells.** Detection cones, fuse rings, bark rings and neon on/off must keep the exact
    geometry and timing the sim uses. Decorate them, don't move them. Keep the colour language:
-   mint = you and your goals, amber = about to happen, red = it has you now.
+   mint = you and your goals, amber = about to happen, red = it has you now. Nothing that can sit
+   on a tell is drawn over it: route pills live in the `ROUTE_PILLS` layer under every
+   `DETECTOR_TELLS` layer (`tests/flight-pill-edges.test.ts`).
 8. **Reduced motion.** Keep every `reducedMotion` branch.
 9. **Missing art.** Every art sprite has a primitive fallback.
 10. **Composition over inheritance.** Views own a `root` container. If you do subclass a Pixi

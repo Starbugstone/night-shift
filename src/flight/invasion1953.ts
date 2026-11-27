@@ -1,4 +1,4 @@
-import type { CameraHazard } from './hazards';
+import type { CameraHazard, HazardField } from './hazards';
 
 export const DRIVE_IN_PROJECTOR = {
   type: 'camera', skin: 'invasion_projector_top', x: 900, y: 1460,
@@ -10,6 +10,15 @@ export const TRIPOD_SNEEZE = {
   range: 640, half: 0.47, base: -2.25, amp: 0, rate: 0, phase: 0,
   burst: { period: 5.5, warning: 1.2, live: 1.32 },
 } satisfies CameraHazard;
+
+/**
+ * The drive-in projector is what sees the saucer (`cause` is the detecting hazard's index, -1 for none). Round 3:
+ * found by its skin, so a reordered hazard list can't hand the applause to another detector.
+ */
+export function projectorSees(field: Pick<HazardField, 'defs'>, cause: number): boolean {
+  const def = cause >= 0 ? field.defs[cause] : undefined;
+  return def?.type === 'camera' && def.skin === DRIVE_IN_PROJECTOR.skin;
+}
 
 export const greetedPilotQueues = new WeakSet<object>();
 

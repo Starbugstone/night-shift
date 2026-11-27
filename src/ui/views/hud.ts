@@ -119,9 +119,8 @@ export class HudMeter extends Container {
     this.alarm.visible = !isEye && m.alarm;
     if (isEye) {
       const lid = 2 + 8 * open;
-      this.eye.draw(keyOf(lid, cy), (g) =>
-        g.moveTo(19, cy).quadraticCurveTo(30, cy - lid * 1.5, 41, cy).quadraticCurveTo(30, cy + lid * 1.5, 19, cy).stroke({ color: '#ffffff', width: 2.6, cap: 'round' }),
-      );
+      if (this.eye.stale(keyOf(lid, cy))) this.eye.redraw((g) =>
+        g.moveTo(19, cy).quadraticCurveTo(30, cy - lid * 1.5, 41, cy).quadraticCurveTo(30, cy + lid * 1.5, 19, cy).stroke({ color: '#ffffff', width: 2.6, cap: 'round' }));
       paint(this.eye, tone);
       if (this.pupil.visible) {
         this.pupil.position.set(30, cy);
@@ -148,24 +147,23 @@ export class HudMeter extends Container {
     const by = 32;
     const bw = w - 72;
     const bh = 18;
-    this.track.draw(keyOf(bw), (g) => roundRect(g, bx, by, bw, bh, bh / 2).fill(TRACK));
+    if (this.track.stale(keyOf(bw))) this.track.redraw((g) => roundRect(g, bx, by, bw, bh, bh / 2).fill(TRACK));
     const v = m.value < 0 ? 0 : m.value > 1 ? 1 : m.value;
     const on = v > 0.005;
     this.bar.visible = on;
     this.gloss.visible = on;
     if (on) {
       const fw = Math.max(bh, bw * v);
-      this.bar.draw(keyOf(fw), (g) => roundRect(g, bx, by, fw, bh, bh / 2).fill('#ffffff'));
+      if (this.bar.stale(keyOf(fw))) this.bar.redraw((g) => roundRect(g, bx, by, fw, bh, bh / 2).fill('#ffffff'));
       paint(this.bar, hot ? (blink ? C.red : C.amber) : v >= m.warn ? C.amber : C.mint);
-      this.gloss.draw(keyOf(fw), (g) => roundRect(g, bx + 5, by + 3, fw - 10, 5, 2.5).fill('rgba(255,255,255,0.35)'));
+      if (this.gloss.stale(keyOf(fw))) this.gloss.redraw((g) => roundRect(g, bx + 5, by + 3, fw - 10, 5, 2.5).fill('rgba(255,255,255,0.35)'));
     }
     // threshold ticks
-    this.ticks.draw(keyOf(bw, m.warn * 1000, m.danger * 1000), (g) =>
-      g.rect(bx + bw * m.warn - 1, by + 3, 2, bh - 6).rect(bx + bw * m.danger - 1, by + 3, 2, bh - 6).fill('rgba(241,238,255,0.28)'),
-    );
+    if (this.ticks.stale(keyOf(bw, m.warn * 1000, m.danger * 1000))) this.ticks.redraw((g) =>
+      g.rect(bx + bw * m.warn - 1, by + 3, 2, bh - 6).rect(bx + bw * m.danger - 1, by + 3, 2, bh - 6).fill('rgba(241,238,255,0.28)'));
     this.flash.visible = m.flash > 0.01;
     if (this.flash.visible) {
-      this.flash.draw(keyOf(bw), (g) => roundRect(g, bx - 3, by - 3, bw + 6, bh + 6, bh / 2 + 3).fill('#ffffff'));
+      if (this.flash.stale(keyOf(bw))) this.flash.redraw((g) => roundRect(g, bx - 3, by - 3, bw + 6, bh + 6, bh / 2 + 3).fill('#ffffff'));
       this.flash.alpha = Math.min(1, m.flash) * 0.75;
     }
   }
@@ -346,7 +344,7 @@ export class HudPrompt extends Container {
     }
     const w = Math.min(maxW, this.textW + 86);
     const x = cx - w / 2;
-    this.pill.draw(keyOf(x, cy, w, h), (g) => {
+    if (this.pill.stale(keyOf(x, cy, w, h))) this.pill.redraw((g) => {
       roundRect(g, x, cy - h / 2 + 4, w, h, h / 2).fill('rgba(5,3,20,0.45)');
       roundRect(g, x, cy - h / 2, w, h, h / 2).fill(C.mint).stroke({ color: C.ink, width: 3 });
       roundRect(g, x + 14, cy - h / 2 + 6, w - 28, h * 0.22, h * 0.11).fill('rgba(255,255,255,0.3)');
@@ -453,7 +451,7 @@ export class HudFuse extends Container {
     // the whole chip floods red while something can see you
     this.flood.visible = f.exposed;
     if (f.exposed) {
-      this.flood.draw(keyOf(w, h), (g) => roundRect(g, 2, 2, w - 4, h - 4, R - 2).fill(C.red));
+      if (this.flood.stale(keyOf(w, h))) this.flood.redraw((g) => roundRect(g, 2, 2, w - 4, h - 4, R - 2).fill(C.red));
       this.flood.alpha = (f.reduced ? 0.3 : 0.2 + 0.2 * Math.abs(Math.sin(f.t * (8 + v * 14)))) * (0.5 + v * 0.5);
     }
 
@@ -461,7 +459,7 @@ export class HudFuse extends Container {
     const ex = 38;
     const ey = h / 2;
     const open = v < 0.02 ? 0 : 0.25 + 0.75 * v;
-    this.eyeBack.draw(keyOf(ey), (g) => g.ellipse(ex, ey, 27, 20).fill(TRACK));
+    if (this.eyeBack.stale(keyOf(ey))) this.eyeBack.redraw((g) => g.ellipse(ex, ey, 27, 20).fill(TRACK));
     const img = v > 0.55 ? this.eyeOpen : this.eyeClosed;
     const useImg = !!img && (v <= 0.02 || v > 0.55);
     this.eyeImg.visible = useImg;
@@ -480,11 +478,11 @@ export class HudFuse extends Container {
       const lid = 2 + 13 * open;
       const tone = v > 0.6 ? C.red : v > 0.02 ? C.amber : C.mint;
       const key = keyOf(lid * 4, ey);
-      this.lid.draw(key, (g) => almond(g, ex, ey, lid).stroke({ color: '#ffffff', width: 3, join: 'round' }));
+      if (this.lid.stale(key)) this.lid.redraw((g) => almond(g, ex, ey, lid).stroke({ color: '#ffffff', width: 3, join: 'round' }));
       paint(this.lid, tone);
-      if (this.lidFill.visible) this.lidFill.draw(key, (g) => almond(g, ex, ey, lid).fill('#f4efe2'));
+      if (this.lidFill.visible && this.lidFill.stale(key)) this.lidFill.redraw((g) => almond(g, ex, ey, lid).fill('#f4efe2'));
       if (this.irisBox.visible) {
-        this.irisMask.draw(key, (g) => almond(g, ex, ey, lid).fill('#ffffff'));
+        if (this.irisMask.stale(key)) this.irisMask.redraw((g) => almond(g, ex, ey, lid).fill('#ffffff'));
         this.iris.position.set(ex, ey);
         this.iris.scale.set(4 + 4 * open);
         this.iris.tint = v > 0.6 ? 0xff5d73 : 0x3a2a6a;
@@ -492,7 +490,7 @@ export class HudFuse extends Container {
         this.pupil.scale.set(2.2 + 1.6 * open);
       }
       if (this.lashes.visible) {
-        this.lashes.draw(keyOf(ey), (g) => {
+        if (this.lashes.stale(keyOf(ey))) this.lashes.redraw((g) => {
           for (let k = -1; k <= 1; k++) g.moveTo(ex + k * 9, ey + 3).lineTo(ex + k * 11, ey + 8);
           g.stroke({ color: '#ffffff', width: 2 });
         });
@@ -529,13 +527,13 @@ export class HudFuse extends Container {
     const by = 42;
     const bw = w - 94;
     const left = 1 - v;
-    this.cordBack.draw(keyOf(bw), (g) => g.moveTo(bx, by).lineTo(bx + bw, by).stroke({ color: 'rgba(18,13,43,0.9)', width: 11, cap: 'round' }));
+    if (this.cordBack.stale(keyOf(bw))) this.cordBack.redraw((g) => g.moveTo(bx, by).lineTo(bx + bw, by).stroke({ color: 'rgba(18,13,43,0.9)', width: 11, cap: 'round' }));
     const endX = bx + bw * left;
     this.ember.visible = burning;
     if (burning) {
       // what has burnt away: a dying ember trail (2 on, 7 off)
       const from = Math.min(bx + bw, endX + 9);
-      this.ember.draw(keyOf(from, bw), (g) => {
+      if (this.ember.stale(keyOf(from, bw))) this.ember.redraw((g) => {
         for (let k = from; k < bx + bw; k += 9) g.moveTo(k, by).lineTo(Math.min(k + 2, bx + bw), by);
         g.stroke({ color: '#ffffff', width: 3, cap: 'round' });
       });
@@ -543,7 +541,7 @@ export class HudFuse extends Container {
     }
     this.cord.visible = left > 0.002;
     if (this.cord.visible) {
-      this.cord.draw(keyOf(endX), (g) => {
+      if (this.cord.stale(keyOf(endX))) this.cord.redraw((g) => {
         g.moveTo(bx, by).lineTo(endX, by).stroke({ color: '#c9a574', width: 8, cap: 'round' });
         // twist marks
         for (let k = bx + 6; k < endX - 4; k += 10) g.moveTo(k, by - 3.5).lineTo(k + 4, by + 3.5);
@@ -560,7 +558,7 @@ export class HudFuse extends Container {
       this.rays.visible = f.exposed;
       if (f.exposed) {
         // crackle: six rays turning with the clock
-        this.rays.draw(keyOf(fl * 8), (g) => {
+        if (this.rays.stale(keyOf(fl * 8))) this.rays.redraw((g) => {
           for (let k = 0; k < 6; k++) {
             const a = (k * Math.PI) / 3;
             const r1 = 13 + (k % 2) * 5 * fl;
@@ -623,9 +621,9 @@ export class HudSunClock extends Container {
     this.rays.visible = hot && !this.storm;
     if (hot && !this.storm) {
       // the chip itself warms up, and the sun comes up behind the dial
-      this.warm.draw(keyOf(w, h), (g) => roundRect(g, 2, 2, w - 4, h - 4, R - 2).fill('#ff9a55'));
+      if (this.warm.stale(keyOf(w, h))) this.warm.redraw((g) => roundRect(g, 2, 2, w - 4, h - 4, R - 2).fill('#ff9a55'));
       this.warm.alpha = 0.12 + 0.3 * dawn;
-      this.rays.draw(keyOf(dawn * 20), (g) => {
+      if (this.rays.stale(keyOf(dawn * 20))) this.rays.redraw((g) => {
         for (let i = 0; i < 10; i++) {
           const a = (i * Math.PI) / 5;
           const r1 = DIAL + 4 + (i % 2 === 0 ? 5 : 2) * dawn;
@@ -646,7 +644,7 @@ export class HudSunClock extends Container {
     }
     // the night used so far, as a wedge
     const deg = Math.round(k * 720) / 2;
-    this.wedge.draw(keyOf(deg, hot ? 1 : 0), (g) => {
+    if (this.wedge.stale(keyOf(deg, hot ? 1 : 0))) this.wedge.redraw((g) => {
       if (deg <= 0) return;
       g.moveTo(0, 0).arc(0, 0, DIAL - 4, -Math.PI / 2, -Math.PI / 2 + (deg * Math.PI) / 180).closePath().fill(hot ? 'rgba(255,170,90,0.55)' : 'rgba(124,255,203,0.28)');
     });

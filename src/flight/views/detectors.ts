@@ -175,7 +175,7 @@ export class WatcherTell {
     const da = wrapAngle(b - a) * k;
     this.swing.rotation = a;
     this.swing.alpha = 0.9;
-    this.swing.draw(keyOf(da * this.r), (g) => {
+    if (this.swing.stale(keyOf(da * this.r))) this.swing.redraw((g) => {
       if (Math.abs(da) < 0.001) return;
       g.moveTo(this.r, 0).arc(0, 0, this.r, 0, da, da < 0)
         .stroke({ color: C.amberHi, width: 5, cap: 'round' });

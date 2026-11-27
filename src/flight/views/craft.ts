@@ -332,6 +332,9 @@ const HARD = { ...ROUTE, color: C.amberHi } as const;
 const PILL_GAP = RING_R + 34;
 /** v4 council: half the side of the square a route pill keeps clear around each entry ring (the ring, its pulse and some air). */
 export const RING_CLEAR = RING_R + 8;
+/** Display labels of the route-pill layer and of every layer of detector tells (tests/flight-pill-edges.test.ts). */
+export const ROUTE_PILLS = 'route-pills';
+export const DETECTOR_TELLS = 'detector-tells';
 
 export class EntryRingView {
   readonly root = new Container();
@@ -342,10 +345,17 @@ export class EntryRingView {
   private readonly arc = new ProgressArc(RING_R + 10, 10);
   private readonly spark = new Glow(glowTexture(GLOW.white), true);
   private readonly pill = new Container();
+  /**
+   * v0.2 council R3: the route pill, at the ring's position but in the view's ROUTE_PILLS layer, under every
+   * detector tell. Pills keep to their rings, so they often cross a cone; the cone's hard edge (and its live
+   * fill) then draw over the pill instead of hiding under it (docs/REGRESSIONS.md F11).
+   */
+  readonly pillRoot = new Container();
   private readonly labelW: number;
 
   constructor(assets: Assets, private readonly entry: EntryDef) {
     this.root.position.set(entry.x, entry.y);
+    this.pillRoot.position.set(entry.x, entry.y);
     this.art = artSprite(assets, 'flight/entry_ring', RING_R * 2, RING_R * 2) ??
       dashedArc(new Graphics(), RING_R - 4, 0, TAU, 16, 10).stroke({ color: C.mint, width: 6 })
         .circle(0, 0, RING_R * 0.55).stroke({ color: C.mint, width: 2 });
@@ -363,7 +373,13 @@ export class EntryRingView {
       { fill: 'rgba(27,20,51,0.9)', r: 20, stroke: C.mint, lineW: 2, shadow: 0 }),
       text);
     this.pill.y = (entry.labelSide === 'above' ? -1 : 1) * PILL_GAP;
-    this.root.addChild(this.spin, this.progress, this.pill);
+    this.root.addChild(this.spin, this.progress);
+    this.pillRoot.addChild(this.pill);
+  }
+
+  /** Shows or hides the ring and its pill together (the pill lives in another layer). */
+  show(visible: boolean): void {
+    this.root.visible = this.pillRoot.visible = visible;
   }
 
   sync(i: number, t: number, rm: boolean, active: boolean, fraction: number, locked: boolean, st: number, camX: number): void {

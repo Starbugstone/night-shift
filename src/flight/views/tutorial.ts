@@ -19,7 +19,7 @@ import { pointInCone } from '../geometry';
 import { drawVehicleFallback } from '../props';
 import { LOCK_ANIM, type FlightScene } from '../scene';
 import { FLIGHT_HUD, POWER_LINE, SUSPICION, barkRadius, neonOn, suspicionMultiplier } from '../sim';
-import { DogView, EntryLabels, EntryRingView, RING_CLEAR, SaucerView } from './craft';
+import { DETECTOR_TELLS, DogView, EntryLabels, EntryRingView, RING_CLEAR, ROUTE_PILLS, SaucerView } from './craft';
 import { MapCollectibleToast, MapCollectibleView } from './collectible';
 import { EggView } from './eggs'; // v4 easter eggs
 import { FLIGHT_BUBBLES, FlightBanner, abovePlayer, FlightTintView, NeonView, TargetArrow, WireView, ZibBubble, woof } from './overlays';
@@ -122,11 +122,19 @@ export class TutorialFlightView implements SceneView {
     // Upper-world lighting is composited after the wash.
     for (const light of this.lights) this.upperWorld.addChild(light);
     this.upperWorld.addChild(this.eggs.lights); // v4 easter eggs
-    for (const n of this.neon) this.upperWorld.addChild(n.glow);
-    for (const c of this.cars) this.upperWorld.addChild(c.cone.root, c.head);
-    this.upperWorld.addChild(this.saucer.groundGlow);
-    for (const n of this.neon) this.upperWorld.addChild(n.root);
-    for (const d of this.dogs) this.upperWorld.addChild(d.ring.root);
+    // v0.2 council R3: route pills draw under the detector tells, so no pill hides a cone's hard edge (F11)
+    const pills = new Container();
+    pills.label = ROUTE_PILLS;
+    for (const r of this.rings) pills.addChild(r.pillRoot);
+    const tells = new Container();
+    tells.label = DETECTOR_TELLS;
+    for (const n of this.neon) tells.addChild(n.glow);
+    for (const c of this.cars) tells.addChild(c.cone.root, c.head);
+    const upperTells = new Container();
+    upperTells.label = DETECTOR_TELLS;
+    for (const n of this.neon) upperTells.addChild(n.root);
+    for (const d of this.dogs) upperTells.addChild(d.ring.root);
+    this.upperWorld.addChild(pills, tells, this.saucer.groundGlow, upperTells);
     for (const l of this.wires) this.upperWorld.addChild(l.root);
     this.upperWorld.addChild(poles);
     for (const r of this.rings) this.upperWorld.addChild(r.root);
@@ -225,7 +233,7 @@ export class TutorialFlightView implements SceneView {
     let ringCount = 0;
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
-      ring.root.visible = cam.sees(ring.root.x, ring.root.y, 180);
+      ring.show(cam.sees(ring.root.x, ring.root.y, 180));
       if (!ring.root.visible) continue;
       ring.sync(i, t, rm, s.lock.ring === i, s.lock.fraction, s.lockedRing === i, s.st, cam.x);
       const box = this.labels.obstacles[ringCount++]!;

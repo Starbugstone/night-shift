@@ -21,16 +21,24 @@ export interface TagBox {
 
 /**
  * The exit tag's box in world px for camera (cx, cy): centred on the exit, then kept inside the view
- * between the top HUD row and the bottom bar. `textW` is the measured title width.
+ * between the top HUD row and the bottom bar. `textW` is the measured title width. The view passes its own
+ * `out` box every frame (no per-frame allocation, tests/shell-hot-alloc.test.ts).
  */
-export function exitTagBox(room: Pick<Room, 'exit' | 'exitZone' | 'roofExit'>, exitX: number, textW: number, cx: number, cy: number): TagBox {
+export function exitTagBox(
+  room: Pick<Room, 'exit' | 'exitZone' | 'roofExit'>, exitX: number, textW: number, cx: number, cy: number,
+  out: TagBox = { x: 0, y: 0, w: 0, h: 0 },
+): TagBox {
   const { exit: s, exitZone: a } = room;
   const w = textW + EXIT_TAG.padX;
   const h = EXIT_TAG.h;
   const midY = room.roofExit ? Math.max(s.y + s.h, a.y + a.h) + 17 : s.y - 17;
   const x = clampTo(exitX - w / 2, cx + MARGIN, cx + VIEW_W - MARGIN - w);
   const y = clampTo(midY - h / 2, cy + HUD_ROW.y + HUD_ROW.h + MARGIN, cy + Math.min(VIEW_H, BOTTOM_BAR) - MARGIN - h);
-  return { x, y, w, h };
+  out.x = x;
+  out.y = y;
+  out.w = w;
+  out.h = h;
+  return out;
 }
 
 /** Like clamp, but a box wider than the room it is kept in keeps its left/top edge on screen. */

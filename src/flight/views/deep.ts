@@ -1,5 +1,6 @@
 import { ItemSparkle } from '../../abduct/views/item-sparkle';
 import { COW } from '../grail';
+import { projectorSees } from '../invasion1953';
 import { RecitalView } from './recital';
 import { Container, Graphics } from 'pixi.js';
 import type { Assets } from '../../contracts';
@@ -23,7 +24,7 @@ import { BULB_ROWS, SHIP, SHIP_BOTTOM, SHIP_LEFT, SHIP_RIGHT, drawShipGround } f
 import { FLIGHT_HUD } from '../sim';
 import { DeepSpottedView, photoStampFor } from '../spotted';
 import { AmbientView } from './ambient';
-import { EntryLabels, EntryRingView, RING_CLEAR, SaucerView } from './craft';
+import { DETECTOR_TELLS, EntryLabels, EntryRingView, RING_CLEAR, ROUTE_PILLS, SaucerView } from './craft';
 import { DeepFlightHud } from './deep-hud';
 import { DriveInScenery } from './invasion1953';
 import { HazardViews } from './hazards';
@@ -158,7 +159,7 @@ class CheckpointView {
       this.glow.place(0, 0, 54, 54, 0.22 + (rm ? 0 : 0.08 * Math.sin(t * 3)));
       this.ring.rotation = rm ? 0 : t * 14 / 46;
       const wave = rm ? 0 : Math.sin(t * 5) * 3;
-      this.pennant.draw(keyOf(wave), (g) => g.moveTo(-7, -22).quadraticCurveTo(8, -24 + wave, 20, -14)
+      if (this.pennant.stale(keyOf(wave))) this.pennant.redraw((g) => g.moveTo(-7, -22).quadraticCurveTo(8, -24 + wave, 20, -14)
         .quadraticCurveTo(8, -8 - wave, -7, -6).closePath().fill(C.mint)
         .stroke({ color: C.ink, width: 2.5, join: 'round' }));
     }
@@ -225,7 +226,7 @@ class WorldFuse {
     this.tether.rotation = Math.atan2(dy, dx);
     this.tether.alpha = 0.5 + 0.5 * v;
     const offset = rm ? 0 : t * 70 % 12;
-    this.tether.draw(keyOf(d, offset), (g) => {
+    if (this.tether.stale(keyOf(d, offset))) this.tether.redraw((g) => {
       for (let start = FUSE_R + 9 - offset; start < d - 20; start += 12) {
         if (start + 3 <= FUSE_R + 9) continue;
         g.moveTo(Math.max(FUSE_R + 9, start), 0).lineTo(Math.min(start + 3, d - 20), 0);
@@ -406,7 +407,7 @@ export class DeepFlightView implements SceneView {
     this.saucer = new SaucerView(assets);
     this.fx = new ParticleView(s.fx);
     this.lights = m.lamps.map((l) => mapLamp(l.x, l.y));
-    this.rings = s.sim.ringRef.map((r) => r.ape ? new RoamView(assets, r.ape, m.targets[r.target]!.short) : new EntryRingView(assets, m.targets[r.target]!.entries[r.entry]!));
+    this.rings = s.sim.ringRef.map((r) => r.ape ? new RoamView(assets, r.ape, m.targets[r.target]!.short, m.targets[r.target]!.troop?.fur === 'light') : new EntryRingView(assets, m.targets[r.target]!.entries[r.entry]!));
     const world = this.camera.world;
     world.addChild(this.ground.root);
     if (m.theme === 'grimsby2199') {
@@ -432,7 +433,12 @@ export class DeepFlightView implements SceneView {
     world.addChild(this.checkpoint.root, this.hazards.ground, this.ambient.steam, this.saucer.shadow);
     for (const light of this.lights) this.upperWorld.addChild(light);
     this.upperWorld.addChild(this.eggs.lights); // v4 easter eggs
-    this.upperWorld.addChild(this.ambient.lights, this.saucer.groundGlow, this.ambient.critters, this.hazards.detectors, this.hazards.sky);
+    // v0.2 council R3: route pills draw under the detector tells, so no pill hides a cone's hard edge (F11)
+    const pills = new Container();
+    pills.label = ROUTE_PILLS;
+    for (const ring of this.rings) if (ring instanceof EntryRingView) pills.addChild(ring.pillRoot);
+    this.hazards.detectors.label = DETECTOR_TELLS;
+    this.upperWorld.addChild(this.ambient.lights, this.saucer.groundGlow, this.ambient.critters, pills, this.hazards.detectors, this.hazards.sky);
     for (const ring of this.rings) this.upperWorld.addChild(ring.root);
     if (this.collectible) this.upperWorld.addChild(this.collectible.root);
     this.upperWorld.addChild(this.huntSparkle.root);
@@ -504,7 +510,7 @@ export class DeepFlightView implements SceneView {
     this.grail?.sync(s);
     this.recitals?.sync(cam);
     this.hazards.sync(cam, t, rm);
-    this.driveIn?.sync(cam, sim.field.t, rm, sim.collectible?.collected ?? false, sim.st.cause === 0, s.queueBarkT);
+    this.driveIn?.sync(cam, sim.field.t, rm, sim.collectible?.collected ?? false, projectorSees(sim.field, sim.st.cause), s.queueBarkT);
     // v4 council: route pills keep clear of the HUD boxes and of every entry ring on screen
     const quietPills = !!strike && strike.age < 1.12;
     const striking = !!strike && strike.age >= -0.12 && strike.age < 0.75;
@@ -565,8 +571,10 @@ export class DeepFlightView implements SceneView {
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       const p = sim.rings[i]!;
-      ring.root.visible = !sim.delivered[sim.ringRef[i]!.target] && cam.sees(p.x, p.y, 160);
-      if (ring.root.visible && ring instanceof EntryRingView) {
+      const seen = !sim.delivered[sim.ringRef[i]!.target] && cam.sees(p.x, p.y, 160);
+      if (ring instanceof EntryRingView) ring.show(seen);
+      else ring.root.visible = seen;
+      if (seen && ring instanceof EntryRingView) {
         const b = clear[n++]!;
         b.x = p.x - cam.x - RING_CLEAR;
         b.y = p.y - cam.y - RING_CLEAR;

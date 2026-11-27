@@ -25,7 +25,7 @@ export const LEVEL8: DeepLevelDef = {
       { human: 'Flint', short: 'Flint', building: { kind: 'terrace', key: 'flight/quarry_top', x: 330, y: 1700 }, entries: [],
         troop: { quota: 2, trails: [trail(510,1920,600,1880), trail(300,1750,205,1690), trail(560,1640,695,1660)] } },
       { human: 'Reed', short: 'Reed', building: { kind: 'terrace', key: 'flight/bandstand_top', x: 1050, y: 1800 }, entries: [],
-        troop: { quota: 2, trails: [trail(1080,1940,970,1990), trail(1170,1770,1230,1675), trail(900,1740,775,1780)] } },
+        troop: { quota: 2, fur: 'light', trails: [trail(1080,1940,970,1990), trail(1170,1770,1230,1675), trail(900,1740,775,1780)] } },
       { human: 'Echo', short: 'Echo', building: { kind: 'terrace', key: 'flight/archive_top', x: 760, y: 2040 },
         entries: [{ ...en.routes.echo_appeal, roomId: 'echo_appeal', x: 847, y: 2079, labelSide: 'above' }] },
     ],

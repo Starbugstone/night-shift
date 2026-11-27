@@ -67,7 +67,7 @@ function make(human: keyof typeof subjects, upper: boolean, route: keyof typeof 
 const rise = [p(190, 265), p(277, 172), p(592, 172), p(595, 42)];
 const side = [p(185, 248), p(300, 209), p(592, 206), p(678, 317), p(875, 314)];
 const sparks = (area: Area, period: number, open: number, phase = 1.2): Hazard =>
-  ({ kind: 'laser', name: 'Sleep-sparks', area, cycle: { period, open, phase } });
+  ({ kind: 'laser', name: 'Sleep-sparks', skin: 'staff', area, cycle: { period, open, phase } });
 
 export const GRAIL_ROOMS = {
   rodney_flap: make('rodney', false, 'rodney_flap', 'grail_shield_rack', 'coconut_halves', 'coconut halves', [],
