@@ -13,7 +13,7 @@ export const LEVEL10: DeepLevelDef = {
   kind: 'deep', id: 'level10', requires: ['level9'], title: copy.title, location: copy.location,
   blurb: copy.blurb, human: copy.human, mugshot: 'human/rodney_head',
   memo: { re: copy.re, body: copy.body, joke: copy.joke },
-  hours: [2, 6], budgetSec: 330, parMarginSec: 198,
+  hours: [2, 6], budgetSec: 172, parMarginSec: 31,
   map: {
     theme: 'grail', w: 1800, h: 2320, start: GRAIL_LAUNCH, fuseSec: 0.8,
     collectible: { id: 'shrubbery', x: 100, y: 805 },

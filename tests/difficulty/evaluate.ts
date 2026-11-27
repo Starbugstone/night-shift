@@ -134,7 +134,7 @@ export const BANDS: Record<string, Band | undefined> = {
   // v4 1122
   level10: {
     skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
-    flightDone: 0.8, casualBudgetShare: 120 / 330, tension: 20,
+    flightDone: 0.8, casualBudgetShare: 120 / 172, tension: 20, // GDD-12: the casual estimate stays within 105–120 s of the 172 s dawn
   },
   level12: { skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: 0.8, tension: 20 },

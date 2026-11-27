@@ -264,7 +264,7 @@ logs). *After* adds the touch speed cap in the model, the route pilot's dart cap
 | L7 | 20/15/20 → 20/16/20 | 20/14/20 → 20/12/20 | – |
 | L8 | 20/20/20 → 20/20/20 | 18/18/18 → 18/18/18 | – |
 | L9 | 20/19/16 → 20/19/18 | 19/17/16 → 17/15/14 | kitchen creak tiles 20 px taller, transom sash phase +0.6 s |
-| L10 | 20/16/15 → 20/16/15 → 20/16/16 | 18/9/11 → 18/**7**/10 → **20/7/15** | settle-exit fix in the model: casual out (see below) |
+| L10 | 20/16/15 → 20/16/15 → 20/16/16 → 19/16/16 | 18/9/11 → 18/**7**/10 → **20/7/15** → 17/9/10 | settle-exit fix in the model, then gallery doors, 4 s settle, 172 s dawn (see below) |
 | L11 | 18/18/18 → 19/17/18 | 16/8/11 → 18/9/14 | east-lane headlights 300 → 270 px, attic probe crossing 282 → 260 px/s |
 | L12 | 17/**14**/14 → **19/17/18** → 18/12/15 | 15/7/11 → 15/**8/12** → 15/7/11 | openings rework: bypass cordon, fuse 0.72 → 0.61 s, dozer dwell 1.35 → 1.8 s, Artie's inner door 15 px taller, clock 192 → 175 s |
 
@@ -282,7 +282,19 @@ Bold marks a miss. The tutorials stay at 100% Delivered and Still asleep for bot
   GDD-12 casual targets (Delivered 80–95%, Night owl 50–55%, Shrubbery 75–90%, estimate ≥ 105 s) were
   met through the artifact: a casual player who never times out delivers every shift in the 330 s dawn,
   and the casual model is faster in rooms than the skilled one, so no par splits their Night owl rates.
-  Those targets need a decision (new targets, or a slower Grail) before L10 can be tuned to them.
+  The follow-up retune made the Grail slower instead of moving the targets: a timed door at the end of both ground
+  galleries and the Portcullis loft on a 14 s cycle (4.5 s open), a 4 s settle bar, the smoke-hole sparks phase
+  4 → 5 s, dawn 330 → 172 s and Night owl 198 → 31 s left (141 s elapsed). All GDD-12 targets hold at 20 seeds:
+  skilled 19/16/16, Shrubbery 19; casual 17/9/10, Shrubbery 17; casual estimate 107 s.
+- **Casual drags faster than skilled, on every level.** `casual.pace` is 3 against `skilled.pace` 2.2, so at
+  cruise the casual hand moves 123 px/s against 90 px/s. In the 2026-11-27 sweep the casual median room time was
+  below the skilled one in all 55 deep-level routes (summed per level, 5–26% less), and the casual shift estimate was at or
+  below the skilled one on 8 of the 12 deep levels. The fast drag is where the casual wake and bonks come from, and
+  every band is calibrated on it: a casual pace of 2 (below skilled) put 7 of 14 levels out (Bakery, Neighbours and
+  L4 casual wake under 20; L9 and L12 casual Night owl 7/20 and 3/20; L4 nigel_skylight casual 4/20; L11 casual
+  Ghost above skilled; L11 and L12 estimates over budget). So the profiles stay, and a time band (Night owl, shift
+  estimate) can only tell casual from skilled where the extra time comes from failures and retries, or where the
+  room's waits do not scale with drag pace (timed doors, settle bars), as in the L10 retune.
 - **L12, in band.** The bypass cordon stops the straight holds, the fuse (0.61 s) and the ticket-loft
   dozer's 1.8 s turn put the skilled model's sightings on the loft → Moe leg (the avenue recital's east
   edge), and the 15 px taller inner doorway in Artie's garden room cuts the casual wakes there (casual

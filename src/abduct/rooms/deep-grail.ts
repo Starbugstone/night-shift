@@ -16,8 +16,12 @@ const subjects = {
     caption: 'Tom the Enchanter', mumbles: ['Some call me Tim. The sign painter won’t take it back.', 'Just a pilot light… stand back… further…'] },
 };
 
+// v0.2 L10 retune: the ground galleries end at a timed door (14 s cycle, 4.5 s open). The wait is the same for a quick
+// hand and a careful one, so a rushed drag no longer buys a faster room (.claude/skills/evaluate-difficulty).
+const GALLERY_DOOR = { period: 14, open: 4.5, phase: 0.5 } as const;
+
 function make(human: keyof typeof subjects, upper: boolean, route: keyof typeof en.routes,
-  obstacle: string, itemArt: string, itemName: string, hazards: Hazard[], checkpoints: Checkpoint[]): Room {
+  obstacle: string, itemArt: string, itemName: string, hazards: Hazard[], checkpoints: Checkpoint[], door?: string): Room {
   const who = subjects[human];
   const sideEnd = human === 'tom_enchanter' ? 2110 : human === 'black_knight' ? 1980 : 1800;
   const westLoft = upper && human === 'rodney';
@@ -43,14 +47,18 @@ function make(human: keyof typeof subjects, upper: boolean, route: keyof typeof 
   next.supports = [...next.supports, ledge];
   if (westLoft) checkpoints.push(p(175, -480), p(30, -503), p(30, -694));
   else if (upper) checkpoints.push(p(979, -480), p(1115, -503), p(1116, -694));
-  else checkpoints.push(p(sideEnd - 475, 269), p(sideEnd - 230, 274), p(sideEnd - 65, 390));
+  else if (door) {
+    // Past the sill, a partition with a door that rises on its cycle: wait in front of it, then cross to the exit.
+    hazards.push({ kind: 'gate', name: door, area: box(sideEnd - 290, 215, 22, 330), axis: 'y', cycle: { ...GALLERY_DOOR } });
+    checkpoints.push(p(sideEnd - 380, 290), p(sideEnd - 200, 290, door, 120), p(sideEnd - 65, 390));
+  } else checkpoints.push(p(sideEnd - 475, 269), p(sideEnd - 230, 274), p(sideEnd - 65, 390));
   const openings = upper
     ? [{ axis: 'horizontal' as const, at: 0, from: 475, to: 705, trim: 'shaft' as const },
       { axis: 'horizontal' as const, at: -752, from: westLoft ? -75 : 1010, to: westLoft ? 145 : 1220, trim: 'shaft' as const }]
     : [740, sideEnd].map(at => ({ axis: 'vertical' as const, at, from: 215, to: 545, trim: 'door' as const }));
   const item = sprite('room/' + itemArt, shelfX + 30, 0);
   item.y = shelfY - item.h;
-  return { human, pose: who.pose, item: { sprite: item, name: itemName }, exit, exitZone: zone, exitSettleSec: 1.25, roofExit: upper,
+  return { human, pose: who.pose, item: { sprite: item, name: itemName }, exit, exitZone: zone, exitSettleSec: 4, roofExit: upper,
     par: 90, backdrop: bay.backdrop, furniture: [...bay.supports, ...next.supports], route: [],
     interior: { building: building([bay, next], openings, hazards), checkpoints, caption: who.caption, mumbles: who.mumbles,
       exitName: en.routes[route].route.toUpperCase() } };
@@ -63,17 +71,17 @@ const sparks = (area: Area, period: number, open: number, phase = 1.2): Hazard =
 
 export const GRAIL_ROOMS = {
   rodney_flap: make('rodney', false, 'rodney_flap', 'grail_shield_rack', 'coconut_halves', 'coconut halves', [],
-    [...side, p(1030, 336), p(1175, 332)]),
+    [...side, p(1030, 336), p(1175, 332)], 'Tent flap'),
   rodney_loft: make('rodney', true, 'rodney_loft', 'grail_strongbox', 'stuffed_swallow', 'stuffed swallow',
     [{ kind: 'swing', name: 'Hanging shield', sprite: fit('grail_hanging_shield', 487, -242, 79, 96), amplitude: 0.65, speed: 1.2, phase: 0.6, mountY: -333 }],
     [...rise, p(610, -105), p(606, -335, 'Hanging shield', 175), p(598, -490)]),
   black_knight_arch: make('black_knight', false, 'black_knight_arch', 'grail_toll_desk', 'black_knight_arm', 'black knight’s arm', [],
-    [...side, p(1054, 276), p(1304, 292), p(1365, 303)]),
+    [...side, p(1054, 276), p(1304, 292), p(1365, 303)], 'Portcullis'),
   black_knight_loft: make('black_knight', true, 'black_knight_loft', 'grail_winch', 'black_knight_shield', 'black knight’s shield',
-    [{ kind: 'gate', name: 'Portcullis', area: box(390, -198, 350, 22), axis: 'x', cycle: { period: 7.2, open: 4.1, phase: 0.8 } }],
+    [{ kind: 'gate', name: 'Portcullis', area: box(390, -198, 350, 22), axis: 'x', cycle: { period: 14, open: 4.5, phase: 6 } }],
     [...rise, p(597, -88), p(597, -360, 'Portcullis', 205), p(598, -490)]),
   tom_stair: make('tom_enchanter', false, 'tom_stair', 'grail_book_stand', 'holy_hand_grenade', 'holy hand grenade',
     [sparks(box(1155, 171, 10, 415), 11.5, 4.6)], [...side, p(981, 325), p(1405, 323, 'Sleep-sparks', 248), p(1502, 373)]),
   tom_smoke: make('tom_enchanter', true, 'tom_smoke', 'grail_chimney', 'enchanter_horns', 'enchanter’s horns',
-    [sparks(box(404, -200, 323, 10), 6.3, 3.7, 4)], [...rise, p(598, -79), p(598, -486, 'Sleep-sparks', 257), p(598, -490)]),
+    [sparks(box(404, -200, 323, 10), 6.3, 3.7, 5)], [...rise, p(598, -79), p(598, -486, 'Sleep-sparks', 257), p(598, -490)]),
 };

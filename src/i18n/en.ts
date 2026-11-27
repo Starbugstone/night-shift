@@ -18,9 +18,9 @@ const routes = {
   len_workshop: { route: "Workshop door", difficulty: "counter & vice" },
   len_skylight: { route: "Skylight", difficulty: "handlebars & lift" },
   // v4 1122
-  rodney_flap: {"route": "Supply flap", "difficulty": "shield rack & hay"},
+  rodney_flap: {"route": "Supply flap", "difficulty": "rack & tent flap"},
   rodney_loft: {"route": "Banner loft", "difficulty": "chest & swinging shield"},
-  black_knight_arch: {"route": "Toll arch", "difficulty": "counter & sill"},
+  black_knight_arch: {"route": "Toll arch", "difficulty": "counter & portcullis"},
   black_knight_loft: {"route": "Portcullis loft", "difficulty": "wheel & gate"},
   tom_stair: {"route": "Stone stair", "difficulty": "lectern & sparks"},
   tom_smoke: {"route": "Smoke hole", "difficulty": "flue & sparks"},
@@ -2146,6 +2146,7 @@ export const en = {
     "Hanging shield": "Hanging shield",
     "Portcullis": "Portcullis",
     "Sleep-sparks": "Sleep-sparks",
+    "Tent flap": "Tent flap", // v0.2 L10 retune: the timed door in Rodney's west gallery
     "Shield rack": "Shield rack",
     "Toll counter": "Toll counter",
     "Stone bookstand": "Stone bookstand",

@@ -104,7 +104,9 @@ describe('Grimsby Keep', () => {
   });
 
   it('takes the west-bank shrubbery and files three witnesses without upgrades', () => {
-    expect(evaluateShrubbery(LEVEL10, PROFILES.bot, 1, playAbduction).fourthStars).toBe(1);
+    // v0.2 L10 retune: perfect timing at a person's drag pace, as the L9 time-car proof does. The 172 s dawn is
+    // shorter than the glacial pace-1 bot's 222 s shift; a perfect hand at 2.2x files all four stars in about 127 s.
+    expect(evaluateShrubbery(LEVEL10, { ...PROFILES.bot, pace: PROFILES.skilled.pace }, 1, playAbduction).fourthStars).toBe(1);
   });
 });
 

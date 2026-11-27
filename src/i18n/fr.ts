@@ -381,9 +381,9 @@ export const fr: Strings = {
     len_workshop: { route: "Porte de l’atelier", difficulty: "comptoir et étau" },
     len_skylight: { route: "Lucarne", difficulty: "guidon et montée" },
     // v4 1122
-    rodney_flap: {"route": "Rabat de service", "difficulty": "râtelier et foin"},
+    rodney_flap: {"route": "Rabat de service", "difficulty": "râtelier et pan de tente"},
     rodney_loft: {"route": "Grenier aux bannières", "difficulty": "coffre et écu"},
-    black_knight_arch: {"route": "Arche du péage", "difficulty": "comptoir et seuil"},
+    black_knight_arch: {"route": "Arche du péage", "difficulty": "comptoir et herse"},
     black_knight_loft: {"route": "Combles de la herse", "difficulty": "roue et herse"},
     tom_stair: {"route": "Escalier de pierre", "difficulty": "lutrin et étincelles"},
     tom_smoke: {"route": "Trou de fumée", "difficulty": "conduit et étincelles"},
@@ -2094,6 +2094,7 @@ export const fr: Strings = {
     "Hanging shield": "Écu suspendu",
     "Portcullis": "Herse",
     "Sleep-sparks": "Étincelles de sommeil",
+    "Tent flap": "Pan de tente", // v0.2 L10 retune
     "Shield rack": "Râtelier",
     "Toll counter": "Comptoir du péage",
     "Stone bookstand": "Lutrin de pierre",
