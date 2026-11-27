@@ -183,25 +183,26 @@ export class SynthAudio implements Audio {
         break;
       case 'lock_progress': {
         const f = 370 + 310 * v;
-        voices.tone('sine', f, f * 1.10, t, 0.10, 0.155, SWELL);
+        // the lock fraction sets the pitch and swells the level a little toward the lock
+        voices.tone('sine', f, f * 1.10, t, 0.10, 0.155 * (0.75 + 0.25 * Math.min(1, v)), SWELL);
         break;
       }
       case 'porch_light':
-        voices.tone('triangle', 228, 319, t, 0.23, 0.14, LAMP);
-        voices.noise('bandpass', 520, t + 0.02, 0.18, 0.20, BREATH_OUT);
+        voices.tone('triangle', 228, 319, t, 0.23, 0.14 * v, LAMP);
+        voices.noise('bandpass', 520, t + 0.02, 0.18, 0.20 * v, BREATH_OUT);
         break;
       case 'camera_focus':
-        voices.tone('sine', 488, 398, t, 0.093, 0.145);
-        voices.tone('sine', 520, 592, t + 0.082, 0.109, 0.165);
+        voices.tone('sine', 488, 398, t, 0.093, 0.145 * v);
+        voices.tone('sine', 520, 592, t + 0.082, 0.109, 0.165 * v);
         break;
       case 'clock_tick':
-        voices.tone('sine', 640, 470, t, 0.063, 0.36);
-        voices.noise('lowpass', 1120, t, 0.039, 0.21);
+        voices.tone('sine', 640, 470, t, 0.063, 0.36 * v);
+        voices.noise('lowpass', 1120, t, 0.039, 0.21 * v);
         break;
       case 'clapper':
-        voices.tone('triangle', 325, 316, t, 0.29, 0.28, MUTED_BRASS);
-        voices.tone('sine', 490, 485, t + 0.006, 0.21, 0.16);
-        voices.noise('lowpass', 1280, t, 0.043, 0.23);
+        voices.tone('triangle', 325, 316, t, 0.29, 0.28 * v, MUTED_BRASS);
+        voices.tone('sine', 490, 485, t + 0.006, 0.21, 0.16 * v);
+        voices.noise('lowpass', 1280, t, 0.043, 0.23 * v);
         break;
       case 'lock_on':
         voices.notes(LOCK, t, 0.073, 0.14, 0.14, 0.19 * v);

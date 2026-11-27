@@ -214,8 +214,7 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
       : progress;
   }
   const predatesBridge = !Object.hasOwn(levels, 'birch_bakery') && !Object.hasOwn(levels, 'birch_neighbours');
-  const importing = raw.version !== SAVE_VERSION || levelIds.includes('birch_bakery');
-  out.bridgeAccess = raw.bridgeAccess === true || (importing && predatesBridge &&
+  out.bridgeAccess = raw.bridgeAccess === true || (predatesBridge &&
     (out.levels.level3.attempts > 0 || ORIGINAL_DEEP_IDS.some(id => out.levels[id].delivered)));
   if (Array.isArray(raw.upgrades)) {
     const set = new Set<UpgradeId>();
@@ -246,22 +245,36 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   return out;
 }
 
+/** Fields any build has ever written to a save. */
+const SAVE_FIELDS = ['version', 'glorbs', 'levels', 'upgrades', 'muted', 'allUnlocked', 'reports', 'lang'] as const;
+
+/**
+ * A stored value worth loading: an object carrying at least one save field. Unreadable JSON, `null`, arrays and an
+ * empty `{}` are not saves, so the loader passes over them to an older key instead of importing nothing.
+ */
+function readSaveShape(stored: string | null): Record<string, unknown> | null {
+  if (!stored) return null;
+  let raw: unknown;
+  try { raw = JSON.parse(stored); } catch { return null; }
+  return isObj(raw) && SAVE_FIELDS.some(field => Object.hasOwn(raw, field)) ? raw : null;
+}
+
+/**
+ * The current key wins whenever it holds a save, including the default record a reset stores. Otherwise the
+ * newest older save is imported and stored under the current key at once (the older keys are never rewritten).
+ */
 export function loadSave(storage: KeyValueStore | null): SaveData {
   if (!storage) return defaultSave();
   try {
-    const own = storage.getItem(SAVE_KEY);
+    const own = readSaveShape(storage.getItem(SAVE_KEY));
     if (own) {
-      const raw: unknown = JSON.parse(own);
-      const current = validateSave(raw);
-      if (isObj(raw) && isObj(raw.levels) && !Object.hasOwn(raw.levels, 'birch_bakery')) writeSave(storage, current);
+      const current = validateSave(own);
+      if (isObj(own.levels) && !Object.hasOwn(own.levels, 'birch_bakery')) writeSave(storage, current);
       return current;
     }
     for (const key of [V2_SAVE_KEY, LEGACY_SAVE_KEY]) {
-      const stored = storage.getItem(key);
-      if (!stored) continue;
-      let raw: unknown;
-      try { raw = JSON.parse(stored); } catch { continue; }
-      if (!isObj(raw)) continue;
+      const raw = readSaveShape(storage.getItem(key));
+      if (!raw) continue;
       const imported = validateSave(raw);
       writeSave(storage, imported);
       return imported;

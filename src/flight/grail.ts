@@ -11,6 +11,8 @@ export type GrailHazard =
   | { type: 'rabbit'; x: number; y: number };
 
 export const COW = { warning: 1.15, impact: 1.4, cycle: 7, radius: 108, body: 33 };
+/** The catapult's creak and moo play only near enough to see the throw (the screen is 540 × 960). */
+export const COW_EARSHOT = 520;
 export const CLOP = { period: 2.6, warning: 0.45, pulse: 1.05, radius: 118 };
 export const RABBIT = { radius: 118, speed: 110, arm: 0.75, lunge: 0.95, rest: 1.5 };
 /** The coconut cavalry trots in from the west along the cart track. */
@@ -116,7 +118,8 @@ export class GrailSpeech {
     for (let i = 0; i < field.defs.length; i++) {
       const d = field.defs[i]!;
       if (d.type === 'cow' && (previous === 0 && d.offset === 0 ||
-        Math.floor((previous - d.offset) / COW.cycle) < Math.floor((field.t - d.offset) / COW.cycle))) {
+        Math.floor((previous - d.offset) / COW.cycle) < Math.floor((field.t - d.offset) / COW.cycle)) &&
+        Math.hypot(x - d.x, y - d.y) < COW_EARSHOT) {
         audio.sfx('creak', 0.45);
         audio.sfx('moo', 0.5);
       }

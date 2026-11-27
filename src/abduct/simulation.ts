@@ -253,7 +253,7 @@ export class AbductSimulation {
     this.wake = new WakeMeter(hush, rules.hard, plan.bonkGain);
     this.subjectName = HUMAN_NAMES[room.human];
     if (room.human === 'forester' || room.human === 'van_bell' || room.human === 'collier') {
-      this.witness = new WitnessReactions(room.human, audio, room.interior?.exitName === 'Bell hatch');
+      this.witness = new WitnessReactions(room.human, audio, room.interior);
     }
     this.snoozeOwned = upgrades.has('snooze_ray');
     this.pilot = new AbductPilot(room);
@@ -434,7 +434,7 @@ export class AbductSimulation {
       this.sleepTalk(tr().dispatch2199.sulks[this.pendingSulk]);
       this.pendingSulk = -1;
     }
-    const reaction = this.witness?.step(this.elapsed, beforeWake, this.wake.value, this.beamMoved);
+    const reaction = this.witness?.step(this.elapsed, beforeWake, this.wake.value, this.beamMoved, this.body.chestX, this.body.chestY);
     if (reaction) this.sleepTalk(reaction);
 
     const cue = this.propCue;

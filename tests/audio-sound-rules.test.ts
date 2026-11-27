@@ -251,3 +251,31 @@ describe('no ambient bed', () => {
     }
   });
 });
+
+// ------------------------------------------------------------------ 4. every cue honours its volume (v0.2, 2026-11-27)
+// A caller that asks for a quieter cue gets one: clock_tick, clapper, porch_light and camera_focus used to play at a
+// fixed level whatever they were asked. tests/audio-repeats.test.ts caps how often each cue repeats.
+
+describe('every cue honours its volume argument', () => {
+  /** The sum of each voice's peak level for one cue, in a fresh context. */
+  async function loudness(name: string, volume: number): Promise<number> {
+    const ac = new Context();
+    vi.stubGlobal('window', { AudioContext: vi.fn(function () { return ac; }) });
+    const audio = new SynthAudio();
+    audio.unlock();
+    await Promise.resolve();
+    ac.state = 'running';
+    ac.currentTime = 1;
+    audio.sfx(name as Parameters<SynthAudio['sfx']>[0], volume);
+    const master = ac.gains[0]!;
+    return ac.gains.filter(g => g.to === master)
+      .reduce((sum, g) => sum + Math.max(0, ...g.gain.events.filter(e => e[0] === 'ramp').map(e => e[2] ?? 0)), 0);
+  }
+
+  it.each(sfxNames())('%s is quieter when asked to be', async (name) => {
+    const full = await loudness(name, 1);
+    const half = await loudness(name, 0.5);
+    expect(full, `${name} plays at volume 1`).toBeGreaterThan(0);
+    expect(half / full, `${name} at volume 0.5 vs 1`).toBeLessThan(0.9);
+  });
+});
