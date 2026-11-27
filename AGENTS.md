@@ -192,6 +192,15 @@ guards it. Read the rows your change touches before you finish, and run their gu
 
 - **A reported bug gets a guard.** When the user reports a new kind of bug, add a row to `docs/REGRESSIONS.md`
   and a test that walks every level in `LEVELS` and every room in `ROOMS`, never a fixed list.
+- **New level or room: walk the checklist (user, 2026-11-27).** `docs/NEW-LEVEL-CHECKLIST.md` maps every problem the
+  v0.2 release council found (difficulty bands, straight lines to every ring, teaching, deadline wording and clock
+  look, repeating sounds, reading time, stretched or orphan art, copy registries, rank payoffs, trophy slots, save
+  shape, e2e run) to its rule and guard. Every row must pass before a new level or room ships, and a council finding
+  that has no row yet gets one with its guard. Views read level data (`clockMode`, hazards, targets), never a list of
+  level ids: `tests/shell-level-branches.test.ts` allows only the story-specific branches it already names.
+- **Difficulty: 6-seed sanity, 20-seed release (user, 2026-11-27).** `npm test` runs the 6-seed difficulty check with
+  a sample-size margin. The strict bands are checked by `npm run difficulty:release` (20 seeds, every level), which
+  must pass before every preprod push that touches a level, room, hazard, wake, suspicion or star tuning, and runs in CI.
 - **Never narrow a guard to pass.** If a test fails, fix the level or the code, not the assertion. Covering
   fewer levels, rings, start delays, seeds or rooms needs the user's OK, and your report gives the before
   and after numbers.
