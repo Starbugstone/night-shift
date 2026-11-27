@@ -106,7 +106,7 @@ non-playable mission concepts follow the playable work orders.
 
 ### L3: "Cul-de-Sac Sweep" (Maple Court, suburbia)
 
-Map ~2160×2880. Sunrise budget 420 s (Night owl: done by 260 s).
+Map ~2160×2880. Sunrise budget 420 s (Night owl: done by 260 s). <!-- shipped clock: level3 budgetSec=420 parMarginSec=160 -->
 Flight hazards:
 - a **police cruiser** circling the block loop, with a fast headlight cone and a
   rotating light-bar radius;
@@ -144,7 +144,7 @@ Specimens:
 
 ### L4: "Downtown Graveyard Shift" (Grimsby city centre)
 
-Map ~2160×3840. Sunrise budget 480 s (Night owl: done by 310 s).
+Map ~2160×3840. Sunrise budget 480 s (Night owl: done by 310 s). <!-- shipped clock: level4 budgetSec=480 parMarginSec=170 -->
 Spawn (2026-11-26 openings rework, zone W-mid): Zib drifts in from the west over the rooftops at
 **(110, 1400)**, north of Market St, so the Mayor is the nearest call. City Hall's south-west roof
 camera (range 480, small sweep) watches the diagonal from West Ave to his elevator and catches the

@@ -153,7 +153,7 @@ In the first clear’s cover-story row, add “The fever log became Form 7-B. Co
 
 ## Clock, stars and proof
 
-The last screening runs until dawn, **292 s** on the shared clock. **Night owl** requires **118 s** left (**174 s** elapsed). **Delivered** needs all three witnesses before dawn. **Ghost** also needs zero full sightings and zero failed room attempts. The **Tripod leg** star needs the find and all three deliveries in the same shift. Keep the standard room retry choice and filed-find rules.
+The last screening runs until dawn, **292 s** on the shared clock. **Night owl** requires **118 s** left (**174 s** elapsed). **Delivered** needs all three witnesses before dawn. **Ghost** also needs zero full sightings and zero failed room attempts. The **Tripod leg** star needs the find and all three deliveries in the same shift. Keep the standard room retry choice and filed-find rules. <!-- shipped clock: level11 budgetSec=292 parMarginSec=118 -->
 
 Use the [1955 baseline in the Grail spec](GDD-12-1122-grail.md#clock-stars-and-proof) and the same [GDD-5 progression checks](GDD-5-progression.md). Start at a **110–125 s** casual independent shift estimate. Make a clean run harder primarily through the two timed room crossings and the tighter flight fuse. Preserve the extra time for a player who loses a room, takes the longer road or goes back for the leg.
 

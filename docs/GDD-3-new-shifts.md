@@ -29,7 +29,7 @@ second sleepers, autopilot proofs and difficulty bands). Merged from a three-age
 
 ## L5 "Pier Pressure" / « Dauphin de quart » (Barnacle Bay, seaside)
 
-Map ~2160×3360, theme `pier`. Sunrise budget 450 s, Night owl par margin 140 s. Half the map is sea.
+Map ~2160×3360, theme `pier`. Sunrise budget 450 s, Night owl par margin 140 s. Half the map is sea. <!-- shipped clock: level5 budgetSec=450 parMarginSec=140 -->
 
 **Look.** Dark Pine sea tile with sparse twinkles, desaturated Ochre sand, a Wood boardwalk. Amber
 lives in exactly two places, the lighthouse lamp and a chip kiosk. Interiors: UV-lilac jellyfish
@@ -106,7 +106,7 @@ fin over the rim. Souvenir item: a sardine tin.
 
 ## L6 "Probe Compliance" / « Contrôle technique » (St. Mildred's General, Endoscopy Wing)
 
-Map ~2160×3120, theme `clinic`. Sunrise budget 450 s, par margin 190 s (was 140; difficulty curve, Neon P5).
+Map ~2160×3120, theme `clinic`. Sunrise budget 450 s, par margin 190 s (was 140; difficulty curve, Neon P5). <!-- shipped clock: level6 budgetSec=450 parMarginSec=190 -->
 
 **Arrival (2026-11-26 openings rework).** Zib comes in along the entry road from the east, at **(2060, 2780)**
 (zone E-south), from Barnacle Bay's townward road. The opening screen shows the east service road, an annex
@@ -172,7 +172,7 @@ brisk, zero dignity complaints."* Roland mumbles *"Initial here to continue drea
 ## L7 "A Whole Cruise Ship" / « Vogue la soucoupe ! » (the SS Buffet Royale, at sea)
 
 Map ~2160×3600, theme `ship`. Sunrise budget 480 s, par margin 134 s (346 s elapsed, including the galley duct and
-Cabin 404 approaches). Graduates the "A Whole Cruise Ship" mission concept card. The ship runs bow-north down the middle of the map; open sea around it.
+Cabin 404 approaches). <!-- shipped clock: level7 budgetSec=480 parMarginSec=134 --> Graduates the "A Whole Cruise Ship" mission concept card. The ship runs bow-north down the middle of the map; open sea around it.
 
 **Look.** Cream bow against ink-blue sea, moonlit Mist decks, a Teal lido pool, strings of deck bulbs
 (decor only), a foam wake trailing south. Interiors in ballroom Brick and Gold with brass rails.

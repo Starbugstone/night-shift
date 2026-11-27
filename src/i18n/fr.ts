@@ -111,6 +111,9 @@ export const fr: Strings = {
     farm_chimney: 'conduit étroit, chat endormi', // v0.2 teaching: the cat on the shelf (room.cat)
     laundry_skylight: 'ventilateur lent',
     laundry_loading: 'plus long, chariot mobile',
+    // v0.2 pills (council round 5, Fable): pill advice, kept short in French so the pill fits and reads in time
+    pete_gallery: 'lentille mobile',
+    band_hatch: 'micro et ballons',
   },
   // v4 progression
   lessons: {

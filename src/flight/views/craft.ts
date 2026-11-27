@@ -330,6 +330,7 @@ const HARD = { ...ROUTE, color: C.amberHi } as const;
 
 /** v4 council: route pill centre to ring centre, vertically. */
 const PILL_GAP = RING_R + 34;
+const PILL_PANEL = { fill: 'rgba(27,20,51,0.9)', r: 20, stroke: C.mint, lineW: 2, shadow: 0 } as const;
 /** v4 council: half the side of the square a route pill keeps clear around each entry ring (the ring, its pulse and some air). */
 export const RING_CLEAR = RING_R + 8;
 /** Display labels of the route-pill layer and of every layer of detector tells (tests/flight-pill-edges.test.ts). */
@@ -352,6 +353,10 @@ export class EntryRingView {
    */
   readonly pillRoot = new Container();
   private readonly labelW: number;
+  /** Round 5 (Fable): the full pill (route and advice) and the short one (route name only), one shown at a time. */
+  private readonly full = new Container();
+  private readonly brief = new Container();
+  private readonly shortW: number;
 
   constructor(assets: Assets, private readonly entry: EntryDef) {
     this.root.position.set(entry.x, entry.y);
@@ -369,9 +374,15 @@ export class EntryRingView {
     text.addChild(new Label(ROUTE).set(route, 0, 1), new Label(calm ? EASY : HARD).set(advice, routeW, 1));
     text.x = 14;
     text.scale.x = (this.labelW - 28) / textW;
-    this.pill.addChild(panelPath(new Graphics(), 0, -20, this.labelW, 40,
-      { fill: 'rgba(27,20,51,0.9)', r: 20, stroke: C.mint, lineW: 2, shadow: 0 }),
-      text);
+    this.full.addChild(panelPath(new Graphics(), 0, -20, this.labelW, 40, PILL_PANEL), text);
+    // round 5 (Fable): the route name alone, for a pill with no room at full width (EntryLabels.place)
+    const name = tr().routes[entry.roomId].route;
+    this.shortW = Math.min(this.labelW, measure(name, 19, 800) + 28);
+    const brief = new Label(ROUTE).set(name, 14, 1);
+    brief.scale.x = Math.min(1, (this.shortW - 28) / Math.max(1, measure(name, 19, 800)));
+    this.brief.addChild(panelPath(new Graphics(), 0, -20, this.shortW, 40, PILL_PANEL), brief);
+    this.brief.visible = false;
+    this.pill.addChild(this.full, this.brief);
     this.pill.y = (entry.labelSide === 'above' ? -1 : 1) * PILL_GAP;
     this.root.addChild(this.spin, this.progress);
     this.pillRoot.addChild(this.pill);
@@ -408,20 +419,47 @@ export class EntryRingView {
     a.w = this.labelW;
     a.h = 40;
     a.top = HUD_ROW.y + HUD_ROW.h + 2;
+    a.short = this.shortW;
+    a.wasShort = this.brief.visible;
+  }
+
+  /** Round 5 (Fable): shows the short pill (route name only) or the full one. */
+  shortPill(short: boolean): void {
+    this.brief.visible = short;
+    this.full.visible = !short;
   }
 
   /** v4 council: puts the route pill's top-left corner at screen (x, y). */
   putPill(x: number, y: number, camX: number, camY: number): void {
     this.pill.position.set(x + camX - this.entry.x, y + 20 + camY - this.entry.y);
+    this.keptX = this.pill.x;
+    this.keptY = this.pill.y;
+    this.placed = true;
   }
+
+  /** Round 5 (Fable): keeps the shown pill where `putPill` last put it, next to its ring (`sync` moves it each frame). */
+  holdPill(): void {
+    this.pill.position.set(this.keptX, this.keptY);
+  }
+
+  private keptX = 0;
+  private keptY = 0;
+  private placed = false;
 
   showPill(visible: boolean): void {
     this.pill.visible = visible;
   }
 
+  /** Whether the pill was left shown at a spot `putPill` gave it (`request` and the views hide it off screen). */
+  get pillVisible(): boolean {
+    return this.placed && this.pill.visible;
+  }
+
   /** Fable F2 (round 3): whether the pill showed last frame, and for how many frames it has been hidden. */
   pillWasShown = true;
   pillHiddenFrames = PILL_HOLD_FRAMES;
+  /** Round 5 (Fable): frames in a row a shown pill has wanted to hide (it hides at PILL_HOLD_FRAMES). */
+  pillHideFrames = 0;
 
 
 }
@@ -454,14 +492,17 @@ export class EntryLabels {
   private readonly spots: { x: number; y: number }[];
   private readonly rings: EntryRingView[] = [];
   private readonly moved: Uint8Array;
+  /** Round 5 (Fable): which pills `placePills` gave their short width this frame. */
+  private readonly short: Uint8Array;
   private count = 0;
 
   constructor(capacity: number, otherObstacles: number, lineCapacity = 0) {
     this.obstacles = Array.from({ length: 2 * capacity + otherObstacles }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
     this.lines = Array.from({ length: lineCapacity }, () => ({ ax: 0, ay: 0, bx: 0, by: 0 }));
-    this.asks = Array.from({ length: capacity }, () => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
+    this.asks = Array.from({ length: capacity }, () => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0, short: 0, wasShort: false }));
     this.spots = Array.from({ length: capacity }, () => ({ x: 0, y: 0 }));
     this.moved = new Uint8Array(capacity);
+    this.short = new Uint8Array(capacity);
   }
 
   request(ring: EntryRingView, camX: number, camY: number): void {
@@ -486,18 +527,42 @@ export class EntryLabels {
     this.lineCount++;
   }
 
-  /** `soft`: the obstacle drawn above the pills (the saucer's fuse box), which a pill may sit under (see placePills). */
-  place(n: number, camX: number, camY: number, soft = -1): void {
-    placePills(this.obstacles, n, this.asks, this.count, this.spots, this.moved, soft);
+  /**
+   * `soft`: the obstacle drawn above the pills (the saucer's fuse box), which a pill may sit under (see placePills).
+   * (`aimX`, `aimY`), round 5 (Fable): where the saucer will be in a moment (screen px); the pill of the ring nearest it
+   * is placed first, so the ring the player is heading for keeps its label when two pills want one spot.
+   */
+  place(n: number, camX: number, camY: number, soft = -1, aimX = NaN, aimY = NaN): void {
+    let first = -1;
+    let best = Infinity;
+    for (let i = 0; i < this.count && !Number.isNaN(aimX); i++) {
+      const a = this.asks[i]!;
+      const d = (a.ringX - aimX) ** 2 + (a.ringY - aimY) ** 2;
+      if (d < best) {
+        best = d;
+        first = i;
+      }
+    }
+    placePills(this.obstacles, n, this.asks, this.count, this.spots, this.moved, soft, this.lines, this.lineCount, this.short, first);
     for (let i = 0; i < this.count; i++) {
       const ring = this.rings[i]!;
       const spot = this.spots[i]!;
       // a pill pushed far from its ring, or across a cable from it, no longer reads as its label: hide it
       const shown = this.moved[i] !== 2 && pillShown(pillReach(this.asks[i]!, spot.x, spot.y, this.lines, this.lineCount), ring.pillWasShown, ring.pillHiddenFrames);
-      ring.pillHiddenFrames = shown ? 0 : ring.pillHiddenFrames + 1;
-      ring.pillWasShown = shown;
-      ring.showPill(shown);
-      ring.putPill(spot.x, spot.y, camX, camY);
+      // round 5 (Fable): a shown pill hides only once it has wanted to for PILL_HOLD_FRAMES, and keeps its last spot
+      // next to its ring meanwhile (world space, so it stays on its side of every solid line): no short flash
+      const showing = ring.pillWasShown && ring.pillVisible;
+      ring.pillHideFrames = shown || !showing ? 0 : ring.pillHideFrames + 1;
+      const held = !shown && showing && ring.pillHideFrames < PILL_HOLD_FRAMES;
+      ring.pillHiddenFrames = shown || held ? 0 : ring.pillHiddenFrames + 1;
+      ring.pillWasShown = shown || held;
+      // a held pill is still shown: never hidden and shown again in one frame (a visible flip rebuilds the render group)
+      if (held) ring.holdPill();
+      else {
+        ring.showPill(shown);
+        ring.putPill(spot.x, spot.y, camX, camY);
+        ring.shortPill(this.short[i] === 1);
+      }
     }
     this.count = 0;
     this.lineCount = 0;

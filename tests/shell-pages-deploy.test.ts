@@ -232,18 +232,24 @@ interface World {
   files?: string[];
   /** Artifacts this run has uploaded so far (any attempt), in the order the API lists them. */
   runArtifacts?: { name: string; expired?: boolean }[];
+  /** Round 5 (Fable): what the n-th listing of this run's artifacts returns (1-based), for a listing that lags. */
+  listing?: (n: number) => { name: string; expired?: boolean }[];
   runId?: number;
   ref?: string;
   sha?: string;
   env?: Record<string, string>;
 }
 
-interface Outcome { outputs: Record<string, string>; failed?: string; warnings: string[] }
+interface Outcome {
+  outputs: Record<string, string>; failed?: string; warnings: string[];
+  /** How many times the step listed the run's artifacts, and every pause it took (ms). */
+  listings: number; pauses: number[];
+}
 
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as new (...args: string[]) => (...args: unknown[]) => Promise<unknown>;
 
 async function runStep(id: string, world: World): Promise<Outcome> {
-  const out: Outcome = { outputs: {}, warnings: [] };
+  const out: Outcome = { outputs: {}, warnings: [], listings: 0, pauses: [] };
   const github = {
     rest: {
       repos: {
@@ -265,7 +271,8 @@ async function runStep(id: string, world: World): Promise<Outcome> {
     async paginate(method: string, args: { run_id: number }) {
       expect(method).toBe('listWorkflowRunArtifacts');
       expect(args.run_id).toBe(world.runId ?? RUN);
-      return (world.runArtifacts ?? []).map(a => ({ expired: false, ...a }));
+      out.listings++;
+      return (world.listing?.(out.listings) ?? world.runArtifacts ?? []).map(a => ({ expired: false, ...a }));
     },
   };
   const context = { repo: { owner: 'owner', repo: 'night-shift' }, ref: world.ref ?? 'refs/heads/main', sha: world.sha ?? '', runId: world.runId ?? RUN };
@@ -273,6 +280,7 @@ async function runStep(id: string, world: World): Promise<Outcome> {
     setOutput(name: string, value: string) { out.outputs[name] = value; },
     setFailed(message: string) { out.failed = message; },
     warning(message: string) { out.warnings.push(message); },
+    info() {},
     summary: { addRaw() { return this; }, async write() {} },
   };
   const fetch = async (url: string) => {
@@ -285,7 +293,9 @@ async function runStep(id: string, world: World): Promise<Outcome> {
     return { existsSync: (path: string) => files.has(path) };
   };
   const process = { env: world.env ?? {} };
-  await new AsyncFunction('github', 'context', 'core', 'fetch', 'require', 'process', stepScript(workflow, id))(github, context, core, fetch, require, process);
+  // no real waiting: a pause is recorded and resolves at once
+  const setTimeout = (resolve: () => void, ms: number) => { out.pauses.push(ms); resolve(); };
+  await new AsyncFunction('github', 'context', 'core', 'fetch', 'require', 'process', 'setTimeout', stepScript(workflow, id))(github, context, core, fetch, require, process, setTimeout);
   return out;
 }
 
@@ -702,5 +712,56 @@ describe('every push waits its turn in the pages queue (round 4, Sol P3)', () =>
     const { ran, state } = await play('single');
     expect(ran).toEqual(['P1', 'P2']);
     expect(liveSha(state, 'main')).toBe(M0);
+  });
+});
+
+// Round 5 (Fable): the find step listed the run's artifacts once. This repo has seen the listing lag behind an upload
+// (the note above the build job); a lag made the run report "tests, sweep or build failed" for a build that passed.
+describe('the artifact listing may lag behind the uploads (round 5, Fable)', () => {
+  const build = JSON.stringify([{ branch: 'main', sha: M1, gate: true }, { branch: 'preprod', sha: P1, gate: true }]);
+  const both = [{ name: art('main', M1) }, { name: art('preprod', P1) }];
+
+  it('lists again, a few seconds apart, until every build this attempt uploaded is listed', async () => {
+    for (const shows of [2, 3]) {
+      const find = await runStep('find', { tips: {}, live: [], listing: n => n < shows ? both.slice(0, 1) : both, env: { BUILD: build, BUILD_RESULT: 'success', RUN_ATTEMPT: '1' } });
+      expect(find.outputs, `listed on call ${shows}`).toEqual({ main: art('main', M1), preprod: art('preprod', P1), live: '' });
+      expect(find.listings).toBe(shows);
+      expect(find.pauses).toEqual(Array(shows - 1).fill(5000));
+      expect(find.warnings).toEqual([]);
+    }
+  });
+
+  it('a lagging listing still publishes the passing push', async () => {
+    const state = { tips: { main: M1, preprod: P1 }, live: [], kept: {} } as Site;
+    const pin = await runStep('pin', { ...state, ref: 'refs/heads/main', sha: M1, runId: RUN });
+    const find = await runStep('find', { ...state, listing: n => n < 3 ? [] : both, env: { BUILD: pin.outputs.build!, BUILD_RESULT: 'success', RUN_ATTEMPT: '1' } });
+    const choose = await runStep('choose', { ...state, files: Object.values(find.outputs).filter(Boolean).map(index), env: { BUILD: pin.outputs.build!, BUILT: JSON.stringify(find.outputs), BUILD_RESULT: 'success', PUSHED: 'main', KEEP: '', RUN_ATTEMPT: '1' } });
+    expect(choose.failed).toBeUndefined();
+    expect((JSON.parse(choose.outputs.published!) as { sha: string }[]).map(p => p.sha)).toContain(M1);
+  });
+
+  it('a build that never appears stops after five listings and says its artifact was not found', async () => {
+    const find = await runStep('find', { tips: {}, live: [], listing: () => both.slice(1), env: { BUILD: build, BUILD_RESULT: 'success', RUN_ATTEMPT: '1' } });
+    expect(find.listings).toBe(5);
+    expect(find.pauses).toEqual([5000, 5000, 5000, 5000]);
+    expect(find.outputs.main).toBe('');
+    expect(find.warnings.join('\n')).toMatch(/every build leg passed, but dist-main-\w+-7-1 was not listed after 5 listings/);
+    const choose = await runStep('choose', { tips: { main: M1, preprod: P1 }, live: [], files: [index(art('preprod', P1))], env: { BUILD: build, BUILT: JSON.stringify(find.outputs), BUILD_RESULT: 'success', PUSHED: 'main', KEEP: '', RUN_ATTEMPT: '1' } });
+    expect(choose.failed).toMatch(/every build leg passed, but its build artifact was not found; nothing is published/);
+    expect(choose.failed).not.toMatch(/tests, sweep or build failed/);
+  });
+
+  it('a leg that failed still reads as a failed build, after the same bounded wait', async () => {
+    const find = await runStep('find', { tips: {}, live: [], listing: () => both.slice(1), env: { BUILD: build, BUILD_RESULT: 'failure', RUN_ATTEMPT: '1' } });
+    expect(find.listings).toBe(5);
+    expect(find.warnings.join('\n')).not.toMatch(/every build leg passed/);
+    const choose = await runStep('choose', { tips: { main: M1, preprod: P1 }, live: [], files: [index(art('preprod', P1))], env: { BUILD: build, BUILT: JSON.stringify(find.outputs), BUILD_RESULT: 'failure', PUSHED: 'main', KEEP: '', RUN_ATTEMPT: '1' } });
+    expect(choose.failed).toMatch(/its tests, sweep or build failed; nothing is published/);
+  });
+
+  it('every build listed at once: one listing, no pause', async () => {
+    const find = await runStep('find', { tips: {}, live: [], runArtifacts: both, env: { BUILD: build, BUILD_RESULT: 'success', RUN_ATTEMPT: '1' } });
+    expect(find.listings).toBe(1);
+    expect(find.pauses).toEqual([]);
   });
 });

@@ -413,6 +413,9 @@ export const en = {
     farm_chimney: 'tight flue, sleeping cat', // v0.2 teaching: the cat on the shelf (room.cat)
     laundry_skylight: 'one slow fan',
     laundry_loading: 'longer, moving cart',
+    // v0.2 pills (council round 5, Fable): pill advice, kept short in French so the pill fits and reads in time
+    pete_gallery: 'turning lens',
+    band_hatch: 'mic stand & balloons',
   },
   // v4 progression
   lessons: {

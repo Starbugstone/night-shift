@@ -21,6 +21,13 @@ export interface PillAsk {
   h: number;
   /** Highest top edge allowed (bottom of the top bar). */
   top: number;
+  /**
+   * Round 5 (Fable): the pill's width with its route name only (no advice), or 0: none. A pill with no room at full width
+   * takes this one (L5's "Cold store" ring sits in a wire corner narrower than its full pill).
+   */
+  short?: number;
+  /** Whether it showed short last frame: it then goes back to full width only within PILL_NEAR (no flip-flop). */
+  wasShort?: boolean;
 }
 
 const MARGIN = 8;
@@ -99,8 +106,22 @@ export function fits(obs: readonly Box[], n: number, x: number, y: number, w: nu
   return true;
 }
 
-/** The free left edge nearest `a.x` at height `y` (slides past whatever blocks), or NaN. */
-function slide(obs: readonly Box[], n: number, a: PillAsk, y: number): number {
+const NO_LINES: readonly PillLine[] = [];
+
+/**
+ * Whether a pill at top-left (x, y) sits across one of `lines[0..lineCount)` from its ring. Round 5 (Fable): such a
+ * spot is hidden (`pillReach`), so the placement treats it as taken and tries the next one (L5's "Cold store" ring:
+ * the only free spot was across the pier line, and its pill never showed).
+ */
+function across(a: PillAsk, x: number, y: number, lines: readonly PillLine[], lineCount: number): boolean {
+  return lineCount > 0 && pillReach(a, x, y, lines, lineCount) === Infinity;
+}
+
+/**
+ * The free left edge nearest `a.x` at height `y` (slides past whatever blocks), or NaN. A spot across a solid line from
+ * the ring is not free. `skip`: an obstacle to ignore (see `placePills`' `soft`).
+ */
+function slide(obs: readonly Box[], n: number, a: PillAsk, y: number, lines: readonly PillLine[], lineCount: number, skip = -1): number {
   const { w, h } = a;
   if (y < a.top || y + h > VIEW_H - MARGIN) return NaN;
   const lo = MARGIN;
@@ -111,10 +132,10 @@ function slide(obs: readonly Box[], n: number, a: PillAsk, y: number): number {
   let best = NaN;
   for (let i = -1; i < n; i++) {
     const b = i < 0 ? null : obs[i]!;
-    if (b && (y >= b.y + b.h || y + h <= b.y)) continue;
+    if (b && (i === skip || y >= b.y + b.h || y + h <= b.y)) continue;
     for (let e = 0; e < (b ? 2 : 1); e++) {
       const x = !b ? a.x : e === 0 ? b.x - MARGIN - w : b.x + b.w + MARGIN;
-      if (x < near || x > far || !fits(obs, n, x, y, w, h)) continue;
+      if (x < near || x > far || !fits(obs, n, x, y, w, h, skip) || across(a, x, y, lines, lineCount)) continue;
       if (Number.isNaN(best) || Math.abs(x - a.x) < Math.abs(best - a.x)) best = x;
     }
   }
@@ -138,13 +159,14 @@ function pushed(obs: readonly Box[], n: number, a: PillAsk, y: number, side: -1 
  * every entry ring on screen, its own included. In order: its labelled side, slid left or right
  * when something is in the way; the ring's other side, slid the same way; then each side pushed
  * further out past what it touches (never back across its ring). Nothing clear: where it asked.
+ * A spot across one of `lines[0..lineCount)` from the ring is not clear (round 5, Fable).
  * Writes the top-left corner into `out`; allocates nothing.
  */
-export function placePill(obs: readonly Box[], n: number, a: PillAsk, out: { x: number; y: number }): void {
+export function placePill(obs: readonly Box[], n: number, a: PillAsk, out: { x: number; y: number }, lines = NO_LINES, lineCount = 0): void {
   for (let pass = 0; pass < 2; pass++) {
     const side = pass === 0 ? a.side : -a.side as -1 | 1;
     const y = a.ringY + side * a.gap - a.h / 2;
-    const x = slide(obs, n, a, y);
+    const x = slide(obs, n, a, y, lines, lineCount);
     if (!Number.isNaN(x)) {
       out.x = x;
       out.y = y;
@@ -157,7 +179,7 @@ export function placePill(obs: readonly Box[], n: number, a: PillAsk, out: { x: 
     for (let k = 0; k < n; k++) {
       y = pushed(obs, n, a, y, side);
       if (Number.isNaN(y) || y < a.top || y + a.h > VIEW_H - MARGIN) break;
-      const x = slide(obs, n, a, y);
+      const x = slide(obs, n, a, y, lines, lineCount);
       if (!Number.isNaN(x)) {
         out.x = x;
         out.y = y;
@@ -178,49 +200,93 @@ export function placePill(obs: readonly Box[], n: number, a: PillAsk, out: { x: 
  * `soft` (v0.2 council round 4, Fable F2) is the index of an obstacle drawn above the pills (the saucer's fuse box):
  * a pill the placement would push past PILL_NEAR gaps, or find no room for, takes its one-gap spot instead when that
  * obstacle is the only thing in the way there.
+ * `lines[0..lineCount)` (round 5, Fable): the solid lines on screen; a spot across one from its ring is not free, so the
+ * pill tries the other side or slides along instead of hiding there.
+ * `short` (round 5): when given, a moved pill that would hide at full width and fits at `asks[i].short` takes that width
+ * (`asks[i].w` and `.x` are rewritten) and is flagged by `short[i] === 1`.
+ * `first` (round 5): the pill placed before all the others (the ring the saucer is heading for), or -1.
  */
-export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array, soft = -1): void {
-  for (let i = 0; i < count; i++) {
+export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array, soft = -1, lines = NO_LINES, lineCount = 0, short?: Uint8Array, first = -1): void {
+  if (first >= count) first = -1;
+  for (let k = 0; k < count; k++) {
+    const i = nth(k, first);
     const a = asks[i]!;
     const o = outs[i]!;
     o.x = a.x;
     o.y = a.ringY + a.side * a.gap - a.h / 2;
-    moved[i] = o.y >= a.top && o.y + a.h <= VIEW_H - MARGIN && fits(obs, n, o.x, o.y, a.w, a.h) ? 0 : 1;
+    moved[i] = o.y >= a.top && o.y + a.h <= VIEW_H - MARGIN && fits(obs, n, o.x, o.y, a.w, a.h) && !across(a, o.x, o.y, lines, lineCount) ? 0 : 1;
+    if (short) short[i] = 0;
     if (!moved[i]) n = keep(obs, n, o.x, o.y, a);
+    // `first` finds its spot before any other pill keeps its own
+    else if (k === 0 && first >= 0) n = moveOne(obs, n, a, o, soft, lines, lineCount, moved, short, i);
   }
-  for (let i = 0; i < count; i++) {
-    if (!moved[i]) continue;
-    const a = asks[i]!;
-    const o = outs[i]!;
-    placePill(obs, n, a, o);
-    if (o.y < a.top || o.y + a.h > VIEW_H - MARGIN || !fits(obs, n, o.x, o.y, a.w, a.h)) {
-      // A crowded screen can leave both preferred sides outside the usable area.
-      // Try the top of each free band, keeping the closest one to the ring.
-      let distance = Infinity;
-      for (let j = -1; j < n; j++) {
-        const y = j < 0 ? a.top : obs[j]!.y + obs[j]!.h + 6;
-        const d = Math.abs(y + a.h / 2 - a.ringY);
-        if (d >= distance) continue;
-        const x = slide(obs, n, a, y);
-        if (!Number.isFinite(x)) continue;
-        distance = d;
-        o.x = x;
-        o.y = y;
-      }
-      if (distance === Infinity) moved[i] = 2;
-    }
-    if (soft >= 0 && (moved[i] === 2 || Math.abs(o.y + a.h / 2 - a.ringY) / a.gap > PILL_NEAR) && underSoft(obs, n, a, soft, o)) moved[i] = 1;
-    if (moved[i] === 2) continue;
-    n = keep(obs, n, o.x, o.y, a);
+  for (let k = first >= 0 ? 1 : 0; k < count; k++) {
+    const i = nth(k, first);
+    if (moved[i]) n = moveOne(obs, n, asks[i]!, outs[i]!, soft, lines, lineCount, moved, short, i);
   }
 }
 
-/** A one-gap spot (its labelled side first, at its own x) blocked by nothing but obstacle `soft`: written into `o`. */
-function underSoft(obs: readonly Box[], n: number, a: PillAsk, soft: number, o: { x: number; y: number }): boolean {
+/** Places pill `i`, whose own spot is taken, and keeps its box (see `placePills`); returns the new obstacle count. */
+function moveOne(obs: Box[], n: number, a: PillAsk, o: { x: number; y: number }, soft: number, lines: readonly PillLine[], lineCount: number, moved: Uint8Array, short: Uint8Array | undefined, i: number): number {
+  moved[i] = placeMoved(obs, n, a, o, soft, lines, lineCount);
+  // round 5 (Fable): no room at full width (it would hide), so try its route name alone
+  const fullOk = a.wasShort ? PILL_NEAR : PILL_FAR;
+  if (short && a.short && a.short < a.w && (moved[i] === 2 || pillReach(a, o.x, o.y, lines, lineCount) > fullOk)) {
+    const w = a.w, x = a.x, ox = o.x, oy = o.y, m = moved[i]!;
+    a.w = a.short;
+    a.x = Math.min(Math.max(a.ringX - a.w / 2, MARGIN), VIEW_W - MARGIN - a.w);
+    moved[i] = placeMoved(obs, n, a, o, soft, lines, lineCount);
+    if (moved[i] !== 2 && pillReach(a, o.x, o.y, lines, lineCount) <= PILL_FAR) short[i] = 1;
+    else {
+      a.w = w;
+      a.x = x;
+      o.x = ox;
+      o.y = oy;
+      moved[i] = m;
+    }
+  }
+  return moved[i] === 2 ? n : keep(obs, n, o.x, o.y, a);
+}
+
+/** The k-th pill to place: `first` comes first (when ≥ 0), then the others in order. */
+function nth(k: number, first: number): number {
+  return first < 0 || k > first ? k : k === 0 ? first : k - 1;
+}
+
+/** Places a pill whose own spot is taken (see `placePills`): 1, or 2 when nothing on screen is free. */
+function placeMoved(obs: readonly Box[], n: number, a: PillAsk, o: { x: number; y: number }, soft: number, lines: readonly PillLine[], lineCount: number): 1 | 2 {
+  let moved: 1 | 2 = 1;
+  placePill(obs, n, a, o, lines, lineCount);
+  if (o.y < a.top || o.y + a.h > VIEW_H - MARGIN || !fits(obs, n, o.x, o.y, a.w, a.h) || across(a, o.x, o.y, lines, lineCount)) {
+    // A crowded screen can leave both preferred sides outside the usable area.
+    // Try the top of each free band, keeping the closest one to the ring.
+    let distance = Infinity;
+    for (let j = -1; j < n; j++) {
+      const y = j < 0 ? a.top : obs[j]!.y + obs[j]!.h + 6;
+      const d = Math.abs(y + a.h / 2 - a.ringY);
+      if (d >= distance) continue;
+      const x = slide(obs, n, a, y, lines, lineCount);
+      if (!Number.isFinite(x)) continue;
+      distance = d;
+      o.x = x;
+      o.y = y;
+    }
+    if (distance === Infinity) moved = 2;
+  }
+  if (soft >= 0 && (moved === 2 || Math.abs(o.y + a.h / 2 - a.ringY) / a.gap > PILL_NEAR) && underSoft(obs, n, a, soft, o, lines, lineCount)) moved = 1;
+  return moved;
+}
+
+/**
+ * A one-gap spot (its labelled side first) blocked by nothing but obstacle `soft`, slid along like any other spot
+ * (round 5, Fable: it tried the pill's own x only) and never across a solid line from its ring: written into `o`.
+ */
+function underSoft(obs: readonly Box[], n: number, a: PillAsk, soft: number, o: { x: number; y: number }, lines: readonly PillLine[], lineCount: number): boolean {
   for (let pass = 0; pass < 2; pass++) {
     const y = a.ringY + (pass === 0 ? a.side : -a.side) * a.gap - a.h / 2;
-    if (y < a.top || y + a.h > VIEW_H - MARGIN || !fits(obs, n, a.x, y, a.w, a.h, soft)) continue;
-    o.x = a.x;
+    const x = slide(obs, n, a, y, lines, lineCount, soft);
+    if (Number.isNaN(x)) continue;
+    o.x = x;
     o.y = y;
     return true;
   }

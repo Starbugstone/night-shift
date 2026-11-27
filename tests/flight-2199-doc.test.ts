@@ -80,3 +80,86 @@ describe('every GDD that names a clock field states the shipped value', () => {
     expect(clockFields(stale).wrong.join()).toMatch(/budgetSec` 205, but level12 ships 220/);
   });
 });
+
+// Round 5 (Fable): GDD-11, GDD-12, GDD-13 (and the older GDDs) give their clocks in prose with their tuning history,
+// which the field check above does not parse. Each deep level's clock is stated once in machine-readable form beside
+// the prose that states it: `<!-- shipped clock: levelN budgetSec=… parMarginSec=… -->` (or `elapsedParSec=…` for an
+// elapsed-clock level). Every deep level in LEVELS has exactly one, each matches the level data, and the paragraph it
+// sits in still states that clock in words: the budget (or the elapsed par) and the Night owl margin or elapsed time.
+type ClockLevel = { id: string; kind: string; budgetSec?: number; parMarginSec?: number; elapsedParSec?: number };
+const CLOCK_FIELDS = ['budgetSec', 'parMarginSec', 'elapsedParSec'] as const;
+
+/** Seconds a paragraph states in words: `183 s`, `25 seconds`, `**1:07**` (not a time of day like 10:05:42). */
+function proseSeconds(text: string): Set<number> {
+  const out = new Set<number>();
+  for (const m of text.replace(/<!--[\s\S]*?-->/g, '').matchAll(/\b(\d+)(?:\*\*)? ?(?:s|seconds?)\b/g)) out.add(Number(m[1]));
+  for (const m of text.matchAll(/(?<![:\d])(\d{1,2}):(\d\d)(?![:\d])/g)) out.add(Number(m[1]) * 60 + Number(m[2]));
+  return out;
+}
+
+function shippedClocks(docs: Record<string, string>, levels: readonly ClockLevel[]): { lines: number; wrong: string[] } {
+  const wrong: string[] = [];
+  const seen = new Map<string, string[]>();
+  let lines = 0;
+  for (const [file, text] of Object.entries(docs)) {
+    for (const para of text.split(/\n\s*\n/)) {
+      for (const m of para.matchAll(/<!-- shipped clock: ([a-z0-9_]+) ((?:\w+=\d+ ?)+)-->/g)) {
+        lines++;
+        const id = m[1]!;
+        seen.set(id, [...seen.get(id) ?? [], file]);
+        const level = levels.find(l => l.id === id);
+        if (!level || level.kind !== 'deep') { wrong.push(`${file}: shipped clock for ${id}, which is not a deep level in LEVELS`); continue; }
+        const stated = Object.fromEntries([...m[2]!.matchAll(/(\w+)=(\d+)/g)].map(f => [f[1]!, Number(f[2])]));
+        const elapsed = level.elapsedParSec !== undefined;
+        const want = elapsed ? ['elapsedParSec'] : ['budgetSec', 'parMarginSec'];
+        if (Object.keys(stated).sort().join() !== [...want].sort().join()) wrong.push(`${file}: ${id} states ${Object.keys(stated).join(', ')}, not ${want.join(', ')}`);
+        for (const key of CLOCK_FIELDS) {
+          if (key in stated && stated[key] !== level[key]) wrong.push(`${file}: ${id} ${key}=${stated[key]}, but ${id} ships ${level[key]}`);
+        }
+        // the prose beside it says the same clock
+        const words = proseSeconds(para);
+        if (elapsed) {
+          if (!words.has(level.elapsedParSec!)) wrong.push(`${file}: the paragraph with ${id}'s clock does not say its ${level.elapsedParSec} s elapsed par`);
+        } else {
+          const budget = level.budgetSec!, margin = level.parMarginSec!;
+          if (!words.has(budget) && !(words.has(margin) && words.has(budget - margin))) wrong.push(`${file}: the paragraph with ${id}'s clock does not say its ${budget} s budget`);
+          if (!words.has(margin) && !words.has(budget - margin)) wrong.push(`${file}: the paragraph with ${id}'s clock does not say its Night owl (${margin} s left, ${budget - margin} s elapsed)`);
+        }
+      }
+    }
+  }
+  for (const level of levels) {
+    if (level.kind !== 'deep') continue;
+    const files = seen.get(level.id) ?? [];
+    if (files.length !== 1) wrong.push(`${level.id}: ${files.length} shipped clock lines (${files.join(', ') || 'none'}); its GDD states it once`);
+  }
+  return { lines, wrong };
+}
+
+describe('every deep level\'s GDD states its shipped clock (round 5, Fable)', () => {
+  const levels = LEVELS as readonly ClockLevel[];
+
+  it('walks every deep level in LEVELS', () => {
+    const { lines, wrong } = shippedClocks(GDDS, levels);
+    expect(lines).toBe(levels.filter(l => l.kind === 'deep').length);
+    expect(wrong).toEqual([]);
+  });
+
+  it('catches a level retuned without its GDD (mutation check)', () => {
+    const retuned = levels.map(l => l.id === 'level10' ? { ...l, budgetSec: 172 } : l.id === 'birch_bakery' ? { ...l, elapsedParSec: 60 } : l);
+    const { wrong } = shippedClocks(GDDS, retuned);
+    expect(wrong.join('\n')).toMatch(/level10 budgetSec=183, but level10 ships 172/);
+    expect(wrong.join('\n')).toMatch(/birch_bakery elapsedParSec=56, but birch_bakery ships 60/);
+  });
+
+  it('catches stale prose beside a right line, a missing line and a new level (mutation check)', () => {
+    const edit = (file: string, from: string, to: string) => Object.fromEntries(Object.entries(GDDS).map(([f, t]) => [f, f.endsWith(file) ? t.replace(from, to) : t]));
+    const stale = shippedClocks(edit('GDD-2-deeper.md', 'Sunrise budget 420 s (Night owl: done by 260 s)', 'Sunrise budget 400 s (Night owl: done by 240 s)'), levels).wrong.join('\n');
+    expect(stale).toMatch(/level3's clock does not say its 420 s budget/);
+    expect(stale).toMatch(/level3's clock does not say its Night owl \(160 s left, 260 s elapsed\)/);
+    expect(shippedClocks(edit('GDD-13-1953-tripods.md', '**118 s** left (**174 s** elapsed)', '**100 s** left'), levels).wrong.join()).toMatch(/level11's clock does not say its Night owl/);
+    expect(shippedClocks(edit('GDD-11-onramp.md', '<!-- shipped clock: birch_neighbours budgetSec=210 parMarginSec=110 -->', ''), levels).wrong.join()).toMatch(/birch_neighbours: 0 shipped clock lines/);
+    const added = [...levels, { id: 'level13', kind: 'deep', budgetSec: 300, parMarginSec: 100 }];
+    expect(shippedClocks(GDDS, added).wrong.join()).toMatch(/level13: 0 shipped clock lines/);
+  });
+});

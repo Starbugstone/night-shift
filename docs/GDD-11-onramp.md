@@ -142,7 +142,7 @@ Use the existing first-clear cover-story row for “The first loaf clocked in. M
 
 ### Clock and proof
 
-One delivery ends the shift. Show elapsed time without a countdown or dawn wash. **Night owl by 56 s**, with an initial clean casual median of **32–44 s**. Keep enough room for a quiet stop and the **6–10 s** pickup branch. A full sighting or failed room loses Ghost for that run. Retrying from the live checkpoint can still earn Delivered. Start with at least 95% skilled and 85% casual delivery on each room route over 20 seeds. The recommended Stockroom door should reach 95% casual.
+One delivery ends the shift. Show elapsed time without a countdown or dawn wash. **Night owl by 56 s**, with an initial clean casual median of **32–44 s**. Keep enough room for a quiet stop and the **6–10 s** pickup branch. A full sighting or failed room loses Ghost for that run. Retrying from the live checkpoint can still earn Delivered. Start with at least 95% skilled and 85% casual delivery on each room route over 20 seeds. The recommended Stockroom door should reach 95% casual. <!-- shipped clock: birch_bakery elapsedParSec=56 -->
 
 Override the memo’s Delivered and Night owl goals. Use the elapsed par of **0:56** for `{time}`.
 
@@ -248,7 +248,7 @@ The gnome sends postcards in his Field Finds status. The existing found flag gat
 
 ### Clock and proof
 
-Start the shared clock at **2:00**, with dawn at **6:00** after **210 real seconds**. Night owl requires **110 s left**, so **par is 100 s**. The clock is live in flight and abduction and keeps its value through the retry choice, using the same charge rules as Maple Court. A delivered first specimen stays aboard on a sighting or failed second room. Aim for a **62–85 s** clean casual median and **8–14 s** for the pickup branch. Sunrise can be reached in a deliberately slow run. Keep the existing dawn warning and one familiar timer in both HUDs. The first flight return shows **1/2** and points the camera at traversable space near the checkpoint.
+Start the shared clock at **2:00**, with dawn at **6:00** after **210 real seconds**. Night owl requires **110 s left**, so **par is 100 s**. The clock is live in flight and abduction and keeps its value through the retry choice, using the same charge rules as Maple Court. A delivered first specimen stays aboard on a sighting or failed second room. Aim for a **62–85 s** clean casual median and **8–14 s** for the pickup branch. Sunrise can be reached in a deliberately slow run. Keep the existing dawn warning and one familiar timer in both HUDs. The first flight return shows **1/2** and points the camera at traversable space near the checkpoint. <!-- shipped clock: birch_neighbours budgetSec=210 parMarginSec=110 -->
 
 Over 20 seeds, each room should deliver at least **90% skilled** and **80% casual**, with the recommended route for each sleeper at **90% casual** or better. Test both delivery orders with the bot, plus the recommended approaches under human input. At each of the four start delays the existing shortest-open-path flight pilot must get spotted or time out before the full quota. Also test direct holds from spawn to each initial ring, to keep the lesson on the first leg. If an untimed route slips through, move the detector or the throat before reducing the fuse. Each room must reject the direct 270 px/s drag within 45 s at all four start phases. Catch the straight drag on the visible set geometry even in a favourable laser phase.
 

@@ -180,16 +180,35 @@ jobs:
         uses: actions/github-script@v7
         env:
           BUILD: ${{ needs.pin.outputs.build }}
+          BUILD_RESULT: ${{ needs.build.result }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
         with:
           script: |
             const { owner, repo } = context.repo;
             const attempt = process.env.RUN_ATTEMPT;
-            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { owner, repo, run_id: context.runId, per_page: 100 });
-            const uploaded = new Set(artifacts.filter(a => !a.expired).map(a => a.name));
+            const wanted = JSON.parse(process.env.BUILD).map(b => ({ ...b, name: `dist-${b.branch}-${b.sha}-${context.runId}-${attempt}` }));
+            // the listing can lag behind an upload that just finished (see the note above the build job): list
+            // again, a few seconds apart, while a build this attempt should have uploaded is missing (council
+            // round 5, Fable). A failed leg uploads nothing, so the wait stays bounded.
+            const LISTINGS = 5;
+            const PAUSE_MS = 5000;
+            let artifacts = [];
+            let uploaded = new Set();
+            for (let n = 1; n <= LISTINGS; n++) {
+              artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { owner, repo, run_id: context.runId, per_page: 100 });
+              uploaded = new Set(artifacts.filter(a => !a.expired).map(a => a.name));
+              const missing = wanted.filter(b => !uploaded.has(b.name)).map(b => b.name);
+              if (!missing.length) break;
+              if (n < LISTINGS) {
+                core.info(`listing ${n} of ${LISTINGS}: ${missing.join(', ')} not listed yet`);
+                await new Promise(resolve => setTimeout(resolve, PAUSE_MS));
+              } else if (process.env.BUILD_RESULT === 'success') {
+                core.warning(`every build leg passed, but ${missing.join(', ')} was not listed after ${LISTINGS} listings`);
+              }
+            }
             const names = { main: '', preprod: '', live: '' };
-            for (const b of JSON.parse(process.env.BUILD)) {
-              const name = `dist-${b.branch}-${b.sha}-${context.runId}-${attempt}`;
+            for (const b of wanted) {
+              const name = b.name;
               if (uploaded.has(name)) { names[b.live ? 'live' : b.branch] = name; continue; }
               // "Re-run failed jobs" keeps a passed leg from an earlier attempt; only this attempt's builds count
               const earlier = artifacts.find(a => a.name.startsWith(`dist-${b.branch}-${b.sha}-${context.runId}-`));
@@ -228,6 +247,7 @@ jobs:
         env:
           BUILD: ${{ needs.pin.outputs.build }}
           BUILT: ${{ toJSON(steps.find.outputs) }}
+          BUILD_RESULT: ${{ needs.build.result }}
           PUSHED: ${{ needs.pin.outputs.pushed }}
           KEEP: ${{ needs.pin.outputs.keep }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -254,7 +274,10 @@ jobs:
               const mine = built.find(b => b.branch === branch && !b.live);
               const fresh = ours(mine, names[branch]);
               if (branch === pushed) {
-                if (!fresh) return core.setFailed(`${branch} ${mine?.sha}: its tests, sweep or build failed; nothing is published`);
+                // round 5 (Fable): every leg passed, so its upload was not found (listing lag), not a failed test
+                if (!fresh) return core.setFailed(process.env.BUILD_RESULT === 'success'
+                  ? `${branch} ${mine?.sha}: every build leg passed, but its build artifact was not found; nothing is published (use "Re-run all jobs")`
+                  : `${branch} ${mine?.sha}: its tests, sweep or build failed; nothing is published`);
                 // a rerun of an older push: the newer push publishes instead
                 const now = await tip(branch);
                 if (now !== mine.sha) {

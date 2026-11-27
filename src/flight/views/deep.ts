@@ -605,7 +605,8 @@ export class DeepFlightView implements SceneView {
         this.labels.request(ring, cam.x, cam.y);
       }
     }
-    this.labels.place(n, cam.x, cam.y, fuseBox);
+    // round 5 (Fable): the ring the saucer is heading for (where it will be in 0.8 s) places its pill first
+    this.labels.place(n, cam.x, cam.y, fuseBox, saucer.x + saucer.vx * 0.8 - cam.x, saucer.y + saucer.vy * 0.8 - cam.y);
     this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0, this.recitals?.coverEars); // v4 UFO pilot
     this.saucer.sync(saucer, t, rm, locking, s.st, lock, sim.field.scramble(saucer.x, saucer.y), sim.st.safe, SAFE_WINDOW);
     if (lifting && !rm) this.saucer.root.y -= Math.min(1, s.st * 6) * 36;

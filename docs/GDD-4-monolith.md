@@ -26,7 +26,7 @@ Echo’s split-level cave keeps the easy `echo_appeal` route from the spatial re
 
 - **Quota met** requires both troop quotas and Echo before sunrise.
 - **Ghost** requires a completed quota with zero full flight sightings. A cave retry costs clock time.
-- **Night owl** requires a completed quota with at least 25 seconds remaining. Finishing at exactly 75 seconds earns it.
+- **Night owl** requires a completed quota with at least 25 seconds remaining of the 100 s run. Finishing at exactly 75 seconds earns it. <!-- shipped clock: level8 budgetSec=100 parMarginSec=25 -->
 
 The human-model evaluator plays the moving rings, the live countdown and the cave. Independent room scores cover the appeals hatch. The flight estimate includes the four open-air pickups. The deep route and flight bands stay in force, including a catch at every tested start time for a naive beeline. Run `DIFFICULTY_LEVELS=level8 npm run difficulty` and `npx vitest run tests/levels-monolith.test.ts`. The real-pointer playthrough accepts `ONLY=L8`.
 
