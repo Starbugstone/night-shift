@@ -75,8 +75,8 @@ game finds the last good one automatically.
 
 ## Fixed
 
-- Shifts that don't end at sunrise no longer say "before dawn", and their clock displays properly
-  everywhere.
+- Shifts that don't end at sunrise (1955 and the 2199 demolition) no longer say "before dawn", and
+  their clock displays properly everywhere.
 - Route labels no longer cover a cable or a detector edge.
 - Exit signs stay on screen in French too, and shift memos never run into the performance goals.
 - Vrell's close-call remarks now match the seconds shown on the report.
