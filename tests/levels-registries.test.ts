@@ -16,7 +16,7 @@ import { DeepFlightScene } from '../src/flight/deep-scene';
 import { fmt, LANGS, setLang, TABLES, type Lang } from '../src/i18n';
 import { deepComment, deepStartEvent, deepZibLine, vrellComment } from '../src/levels/humor';
 import { formatOrderNumber, isDeep, LEVELS, levelRooms, workOrderNumber } from '../src/levels/levels';
-import { DeepRun } from '../src/levels/run';
+import { DeepRun, endsAtSunrise } from '../src/levels/run';
 import type { DeepLevelDef, LevelDef } from '../src/levels/types';
 import { shownStarLabels } from '../src/ui/star-labels';
 
@@ -141,8 +141,8 @@ describe('per-level registries', () => {
         if (!isDeep(l)) continue;
         const scene = flight(l);
         expect(wrongCounts(l, [scene.bannerBody], lang), `${lang} ${l.id} banner objective`).toEqual([]);
-        // no sunrise on an elapsed-time shift
-        if (l.clockMode === 'elapsed') {
+        // no sunrise on a shift that doesn't end at sunrise (v0.2 presentation: was elapsed shifts only)
+        if (!endsAtSunrise(l)) {
           expect(`${scene.bannerHeading} ${scene.bannerBody}`, `${lang} ${l.id} banner`).not.toMatch(/sunrise|dawn|aube|lever du soleil/i);
         }
       }

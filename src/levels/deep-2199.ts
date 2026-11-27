@@ -13,6 +13,7 @@ export const LEVEL12: DeepLevelDef = {
   kind: 'deep', id: 'level12', requires: ['level10', 'level11'], title: words.title,
   location: words.location, blurb: words.blurb, human: words.human, mugshot: 'human/artie_head',
   memo: { re: words.re, body: words.body, joke: words.joke },
+  clockMode: 'demolition', // v0.2 presentation
   hours: [0, 0], budgetSec: 192, parMarginSec: 26,
   map: {
     // v4 openings: Zib slips in from the north under the west demolition barge and flies south. The big

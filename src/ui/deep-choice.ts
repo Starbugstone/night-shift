@@ -5,7 +5,7 @@ import type { Scene } from '../contracts';
 import { VIEW_W } from '../contracts';
 import type { Shell } from '../core/shell';
 import { abductFailLine } from '../levels/humor';
-import type { DeepRun } from '../levels/run';
+import { endsAtSunrise, type DeepRun } from '../levels/run';
 import { easeOutBack } from '../core/fx';
 import { GLOW, ScreenTint } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
@@ -38,6 +38,8 @@ export class DeepChoiceScene implements Scene {
   readonly title: string;
   readonly building: string;
   readonly status: string;
+  /** v0.2 presentation: the deadline is sunrise, so the retry bar ends in a sun (else a bolt). */
+  readonly sunIcon: boolean;
   readonly retry: Button;
   readonly back = new Button(70, 676, VIEW_W - 140, 76, tr().common.backToFlight, 'secondary', 26);
   readonly quit = new Button(70, 772, VIEW_W - 140, 60, tr().deepChoice.abandon, 'ghost', 22);
@@ -64,6 +66,7 @@ export class DeepChoiceScene implements Scene {
     this.status = run.level.clockMode === 'elapsed'
       ? fmt(tr().birch.timeAgainstPar, { used: run.clockText(), par: fmtTime(deepPar(run.level)) })
       : deadlineLabel(run.level, `${m}:${sec < 10 ? '0' : ''}${sec}`, 'retry');
+    this.sunIcon = endsAtSunrise(run.level);
   }
 
   update(dt: number): void {
@@ -105,7 +108,7 @@ class DeepChoiceView implements SceneView {
   private readonly failedFace: Container | Graphics | null;
 
   constructor(private readonly s: DeepChoiceScene) {
-    this.sun = s.run.level.id === 'level9' || s.run.level.clockMode === 'elapsed' ? null : new SunIcon(9, 12, 16);
+    this.sun = s.sunIcon ? new SunIcon(9, 12, 16) : null;
     this.title = new Label({ size: s.title.length > 13 ? 42 : 50, color: C.red, weight: 900, outline: C.ink });
     this.title.set(s.title, VIEW_W / 2, 120, VIEW_W - 60);
     this.title.rotation = -0.05;

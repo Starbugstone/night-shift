@@ -190,8 +190,15 @@ export interface DeepMap {
 /** A live shift with one to three targets and an elapsed or deadline clock. */
 export interface DeepLevelDef extends LevelBase {
   kind: 'deep';
-  /** Elapsed-time shift with a par and no deadline. */
-  clockMode?: 'elapsed';
+  /**
+   * What the shift clock shows and what ends the shift (v0.2 presentation). Omitted: a time-of-day clock
+   * that runs from hours[0] to sunrise at hours[1].
+   * - 'elapsed': a stopwatch with a par and no deadline.
+   * - 'countdown': the deadline is still sunrise, but every clock counts down the time left (time trial).
+   * - 'storm': a time-of-day clock with seconds; the shift ends when the storm passes, not at sunrise.
+   * - 'demolition': a countdown to the demolition; no sunrise.
+   */
+  clockMode?: 'elapsed' | 'countdown' | 'storm' | 'demolition';
   elapsedParSec?: number;
   /** Real seconds from the start of the shift to sunrise. */
   budgetSec: number;

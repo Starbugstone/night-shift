@@ -21,6 +21,7 @@ const lamps = [
 export const LEVEL9: DeepLevelDef = {
   kind: 'deep', id: 'level9', title: copy.title, location: copy.location, blurb: copy.blurb,
   human: copy.human, mugshot: 'human/doc_head', memo: { re: copy.re, body: copy.body, joke: copy.joke },
+  clockMode: 'storm', // v0.2 presentation
   hours: [22, 22], budgetSec: 380, parMarginSec: 258,
   map: {
     theme: 'storm55', w: 1760, h: 2240, start: { x: 900, y: 2170 }, fuseSec: 0.86,

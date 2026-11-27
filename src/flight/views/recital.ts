@@ -118,7 +118,9 @@ export class RecitalView {
         g.rotation = p.torch;
       }
     }
-    const speaker = f.defs[this.s.reciterIndex];
+    // v0.2 presentation: the card belongs to the poet who began the verse and stays for its reading time,
+    // wherever the cone sweeps or the saucer drifts meanwhile.
+    const speaker = this.s.verseT > 0 ? f.defs[this.s.verseSpeaker] : undefined;
     const verse = this.verses.indexOf(this.s.verse);
     this.bubble.visible = speaker?.type === 'camera' && verse >= 0 && this.s.state === 'fly';
     if (!this.bubble.visible || speaker?.type !== 'camera') return;

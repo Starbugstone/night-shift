@@ -21,7 +21,7 @@ import { drawPierGround } from '../pier-ground';
 import { propSize } from '../props';
 import { BULB_ROWS, SHIP, SHIP_BOTTOM, SHIP_LEFT, SHIP_RIGHT, drawShipGround } from '../ship-hull';
 import { FLIGHT_HUD } from '../sim';
-import { DeepSpottedView } from '../spotted';
+import { DeepSpottedView, photoStampFor } from '../spotted';
 import { AmbientView } from './ambient';
 import { EntryLabels, EntryRingView, RING_CLEAR, SaucerView } from './craft';
 import { DeepFlightHud } from './deep-hud';
@@ -449,7 +449,7 @@ export class DeepFlightView implements SceneView {
     this.tints.dawnDecor.addChild(this.dawn.root);
     this.hud = new DeepFlightHud(s);
     this.spotted = new DeepSpottedView(assets);
-    this.spotted.photo.pm = s.level.id === 'level9';
+    this.spotted.photo.stamp = photoStampFor(s.level); // v0.2 presentation
     this.root.addChild(this.camera.root, this.tints.root);
     if (this.crestValley) this.root.addChild(this.crestValley.weather);
     this.root.addChild(this.hud.root);

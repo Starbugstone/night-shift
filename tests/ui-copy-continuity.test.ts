@@ -36,7 +36,8 @@ import { DeepFlightScene } from '../src/flight/deep-scene';
 import { fmt, setLang, TABLES, tr, type Lang } from '../src/i18n';
 import { formatOrderNumber, isDeep, LEVELS, workOrderNumber } from '../src/levels/levels';
 import { isLevelUnlocked, RANKS, type RunOutcome } from '../src/levels/progress';
-import { DeepRun } from '../src/levels/run';
+import { clockFace, DeepRun, endsAtSunrise } from '../src/levels/run';
+import { photoClock, photoStampFor } from '../src/flight/spotted';
 import { defaultSave, type LevelId } from '../src/levels/save';
 import type { DeepLevelDef } from '../src/levels/types';
 import type { Shell } from '../src/core/shell';
@@ -227,7 +228,7 @@ function deadlineLabels(lv: DeepLevelDef): Record<string, string> {
   const late = new DeepRun(lv, index);
   late.phase = 'sunrise';
   const report = deepReport(late, outcome());
-  return { 'flight banner': scene.bannerHeading, 'retry screen': choice.status, 'report time': report.rows[0]![1] };
+  return { 'flight banner': scene.bannerHeading, 'flight banner body': scene.bannerBody, 'retry screen': choice.status, 'report time': report.rows[0]![1] };
 }
 
 describe('2. sunrise and dawn only where the deadline is dawn', () => {
@@ -266,6 +267,45 @@ describe('2. sunrise and dawn only where the deadline is dawn', () => {
     }
     expect(wrong).toEqual([]);
     expect(stale, 'fixed: drop from PENDING_DAWN_UI').toEqual([]);
+  });
+
+  // v0.2 presentation: "Collect all three before dawn" under a DEMOLITION clock, a sun on the 2199 retry
+  // bar, "0:55 AM" stamped on a countdown. Each level's clock comes from its data (clockMode).
+  it('clockMode matches the hours: sunrise levels run to 6:00, the others have no dawn', () => {
+    for (const lv of LEVELS) if (isDeep(lv)) expect(endsAtSunrise(lv), lv.id).toBe(dawnDeadline(lv.id));
+  });
+
+  it('the retry screen shows a sun only when the deadline is sunrise', () => {
+    for (const lv of LEVELS) {
+      if (!isDeep(lv)) continue;
+      const failed = new DeepRun(lv, workOrderNumber(lv.id) - 1);
+      const target = lv.map.targets.findIndex((tg) => tg.entries.length > 0);
+      const tg = lv.map.targets[target]!;
+      failed.lastFail = { target, entry: 0, roomId: tg.entries[0]!.roomId, reason: 'woke', by: tg.short };
+      const choice = new DeepChoiceScene({} as Shell, failed, { retry() {}, backToFlight() {}, quit() {} } as never);
+      expect(choice.sunIcon, lv.id).toBe(dawnDeadline(lv.id));
+    }
+  });
+
+  it('the spotted photo stamps AM or PM only on a time-of-day clock', () => {
+    const wrong: string[] = [];
+    for (const lang of LANGS) {
+      setLang(lang);
+      for (const lv of LEVELS) {
+        if (!isDeep(lv)) continue;
+        for (const at of [0, 45, 100]) {
+          const run = new DeepRun(lv, workOrderNumber(lv.id) - 1);
+          run.tick(Math.min(at, run.budget - 1));
+          const text = run.clockText(lang);
+          const { h, m } = run.clock();
+          const timeOfDay = text.startsWith(`${h}:${String(m).padStart(2, '0')}`);
+          const stamp = photoClock(text, photoStampFor(lv));
+          if (!timeOfDay && stamp !== text) wrong.push(`${lang} ${lv.id} ${clockFace(lv)}: "${stamp}" on a ${text} timer`);
+          if (timeOfDay && lang === 'en' && !/ (AM|PM)$/.test(stamp)) wrong.push(`${lang} ${lv.id}: "${stamp}" has no AM/PM`);
+        }
+      }
+    }
+    expect(wrong).toEqual([]);
   });
 
   it('time trials count down on every screen, never "sunrise"', () => {

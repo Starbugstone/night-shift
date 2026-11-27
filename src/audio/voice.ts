@@ -66,7 +66,13 @@ export class VoiceEngine {
     if (l.done || l.end <= now) return;
     const at = Math.min(l.end, now + STOP_FADE);
     l.fade.fadeTo(0, now, at - now);
-    for (const s of l.sources) s.stop(at);
+    for (const s of l.sources) {
+      try {
+        s.stop(at);
+      } catch {
+        // already stopped (a strict WebAudio rejects a second stop)
+      }
+    }
     l.end = at;
   }
 

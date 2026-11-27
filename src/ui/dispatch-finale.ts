@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import type { Assets, Scene } from '../contracts';
+import { ART } from '../art-manifest';
 import type { Shell } from '../core/shell';
 import { ViewSlot } from '../core/gfx/scene';
 import { Label, Paragraph } from '../core/gfx/text';
@@ -21,7 +22,9 @@ function note(text: string, x: number, y: number, width: number, size: number) {
   return p;
 }
 function face(assets: Assets, key: string, x: number, y: number, size: number, tint: string) {
-  const figure = artSprite(assets, key, size, size) ?? new Graphics()
+  // v0.2 presentation: `size` is the width; the art keeps its manifest aspect (Krix's head is 80×68)
+  const spec = ART[key];
+  const figure = artSprite(assets, key, size, spec ? size * spec.h / spec.w : size) ?? new Graphics()
     .ellipse(0, 0, size / 3, size * 0.44).fill(tint).stroke({ color: C.ink, width: 4 })
     .ellipse(-size * 0.1, -4, 5, 8).fill(C.ink).ellipse(size * 0.1, -4, 5, 8).fill(C.ink);
   figure.position.set(x, y);
@@ -199,8 +202,10 @@ export class DispatchFinale implements Scene {
     this.age += dt;
     const { pointer, audio } = this.shell.ctx;
     if (this.skip.update(pointer, dt)) return this.finish();
-    if (!this.next.update(pointer, dt) && this.age < this.timings[this.page]!) return;
-    if (this.page === 2) return this.finish();
+    const last = this.page === this.timings.length - 1;
+    // v0.2 presentation: the pages turn by themselves, but the last one waits for a tap
+    if (!this.next.update(pointer, dt) && (last || this.age < this.timings[this.page]!)) return;
+    if (last) return this.finish();
     this.page++;
     this.age = 0;
     audio.sfx('stamp');

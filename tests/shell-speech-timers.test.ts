@@ -8,6 +8,8 @@
 // 3. No new speech-like timer (`quipT`, `shoutFor`, `LINE_SECONDS`...) is set to a number literal,
 //    except the listed non-speech cues.
 // 4. Flavour lines wait FRESH_LINE_SECONDS before replacing a line, never a literal.
+// 5. A flight scene's speech timer is read by the view that shows the line (v0.2: the 2199 verse card
+//    ignored verseT). tests/flight-2199-verse.test.ts drives the scene and view through whole verses.
 //
 // PENDING_* name today's violations (bugs). They only shrink: a pending entry that passes fails.
 import { describe, expect, it } from 'vitest';
@@ -168,6 +170,18 @@ describe('speech timers read the line', () => {
       const [path, name] = key.split(':') as [string, string];
       expect(source(path), `${key} is gone: remove it from NOT_SPEECH`).toMatch(new RegExp(`\\b${name}\\b`));
     }
+  });
+
+  // v0.2 presentation
+  it('shows each flight scene speech line from its timer, in a view', () => {
+    const views = files.filter(f => f.path.startsWith('src/flight/views/'));
+    const unread: string[] = [];
+    for (const path of ['src/flight/scene.ts', 'src/flight/deep-scene.ts']) {
+      for (const field of SPEECH_TIMERS[path]!) {
+        if (!views.some(v => new RegExp(`\\.${field}\\b`).test(v.text))) unread.push(`${path}:${field}`);
+      }
+    }
+    expect(unread, 'a view must hide the line when its timer runs out').toEqual([]);
   });
 
   it('lets a flavour line wait FRESH_LINE_SECONDS before it replaces a line', () => {

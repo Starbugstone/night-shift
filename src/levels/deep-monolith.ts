@@ -14,6 +14,7 @@ const copy = en.levels.level8;
 export const LEVEL8: DeepLevelDef = {
   kind: 'deep', id: 'level8', title: copy.title, location: copy.location, blurb: copy.blurb,
   human: copy.human, mugshot: 'human/flint_head', memo: { re: copy.re, body: copy.body, joke: copy.joke },
+  clockMode: 'countdown', // v0.2 presentation
   hours: [5, 6], budgetSec: 100, parMarginSec: 25,
   map: {
     theme: 'badlands', w: 1440, h: 2200, start: { x: 1250, y: 150 }, fuseSec: 0.9,

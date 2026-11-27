@@ -125,6 +125,8 @@ export class DeepFlightScene implements Scene {
   verseT = 0;
   verse = '';
   reciterIndex = -1;
+  /** v0.2 presentation: the poet reading the current verse, held for its whole reading time (-1: none). */
+  verseSpeaker = -1;
   /** v4 openings: L12's opener waits until a poet is on screen. */
   private poetsUnseen = false;
   private versePending = false;
@@ -195,7 +197,7 @@ export class DeepFlightScene implements Scene {
       case 'birch_neighbours': return words.birch.collectNeighbours;
       case 'level8': return words.timeTrial.banner;
       case 'level9': return words.crestValley.banner;
-      default: return words.flight.collectAll;
+      default: return this.level.clockMode === 'demolition' ? words.dispatch2199.banner : words.flight.collectAll; // v0.2 presentation
     }
   }
 
@@ -241,7 +243,8 @@ export class DeepFlightScene implements Scene {
   }
 
   private say(evt: DeepZibEvent, force = false, panic = false): void {
-    if (evt !== 'start12' && (this.pendingOpener === 'start12' || this.zibEvent === 'start12' && this.zibT > 0)) return;
+    // the 2199 opener holds back flavour, never a warning (v0.2 presentation)
+    if (!panic && evt !== 'start12' && (this.pendingOpener === 'start12' || this.zibEvent === 'start12' && this.zibT > 0)) return;
     if (!force && this.zibCd > 0) return;
     // flavour lines wait their turn: they don't cut a line the player is still reading
     if (force && !panic && FLAVOUR.has(evt) && this.zibT > 0 && this.zibFor - this.zibT < FRESH_LINE_SECONDS) return;
@@ -297,7 +300,7 @@ export class DeepFlightScene implements Scene {
       return;
     }
     if (!wasWarning && this.run.deadlineWarning > 0) {
-      this.say(this.level.id === 'level12' ? 'demolition' : this.level.id === 'level9' ? 'stormClosing' : 'dawn', true, true);
+      this.say(this.level.clockMode === 'demolition' ? 'demolition' : this.level.clockMode === 'storm' ? 'stormClosing' : 'dawn', true, true);
       audio.sfx('sunrise', 0.6);
     }
     if (car?.visible && this.state === 'fly') {
@@ -375,6 +378,7 @@ export class DeepFlightScene implements Scene {
         this.say('start12', true);
       }
       this.verseT = Math.max(0, this.verseT - dt);
+      if (this.verseT === 0) this.verseSpeaker = -1;
       let speaker = -1;
       let distance = Infinity;
       for (let i = 0; i < field.defs.length; i++) {
@@ -392,6 +396,7 @@ export class DeepFlightScene implements Scene {
         const verses = tr().dispatch2199.verses;
         this.verse = verses[this.run.recitalVerse++ % verses.length]!;
         this.verseT = readSeconds(this.verse);
+        this.verseSpeaker = speaker;
         this.zibCd = this.verseT + 0.4;
         this.versePending = false;
       }
@@ -515,7 +520,11 @@ export class DeepFlightScene implements Scene {
       this.wasExposed = false;
       const cause = sim.spottedBy >= 0 ? field.spotCause(sim.spottedBy) : 'police';
       this.spotCause = cause;
-      const seed = this.run.spotted * 7 + Math.floor(this.ctx.time * 3);
+      // v0.2 presentation: count the sighting now, so a deadline while the card shows still reports it
+      this.run.onSpotted();
+      this.verseT = 0;
+      this.verseSpeaker = -1;
+      const seed = (this.run.spotted - 1) * 7 + Math.floor(this.ctx.time * 3);
       this.caption = spotCaption(cause, seed);
       this.shout = spotShout(cause, seed);
       this.spotLine = spotZibLine(cause, seed);
@@ -541,7 +550,7 @@ export class DeepFlightScene implements Scene {
   }
 
   private respawn(): void {
-    const pos = this.run.onSpotted();
+    const pos = this.run.spawn;
     // the world kept turning while the photo developed
     this.sim.st.t = this.run.elapsed;
     this.sim.place(pos.x, pos.y, SAFE_WINDOW);

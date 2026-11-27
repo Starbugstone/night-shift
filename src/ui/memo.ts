@@ -94,7 +94,7 @@ export class MemoScene implements Scene {
       audio.speak(`${lt.body} ${lt.joke}`, 'vrell', { within: this.totalChars / CPS });
     }
     this.chars += dt * CPS;
-    if (p.pressed && !this.start.contains(p.x, p.y) && !this.back.contains(p.x, p.y) && !this.practice?.contains(p.x, p.y)) {
+    if (p.pressed && !this.start.contains(p.x, p.y) && !this.back.contains(p.x, p.y) && !this.practice?.contains(p.x, p.y) && !this.replay?.contains(p.x, p.y)) {
       if (this.chars < this.totalChars) audio.hush('vrell');
       this.chars = 1e6; // tap: finish typing
     }

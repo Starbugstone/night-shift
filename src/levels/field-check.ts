@@ -5,6 +5,7 @@ import { davePatio } from '../abduct/rooms/deep';
 import { LEVEL3 } from './deep-levels';
 import { LEVELS } from './levels';
 import type { DeepLevelDef } from './types';
+import { targetHeadKey } from '../ui/draw';
 
 export const FIELD_CHECK_INDEX = LEVELS.findIndex(level => level.id === 'birch_bakery');
 export const FIELD_CHECK_RULES: AbductRules = { hard: true, wakeFails: false };
@@ -12,11 +13,14 @@ export const FIELD_CHECK_RULES: AbductRules = { hard: true, wakeFails: false };
 const dave = LEVEL3.map.targets[0];
 const house = { ...dave.building, x: 600, y: 420 };
 const patio = { ...dave.entries[1], x: 658, y: 499, recommended: false };
+// v0.2 presentation: Field Check comes before Maple Court, so the HUD chip and the room never name Dave.
+// The chip keeps the rig's face (the room's ragdoll); the name and the decoy's wake-up caption are its own.
+const dummy = { ...dave, human: 'Practice dummy', short: 'Dummy', head: targetHeadKey(dave), building: house, entries: [patio] };
 export const FIELD_CHECK: DeepLevelDef = {
   ...LEVEL3,
   map: {
     theme: 'suburb', w: 1080, h: 1450, start: { x: 540, y: 1300 }, fuseSec: 1.2,
-    targets: [{ ...dave, building: house, entries: [patio] }],
+    targets: [dummy],
     roads: [{ dir: 'h', at: 850, from: 0, to: 1080 }],
     props: [{ key: 'flight/van_top', kind: 'diner', x: 244, y: 856, rot: Math.PI / 2 }],
     groundProps: [], lamps: [],
@@ -40,6 +44,7 @@ export const FIELD_CHECK_ROOM: Room = {
   exitZone: { x: 776, y: 380, w: 120, h: 166 },
   interior: {
     ...davePatio.interior!,
+    caption: "The decoy woke up. On a live call, that's a police report.",
     building: building(
       [{ ...bedroom, w: 540, decor: [], furniture: [] }, landing],
       [{ axis: 'vertical', at: 540, from: 220, to: 600, trim: 'door' }],

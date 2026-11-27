@@ -50,6 +50,10 @@ export function grailTerrain(g: CanvasRenderingContext2D): void {
   g.restore();
 }
 
+// v0.2 presentation: numbers, so sync() parses no colour string each frame
+const RIM_HOT = 0xff5d73;
+const RIM_COOL = 0xeed8b5;
+
 export class GrailDetectorView {
   readonly root = new Container();
   private readonly rim: Graphics;
@@ -81,7 +85,7 @@ export class GrailDetectorView {
     if (!this.root.visible) return;
     this.tell.visible = tell;
     this.rim.visible = live;
-    this.rim.tint = hot ? '#ff5d73' : '#eed8b5';
+    this.rim.tint = hot ? RIM_HOT : RIM_COOL;
     this.rim.scale.set(this.d.type === 'squire' ? f.a[i]! / CLOP.radius : 1);
     this.gesture.visible = tell && this.d.type !== 'cow';
     this.shadow.visible = this.d.type === 'cow' && (tell || live);

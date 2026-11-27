@@ -486,6 +486,8 @@ export const fr: Strings = {
   },
   // v4 2199
   dispatch2199: {
+    // v0.2 presentation
+    banner: "Récupérez les trois avant la démolition",
     parking: "Anneau de stationnement : Zib. Piscine comprise.",
     sign: "Pas de panique",
     agent: "À : Agent Zib",
@@ -837,6 +839,8 @@ export const fr: Strings = {
   },
 
   abduct: {
+    // v0.2 presentation: the creaky floorboard's caption
+    creak: 'criiic',
     wake: 'RÉVEIL',
     awake: 'RÉVEILLÉ !',
     holdingOn: "ÇA S'ACCROCHE !",
@@ -2107,6 +2111,10 @@ export const fr: Strings = {
     // v4 progression
     'Practice decoy': "Leurre d'entraînement",
     Landing: 'Palier',
+    // v0.2 presentation: the Field Check stand-in (it comes before Maple Court, so it is not Dave)
+    'Practice dummy': "Mannequin d'entraînement",
+    Dummy: 'Mannequin',
+    "The decoy woke up. On a live call, that's a police report.": "Le leurre s'est réveillé. En mission, ça finit en rapport de police.",
     'Farmer Doyle': 'Le fermier Doyle',
     Larry: 'Larry',
     'Dentist Dave': 'Dave le dentiste',

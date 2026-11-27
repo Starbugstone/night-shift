@@ -22,6 +22,24 @@ export type RunPhase = 'flight' | 'abduct' | 'choice' | 'done' | 'sunrise';
 /** The sky starts warming this many seconds before sunrise. */
 export const SUNRISE_WARN = 30;
 
+/** What a shift clock reads: a time of day, a time of day with seconds (storm), a countdown or a stopwatch. */
+export type ClockFace = 'time' | 'storm' | 'countdown' | 'stopwatch';
+
+/** The face every screen shows for this level's clock (v0.2 presentation: one source, from the level data). */
+export function clockFace(level: DeepLevelDef): ClockFace {
+  switch (level.clockMode) {
+    case 'elapsed': return 'stopwatch';
+    case 'storm': return 'storm';
+    case 'countdown': case 'demolition': return 'countdown';
+    default: return 'time';
+  }
+}
+
+/** The shift ends at sunrise: the sun icon, the dawn tint and dawn words belong to it. */
+export function endsAtSunrise(level: DeepLevelDef): boolean {
+  return level.clockMode === undefined || level.clockMode === 'countdown';
+}
+
 export interface RunFail {
   target: number;
   entry: number;
@@ -102,7 +120,7 @@ export class DeepRun {
 
   /** 0 = night, 1 = sunrise; ramps over the last SUNRISE_WARN seconds. */
   get dawn(): number {
-    return this.level.id === 'level9' || this.level.id === 'level12' ? 0 : this.deadlineWarning;
+    return endsAtSunrise(this.level) ? this.deadlineWarning : 0;
   }
 
   get deadlineWarning(): number {
@@ -112,7 +130,7 @@ export class DeepRun {
 
   /** Clock face time, e.g. { h: 3, m: 17 } on a 2:00 → 6:00 shift. */
   clock(): { h: number; m: number } {
-    if (this.level.id === 'level9') {
+    if (this.level.clockMode === 'storm') {
       const seconds = crestValleyClock(this.elapsed);
       return { h: Math.floor(seconds / 3600) % 12, m: Math.floor(seconds / 60) % 60 };
     }
@@ -123,17 +141,18 @@ export class DeepRun {
   }
 
   clockText(locale = 'en'): string {
-    if (this.level.clockMode === 'elapsed') {
+    const face = clockFace(this.level);
+    if (face === 'stopwatch') {
       const sec = Math.floor(this.elapsed);
       return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
     }
-    if (this.level.id === 'level9') {
+    if (face === 'storm') {
       const seconds = crestValleyClock(this.elapsed);
       const hour = locale === 'fr' ? 22 : 10;
       const minutes = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
       return `${hour}:${minutes}:${String(seconds % 60).padStart(2, '0')}`;
     }
-    if (this.level.id === 'level8' || this.level.id === 'level12') {
+    if (face === 'countdown') {
       const sec = Math.ceil(this.remaining);
       return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
     }
@@ -154,7 +173,10 @@ export class DeepRun {
     return false;
   }
 
-  /** Spotted in flight: respawn at the checkpoint. */
+  /**
+   * Spotted in flight: count the sighting and respawn at the checkpoint. Call it when the sighting
+   * happens, not on the respawn tap, so a deadline during the Spotted card still reports it.
+   */
   onSpotted(): Vec2 {
     this.spotted++;
     this.spawn = { ...this.checkpoint };

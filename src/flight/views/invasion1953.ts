@@ -236,7 +236,8 @@ export class DriveInScenery {
     this.coop.y = TRIPOD_LEG.y - 92 + settle * 11;
     this.coop.rotation = 0.105 * settle;
     const frame = reduced ? 0 : Math.floor(t * 2.3) % this.screenFrames.length;
-    for (let i = 0; i < this.screenFrames.length; i++) this.screenFrames[i]!.visible = i === frame;
+    // v0.2 presentation: a flicker uses alpha (docs/PIXI-MIGRATION.md rule 3), not visible
+    for (let i = 0; i < this.screenFrames.length; i++) this.screenFrames[i]!.alpha = i === frame ? 1 : 0;
     this.child.rotation = reduced ? 0 : 0.12 * Math.sin(t * 10);
     this.applause.alpha = exposed ? 1 : 0.42;
     this.applause.rotation = reduced ? 0 : 0.15 * Math.sin(t * 12);

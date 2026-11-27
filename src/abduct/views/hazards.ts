@@ -316,7 +316,7 @@ function zone(state: HazardState, spec: Extract<Hazard, { kind: 'draft' | 'creak
   edge.sync(1);
   const arrows: Graphics[] = [];
   const markings = new Graphics();
-  const caption = new Label(CREAK, 'creeeak');
+  const caption = new Label(CREAK, tr().abduct.creak);
   root.addChild(edge.root, markings, caption);
   if (spec.kind === 'draft' && spec.ay === 0) {
     const direction = Math.sign(spec.ax);

@@ -716,6 +716,8 @@ export const en = {
   },
   // v4 2199
   dispatch2199: {
+    // v0.2 presentation
+    banner: "Collect all three before demolition",
     parking: "Parking ring: Zib. Pool included.",
     sign: "DON’T PANIC",
     agent: "TO: Agent Zib",
@@ -1059,6 +1061,8 @@ export const en = {
   },
 
   abduct: {
+    // v0.2 presentation: the creaky floorboard's caption
+    creak: 'creeeak',
     wake: 'WAKE',
     awake: 'AWAKE!',
     holdingOn: 'HOLDING ON!',
@@ -2159,6 +2163,10 @@ export const en = {
     // v4 progression
     'Practice decoy': 'Practice decoy',
     Landing: 'Landing',
+    // v0.2 presentation: the Field Check stand-in (it comes before Maple Court, so it is not Dave)
+    'Practice dummy': 'Practice dummy',
+    Dummy: 'Dummy',
+    "The decoy woke up. On a live call, that's a police report.": "The decoy woke up. On a live call, that's a police report.",
     // people
     'Farmer Doyle': 'Farmer Doyle',
     Larry: 'Larry',

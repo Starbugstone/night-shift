@@ -15,7 +15,8 @@ import { deadlineWarning as deadlineCaption } from './deadline';
 export interface InnerScene extends Scene {
   readonly view: Container;
   render(): void;
-  debug?: unknown;
+  /** The room (an AbductSimulation): `delivered` once it has accepted the specimen. */
+  debug?: { readonly delivered?: boolean };
 }
 
 export class DeepAbductScene implements Scene {
@@ -37,14 +38,15 @@ export class DeepAbductScene implements Scene {
     return this.look.get().root;
   }
 
-  get debug(): unknown {
+  get debug(): InnerScene['debug'] {
     return this.inner.debug;
   }
 
   update(dt: number): void {
     this.t += dt;
     if (this.done) return;
-    if (this.run.tick(dt)) {
+    // v0.2 presentation: a delivery the room accepted is safe; its exit animation costs no shift time
+    if (!this.inner.debug?.delivered && this.run.tick(dt)) {
       this.done = true;
       this.onSunrise();
       return;
@@ -91,12 +93,12 @@ class DeepShiftView implements SceneView {
     private readonly reduced: () => boolean,
     private readonly time: () => number,
   ) {
-    const demolition = run.level.id === 'level12';
-    const storm = run.level.id === 'level9';
+    const demolition = run.level.clockMode === 'demolition';
+    const storm = run.level.clockMode === 'storm';
     const room = run.current?.roomId;
     this.clockX = room === 'inventor_balcony' || room === 'bully_transom' || room === 'band_hatch' ? 14 : DEEP_HUD_SUNRISE_SLOT.x;
     this.sun = run.level.clockMode === 'elapsed' ? new HudTimer() : new HudSunClock(storm || demolition ? null : artTex(assets, 'ui/sunrise_clock', DEEP_HUD_SUNRISE_SLOT.w, DEEP_HUD_SUNRISE_SLOT.h),
-      demolition ? tr().dispatch2199.deadline : storm ? tr().crestValley.left : run.level.id === 'level8' ? tr().timeTrial.left : undefined, storm || demolition);
+      demolition ? tr().dispatch2199.deadline : storm ? tr().crestValley.left : run.level.clockMode === 'countdown' ? tr().timeTrial.left : undefined, storm || demolition);
     this.sun.alpha = 0.92;
     this.warning.position.set(DEEP_HUD_WARNING_SLOT.x, DEEP_HUD_WARNING_SLOT.y);
     this.warning.addChild(this.panel, this.caption);

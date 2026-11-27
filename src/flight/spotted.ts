@@ -12,6 +12,8 @@ import { clamp, roundRectPath, text } from '../ui/draw';
 import { C } from '../ui/theme';
 import { artSprite } from '../ui/views/art';
 import { SPOT_CAUSES, type SpotCause } from './hazards';
+import { clockFace } from '../levels/run';
+import type { DeepLevelDef } from '../levels/types';
 import { paintedSprite, plate, TAU } from './views/world';
 
 const INK = '#1b1433';
@@ -30,6 +32,20 @@ const STAMP = { size: 80, color: C.amberHi, outline: C.ink, weight: 900 } as con
 const CAPTION = { size: 18, color: C.paperInk, weight: 700, italic: true, align: 'center', lineHeight: 24 } as const;
 const EXCUSE = { size: 16, color: C.mint, weight: 700, align: 'left', lineHeight: 21 } as const;
 const BACK = { size: 15, color: C.mint, weight: 800 } as const;
+
+// v0.2 presentation: a countdown or a stopwatch is no time of day, so it gets no AM.
+export type PhotoStamp = 'am' | 'pm' | 'timer';
+
+export function photoStampFor(level: DeepLevelDef): PhotoStamp {
+  const face = clockFace(level);
+  return face === 'storm' ? 'pm' : face === 'time' ? 'am' : 'timer';
+}
+
+/** The time stamped on the witness photo, from the HUD clock text. */
+export function photoClock(clock: string, stamp: PhotoStamp): string {
+  if (stamp === 'timer') return clock;
+  return fmt(stamp === 'pm' ? tr().flight.photo.clockPm : tr().flight.photo.clock, { clock });
+}
 
 export class SpottedPhoto {
   readonly root = new Container();
@@ -51,8 +67,8 @@ export class SpottedPhoto {
   private py = PH / 2;
   private lastCause: SpotCause | null = null;
   private lastClock = '';
-  /** v4 L9 1955: the shift is in the evening, so the stamp reads PM. */
-  pm = false;
+  /** How the lens stamps the HUD clock: a night shift's AM, the 1955 evening's PM, or a timer as is. */
+  stamp: PhotoStamp = 'am';
 
   constructor() {
     this.grade.desaturate();
@@ -153,7 +169,7 @@ export class SpottedPhoto {
     }
     if (changed || clock !== this.lastClock) {
       this.lastClock = clock;
-      this.lensClock.set(fmt(this.pm ? tr().flight.photo.clockPm : tr().flight.photo.clock, { clock }), PW - (cause === 'window' ? 108 : 12), 20);
+      this.lensClock.set(photoClock(clock, this.stamp), PW - (cause === 'window' ? 108 : 12), 20);
     }
     this.rec.visible = (rm || Math.floor(t * 2) % 2 === 0) &&
       (cause === 'camera' || cause === 'police' || cause === 'patrol' || cause === 'traffic' ||
