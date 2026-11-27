@@ -1788,7 +1788,7 @@ export const en = {
       // L7 SS Buffet Royale
       "captain's log": {
         got: [
-          "The captain's log. A literal log. Stardate: tonight. Don't open it, Zib. Don't sniff it, Zib.",
+          "The captain's log. A literal log. Stardate: 47634.4. Don't open it, Zib. Don't sniff it, Zib.",
           "Captain's log, supplemental. Found in the funnel. We chose not to ask how it got there.",
           "One captain's log, logged. Yes, I hear it. No, I'm not changing the form.",
         ],
@@ -3180,7 +3180,7 @@ export const en = {
       bedpan: "Brushed steel, suspiciously gleaming. Zib wore it as a Viking helmet; HR said no.",
       // L7 SS Buffet Royale
       'blue heart pendant': "Souvenir-deck enamel on a gold-ish chain. Please don't toss it overboard; Accounting is watching.",
-      "captain's log": 'A literal timber log with a brass plaque. Stardate classified; splinters very real.',
+      "captain's log": 'A literal timber log with a brass plaque. Stardate 47634.4; splinters very real.',
       'chocolate éclair': 'Stasis-sealed to preserve the glaze. Only two bite marks—Zib blames turbulence.',
       'giant pepper mill': 'Three feet of walnut-turned intimidation. Say when, or spend eternity sneezing.',
       'complimentary towel swan': 'Origami terrycloth that survived re-entry. Greg has already asked for it back.',

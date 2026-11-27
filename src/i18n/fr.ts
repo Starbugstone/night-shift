@@ -1358,7 +1358,7 @@ export const fr: Strings = {
     'silver butt plug': { one: '{n} plug anal en argent', other: '{n} plugs anaux en argent' },
     'inflated rubber glove': { one: '{n} gant en latex gonflé', other: '{n} gants en latex gonflés' },
     bedpan: { one: '{n} bassin de lit', other: '{n} bassins de lit' },
-    "captain's log": { one: '{n} bûche de bord', other: '{n} bûches de bord' },
+    "captain's log": { one: '{n} log du capitaine', other: '{n} logs du capitaine' },
     'giant pepper mill': { one: '{n} moulin à poivre géant', other: '{n} moulins à poivre géants' },
     'lime mankini': { one: '{n} mankini vert fluo', other: '{n} mankinis vert fluo' },
     // v4 easter eggs
@@ -1743,13 +1743,13 @@ export const fr: Strings = {
       // L7 SS Buffet Royal
       "captain's log": {
         got: [
-          "La bûche de bord du commandant. Une vraie bûche. Date stellaire : cette nuit. Ne l'ouvrez pas, Zib. Ne la reniflez pas.",
-          "Bûche de bord, entrée supplémentaire. Trouvée dans la cheminée. On a préféré ne pas demander comment elle est arrivée là.",
-          "Le commandant tenait une bûche de bord. On ne veut pas savoir ce qu'il y consignait.",
+          "Log du capitaine. Date stellaire : 47634.4. Une vraie bûche. Ne l'ouvrez pas, Zib. Ne le reniflez pas.",
+          "Entrée supplémentaire du log : trouvé dans la cheminée. On a préféré ne pas demander comment il est arrivé là.",
+          "Le capitaine tenait un log. Littéralement. On ne veut pas savoir ce qu'il y consignait.",
         ],
         missed: [
-          "La bûche de bord est restée dans la cheminée. Tant mieux : certaines archives ne se touchent pas.",
-          "Pas de bûche. Les archives du navire restent à bord. Sous le vent, de préférence.",
+          "Le log est resté dans la cheminée. Tant mieux : certaines archives ne se touchent pas.",
+          "Pas de log. Les archives du navire restent à bord. Sous le vent, de préférence.",
         ],
       },
       'chocolate éclair': {
@@ -3118,7 +3118,7 @@ export const fr: Strings = {
       bedpan: "Inox brossé, propre à en devenir suspect. Zib l'a mis en casque viking ; les RH ont dit non.",
       // L7 SS Buffet Royal
       'blue heart pendant': 'Émail de boutique souvenirs sur chaîne presque en or. Interdiction de le jeter à la mer : la compta veille.',
-      "captain's log": 'Une vraie bûche avec plaque en laiton. Date stellaire confidentielle ; échardes bien réelles.',
+      "captain's log": 'Une vraie bûche avec plaque en laiton. Date stellaire 47634.4 ; échardes bien réelles.',
       'chocolate éclair': 'Mis en stase pour préserver le glaçage. Deux coups de dents — Zib accuse les turbulences.',
       'giant pepper mill': "Un mètre de noyer massif pour intimider les clients. Dites stop, ou éternuez pour l'éternité.",
       'complimentary towel swan': 'Origami en éponge rescapé de la rentrée atmosphérique. Greg le réclame déjà.',

@@ -75,6 +75,7 @@ Status: **guarded** = a test fails on regression; **pending** = guarded, with cu
 | C9 | A level missing from a registry | Count words match the level's specimens; plurals agree; each level has its own cover story, headline and opener; `#NNNN` order numbers. | `tests/levels-registries.test.ts`, `tests/ui-story.test.ts`, `tests/ui-workorders.test.ts` | pending: Birch shifts reuse "three specimens" lines, "1 sightings"/"1 seconds", no cover story for L10 and L12, no headline for L12, no opener for `birch_bakery`. |
 | C10 | Obscure, misquoted or far-fetched reference | Instantly obvious, international, quoted right; 2–3 running jokes at a time; send the user unsure lines with the original. | none | rule only (memory notes, `docs/story/continuity-review.md`). |
 | C11 | Lore term used before it is set up | Terms like OBELISK™, Temporal Dispatch and Form 88-MPH appear only after the level that introduces them. | `tests/ui-copy-continuity.test.ts` (token table) | guarded for the listed tokens; add a token with each new term. |
+| C12 | A literal translation loses a souvenir's reference | Keep the reference recognizable in both languages: the captain's log stays « log du capitaine » in French, with the same numeric stardate in its EN/FR descriptions and report lines. | `tests/ui-souvenir-reference.test.ts` walks every level and room, Field Check included | guarded for the captain's log. |
 
 ## Engine, rendering and sound
 
