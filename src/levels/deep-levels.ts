@@ -524,7 +524,7 @@ export const LEVEL4 = {
   memo: {
     re: 'Work Order #{num} — Grimsby Centre (containment)',
     body:
-      "Thanks to Gary's CCTV complaint and Mrs. Pruitt's photo on City Hall's board, Head Office wants a civic audit: Night Guard Nigel at the museum, DJ Kev at the Bassment, and Mayor Whitlock. Watch the police chopper, traffic, and neon. The site crane swings a solid boom. Office windows flicker, then light the street: Accounting works late.",
+      "Thanks to Gary's CCTV complaint and Mrs. Pruitt's photo on City Hall's board, Head Office wants a civic audit: Night Guard Nigel at the museum, DJ Kev at the Bassment, and Mayor Whitlock. Watch the police chopper, traffic, and neon. The crane swings a solid boom. Office windows flicker, then light the street: Accounting works late.",
     joke:
       "The Mayor is an elected official, so file Form 9-V (Votes, Alien). Also check Nigel's ledger—someone shipped an unlisted black rock out of that museum last week.",
   },

@@ -430,7 +430,7 @@ export const en = {
     camera: 'Gary’s camera fills its own fuse. Dodge the cone.',
     pop: 'The cuckoo pops out on a timer. Go while it hides.',
     // v0.2 follow-up: first-encounter flight lesson for L10 (the rabbit)
-    rabbit: "That's no ordinary rabbit! Don't linger.",
+    rabbit: 'That’s no ordinary rabbit! Don’t linger.',
   },
   // v4 progression
   fieldCheckControls: {
@@ -606,7 +606,7 @@ export const en = {
       human: 'Dave, Barb & Gary',
       collect: 'Dave, Barb & Gary',
       re: 'Work Order #{num} — Maple Court (bulk order)',
-      body: "Three before dawn this time, Zib. Dentist Dave, Coach Barb and Gary from Neighbourhood Watch. Watch for the cruiser. Mrs. Pruitt has binoculars trained on the street from her window. Gary’s been shopping: rooftop cameras sweep the street, so pass behind the beam. Bats fly in solid flocks. They don't swerve; you do.", // v0.2 follow-up: teaches the cameras and bat flocks
+      body: "Three before dawn this time, Zib. Dentist Dave, Coach Barb and Gary from Neighbourhood Watch. Watch for the cruiser. Mrs. Pruitt has binoculars trained on the street from her window. Gary’s been shopping: rooftop cameras sweep the road, so slip behind the beam. Bats fly in solid flocks. They don’t swerve; you do.", // v0.2 follow-up: teaches the cameras and bat flocks
       joke: "Gary’s new lasers have caught him eleven times. A volunteer astronomer is on Birch Lane with a SETI dish, if you fancy a detour.",
       signoff: '— Vrell. Co-signed under mild protest.', // v4 story
     },
@@ -617,7 +617,7 @@ export const en = {
       human: 'Nigel, Kev & the Mayor',
       collect: 'Nigel, Kev & the Mayor',
       re: 'Work Order #{num} — Grimsby Centre (containment)',
-      body: "Thanks to Gary's CCTV complaint and Mrs. Pruitt's photo on City Hall's board, Head Office wants a civic audit: Night Guard Nigel at the museum, DJ Kev at the Bassment, and Mayor Whitlock. Watch the police chopper, traffic, and neon. The site crane swings a solid boom. Office windows flicker, then light the street: Accounting works late.", // v0.2 follow-up: teaches the crane and the office windows
+      body: "Thanks to Gary's CCTV complaint and Mrs. Pruitt's photo on City Hall's board, Head Office wants a civic audit: Night Guard Nigel at the museum, DJ Kev at the Bassment, and Mayor Whitlock. Watch the police chopper, traffic, and neon. The crane swings a solid boom. Office windows flicker, then light the street: Accounting works late.", // v0.2 follow-up: teaches the crane and the office windows
       joke: "The Mayor is an elected official, so file Form 9-V (Votes, Alien). Also check Nigel's ledger—someone shipped an unlisted black rock out of that museum last week.",
       signoff: '— Vrell. My eye is twitching.', // v4 story
     },
@@ -682,13 +682,13 @@ export const en = {
     { title: 'Intern', flavour: 'Unpaid. Zero parking ring.' },
     { title: 'Probationary Abductor', flavour: 'Promising, if bonky. No toasters.' },
     { title: 'Abductor', flavour: 'Lanyard privileges unlocked.' },
-    { title: 'Senior Abductor', flavour: 'Parking ring: next after Bubbles.' }, // v0.2 follow-up: fits the rank card unsqueezed
-    { title: 'Abduction Lead', flavour: 'Signs everything. Reads nothing.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Senior Abductor', flavour: 'Parking ring: queued behind Bubbles.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Abduction Lead', flavour: 'Signs everyone’s forms. Reads none.' }, // v0.2 follow-up: fits the rank card unsqueezed
     { title: 'Head of Internal Affairs', flavour: 'Trusted with the brass thermometer.' }, // v0.2 follow-up: fits the rank card unsqueezed
     // v0.2 copy: the ladder runs to 55 stars; ranks from 36 stars need L8, so they may mention pay
-    { title: 'Fleet Admiral of Naps', flavour: 'Has a beanbag. Vrell gets a stool.' }, // v0.2 follow-up: fits the rank card unsqueezed
-    { title: 'Chief Paradox Officer', flavour: 'Payroll pays you yesterday.' }, // v0.2 follow-up: fits the rank card unsqueezed
-    { title: 'Employee of the Millennium', flavour: 'Framed in every era, as "Zibb".' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Fleet Admiral of Naps', flavour: 'Own beanbag. Vrell sits on a crate.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Chief Paradox Officer', flavour: 'Salaried, sort of. Paid yesterday.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Employee of the Millennium', flavour: 'Framed forever. Plaque: "Zibb".' }, // v0.2 follow-up: fits the rank card unsqueezed
   ],
 
   // v4 L9 1955
