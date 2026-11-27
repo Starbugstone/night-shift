@@ -12,6 +12,8 @@ import { DeepFlightScene, SPOT_SKIP } from '../src/flight/deep-scene';
 import { tr } from '../src/i18n';
 import { isDeep, LEVELS, workOrderNumber } from '../src/levels/levels';
 import { DeepRun, SUNRISE_WARN } from '../src/levels/run';
+import { deepStartEvent } from '../src/levels/humor';
+import { readSeconds } from '../src/core/read-time';
 import type { DeepLevelDef } from '../src/levels/types';
 import { DeepAbductScene } from '../src/ui/deep-abduct';
 
@@ -95,6 +97,44 @@ describe('an accepted delivery is safe from the deadline', () => {
         expect(inner.update).toHaveBeenCalledTimes(3 * 60 + 1);
       }
     }
+  });
+});
+
+// v0.2 council round 5 (Sol, non-blocking): the cut-in check above was 2199-only. Every timed deep level with a shift
+// opener: once the opener is up, the deadline warning cuts in (a panic line from the level's own warning pool), and
+// nothing a parked saucer meets displaces it while it is being read.
+describe('the deadline warning cuts in over every shift opener', () => {
+  const timedOpeners = DEEP.filter((lv) => Number.isFinite(lv.budgetSec) && deepStartEvent(lv.id) !== null);
+  /** Where the opener plays: the launch, or (2199, named on first sight) above the first poet, in view of it. */
+  const openerSpot = (lv: DeepLevelDef) => {
+    if (deepStartEvent(lv.id) !== 'start12') return lv.map.start;
+    const poet = lv.map.hazards.find((d) => d.type === 'camera')!;
+    return { x: poet.x, y: Math.max(60, poet.y - 400) };
+  };
+  it('covers the timed levels', () => {
+    expect(timedOpeners.length).toBeGreaterThanOrEqual(5);
+    expect(timedOpeners.some((lv) => lv.id === 'level12')).toBe(true);
+  });
+  it.each(timedOpeners.map((lv) => [lv.id, lv] as const))('%s', (_id, lv) => {
+    const { run, scene, onSunrise } = flight(lv);
+    const zib = tr().humor.deepZib as unknown as Record<string, readonly string[]>;
+    const opener = zib[deepStartEvent(lv.id)!]!;
+    const spot = openerSpot(lv);
+    const step = () => { scene.sim.place(spot.x, spot.y, 3); scene.update(DT); };
+    for (let i = 0; i < 10 * 60 && !opener.includes(scene.zibText); i++) step();
+    expect(opener, 'the opener never played').toContain(scene.zibText);
+    run.tick(run.remaining - SUNRISE_WARN - 0.005);
+    step();
+    const pool = zib[lv.clockMode === 'demolition' ? 'demolition' : lv.clockMode === 'storm' ? 'stormClosing' : 'dawn']!;
+    expect(scene.zibPanic).toBe(true);
+    expect(pool).toContain(scene.zibText);
+    const warning = scene.zibText;
+    const cut: string[] = [];
+    for (let i = 0; i < (readSeconds(warning) - 2 * DT) * 60 && !onSunrise.mock.calls.length; i++) {
+      step();
+      if (scene.zibText !== warning) { cut.push(`${(i * DT).toFixed(2)} s: ${scene.zibText}`); break; }
+    }
+    expect(cut, 'the warning was cut while being read').toEqual([]);
   });
 });
 

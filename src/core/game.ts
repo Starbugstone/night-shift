@@ -166,9 +166,10 @@ export class Game implements Shell {
   }
 
   /** Progress: written, and (v0.2 council round 4, Neon 4) the damaged-file notice has nothing left to report. */
-  setSave(s: SaveData): void {
-    this.saves.writeProgress(s);
+  setSave(s: SaveData): boolean {
+    const persisted = this.saves.writeProgress(s);
     this.applySave(s);
+    return persisted;
   }
 
   /** Sound and language: never written over an unreadable file the player has not shredded (Sol P2). */
@@ -186,10 +187,10 @@ export class Game implements Shell {
     this.setSettings({ ...this._save, muted: !this._save.muted });
   }
 
-  resetProgress(): void {
+  resetProgress(): boolean {
     // v4 reset: through setSave, so preprod's store writes only its own key
     this.run = null;
-    this.setSave(resetSave(this._save));
+    return this.setSave(resetSave(this._save));
   }
 
   get saveStatus(): SaveStatus {

@@ -4,7 +4,7 @@ import { resetSave } from '../src/core/reset';
 import { PREPROD_SAVE_KEY, preprodStorage } from '../src/core/storage';
 import { en } from '../src/i18n/en';
 import { LEVELS, ROOM_IDS } from '../src/levels/levels';
-import { LEGACY_SAVE_KEY, LEVEL_IDS, SAVE_FIELD_TYPES, SAVE_KEY, V2_SAVE_KEY, defaultSave, isStoredSave, type KeyValueStore, type SaveStatus } from '../src/levels/save';
+import { LEGACY_SAVE_KEY, LEVEL_IDS, SAVE_FIELD_TYPES, SAVE_KEY, V2_SAVE_KEY, defaultSave, isStoredSave, type KeyValueStore, type LevelProgress, type SaveStatus } from '../src/levels/save';
 
 export function memStore(init: Record<string, string> = {}): KeyValueStore & { data: Record<string, string> } {
   const data = { ...init };
@@ -106,6 +106,9 @@ export function nestedDamageShapes(): { name: string; value: string; progress: b
     ['upgrades with null', { upgrades: [null, 'beam_dampener'] }],
     ...[null, 3, 'x', [], { count: 0, room, first: 0 }, { count: 1, room: 7, first: 0 }].map(e => [`trophy ${JSON.stringify(e)}`, { trophies: { [item]: e } }] as [string, Record<string, unknown>]),
     ...[null, 3, [], { count: 'x', first: 0, probed: true, probes: 1 }, { count: 1, first: 0, probes: -1 }].map(e => [`specimen ${JSON.stringify(e)}`, { specimens: { [specimen]: e } }] as [string, Record<string, unknown>]),
+    // v0.2 council round 5 (Sol P3): a kept entry with a mistyped field (see shelfFieldDamageShapes)
+    [`trophy with first "broken"`, { trophies: { [item]: { count: 1, room, first: 'broken' } } }],
+    [`specimen with first "broken"`, { specimens: { [specimen]: { count: 1, room, first: 'broken', probed: false, probes: 0 } } }],
   ];
   for (const [name, extra] of shelves) {
     out.push({ name: `${name} beside sound records`, value: save(levels, extra), progress: true });
@@ -118,6 +121,80 @@ export function nestedDamageShapes(): { name: string; value: string; progress: b
   }
   return out;
 }
+
+/**
+ * v0.2 council round 5 (Sol P3): every known souvenir and specimen with a sound shelf entry, then each of its fields
+ * given every wrong value in turn. The reader either keeps the exhibit (defaulting the field) or drops it; both are
+ * damage. `kept` is the sound entry, to check what a kept exhibit still holds.
+ */
+export function shelfFieldDamageShapes(): { name: string; value: string; shelf: 'trophies' | 'specimens'; id: string; field: string; kept: Record<string, unknown> }[] {
+  const room = ROOM_IDS[0]!;
+  const wrong: Record<string, unknown[]> = {
+    count: ['3', null, true, [], {}, -1, 0],
+    room: [7, null, 'not-a-room', {}, []],
+    first: ['broken', null, -1, [], {}, true],
+    probed: ['yes', 1, null, []],
+    probes: ['2', -1, null, true, {}],
+  };
+  const sound = {
+    trophies: { count: 2, room, first: 3 },
+    specimens: { count: 2, room, first: 3, probed: true, probes: 1 },
+  } as const;
+  const ids = { trophies: Object.keys(en.items), specimens: Object.keys(en.trophies.specimens.entries) };
+  const out: { name: string; value: string; shelf: 'trophies' | 'specimens'; id: string; field: string; kept: Record<string, unknown> }[] = [];
+  for (const shelf of ['trophies', 'specimens'] as const) {
+    for (const id of ids[shelf]) {
+      for (const field of Object.keys(sound[shelf])) {
+        for (const v of wrong[field]!) {
+          const entry = { ...sound[shelf], [field]: v };
+          out.push({ name: `${shelf}.${id}.${field} = ${JSON.stringify(v)}`, value: JSON.stringify({ ...defaultSave(), glorbs: 30, [shelf]: { [id]: entry } }), shelf, id, field, kept: sound[shelf] });
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * v0.2 council round 5 (Sol P2): truly sparse damaged saves, with no `glorbs` and no other usable top-level field, so
+ * the level record alone decides whether the file loads. For every level in LEVELS and LEVEL_IDS: a mixed star list
+ * holding earned stars, and one broken field beside one valid one. `keep` is what the reader must keep of it.
+ */
+export function sparseLevelShapes(): { name: string; id: string; value: string; keep: Partial<LevelProgress> }[] {
+  const ids = [...new Set<string>([...LEVELS.map(l => l.id), ...LEVEL_IDS])];
+  const pickup = Object.keys(en.mapCollectibles.items)[0]!;
+  const records: [unknown, Partial<LevelProgress>][] = [
+    [{ stars: [true, true, null, false] }, { stars: [true, true, false, false], delivered: true }],
+    [{ stars: [true, 'x', false, false] }, { stars: [true, false, false, false], delivered: true }],
+    [{ stars: [null, true] }, { stars: [false, true, false, false], delivered: false }],
+    [{ stars: [false, false, false, true, 'x'] }, { stars: [false, false, false, true] }],
+    [{ stars: [true, false, false, false], delivered: 'yes' }, { stars: [true, false, false, false], delivered: true }],
+    [{ stars: [true, true, null, true], bestTimeSec: 0 }, { stars: [true, true, false, true], bestTimeSec: null }],
+    [{ attempts: 2, bestTimeSec: '50' }, { attempts: 2, bestTimeSec: null }],
+    [{ delivered: true, attempts: -1 }, { delivered: true, attempts: 0 }],
+    [{ bestTimeSec: 90, stars: 'broken' }, { bestTimeSec: 90, stars: [false, false, false, false] }],
+    [{ mapCollectible: pickup, attempts: '3' }, { mapCollectible: pickup as LevelProgress['mapCollectible'], attempts: 0 }],
+  ];
+  const out: { name: string; id: string; value: string; keep: Partial<LevelProgress> }[] = [];
+  for (const id of ids) {
+    for (const [record, keep] of records) {
+      out.push({ name: `{levels:{${id}:${JSON.stringify(record)}}}`, id, value: JSON.stringify({ levels: { [id]: record } }), keep });
+      out.push({ name: `{version:3,levels:{${id}:${JSON.stringify(record)}}}`, id, value: JSON.stringify({ version: 3, levels: { [id]: record } }), keep });
+    }
+  }
+  return out;
+}
+
+/** Every key a sparse damaged save can sit under, alone: this build's own key and each older key, production and preprod. */
+export const SPARSE_PLACES: readonly { where: string; key: string; preprod: boolean }[] = [
+  { where: 'current key', key: SAVE_KEY, preprod: false },
+  { where: 'v2 key', key: V2_SAVE_KEY, preprod: false },
+  { where: 'v1 key', key: LEGACY_SAVE_KEY, preprod: false },
+  { where: 'preprod key', key: PREPROD_SAVE_KEY, preprod: true },
+  { where: 'production key under preprod', key: SAVE_KEY, preprod: true },
+  { where: 'preprod v2 key', key: 'night-shift-save-preprod', preprod: true },
+  { where: 'v2 key under preprod', key: V2_SAVE_KEY, preprod: true },
+];
 
 /**
  * v0.2 council round 4 (Opus O2): a v0.1 save under the older v2 key with one top-level field of the wrong type and
@@ -135,6 +212,28 @@ export function damagedOlderShapes(): string[] {
 
 const PREPROD_V2_KEY = 'night-shift-save-preprod';
 const PROD = JSON.stringify({ ...defaultSave(), glorbs: 77 });
+
+/**
+ * v0.2 council round 5 (Opus 2): a salvageable save (damagedOlderShapes: 420 Glorbs, L3 starred) under a newer key and
+ * a sound older save (5 Glorbs, L1 only) under an older one, for every pair of keys the loader reads, production and
+ * preprod. The newer one must load: from this build's own key it is repaired, from an older key recovered.
+ */
+export function salvageableOverSoundCases(): DamageCase[] {
+  const older = JSON.stringify({ version: 1, glorbs: 5, levels: { level1: { stars: [true, false, false], delivered: true } } });
+  const pairs: { where: string; newer: string; older: string; preprod: boolean; want: SaveStatus }[] = [
+    { where: 'current over v2', newer: SAVE_KEY, older: V2_SAVE_KEY, preprod: false, want: 'repaired' },
+    { where: 'current over v1', newer: SAVE_KEY, older: LEGACY_SAVE_KEY, preprod: false, want: 'repaired' },
+    { where: 'v2 over v1', newer: V2_SAVE_KEY, older: LEGACY_SAVE_KEY, preprod: false, want: 'recovered' },
+    { where: 'preprod over production', newer: PREPROD_SAVE_KEY, older: SAVE_KEY, preprod: true, want: 'repaired' },
+    { where: 'preprod v2 over production', newer: PREPROD_V2_KEY, older: SAVE_KEY, preprod: true, want: 'recovered' },
+    { where: 'production over v2, preprod', newer: SAVE_KEY, older: V2_SAVE_KEY, preprod: true, want: 'recovered' },
+    { where: 'production over v1, preprod', newer: SAVE_KEY, older: LEGACY_SAVE_KEY, preprod: true, want: 'recovered' },
+    { where: 'v2 over v1, preprod', newer: V2_SAVE_KEY, older: LEGACY_SAVE_KEY, preprod: true, want: 'recovered' },
+  ];
+  return damagedOlderShapes().flatMap(bad => pairs.map(p => ({
+    name: `salvageable ${p.where}: ${bad}`, init: { [p.newer]: bad, [p.older]: older }, preprod: p.preprod, want: [p.want] as const,
+  })));
+}
 
 export interface DamageCase {
   name: string;
@@ -165,6 +264,9 @@ export function damageCases(): DamageCase[] {
     out.push({ name: `nested damage over v2: ${n.name}`, init: { [SAVE_KEY]: n.value, [V2_SAVE_KEY]: V2 }, preprod: false, want: ['repaired'] });
     out.push({ name: `nested damage, preprod: ${n.name}`, init: { [PREPROD_SAVE_KEY]: n.value, [SAVE_KEY]: PROD }, preprod: true, want: ['repaired'] });
   }
+  for (const n of sparseLevelShapes()) {
+    for (const p of SPARSE_PLACES) out.push({ name: `sparse damage, ${p.where}: ${n.name}`, init: { [p.key]: n.value }, preprod: p.preprod, want: ['repaired'] });
+  }
   for (const bad of damagedOlderShapes()) {
     out.push({ name: `damaged v2 alone: ${bad}`, init: { [V2_SAVE_KEY]: bad }, preprod: false, want: ['recovered'] });
     out.push({ name: `damaged v2 under a broken current key: ${bad}`, init: { [SAVE_KEY]: '{not json', [V2_SAVE_KEY]: bad }, preprod: false, want: ['recovered'] });
@@ -172,6 +274,7 @@ export function damageCases(): DamageCase[] {
     out.push({ name: `damaged production save under preprod: ${bad}`, init: { [SAVE_KEY]: bad }, preprod: true, want: ['recovered'] });
     out.push({ name: `damaged v2 under preprod: ${bad}`, init: { [V2_SAVE_KEY]: bad }, preprod: true, want: ['recovered'] });
   }
+  out.push(...salvageableOverSoundCases());
   for (const bad of damagedProgressShapes()) {
     out.push({ name: `damaged progress: ${bad}`, init: { [SAVE_KEY]: bad, [V2_SAVE_KEY]: V2 }, preprod: false, want: ['repaired'] });
     out.push({ name: `damaged progress, preprod: ${bad}`, init: { [PREPROD_SAVE_KEY]: bad, [SAVE_KEY]: PROD }, preprod: true, want: ['repaired'] });

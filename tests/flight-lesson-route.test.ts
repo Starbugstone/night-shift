@@ -13,6 +13,8 @@
 // Round 4 (Fable F3): a leg starting inside the zone of a lesson already met and read flashed it for 0.3–1.5 s (L3, L5,
 // L8, L10). Such a lesson is no longer raised, a showing never ends at its retirement before its hold, and the check
 // no longer excuses showings that ended because the lesson retired.
+// Round 5 (Opus 1): nothing guarded that rule, so the hold check also fails any showing that starts after
+// flightLessonState() reported the hazard met and the tip read for its reading time.
 import { describe, expect, it } from 'vitest';
 import type { PointerState } from '../src/contracts';
 import { FlightAutopilot } from '../src/flight/autopilot';
@@ -111,7 +113,8 @@ function playRoute(level: DeepLevelDef, lesson: FlightLesson, limitSec = 400): R
   return log;
 }
 
-interface Showing { start: number; len: number; end: 'flight' | 'cut' | 'open' }
+/** `afterRead`: it came up after the lesson was met and read (round 5, Opus 1: it must not be raised again). */
+interface Showing { start: number; len: number; end: 'flight' | 'cut' | 'open'; afterRead: boolean }
 
 /** Every showing of the tip on the whole autopilot shift: how long, and whether it ended in flight or was cut (spotted, leg end, retired, cool-off). */
 function showings(level: DeepLevelDef, lesson: FlightLesson, limitSec = 400): Showing[] {
@@ -127,6 +130,10 @@ function showings(level: DeepLevelDef, lesson: FlightLesson, limitSec = 400): Sh
   const out: Showing[] = [];
   let active = '';
   let start = -1;
+  let afterRead = false;
+  // when flightLessonState first reported the hazard met and the tip read for its reading time
+  let readAt = -1;
+  const need = readSeconds(tip);
   let lockT = -1;
   let spotT = -1;
   let checkpoint = { ...level.map.start };
@@ -149,11 +156,16 @@ function showings(level: DeepLevelDef, lesson: FlightLesson, limitSec = 400): Sh
     (scene as { state: string }).state = sim.phase === 'spotted' ? 'spotted' : sim.phase === 'fly' ? 'fly' : 'locking';
     active = flightLesson(scene, active);
     const on = active === tip;
-    if (on && start < 0) start = t;
+    if (on && start < 0) {
+      start = t;
+      afterRead = readAt >= 0;
+    }
+    const st = flightLessonState(run);
+    if (readAt < 0 && st?.met && st.shownSec >= need) readAt = t;
     if (!on && start >= 0) {
       // round 4 (Fable F3): a lesson retiring is no excuse for a short showing; only the leg ending or another tip cuts one
       const cut = scene.state !== 'fly' || active !== '';
-      out.push({ start, len: t - start, end: cut ? 'cut' : 'flight' });
+      out.push({ start, len: t - start, end: cut ? 'cut' : 'flight', afterRead });
       start = -1;
     }
     if (sim.phase === 'spotted' && spotT < 0) spotT = t;
@@ -176,7 +188,7 @@ function showings(level: DeepLevelDef, lesson: FlightLesson, limitSec = 400): Sh
       }
     }
   }
-  if (start >= 0) out.push({ start, len: limitSec - start, end: 'open' });
+  if (start >= 0) out.push({ start, len: limitSec - start, end: 'open', afterRead });
   return out;
 }
 
@@ -248,6 +260,7 @@ describe('flight lessons follow their hazards', () => {
       it('a tip that comes up stays for its hold: no showing ends in flight sooner (EN, FR)', () => {
         const lang = getLang();
         const short: string[] = [];
+        const repeats: string[] = [];
         try {
           for (const l of LANGS) {
             setLang(l);
@@ -256,6 +269,9 @@ describe('flight lessons follow their hazards', () => {
             const shows = showings(level, lesson);
             expect(shows.length, l).toBeGreaterThan(0);
             for (const s of shows) if (s.end === 'flight' && s.len < hold - 1 / 60) short.push(`${l}: shown at ${s.start.toFixed(1)} s for ${s.len.toFixed(2)} s (hold ${hold.toFixed(1)} s)`);
+            // round 5 (Opus 1): a lesson met and read for its reading time is never raised again (deleting the
+            // `read && seen.lastT < 0` clause brought it back on later legs on birch_neighbours, L3, L5, L8 and L10)
+            for (const s of shows) if (s.afterRead) repeats.push(`${l}: raised again at ${s.start.toFixed(1)} s for ${s.len.toFixed(2)} s after it was met and read`);
             // the first showing, unless it was cut, lasts its hold
             const first = shows[0]!;
             if (first.end !== 'cut') expect(first.len, `${l}: first showing`).toBeGreaterThanOrEqual(hold - 1 / 60);
@@ -264,6 +280,7 @@ describe('flight lessons follow their hazards', () => {
           setLang(lang);
         }
         expect(short).toEqual([]);
+        expect(repeats).toEqual([]);
       });
 
       it('stays quiet at the spawn when the spawn is far from the hazard', () => {

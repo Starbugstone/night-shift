@@ -272,9 +272,16 @@ describe('a damaged current save keeps its level progress (round 3, Fable F4)', 
     }
   });
 
-  it('a sound v1 still beats a damaged v2: an older key is salvaged only when no key holds a save', () => {
+  // round 5 (Opus 2): the rule was "an older key is salvaged only when no key holds a save", so a salvageable v0.1 save
+  // lost to an older sound one. Keys now settle newest first; a v2 value with nothing to salvage still falls through.
+  it('a sound v1 still beats a v2 with nothing to salvage, and loses to a salvageable v2', () => {
+    for (const garbage of ['{not json', '{}', JSON.stringify({ version: 2, glorbs: null }), JSON.stringify({ version: 2, glorbs: null, levels: { level3: null } })]) {
+      expect(loadSave(memStore({ [V2_SAVE_KEY]: garbage, [LEGACY_SAVE_KEY]: V1 })).glorbs, garbage).toBe(321);
+    }
     const bad = JSON.stringify({ version: 2, glorbs: null, levels: { level3: cleared } });
-    expect(loadSave(memStore({ [V2_SAVE_KEY]: bad, [LEGACY_SAVE_KEY]: V1 })).glorbs).toBe(321);
+    const save = loadSave(memStore({ [V2_SAVE_KEY]: bad, [LEGACY_SAVE_KEY]: V1 }));
+    expect(save.glorbs).toBe(0);
+    expect(save.levels.level3.delivered).toBe(true);
   });
 
   // round 4 (Opus O2): a v0.1 save under the v2 key with one wrong-type field used to load blank, and the first new

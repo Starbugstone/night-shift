@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import approachesSource from '../scripts/tutorial-approaches.cjs?raw';
 import runner from '../scripts/e2e-playthrough.cjs?raw';
+import deliverySource from '../scripts/e2e-delivery.cjs?raw';
 import game from '../src/core/game.ts?raw';
 import { SLOWEST_HONEST_PACE } from '../src/abduct/autopilot';
 import { LEVELS } from '../src/levels/levels';
@@ -17,6 +18,7 @@ import { ROOMS } from '../src/abduct/rooms';
 import { DeepAbductScene } from '../src/ui/deep-abduct';
 import type { GameContext, RoomId } from '../src/contracts';
 import type { DeepRun } from '../src/levels/run';
+import type { ReportModel } from '../src/ui/report';
 
 interface Approach { room: string; level: number; ring: number; name: string }
 
@@ -104,6 +106,140 @@ describe('every run enters the ring it meant to (round 3, Sol P2)', () => {
       const deep = new DeepAbductScene(scene, {} as DeepRun, ctx.assets, () => false, () => {});
       expect(deep.roomId, id).toBe(id);
       scene.dispose?.();
+    }
+  });
+});
+
+// v0.2 council round 5 (Sol P2, docs/REGRESSIONS.md P6): replacing expectDelivered's body with `return end.progress`
+// kept every test above green, so a failed shift could pass the browser run again. The checks now live in
+// scripts/e2e-delivery.cjs, and this suite runs both that module and the runner's own expectDelivered (cut out of
+// the script and evaluated with a fake page) against rejected reports, failed or missing deliveries and failed reloads,
+// for every level in LEVELS.
+type Progress = { reports: number; level: Record<string, unknown> };
+type End = { scene: string; report: { stamp: string; delivered: boolean; stars: boolean[] } | null; progress: Progress | null };
+type Delivery = {
+  deliveryProblems(before: Progress, end: End, extra?: string[]): string[];
+  reloadProblems(after: Progress, reloaded: unknown): string[];
+};
+
+function loadDelivery(src: string): Delivery {
+  const module = { exports: {} as Delivery };
+  new Function('module', src)(module);
+  return module.exports;
+}
+
+/** Every report stamp but 'delivered': a new stamp fails the typecheck until it is listed here. */
+const FAILED_STAMPS: Record<Exclude<ReportModel['stamp'], 'delivered'>, true> = { failed: true, sunrise: true, storm: true, demolition: true };
+
+interface DeliveryCase { name: string; before: Progress; end: End; extra: string[]; reloaded: unknown; pass: boolean }
+
+function deliveryCases(): DeliveryCase[] {
+  const out: DeliveryCase[] = [];
+  LEVELS.forEach((level, i) => {
+    const before: Progress = { reports: 3 + i, level: { stars: [false, false, false, false], delivered: false, bestTimeSec: null, attempts: i } };
+    const after: Progress = { reports: 4 + i, level: { stars: [true, false, true, false], delivered: true, bestTimeSec: 60 + i, attempts: i + 1 } };
+    const report = { stamp: 'delivered', delivered: true, stars: [true, false, true, false] };
+    const good: End = { scene: 'report', report, progress: after };
+    // by default the reload reads back exactly what the shift ended with, so only the named check can catch it
+    const add = (name: string, end: End, pass = false, reloaded: unknown = end.progress, extra: string[] = []) =>
+      out.push({ name: `${level.id}: ${name}`, before, end, extra, reloaded, pass });
+    add('a fresh delivery that persisted', good, true);
+    for (const scene of ['flight', 'abduct', 'title', 'workorders']) add(`ended on ${scene}`, { ...good, scene });
+    add('no report model', { ...good, report: null });
+    for (const stamp of Object.keys(FAILED_STAMPS)) {
+      add(`a ${stamp} report`, { ...good, report: { stamp, delivered: false, stars: [false, false, false, false] } });
+      add(`a ${stamp} stamp on an otherwise delivered report`, { ...good, report: { ...report, stamp } });
+    }
+    add('a report not delivered', { ...good, report: { ...report, delivered: false } });
+    add('a report without the Delivered star', { ...good, report: { ...report, stars: [false, true, true, false] } });
+    add('no new report filed', { ...good, progress: { ...after, reports: before.reports } });
+    add('two reports filed', { ...good, progress: { ...after, reports: before.reports + 2 } });
+    add('no new attempt', { ...good, progress: { ...after, level: { ...after.level, attempts: i } } });
+    add('the level not delivered', { ...good, progress: { ...after, level: { ...after.level, delivered: false } } });
+    add('no best time', { ...good, progress: { ...after, level: { ...after.level, bestTimeSec: null } } });
+    add('no saved progress', { ...good, progress: null });
+    add('a problem of the run itself', good, false, after, ['FORCE_SPOT: no SPOTTED card was tapped']);
+    add('a reload back to before', good, false, before);
+    add('a reload that lost the delivery', good, false, { ...after, level: { ...after.level, delivered: false } });
+    add('a reload that lost the report', good, false, { ...after, reports: before.reports });
+    add('a reload with no save', good, false, null);
+  });
+  return out;
+}
+
+/** The runner's own expectDelivered, cut out of the script and bound to a fake page. */
+function runnerExpectDelivered(src: string, delivery: Delivery, page: { reloads: number; reloaded: unknown }) {
+  const start = src.indexOf('async function expectDelivered(');
+  if (start < 0) return null;
+  let depth = 0;
+  let end = src.indexOf('{', start);
+  for (; end < src.length; end++) {
+    if (src[end] === '{') depth++;
+    else if (src[end] === '}' && --depth === 0) break;
+  }
+  const body = src.slice(start, end + 1);
+  const make = new Function('deliveryProblems', 'reloadProblems', 'openFixture', 'progressOf', `${body}\nreturn expectDelivered;`);
+  return make(delivery.deliveryProblems, delivery.reloadProblems, async () => { page.reloads++; }, async () => page.reloaded) as
+    (id: string, before: Progress, end: End, extra?: string[]) => Promise<Progress>;
+}
+
+/** Every case the module or the runner gets wrong. */
+async function deliveryMisses(runnerSrc: string, deliverySrc: string): Promise<string[]> {
+  const delivery = loadDelivery(deliverySrc);
+  const misses: string[] = [];
+  for (const c of deliveryCases()) {
+    const problems = [...delivery.deliveryProblems(c.before, c.end, c.extra), ...(c.end.progress ? delivery.reloadProblems(c.end.progress, c.reloaded) : [])];
+    if (c.pass !== (problems.length === 0)) misses.push(`module: ${c.name} -> ${problems.join('; ') || 'accepted'}`);
+    const page = { reloads: 0, reloaded: c.reloaded };
+    const expectDelivered = runnerExpectDelivered(runnerSrc, delivery, page);
+    if (!expectDelivered) return ['the runner has no expectDelivered'];
+    const id = c.name.slice(0, c.name.indexOf(':'));
+    try {
+      const result = await expectDelivered(id, c.before, c.end, c.extra);
+      if (!c.pass) misses.push(`runner accepted ${c.name}`);
+      else if (JSON.stringify(result) !== JSON.stringify(c.end.progress) || page.reloads !== 1) misses.push(`runner: ${c.name} returned ${JSON.stringify(result)} after ${page.reloads} reloads`);
+    } catch (e) {
+      if (c.pass) misses.push(`runner rejected ${c.name}: ${String(e)}`);
+      else if (!String(e).includes(`${id}: `)) misses.push(`runner: ${c.name} failed without naming the level: ${String(e)}`);
+    }
+  }
+  return misses;
+}
+
+describe('a shift passes only on a fresh, persisted delivery (round 5, Sol P2)', () => {
+  it('covers every level in LEVELS with rejected reports, failed deliveries and failed reloads', () => {
+    const cases = deliveryCases();
+    for (const level of LEVELS) {
+      const mine = cases.filter(c => c.name.startsWith(`${level.id}: `));
+      expect(mine.filter(c => c.pass).length, level.id).toBe(1);
+      expect(mine.filter(c => !c.pass).length, level.id).toBeGreaterThanOrEqual(20);
+    }
+    expect(runner).toMatch(/require\('\.\/e2e-delivery\.cjs'\)/);
+  });
+
+  it('the checks and the runner accept only the fresh delivery that persisted', async () => {
+    expect(await deliveryMisses(runner, deliverySource)).toEqual([]);
+  });
+
+  it('catches a runner or a check that lets a failed shift through (mutation check)', async () => {
+    const body = runner.slice(runner.indexOf('async function expectDelivered('));
+    const bodyEnd = body.indexOf('\n  }\n') + 4;
+    const mutations: [string, string, string][] = [
+      ['runner', 'expectDelivered returns the progress unchecked', runner.replace(body.slice(0, bodyEnd), 'async function expectDelivered(id, before, end) {\n    return end.progress;\n  }\n')],
+      ['runner', 'no reload', runner.replace('problems.push(...reloadProblems(end.progress, await progressOf(id)));', '')],
+      ['runner', 'problems never thrown', runner.replace('if (problems.length) throw', 'if (false) throw')],
+      ['runner', 'the run\'s own problems dropped', runner.replace('deliveryProblems(before, end, extra)', 'deliveryProblems(before, end)')],
+      ['delivery', 'any stamp passes', deliverySource.replace("report.stamp !== 'delivered' || ", '')],
+      ['delivery', 'the Delivered star is not read', deliverySource.replace(" || !Array.isArray(report.stars) || report.stars[0] !== true", '')],
+      ['delivery', 'reports are not counted', deliverySource.replace('after.reports !== before.reports + 1', 'false')],
+      ['delivery', 'attempts are not counted', deliverySource.replace('after.level.attempts !== before.level.attempts + 1', 'false')],
+      ['delivery', 'the best time is not read', deliverySource.replace(' || after.level.bestTimeSec === null || after.level.bestTimeSec === undefined', '')],
+      ['delivery', 'the reload is not compared', deliverySource.replace("return ['save changed on reload: ' + JSON.stringify({ after, reloaded })];", 'return [];')],
+    ];
+    for (const [file, name, mutated] of mutations) {
+      expect(mutated, name).not.toBe(file === 'runner' ? runner : deliverySource);
+      const misses = await deliveryMisses(file === 'runner' ? mutated : runner, file === 'delivery' ? mutated : deliverySource);
+      expect(misses.length, name).toBeGreaterThan(0);
     }
   });
 });

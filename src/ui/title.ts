@@ -64,6 +64,8 @@ export class TitleScene implements Scene {
   confirmT = 0;
   /** Seconds left on the "file shredded" note after an erase. */
   shreddedT = 0;
+  /** v0.2 council round 5 (Sol P3): the erase did not persist; the note says the shredder jammed instead. */
+  shredFailed = false;
   private scrimArmed = false;
   readonly taglineSeed = Math.random();
   private labelsFor = -1;
@@ -88,6 +90,10 @@ export class TitleScene implements Scene {
     this.t += dt;
     const p = this.shell.ctx.pointer;
     this.shreddedT = Math.max(0, this.shreddedT - dt);
+    if (this.shredFailed && this.shreddedT === 0) {
+      this.shredFailed = false;
+      this.notice.visible = this.saveStatus !== 'ok';
+    }
     if (this.confirming) return this.updateConfirm(dt);
     if (this.mute.update(p, dt)) this.shell.toggleMute();
     for (const { lang, b } of this.langs) if (b.update(p, dt) && lang !== getLang()) this.shell.setLanguage(lang);
@@ -128,13 +134,16 @@ export class TitleScene implements Scene {
     const p = this.shell.ctx.pointer;
     this.confirmT = Math.min(1, this.confirmT + dt * 4.5);
     if (this.erase.update(p, dt)) {
-      this.shell.resetProgress();
+      // v0.2 council round 5 (Sol P3): "shredded" only once the fresh file is stored; a jammed write keeps the file,
+      // its status and the reset button, and the notice comes back once the jammed note has been read
+      const persisted = this.shell.resetProgress() !== false;
       this.closeConfirm();
-      this.saveStatus = 'ok';
+      this.shredFailed = !persisted;
+      this.saveStatus = persisted ? 'ok' : this.shell.saveStatus ?? this.saveStatus;
       this.notice.visible = false;
-      this.reset.visible = hasProgress(this.shell.save);
+      this.reset.visible = !persisted || hasProgress(this.shell.save);
       this.labelsFor = -1; // the trophy count starts again from zero
-      this.shreddedT = readSeconds(tr().title.reset.done);
+      this.shreddedT = readSeconds(persisted ? tr().title.reset.done : tr().title.reset.shredFailed);
       return;
     }
     if (this.keep.update(p, dt)) return this.closeConfirm();
@@ -379,7 +388,7 @@ class TitleView implements SceneView {
     const note = s.shreddedT > 0;
     this.shredded.visible = note;
     if (note) {
-      this.shredded.set(str.reset.done, VIEW_W / 2, 836, VIEW_W - 40);
+      this.shredded.set(s.shredFailed ? str.reset.shredFailed : str.reset.done, VIEW_W / 2, 836, VIEW_W - 40);
       this.shredded.alpha = rm ? 1 : Math.min(1, s.shreddedT / 0.5);
     }
     this.notice.sync(fade);

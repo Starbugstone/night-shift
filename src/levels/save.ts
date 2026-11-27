@@ -169,15 +169,24 @@ function readLevel(raw: unknown, path = 'level', damage?: string[]): LevelProgre
   return lv;
 }
 
+/**
+ * v0.2 council round 5 (Sol P3): a kept shelf entry whose `first` is not a count (`"broken"`, `null`, `-1`) is damage:
+ * the reader defaults it, so the entry is stored back repaired. A missing `first` is not.
+ */
+function shelfFirst(e: Record<string, unknown>, path: string, damage?: string[]): number {
+  if (e.first !== undefined && !(isFiniteNumber(e.first) && (e.first as number) >= 0)) damage?.push(`${path}.first`);
+  return Math.floor(finiteNonNeg(e.first, 0, 1e9));
+}
+
 /** Keep only well-formed entries for known souvenirs (unknown or retired items drop out). */
-function readTrophies(raw: unknown): Record<string, TrophyEntry> {
+function readTrophies(raw: unknown, damage?: string[]): Record<string, TrophyEntry> {
   const out: Record<string, TrophyEntry> = {};
   if (!isObj(raw)) return out;
   for (const [item, e] of Object.entries(raw)) {
     if (!Object.hasOwn(en.items, item) || !isObj(e)) continue;
     const count = Math.floor(finiteNonNeg(e.count, 0, 1e6));
     if (count < 1 || typeof e.room !== 'string' || !isRoomId(e.room)) continue;
-    out[item] = { count, room: e.room, first: Math.floor(finiteNonNeg(e.first, 0, 1e9)) };
+    out[item] = { count, room: e.room, first: shelfFirst(e, `trophies.${item}`, damage) };
   }
   return out;
 }
@@ -187,7 +196,7 @@ export function isSpecimenId(value: unknown): value is string {
 }
 
 /** v4 specimens: keep only well-formed entries for known specimens (unknown ids and bad shapes drop out). */
-export function readSpecimens(raw: unknown): Record<string, SpecimenEntry> {
+export function readSpecimens(raw: unknown, damage?: string[]): Record<string, SpecimenEntry> {
   const out: Record<string, SpecimenEntry> = {};
   if (!isObj(raw)) return out;
   for (const [id, e] of Object.entries(raw)) {
@@ -205,7 +214,7 @@ export function readSpecimens(raw: unknown): Record<string, SpecimenEntry> {
       probes = Math.floor(Math.min(1e6, e.probes));
     }
     const probed = probes > 0;
-    const first = Math.floor(finiteNonNeg(e.first, 0, 1e9));
+    const first = shelfFirst(e, `specimens.${id}`, damage);
     out[id] = e.room !== undefined
       ? { count, room: e.room, first, probed, probes }
       : { count, first, probed, probes };
@@ -272,8 +281,8 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   out.fieldCheckSeen = raw.fieldCheckSeen === true || (oldDispatch && out.levels.level2.delivered);
   if (raw.dispatch2199Finale === true) out.dispatch2199Finale = true;
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
-  out.trophies = readTrophies(raw.trophies);
-  out.specimens = readSpecimens(raw.specimens);
+  out.trophies = readTrophies(raw.trophies, damage);
+  out.specimens = readSpecimens(raw.specimens, damage);
   if (damage) {
     // a shelf entry for a known souvenir or specimen that the reader could not keep
     const dropped = (field: string, known: (id: string) => boolean, kept: Record<string, unknown>) => {
@@ -310,11 +319,14 @@ export const SAVE_FIELD_TYPES: Readonly<Record<string, (value: unknown) => boole
   specimens: isObj,
 };
 
-/** A level record that holds at least one value `readLevel` keeps. */
+/**
+ * A level record that holds at least one value `readLevel` keeps. v0.2 council round 5 (Sol P2): that includes an
+ * earned star in one of the four slots of a damaged star list (`[true, true, null, false]`), which `readLevel` keeps.
+ */
 function isUsableLevel(record: unknown): boolean {
   if (!isObj(record)) return false;
   const s = record.stars;
-  if (Array.isArray(s) ? s.length > 0 && s.every(isBool) : isFiniteNumber(s)) return true;
+  if (Array.isArray(s) ? (s.length > 0 && s.every(isBool)) || s.slice(0, 4).includes(true) : isFiniteNumber(s)) return true;
   if (isBool(record.delivered)) return true;
   if (typeof record.attempts === 'number' && Number.isFinite(record.attempts) && record.attempts >= 0) return true;
   const bt = record.bestTimeSec ?? record.bestTime;
@@ -445,27 +457,27 @@ export function loadSaveWithStatus(storage: KeyValueStore | null): { save: SaveD
       return { save: current, status: clean ? 'ok' : 'repaired' };
     }
     if (stored !== null) damaged = true;
-    const older = [V2_SAVE_KEY, LEGACY_SAVE_KEY] as const;
-    for (const key of older) {
+    // Newest key first, and each key settles before an older one is read (v0.2 council round 5, Opus 2): a sound save
+    // imports, and failing that a damaged one whose level records survive is salvaged (Opus O2; the older key stays
+    // as it was), so a salvageable v0.1 save is never passed over for an older sound one. A value with nothing to
+    // salvage (garbage, an empty record) still falls through to the next key.
+    for (const key of [V2_SAVE_KEY, LEGACY_SAVE_KEY] as const) {
       const value = read(key);
       if (passedOverDamage(storage, key)) damaged = true;
       const raw = readSaveShape(value);
-      if (!raw) {
-        if (value !== null) damaged = true;
-        continue;
+      if (raw) {
+        const damage: string[] = [];
+        const imported = validateSave(raw, LEVEL_IDS, damage);
+        writeSave(storage, imported);
+        return { save: imported, status: damaged ? 'recovered' : damage.length > 0 ? 'repaired' : 'ok' };
       }
-      const damage: string[] = [];
-      const imported = validateSave(raw, LEVEL_IDS, damage);
-      writeSave(storage, imported);
-      return { save: imported, status: damaged ? 'recovered' : damage.length > 0 ? 'repaired' : 'ok' };
-    }
-    // Opus O2: a damaged older save whose level records survive beats a fresh file (the older key stays as it was)
-    for (const key of older) {
-      const raw = salvageCurrent(read(key));
-      if (!raw) continue;
-      const imported = validateSave(raw);
-      writeSave(storage, imported);
-      return { save: imported, status: 'recovered' };
+      const salvaged = salvageCurrent(value);
+      if (salvaged) {
+        const imported = validateSave(salvaged);
+        writeSave(storage, imported);
+        return { save: imported, status: 'recovered' };
+      }
+      if (value !== null) damaged = true;
     }
     const repaired = salvageCurrent(stored, true);
     if (repaired) {

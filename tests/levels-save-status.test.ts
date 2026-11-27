@@ -6,9 +6,11 @@
 import { describe, expect, it } from 'vitest';
 import { resetSave } from '../src/core/reset';
 import { preprodStorage } from '../src/core/storage';
-import { LEGACY_SAVE_KEY, LEVEL_IDS, SAVE_KEY, V2_SAVE_KEY, defaultSave, isStoredSave, loadSave, loadSaveWithStatus, validateSave, writeSave, type KeyValueStore } from '../src/levels/save';
-import { LEVELS } from '../src/levels/levels';
-import { damageCases, damagedOlderShapes, damagedProgressShapes, memStore, nestedDamageShapes, notSaveShapes, okCases, ownKey, storeFor } from './levels-save-shapes';
+import { LEGACY_SAVE_KEY, LEVEL_IDS, SAVE_KEY, V2_SAVE_KEY, defaultSave, isSalvageableSave, isStoredSave, loadSave, loadSaveWithStatus, validateSave, writeSave, type KeyValueStore } from '../src/levels/save';
+import { LEVELS, ROOM_IDS } from '../src/levels/levels';
+import { en } from '../src/i18n/en';
+import { SaveSession } from '../src/core/save-session';
+import { SPARSE_PLACES, salvageableOverSoundCases, shelfFieldDamageShapes, damageCases, damagedOlderShapes, damagedProgressShapes, memStore, nestedDamageShapes, notSaveShapes, okCases, ownKey, sparseLevelShapes, storeFor } from './levels-save-shapes';
 
 const cases = damageCases();
 /** Thousands of generated cases per test: under a parallel full run the 5 s default is too short (Neon 4, P2). */
@@ -64,6 +66,33 @@ describe('the loader reports a damaged save', () => {
     }
   }, SLOW);
 
+  // v0.2 council round 5 (Sol P3): a progress write over a store that throws used to clear the status to 'ok' while
+  // the damaged bytes stayed (the next boot said 'unreadable' again)
+  it('a progress write clears the status only when it lands', () => {
+    const misses: string[] = [];
+    for (const c of cases) {
+      const { disk, storage } = storeFor(c);
+      const session = new SaveSession(storage);
+      const loaded = session.status;
+      const before = JSON.stringify(disk.data);
+      // what the next boot says of the file as the load left it (a repaired or recovered save was stored back then)
+      const reload = () => new SaveSession(storeFor({ init: { ...disk.data }, preprod: c.preprod }).storage).status;
+      const next = reload();
+      const setItem = disk.setItem;
+      disk.setItem = () => { throw new Error('quota exceeded'); };
+      const played = { ...session.save, reports: session.save.reports + 1 };
+      if (session.writeProgress(played)) misses.push(`${c.name}: a throwing write reported persisted`);
+      if (session.status !== loaded) misses.push(`${c.name}: ${loaded} -> ${session.status} after a failed write`);
+      if (JSON.stringify(disk.data) !== before) misses.push(`${c.name}: the disk changed`);
+      if (reload() !== next) misses.push(`${c.name}: reload ${reload()}, want ${next}`);
+      disk.setItem = setItem;
+      if (!session.writeProgress(played) || session.status !== 'ok') misses.push(`${c.name}: a landed write did not clear ${loaded}`);
+      if (reload() !== 'ok') misses.push(`${c.name}: reload after a landed write is not ok`);
+    }
+    expect(misses).toEqual([]);
+    expect(new SaveSession(null).writeProgress(defaultSave())).toBe(true);
+  }, SLOW);
+
   it('a store that throws on a stored value reports it unreadable', () => {
     const disk = memStore({ [SAVE_KEY]: '{}' });
     const throwing: KeyValueStore = { ...disk, getItem: (k) => { if (k === V2_SAVE_KEY) throw new Error('quota'); return disk.getItem(k); } };
@@ -104,15 +133,87 @@ describe('damage inside a recognised field is reported and stored back clean (ro
     expect(misses).toEqual([]);
   }, SLOW);
 
+  // v0.2 council round 5 (Sol P3): `"first": "broken"` on a kept exhibit used to default to 0 with no damage, 'ok'
+  it('a kept shelf entry with a mistyped field loads repaired and is stored back clean, for every souvenir and specimen', () => {
+    const shapes = shelfFieldDamageShapes();
+    expect(shapes.filter(s => s.shelf === 'trophies' && s.field === 'first').length).toBeGreaterThanOrEqual(Object.keys(en.items).length);
+    expect(shapes.filter(s => s.shelf === 'specimens' && s.field === 'first').length).toBeGreaterThanOrEqual(Object.keys(en.trophies.specimens.entries).length);
+    const misses: string[] = [];
+    let kept = 0;
+    for (const n of shapes) {
+      const disk = memStore({ [SAVE_KEY]: n.value });
+      const first = loadSaveWithStatus(disk);
+      if (first.status !== 'repaired') misses.push(`${n.name} -> ${first.status}`);
+      const entry = (first.save[n.shelf] as unknown as Record<string, Record<string, unknown> | undefined>)[n.id];
+      if (entry) {
+        kept++;
+        if (entry.count !== n.kept.count || entry.room !== n.kept.room) misses.push(`${n.name}: kept as ${JSON.stringify(entry)}`);
+      }
+      if (n.field === 'first' && !entry) misses.push(`${n.name}: the exhibit was lost`);
+      const damage: string[] = [];
+      validateSave(JSON.parse(disk.data[SAVE_KEY]!), LEVEL_IDS, damage);
+      if (damage.length) misses.push(`${n.name}: stored back with ${damage.join(', ')}`);
+      const again = loadSaveWithStatus(disk);
+      if (again.status !== 'ok') misses.push(`${n.name}: reload ${again.status}`);
+      expect(again.save, n.name).toEqual(first.save);
+    }
+    expect(misses).toEqual([]);
+    expect(kept).toBeGreaterThan(0);
+  }, SLOW);
+
   it('a save a build writes is never reported damaged', () => {
     const played = defaultSave();
     played.levels.level3 = { stars: [true, false, true, false], delivered: true, bestTimeSec: 99, attempts: 4, mapCollectible: undefined };
-    for (const save of [defaultSave(), played, { ...defaultSave(), upgrades: ['hush_drive' as const] }]) {
+    // round 5: shelf entries as a build writes them, for every souvenir and specimen
+    const shelved = defaultSave();
+    for (const [i, item] of Object.keys(en.items).entries()) shelved.trophies[item] = { count: 1 + (i % 3), room: ROOM_IDS[i % ROOM_IDS.length]!, first: i };
+    for (const [i, id] of Object.keys(en.trophies.specimens.entries).entries()) {
+      shelved.specimens[id] = i % 2 ? { count: 1, room: ROOM_IDS[i % ROOM_IDS.length]!, first: i, probed: i % 3 > 0, probes: i % 3 } : { count: 2, first: 0, probed: false, probes: 0 };
+    }
+    for (const save of [defaultSave(), played, shelved, { ...defaultSave(), upgrades: ['hush_drive' as const] }]) {
       const damage: string[] = [];
       validateSave(JSON.parse(JSON.stringify(save)), LEVEL_IDS, damage);
       expect(damage).toEqual([]);
     }
   });
+});
+
+// v0.2 council round 5 (Sol P2): `{"levels":{"level1":{"stars":[true,true,null,false]}}}` with nothing else loaded
+// 'unreadable' with zero stars (the usable-level check wanted an all-boolean star list), and the next progress write
+// replaced the bytes, so both earned stars were gone for good. Every level, every key, no glorbs or other usable field.
+describe('a sparse damaged save keeps the progress it holds (round 5, Sol P2)', () => {
+  const sparse = sparseLevelShapes();
+
+  it('covers every level in LEVELS and LEVEL_IDS', () => {
+    for (const id of new Set([...LEVELS.map(l => l.id), ...LEVEL_IDS])) expect(sparse.filter(n => n.id === id).length, id).toBeGreaterThanOrEqual(10);
+    for (const n of sparse) expect(Object.keys(JSON.parse(n.value)).filter(k => k !== 'version' && k !== 'levels'), n.name).toEqual([]);
+  });
+
+  it('loads repaired under every key, keeps the earned stars, stores them back clean, then loads ok', () => {
+    const misses: string[] = [];
+    for (const n of sparse) {
+      for (const p of SPARSE_PLACES) {
+        const label = `${p.where}: ${n.name}`;
+        const { disk, storage } = storeFor({ init: { [p.key]: n.value }, preprod: p.preprod });
+        const first = loadSaveWithStatus(storage);
+        if (first.status !== 'repaired') misses.push(`${label} -> ${first.status}`);
+        const kept = first.save.levels[n.id]!;
+        for (const [field, want] of Object.entries(n.keep)) {
+          if (JSON.stringify(kept[field as keyof typeof kept]) !== JSON.stringify(want)) misses.push(`${label}: ${field} ${JSON.stringify(kept[field as keyof typeof kept])}, want ${JSON.stringify(want)}`);
+        }
+        const own = disk.data[ownKey(p.preprod)];
+        if (own === undefined) { misses.push(`${label}: not stored back`); continue; }
+        const damage: string[] = [];
+        validateSave(JSON.parse(own), LEVEL_IDS, damage);
+        if (damage.length) misses.push(`${label}: stored back with ${damage.join(', ')}`);
+        if (p.key !== ownKey(p.preprod) && disk.data[p.key] !== n.value) misses.push(`${label}: the older key was rewritten`);
+        const again = loadSaveWithStatus(p.preprod ? preprodStorage(disk)! : disk);
+        if (again.status !== 'ok') misses.push(`${label}: reload ${again.status}`);
+        expect(again.save, label).toEqual(first.save);
+      }
+    }
+    expect(misses).toEqual([]);
+  }, SLOW);
 });
 
 // v0.2 council round 4 (Opus O2): only the current key used to be salvaged, so a v0.1 save under the older v2 key with
@@ -141,9 +242,29 @@ describe('a damaged older save with level progress is salvaged (round 4, Opus O2
     }
   });
 
-  it('a sound older save still beats a damaged newer one', () => {
-    const bad = damagedOlderShapes()[0]!;
+  // round 5 (Opus 2): this used to say a sound older save beats any damaged newer one, which threw away a salvageable
+  // v0.1 save; it still holds for a newer value with nothing to salvage (E12)
+  it('a sound older save still beats a newer value with nothing to salvage', () => {
     const v1 = JSON.stringify({ version: 1, glorbs: 321, levels: { level1: { stars: [true, false, true], delivered: true } } });
-    expect(loadSaveWithStatus(memStore({ [V2_SAVE_KEY]: bad, [LEGACY_SAVE_KEY]: v1 })).save.glorbs).toBe(321);
+    for (const bad of notSaveShapes().filter(s => !isSalvageableSave(s))) {
+      expect(loadSaveWithStatus(memStore({ [V2_SAVE_KEY]: bad, [LEGACY_SAVE_KEY]: v1 })).save.glorbs, bad).toBe(321);
+    }
   });
+
+  // round 5 (Opus 2): v2 held a salvageable v0.1 save (420 Glorbs, L3 starred) and v1 a sound older one (1 delivered,
+  // 5 Glorbs): the game loaded v1 and wrote it to v3, losing the v0.1 progress. Same on preprod. Every key pair.
+  it('a salvageable newer save beats a sound older one, under every pair of keys', () => {
+    const misses: string[] = [];
+    for (const c of salvageableOverSoundCases()) {
+      const { disk, storage } = storeFor(c);
+      const untouched = Object.fromEntries(Object.entries(c.init).filter(([k]) => k !== ownKey(c.preprod)));
+      const { save, status } = loadSaveWithStatus(storage);
+      if (!c.want.includes(status)) misses.push(`${c.name} -> ${status}`);
+      if (save.glorbs === 5 || !save.levels.level2.delivered || JSON.stringify(save.levels.level3.stars) !== '[true,true,true,false]') misses.push(`${c.name}: loaded the older save (${save.glorbs} Glorbs)`);
+      for (const [k, v] of Object.entries(untouched)) if (disk.data[k] !== v) misses.push(`${c.name}: ${k} rewritten`);
+      const again = loadSaveWithStatus(c.preprod ? preprodStorage(disk)! : disk);
+      if (again.status !== 'ok' || JSON.stringify(again.save) !== JSON.stringify(save)) misses.push(`${c.name}: reload ${again.status}`);
+    }
+    expect(misses).toEqual([]);
+  }, SLOW);
 });

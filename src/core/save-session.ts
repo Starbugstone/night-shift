@@ -28,11 +28,16 @@ export class SaveSession {
     return this.dismissed ? 'ok' : this.loaded;
   }
 
-  /** Progress (a run, a purchase, a story beat, a reset): stored, and the file is sound again. */
-  writeProgress(s: SaveData): void {
+  /**
+   * Progress (a run, a purchase, a story beat, a reset): stored, and the file is sound again. v0.2 council round 5
+   * (Sol P3): only when the write lands; a store that throws keeps the damaged bytes, so the status stays. With no
+   * store at all (private mode) there is no file to report on. Returns whether the progress persisted.
+   */
+  writeProgress(s: SaveData): boolean {
     this.current = s;
-    this.loaded = 'ok';
-    writeSave(this.storage, s);
+    const persisted = this.storage === null || writeSave(this.storage, s);
+    if (persisted) this.loaded = 'ok';
+    return persisted;
   }
 
   /** Sound and language: stored, except over an unreadable file nobody chose to shred yet. */

@@ -36,8 +36,8 @@ function boot(disk: ReturnType<typeof memStore>, preprod: boolean) {
     audio: { sfx: (n: string) => sfx.push(n) },
     input: {},
     assets: { get: () => undefined },
-    setSave(s: SaveData) { saves.writeProgress(s); },
-    resetProgress() { shell.setSave(resetSave(shell.save)); },
+    setSave(s: SaveData) { return saves.writeProgress(s); },
+    resetProgress() { return shell.setSave(resetSave(shell.save)); },
     dismissSaveNotice() { saves.dismiss(); },
     toggleMute() { saves.writeSettings({ ...saves.save, muted: !saves.save.muted }); },
     setLanguage(lang: Lang) { saves.writeSettings({ ...saves.save, lang }); },
@@ -67,8 +67,8 @@ describe('a damaged save on the title', () => {
   it('the Game keeps its save in a SaveSession: progress, settings and the dismissal go through it', () => {
     const game = gameSource;
     expect(game).toMatch(/this\.saves = new SaveSession\(this\.storage\)/);
-    expect(game).toMatch(/setSave\(s: SaveData\): void \{\s*this\.saves\.writeProgress\(s\);/);
-    expect(game).toMatch(/resetProgress\(\): void \{[^}]*this\.setSave\(resetSave\(this\._save\)\);/);
+    expect(game).toMatch(/setSave\(s: SaveData\): boolean \{\s*const persisted = this\.saves\.writeProgress\(s\);[^}]*return persisted;/);
+    expect(game).toMatch(/resetProgress\(\): boolean \{[^}]*return this\.setSave\(resetSave\(this\._save\)\);/);
     expect(game).toMatch(/dismissSaveNotice\(\): void \{[^}]*this\.saves\.dismiss\(\);\s*\}/);
     expect(game).toMatch(/toggleMute\(\): void \{\s*this\.setSettings\(/);
     expect(game).toMatch(/setLanguage\(lang: Lang\): void \{[^}]*this\.setSettings\(/);
@@ -190,6 +190,43 @@ describe('a damaged save on the title', () => {
       const again = boot(disk, c.preprod);
       expect(again.loaded, c.name).toEqual({ save: played, status: 'ok' });
     }
+  }, SLOW);
+
+  // v0.2 council round 5 (Sol P3): with a store whose writes throw, the erase used to say "file shredded" and the
+  // session reported 'ok' while the damaged bytes stayed on disk, so the next boot showed the notice again
+  it('a jammed erase never says shredded: the file, its status, the notice and the reset button stay, EN and FR', () => {
+    const misses: string[] = [];
+    for (const c of cases) {
+      for (const lang of LANGS) {
+        setLang(lang);
+        const disk = memStore(c.init);
+        const f = boot(disk, c.preprod);
+        const status = f.shell.saveStatus;
+        const before = JSON.stringify(disk.data);
+        // what the next boot says of the file as the load left it (a repaired save was stored back then)
+        const next = boot(memStore(disk.data), c.preprod).loaded.status;
+        disk.setItem = () => { throw new Error('quota exceeded'); };
+        const scene = f.title();
+        f.tap(scene, scene.reset);
+        f.tap(scene, scene.erase);
+        const str = activeTr().title.reset;
+        if (scene.confirming) misses.push(`${lang} ${c.name}: the card stayed open`);
+        if (!scene.shredFailed || scene.shreddedT <= 0) misses.push(`${lang} ${c.name}: no jammed note`);
+        if (f.shell.saveStatus !== status || scene.saveStatus !== status) misses.push(`${lang} ${c.name}: status ${f.shell.saveStatus}/${scene.saveStatus}, want ${status}`);
+        if (!scene.reset.visible) misses.push(`${lang} ${c.name}: the reset button went away`);
+        if (JSON.stringify(disk.data) !== before) misses.push(`${lang} ${c.name}: the disk changed`);
+        // once the note has been read, the notice comes back for the file still on disk
+        for (let i = 0; i < 60 * 12 && scene.shreddedT > 0; i++) scene.update(1 / 60);
+        if (scene.shredFailed || scene.notice.visible !== (status !== 'ok')) misses.push(`${lang} ${c.name}: notice ${scene.notice.visible} after the note`);
+        if (str.shredFailed === str.done) misses.push(`${lang}: the jammed note is the shredded note`);
+        const again = boot(memStore(disk.data), c.preprod);
+        if (again.loaded.status !== next) misses.push(`${lang} ${c.name}: reload ${again.loaded.status}, want ${next}`);
+      }
+    }
+    expect(misses).toEqual([]);
+    // the view draws the jammed note in place of the shredded one, and both fit the phone width
+    expect(titleSource).toMatch(/this\.shredded\.set\(s\.shredFailed \? str\.reset\.shredFailed : str\.reset\.done/);
+    for (const lang of LANGS) for (const line of [tr(lang).done, tr(lang).shredFailed]) expect(measure(line, 19, 800), line).toBeLessThanOrEqual(VIEW_W - 40);
   }, SLOW);
 
   it('the card says the file was damaged only for a damaged save', () => {

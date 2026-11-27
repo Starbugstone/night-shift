@@ -112,10 +112,13 @@ export function lessonHoldSeconds(tip: string): number {
   return Math.min(FRESH_LINE_SECONDS, readSeconds(tip));
 }
 
-/** For tests: whether this run's lesson has retired, and how long its tip has been on screen. */
-export function flightLessonState(run: object): { spent: boolean; shownSec: number } | null {
+/**
+ * For tests: whether this run's lesson has retired, whether the saucer has met its hazard (v0.2 council round 5), and
+ * how long its tip has been on screen.
+ */
+export function flightLessonState(run: object): { spent: boolean; met: boolean; shownSec: number } | null {
   const seen = encounters.get(run);
-  return seen ? { spent: seen.stage === SPENT, shownSec: seen.shownSec } : null;
+  return seen ? { spent: seen.stage === SPENT, met: seen.stage !== FRESH, shownSec: seen.shownSec } : null;
 }
 
 /**

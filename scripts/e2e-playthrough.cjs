@@ -30,6 +30,7 @@
 // WebGL canvas is blank to toDataURL outside the frame that drew it).
 const path = require('path');
 const fs = require('fs');
+const { deliveryProblems, reloadProblems } = require('./e2e-delivery.cjs');
 const BASE = process.env.BASE || 'http://localhost:5199/';
 const OUT = process.env.OUT || path.resolve(__dirname, '../review/e2e');
 fs.mkdirSync(OUT, { recursive: true });
@@ -322,24 +323,17 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
    * A shift passes only on a fresh, successful, persisted delivery: a report stamped 'delivered'
    * whose own stars include Delivered (not sunrise, storm, demolition or failed), one more report
    * and attempt than before, the level delivered with a best time, and the same level record
-   * after a reload.
+   * after a reload. The checks are scripts/e2e-delivery.cjs (round 5, Sol P2); tests/shell-e2e-runner.test.ts runs
+   * this very function against rejected reports and failed reloads for every level.
    */
   async function expectDelivered(id, before, end, extra = []) {
-    const after = end.progress;
-    const problems = [...extra];
-    if (end.scene !== 'report') problems.push(`ended on ${end.scene}, not report`);
-    if (!end.report) problems.push('no report model');
-    else if (end.report.stamp !== 'delivered' || !end.report.delivered || !end.report.stars[0]) problems.push(`report ${JSON.stringify(end.report)}`);
-    if (after.reports !== before.reports + 1) problems.push(`reports ${before.reports} -> ${after.reports}`);
-    if (after.level.attempts !== before.level.attempts + 1) problems.push(`attempts ${before.level.attempts} -> ${after.level.attempts}`);
-    if (!after.level.delivered || after.level.bestTimeSec === null) problems.push('level not delivered');
+    const problems = deliveryProblems(before, end, extra);
     if (!problems.length) {
       await openFixture('');
-      const reloaded = await progressOf(id);
-      if (JSON.stringify(reloaded) !== JSON.stringify(after)) problems.push('save changed on reload: ' + JSON.stringify({ after, reloaded }));
+      problems.push(...reloadProblems(end.progress, await progressOf(id)));
     }
     if (problems.length) throw new Error(`${id}: ${problems.join('; ')}`);
-    return after;
+    return end.progress;
   }
 
   async function deepShift({ id, num }, name) {

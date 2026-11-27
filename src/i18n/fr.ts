@@ -58,6 +58,8 @@ export const fr: Strings = {
       // v0.2 damaged save (council round 4): an unreadable file, nothing survived
       damagedLostBody: 'Votre dossier est revenu illisible, alors le Bureau en a ouvert un neuf. Tout effacer supprime le fichier abîmé pour de bon. Vos réglages de son et de langue sont conservés.',
       keepFresh: 'Garder le dossier neuf',
+      // v0.2 damaged save (council round 5): the erase could not be stored, so the old file is still there
+      shredFailed: 'Broyeuse coincée. Votre dossier n’a pas bougé.',
     },
   },
 

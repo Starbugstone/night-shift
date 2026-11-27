@@ -25,8 +25,8 @@ export interface Shell {
   toggleMute(): void;
   /** Switch the display language (saved; clears a `?lang=` override). */
   setLanguage(lang: Lang): void;
-  /** v4 reset: erase all progress (a fresh save), keeping sound and language. */
-  resetProgress(): void;
+  /** v4 reset: erase all progress (a fresh save), keeping sound and language. True when the fresh save persisted. */
+  resetProgress(): boolean;
   /** v0.2 damaged save: what the loader found at boot ('ok' once progress is saved, the file reset or the notice dismissed). */
   readonly saveStatus: SaveStatus;
   /** v0.2 damaged save: the player read the notice; hidden for this session, nothing written (council round 4, Sol P2). */

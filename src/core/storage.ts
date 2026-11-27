@@ -46,17 +46,13 @@ export function preprodStorage(inner: KeyValueStore | null): MergingStore | null
       if (key === SAVE_KEY) return inner.getItem(PREPROD_SAVE_KEY);
       if (key === V2_SAVE_KEY) {
         passedOver = false;
-        // The first loadable candidate: an unreadable or empty newer value must not hide an intact older save.
-        const keys = [PREPROD_V2_KEY, SAVE_KEY, V2_SAVE_KEY];
-        for (const k of keys) {
+        // The newest loadable candidate: a save, or (v0.2 council round 4, Opus O2) a damaged save whose level records
+        // survive, to salvage. Each key settles before an older one is read (round 5, Opus 2: a salvageable production
+        // save beats an older sound one), and an unreadable or empty newer value never hides an intact older save.
+        for (const k of [PREPROD_V2_KEY, SAVE_KEY, V2_SAVE_KEY]) {
           const v = inner.getItem(k);
-          if (isStoredSave(v)) return v;
+          if (isStoredSave(v) || isSalvageableSave(v)) return v;
           if (v !== null) passedOver = true;
-        }
-        // v0.2 council round 4 (Opus O2): with none, the first damaged save whose level records survive, to salvage
-        for (const k of keys) {
-          const v = inner.getItem(k);
-          if (isSalvageableSave(v)) return v;
         }
         return null;
       }
