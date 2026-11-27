@@ -69,4 +69,16 @@ describe('save fallback across older keys', () => {
     expect(loadSave(preprodStorage(disk))).toEqual(defaultSave());
     expect(disk.data[SAVE_KEY]).toBe(prod);
   });
+
+  it('preprod falls through an unreadable production save to production\'s intact v2', () => {
+    for (const bad of UNREADABLE) {
+      const disk = memStore({ [SAVE_KEY]: bad, [V2_SAVE_KEY]: V2 });
+      const save = loadSave(preprodStorage(disk));
+      expect(save.glorbs, bad).toBe(140);
+      expect(save.levels.level3.delivered, bad).toBe(true);
+      // production's keys stay untouched
+      expect(disk.data[SAVE_KEY]).toBe(bad);
+      expect(disk.data[V2_SAVE_KEY]).toBe(V2);
+    }
+  });
 });

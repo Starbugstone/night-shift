@@ -1,4 +1,4 @@
-import { SAVE_KEY, V2_SAVE_KEY, type KeyValueStore } from '../levels/save';
+import { SAVE_KEY, V2_SAVE_KEY, isStoredSave, type KeyValueStore } from '../levels/save';
 
 /** localStorage, or null when blocked (private mode, sandboxed iframe…). */
 export function browserStorage(): KeyValueStore | null {
@@ -42,7 +42,14 @@ export function preprodStorage(inner: KeyValueStore | null): KeyValueStore | nul
   return {
     getItem: (key) => {
       if (key === SAVE_KEY) return inner.getItem(PREPROD_SAVE_KEY);
-      if (key === V2_SAVE_KEY) return inner.getItem(PREPROD_V2_KEY) ?? inner.getItem(SAVE_KEY) ?? inner.getItem(V2_SAVE_KEY);
+      if (key === V2_SAVE_KEY) {
+        // The first loadable candidate: an unreadable or empty newer value must not hide an intact older save.
+        for (const k of [PREPROD_V2_KEY, SAVE_KEY, V2_SAVE_KEY]) {
+          const v = inner.getItem(k);
+          if (isStoredSave(v)) return v;
+        }
+        return null;
+      }
       return inner.getItem(key);
     },
     setItem: (key, value) => inner.setItem(map(key), value),

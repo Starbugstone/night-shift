@@ -259,6 +259,11 @@ function readSaveShape(stored: string | null): Record<string, unknown> | null {
   return isObj(raw) && SAVE_FIELDS.some(field => Object.hasOwn(raw, field)) ? raw : null;
 }
 
+/** True when a stored string holds a loadable save (see readSaveShape). */
+export function isStoredSave(stored: string | null): boolean {
+  return readSaveShape(stored) !== null;
+}
+
 /**
  * The current key wins whenever it holds a save, including the default record a reset stores. Otherwise the
  * newest older save is imported and stored under the current key at once (the older keys are never rewritten).
