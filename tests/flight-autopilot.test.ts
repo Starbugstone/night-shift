@@ -1,20 +1,10 @@
 // Solvability proof for the deep-level flight maps: the hazard-aware autopilot completes every
-// flight leg of L3 and L4 without being spotted (abductions stubbed as instant successes), and a
-// naive beeline gets caught, so the maps are not trivially open.
+// flight leg of every deep level in LEVELS without being spotted (abductions stubbed as instant
+// successes), and a naive beeline gets caught, so the maps are not trivially open. Levels whose
+// flight needs its own driver are named in OWN_DRIVER with the test that proves them.
 import { describe, expect, it } from 'vitest';
-import { LEVEL3, LEVEL4 } from '../src/levels/deep-levels';
-// L5 pier code
-import { LEVEL5 } from '../src/levels/deep-pier';
-// L6 clinic code
-import { LEVEL6 } from '../src/levels/deep-clinic';
-// L7 cruise code
-import { LEVEL7 } from '../src/levels/deep-ship';
-// v4 L9 1955
-import { LEVEL12 } from '../src/levels/deep-2199';
-import { LEVEL9 } from '../src/levels/deep-1955';
-// v4 1122
-import { LEVEL10 } from '../src/levels/deep-grail';
-import type { DeepLevelDef } from '../src/levels/types';
+import { LEVELS } from '../src/levels/levels';
+import type { DeepLevelDef, LevelDef } from '../src/levels/types';
 import { autopilotController, runHeadless, type HeadlessResult } from './flight-deep-harness';
 import { BEELINE_DELAYS, beelineFlight } from './difficulty/beeline';
 
@@ -32,7 +22,28 @@ function overview(_level: DeepLevelDef, _name: string, _r: HeadlessResult): void
   // map + exposure + trail SVG dump lives in a scratch tool; no-op here
 }
 
-for (const level of [LEVEL3, LEVEL4, LEVEL5, LEVEL6, LEVEL7, LEVEL9, LEVEL10, LEVEL12]) {
+/** Deep levels proved by their own flight driver (pickup detours, roaming targets, troop counts). */
+const OWN_DRIVER: Readonly<Record<string, string>> = {
+  birch_bakery: 'tests/levels-birch.test.ts',
+  birch_neighbours: 'tests/levels-birch.test.ts',
+  level8: 'tests/levels-monolith.test.ts',
+  level11: 'tests/flight-1953.test.ts',
+};
+
+const isDeep = (level: LevelDef): level is DeepLevelDef => level.kind === 'deep';
+const DEEP = LEVELS.filter(isDeep);
+/** Test files in this folder (paths only, nothing is loaded). */
+const TEST_FILES = new Set(Object.keys(import.meta.glob('./*.test.ts')).map((path) => `tests/${path.slice(2)}`));
+
+describe('deep flight coverage', () => {
+  it('names only real deep levels in OWN_DRIVER', () => {
+    const ids = new Set<string>(DEEP.map((level) => level.id));
+    expect(Object.keys(OWN_DRIVER).filter((id) => !ids.has(id))).toEqual([]);
+    expect(Object.values(OWN_DRIVER).filter((file) => !TEST_FILES.has(file))).toEqual([]);
+  });
+});
+
+for (const level of DEEP.filter((l) => !(l.id in OWN_DRIVER))) {
   describe(`${level.id} ${level.title}: flight legs`, () => {
     it('the autopilot visits all three targets without being spotted', () => {
       const r = runHeadless(level.map, [], autopilotController(), 400);

@@ -1,7 +1,7 @@
 import type { Assets } from '../contracts';
-import { ART } from '../art-manifest';
+import { PRELOAD_ART } from '../art-manifest';
 
-/** Preloads every manifest key; missing files simply stay undefined. */
+/** Preloads every manifest key that has a file (PRELOAD_ART); a file that fails still stays undefined. */
 export class AssetLoader implements Assets {
   private readonly images = new Map<string, HTMLImageElement>();
   private settled = 0;
@@ -9,7 +9,7 @@ export class AssetLoader implements Assets {
   readonly total: number;
 
   constructor(base: string = import.meta.env.BASE_URL) {
-    const keys = Object.keys(ART);
+    const keys = PRELOAD_ART;
     this.total = keys.length;
     for (const key of keys) {
       const img = new Image();

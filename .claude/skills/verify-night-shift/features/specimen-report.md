@@ -1,34 +1,37 @@
 # Specimen Report and save
 
-A finished attempt files a Specimen Report with time, bonks, dignity, snores, items taken, sightings, earned stars and Glorbs. Work Orders show accumulated stars and the best delivery time when you return or reload.
+A finished attempt files a Specimen Report: a stamp, the run's statistics, up to four stars, Glorbs, a rank line,
+Vrell's comment and (deep shifts) a cover story and tabloid headline. Work Orders show accumulated stars and the
+best time when you return or reload.
 
 ## Sub-features
 
-- `report-stats` shows the attempt's stamp and statistics.
-- `report-stars` scores Delivered, Still asleep, and Night owl.
-- `report-save` keeps stars, best time, attempts, balance and unlocks.
-- `report-actions` continues to the next memo or Work Orders, or starts a retry.
+- `report-stamp`: `delivered`, `failed`, or the deadline that ran out (`sunrise`, `storm` for 1955, `demolition` for 2199). The model is `active.model` while the scene is `report`.
+- `report-stars`: four stars, scored by `computeStars` (tutorials) and `computeDeepStars` (deep shifts) in `src/levels/progress.ts`, in this order:
+  1. **Delivered** (deep: every specimen delivered before the deadline; L8: quota met).
+  2. **Still asleep** (tutorial: nobody woke) or **Ghost** (deep: no sighting and no failed room; L8 counts sightings only).
+  3. **Night owl**: within par (tutorial, bakery) or with at least `parMarginSec` left on the clock.
+  4. The town pickup star, named after the pickup (L1 has none): the pickup taken on a delivered run.
+- `report-pay`: no Glorbs without delivery; otherwise delivery pay plus new-star pay, and a smaller repeat pay per star already owned.
+- `report-save`: one more `reports` and level `attempts`; `delivered`, the best time and the union of stars; the souvenirs, town find and specimens go to the trophy room.
+- `report-actions`: **Retry** (140, 888) and **Next** / **Work orders** (394, 888). At an era fork the report returns to Work Orders. After the first 2199 delivery, **Next** opens the Dispatch finale, and the report opens it by itself once Vrell's comment has had its read time.
 
 ## How to get to it (user POV)
 
-- Complete abduction following a [tutorial shift](tutorial-shifts.md). A room fixture can also produce a genuine report with zero flight time and sightings.
-- Use **Retry** to start the same flight over. On a successful L1 report, **Next** opens the L2 memo. L2 offers **Work orders**. An in-room **Restart** opens abort choices and leaves the report count untouched.
+- Finish a tutorial room, or the last specimen of a deep shift, or let a deep shift's clock run out.
+- A room fixture (`?room=<id>`) files a genuine tutorial report with zero flight time and sightings.
 
 ## Driving it with Playwright
 
-Preconditions:
-
-- Start with an empty save for first-time star pay. For repeat rewards, deliver the same level again in the same browser context.
-- Use a full shift when asserting combined flight and abduction time against par (L1 42 s, L2 48 s).
-
-- **Capture and score.** Run `await game.pilotRoom(id, { keepReport: true })` from an active room, or complete the route with a manual pointer drag. For a manual run, wait for `report` then run `await game.step(210); await game.capture('report')`. To check skip during a manual run, tap `(270, 430)` during the reveal and capture the completed report. Check the stamp, six statistics and star positions. Delivered earns the first star; delivery without waking earns the second; delivery at or under par earns the third.
-- **Check the save.** Read `const saved = await game.stored()` and compare it with `await game.save()`. A successful first attempt increments `reports` and that level's `attempts`, sets `delivered`, and records the best time. Compare the `glorbs` increase to 5 for delivery plus 10 per newly earned star or 2 per repeated star. On a slower repeat, the prior best time and prior stars remain in the save.
-- **Check navigation.** After the reveal, use `await game.tap(140, 888); await game.expectScene('flight')` for Retry. In an independent repeat, tap `(394, 888)` for Next or Work orders and expect `memo` after an L1 delivery or `workorders` after L2.
-- **Reload and check the second view.** Run `await game.open(); await game.tap(270, 686); await game.expectScene('workorders')`. Compare `await game.save()` with `saved`, capture the visible stars, time, rank and balance, and verify L2 is playable after L1 delivery. The room helper performs this persistence sequence automatically.
-- **Check abort side effects.** Record `await game.stored()` before tapping the current room's Restart button. After the abort screen appears, assert that the storage value equals the pre-abort value.
+- **Capture and score.** Run `await game.pilotRoom(id, { keepReport: true })` from an active room, or let `scripts/e2e-playthrough.cjs` finish a shift. While the scene is `report`, read `active.model.stamp`, `active.model.delivered` and `active.outcome.stars` (this attempt's stars, not the save's). Wait about 210 frames for the reveal, or tap (270, 430) to skip it, then capture.
+- **Check the save.** Compare `await game.stored()` with `await game.save()`. Check that `reports` and the level's `attempts` each went up by one, and the Glorb change matches the pay rule above.
+- **Reload.** Run `await game.open(); await game.tap(270, 686); await game.expectScene('workorders')`, then compare the level record and capture the card's stars and best time. `pilotRoom` and the e2e runner do this themselves.
+- **Navigation.** After the reveal, tap Retry and expect `flight` (a new attempt of the same shift); in another run, tap Next and expect the next memo or `workorders`.
+- **Abort side effects.** Record `await game.stored()`, tap a room's Restart at (474, 47), and check the abort screen leaves storage unchanged.
 
 ## Gotchas
 
-- The room helper's default follows the report with a reload check and returns to Work Orders. For report buttons, use `{ keepReport: true }`. To check tap-to-finish, capture the report while its reveal is still in progress.
-- The rendered stars score this attempt. The Work Orders stars are cumulative for the level.
-- A report opened by the debug `goto` provides demo statistics by default. Use actual gameplay for scoring and persistence checks.
+- The Work Orders stars are cumulative; the report's are this attempt's. A delivered level stays delivered after a later failed attempt.
+- The deep run (`__nightShift.run`) is cleared when the report opens; read the report model, not `run.phase`.
+- Read a 2199 first-clear report as soon as the scene is `report`: it moves on to `dispatch-finale` without a tap.
+- `goto('report', …)` shows demo statistics and writes no save unless `persist: true`; use real play for scoring and persistence checks.

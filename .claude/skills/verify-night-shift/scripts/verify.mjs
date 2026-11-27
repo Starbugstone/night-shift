@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createServer } from 'vite';
@@ -36,11 +37,21 @@ const provenance = {
   target,
   fromOrders,
   viewport: { width: 375, height: 690 },
+  // DPR 1 by default: at 2, software GL stalls on every pointer move on this host. DSF=2 for crisp captures.
+  deviceScaleFactor: Number(process.env.DSF || 1),
+  // DRAW=1 renders every stepped frame; by default only evidence frames are drawn (capture redraws).
+  drawEveryFrame: process.env.DRAW === '1',
+  // A cold dev server compiles every module on the first load: give it time on a busy host.
+  loadSeconds: Number(process.env.LOAD_SECONDS || 90),
   framesPerSecond: 60,
 };
 const base = 'http://127.0.0.1:' + port;
 const wait = (ms) => new Promise((done) => setTimeout(done, ms));
-const saveKey = 'night-shift-save-v2';
+// Read the live key from the game so this runner cannot fall behind a save migration again.
+const saveSource = await readFile(resolve('src/levels/save.ts'), 'utf8');
+const saveKey = saveSource.match(/export const SAVE_KEY = '([^']+)'/)?.[1];
+assert(saveKey, 'SAVE_KEY not found in src/levels/save.ts');
+provenance.saveKey = saveKey;
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.once(signal, () => {
     interrupted = signal;
@@ -84,8 +95,9 @@ function controls(page) {
   const save = () => observe(() => window.__nightShift.save);
   const capture = async (name) => {
     assert.match(name, /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/);
-    // the game canvas is WebGL: capture() renders and reads it in one go
-    const data = await observe(() => window.__nightShift.capture());
+    // the game canvas is WebGL and may not have drawn since the last step (drawing is off between
+    // evidence frames): redraw, then read it in the same task
+    const data = await observe(() => { window.__nightShift.redraw(); return window.__nightShift.capture(); });
     assert.match(data, /^data:image\/png;base64,/);
     await writeFile(resolve(evidence, name + '.png'), Buffer.from(data.split(',')[1], 'base64'));
     record('capture', { name, scene: await scene() });
@@ -109,7 +121,7 @@ function controls(page) {
     record('open', { path, expected });
     priorPages += now;
     now = 0;
-    const response = await page.goto(new URL(path, base).href);
+    const response = await page.goto(new URL(path, base).href, { timeout: provenance.loadSeconds * 1000 });
     assert.equal(response?.status(), 200, 'Vite response');
     const canvas = page.locator('#game');
     await canvas.waitFor();
@@ -120,11 +132,12 @@ function controls(page) {
       x: box.x + (box.width - 540 * scale) / 2,
       y: box.y + (box.height - 960 * scale) / 2,
     };
-    const deadline = Date.now() + 15_000;
+    const deadline = Date.now() + provenance.loadSeconds * 1000;
     while (Date.now() < deadline) {
       await step(4);
       const actual = await scene();
       if (actual && actual !== 'loading') {
+        if (!provenance.drawEveryFrame) await observe(() => { window.__nightShift.drawing = false; });
         // wait out the transition (and any cover hold while the new view uploads), then settle
         for (let n = 0; n < 240 && await observe(() => window.__nightShift.transitioning); n++) await step(1);
         await step(30);
@@ -166,16 +179,21 @@ function controls(page) {
     }
     await up();
   };
-  return { page, observe, record, step, scene, stored, save, capture, expectScene, open, move, down, up, tap, drag };
+  /**
+   * Navigate inside the loaded page (`__nightShift.goto(scene, arg)`), e.g. goto('flight', 12) or
+   * goto('abduct', 'nora_kitchen'). Under load a second page.goto can time out; this cannot.
+   */
+  const goto = async (name, arg, expected = name) => {
+    record('goto', { scene: name, arg });
+    await page.evaluate(([n, a]) => window.__nightShift.goto(n, a), [name, arg]);
+    await expectScene(expected);
+  };
+  return { page, observe, record, step, scene, stored, save, capture, expectScene, open, goto, move, down, up, tap, drag };
 }
 
-// World-space approaches from scripts/e2e-playthrough.cjs, with input on the virtual clock.
-const approaches = {
-  farm_window: { ring: 0, via: [[150, 1400], [150, 590]] },
-  farm_chimney: { ring: 1, via: [[150, 1500], [150, 450]] },
-  laundry_skylight: { ring: 0, via: [[540, 1400], [540, 700]] },
-  laundry_loading: { ring: 1, via: [[540, 1500], [540, 700], [640, 330]] },
-};
+// World-space tutorial approaches, shared with scripts/e2e-playthrough.cjs, with input on the virtual clock.
+const approaches = Object.fromEntries(createRequire(import.meta.url)('../../../../scripts/tutorial-approaches.cjs')
+  .map(({ room, ring, via }) => [room, { ring, via: via.map(({ x, y }) => [x, y]) }]));
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 async function flyRing(game, roomId) {
@@ -317,7 +335,7 @@ try {
   });
   if (interrupted) throw new Error('Interrupted by ' + interrupted);
   provenance.chromium = browser.version();
-  const context = await browser.newContext({ viewport: provenance.viewport, deviceScaleFactor: 2 });
+  const context = await browser.newContext({ viewport: provenance.viewport, deviceScaleFactor: provenance.deviceScaleFactor });
   await context.addInitScript(virtualClock);
   const page = await context.newPage();
   page.on('pageerror', (error) => errors.push(error.message));
@@ -333,17 +351,19 @@ try {
   assert.match(await page.title(), /Night Shift/);
   assert.equal(await game.stored(), null, 'Doctor requires a fresh browser context');
   assert.deepEqual(errors, [], 'Doctor browser errors');
-  console.log('Doctor passed:', base, provenance.revision.slice(0, 8), 'title ready, empty save');
+  console.log('Doctor passed:', base, provenance.revision.slice(0, 8), 'title ready, empty', saveKey);
 
   if (target.endsWith('.mjs')) {
     const { default: journey } = await import(pathToFileURL(resolve(target)));
     await journey(game);
   } else if (target !== 'doctor') {
     if (fromOrders) {
-      assert(Object.hasOwn(approaches, target), 'This build has four flight entries');
+      assert(Object.hasOwn(approaches, target), 'This build has four tutorial flight entries');
+      // A fresh save has only Farmer Doyle open; Larry needs Doyle delivered first (use a journey).
+      assert(target.startsWith('farm_'), '--from-orders starts from an empty save, where only Farmer Doyle is open');
       await game.tap(270, 686);
       await game.expectScene('workorders');
-      await game.tap(270, target.startsWith('farm_') ? 354 : 558);
+      await game.tap(270, 364);
       await game.expectScene('memo');
       await game.tap(270, 894);
       await game.flyRing(target);

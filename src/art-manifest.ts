@@ -1011,4 +1011,25 @@ export const RETIRED_ART: Record<string, ArtSpec> = {
   'room/understudy_awake': { w: 110, h: 112 }, // Same drummer awake, sticks raised.
 };
 
+/**
+ * Keys drawn only by a procedural painter (`paintRoom55` in src/abduct/crest-valley-art.ts): they
+ * have no SVG yet. They stay in ART for their size, but the loader does not request them, so boot
+ * makes no failing request. When a file lands in public/art, take its key off this list
+ * (tests/shell-art-preload.test.ts fails until you do).
+ */
+export const PROCEDURAL_ART: ReadonlySet<string> = new Set([
+  'room/bus_cart55',
+  'room/amp_trolley55',
+  'room/counterweight_guide55',
+  'room/counter_plinth55',
+  'room/amp_crate55',
+  'room/lightning_cable55',
+  'room/service_bell55',
+  'room/mic_stand55',
+  'room/party_balloons55',
+]);
+
+/** Every key the asset loader requests at boot: ART without the procedural-only keys. */
+export const PRELOAD_ART: readonly string[] = Object.keys(ART).filter((key) => !PROCEDURAL_ART.has(key));
+
 export type ArtKey = keyof typeof ART;

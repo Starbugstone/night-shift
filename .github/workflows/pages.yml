@@ -3,7 +3,10 @@ name: Test and publish game
 #   /           production, from main
 #   /preprod/   preprod, from the preprod branch, to try changes before they reach main
 #   /pixi/      redirects to /preprod/ (the old preprod address)
-# A push to either branch tests that branch, then rebuilds and republishes both.
+# A push to either branch republishes both. Each branch is pinned to one exact commit first: the
+# pushed commit for the branch that was pushed, the current tip for the other. Each pinned commit
+# is then tested and built from the same checkout, and the site is assembled from those builds
+# only, so it never holds a commit that did not pass its own tests. /deployed.json names both SHAs.
 on:
   push:
     branches: [main, preprod]
@@ -16,47 +19,95 @@ concurrency:
   group: pages
   cancel-in-progress: false
 jobs:
+  pin:
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.pin.outputs.targets }}
+    steps:
+      - id: pin
+        name: Pin main and preprod to exact commits
+        env:
+          REPO: https://github.com/${{ github.repository }}.git
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # the event's own commit for the branch that triggered the run, the branch tip otherwise
+          pin() {
+            if [ "$EVENT_REF" = "refs/heads/$1" ]; then
+              echo "$EVENT_SHA"
+            else
+              git ls-remote "$REPO" "refs/heads/$1" | awk -v ref="refs/heads/$1" '$2 == ref { print $1 }'
+            fi
+          }
+          main=$(pin main)
+          preprod=$(pin preprod)
+          if [ -z "$main" ]; then echo "::error::main has no commit to publish"; exit 1; fi
+          targets=$(jq -cn --arg main "$main" --arg preprod "$preprod" \
+            '[{branch: "main", sha: $main}] + (if $preprod == "" then [] else [{branch: "preprod", sha: $preprod}] end)')
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+          printf 'Publishing main %s, preprod %s\n' "$main" "${preprod:-(no branch)}" >> "$GITHUB_STEP_SUMMARY"
   # Build and deploy are separate jobs (the layout GitHub documents): deploying in the same job as
   # the upload sometimes asked for the artifact before it was listed ("No artifacts named
   # github-pages"), failing about one push in three.
   build:
+    needs: pin
+    name: Test and build ${{ matrix.branch }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include: ${{ fromJSON(needs.pin.outputs.targets) }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.sha }}
+      - name: Check the checkout is the pinned commit
+        env:
+          PINNED: ${{ matrix.sha }}
+        run: test "$(git rev-parse HEAD)" = "$PINNED"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      # the pushed branch must pass its own tests before anything is published
-      - run: npm ci
+      # the pinned commit must pass its own tests before its build is published
+      - run: npm ci --no-audit --no-fund
       - run: npm test
-      - name: Build production (main) and preprod
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.branch }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 1
+  assemble:
+    needs: [pin, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          path: dists
+      - name: Assemble production (main) and preprod
         env:
-          REPO: https://github.com/${{ github.repository }}.git
+          TARGETS: ${{ needs.pin.outputs.targets }}
         run: |
           set -euo pipefail
-          build() {
-            git clone --quiet --depth 1 --branch "$1" "$REPO" "$RUNNER_TEMP/$1"
-            (cd "$RUNNER_TEMP/$1" && npm ci --no-audit --no-fund && npm run build)
-          }
-          build main
           mkdir -p site
-          cp -r "$RUNNER_TEMP/main/dist/." site/
-          if git ls-remote --exit-code --heads "$REPO" preprod > /dev/null; then
-            build preprod
-            cp -r "$RUNNER_TEMP/preprod/dist" site/preprod
-          fi
+          cp -r dists/dist-main/. site/
+          if [ -d dists/dist-preprod ]; then cp -r dists/dist-preprod site/preprod; fi
           mkdir -p site/pixi
           printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Night Shift preprod</title>' \
             '<meta http-equiv="refresh" content="0; url=../preprod/">' \
             '<script>location.replace("../preprod/" + location.search + location.hash)</script>' \
             > site/pixi/index.html
+          printf '%s\n' "$TARGETS" > site/deployed.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
   deploy:
-    needs: build
+    needs: assemble
     runs-on: ubuntu-latest
     environment:
       name: github-pages

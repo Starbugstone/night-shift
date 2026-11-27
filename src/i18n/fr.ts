@@ -2,6 +2,7 @@
 // de service, les dormeurs disent n'importe quoi. Écrire avec des espaces et des apostrophes
 // simples : `frenchTypo` (index.ts) pose les espaces insécables et les apostrophes typographiques.
 import type { Strings } from './en';
+import { RELEASE_LABEL } from '../core/version'; // v0.2 release hygiene
 
 export const fr: Strings = {
   meta: {
@@ -40,7 +41,7 @@ export const fr: Strings = {
       'Thermomètres en laiton depuis 1953.',
       'Zéro permis. Zéro témoin.',
     ],
-    build: 'v0.1 · version de nuit',
+    build: `v${RELEASE_LABEL} · version de nuit`, // v0.2 release hygiene: from package.json
     language: 'Langue',
     // v4 reset
     reset: {

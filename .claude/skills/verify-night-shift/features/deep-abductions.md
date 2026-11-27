@@ -1,58 +1,42 @@
-# Deep abduction interiors
+# Deep shifts
 
-Deep interiors move the camera with the specimen across interconnected rooms. Each specimen has two routes with distinct exits. Moving furniture, timed doors, secondary sleepers, lasers and security cameras make the route and timing matter.
+Every order after the two tutorials is a live shift. Zib flies a large map with one to three specimens, hovers in a
+ring to lock on, then drags each sleeper through a multi-room interior to its exit. Detectors (cones, cameras,
+lights, poets, cows…) fill the Suspicion fuse; a full fuse shows the SPOTTED card and sends the saucer back. The
+shift has a clock: a sunrise, storm or demolition deadline, or (the bakery) an elapsed time against par. Each map
+has one optional town pickup, hinted in the memo.
 
 ## Sub-features
 
-- `deep-suburb` covers Dave's roof and patio, Barb's chimney and back door, and Gary's skylight and garage door.
-- `deep-downtown` covers Nigel's skylight and loading bay, Kev's vent and fire escape, and the Mayor's clock tower and elevator.
-- `deep-hazards` covers timed crossings, camera and laser alarms and secondary sleeper wakes.
+- `deep-flight`: HUD clock, specimen tracker, rings with route labels, minimap, the quit button at (46, 47).
+- `deep-spotted`: the SPOTTED card waits for a tap (skippable after 0.9 s, `SPOT_SKIP`); the clock is charged only for the first 1.35 s (`SPOT_HOLD`).
+- `deep-rooms`: scrolling interiors with timed doors, second sleepers, lasers, cameras, moisture (Bubbles), probes (L6), the swell (L7), the 1122 time window and the 1953 heat ray.
+- `deep-choice`: after a failed or abandoned room, **Retry** at (270, 598), **Back to flight** at (270, 714), **Abandon** at (270, 802).
+- `deep-pickup`: the town pickup. Hover on it like a ring (the 1955 time car moves; L8's Krix is an outdoor catch).
+- `deep-deadline`: running out of clock files a failed report (stamp `sunrise`, `storm` or `demolition`).
+- `deep-practice`: the bakery memo offers the **Field Check** practice and the 2199 memo a recital practice, at (142, 894); on those memos **Start shift** moves to (394, 894).
+- `deep-finale`: the first 2199 delivery's report opens the `dispatch-finale` scene (on **Next**, or by itself after Vrell's comment) (Skip (118, 879), Next (371, 879)); afterwards the 2199 memo shows Replay (88, 894), Practice (248, 894) and Start shift (430, 894).
 
 ## How to get to it (user POV)
 
-The standalone game has no player entry to the deep rooms at `c50157a`. The proposed isolated browser entry is `?room=<id>`. The implemented route catalog is below.
-
-| Specimen | Route IDs |
-| --- | --- |
-| Dentist Dave | `dave_roof`, `dave_patio` |
-| Coach Barb | `barb_chimney`, `barb_backdoor` |
-| Gary | `gary_skylight`, `gary_garagedoor` |
-| Night Guard Nigel | `nigel_skylight`, `nigel_loading` |
-| DJ Kev | `kev_vent`, `kev_fireescape` |
-| Mayor Whitlock | `mayor_clocktower`, `mayor_elevator` |
+- Clock in, scroll the Work Orders, tap an unlocked deep card, then **Start shift** (at (270, 894), or where `deep-practice` says).
+- The eras unlock in order: the first 1955 delivery opens 1122 and 1953 (either order); 2199 needs both.
+- `?unlock=1&flight=N` opens order N's flight directly; `?room=<id>` opens one room with zero flight time.
 
 ## Driving it with Playwright
 
-Preconditions:
+Preconditions: an e2e preview build (`npm run build -- --mode e2e --outDir review/e2e-build`, then `npm run preview -- --outDir review/e2e-build --port <port> --strictPort`) and the media tooling's Playwright.
 
-- A Vite instance with the requested deep room wired into its `?room=` entry. For wake-failure and report cases, the game must also start the deep rules and file the run to the appropriate level. The baseline checkout lacks these prerequisites.
-
-- **Check entry.** Run `.claude/skills/verify-night-shift/scripts/verify.mjs 5297 dave-roof-01 dave_roof`. The command expects scene `abduct` and the requested room with a scrolling interior. At `c50157a` it reaches `title`, returns failure, and captures `unexpected-entry.png` plus the trace. Repeat using a fresh run ID for each room when checking a routing change.
-- **Verify traversal once entry works.** The same command drives the room through mouse drags, recenters the finger as needed, and requires the sleeper to reach the requested exit asleep. Capture entry, the camera moving into the next room, the exit, and the stored result. Check `active.debug.interior`, camera movement and the delivered result while the scene is live.
-- **Check a failure once entry works.** Use a custom journey and open `await game.open('/?room=gary_skylight', 'abduct')`. Drag into an active laser and capture the alarm and resulting failure. For a separate sleeper case, use `dave_roof` and agitate the beam close to Brenda. Check the named cause through `active.debug.result()` before the scene changes and compare it with the visible warning. Log unmet prerequisites if entry or the expected hazard rules are unavailable.
-- **Check the existing headless coverage.** Run `npm test -- tests/abduct-deep.test.ts` to exercise all twelve deep paths, the hard rules, and hazard failure assertions in Vitest.
+- **Whole shift.** `BASE=http://127.0.0.1:<port>/ ONLY=<level id> node scripts/e2e-playthrough.cjs`. It drives the flight autopilot and every room through real pointer input, taps through SPOTTED cards and the choice screen, and fails unless the report is stamped *delivered*, the save gains one report and one attempt, and the level record survives a reload. Captures land in `review/e2e/`.
+- **Town pickup.** Add `PICKUP=1` for Birch Lane (corridor plus the live pickup position), 1955 (time car pilot) or 1953 (tripod leg pilot). The run must then earn all four stars.
+- **One room.** `.claude/skills/verify-night-shift/scripts/verify.mjs <port> <run> <room id>` opens `?room=<id>`, pilots it and checks the report and save. Inside a journey use `game.goto('abduct', '<room id>')` to stay in the loaded page.
+- **A failure on purpose.** In a journey, open a room and drive into its hazard (a laser, a camera, a sleeper's wake radius). Read `active.debug.result()` before the scene changes and compare its `failReason` with the warning on screen, then check the choice screen.
+- **Headless proofs.** `tests/flight-autopilot.test.ts` flies every deep map in `LEVELS` (Birch Lane, L8 and L11 have their own drivers, named in the test); `tests/abduct-*.test.ts` and `npm run difficulty` cover rooms, hard rules and difficulty bands.
 
 ## Gotchas
 
-- The 16 IDs in `src/contracts.ts` describe the catalog. `isRoomId` in `src/levels/levels.ts` accepts only the four tutorial IDs at this revision. The fallback is the title. The same guard also applies to the room argument of `window.__nightShift.goto`.
-- The standalone abduction dev mount and headless tests exercise the room code. Track their results independently of the game's browser routing, report and save.
-- Keep the browser-entry check failing until routing exists. Once it lands, verify the level assignment and hard rules as well as the room identity.
-
-## v3 routes (L5–L7, docs/GDD-3-new-shifts.md)
-
-| Level | Specimen | Route IDs | Signature to check |
-| --- | --- | --- | --- |
-| L5 Pier Pressure | Bubbles (dolphin) | `bubbles_roof`, `bubbles_tunnel` | 7-joint body plan, moisture sheath (amber below 25 %, red 1 s fuse at 0), refills, water float |
-| L5 | Pete | `pete_gallery`, `pete_slipway` | lamp-room lens cone |
-| L5 | Sal | `sal_loft`, `sal_dock` | ice-chute draft, Kipper |
-| L6 Probe Compliance | Hank | `hank_front`, `hank_rear` | two Form 7-B drones per route, exit shut (amber checkboxes) until both tick, feather kick tell |
-| L6 | Dr. Osei | `osei_helipad`, `osei_pharmacy` | pager speaker, lift car |
-| L6 | Mr. Pemberton | `pemberton_window`, `pemberton_chute` | Roland second sleeper |
-| L7 A Whole Cruise Ship | Captain Sterling | `captain_mast`, `captain_funnel` | the swell: plumb dial bead before reversal, Anchovy |
-| L7 | Chef Marco | `marco_skylight`, `marco_promenade` | castor dessert trolley parked at a doorway |
-| L7 | Greg | `greg_awning`, `greg_cabin` | deckchair stack, steward camera |
-
-Flight signatures: L5 lighthouse beam with shadow wedges, L6 triggered ambulances (1.2 s bay tell),
-L7 deck photographers (amber frame → iris → 1 s exposure). Headless proofs: `tests/abduct-pier.test.ts`,
-`tests/abduct-clinic.test.ts`, `tests/abduct-ship.test.ts`, `tests/flight-autopilot.test.ts`; whole shifts in the
-browser: `ONLY=L5` (or `L6`, `L7`, `deep`) `node scripts/e2e-playthrough.cjs`.
+- A held pointer never closes the SPOTTED card: release, then press again after 0.9 s.
+- `run.phase` is gone by the time the report shows (the run is cleared); read the report's `model.stamp` and `outcome.stars` instead.
+- `?unlock=1` opens every order, so it cannot prove era unlocks; play the prerequisite shift in the same context for that.
+- The 1955 time car only appears part-way into the shift; the pickup pilot waits for it.
+- The L12 practice recital and the Field Check write no report.

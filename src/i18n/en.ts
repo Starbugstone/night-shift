@@ -3,6 +3,7 @@
 // Placeholders are `{name}` (fill with `fmt`), plurals are `{ one, other }` (pick with `plural`).
 import type { RoomId, UpgradeId } from '../contracts';
 import type { CommentKey, DeepZibEvent, ZibEvent } from '../levels/humor';
+import { RELEASE_LABEL } from '../core/version'; // v0.2 release hygiene
 
 type Lines = readonly string[];
 type Plural = { one: string; other: string };
@@ -342,7 +343,7 @@ export const en = {
       'Brass thermometers since 1953.',
       'Zero permits. Zero witnesses.',
     ],
-    build: 'v0.1 · night shift build',
+    build: `v${RELEASE_LABEL} · night shift build`, // v0.2 release hygiene: from package.json
     language: 'Language',
     // v4 reset
     reset: {
