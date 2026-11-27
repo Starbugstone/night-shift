@@ -10,6 +10,7 @@ import { Shape, ellipseArc, keyOf } from '../core/gfx/shapes';
 import { HudButton, HudMeter, HudPrompt, HudTimer, HUD_ROW, type MeterState } from '../ui/views/hud';
 import { artSprite } from '../ui/views/art';
 import { getLang, tr } from '../i18n';
+import { humanPartKey } from './human-parts';
 import { clamp, Joint, type Ragdoll } from './ragdoll';
 import type { AbductSimulation } from './simulation';
 import { TurnButtonsView, TurnTell } from './turn-draw';
@@ -316,16 +317,14 @@ export class HumanArt implements SpecimenArt {
   private readonly awake: Sprite;
 
   constructor(human: Human, ctx: GameContext) {
-    const key = 'human/' + human;
     const skin = human === 'marvin' ? '#9e6047' : '#d5a182';
-    const head = part(key + '_head', skin);
-    const awakeHead = part(key + '_head_awake', skin);
-    const torso = part(key + '_torso', SHIRTS[human]);
-    const limbs = human === 'artie' ? 'human/doc' : human === 'penny' ? 'human/larry' : human === 'moe' ? 'human/buff' : key;
-    const upperArm = part(limbs + '_upper_arm', SHIRTS[human]);
-    const lowerArm = part(limbs + '_lower_arm', human === 'marvin' ? skin : '#c18b77');
-    const upperLeg = part(limbs + '_upper_leg', PANTS[human]);
-    const lowerLeg = part(limbs + '_lower_leg', PANTS[human]);
+    const head = part(humanPartKey(human, 'head'), skin);
+    const awakeHead = part(humanPartKey(human, 'head_awake'), skin);
+    const torso = part(humanPartKey(human, 'torso'), SHIRTS[human]);
+    const upperArm = part(humanPartKey(human, 'upper_arm'), SHIRTS[human]);
+    const lowerArm = part(humanPartKey(human, 'lower_arm'), human === 'marvin' ? skin : '#c18b77');
+    const upperLeg = part(humanPartKey(human, 'upper_leg'), PANTS[human]);
+    const lowerLeg = part(humanPartKey(human, 'lower_leg'), PANTS[human]);
     this.ape = human === 'echo' || human === 'flint' || human === 'reed' ? new ApeLimbProjection() : null; // v4 L8
     const parts = [
       [upperArm, Joint.Neck, Joint.FarElbow], [lowerArm, Joint.FarElbow, Joint.FarHand],

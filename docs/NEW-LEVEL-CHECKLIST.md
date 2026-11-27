@@ -55,6 +55,7 @@ run at the end of this page.
 | Problem | Rule | Guard | Command |
 |---|---|---|---|
 | Stretched or borrowed art | Every sprite is drawn within 5% of its manifest aspect ratio; a new shape gets its own key (`scripts/art-shapes/build.mjs`, `shelfProp`). | `tests/abduct-sprite-aspect.test.ts`, `tests/flight-pickup-figure.test.ts` | `npm test` |
+| A specimen wearing someone else's limbs | A new specimen ships all seven parts (`head`, `head_awake`, `torso`, `upper_arm`, `lower_arm`, `upper_leg`, `lower_leg`) as its own `human/<id>_*` keys; a new sleeper ships its own asleep and awake art. | `tests/abduct-body-art.test.ts` | `npm test` |
 | Orphan art downloaded by every phone | Every key in `ART` is drawn by a room or level definition or by code that names it as a value. A key nothing draws leaves `ART`: delete it with its SVG, or move it to `SOURCE_ART` if a build script reads it. | `tests/shell-art-orphans.test.ts` | `npm test` |
 | Boot requests art that isn't there | The loader asks only for `PRELOAD_ART`; procedural-only keys sit in `PROCEDURAL_ART`. | `tests/shell-art-preload.test.ts` | `npm test` |
 | Solid props that look like decor | An art key is always solid or always decor; solid props wear the cream rim. | `tests/abduct-prop-roles.test.ts` | `npm test` |

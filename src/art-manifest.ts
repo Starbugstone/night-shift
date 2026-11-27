@@ -955,6 +955,22 @@ export const ART: Record<string, ArtSpec> = {
   'flight/invasion_field_rows_wide': { w: 300, h: 360 },
   'flight/invasion_field_rows_strip': { w: 210, h: 325 },
   'flight/invasion_field_rows_patch': { w: 230, h: 200 },
+
+  // ---- APPEND: v0.2 the 2199 residents' own limbs (art: Fable). They wore Doc's, Larry's and Buff's until now.
+  // Built by scripts/art-2199/limbs.mjs in the residents' own ink (#211e35, 2 px) and torso palettes. A human's
+  // parts are always their own: src/abduct/human-parts.ts, tests/abduct-body-art.test.ts.
+  'human/artie_upper_arm': { w: 26, h: 60 }, // mauve dressing-gown sleeve
+  'human/artie_lower_arm': { w: 24, h: 60 }, // wide gown sleeve with the pink turn-back cuff, bare hand
+  'human/artie_upper_leg': { w: 32, h: 70 }, // the gown's skirt to the knee, pink hem, pyjama below it
+  'human/artie_lower_leg': { w: 30, h: 72 }, // blue-striped pyjama leg and a pink slipper with a fleece collar
+  'human/penny_upper_arm': { w: 26, h: 60 }, // khaki travel-suit sleeve with a buttoned shoulder tab
+  'human/penny_lower_arm': { w: 24, h: 60 }, // rolled cuff, bare forearm, wristband, the thumb standing clear of the fist
+  'human/penny_upper_leg': { w: 32, h: 70 }, // suit leg with a flapped cargo pocket
+  'human/penny_lower_leg': { w: 30, h: 72 }, // suit leg bloused into a tall plum walking boot, cream sole
+  'human/moe_upper_arm': { w: 26, h: 60 }, // brass shoulder ball over a brushed-steel tube
+  'human/moe_lower_arm': { w: 24, h: 60 }, // dark elbow hinge, mint status band, wrist collar, two-jaw grip
+  'human/moe_upper_leg': { w: 32, h: 70 }, // brass hip ball, steel thigh, dark knee cap
+  'human/moe_lower_leg': { w: 30, h: 72 }, // steel shin with a mint level gauge, ankle ring, heavy foot with a brass toe
 };
 
 /**

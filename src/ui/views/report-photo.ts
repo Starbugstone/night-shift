@@ -3,6 +3,7 @@ import { Container, Graphics } from 'pixi.js';
 import { ART } from '../../art-manifest';
 import type { Assets } from '../../contracts';
 import { bodyPlanFor } from '../../abduct/body-plan';
+import { humanPartKey, type HumanPart } from '../../abduct/human-parts';
 import { Joint } from '../../abduct/ragdoll';
 import { roundRect } from '../../core/gfx/shapes';
 import { CARD_H, CARD_W, WINDOW, fitPhoto, type Photo } from '../report-photo';
@@ -12,7 +13,7 @@ const INK = '#1d1631';
 const HUMAN_JOINTS = 11;
 
 /** Human bones in the abduction's draw order: [from, to, part, far side]. */
-const HUMAN_BONES: ReadonlyArray<readonly [Joint, Joint, string, boolean]> = [
+const HUMAN_BONES: ReadonlyArray<readonly [Joint, Joint, HumanPart, boolean]> = [
   [Joint.Neck, Joint.FarElbow, 'upper_arm', true],
   [Joint.FarElbow, Joint.FarHand, 'lower_arm', true],
   [Joint.Pelvis, Joint.FarKnee, 'upper_leg', true],
@@ -63,14 +64,13 @@ function bone(assets: Assets, photo: Photo, key: string, color: string, a: Joint
 }
 
 function humanPose(parent: Container, assets: Assets, photo: Photo): void {
-  const base = 'human/' + photo.human + '_';
   for (const [a, b, part, far] of HUMAN_BONES) {
-    const limb = bone(assets, photo, base + part, PART_COLORS[part]!, a, b, false);
+    const limb = bone(assets, photo, humanPartKey(photo.human, part), PART_COLORS[part]!, a, b, false);
     if (!limb) continue;
     limb.alpha = far ? 0.73 : 1;
     parent.addChild(limb);
   }
-  const awake = assets.get(base + 'head_awake') ? base + 'head_awake' : base + 'head';
+  const awake = humanPartKey(photo.human, assets.get(humanPartKey(photo.human, 'head_awake')) ? 'head_awake' : 'head');
   const head = bone(assets, photo, awake, PART_COLORS.head!, Joint.Neck, Joint.Head, true);
   if (head) parent.addChild(head);
 }
