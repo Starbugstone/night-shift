@@ -10,6 +10,7 @@ import type { SceneView } from '../../core/gfx/scene';
 import { Shape, keyOf, panelPath } from '../../core/gfx/shapes';
 import { Label, measure } from '../../core/gfx/text';
 import { tr } from '../../i18n';
+import { readSeconds } from '../../core/read-time';
 import type { DeepMap, PropKind } from '../../levels/types';
 import { clamp } from '../../ui/draw';
 import { C } from '../../ui/theme';
@@ -48,6 +49,9 @@ const FUSE_R = FLIGHT_HUD.saucer / 2 + 21;
 
 type Target = DeepMap['targets'][number];
 
+/** Seconds a cleared house rests between its left-behind quips. */
+const QUIP_PAUSE = 4.5;
+
 class DeepTargetView {
   readonly root = new Container();
   private readonly building: TargetBuilding;
@@ -56,6 +60,9 @@ class DeepTargetView {
   private readonly collected = new Container();
   private readonly missed = new Container();
   private readonly quips: Container[] = [];
+  /** How long each quip stays up (long enough to read it), and one full turn of quips and pauses. */
+  private readonly quipFor: number[] = [];
+  private readonly quipCycle: number;
   private readonly y: number;
 
   constructor(assets: Assets, private readonly d: Target) {
@@ -76,8 +83,10 @@ class DeepTargetView {
         { fill: C.paper, r: 17, lineW: 2.5, shadow: 3 }).poly([-8, 16, 0, 28, 8, 16]).fill(C.paper),
         new Label(MISSED).set(words, 0, 1, w - 20));
       this.quips.push(quip);
+      this.quipFor.push(readSeconds(words));
       this.missed.addChild(quip);
     }
+    this.quipCycle = this.quipFor.reduce((sum, s) => sum + s + QUIP_PAUSE, 0);
     this.root.addChild(this.building.root);
     this.bubble.addChild(this.collected, this.missed);
   }
@@ -88,19 +97,29 @@ class DeepTargetView {
     if (!this.root.visible) return;
     this.building.sync(done, t + i / 3, rm);
     this.collected.visible = done;
-    // each quip stays ~4.5 s (long enough to read), then rests ~4.5 s
-    const cycle = (t * 0.11 + i * 0.37) % 1;
     // the quip comes and goes on a cycle: fade it out with alpha (a visible flip rebuilds the render group)
     this.missed.visible = done && this.quips.length > 0;
     if (!this.missed.visible) return;
-    if (cycle > 0.5) {
+    // each quip stays up for its reading time, then the house rests QUIP_PAUSE; houses start out of step
+    let u = (t + i * 3.4) % this.quipCycle;
+    let line = -1;
+    let k = 0;
+    for (let q = 0; q < this.quipFor.length; q++) {
+      const show = this.quipFor[q]!;
+      if (u < show) {
+        line = q;
+        k = u / show;
+        break;
+      }
+      u -= show + QUIP_PAUSE;
+      if (u < 0) break;
+    }
+    if (line < 0) {
       this.missed.alpha = 0;
       return;
     }
-    const k = cycle / 0.5;
     this.missed.alpha = Math.min(1, k * 8, (1 - k) * 6);
     this.missed.y = this.y - (rm ? 0 : Math.sin(k * Math.PI) * 6);
-    const line = Math.floor(t * 0.11 + i * 0.37) % this.quips.length;
     for (let q = 0; q < this.quips.length; q++) this.quips[q]!.visible = q === line;
   }
 }

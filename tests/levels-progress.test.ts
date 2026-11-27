@@ -58,17 +58,23 @@ describe('glorbs and ranks', () => {
     expect(rankFor(0).title).toBe('Intern');
     expect(rankFor(2).title).toBe('Intern');
     expect(rankFor(3).title).toBe('Probationary Abductor');
-    expect(rankFor(5).title).toBe('Abductor');
+    // v0.2: the ladder is spread over the 55 stars (tests/levels-progress-ranks.test.ts walks the journeys)
+    expect(rankFor(6).title).toBe('Probationary Abductor');
     expect(rankFor(7).title).toBe('Abductor');
-    expect(rankFor(8).title).toBe('Senior Abductor');
-    expect(rankFor(11).title).toBe('Abduction Lead');
-    expect(rankFor(12).title).toBe('Abduction Lead');
+    expect(rankFor(11).title).toBe('Abductor');
+    expect(rankFor(12).title).toBe('Senior Abductor');
+    expect(rankFor(18).title).toBe('Abduction Lead');
+    expect(rankFor(24).title).toBe('Abduction Lead');
     expect(nextRank(3)?.title).toBe('Abductor');
-    expect(nextRank(8)?.title).toBe('Abduction Lead');
-    expect(rankFor(15).title).toBe('Head of Internal Affairs');
-    expect(rankFor(21).title).toBe('Fleet Admiral of Naps');
-    expect(nextRank(11)?.title).toBe('Head of Internal Affairs');
-    expect(nextRank(19)).toBeNull();
+    expect(nextRank(12)?.title).toBe('Abduction Lead');
+    expect(rankFor(25).title).toBe('Head of Internal Affairs');
+    expect(rankFor(32).title).toBe('Fleet Admiral of Naps');
+    expect(rankFor(41).title).toBe('Chief Paradox Officer');
+    expect(rankFor(50).title).toBe('Employee of the Millennium');
+    expect(rankFor(55).title).toBe('Employee of the Millennium');
+    expect(nextRank(18)?.title).toBe('Head of Internal Affairs');
+    expect(nextRank(49)?.title).toBe('Employee of the Millennium');
+    expect(nextRank(50)).toBeNull();
   });
 
   it('applyRun merges best stars, pays, and never mutates the input', () => {

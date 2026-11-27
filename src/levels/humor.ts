@@ -4,6 +4,7 @@ import type { AbductResult, FlightResult, RoomId } from '../contracts';
 import { en } from '../i18n/en';
 import { fmt, gt, isSingular, plural, tr } from '../i18n';
 import type { LevelId, SaveData } from './save'; // v4 story
+import { isDeep, LEVELS } from './levels'; // v0.2 copy
 // v4 items & recap humour
 import { offeredItems, souvenirTurn } from './souvenir-quips';
 
@@ -160,7 +161,9 @@ export type DeepZibEvent =
   | 'spotter1953' // v4 openings
   | 'cruisers1955' // v4 openings
   | 'twoOfThree'
-  | 'birchHandprint' | 'birchRetry' | 'birchLaunch' | 'birchBinLid' | 'birchReturned';
+  | 'birchHandprint' | 'birchRetry' | 'birchLaunch' | 'birchBinLid' | 'birchReturned'
+  // v0.2 copy: the Bakery's shift opener
+  | 'birchBakery';
 
 export const DEEP_ZIB: Record<DeepZibEvent, readonly string[]> = en.humor.deepZib;
 
@@ -243,28 +246,50 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
   if (turn?.line) return turn.line;
   if (turn) rotation = turn.rest;
   let list: readonly string[];
+  // v0.2 copy: lines that say how many specimens came aboard only join the pool of a level with that count
+  const counted = countedLines(r.levelId);
   // v4 council: L8 is a time trial (four apes and Echo), so the three-specimen lines don't fit it
   if (r.levelId === 'level8') list = r.spotted > 0 ? c.monolithSpotted : c.monolith;
   else if (r.levelId === 'level9') {
     if (r.spotted > 0) return plural(r.spotted, c.clocktowerSpotted);
     list = c.clocktower;
   }
-  else if (r.stars >= 3) list = c.perfect;
+  else if (r.stars >= 3) list = withCounted(c.perfect, counted?.perfect);
   else if (r.spotted === 0 && r.failed === 0) list = c.ghost;
-  else if (r.spotted >= 3) list = c.spotted;
-  else if (r.failed >= 2) list = c.failed;
+  else if (r.spotted >= 3) list = withCounted(c.spotted, counted?.spotted);
+  else if (r.failed >= 2) list = withCounted(c.failed, counted?.failed);
   else if (r.remaining < 20) list = c.close;
   else if (r.levelId === 'level3' && rotation % 2 === 0) list = c.gary;
   else if (r.levelId === 'level4' && rotation % 2 === 0) list = c.mayor;
   else if (r.levelId === 'level5' && rotation % 2 === 0) list = c.pier; // L5 pier code
   else if (r.levelId === 'level6' && rotation % 2 === 0) list = c.clinic; // L6 clinic code
   else if (r.levelId === 'level7' && rotation % 2 === 0) list = c.cruise; // L7 cruise code
-  else list = c.default;
-  return fmt(pick(list, rotation), { spotted: r.spotted, failed: r.failed, remaining: Math.round(r.remaining) });
+  else list = withCounted(c.default, counted?.default);
+  const remaining = Math.round(r.remaining);
+  return fmt(pick(list, rotation), {
+    spotted: r.spotted, failed: r.failed, remaining,
+    // v0.2 copy: counted words agree with their number ("1 second", "once")
+    seconds: plural(remaining, c.units.seconds), times: plural(r.spotted, c.units.times), sightings: plural(r.spotted, c.units.sightings),
+  });
+}
+
+type CountedPools = (typeof en.humor.deepComments.bySpecimens)[1];
+
+/** v0.2 copy: the count-specific lines for a deep level's specimen count, or null when the level is unknown. */
+function countedLines(levelId: string): CountedPools | null {
+  const level = LEVELS.find(l => l.id === levelId);
+  if (!level || !isDeep(level)) return null;
+  const pools = tr().humor.deepComments.bySpecimens as Readonly<Record<number, CountedPools>>;
+  return pools[level.map.targets.length] ?? null;
+}
+
+function withCounted(shared: readonly string[], counted: readonly string[] | undefined): readonly string[] {
+  return counted?.length ? [...shared, ...counted] : shared;
 }
 
 // v4 story
 const DEEP_START: Readonly<Record<string, DeepZibEvent>> = {
+  birch_bakery: 'birchBakery', // v0.2 copy
   birch_neighbours: 'birchLaunch',
   level3: 'start3',
   level4: 'start4',

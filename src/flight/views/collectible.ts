@@ -2,11 +2,12 @@ import { Container, Graphics } from 'pixi.js';
 import { VIEW_W, type Assets, type MapCollectibleId } from '../../contracts';
 import { batched, panelPath } from '../../core/gfx/shapes';
 import { Label, measure, type LabelStyle } from '../../core/gfx/text';
-import { fmt, tr } from '../../i18n';
+import { tr } from '../../i18n';
+import { readSeconds } from '../../core/read-time';
 import { C } from '../../ui/theme';
 import { artSprite } from '../../ui/views/art';
 import { HudPanel } from '../../ui/views/hud';
-import type { MapCollectible } from '../collectible';
+import { mapPickupToastText, type MapCollectible } from '../collectible';
 import { figurePose, figureSeed, newFigurePose } from '../pickup-pose';
 import { PERSON_RIGS, PICKUP_SIZE, pickupKey, type PartMove, type PersonRig, type RigPart } from '../pickup-rig';
 import type { Box } from './clear-of';
@@ -553,10 +554,16 @@ const SHOUT = { size: 16, color: C.paperInk, weight: 900, italic: true } as cons
  * The flight view puts `root` in its FLIGHT_BUBBLES layer. It speaks for ~4 s, rests ~3 s, while the
  * pickup is still there and the window is on screen.
  */
+/** Seconds the window shout rests between showings. */
+const SHOUT_PAUSE = 3;
+
 class PickupShout {
   readonly root = new Container();
+  /** How long the shout stays up each time: long enough to read it. */
+  private readonly showFor: number;
 
   constructor(private readonly at: { x: number; y: number }, text: string) {
+    this.showFor = readSeconds(text);
     const w = Math.min(300, measure(text, 16, 900, true) + 30);
     this.root.position.set(at.x, at.y);
     // the bubble sits below the window (over the street), its tail pointing up at it
@@ -569,7 +576,7 @@ class PickupShout {
     const on = present && cam.sees(this.at.x, this.at.y + 40, 200);
     if (this.root.visible !== on) this.root.visible = on;
     if (!on) return;
-    const k = (t % 7) / 4;
+    const k = (t % (this.showFor + SHOUT_PAUSE)) / this.showFor;
     // fade in and out with alpha (the cycle is not a state change)
     this.root.alpha = k >= 1 ? 0 : Math.min(1, k * 10, (1 - k) * 8);
     this.root.y = this.at.y + (reduced || k >= 1 ? 0 : -Math.sin(k * Math.PI) * 4);
@@ -670,10 +677,9 @@ export class MapCollectibleView {
 export class MapCollectibleToast extends Container {
   constructor(id: MapCollectibleId) {
     super();
-    const words = tr().mapCollectibles;
     const panel = new HudPanel().set(316, 44, C.mint);
     this.position.set(VIEW_W / 2 - 158, 216);
-    this.addChild(panel, new Label(TOAST).set(fmt(words.toast, { name: words.items[id].name }), 158, 22, 290));
+    this.addChild(panel, new Label(TOAST).set(mapPickupToastText(id), 158, 22, 290));
   }
 
   sync(remaining: number, reduced: boolean): void {

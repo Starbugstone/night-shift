@@ -60,8 +60,12 @@ export interface Rank {
   flavour: string;
 }
 
-/** Thresholds; titles and flavour are the English ones from src/i18n (shown via tr().ranks[i]). */
-const RANK_STARS = [0, 3, 5, 8, 11, 15, 19] as const;
+/**
+ * Thresholds; titles and flavour are the English ones from src/i18n (shown via tr().ranks[i]).
+ * v0.2: spread over the 55 stars, so a perfect run is promoted every one or two orders and reaches the
+ * top rank only on the last orders (tests/levels-progress-ranks.test.ts walks the journeys).
+ */
+const RANK_STARS = [0, 3, 7, 12, 18, 25, 32, 41, 50] as const;
 export const RANKS: readonly Rank[] = RANK_STARS.map((minStars, i) => ({ ...en.ranks[i]!, minStars }));
 
 export function rankFor(stars: number): Rank {

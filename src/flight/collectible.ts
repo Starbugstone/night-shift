@@ -1,5 +1,7 @@
 import type { GameContext, MapCollectibleId, Vec2 } from '../contracts';
 import { P_RING, P_TWINKLE, PC, type Particles } from '../core/fx';
+import { readSeconds } from '../core/read-time';
+import { fmt, tr } from '../i18n';
 import { TimeCar } from './time-car';
 import { LockOn, RING_R, ringUnder, type Saucer } from './sim';
 
@@ -58,11 +60,18 @@ export class MapCollectible {
   }
 }
 
-export function mapPickupFeedback(ctx: GameContext, fx: Particles, { x, y }: Readonly<Vec2>): number {
+/** The "Collected: {name}" toast for a town pickup, in the current language. */
+export function mapPickupToastText(id: MapCollectibleId): string {
+  const words = tr().mapCollectibles;
+  return fmt(words.toast, { name: words.items[id].name });
+}
+
+/** Plays the pickup cue; returns how long its toast stays up (long enough to read it). */
+export function mapPickupFeedback(ctx: GameContext, fx: Particles, id: MapCollectibleId, { x, y }: Readonly<Vec2>): number {
   ctx.audio.sfx('pickup');
   if (!ctx.reducedMotion) {
     fx.spawn(P_RING, x, y, 0, 0, 0.45, 106, PC.mint);
     fx.burst(P_TWINKLE, x, y, 5, 70, 150, 0.5, 8, PC.mint, 0, 2);
   }
-  return 2.4;
+  return readSeconds(mapPickupToastText(id));
 }

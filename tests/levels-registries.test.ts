@@ -82,25 +82,15 @@ function flight(l: DeepLevelDef): DeepFlightScene {
 // ------------------------------------------------------------------ pending gaps (bugs)
 
 /** Levels whose Vrell report lines claim the wrong number of specimens. */
-const PENDING_COMMENT_COUNT = new Set([
-  // one specimen (Mabel), but the shared perfect/default/spotted/failed pools say "Three specimens", "All three"
-  'birch_bakery',
-  // two specimens (Nora and Len), same shared pools
-  'birch_neighbours',
-]);
+const PENDING_COMMENT_COUNT = new Set<string>([]);
 /** humor.deepComments pools whose `{n} sightings` style lines can print "1 sightings" / "1 seconds". */
-const PENDING_SINGULAR = new Set([
-  // L8, picked from one sighting: "1 sightings, three million years ago", "the apes saw you 1 times"
-  'monolithSpotted',
-  // picked under 20 s left: "Delivered with 1 seconds of night to spare"
-  'close',
-]);
+const PENDING_SINGULAR = new Set<string>([]);
 /** Levels whose report cover story has no line of its own (falls back to "swamp gas, a weather balloon, Venus"). */
-const PENDING_COVER_CAUSES = new Set(['level10', 'level12']);
+const PENDING_COVER_CAUSES = new Set<string>([]);
 /** Levels with no tabloid headline of their own (fall back to the generic headlines). */
-const PENDING_HEADLINES = new Set(['level12']);
+const PENDING_HEADLINES = new Set<string>([]);
 /** Deep levels with no shift opener (Zib's first line after the banner). Possibly deliberate: then give it a reason here. */
-const PENDING_OPENER = new Set(['birch_bakery']);
+const PENDING_OPENER = new Set<string>([]);
 
 function pendingCheck(name: string, pending: ReadonlySet<string>, failing: readonly string[]): void {
   expect(failing.filter(id => !pending.has(id)), `${name}: new gap`).toEqual([]);

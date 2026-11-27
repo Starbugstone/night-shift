@@ -393,7 +393,7 @@ export class FlightScene implements Scene {
     const speed = saucerSpeed(s);
     const idx = ringUnder(s.x, s.y, speed, this.ringPts, RING_R);
     if (this.collectible?.update(dt, s, speed, idx)) {
-      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, this.collectible.def);
+      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, this.collectible.def.id, this.collectible.def);
     }
     if (idx >= 0 && !this.saidNearRing) {
       this.saidNearRing = true;

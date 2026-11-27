@@ -160,6 +160,8 @@ const deepZib = {
   birchLaunch: ["Binoculars and a binder. Vrell, I think she’s one of us."],
   birchBinLid: ["Is that one of ours? …It’s a bin lid. Nice lines, though."],
   birchReturned: ["One aboard. That ties my record. They’re making me do it twice."],
+  // v0.2 copy: the Bakery opener (Zib's first live call)
+  birchBakery: ["First live call. If anyone asks, I’m only here for the dough."],
   // v4 L9 1955
   // v4 1122
   start10: ["No horses. Just coconuts. Vrell, is that what you meant by a company car?"],
@@ -674,7 +676,10 @@ export const en = {
     { title: 'Senior Abductor', flavour: 'Parking ring: waitlisted. Behind Bubbles.' },
     { title: 'Abduction Lead', flavour: "Signs other people's forms. Rarely reads them." },
     { title: 'Head of Internal Affairs', flavour: 'Trusted with the 1953 brass thermometer.' },
-    { title: 'Fleet Admiral of Naps', flavour: 'Salary pending. Vrell is "looking into it".' },
+    // v0.2 copy: the ladder runs to 55 stars; ranks from 36 stars need L8, so they may mention pay
+    { title: 'Fleet Admiral of Naps', flavour: 'Has a reserved beanbag. Gary has filed a complaint.' },
+    { title: 'Chief Paradox Officer', flavour: 'Salaried, sort of. Payroll pays you yesterday.' },
+    { title: 'Employee of the Millennium', flavour: 'Framed in every century. Vrell still spells it "Zibb".' },
   ],
 
   // v4 L9 1955
@@ -881,6 +886,9 @@ export const en = {
       // v4 L9 1955
       // v4 1953
       level11: ["a projector malfunction"],
+      // v0.2 copy
+      level10: ['an unladen swallow', 'two coconut halves in the fog', 'a cow on a very high trajectory'],
+      level12: ['a planning notice nobody was meant to read', 'a bulldozer on a moonlit test drive', 'a hitchhiker with very bright thumbs'],
       level9: ["ball lightning off the courthouse", "a prototype tailfin reflection", "too many chocolate malts"],
       level1: ['swamp gas', 'a very tall barn owl', 'a combine harvester with ambitions'],
       level2: ['a washing machine on spin', 'reflections off the diner sign', 'static from a lost sock'],
@@ -903,6 +911,8 @@ export const en = {
       level10: ["COW CLEARS CASTLE WALL. LANDING SCORES A FOUR.", "COWS STILL DENY ALL KNOWLEDGE"],
       // v4 1953
       level11: ["SAUCER SEEN OVER DRIVE-IN. AUDIENCE DEMANDS SEQUEL."],
+      // v0.2 copy: delivered and spotted (the demolition report keeps dispatch2199.gazette)
+      level12: ['SAUCER BEATS BULLDOZERS TO TOWN, RESIDENTS STILL IN PYJAMAS', 'POETRY GUARDS FILE COMPLAINT: "AUDIENCE LEFT DURING VERSE TWO"'],
       level9: [
         'LIGHTNING STOPS COURTHOUSE CLOCK AT 10:04 — FLYING HUBCAP BLAMED',
         'CHROME HUBCAP OVER MAIN ST — LOCAL BULLY STILL OUT COLD IN BOOTH',
@@ -1241,21 +1251,46 @@ export const en = {
       },
       clocktowerExpired: ["10:10. The storm passed, the town clock is stuck, and the Temporal Dispatch pass just expired.", "Storm's over. Your pass expired at 10:10. Zib, please return the saucer to the century you found it in."],
       perfect: [
-        'Three specimens, no sightings, home before dawn. I have nothing to complain about and I resent it.',
         'Flawless shift. I have forwarded your report to Head Office with my name on it. Standard procedure.',
         "Flawless. Your mother called Head Office to ask if you're eating enough. Please tell her to stop.",
       ],
       ghost: ['Nobody saw you. Nobody woke up. You are the rumour other interns tell each other.', "One witness did phone the radio. They assumed it was a radio play and hung up."],
       spotted: [
-        'All three delivered, and spotted {spotted} times. The local paper ran a special edition. You are on page one.',
         'Delivered. Also: {spotted} sightings. Please stop becoming folklore on company time.',
       ],
       failed: [
         "{failed} failed attempts. The specimens didn't notice. Their neighbours did.",
-        'All three, eventually. After {failed} retries. Persistence is a virtue. Efficiency is a bigger one.',
       ],
-      close: ["Delivered with {remaining} seconds of night to spare. I watched the clock. I don't have a heart, but if I did."],
-      default: ['Three specimens. Adequate. My favourite word, as you know.', 'Shift complete. Please wipe down the beam. Thrice.'],
+      // v0.2 copy: {seconds} is a plural phrase from `units` ("1 second", "12 seconds")
+      close: ["Delivered with {seconds} to spare. I watched the clock. I don't have a heart, but if I did."],
+      default: ['Shift complete. Please wipe down the beam. Thrice.'],
+      // v0.2 copy: lines that name the specimen count, by the level's count (src/levels/humor.ts adds them to the pool)
+      bySpecimens: {
+        1: {
+          perfect: ['One specimen, no sightings, not a crumb out of place. Head Office calls that a pilot scheme.'],
+          spotted: ['One specimen delivered, and spotted {times}. For one human, Zib. One.'],
+          failed: ['One specimen, {failed} attempts. The specimen was asleep, Zib. It was not a moving target.'],
+          default: ['One specimen. Adequate, in the travel size.'],
+        },
+        2: {
+          perfect: ["Both aboard, no sightings, home before dawn. Two for two. Don't let it go to your antennae."],
+          spotted: ["Both delivered, and spotted {times}. That's more witnesses than specimens. Please do the maths."],
+          failed: ['Both of them, eventually. {failed} retries for two sleepers. The sleepers were the easy part.'],
+          default: ['Two specimens. Twice the paperwork, none of the excuses.'],
+        },
+        3: {
+          perfect: ['Three specimens, no sightings, home before dawn. I have nothing to complain about and I resent it.'],
+          spotted: ['All three delivered, and spotted {times}. The local paper ran a special edition. You are on page one.'],
+          failed: ['All three, eventually. After {failed} retries. Persistence is a virtue. Efficiency is a bigger one.'],
+          default: ['Three specimens. Adequate. My favourite word, as you know.'],
+        },
+      },
+      // v0.2 copy: counted words for {seconds}, {times} and {sightings}
+      units: {
+        seconds: { one: '{n} second', other: '{n} seconds' },
+        times: { one: 'once', other: '{n} times' },
+        sightings: { one: 'One sighting', other: '{n} sightings' },
+      },
       gary: ["Gary's own cameras recorded the whole abduction. He'll review the tape in the morning and blame the Hendersons.", "Gary has already filed a neighbourhood alert about a 'suspiciously polite breeze'."],
       mayor: ['You abducted an elected official. On a weeknight. Head Office would like it noted that we did not vote for him.', 'The Mayor slept through the whole abduction. Honestly, an improvement on his council meetings.'],
       // L5 pier code
@@ -1277,8 +1312,8 @@ export const en = {
         "Echo is in the hold, still filing. I stamped every one of her forms 'VOID'. It felt wonderful.",
       ],
       monolithSpotted: [
-        'Done, but the apes saw you {spotted} times. They are already painting it on the cave wall.',
-        "{spotted} sightings, three million years ago. Historians will call it the first UFO. Thanks, Zib.",
+        'Done, but the apes saw you {times}. They are already painting it on the cave wall.',
+        "{sightings}, three million years ago. Historians will call it the first UFO. Thanks, Zib.",
       ],
     },
     // v4 story: Vrell's scripted arc lines on a level's first delivery
@@ -2572,7 +2607,7 @@ export const en = {
         memoHint: "Mrs. Pruitt's photo",
       },
       obelisk_crate: {
-        name: 'OBELISK™ crate',
+        name: 'Unaccounted crate',
         comment: "Empty decoy. Just straw and a forwarding label for the SS Buffet Royale. Accounting is furious nobody paid customs.",
         missedComment: "Left that unaccounted crate on the pier. Customs cleared it as 'garden ornament'.",
         memoHint: 'unaccounted crate',
@@ -2602,6 +2637,8 @@ export const en = {
   trophies: {
     // v4 trophy hunt
     hunt: 'Go get it',
+    // v0.2 copy: on a find filed on a failed shift, while its star is still open
+    huntStar: 'Bring it home for ★',
     button: 'Trophy room',
     buttonCount: 'Trophy room · {n}/{max}',
     title: 'TROPHY ROOM',
@@ -2945,7 +2982,7 @@ export const en = {
           at10: "His 3 AM set now opens with a yodelling track. Three Martians in the crowd screamed \"Ack ack!\" and fled.",
         },
         mayor: {
-          at3: "Rehearses a speech in case we say \"Take me to your leader\". Nobody has told him we meant Bubbles.",
+          at3: "Rehearses a speech in case we say \"Take me to your leader\". Nobody has told him our leader is Vrell, and Vrell does not take meetings.",
           at10: "A chain-smoking man in shadows now lurks at every council meeting. Whitlock calls him his \"advisor\".",
         },
         bubbles: {

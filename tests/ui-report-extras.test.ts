@@ -140,6 +140,23 @@ describe('cover story and tabloid', () => {
     for (let s = 0; s < 12; s++) seen.add(tabloidHeadline('level1', 2, s)!);
     expect([...seen].some((x) => TABLES.en.reportExtras.headlines.generic!.includes(x))).toBe(true);
   });
+
+  // v0.2 copy (council, Neon 10): L10 and L1 both ran « LES VACHES NIENT TOUT EN BLOC » in French
+  it('never prints the same headline or cover cause for two levels, in EN or FR', () => {
+    for (const lang of LANGS) {
+      const x = TABLES[lang].reportExtras;
+      for (const table of ['headlines', 'causes'] as const) {
+        const owner = new Map<string, string>();
+        for (const l of LEVELS) {
+          for (const line of x[table][l.id] ?? []) {
+            const key = line.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+            expect(owner.get(key) ?? l.id, `${lang} ${table}: "${line}" on ${owner.get(key)} and ${l.id}`).toBe(l.id);
+            owner.set(key, l.id);
+          }
+        }
+      }
+    }
+  });
 });
 
 describe('report layout', () => {
@@ -292,6 +309,11 @@ describe('report scene', () => {
       else expect(model.cover).toMatch(/3/);
       const { layout } = reportContent(model, outcome(), measure);
       expect(layout.cover.lines.some((t) => model.cover.startsWith(t)), lv.id).toBe(true);
+      // v0.2 copy: a repeat L12 delivery that was seen files one of its own causes
+      if (lv.id === 'level12') {
+        const again = deepReport(run, { ...outcome(), newStarFlags: [false, false, false, false] });
+        expect(tr().reportExtras.causes.level12!.some((c) => again.cover.includes(c)), again.cover).toBe(true);
+      }
     }
   });
 

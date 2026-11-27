@@ -90,6 +90,7 @@ import {
   type TrophyRoomTab,
   type TrophyShelfState,
   type TrophySlotState,
+  townStarOpen,
 } from './trophy-data';
 import { fmt, plural, tr } from '../i18n';
 
@@ -448,9 +449,12 @@ export class TrophiesScene implements Scene, ModalNavLook {
     if (!stop) return;
     this.selected = stop.sel;
     this.huntBtn.cancel();
-    this.huntLaunch = stop.sel.kind !== 'specimen' && !stop.sel.item.found
+    // v0.2: a find filed on a failed shift keeps its hunt button until its star is earned
+    const starOpen = stop.sel.kind === 'town' && stop.sel.item.found && townStarOpen(this.shell.save, stop.sel.item.slot);
+    this.huntLaunch = stop.sel.kind !== 'specimen' && (!stop.sel.item.found || starOpen)
       ? trophyHunt(stop.sel.item.slot, index => isLevelUnlocked(this.shell.save, index))
       : null;
+    this.huntBtn.label = starOpen ? tr().trophies.huntStar : tr().trophies.hunt;
     this.huntBtn.visible = !!this.huntLaunch;
     this.selectedIndex = index;
     if (this.activeRoom === 'souvenirs') this.pageIndex = stop.page;

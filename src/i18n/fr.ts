@@ -446,7 +446,10 @@ export const fr: Strings = {
     { title: 'Ravisseur confirmé', flavour: "Anneau de parking : sur liste d'attente. Derrière Bubulle." },
     { title: 'Chef ravisseur', flavour: 'Signe les formulaires des autres. Les lit rarement.' },
     { title: 'Chef des Affaires internes', flavour: 'Habilité au thermomètre en laiton de 1953.' },
-    { title: 'Grand amiral de la sieste', flavour: "Salaire à l'étude. Vrell « s'en occupe »." },
+    // v0.2 copy
+    { title: 'Grand amiral de la sieste', flavour: 'Pouf réservé à votre nom. Gary a porté plainte.' },
+    { title: 'Directeur des paradoxes', flavour: 'Salarié, en quelque sorte. La paie tombe la veille.' },
+    { title: 'Employé du millénaire', flavour: 'Encadré dans tous les siècles. Vrell écrit toujours « Zibb ».' },
   ],
 
   // v4 L9 1955
@@ -666,6 +669,9 @@ export const fr: Strings = {
       // v4 L9 1955
       // v4 1953
       level11: ["une panne de projecteur"],
+      // v0.2 copy
+      level10: ['une hirondelle à vide', 'deux demi-noix de coco dans le brouillard', 'une vache en trajectoire très haute'],
+      level12: ["un avis d'urbanisme que personne ne devait lire", 'un bulldozer en essai au clair de lune', 'une autostoppeuse au pouce très lumineux'],
       level9: ["la foudre en boule sur le tribunal", "un reflet sur un pare-chocs chromé", "un abus de milk-shakes au chocolat"],
       level1: ['des gaz des marais', 'une très grande chouette effraie', 'une moissonneuse-batteuse ambitieuse'],
       level2: ['un lave-linge en plein essorage', "des reflets de l'enseigne du snack", "l'électricité statique d'une chaussette perdue"],
@@ -684,9 +690,11 @@ export const fr: Strings = {
       birch_neighbours: ["MME PRUITT SIGNALE UNE SOUCOUPE POUR LA 37ᵉ FOIS. ET CETTE FOIS, ELLE A RAISON."],
       // v4 L9 1955
       // v4 1122
-      level10: ["UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.", "LES VACHES NIENT TOUT EN BLOC"],
+      level10: ["UNE VACHE FRANCHIT LE REMPART. QUATRE SUR DIX À L’ATTERRISSAGE.", "LES VACHES NIENT TOUJOURS TOUT"],
       // v4 1953
       level11: ["SOUCOUPE AU DRIVE-IN. LE PUBLIC RÉCLAME UNE SUITE."],
+      // v0.2 copy
+      level12: ['LA SOUCOUPE DEVANCE LES BULLDOZERS, LES HABITANTS ENCORE EN PYJAMA', 'LES POÈTES DE GARDE PORTENT PLAINTE : « LE PUBLIC EST PARTI AU DEUXIÈME COUPLET »'],
       level9: [
         "LA FOUDRE FIGE L'HORLOGE À 22 H 04 — UN ENJOLIVEUR VOLANT ACCUSÉ",
         'ENJOLIVEUR CHROMÉ GRANDE RUE — LA BRUTE LOCALE TOUJOURS K.O. AU CAFÉ',
@@ -944,6 +952,8 @@ export const fr: Strings = {
     itemsNone: 'aucun',
     deepZib: {
       birchReturned: ["Un à bord. J’égale mon record. Et ils veulent que je recommence."],
+      // v0.2 copy
+      birchBakery: ["Première vraie mission. Si on demande, je suis juste là pour le blé."],
       birchBinLid: ["C’est un des nôtres ?… Ah, un couvercle de poubelle. Belle ligne, quand même."],
       birchLaunch: ["Des jumelles et un classeur. Vrell, je crois qu’elle est des nôtres."],
       birchRetry: ["Je contourne la lampe, cette fois. Elle sait à quoi je ressemble."],
@@ -1202,21 +1212,46 @@ export const fr: Strings = {
       },
       clocktowerExpired: ["22 h 10. L'orage est passé, l'horloge est bloquée et le laissez-passer temporel vient d'expirer.", "L'orage est fini. Votre laissez-passer a expiré à 22 h 10. Zib, ramenez la soucoupe à son siècle d'origine."],
       perfect: [
-        "Trois spécimens, zéro témoin, rentré avant l'aube. Je n'ai rien à redire et je vous en veux.",
         "Service impeccable. J'ai transmis votre rapport au siège avec mon nom dessus. Procédure standard.",
         "Impeccable. Votre mère a appelé le siège pour savoir si vous mangiez assez. Dites-lui d'arrêter.",
       ],
       ghost: ["Personne ne vous a vu. Personne ne s'est réveillé. Vous êtes la rumeur que les stagiaires se racontent.", "Un témoin a bien appelé la radio. Ils ont cru à une rediffusion d'Orson Welles et ont raccroché."],
       spotted: [
-        'Les trois livrés, et repéré {spotted} fois. Le journal local a sorti une édition spéciale. Vous faites la une.',
-        'Livrés. Et aussi : {spotted} signalements. Cessez de devenir une légende urbaine sur vos heures de travail.',
+        'Livraison faite. Et aussi : {spotted} signalements. Cessez de devenir une légende urbaine sur vos heures de travail.',
       ],
       failed: [
         "{failed} tentatives ratées. Les spécimens n'ont rien remarqué. Leurs voisins, si.",
-        "Les trois, finalement. Après {failed} essais. La persévérance est une vertu. L'efficacité en est une plus grande.",
       ],
-      close: ["Livrés à {remaining} secondes de l'aube. J'avais l'œil sur l'horloge. Je n'ai pas de cœur, mais si j'en avais un…"],
-      default: ['Trois spécimens. Correct. Mon mot préféré, vous le savez.', 'Service terminé. Merci de désinfecter le rayon. Trois fois.'],
+      // v0.2 copy
+      close: ["Livraison à {seconds} de la fin. J'avais l'œil sur l'horloge. Je n'ai pas de cœur, mais si j'en avais un…"],
+      default: ["Service terminé. Merci de désinfecter le rayon. Deux fois plutôt qu'une."],
+      // v0.2 copy
+      bySpecimens: {
+        1: {
+          perfect: ["Un spécimen, zéro témoin, pas une miette de travers. Le siège appelle ça un projet pilote."],
+          spotted: ['Un spécimen livré, et repéré {times}. Pour un seul humain, Zib. Un seul.'],
+          failed: ["Un spécimen, {failed} tentatives. Il dormait, Zib. Ce n'était pas une cible mouvante."],
+          default: ['Un spécimen. Correct, format voyage.'],
+        },
+        2: {
+          perfect: ["Les deux à bord, zéro témoin, rentré avant l'aube. Deux sur deux. Que ça ne vous monte pas aux antennes."],
+          spotted: ['Les deux livrés, et repéré {times}. Plus de témoins que de spécimens. Faites le calcul.'],
+          failed: ["Les deux, finalement. {failed} essais pour deux dormeurs. Les dormeurs, c'était la partie facile."],
+          default: ['Deux spécimens. Deux fois plus de paperasse, zéro excuse.'],
+        },
+        3: {
+          perfect: ["Trois spécimens, zéro témoin, rentré avant l'aube. Je n'ai rien à redire et je vous en veux."],
+          spotted: ['Les trois livrés, et repéré {times}. Le journal local a sorti une édition spéciale. Vous faites la une.'],
+          failed: ["Les trois, finalement. Après {failed} essais. La persévérance est une vertu. L'efficacité en est une plus grande."],
+          default: ['Trois spécimens. Correct. Mon mot préféré, vous le savez.'],
+        },
+      },
+      // v0.2 copy
+      units: {
+        seconds: { one: '{n} seconde', other: '{n} secondes' },
+        times: { one: 'une fois', other: '{n} fois' },
+        sightings: { one: 'Une observation', other: '{n} observations' },
+      },
       gary: ["Les propres caméras de Gary ont filmé tout l'enlèvement. Il visionnera la bande demain matin et accusera les Henderson.", "Gary a déjà posté une alerte de quartier pour « courant d'air anormalement poli »."],
       mayor: ["Vous avez enlevé un élu. Un soir de semaine. Le siège tient à préciser que nous n'avons pas voté pour lui.", "Le maire a dormi tout du long. Franchement, c'est plus actif qu'en conseil municipal."],
       // L5 pier code
@@ -1238,8 +1273,8 @@ export const fr: Strings = {
         "Écho est dans la soute et remplit encore des formulaires. J'ai tout tamponné « NUL ». Quel bonheur.",
       ],
       monolithSpotted: [
-        'Mission bouclée, mais les singes vous ont vu {spotted} fois. Ils le peignent déjà sur la paroi de la grotte.',
-        "{spotted} observations, il y a trois millions d'années. Les historiens parleront du premier OVNI. Merci, Zib.",
+        'Mission bouclée, mais les singes vous ont vu {times}. Ils le peignent déjà sur la paroi de la grotte.',
+        "{sightings}, il y a trois millions d'années. Les historiens parleront du premier OVNI. Merci, Zib.",
       ],
     },
     // v4 story: Vrell's scripted arc lines on a level's first delivery
@@ -2510,7 +2545,7 @@ export const fr: Strings = {
         memoHint: 'photo de Mme Pruitt',
       },
       obelisk_crate: {
-        name: 'Caisse OBELISK™',
+        name: 'Caisse non déclarée',
         comment: "La caisse était un leurre. Dedans, de la paille et une étiquette de réexpédition pour le SS Buffet Royal. La compta fulmine : personne n'a payé la douane.",
         missedComment: "Vous avez laissé cette caisse non déclarée sur la jetée. La douane l'a classée en « nain de jardin ».",
         memoHint: 'caisse non déclarée',
@@ -2540,6 +2575,8 @@ export const fr: Strings = {
   trophies: {
     // v4 trophy hunt
     hunt: 'Partir en chasse',
+    // v0.2 copy
+    huntStar: 'Le rapporter pour ★',
     button: 'Trophées',
     buttonCount: 'Trophées · {n}/{max}',
     title: 'SALLE DES TROPHÉES',
@@ -2883,7 +2920,7 @@ export const fr: Strings = {
           at10: "Son set de 3 h démarre désormais sur du yodel. Trois Martiens dans la foule ont crié « Ack ack ! » et détalé.",
         },
         mayor: {
-          at3: "Répète un discours au cas où on dirait « Menez-moi à votre chef ». Personne ne lui a dit qu'on parlait de Bubulle.",
+          at3: "Répète un discours au cas où on dirait « Menez-moi à votre chef ». Personne ne lui a dit que notre chef, c'est Vrell, et que Vrell ne prend aucun rendez-vous.",
           at10: "L'Homme à la cigarette rôde dans l'ombre à chaque conseil municipal. Whitlock le présente comme son « conseiller ».",
         },
         bubbles: {

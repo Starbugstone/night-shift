@@ -41,13 +41,7 @@ const SPEECH_TIME_HELPERS: Readonly<Record<string, string>> = {
   mapPickupFeedback: 'src/flight/collectible.ts',
 };
 /** Known timers still set to a fixed duration (`file:field`). Bugs: fix them and remove the entry. */
-const PENDING_TIMERS = new Set([
-  // "Deliver {name} first." toast on the Work Orders board: a fixed 2.4 s
-  'src/ui/workorders.ts:toastT',
-  // the "Collected: {name}" pickup toast: mapPickupFeedback returns a fixed 2.4 s
-  'src/flight/scene.ts:collectibleToastT',
-  'src/flight/deep-scene.ts:collectibleToastT',
-]);
+const PENDING_TIMERS = new Set<string>([]);
 
 function assignments(text: string, field: string): string[] {
   const re = new RegExp(`(?:\\.|\\b)${field}\\s*(?:=(?!=)|\\+=)\\s*([^;\\n]+)`, 'g');
@@ -97,12 +91,7 @@ const SELF_TIMED: ReadonlyArray<{ path: string; cls: string; what: string }> = [
   { path: 'src/flight/views/deep.ts', cls: 'DeepTargetView', what: "a cleared house's left-behind quip" },
 ];
 /** Self-timed views still on a fixed cycle. Bugs: fix them and remove the entry. */
-const PENDING_SELF_TIMED = new Set([
-  // shows ~4 s of every 7 s (`(t % 7) / 4`), whatever the shout's length
-  'PickupShout',
-  // each quip shows ~4.5 s of every 9 s (`t * 0.11 % 1`), whatever its length
-  'DeepTargetView',
-]);
+const PENDING_SELF_TIMED = new Set<string>([]);
 
 function classBody(text: string, cls: string): string {
   const start = text.search(new RegExp(`class ${cls}\\b`));
@@ -125,9 +114,7 @@ const NOT_SPEECH: Readonly<Record<string, string>> = {
   'src/abduct/index.ts:TURN_HINT_SECONDS': 'the turn gesture hint: up until the player turns once, at most 7 s (readSeconds\' own maximum)',
 };
 /** New-style speech timers still set to a literal (`file:name`). Bugs. */
-const PENDING_LITERAL = new Set([
-  'src/ui/workorders.ts:toastT',
-]);
+const PENDING_LITERAL = new Set<string>([]);
 
 function literalTimers(): Map<string, string[]> {
   const out = new Map<string, string[]>();

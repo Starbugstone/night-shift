@@ -149,7 +149,8 @@ export function deepReport(run: DeepRun, outcome: RunOutcome): ReportModel {
     ...(run.photo ? { photo: run.photo } : {}),
     cover: lv.id === 'level10' && !sunrise && run.collectible?.collectedId ? tr().grail.greenery
       : lv.id === 'level10' && outcome.stars[1] ? tr().grail.ghost
-      : lv.id === 'level12' ? sunrise ? tr().dispatch2199.deadline : outcome.stars[1] ? tr().dispatch2199.ghost : tr().dispatch2199.cover
+      // v0.2 copy: after the first clear, a seen L12 delivery files its own cover causes
+      : lv.id === 'level12' && (sunrise || outcome.stars[1] || firstClear) ? sunrise ? tr().dispatch2199.deadline : outcome.stars[1] ? tr().dispatch2199.ghost : tr().dispatch2199.cover
       : lv.id === 'level11' && !sunrise && outcome.newStarFlags[0] ? tr().invasion1953.firstCover
       : lv.id === 'level11' && !sunrise && run.collectible?.collectedId === 'tripod_leg' ? tr().invasion1953.legCover
       : coverStory({ levelId: lv.id, items: run.totals.items, spotted: run.spotted, sunrise, firstClear, seed: outcome.save.reports }),

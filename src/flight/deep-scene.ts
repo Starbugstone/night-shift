@@ -329,7 +329,7 @@ export class DeepFlightScene implements Scene {
     const previousTime = sim.st.t;
     sim.update(dt, p, !this.quit.pressedDown);
     if (sim.justCollected && sim.collectible) {
-      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, sim.collectible.position);
+      this.collectibleToastT = mapPickupFeedback(this.ctx, this.fx, sim.collectible.def.id, sim.collectible.position);
       if (car) this.say('timeCarCaught', true);
     }
     if (car && beforeCarTime < TIME_CAR.strike && car.elapsed >= TIME_CAR.strike && sim.phase !== 'spotted') {

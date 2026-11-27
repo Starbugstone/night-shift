@@ -128,14 +128,7 @@ const TOKEN_ALLOWED: Readonly<Record<string, string>> = {
 };
 
 /** `${lang} ${token} ${path}` violations waiting for a fix. */
-const PENDING_TOKENS = new Set<string>([
-  // L4 Mayor's 3rd-visit addendum needs Bubbles, whom a player meets only at L5
-  'en Bubbles trophies.specimens.repeats.mayor.at3',
-  'fr Bubbles trophies.specimens.repeats.mayor.at3',
-  // the L5 town pickup is named "OBELISK™ crate", two shifts before the L7 manifest names the firm
-  'en OBELISK™ mapCollectibles.items.obelisk_crate.name',
-  'fr OBELISK™ mapCollectibles.items.obelisk_crate.name',
-]);
+const PENDING_TOKENS = new Set<string>([]);
 
 function tokenViolations(lang: Lang, tied: readonly TiedString[]): string[] {
   const out: string[] = [];

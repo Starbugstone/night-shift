@@ -490,6 +490,15 @@ export function gnomePostcards(save: SaveData): string[] {
   return cards;
 }
 
+/**
+ * v0.2: a town find is filed on any report, even a failed shift, but its star needs a delivered shift with
+ * it aboard. True while the find is filed and that level's pickup star is still unearned.
+ */
+export function townStarOpen(save: SaveData, slot: TownTrophySlot): boolean {
+  const lv = save.levels[slot.levelId];
+  return lv?.mapCollectible === slot.id && !lv.stars[3];
+}
+
 /** Resolve the full Room 2 (Field finds) shelf state from a SaveData (read-only). */
 export function buildTownShelfState(save: SaveData): TownShelfState {
   const catalog = townCatalog();

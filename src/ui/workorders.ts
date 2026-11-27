@@ -8,6 +8,7 @@ import { deepPar } from '../levels/types';
 import { LEVELS, formatOrderNumber, workOrderNumber } from '../levels/levels';
 import { MAX_STARS, RANKS, dispatchRequirements, isLevelUnlocked, levelStarCount, nextDispatchIndex, nextRank, rankFor, totalStars, type Rank } from '../levels/progress';
 import { fmt, tr } from '../i18n';
+import { readSeconds } from '../core/read-time';
 import { easeOutCubic } from '../core/fx';
 import { GLOW, Glow, glowTexture } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
@@ -34,6 +35,29 @@ const GAP = 20;
 /** Rank title and flavour in the current language. */
 function rankText(r: Rank): { title: string; flavour: string } {
   return tr().ranks[RANKS.indexOf(r)] ?? r;
+}
+
+/** What the Work Orders rank panel shows for a save. */
+export interface RankCard {
+  title: string;
+  flavour: string;
+  /** Stars needed for the next rank, or null at the top. */
+  nextAt: number | null;
+}
+
+/**
+ * v0.2 copy: the rank panel. The 2199 finale gives Zib Bubbles' parking ring, so once L12 is delivered the
+ * panel says so at every rank (it used to need exactly Senior Abductor, which no fresh player can hold then).
+ */
+export function rankCard(save: Shell['save']): RankCard {
+  const stars = totalStars(save);
+  const rank = rankText(rankFor(stars));
+  const next = nextRank(stars);
+  return {
+    title: rank.title,
+    flavour: save.levels.level12.delivered ? tr().dispatch2199.parking : rank.flavour,
+    nextAt: next ? next.minStars : null,
+  };
 }
 
 function outstandingOrders(save: Shell['save'], index: number): string {
@@ -139,7 +163,7 @@ export class WorkOrdersScene implements Scene {
     card.shake = 1;
     const w = tr().workOrders;
     this.toast = fmt(w.deliverFirst, { name: outstandingOrders(this.shell.save, card.index) || w.lastSpecimen });
-    this.toastT = 2.4;
+    this.toastT = readSeconds(this.toast);
   }
 
   get view(): Container {
@@ -196,8 +220,8 @@ class WorkOrdersView implements SceneView {
     this.upgrades = new ButtonView(s.upgrades);
 
     const stars = totalStars(save);
-    const rank = rankText(rankFor(stars));
-    const nr = nextRank(stars);
+    const rank = rankCard(save);
+    const nr = rank.nextAt;
     const colW = s.upgrades.x - 44 - 12;
     const purse = roundRect(new Graphics(), 384, 114, 118, 48, 24).fill('rgba(18,13,43,0.55)');
     const coin = iconSprite(glorbTexture(assets, 38), 38);
@@ -214,9 +238,9 @@ class WorkOrdersView implements SceneView {
       new Label({ size: 26, color: C.mint, align: 'left', weight: 800 }).set(String(save.glorbs), 434, 139, 62),
       new Label({ size: 22, color: C.amberHi, align: 'left', weight: 800 }).set(fmt(strings.stars, { n: stars, max: MAX_STARS }), 44, 198),
     );
-    if (nr) this.root.addChild(new Label({ size: 15, color: C.muted, align: 'left', weight: 700 }).set(fmt(strings.nextRank, { n: nr.minStars }), 44, 224, colW));
-    const flavour = new Label({ size: nr ? 14 : 15, color: nr ? 'rgba(169,162,214,0.8)' : C.muted, align: 'left', italic: true });
-    this.root.addChild(flavour.set(save.levels.level12.delivered && rank.title === tr().ranks[3]!.title ? tr().dispatch2199.parking : rank.flavour, 44, nr ? 244 : 232, colW), this.upgrades, this.toast);
+    if (nr !== null) this.root.addChild(new Label({ size: 15, color: C.muted, align: 'left', weight: 700 }).set(fmt(strings.nextRank, { n: nr }), 44, 224, colW));
+    const flavour = new Label({ size: nr !== null ? 14 : 15, color: nr !== null ? 'rgba(169,162,214,0.8)' : C.muted, align: 'left', italic: true });
+    this.root.addChild(flavour.set(rank.flavour, 44, nr !== null ? 244 : 232, colW), this.upgrades, this.toast);
   }
 
   sync(): void {
