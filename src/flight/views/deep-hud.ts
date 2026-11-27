@@ -231,10 +231,12 @@ export class DeepFlightHud {
     const m = s.level.map;
     this.delivered = new DeliveredBanner(m.targets.length);
     this.fuse = new HudFuse(artTex(assets, 'ui/eye_closed'), artTex(assets, 'ui/eye_open'));
-    const demolition = s.level.id === 'level12';
-    const storm = s.level.id === 'level9';
-    this.sun = s.level.clockMode === 'elapsed' ? new HudTimer() : new HudSunClock(storm || demolition ? null : artTex(assets, 'ui/sunrise_clock'),
-      demolition ? tr().dispatch2199.deadline : storm ? tr().crestValley.left : s.level.id === 'level8' ? tr().timeTrial.left : undefined, storm || demolition);
+    // v0.2: the clock's look comes from the level's clockMode, not its id
+    const mode = s.level.clockMode;
+    const demolition = mode === 'demolition';
+    const storm = mode === 'storm';
+    this.sun = mode === 'elapsed' ? new HudTimer() : new HudSunClock(storm || demolition ? null : artTex(assets, 'ui/sunrise_clock'),
+      demolition ? tr().dispatch2199.deadline : storm ? tr().crestValley.left : mode === 'countdown' ? tr().timeTrial.left : undefined, storm || demolition);
     this.fuseState.seconds = 1 / (SUSPICION.rate * s.sim.mult);
     const fuse = Math.round(this.fuseState.seconds * 10) / 10;
     this.banner = new FlightBanner(400, 86,
