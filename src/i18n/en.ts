@@ -683,7 +683,7 @@ export const en = {
     { title: 'Abduction Lead', flavour: "Signs other people's forms. Rarely reads them." },
     { title: 'Head of Internal Affairs', flavour: 'Trusted with the 1953 brass thermometer.' },
     // v0.2 copy: the ladder runs to 55 stars; ranks from 36 stars need L8, so they may mention pay
-    { title: 'Fleet Admiral of Naps', flavour: 'Has a reserved beanbag. Gary has filed a complaint.' },
+    { title: 'Fleet Admiral of Naps', flavour: 'Has a reserved beanbag. Vrell still gets a folding chair.' },
     { title: 'Chief Paradox Officer', flavour: 'Salaried, sort of. Payroll pays you yesterday.' },
     { title: 'Employee of the Millennium', flavour: 'Framed in every century. Vrell still spells it "Zibb".' },
   ],
@@ -896,7 +896,7 @@ export const en = {
       level11: ["a projector malfunction"],
       // v0.2 copy
       level10: ['an unladen swallow', 'two coconut halves in the fog', 'a cow on a very high trajectory'],
-      level12: ['a planning notice nobody was meant to read', 'a bulldozer on a moonlit test drive', 'a hitchhiker with very bright thumbs'],
+      level12: ['a planning notice nobody was meant to read', 'a bulldozer on a moonlit test drive', 'a hitchhiker with a very bright thumb'],
       level9: ["ball lightning off the courthouse", "a prototype tailfin reflection", "too many chocolate malts"],
       level1: ['swamp gas', 'a very tall barn owl', 'a combine harvester with ambitions'],
       level2: ['a washing machine on spin', 'reflections off the diner sign', 'static from a lost sock'],
@@ -1279,7 +1279,7 @@ export const en = {
         1: {
           perfect: ['One specimen, no sightings, not a crumb out of place. Head Office calls that a pilot scheme.'],
           spotted: ['One specimen delivered, and spotted {times}. For one human, Zib. One.'],
-          failed: ['One specimen, {failed} attempts. The specimen was asleep, Zib. It was not a moving target.'],
+          failed: ['One specimen, {failed} retries. The specimen was asleep, Zib. It was not a moving target.'],
           default: ['One specimen. Adequate, in the travel size.'],
         },
         2: {

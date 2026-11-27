@@ -123,8 +123,8 @@ export const fr: Strings = {
     // v0.2 teaching: first-encounter room prompts (src/abduct/room-lessons.ts)
     patrol: 'Il fait sa ronde. Laissez-le passer, puis allez-y.',
     fragile: 'Fragile ! Un fracas réveille toute la maison.',
-    draft: 'L’air chaud monte. Laissez-vous porter.',
-    camera: 'La caméra de Gary a sa jauge. Évitez son cône.',
+    draft: 'Le courant d’air monte. Laissez-vous porter.',
+    camera: 'La caméra de Gary a sa propre jauge. Évitez le cône.',
     pop: 'Le coucou sort à heure fixe. Passez quand il rentre.',
   },
   // v4 progression
@@ -453,9 +453,9 @@ export const fr: Strings = {
     { title: 'Chef ravisseur', flavour: 'Signe les formulaires des autres. Les lit rarement.' },
     { title: 'Chef des Affaires internes', flavour: 'Habilité au thermomètre en laiton de 1953.' },
     // v0.2 copy
-    { title: 'Grand amiral de la sieste', flavour: 'Pouf réservé à votre nom. Gary a porté plainte.' },
+    { title: 'Grand amiral de la sieste', flavour: 'Pouf réservé à votre nom. Vrell a encore un tabouret pliant.' },
     { title: 'Directeur des paradoxes', flavour: 'Salarié, en quelque sorte. La paie tombe la veille.' },
-    { title: 'Employé du millénaire', flavour: 'Encadré dans tous les siècles. Vrell écrit toujours « Zibb ».' },
+    { title: 'Employé du millénaire', flavour: 'Encadré à chaque siècle. Vrell écrit toujours « Zibb ».' },
   ],
 
   // v4 L9 1955
@@ -678,7 +678,7 @@ export const fr: Strings = {
       // v4 1953
       level11: ["une panne de projecteur"],
       // v0.2 copy
-      level10: ['une hirondelle à vide', 'deux demi-noix de coco dans le brouillard', 'une vache en trajectoire très haute'],
+      level10: ['une hirondelle non chargée', 'deux demi-noix de coco dans le brouillard', 'une vache à très haute altitude'],
       level12: ["un avis d'urbanisme que personne ne devait lire", 'un bulldozer en essai au clair de lune', 'une autostoppeuse au pouce très lumineux'],
       level9: ["la foudre en boule sur le tribunal", "un reflet sur un pare-chocs chromé", "un abus de milk-shakes au chocolat"],
       level1: ['des gaz des marais', 'une très grande chouette effraie', 'une moissonneuse-batteuse ambitieuse'],
@@ -702,7 +702,7 @@ export const fr: Strings = {
       // v4 1953
       level11: ["SOUCOUPE AU DRIVE-IN. LE PUBLIC RÉCLAME UNE SUITE."],
       // v0.2 copy
-      level12: ['LA SOUCOUPE DEVANCE LES BULLDOZERS, LES HABITANTS ENCORE EN PYJAMA', 'LES POÈTES DE GARDE PORTENT PLAINTE : « LE PUBLIC EST PARTI AU DEUXIÈME COUPLET »'],
+      level12: ['LA SOUCOUPE DEVANCE LES BULLDOZERS, LES HABITANTS ENCORE EN PYJAMA', 'PLAINTE DES GARDES-POÈTES : « LE PUBLIC EST PARTI À LA STROPHE 2 »'],
       level9: [
         "LA FOUDRE FIGE L'HORLOGE À 22 H 04 — UN ENJOLIVEUR VOLANT ACCUSÉ",
         'ENJOLIVEUR CHROMÉ GRANDE RUE — LA BRUTE LOCALE TOUJOURS K.O. AU CAFÉ',
@@ -963,7 +963,7 @@ export const fr: Strings = {
     deepZib: {
       birchReturned: ["Un à bord. J’égale mon record. Et ils veulent que je recommence."],
       // v0.2 copy
-      birchBakery: ["Première vraie mission. Si on demande, je suis juste là pour le blé."],
+      birchBakery: ["Première vraie mission. Si on me demande, je suis juste là pour le blé."],
       birchBinLid: ["C’est un des nôtres ?… Ah, un couvercle de poubelle. Belle ligne, quand même."],
       birchLaunch: ["Des jumelles et un classeur. Vrell, je crois qu’elle est des nôtres."],
       birchRetry: ["Je contourne la lampe, cette fois. Elle sait à quoi je ressemble."],
@@ -1240,7 +1240,7 @@ export const fr: Strings = {
         1: {
           perfect: ["Un spécimen, zéro témoin, pas une miette de travers. Le siège appelle ça un projet pilote."],
           spotted: ['Un spécimen livré, et repéré {times}. Pour un seul humain, Zib. Un seul.'],
-          failed: ["Un spécimen, {failed} tentatives. Il dormait, Zib. Ce n'était pas une cible mouvante."],
+          failed: ["Un spécimen, {failed} essais ratés. Le spécimen dormait, Zib. Ce n'était pas une cible mouvante."],
           default: ['Un spécimen. Correct, format voyage.'],
         },
         2: {
@@ -2590,7 +2590,7 @@ export const fr: Strings = {
     // v4 trophy hunt
     hunt: 'Partir en chasse',
     // v0.2 copy
-    huntStar: 'Le rapporter pour ★',
+    huntStar: 'Rapporter pour ★',
     button: 'Trophées',
     buttonCount: 'Trophées · {n}/{max}',
     title: 'SALLE DES TROPHÉES',
@@ -2934,7 +2934,7 @@ export const fr: Strings = {
           at10: "Son set de 3 h démarre désormais sur du yodel. Trois Martiens dans la foule ont crié « Ack ack ! » et détalé.",
         },
         mayor: {
-          at3: "Répète un discours au cas où on dirait « Menez-moi à votre chef ». Personne ne lui a dit que notre chef, c'est Vrell, et que Vrell ne prend aucun rendez-vous.",
+          at3: "Répète un discours au cas où on dirait « Menez-moi à votre chef ». Personne ne lui a dit que notre chef, c'est Vrell — et Vrell ne reçoit pas.",
           at10: "L'Homme à la cigarette rôde dans l'ombre à chaque conseil municipal. Whitlock le présente comme son « conseiller ».",
         },
         bubbles: {
