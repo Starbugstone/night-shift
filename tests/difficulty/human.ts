@@ -161,6 +161,10 @@ export function playAbduction(
   const approach = new Contact();
   const hazardAreas = room.interior?.building.hazards.flatMap(hazard => 'area' in hazard ? [solidRect(hazard.area)] : []) ?? [];
   let frames = wait;
+  // Grail exits take a still passenger, and the room tells the player to let go in the opening
+  // (en.grail.settle, the L10 memo). A person sees the settle bar and lifts the thumb one reaction
+  // later, which parks the beam; they take hold again if the body swings back out of the zone.
+  let settling = 0;
   while (sim.elapsed - t0 < 180 && !sim.complete) {
     const { body } = sim;
     pilot.pace = sim.elapsed - heard < 2.5 ? Math.min(profile.pace, 1.4) : profile.pace;
@@ -198,7 +202,8 @@ export function playAbduction(
       queue.fill({ x: planX, y: planY });
     }
     const w = wobble(sim.elapsed);
-    touchBeam(sim, hand.x + w.x, hand.y + w.y);
+    settling = sim.grailExit?.inside ? settling + DT : 0;
+    if (settling === 0 || settling < profile.reaction) touchBeam(sim, hand.x + w.x, hand.y + w.y);
     sim.update(DT);
     frames++;
     peakWake = Math.max(peakWake, sim.wake.value);

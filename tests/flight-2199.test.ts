@@ -52,7 +52,7 @@ function steerTo(sim: DeepFlightSim, target: Vec2): void {
 
 describe('2199 harbour approaches', () => {
   it('keeps every 48-pixel recommended ring, staging pocket and quay crossing clear throughout each sweep', () => {
-    for (const [x, y] of [[270,795],[1530,795],[1080,1950],[535,565],[1490,560],[760,1945],[1270,130],[180,430],
+    for (const [x, y] of [[270,795],[1530,795],[1080,1950],[400,660],[1490,560],[760,1945],[1270,130],[180,430],
       [map.start.x, map.start.y], [GRIMSBY_SET.practice.x, GRIMSBY_SET.practice.y]]) {
       expect(exposure(x!, y!, 48).some(Boolean), `pocket at ${x},${y}`).toBe(false);
     }
@@ -129,7 +129,7 @@ describe('2199 harbour approaches', () => {
 
   it('can brake and lock each entrance from its turnout and depart inside checkpoint grace', () => {
     const turnouts = [
-      [{ x: 310, y: 940 }, { x: 535, y: 565 }],
+      [{ x: 310, y: 940 }, { x: 400, y: 660 }],
       [{ x: 1490, y: 940 }, { x: 1490, y: 560 }],
       [{ x: 1080, y: 1770 }, { x: 760, y: 1945 }],
     ];

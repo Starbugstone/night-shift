@@ -24,7 +24,10 @@ and hand wobble to measure route difficulty and full-shift star rates.
   enforces (`tests/levels-difficulty-touch.test.ts` checks every room). It eases off for
   2.5 s after hearing a creak or a crash. When the body snags and the beam runs on (lead > 150 px and
   the chest still for 0.5 s), it drags back to the body and rewinds to the last checkpoint reached.
-  Each run starts 0–8 s into the hazard cycles, under the deep rules (`wakeFails`, `hard`).
+  At a settle exit (the Grail's time window, `exitSettleSec`) the hand lets go one reaction after the
+  chest enters the zone, as the room and the memo tell the player, and takes hold again if the body swings
+  out (`tests/levels-difficulty-settle.test.ts`). Each run starts 0–8 s into the hazard cycles, under the
+  deep rules (`wakeFails`, `hard`).
 - **Deep flight**: `FlightAutopilot`, run with a person's reaction. When the right move changes (wait → go,
   go → wait, dash), the thumb keeps doing what it was doing for `reaction` s, then follows. Steering
   runs 0.08 s behind, with tremor and drift. Do not delay the whole steering signal by the full
@@ -215,16 +218,16 @@ whatever the bands say.
 - **Every-ring matrix (deep shifts).** A thumb held straight from the launch at *each* entry ring,
   at each of the four delays, ignoring detectors, timing and walls, must be spotted or fail to lock
   within 60 s (`directApproaches` in `tests/difficulty/beeline.ts`; the report prints the matrix).
-  The holds still clean on L5 and L12 are listed in `PENDING_DIRECT` and wait for a rework of those
-  levels. That list may only shrink: a listed hold that gets caught, or any other clean hold, fails.
-  What the 2026-11-27 attempt measured: the near rings (Sal's market and Artie's garden sit 0.5–0.75
-  screens from the launch, the garden straight down the lane) can only be caught at all four delays
-  by a timed guard at the door that lights the ring about 70–80% of the time, because a short hop's
-  clean slot is wider than the 2.5–3 s gaps between the tested delays. With guards like that on
-  every clean ring, L5 Ghost fell to 6/20 skilled and 3/20 casual (waiting out a guard leaves the
-  saucer in the lighthouse sweep), and L12 casual Ghost fell to 2–5/20 against its 7/20 target.
-  A rework needs either a launch further from the nearest rings, so the catch can sit on the way
-  beyond the opening screen, or a guard plus a shadowed waiting pocket outside its sweep.
+  `PENDING_DIRECT` is empty and may only stay so. Near rings (0.5–0.75 screens from the launch) cannot be
+  caught at every delay by a timed guard without lighting the door 70–80% of the time, because a short
+  hop's clean slot is wider than the gaps between tested delays; the 2026-11-27 attempt with such guards
+  cut L5 Ghost to 6/20 skilled and 3/20 casual. Put the catch on the way instead: L5 strings regatta
+  bunting across the straight lines (Sal's crate yard, the regatta course, the beach huts) and L12 runs
+  the bypass cordon across Artie's lane and Penny's gardens, so a held thumb stalls on the flags while
+  the way round crosses the level's real pressure. A cable must sit square to the line and reach well past
+  the point where the target's perpendicular meets it, or the saucer slides along it and slips round the
+  end; leave a gap of 190 px or more between two cables, or the planner wedges the saucer in it. Check a
+  fine sweep too (every quarter second across one hazard cycle), not only the four tested delays.
 - **Rooms.** At the same delays, a steady 270 px/s drag straight at the exit must wake the specimen,
   trip an alarm or fail to deliver within 45 s. This catches usable shortcuts through scenery or
   across timing obstacles even when the authored route is challenging. Use the side route or wait
@@ -256,28 +259,36 @@ logs). *After* adds the touch speed cap in the model, the route pilot's dart cap
 | Neighbours | 20/20/20 → 20/20/20 | 20/16/20 → 20/15/20 | – |
 | L3 | 19/18/19 → 19/19/19 | 17/13/17 → 17/15/17 | – |
 | L4 | 20/17/20 → 20/16/20 | 20/**11**/20 → 20/12/20 | museum NE camera sweep 1.65 → 1.4 rad/s |
-| L5 | 20/16/20 → 20/12/20 | 20/**6**/20 → 20/11/20 | none (room timing moved the beam phase) |
+| L5 | 20/16/20 → 20/12/20 → 20/19/20 | 20/**6**/20 → 20/11/20 → 20/11/20 | openings rework: regatta bunting, lamp phase 2.3 → 1.9 |
 | L6 | 20/18/20 → 20/20/20 | 20/12/20 → 20/10/20 | ward camera centre +0.15 rad, medevac spot 136 → 120 px |
 | L7 | 20/15/20 → 20/16/20 | 20/14/20 → 20/12/20 | – |
 | L8 | 20/20/20 → 20/20/20 | 18/18/18 → 18/18/18 | – |
 | L9 | 20/19/16 → 20/19/18 | 19/17/16 → 17/15/14 | kitchen creak tiles 20 px taller, transom sash phase +0.6 s |
-| L10 | 20/16/15 → 20/16/15 | 18/9/11 → 18/**7**/10 | none: still out (casual Ghost wants 8–9) |
+| L10 | 20/16/15 → 20/16/15 → 20/16/16 | 18/9/11 → 18/**7**/10 → **20/7/15** | settle-exit fix in the model: casual out (see below) |
 | L11 | 18/18/18 → 19/17/18 | 16/8/11 → 18/9/14 | east-lane headlights 300 → 270 px, attic probe crossing 282 → 260 px/s |
-| L12 | 17/**14**/14 → **19/17/18** | 15/7/11 → 15/**8/12** | none: still out (finale bands) |
+| L12 | 17/**14**/14 → **19/17/18** → 18/12/15 | 15/7/11 → 15/**8/12** → 15/7/11 | openings rework: bypass cordon, fuse 0.72 → 0.61 s, dozer dwell 1.35 → 1.8 s, Artie's inner door 15 px taller, clock 192 → 175 s |
 
 Bold marks a miss. The tutorials stay at 100% Delivered and Still asleep for both profiles.
 
 - **L11 flight stall.** At 300 px the east-lane cars left 0.55 s gaps, and a saucer east of the lane
   held until sunrise in 5 of 20 casual flights (casual flight finishes 75% → 100%; estimate
   108 → 111 s). The stall threshold sits near 290 px; 270 keeps a margin.
-- **L10, still out.** Tom's smoke-hole sleep-sparks cause most casual failures. Widening the open
-  window by 0.15–0.2 s gives casual 8–9 Ghost but skilled 17/20, over the 80% ceiling. Moving the
-  phase trades casual Night owl. Two casual timeouts (`rodney_flap` and `rodney_loft`, seed 5)
-  hold inside the exit zone for 180 s without delivering: look at the Grail exit settle first.
-- **L12, still out.** After the dart fix the skilled model delivers every room except the ticket loft
-  and is almost never spotted, so its Ghost and Night owl sit far above 50–65% and 67–75%. Neither
-  the clock (186–192 s) nor the fuse (0.64–0.72 s) moves skilled Ghost; room changes move only room
-  times. The finale needs a room or flight change that a practised player can still fail.
+- **L10, settle exits.** The casual seed-5 timeouts in five Grail rooms were the model, not the room:
+  the hand never let go at the time window, and its tremor and drift moved the beam about 70 px/s, so
+  the chest never stayed under the 28 px/s settle speed for 1.25 s. The game tells the player to let go
+  there, and a resting thumb inside the 14 px touch dead zone holds the beam still anyway. With the hand
+  letting go, casual Grail rooms run about 6 s shorter and never time out: casual 18/7/10 → 20/7/15,
+  Shrubbery 17 → 20/20, casual estimate 111 → 91 s. Skilled is unchanged (20/16/16, in band). The
+  GDD-12 casual targets (Delivered 80–95%, Night owl 50–55%, Shrubbery 75–90%, estimate ≥ 105 s) were
+  met through the artifact: a casual player who never times out delivers every shift in the 330 s dawn,
+  and the casual model is faster in rooms than the skilled one, so no par splits their Night owl rates.
+  Those targets need a decision (new targets, or a slower Grail) before L10 can be tuned to them.
+- **L12, in band.** The bypass cordon stops the straight holds, the fuse (0.61 s) and the ticket-loft
+  dozer's 1.8 s turn put the skilled model's sightings on the loft → Moe leg (the avenue recital's east
+  edge), and the 15 px taller inner doorway in Artie's garden room cuts the casual wakes there (casual
+  Ghost stays 7/20 while skilled falls to 12/20). The rates are chaotic in the dozer dwell: 1.7 s and
+  1.9 s put skilled Ghost back at 16–18/20. The clock and par come last: fit them from the run times
+  in the JSON report (175 s with a 26 s margin sits in a 172–177.5 s by 148.5–150 s elapsed window).
 
 ## Retune results (2026-11-24)
 

@@ -14,11 +14,11 @@ export const LEVEL12: DeepLevelDef = {
   location: words.location, blurb: words.blurb, human: words.human, mugshot: 'human/artie_head',
   memo: { re: words.re, body: words.body, joke: words.joke },
   clockMode: 'demolition', // v0.2 presentation
-  hours: [0, 0], budgetSec: 192, parMarginSec: 26,
+  hours: [0, 0], budgetSec: 175, parMarginSec: 26, // v0.2 openings: the cordon detours retuned the clock (was 192 s)
   map: {
     // v4 openings: Zib slips in from the north under the west demolition barge and flies south. The big
     // recital no longer faces the launch: it guards Moe's bureau at the far end of the avenue.
-    theme: 'grimsby2199', w: 1800, h: 2320, start: { x: 300, y: 250 }, fuseSec: 0.72,
+    theme: 'grimsby2199', w: 1800, h: 2320, start: { x: 300, y: 250 }, fuseSec: 0.61,
     collectible: { id: 'bypass_towel', x: 180, y: 430 },
     roads: [
       { dir: 'h', at: 130, from: 310, to: 1490 },
@@ -45,10 +45,16 @@ export const LEVEL12: DeepLevelDef = {
       recital(655, 965, 340, 0.36, -2.17, 0.55, 0.70, 0.4),
       recital(900, 2260, 285, 0.32, -1.36, 0.58, 0.70, 4.3),
       { type: 'steward', skin: 'dozer2199', path: [{ x: 1270, y: 400 }, { x: 1270, y: 600 }],
-        speed: 72, dwell: 1.35, phase: 220, coneRange: 195, coneHalf: 0.80, sweepAmp: 0, sweepRate: 0 },
+        speed: 72, dwell: 1.8, phase: 220, coneRange: 195, coneHalf: 0.80, sweepAmp: 0, sweepRate: 0 },
       // The bypass cordon: flagged cable across the gardens, open only at the avenue where the poet reads.
       { type: 'wire', kind: 'bunting', ax: 400, ay: 1240, bx: 760, by: 1240 },
       { type: 'wire', kind: 'bunting', ax: 1040, ay: 1240, bx: 1400, by: 1240 },
+      // v0.2 openings: the bypass survey has reached the north of town. Artie's lane is closed under the
+      // DON'T PANIC sign (the diversion runs west through the harbour bay, past the towel), and a survey
+      // line crosses the gardens between the quay and Penny's. A thumb held straight from the launch at
+      // Artie's or Penny's doors stalls on the cable (docs/GDD-14-2199-hitchhiker.md, "No straight-line win").
+      { type: 'wire', kind: 'bunting', ax: 230, ay: 560, bx: 600, by: 560 },
+      { type: 'wire', kind: 'bunting', ax: 892, ay: 328, bx: 788, by: 566 },
     ],
   },
 };

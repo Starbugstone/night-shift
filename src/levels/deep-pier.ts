@@ -95,7 +95,7 @@ const LIGHT: LighthouseHazard = {
   period: 7.5,
   half: 0.61,
   range: 3200,
-  phase: 2.3,
+  phase: 1.9, // v0.2 openings: 2.3 let the blind ring-to-ring itinerary through at the 5 s start
   lead: 0.65,
   casters: CASTERS,
 };
@@ -157,6 +157,16 @@ const HAZARDS: HazardDef[] = [
   { type: 'wire', kind: 'bunting', ax: 1300, ay: 2050, bx: 1560, by: 2050 },
   // the chip kiosk's sign scrambles steering
   { type: 'neon', x: 960, y: 2920, r: 120, text: 'CHIPS', billboard: false },
+  // v0.2 openings: regatta weekend. A thumb held straight from the beach at any door stalls on flags;
+  // the way round each line crosses open, lamp-swept ground, where the tall things' shadows are the
+  // waiting pockets (docs/GDD-3-new-shifts.md, "Every-ring rule").
+  // Sal has roped off his crate yard: the beach side and the slipway side of the fish market.
+  { type: 'wire', kind: 'bunting', ax: 540, ay: 2700, bx: 980, by: 2700 },
+  { type: 'wire', kind: 'bunting', ax: 980, ay: 2700, bx: 980, by: 2380 },
+  // the regatta course: a flag line between two marker buoys across the outer harbour
+  { type: 'wire', kind: 'bunting', ax: 1383, ay: 2177, bx: 1817, by: 2424 },
+  // the beach huts dressed overall, bunting from the huts across the sand
+  { type: 'wire', kind: 'bunting', ax: 160, ay: 1600, bx: 1000, by: 1600 },
 ];
 
 const GROUND: GroundPatch[] = [

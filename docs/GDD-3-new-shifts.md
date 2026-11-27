@@ -43,13 +43,24 @@ enough together for plain drag, and every entry ring has a full second of cover 
 Also: gull flocks (solid, bumping), a harbour patrol boat with a headlight (`car` on a water path),
 bunting (`wire`), one `neon` chip-kiosk sign.
 
-**Every-ring rule (v0.2, 2026-11-27): pending.** A straight hold from the launch locks 18 of the 24
-entry/delay pairs cleanly (both of Sal's doors at all four delays, a 3 s hop from the launch; Pete's
-and Bubbles' rings when the beam passes while the saucer is shaded). The lighthouse alone cannot catch
-them at every delay whatever its period or phase. Door cameras that do (one per building, lighting the
-rings 70–80% of each sweep) cut 20-seed Ghost to 6/20 skilled and 3/20 casual, because waiting out a
-camera leaves the saucer in the beam. The holds are pinned in `PENDING_DIRECT`
-(`tests/difficulty/beeline.ts`) until a rework adds shadowed waiting pockets or moves the launch.
+**Every-ring rule (v0.2, 2026-11-27).** A thumb held straight from the launch at any of the six entry
+rings must be spotted or fail to lock at 0, 2.5, 5 and 8 s. The lighthouse alone cannot do it: Sal's doors
+are a 3 s hop through the lifeguard tower's and the market's shadows, and the beam meets the long holds to
+Pete and Bubbles only when it passes while they are in the open (18 of 24 holds were clean, and every launch
+position tried left at least 10 clean). Door cameras that catch them light the rings 70–80% of the time and
+cost Ghost. So the catch sits on the way, in regatta-weekend bunting (`wire`, `bunting`):
+
+- **Sal's crate yard** is roped off on its beach side (y = 2700, x = 540–980) and its slipway side
+  (x = 980, y = 2380–2700). The holds from the beach stall on the rope; the way in is round the end, over
+  open, lamp-swept sand, with the market shed's shadow as the waiting pocket.
+- **The regatta course**: a flag line between two marker buoys across the outer harbour,
+  (1383, 2177) → (1817, 2424), square to the straight line from the beach to the lighthouse.
+- **The beach huts dressed overall**: bunting from the huts across the sand at y = 1600, x = 160–1000. The way
+  north to the marine park is the strip by the promenade, under the first gull loop.
+
+All 24 holds are caught (and every quarter-second start across one lamp turn). The lamp phase moved from
+2.3 to 1.9 rad so the blind ring-to-ring itinerary is also caught at the 5 s start. 20 seeds,
+Delivered / Ghost / Night owl: skilled 20/12/20 → 20/19/20, casual 20/11/20 → 20/11/20.
 
 **Abduction signature: the dolphin.**
 - **Body plan.** The ragdoll gets a per-specimen body plan. The dolphin plan: 7 joints, 6 bones

@@ -46,24 +46,12 @@ export interface DirectApproach {
 }
 
 /**
- * Straight holds that still lock cleanly, by level, as `roomId@delay`. They were found when the
- * every-ring matrix replaced the nearest-ring itinerary (v0.2 council, 2026-11-27) and wait for a
- * rework of their level: the nearest rings sit 0.5–0.75 screens from the launch, and the timed
- * guards that catch them at every tested delay cost both star bands far more than they allow
- * (see .claude/skills/evaluate-difficulty/SKILL.md, "Every-ring matrix"). The list may only shrink:
- * a listed hold that is caught fails the gate until it is removed, and any other clean hold fails.
+ * Straight holds that still lock cleanly, by level, as `roomId@delay`, waiting for a rework of their
+ * level. The list may only shrink: a listed hold that is caught fails the gate until it is removed,
+ * and any other clean hold fails. Empty since the v0.2 openings rework (2026-11-27): L5's regatta
+ * bunting and L12's bypass cordon stop the 32 holds the every-ring matrix first found there.
  */
-export const PENDING_DIRECT: Readonly<Record<string, readonly string[]>> = {
-  level5: [
-    'bubbles_roof@0', 'bubbles_roof@8', 'bubbles_tunnel@0', 'bubbles_tunnel@2.5', 'bubbles_tunnel@8',
-    'pete_gallery@0', 'pete_gallery@2.5', 'pete_gallery@8', 'pete_slipway@0', 'pete_slipway@8',
-    'sal_loft@0', 'sal_loft@2.5', 'sal_loft@5', 'sal_loft@8', 'sal_dock@0', 'sal_dock@2.5', 'sal_dock@5', 'sal_dock@8',
-  ],
-  level12: [
-    'artie_garden@0', 'artie_garden@2.5', 'artie_garden@5', 'artie_garden@8', 'artie_bath@0', 'artie_bath@2.5', 'artie_bath@5',
-    'penny_service@0', 'penny_service@2.5', 'penny_service@5', 'penny_service@8', 'penny_loft@0', 'penny_loft@2.5', 'penny_loft@8',
-  ],
-};
+export const PENDING_DIRECT: Readonly<Record<string, readonly string[]>> = {};
 
 /**
  * The every-ring matrix: a thumb held straight from the launch at each entry ring of a deep shift,

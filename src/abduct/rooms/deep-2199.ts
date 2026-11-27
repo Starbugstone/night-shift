@@ -33,7 +33,8 @@ function room(id: keyof typeof en.routes, human: Resident, upper: boolean, obsta
     ({ at, from, to, axis: upper ? 'horizontal' : 'vertical', trim: upper ? 'shaft' : 'door' });
   const openings = upper
     ? [opening(0, 475, 700), opening(-515, 460, 675), opening(-515 - length, 475, 700)]
-    : [opening(740, 210, 510), opening(1510, 205, human === 'artie' ? 430 : 475), opening(1510 + length, 265, 505)];
+    // v0.2: Artie's inner door 445 (was 430): the casual model bonked its sill on 6 of 8 garden-door wakes.
+    : [opening(740, 210, 510), opening(1510, 205, human === 'artie' ? 445 : 475), opening(1510 + length, 265, 505)];
   const landing: Furniture[] = [];
   if (!upper) {
     landing.push(human === 'artie' ? shelfProp(1165 + length, 449, 175, 22) : shelfProp(1170 + length, 484, 195, 21));
