@@ -22,8 +22,12 @@ export function shrubberyDetour(sim: DeepFlightSim, profile: HumanProfile, seed:
   };
 }
 
-/** GDD-12's percentage bands for 20 matched seeds, in star order. */
+/**
+ * GDD-12's percentage bands for 20 matched seeds, in star order. v0.2 council round 2 (user decision
+ * 2026-11-27): casual Ghost 40–45% → 35–50% and casual Night owl 50–55% → 45–60%, widened about their
+ * centre to admit three or more counts out of 20 (rates.ts MIN_BAND_COUNTS).
+ */
 export const GRAIL_TARGETS = {
   skilled: [[90, 100], [65, 80], [75, 85], [90, 100]],
-  casual: [[80, 95], [40, 45], [50, 55], [75, 90]],
+  casual: [[80, 95], [35, 50], [45, 60], [75, 90]],
 } as const;

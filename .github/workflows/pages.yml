@@ -3,11 +3,15 @@ name: Test and publish game
 #   /           production, from main
 #   /preprod/   preprod, from the preprod branch, to try changes before they reach main
 #   /pixi/      redirects to /preprod/ (the old preprod address)
-# A push to either branch republishes both. Each branch is pinned to one exact commit first: the
-# pushed commit for the branch that was pushed, the current tip for the other. Each pinned commit
-# is then tested and built from the same checkout, and the site is assembled from those builds
-# only, so it never holds a commit that did not pass its own tests and its 20-seed difficulty sweep.
+# Each run publishes the whole site, but a push gates only its own branch (v0.2 council round 2,
+# Opus F3): the pushed commit is tested, swept and built, and must pass. The other branch keeps its
+# last good build, the one the site serves now (kept as an artifact by the run that published it).
+# When the other branch's tip is newer than what is live, this run tests and builds that tip too and
+# publishes it if it passes; if it fails, the last good build stays (that leg shows red, the push
+# still deploys). Every published build comes from one exact, tested commit, never a fresh clone, and
 # /deployed.json names both SHAs.
+# A rerun keeps its original event SHA (Sol P1, round 2): right before publishing, each SHA must
+# still be its branch's tip or what the site serves now, or the run is superseded and publishes nothing.
 on:
   push:
     branches: [main, preprod]
@@ -16,6 +20,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -24,30 +29,63 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       targets: ${{ steps.pin.outputs.targets }}
+      build: ${{ steps.pin.outputs.build }}
+      pushed: ${{ steps.pin.outputs.pushed }}
+      keep: ${{ steps.pin.outputs.keep }}
+      keep_name: ${{ steps.pin.outputs.keep_name }}
+      keep_run: ${{ steps.pin.outputs.keep_run }}
     steps:
       - id: pin
-        name: Pin main and preprod to exact commits
-        env:
-          REPO: https://github.com/${{ github.repository }}.git
-          EVENT_REF: ${{ github.ref }}
-          EVENT_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          # the event's own commit for the branch that triggered the run, the branch tip otherwise
-          pin() {
-            if [ "$EVENT_REF" = "refs/heads/$1" ]; then
-              echo "$EVENT_SHA"
-            else
-              git ls-remote "$REPO" "refs/heads/$1" | awk -v ref="refs/heads/$1" '$2 == ref { print $1 }'
-            fi
-          }
-          main=$(pin main)
-          preprod=$(pin preprod)
-          if [ -z "$main" ]; then echo "::error::main has no commit to publish"; exit 1; fi
-          targets=$(jq -cn --arg main "$main" --arg preprod "$preprod" \
-            '[{branch: "main", sha: $main}] + (if $preprod == "" then [] else [{branch: "preprod", sha: $preprod}] end)')
-          echo "targets=$targets" >> "$GITHUB_OUTPUT"
-          printf 'Publishing main %s, preprod %s\n' "$main" "${preprod:-(no branch)}" >> "$GITHUB_STEP_SUMMARY"
+        name: Pin the pushed commit, and the other branch to its tip or its last good build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pushed = context.ref.replace(/^refs\/heads\//, '');
+            if (pushed !== 'main' && pushed !== 'preprod') return core.setFailed(`Run this workflow from main or preprod, not ${context.ref}`);
+            const tip = async (branch) => {
+              try { return (await github.rest.repos.getBranch({ owner, repo, branch })).data.commit.sha; }
+              catch (e) { if (e.status === 404) return ''; throw e; }
+            };
+            // what the site serves now ([] before the first deploy); the query string skips the CDN cache
+            const live = await (async () => {
+              try {
+                const site = (await github.rest.repos.getPages({ owner, repo })).data.html_url.replace(/\/$/, '');
+                const res = await fetch(`${site}/deployed.json?run=${context.runId}-${Date.now()}`, { cache: 'no-store' });
+                const list = res.ok ? await res.json() : [];
+                return Array.isArray(list) ? list : [];
+              } catch { return []; }
+            })();
+            // the run that kept a tested build of this branch at this commit, if its artifact is still there
+            const keptRun = async (branch, sha) => {
+              const { data } = await github.rest.actions.listArtifactsForRepo({ owner, repo, name: `dist-${branch}-${sha}`, per_page: 20 });
+              return data.artifacts.find(a => !a.expired)?.workflow_run?.id;
+            };
+            const build = [];
+            const targets = [];
+            let keep = null;
+            for (const branch of ['main', 'preprod']) {
+              const sha = branch === pushed ? context.sha : await tip(branch);
+              if (!sha) {
+                if (branch === 'main') return core.setFailed('main has no commit to publish');
+                continue;
+              }
+              targets.push({ branch, sha });
+              // the pushed commit must pass: it is the only build this push gates
+              if (branch === pushed) { build.push({ branch, sha, gate: true }); continue; }
+              const was = live.find(t => t.branch === branch)?.sha;
+              const run = was ? await keptRun(branch, was) : undefined;
+              if (run) keep = { branch, sha: was, run, name: `dist-${branch}-${was}` };
+              // a newer tip is built too; it gates only when there is no last good build to fall back on
+              if (sha !== was || !run) build.push({ branch, sha, gate: !run });
+            }
+            core.setOutput('pushed', pushed);
+            core.setOutput('targets', JSON.stringify(targets));
+            core.setOutput('build', JSON.stringify(build));
+            core.setOutput('keep', keep ? JSON.stringify(keep) : '');
+            core.setOutput('keep_name', keep?.name ?? '');
+            core.setOutput('keep_run', keep ? String(keep.run) : '');
+            await core.summary.addRaw(`Pushed ${pushed} ${context.sha}. Building ${build.map(b => `${b.branch} ${b.sha}${b.gate ? '' : ' (falls back to the live build)'}`).join(', ')}.${keep ? ` Last good ${keep.branch}: ${keep.sha} (run ${keep.run}).` : ''}\n`).write();
   # Build and deploy are separate jobs (the layout GitHub documents): deploying in the same job as
   # the upload sometimes asked for the artifact before it was listed ("No artifacts named
   # github-pages"), failing about one push in three.
@@ -56,9 +94,10 @@ jobs:
     name: Test and build ${{ matrix.branch }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      # one branch's failing tip must not stop the other branch's build (Opus F3)
+      fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.pin.outputs.targets) }}
+        include: ${{ fromJSON(needs.pin.outputs.build) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -91,44 +130,129 @@ jobs:
           if [ -f "$RUNNER_TEMP/difficulty/summary.md" ]; then cat "$RUNNER_TEMP/difficulty/summary.md" >> "$GITHUB_STEP_SUMMARY"; fi
           exit "$status"
       - run: npm run build
+      # named by commit and kept, so a later run for the other branch can republish this exact build
       - uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.branch }}
+          name: dist-${{ matrix.branch }}-${{ matrix.sha }}
           path: dist
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 90
   assemble:
     needs: [pin, build]
+    # runs when a build leg failed too: only the pushed branch has to pass (see the choose step)
+    if: ${{ !cancelled() && needs.pin.result == 'success' }}
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.choose.outputs.published }}
     steps:
       - uses: actions/download-artifact@v4
         with:
           pattern: dist-*
           path: dists
-      - name: Assemble production (main) and preprod
+      - name: Fetch the other branch's last good build
+        if: ${{ needs.pin.outputs.keep_run != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.pin.outputs.keep_name }}
+          path: dists/${{ needs.pin.outputs.keep_name }}
+          run-id: ${{ needs.pin.outputs.keep_run }}
+          github-token: ${{ github.token }}
+      - id: choose
+        name: Choose each branch's build
+        uses: actions/github-script@v7
         env:
-          TARGETS: ${{ needs.pin.outputs.targets }}
+          BUILD: ${{ needs.pin.outputs.build }}
+          PUSHED: ${{ needs.pin.outputs.pushed }}
+          KEEP: ${{ needs.pin.outputs.keep }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const built = JSON.parse(process.env.BUILD);
+            const keep = process.env.KEEP ? JSON.parse(process.env.KEEP) : null;
+            const pushed = process.env.PUSHED;
+            const tip = async (branch) => (await github.rest.repos.getBranch({ owner, repo, branch })).data.commit.sha;
+            const published = [];
+            for (const branch of ['main', 'preprod']) {
+              const mine = built.find(b => b.branch === branch);
+              const ok = mine && fs.existsSync(`dists/dist-${branch}-${mine.sha}/index.html`);
+              if (branch === pushed) {
+                if (!ok) return core.setFailed(`${branch} ${mine?.sha}: its tests, sweep or build failed; nothing is published`);
+                // a rerun of an older push: the newer push publishes instead
+                const now = await tip(branch);
+                if (now !== mine.sha) {
+                  core.warning(`${branch} ${mine.sha} is superseded by ${now}; this run publishes nothing`);
+                  return core.setOutput('published', '');
+                }
+                published.push({ branch, sha: mine.sha, dir: `dists/dist-${branch}-${mine.sha}` });
+              } else if (ok) {
+                published.push({ branch, sha: mine.sha, dir: `dists/dist-${branch}-${mine.sha}` });
+              } else if (keep?.branch === branch && fs.existsSync(`dists/${keep.name}/index.html`)) {
+                if (mine) core.warning(`${branch} ${mine.sha} failed; the site keeps ${keep.sha}`);
+                published.push({ branch, sha: keep.sha, dir: `dists/${keep.name}` });
+              } else if (mine) {
+                return core.setFailed(`${branch} ${mine.sha} failed and there is no earlier good build to keep`);
+              }
+            }
+            core.setOutput('published', JSON.stringify(published));
+      - name: Assemble production (main) and preprod
+        if: ${{ steps.choose.outputs.published != '' }}
+        env:
+          PUBLISHED: ${{ steps.choose.outputs.published }}
         run: |
           set -euo pipefail
           mkdir -p site
-          cp -r dists/dist-main/. site/
-          if [ -d dists/dist-preprod ]; then cp -r dists/dist-preprod site/preprod; fi
+          main=$(jq -r '.[] | select(.branch == "main") | .dir' <<<"$PUBLISHED")
+          preprod=$(jq -r '.[] | select(.branch == "preprod") | .dir' <<<"$PUBLISHED")
+          cp -r "$main/." site/
+          if [ -n "$preprod" ]; then cp -r "$preprod" site/preprod; fi
           mkdir -p site/pixi
           printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Night Shift preprod</title>' \
             '<meta http-equiv="refresh" content="0; url=../preprod/">' \
             '<script>location.replace("../preprod/" + location.search + location.hash)</script>' \
             > site/pixi/index.html
-          printf '%s\n' "$TARGETS" > site/deployed.json
+          jq -c 'map({branch, sha})' <<<"$PUBLISHED" > site/deployed.json
       - uses: actions/configure-pages@v5
+        if: ${{ steps.choose.outputs.published != '' }}
       - uses: actions/upload-pages-artifact@v5
+        if: ${{ steps.choose.outputs.published != '' }}
         with:
           path: site
   deploy:
     needs: assemble
+    if: ${{ !cancelled() && needs.assemble.result == 'success' && needs.assemble.outputs.published != '' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.publish.outputs.page_url }}
     steps:
+      - id: fresh
+        name: Skip a superseded run
+        uses: actions/github-script@v7
+        env:
+          PUBLISHED: ${{ needs.assemble.outputs.published }}
+        with:
+          script: |
+            // A rerun keeps its original SHAs: publish only if every one is still its branch's tip
+            // or what the site serves now, so an older commit never replaces a newer deployment.
+            const { owner, repo } = context.repo;
+            const tip = async (branch) => (await github.rest.repos.getBranch({ owner, repo, branch })).data.commit.sha;
+            const live = await (async () => {
+              try {
+                const site = (await github.rest.repos.getPages({ owner, repo })).data.html_url.replace(/\/$/, '');
+                const res = await fetch(`${site}/deployed.json?run=${context.runId}-${Date.now()}`, { cache: 'no-store' });
+                const list = res.ok ? await res.json() : [];
+                return Array.isArray(list) ? list : [];
+              } catch { return []; }
+            })();
+            const stale = [];
+            for (const { branch, sha } of JSON.parse(process.env.PUBLISHED)) {
+              const now = await tip(branch);
+              const was = live.find(t => t.branch === branch)?.sha;
+              if (sha !== now && sha !== was) stale.push(`${branch} ${sha} (tip ${now}, live ${was ?? 'none'})`);
+            }
+            if (stale.length) core.warning(`Superseded, not publishing: ${stale.join('; ')}`);
+            core.setOutput('publish', stale.length ? 'false' : 'true');
       - id: publish
+        if: ${{ steps.fresh.outputs.publish == 'true' }}
         uses: actions/deploy-pages@v5

@@ -13,7 +13,9 @@ export const LEVEL10: DeepLevelDef = {
   kind: 'deep', id: 'level10', requires: ['level9'], title: copy.title, location: copy.location,
   blurb: copy.blurb, human: copy.human, mugshot: 'human/rodney_head',
   memo: { re: copy.re, body: copy.body, joke: copy.joke },
-  hours: [2, 6], budgetSec: 172, parMarginSec: 31,
+  // v0.2 council round 2: the slowest honest hand (SLOWEST_HONEST_PACE) needs 171 s, so dawn moves 172 → 183 s
+  // (5% to spare; 184 s lets a 19th casual Shrubbery run in); Night owl stays at 141 s elapsed (42 s left)
+  hours: [2, 6], budgetSec: 183, parMarginSec: 42,
   map: {
     theme: 'grail', w: 1800, h: 2320, start: GRAIL_LAUNCH, fuseSec: 0.8,
     collectible: { id: 'shrubbery', x: 100, y: 805 },

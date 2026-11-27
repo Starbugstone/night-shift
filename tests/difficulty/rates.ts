@@ -11,6 +11,13 @@
 
 /** Attempts from which a rate band is judged exactly. */
 export const EXACT_FROM = 20;
+/**
+ * Fewest counts out of EXACT_FROM that the bands on one count may admit together (user decision
+ * 2026-11-27, once Pages gated on the sweep): a band that admits one or two counts at 20 seeds (33–38%
+ * = only 7/20) turns seed luck into a red build. Widen such a band about its centre in whole counts
+ * (`widenBand`); every band on a count (a tier floor and a design band on the same star) counts.
+ */
+export const MIN_BAND_COUNTS = 3;
 /** One-sided significance of the sanity check below EXACT_FROM attempts. */
 export const ALPHA = 0.05;
 const EPS = 1e-9;
@@ -23,6 +30,8 @@ export interface RateBand {
 export interface RateCheck {
   /** What is counted, e.g. `Ghost (casual)` or `sal_loft (skilled) delivers`. */
   label: string;
+  /** The count it judges, when several bands judge one count (a star's tier floor and its design band). */
+  key?: string;
   k: number;
   n: number;
   min?: number;
@@ -118,14 +127,61 @@ export function bandText(c: Pick<RateCheck, 'min' | 'max' | 'against'>): string 
   return '–';
 }
 
+/** The counts k out of n that every band in `bands` admits (k/n inside each). */
+export function admittedCounts(bands: readonly RateBand[], n = EXACT_FROM): number[] {
+  const out: number[] = [];
+  for (let k = 0; k <= n; k++) {
+    if (bands.every(b => (b.min === undefined || k >= b.min * n - EPS) && (b.max === undefined || k <= b.max * n + EPS))) out.push(k);
+  }
+  return out;
+}
+
+/**
+ * The MIN_BAND_COUNTS rule: a two-sided band that admits fewer than MIN_BAND_COUNTS counts out of n,
+ * widened about its centre to the counts nearest the centre (ties both in, so a centre between two
+ * counts gets four). 33–38% → 30–40% (6–8/20); 50–55% → 45–60% (9–12/20).
+ */
+export function widenBand(band: Required<RateBand>, n = EXACT_FROM): Required<RateBand> {
+  if (admittedCounts([band], n).length >= MIN_BAND_COUNTS) return band;
+  const centre = (band.min + band.max) / 2 * n;
+  const byDistance = Array.from({ length: n + 1 }, (_, k) => k).sort((a, b) => Math.abs(a - centre) - Math.abs(b - centre));
+  const cut = Math.abs(byDistance[MIN_BAND_COUNTS - 1]! - centre);
+  const keep = byDistance.filter(k => Math.abs(k - centre) <= cut + EPS);
+  return { min: Math.min(...keep) / n, max: Math.max(...keep) / n };
+}
+
+/**
+ * Counts whose bands, taken together, admit fewer than MIN_BAND_COUNTS counts out of EXACT_FROM: one
+ * sentence each. Checks without a key stand for their own label.
+ */
+export function narrowBands(checks: readonly RateCheck[]): string[] {
+  const groups = new Map<string, RateCheck[]>();
+  for (const c of checks) {
+    // order checks have no band; a single proof run (the bot's pickup detour) is pass/fail, not a rate
+    if (c.against || c.n === 1) continue;
+    const key = c.key ?? c.label;
+    groups.set(key, [...groups.get(key) ?? [], c]);
+  }
+  const out: string[] = [];
+  for (const group of groups.values()) {
+    // at the release sweep: 20 attempts, or more where a seed plays several attempts (tutorial routes)
+    const n = Math.max(EXACT_FROM, ...group.map(c => c.n));
+    const counts = admittedCounts(group, n);
+    if (counts.length >= MIN_BAND_COUNTS) continue;
+    out.push(`band too narrow: ${group.map(c => `${c.label} ${bandText(c)}`).join(' and ')} admit${group.length > 1 ? '' : 's'} ${counts.length ? counts.join(', ') : 'no count'} out of ${n}; a band must admit ${MIN_BAND_COUNTS} (widen it about its centre, rates.ts widenBand)`);
+  }
+  return out;
+}
+
 /** Collects a level's rate checks and turns failed ones into violation sentences. */
 export class RateLedger {
   readonly checks: RateCheck[] = [];
   constructor(private readonly violations: string[]) {}
 
   /** Judge a floor and/or ceiling; `detail` is appended to a violation (e.g. the fail causes). */
-  rate(label: string, k: number, n: number, band: RateBand, detail = ''): RateCheck {
+  rate(label: string, k: number, n: number, band: RateBand, detail = '', key?: string): RateCheck {
     const c = judgeRate(label, k, n, band);
+    if (key) c.key = key;
     this.checks.push(c);
     if (!c.pass) this.violations.push(`${label} ${k}/${n} (${pct(k / n)}), band wants ${bandText(c)}${sanityNote(c)}${detail ? `; ${detail}` : ''}`);
     return c;

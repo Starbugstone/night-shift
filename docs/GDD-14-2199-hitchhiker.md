@@ -32,7 +32,7 @@ Greybox **1800 × 2320** logical px with the origin at the top left. Retain the 
 
 The fleet’s Recital Division reads from fixed lecterns. A recital sweeps a defined sector. On the ground, a trapped listener passes out. In the air, a full dose sends Zib fleeing back to the checkpoint. The three sleepers are indoors and use the normal room rules. Zib gives the player the line under **Copy** once, when the first poet comes on screen. The memo practice starts on the avenue at **(900, 850)**, 130 px outside the avenue recital's reach, and ends at either outer lane. It files no delivery, star or pickup.
 
-Use existing `camera` detection and its sinusoidal heading, `base + amp × sin(rate × t + phase)`, on the shared hazard clock. East is 0 rad, south is +π/2. A `reciter2199` camera skin and a poetry sighting cause carry the fiction through the map and report. Keep the shared fuse, checkpoint, collision and lock rules. `map.fuseSec` is **0.61 s** (0.80 s before the 2026-11-26 fuse staircase, 0.72 s until the v0.2 openings rework); the Hush Drive fuse is `0.61 / 0.8 ≈ 0.76 s`. Origins below are also the guard sprite centres. The lectern stays put and the guard turns with the sampled heading.
+Use existing `camera` detection and its sinusoidal heading, `base + amp × sin(rate × t + phase)`, on the shared hazard clock. East is 0 rad, south is +π/2. A `reciter2199` camera skin and a poetry sighting cause carry the fiction through the map and report. Keep the shared fuse, checkpoint, collision and lock rules. `map.fuseSec` is **0.65 s** (0.80 s before the 2026-11-26 fuse staircase, 0.72 s until the v0.2 openings rework, 0.61 s until the v0.2 council round 2 retune); the Hush Drive fuse is `0.65 / 0.8 ≈ 0.81 s`. Origins below are also the guard sprite centres. The lectern stays put and the guard turns with the sampled heading.
 
 | Reciter | Origin | Range | Half angle | Base | Amp | Rate | Phase |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -128,21 +128,23 @@ Use archive IDs `artie`, `penny` and `moe`. The dossier and repeat addenda fit t
 
 ## The clock and the stars
 
-The fleet’s demolition timer starts at **2:55** (**175 s**; the greybox proposal was 4:00, the 2026-11-26 openings rework moved the shipped clock from 188 s to 192 s, and the v0.2 openings rework to 175 s) and counts down in both flight and rooms. Drive it from `DeepRun.remaining` and reuse the countdown HUD and the last **30 s** deadline warning. Use a steady amber HUD at 30 s even in reduced motion. Keep the sky dark. The barges’ running lights pick up a charge at the warning, using the same elapsed time. They are scenery. At zero, show the demolition seal closing over the map and cut to the failure report. The retry choice pauses the clock as usual. A whole-shift restart resets the clock, the hazard phases and all run-local progress. Success requires the third room result to reach the runner before the timer hits zero. The last second has the same rules in either phase.
+The fleet’s demolition timer starts at **3:25** (**205 s**; the greybox proposal was 4:00, the 2026-11-26 openings rework moved the shipped clock from 188 s to 192 s, the v0.2 openings rework to 175 s, and the v0.2 council round 2 retune to 205 s so the slowest honest hand finishes, see below) and counts down in both flight and rooms. Drive it from `DeepRun.remaining` and reuse the countdown HUD and the last **30 s** deadline warning. Use a steady amber HUD at 30 s even in reduced motion. Keep the sky dark. The barges’ running lights pick up a charge at the warning, using the same elapsed time. They are scenery. At zero, show the demolition seal closing over the map and cut to the failure report. The retry choice pauses the clock as usual. A whole-shift restart resets the clock, the hazard phases and all run-local progress. Success requires the third room result to reach the runner before the timer hits zero. The last second has the same rules in either phase.
 
 | Star | Rule |
 | --- | --- |
 | Delivered / Livré | File all three residents before the fleet’s deadline. |
 | Ghost / Fantôme | Deliver with zero full sightings and zero failed room attempts. Partial suspicion can drain. |
-| Night owl / Oiseau de nuit | Deliver with **26 s** left (**149 s** elapsed, **2:29**). `parMarginSec` is 26 (the greybox proposal was 102 s left at 2:18 elapsed). |
+| Night owl / Oiseau de nuit | Deliver with **52 s** left (**153 s** elapsed, **2:33**). `parMarginSec` is 52 (26 s left at 149 s elapsed until the v0.2 council round 2 retune; the greybox proposal was 102 s left at 2:18 elapsed). |
 | Towel / Serviette | Take the towel and complete the shift on that run. |
 
 Greybox targets over **20 matched no-upgrade seeds**, out of all whole-shift attempts. Measure ordinary runs and towel detour runs separately. Make this the hardest of the three new dates by asking for more timing decisions per flight and a tighter clean-run recovery budget. Aim for a **120–140 s** casual independent shift estimate. Check the ordering against the two earlier dates on the same seeds. Use actual Ghost rates, par headroom and where players fail to tune that ordering. Retain the earlier dates’ easy opening approach and reserve the demanding timing for the faster branches. [Progression curve](GDD-5-progression.md#target-curve) · [Difficulty evaluator](../.claude/skills/evaluate-difficulty/SKILL.md)
 
 | Model | Delivered | Ghost | Night owl | Towel on detour runs |
 | --- | --- | --- | --- | --- |
-| Casual | 75–85% | 33–38% | 50–55% | 55–75% |
-| Skilled | 85–92% | 50–65% | 67–75% | 80–95% |
+| Casual | 75–85% | 30–40% | 45–60% | 55–75% |
+
+**v0.2 council round 2 (2026-11-27).** The difficulty model now stops the clock when a room accepts the specimen, as the game does, and every deep clock must let the slowest honest hand (the perfect autopilot at 1.5 × cruise) finish with 5% to spare. At 175 s that hand missed the demolition on 8 of 20 seeds: the luggage shutter (23 s cycle) and the stamp counterweight (20 s) each cost a slow hand a whole cycle. The shutter now opens first at phase **4 s** (was 7.25 s), so a slow hand meets its first opening and a quick one waits for it; the fuse is **0.65 s** (was 0.61 s); the demolition is **205 s** with Night owl at **153 s** elapsed. The casual Ghost, Night owl, skilled Delivered and skilled Night owl bands were widened about their centres to admit at least three counts out of 20 (user decision, 2026-11-27). 20 seeds, Delivered / Ghost / Night owl / towel: skilled **18 / 11 / 14 / 18**, casual **15 / 6 / 10 / 15**; casual estimate **122 s**; slowest honest hand **186.8 s** of the **194.8 s** limit.
+| Skilled | 85–95% | 50–65% | 65–75% | 80–95% |
 
 At six seeds, require Delivered / Ghost / Night owl of **4/6, 2/6, 3/6** casual and **5/6, 3/6, 4/6** skilled. Skilled Ghost must exceed casual Ghost. The casual Ghost ceiling stays **90%**. Per room require at least **75% skilled / 40% casual** delivery, with one **≥65% casual** route per sleeper. Keep ≥80% flight completion for both models, median sightings ≤1 skilled and ≤2 casual, and casual room median peak wake averaging ≥20. Bring the casual estimate under 80% of the 175 s budget. These are proposed targets. The greybox needs full-route evidence before the clock and geometry are set for release.
 

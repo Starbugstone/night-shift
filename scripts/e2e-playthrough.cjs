@@ -1,7 +1,8 @@
 // End-to-end bot: plays all four tutorial routes (L1 window/chimney, L2 skylight/loading door), then
 // every deep shift in the Work Orders (Birch Lane, L3…L12), all through real pointer input.
 // Every abduction (tutorial and deep) is driven by the scene's own per-frame autopilot through
-// `debug.autopilotFinger()`: the screen point to hold the mouse button at (the beam heads for it).
+// `debug.autopilotFinger()`: the screen point to hold the mouse button at (the beam heads for it), at a drag
+// pace no slower than the game's SLOWEST_HONEST_PACE (read from `__nightShift.honestPace`).
 // The mouse stays down for the whole room.
 // Deep flights use the flight `debug.autopilot()` (an absolute finger position, logical px);
 // tutorial flights steer through fixed waypoints. A SPOTTED card is closed with a real tap.
@@ -14,7 +15,8 @@
 //   source ~/.local/share/claude-media-tools/env.sh
 //   BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs   (add GPUARGS=... for the real GPU, below)
 // Env: ONLY=tutorial|deep|<order> to run a subset, where <order> is a level id or its short name,
-// comma-separated (ONLY=birch_bakery,L10,L11). RUNS=L1-window,... picks tutorial routes; ONLY=probe
+// comma-separated (ONLY=birch_bakery,L10,L11). RUNS=L1-window,... picks tutorial routes (with ONLY=tutorial or
+// no ONLY); an unknown name or a selection that plays nothing exits 1. ONLY=probe
 // with ROOM= plays one room. PLAYWRIGHT_PATH or PLAYWRIGHT_MODULE finds playwright.
 // PICKUP=1 takes the town pickup first where the run has a pickup driver (Birch Lane, L9 time car,
 // L11 tripod leg) and then requires all four stars. CAR_FIRST=1 (L9) and BIRCH_PICKUP=1 (Birch Lane)
@@ -217,6 +219,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
    * `pickup` is 'birch' (via points, then the live pickup position), 'time_car', 'tripod' or null.
    */
   async function installDriver(pickup = null) {
+    const pace = await page.evaluate(() => window.__nightShift.honestPace);
+    if (typeof pace !== 'number' || !(pace >= 1)) throw new Error(`the build exposes no honest drag pace (__nightShift.honestPace = ${pace})`);
     await page.evaluate(({ pickup }) => {
       if (window.__e2eDrv) return;
       const drv = (window.__e2eDrv = { fx: 270, fy: 520, on: false, flight: null, pickup });
@@ -262,9 +266,11 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
           drv.flight = { down: it.down, x: it.x, y: it.y };
         } else drv.flight = null;
         if (ns && ns.scene === 'abduct' && a && a.debug && typeof a.debug.autopilot === 'function' && drv.on && p && p.down) {
-          // Use the practiced drag pace on the timed crossings. Artie's blade needs a steady lift.
+          // Every room at an honest pace: never slower than the game's SLOWEST_HONEST_PACE (the pace every deep
+          // shift's clock is proved against, tests/difficulty/honest-pace.ts), the practiced 2.2 on the timed
+          // crossings. Artie's blade needs a steady lift.
           const dispatchCrossing = ns.run?.level.id === 'level12' && a.debug.room.human !== 'artie';
-          if (pickup === 'time_car' || dispatchCrossing) a.debug.pilot.pace = 2.2;
+          a.debug.pilot.pace = Math.max(ns.honestPace, pickup === 'time_car' || dispatchCrossing ? 2.2 : 0);
           const f = a.debug.autopilotFinger(1 / 60);
           drv.fx = f.x;
           drv.fy = f.y;
@@ -340,6 +346,9 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     let spottedTaps = 0;
     let atReport = null;
     let forcedSpot = process.env.FORCE_SPOT !== '1';
+    // the shift clock as the run last read it, and its deadline (null: a stopwatch shift)
+    let gameSec = null;
+    let budgetSec = null;
     const renderer = await page.evaluate(() => {
       const gl = document.querySelector('canvas#game')?.getContext('webgl2');
       const ext = gl?.getExtension('WEBGL_debug_renderer_info');
@@ -363,7 +372,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         const ns = window.__nightShift;
         const a = ns.active;
         const run = ns.run;
-        const base = { scene: ns.scene, busy: ns.transitioning, clock: run ? run.clockText() : null, elapsed: run ? run.elapsed : null, phase: run ? run.phase : null, delivered: run ? run.delivered.slice() : null, spotted: run ? run.spotted : null, failed: run ? run.failedAbductions : null, pickup: run?.collectible ? run.collectible.collected : null };
+        const base = { scene: ns.scene, busy: ns.transitioning, clock: run ? run.clockText() : null, elapsed: run ? run.elapsed : null, budget: run && Number.isFinite(run.level.budgetSec) ? run.level.budgetSec : null, phase: run ? run.phase : null, delivered: run ? run.delivered.slice() : null, spotted: run ? run.spotted : null, failed: run ? run.failedAbductions : null, pickup: run?.collectible ? run.collectible.collected : null };
         base.room = run?.current?.roomId;
         if (run?.level.id === 'level8') {
           base.witnesses = run.specimenCount;
@@ -381,6 +390,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         if (ns.scene === 'abduct') return { ...base, kind: 'abduct', roomElapsed: a.debug.elapsed, checkpoint: a.debug.pilot.index, drv: window.__e2eDrv ? { fx: window.__e2eDrv.fx, fy: window.__e2eDrv.fy } : null };
         return base;
       });
+      if (info.elapsed !== null) { gameSec = info.elapsed; budgetSec = info.budget; }
       if (info.witnesses > lastWitnesses) {
         lastWitnesses = info.witnesses;
         log.push({ clock: info.clock, witnesses: info.witnesses, troops: info.troops });
@@ -469,7 +479,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       if (pickup === 'time_car' && !carShot) extra.push('time car lock not captured');
     }
     const result = await expectDelivered(id, before, end, extra);
-    return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), renderer, pickup, spottedTaps, report: end.report, before, result, log };
+    return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), gameSec: gameSec === null ? null : Math.round(gameSec * 10) / 10, budgetSec, renderer, pickup, spottedTaps, report: end.report, before, result, log };
   }
 
   const ONLY = (process.env.ONLY || '').split(',').map(t => t.trim()).filter(Boolean);
@@ -493,7 +503,9 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     await finish();
     return;
   }
-  const deepOrders = await page.evaluate(() => window.__nightShift.workOrders.filter(order => order.kind === 'deep'));
+  const orders = await page.evaluate(() => window.__nightShift.workOrders);
+  const deepOrders = orders.filter(order => order.kind === 'deep');
+  const tutorialOrders = orders.filter(order => order.kind === 'tutorial');
   const runName = id => id.replace(/^level(\d+)$/, 'L$1');
   const known = new Set(['tutorial', 'deep', ...deepOrders.flatMap(o => [o.id, runName(o.id)])]);
   const unknown = ONLY.filter(t => !known.has(t));
@@ -502,10 +514,28 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   const playTutorial = ONLY.length === 0 || ONLY.includes('tutorial');
   const deepToPlay = deepOrders.filter(o => allDeep || ONLY.includes(o.id) || ONLY.includes(runName(o.id)));
 
-  const ONLY_RUNS = process.env.RUNS ? process.env.RUNS.split(',') : null;
+  const ONLY_RUNS = process.env.RUNS ? process.env.RUNS.split(',').map(t => t.trim()).filter(Boolean) : null;
   const runs = require('./tutorial-approaches.cjs');
-  for (const r of playTutorial ? runs : []) {
-    if (ONLY_RUNS && !ONLY_RUNS.includes(r.name)) continue;
+  // v0.2 council round 2 (Sol P2): the fixtures must match the registered tutorial orders ring for ring, so a new
+  // tutorial ring (or a moved one) fails here instead of being skipped
+  const fixtureProblems = [];
+  for (const o of tutorialOrders) {
+    o.rings.forEach((room, ring) => {
+      const f = runs.find(r => r.level === o.num && r.ring === ring);
+      if (!f) fixtureProblems.push(`no tutorial approach for order ${o.num} (${o.id}) ring ${ring} (${room})`);
+      else if (f.room !== room) fixtureProblems.push(`${f.name} flies to ring ${ring} of order ${o.num}, which is ${room}, not ${f.room}`);
+    });
+  }
+  for (const r of runs) if (!tutorialOrders.some(o => o.num === r.level && o.rings[r.ring] === r.room)) fixtureProblems.push(`${r.name} names no registered tutorial ring`);
+  if (fixtureProblems.length) throw new Error(`tutorial approaches out of date (scripts/tutorial-approaches.cjs): ${fixtureProblems.join('; ')}`);
+  if (ONLY_RUNS) {
+    if (!playTutorial) throw new Error(`RUNS=${process.env.RUNS} picks tutorial routes, but ONLY=${process.env.ONLY} plays no tutorial`);
+    const typos = ONLY_RUNS.filter(n => !runs.some(r => r.name === n));
+    if (typos.length || !ONLY_RUNS.length) throw new Error(`RUNS names no tutorial route: ${typos.join(', ') || '(empty)'}; routes are ${runs.map(r => r.name).join(', ')}`);
+  }
+  const tutorialToPlay = playTutorial ? runs.filter(r => !ONLY_RUNS || ONLY_RUNS.includes(r.name)) : [];
+  if (!tutorialToPlay.length && !deepToPlay.length) throw new Error(`the selection plays nothing (ONLY=${process.env.ONLY || ''} RUNS=${process.env.RUNS || ''})`);
+  for (const r of tutorialToPlay) {
     const id = `level${r.level}`;
     try {
       await openFixture('?unlock=1');
@@ -529,7 +559,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     const name = runName(order.id);
     try {
       results[name] = await deepShift(order, name);
-      console.error('RESULT', name, 'delivered', results[name].wallSec + ' s');
+      console.error('RESULT', name, 'delivered', results[name].wallSec + ' s wall,', results[name].gameSec + ' game s of', results[name].budgetSec ?? 'no clock');
     } catch (e) {
       failures[name] = String(e.message || e);
       console.error('RESULT', name, failures[name]);
@@ -538,5 +568,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   }
   // a full run proves every registered order, not just the ones that happened to finish
   if (allDeep) for (const o of deepOrders) if (!results[runName(o.id)] && !failures[runName(o.id)]) failures[runName(o.id)] = 'not played';
+  // ...and every registered tutorial ring (the approaches match them, checked above)
+  if (playTutorial && !ONLY_RUNS) for (const r of runs) if (!results[r.name] && !failures[r.name]) failures[r.name] = 'not played';
   await finish();
 })().catch((e) => { console.error('FAIL', e); process.exit(1); });

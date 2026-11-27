@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
 import { placePills, type Box, type PillAsk } from './clear-of';
-import type { Assets } from '../../contracts';
+import type { Assets, RoomId } from '../../contracts';
 import { VIEW_H, VIEW_W } from '../../contracts';
 import { easeOutBack } from '../../core/fx';
 import { GLOW, glowTexture, Glow } from '../../core/gfx/glow';
@@ -352,12 +352,8 @@ export class EntryRingView {
     this.tintDisc.blendMode = 'add';
     this.spin.addChild(this.tintDisc, this.art);
     this.progress.addChild(new Graphics().circle(0, 0, RING_R + 10).stroke({ color: 'rgba(27,20,51,0.55)', width: 10 }), this.arc.root, this.spark);
-    const words = tr().routes[entry.roomId];
-    const route = words.route + tr().flight.entrySep;
-    const advice = routeAdvice(entry.roomId);
-    const routeW = measure(route, 19, 800);
-    const textW = routeW + measure(advice, 19, 800);
-    this.labelW = Math.min(VIEW_W - 16, textW + 28);
+    const { route, advice, routeW, textW } = pillText(entry.roomId);
+    this.labelW = routePillWidth(entry.roomId);
     const text = new Container();
     const calm = entry.recommended ?? /easy|safe|short/.test(entry.difficulty);
     text.addChild(new Label(ROUTE).set(route, 0, 1), new Label(calm ? EASY : HARD).set(advice, routeW, 1));
@@ -408,6 +404,18 @@ export class EntryRingView {
   }
 
 
+}
+
+function pillText(roomId: RoomId): { route: string; advice: string; routeW: number; textW: number } {
+  const route = tr().routes[roomId].route + tr().flight.entrySep;
+  const advice = routeAdvice(roomId);
+  const routeW = measure(route, 19, 800);
+  return { route, advice, routeW, textW: routeW + measure(advice, 19, 800) };
+}
+
+/** Width of an entry ring's route pill in the current language (tests/flight-pill-lines.test.ts places them too). */
+export function routePillWidth(roomId: RoomId): number {
+  return Math.min(VIEW_W - 16, pillText(roomId).textW + 28);
 }
 
 /** Both flight views place their visible entry labels together, in screen space. */

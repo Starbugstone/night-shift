@@ -1,4 +1,5 @@
 import { en } from '../../i18n/en';
+import { BELL_CLAPPER_ART } from '../invasion1953';
 import { building, type Checkpoint, type Hazard, type InteriorRoom, type Opening } from './interior';
 import { BED_POSE, prop, shelfProp, sprite, type Area, type Furniture, type Room, type Sprite } from './layout';
 
@@ -202,7 +203,7 @@ export const ROOMS_1953 = {
       prop(fit('invasion_attic_shelf_low', 608, -655, 212, 83)),
     ], [bellExit]),
   ], [top(-92, 522, 731), top(-888, 412, 606)], [
-    { kind: 'swing', name: 'Bell clapper', sprite: art('invasion_bell_clapper', 579, 33),
+    { kind: 'swing', name: 'Bell clapper', sprite: art(BELL_CLAPPER_ART, 579, 33),
       amplitude: 0.62, speed: 1.2, phase: 0.6, mountY: -76 },
   ], bellExit, box(435, -850, 156, 62), [
     point(176, 414), point(330, 407), point(647, 402), point(681, 237),

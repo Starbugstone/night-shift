@@ -12,22 +12,27 @@ import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, directApproaches, directViolations, naiveRoomWins, type DirectApproach } from './beeline';
 import { HARD_RULES, OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
 import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateTripodFirst, evaluateStars, type CarReport, type StarReport, type TripodReport } from './stars';
-import { checkDispatchFinale } from './dispatch2199';
+import { checkDispatchFinale, starKey } from './dispatch2199';
 import { naiveCarCatches } from './time-car';
-import { RateLedger, bandText, tolerated, type RateCheck } from './rates';
+import { EXACT_FROM, RateLedger, bandText, narrowBands, tolerated, type RateCheck } from './rates';
+import { HONEST_HAND, evaluateHonestPace, honestPaceViolations, type HonestPaceReport } from './honest-pace';
 
 // Minimum shares of full attempts, in the game's star order. The beeline and wake
 // checks below still enforce challenge when the route-aware player earns many stars.
-const STAR_FLOORS = {
+export const STAR_FLOORS = {
   tutorial: { skilled: [5 / 6, 0.75, 2 / 3], casual: [2 / 3, 0.60, 1 / 2] },
-  birch_bakery: { skilled: [1, 1, 5 / 6], casual: [1, 5 / 6, 5 / 6] },
+  // v0.2 council round 2 (rates.ts MIN_BAND_COUNTS): the 100% floors admitted only 20/20, and casual
+  // Ghost (5/6 floor under the 90% cap) only 17–18/20: widened about their centre to 90% and 80–90%
+  birch_bakery: { skilled: [0.9, 0.9, 5 / 6], casual: [0.9, 0.8, 5 / 6] },
   birch_neighbours: { skilled: [5 / 6, 5 / 6, 5 / 6], casual: [5 / 6, 4 / 6, 5 / 6] },
   early: { skilled: [5 / 6, 2 / 3, 2 / 3], casual: [2 / 3, 0.60, 1 / 2] },
   middle: { skilled: [5 / 6, 0.60, 2 / 3], casual: [2 / 3, 0.45, 1 / 2] },
   late: { skilled: [5 / 6, 0.50, 2 / 3], casual: [2 / 3, 0.33, 1 / 2] },
 } as const;
 
-const CASUAL_GHOST_CAP = 0.9;
+export const CASUAL_GHOST_CAP = 0.9;
+/** Levels whose stars have 20-seed design bands (./grail.ts GRAIL_TARGETS, ./dispatch2199.ts FINALE_BANDS). */
+export const DESIGN_BANDS: readonly string[] = ['level10', 'level12'];
 const MIN_CASUAL_PAR_SHARE = 0.30;
 const MIN_CASUAL_PEAK_SUSPICION = 0.05;
 const L9_OWL_CAP = 0.9;
@@ -55,9 +60,10 @@ export interface Band {
 
 /** Difficulty targets for the deep levels. */
 export const BANDS: Record<string, Band | undefined> = {
+  // v0.2 council round 2 (rates.ts MIN_BAND_COUNTS): 95% floors admitted only 19–20/20, now 90%
   birch_bakery: {
-    skilledRoute: 0.95, casualRoute: 0.85, casualBuilding: 0.95, skilledSpots: 1, casualSpots: 2,
-    flightDone: 0.95, casualBudgetShare: 0.8, tension: 20,
+    skilledRoute: 0.9, casualRoute: 0.85, casualBuilding: 0.9, skilledSpots: 1, casualSpots: 2,
+    flightDone: 0.9, casualBudgetShare: 0.8, tension: 20,
   },
   birch_neighbours: {
     skilledRoute: 0.90, casualRoute: 0.80, casualBuilding: 0.90, skilledSpots: 1, casualSpots: 2,
@@ -134,7 +140,7 @@ export const BANDS: Record<string, Band | undefined> = {
   // v4 1122
   level10: {
     skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
-    flightDone: 0.8, casualBudgetShare: 120 / 172, tension: 20, // GDD-12: the casual estimate stays within 105–120 s of the 172 s dawn
+    flightDone: 0.8, casualBudgetShare: 120 / 183, tension: 20, // GDD-12: the casual estimate stays within 105–120 s (dawn 183 s since v0.2 round 2)
   },
   level12: { skilledRoute: 0.75, casualRoute: 0.4, casualBuilding: 0.65, skilledSpots: 1, casualSpots: 2,
     flightDone: 0.8, casualBudgetShare: 0.8, tension: 20 },
@@ -204,6 +210,8 @@ export interface LevelReport extends StarLevelReport {
   carFirst?: CarReport[];
   tripodFirst?: TripodReport[];
   carBeelines?: ReturnType<typeof naiveCarCatches>;
+  /** The perfect-hand autopilot at SLOWEST_HONEST_PACE, the whole shift on every seed (./honest-pace.ts). */
+  honestPace: HonestPaceReport;
 }
 
 const median = (xs: number[]): number => {
@@ -299,11 +307,15 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
   }
   const num = workOrderNumber(level.id);
   const floors = STAR_FLOORS[level.id === 'birch_bakery' || level.id === 'birch_neighbours' ? level.id : level.kind === 'tutorial' ? 'tutorial' : num <= workOrderNumber('level4') ? 'early' : num <= workOrderNumber('level6') ? 'middle' : 'late'];
-  for (const row of base.stars) {
+  // A level with design bands for its stars (the Grail targets, the 2199 finale bands) is judged on
+  // them at 20 seeds, in place of the tier floors (v0.2 council round 2: a tier floor on top of a widened
+  // design band would narrow it again, e.g. the late 33% casual Ghost floor on the finale's 30–40%).
+  const designed = seeds === EXACT_FROM && DESIGN_BANDS.includes(level.id);
+  for (const row of designed ? [] : base.stars) {
     const want = row.profile === 'skilled' ? floors.skilled : row.profile === 'casual' ? floors.casual : [];
     for (const [i, floor] of want.entries()) {
       const ceiling = level.kind === 'deep' && row.profile === 'casual' && i === 1 ? CASUAL_GHOST_CAP : undefined;
-      ledger.rate(`${base.starLabels[i]} (${row.profile})`, row.earned[i]!, row.attempts, { min: floor, ...(ceiling === undefined ? {} : { max: ceiling }) });
+      ledger.rate(`${base.starLabels[i]} (${row.profile})`, row.earned[i]!, row.attempts, { min: floor, ...(ceiling === undefined ? {} : { max: ceiling }) }, '', starKey(row.profile, i));
     }
   }
   if (level.kind === 'deep' && skilledStars && casualStars) {
@@ -329,6 +341,7 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
         base.violations.push(noObstacle(entry.roomId));
       }
     }
+    base.violations.push(...narrowBands(base.rates));
     return base;
   }
   const band = BANDS[level.id];
@@ -377,13 +390,16 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     budgetSec: level.budgetSec,
     parSec: deepPar(level),
     tension: Math.round(tension),
+    honestPace: evaluateHonestPace(level, seeds, play),
   };
   report.violations.push(...check(report, band, ledger));
+  report.violations.push(...honestPaceViolations(report.honestPace));
   if (isBirch(level.id)) {
     report.birchDetours = [...profiles, PROFILES.bot].map(profile => evaluateBirchDetours(level, profile, profile.name === 'bot' ? 1 : seeds, play));
     for (const row of report.birchDetours) {
       const bakery = level.id === 'birch_bakery';
-      const floor = row.profile === 'bot' ? 1 : row.profile === 'skilled' ? (bakery ? 0.95 : 0.90) : bakery ? 0.90 : 0.80;
+      // the bot's single run is a proof; the 20-seed floors admit at least three counts (MIN_BAND_COUNTS)
+      const floor = row.profile === 'bot' ? 1 : row.profile === 'skilled' ? 0.90 : bakery ? 0.90 : 0.80;
       ledger.rate(`Pickup detour (${row.profile})`, row.fourth, row.attempts, { min: floor });
       if ((row.profile === 'bot' || seeds >= 20) && row.allFour === 0) report.violations.push(`Pickup (${row.profile}): no four-star shift`);
     }
@@ -397,10 +413,10 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
       if (seeds === 20 && (row.profile === 'skilled' || row.profile === 'casual')) {
         const counts = [...stars.find(star => star.profile === row.profile)!.earned, row.fourthStars];
         GRAIL_TARGETS[row.profile].forEach(([min, max], index) => {
-          ledger.rate(`Grail target: ${report.starLabels[index]} (${row.profile})`, counts[index]!, seeds, { min: min / 100, max: max / 100 });
+          ledger.rate(`Grail target: ${report.starLabels[index]} (${row.profile})`, counts[index]!, seeds, { min: min / 100, max: max / 100 }, '', starKey(row.profile, index));
         });
       }
-      ledger.rate(`Shrubbery detour (${row.profile})`, row.fourthStars, row.attempts, { min: floor });
+      ledger.rate(`Shrubbery detour (${row.profile})`, row.fourthStars, row.attempts, { min: floor }, '', starKey(row.profile, 3));
     }
   }
   if (level.id === 'level12') {
@@ -445,6 +461,7 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     }
   }
   for (const room of casual) if (room.obstacleShare === 0) report.violations.push(noObstacle(room.roomId));
+  report.violations.push(...narrowBands(report.rates));
   return report;
 }
 
@@ -557,6 +574,8 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
   lines.push('');
   lines.push(`Tension (casual mean peak wake): ${r.tension}.`);
   const deadline = r.levelId === 'level9' ? 'storm passes at' : r.levelId === 'level12' ? 'demolition' : 'sunrise';
+  const honest = r.honestPace;
+  lines.push(`Slowest honest hand (autopilot, pace ${HONEST_HAND.pace}): ${honest.runs.filter(run => run.delivered).length}/${honest.runs.length} delivered, slowest ${Number.isFinite(honest.worstSec) ? `${honest.worstSec} s` : 'no delivery'}${Number.isFinite(honest.budgetSec) ? `, must finish by ${Math.round(honest.limitSec * 10) / 10} s of ${honest.budgetSec} s` : ''}.`);
   lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')}${Number.isFinite(r.budgetSec) ? ` · ${deadline} ${r.budgetSec} s` : ''} · Night owl by ${r.parSec} s.`);
   if (r.birchDetours) for (const row of r.birchDetours) {
     lines.push(`${row.profile} pickup detour: ${row.fourth}/${row.attempts} fourth stars, ${row.allFour}/${row.attempts} four-star shifts.`);

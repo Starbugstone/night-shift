@@ -18,6 +18,9 @@ run at the end of this page.
 | Same opening, a detector parked on the spawn | No spawn gate; neighbouring levels use different spawn zones. | `tests/levels-spawn-variety.test.ts` | `npm test` |
 | A deep map nobody flew | Every deep level is flown by the headless autopilot (or names its own driver). | `tests/flight-autopilot.test.ts` | `npm test` |
 | Bump on start | A room spawn sits 10 s without input with zero bonks and zero wake. | `tests/abduct-spawn.test.ts` | `npm test` |
+| A clock only fast hands beat | The perfect-hand autopilot at `SLOWEST_HONEST_PACE` (1.5 × cruise, about 62 px/s) delivers the whole shift with 5% of the budget left on every tested seed. Give back clock time or move a timed crossing so a slow hand meets its first opening; keep the Night owl par where it was in elapsed seconds. | `tests/difficulty/honest-pace.ts` (in `tests/levels-difficulty.test.ts`) | `npm run difficulty`; the release table lists every level's slowest honest run against its limit. |
+| Difficulty evidence the game can't produce | The model's hand reaches the room only through `AbductSimulation.pointAt` with an on-screen finger, and charges room time with the game's `roomChargesShift`. Don't write to the beam or the shift clock from the model. | `tests/levels-difficulty-touch.test.ts`, `tests/levels-difficulty-clock.test.ts` | `npm test` |
+| A band that admits one or two counts | Every rate band (with the other bands on the same count) admits at least three counts out of 20; widen it about its centre (`widenBand`), never shift it. | `narrowBands` in `tests/difficulty/rates.ts`, `tests/levels-difficulty-rates.test.ts` | `npm run difficulty` |
 
 ## Teaching
 
@@ -74,15 +77,18 @@ run at the end of this page.
 | Rank text squeezed sideways | Every rank title, flavour and payoff fits `RANK_BOX` at its normal font beside a 4-digit purse, EN and FR. | `tests/ui-workorders-rank-fit.test.ts` | `npm test` |
 | A memo that runs into the goals | Body and joke box clear the goals block at or above the 16 px floor, EN and FR; cut the copy, never the floor. | `tests/ui-memo-fit.test.ts` | `npm test` |
 | An exit sign off screen | Every interior room's exit tag stays inside the view wherever the exit shows, EN and FR. | `tests/abduct-exit-tag.test.ts` | `npm test` |
+| A route pill over a cable | Route pills keep off every solid line on screen (wires, bunting, survey cables, crane booms) as drawn. A new solid hazard returns its segment from `HazardField.solidLine`. | `tests/flight-pill-lines.test.ts` | `npm test` |
+| Behaviour keyed on display text | Find a prop, a route or a hazard by an id, an art key or a shared constant, never by comparing with English text (it is a translation key too). | `tests/shell-display-strings.test.ts` | `npm test` |
 | A souvenir, specimen or town pickup with no trophy slot | Every room item, swap, specimen and town pickup has its slot and EN+FR text; each level after L1 has one pickup hinted in its memo. | `tests/ui-trophies*.test.ts`, `tests/ui-trophies-specimens.test.ts`, `tests/flight-collectible*.test.ts`, `tests/ui-trophies-hunt-star.test.ts` | `npm test` |
 
 ## Save and release
 
 | Problem | Rule | Guard | Command |
 |---|---|---|---|
-| A save that hides older progress, or a new level missing from the save | The loader imports only a real save shape and falls through broken values; `LEVEL_IDS` names exactly the levels in `LEVELS`, and each level's progress survives a write and a reload. | `tests/levels-save.test.ts`, `tests/levels-save-fallback.test.ts`, `tests/levels-save-levels.test.ts` | `npm test` |
-| A browser run that passes without playing | Every shift ends on a delivered report that survives a reload; a full run plays every registered order. | `scripts/e2e-playthrough.cjs` | `npm run build -- --mode e2e --outDir review/e2e-build`, `npm run preview -- --outDir review/e2e-build --port <port> --strictPort`, then `BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs` |
-| An untested commit on the live site | Pages pins each branch to one SHA, tests it before building it, and publishes only those builds. | `tests/shell-pages-deploy.test.ts` | `npm test`; after a push, compare `/deployed.json` with the pushed SHA |
+| A save that hides older progress, or a new level missing from the save | The loader imports only a real save shape, every recognised field correctly typed (a new save field gets its entry in `SAVE_FIELD_TYPES`), and falls through broken values; `LEVEL_IDS` names exactly the levels in `LEVELS`, and each level's progress survives a write and a reload. | `tests/levels-save.test.ts`, `tests/levels-save-fallback.test.ts`, `tests/levels-save-levels.test.ts` | `npm test` |
+| A browser run that passes without playing | Every shift ends on a delivered report that survives a reload; a full run plays every registered order and tutorial ring (a new tutorial ring needs its approach in `scripts/tutorial-approaches.cjs`); a typo or empty selection fails; rooms go no slower than `SLOWEST_HONEST_PACE`. | `scripts/e2e-playthrough.cjs`, `tests/shell-e2e-runner.test.ts` | `npm run build -- --mode e2e --outDir review/e2e-build`, `npm run preview -- --outDir review/e2e-build --port <port> --strictPort`, then `BASE=http://localhost:<port>/ node scripts/e2e-playthrough.cjs` |
+| An untested commit on the live site | Pages pins each branch to one SHA, tests it before building it, and publishes only those builds; a push gates only its own branch (the other keeps its last good build), and a superseded run (a rerun with an old event SHA) publishes nothing. | `tests/shell-pages-deploy.test.ts` | `npm test`; after a push, compare `/deployed.json` with the pushed SHA |
+| A deadline that drops what the player earned | Sightings count when they happen; an accepted delivery is safe through its exit animation; the 2199 opener never holds back a warning. | `tests/flight-deep-lifecycle.test.ts` | `npm test` |
 | The build calls itself the old version | Title label and lockfile follow `package.json`. | `tests/shell-version.test.ts` | `npm test` |
 
 ## What is not automated

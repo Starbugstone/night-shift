@@ -114,6 +114,9 @@ export interface FlockHazard {
   phase: number;
 }
 
+/** A solid line hazard's segment in world px (`HazardField.solidLine`). */
+export interface SolidLine { ax: number; ay: number; bx: number; by: number; half: number }
+
 /** Power line or tram wire: a solid segment. */
 export interface WireHazard {
   type: 'wire';
@@ -829,6 +832,27 @@ export class HazardField {
       } else arm[s] = 0;
     }
     return clicked;
+  }
+
+  /**
+   * Hazard i's solid line now, in world px, when it is one: a power or tram wire, bunting or a survey
+   * cable, or a crane boom (tail to tip). `half` is half its solid width. The route pills keep off these
+   * (src/flight/views/clear-of.ts lineObstacles; v0.2 council round 2, Opus F2).
+   */
+  solidLine(i: number, out: SolidLine): boolean {
+    const d = this.defs[i]!;
+    if (d.type === 'wire') {
+      out.ax = d.ax; out.ay = d.ay; out.bx = d.bx; out.by = d.by; out.half = 0;
+      return true;
+    }
+    if (d.type === 'crane') {
+      const tail = d.len * CRANE_TAIL;
+      const a = this.a[i]!;
+      out.ax = d.x - Math.cos(a) * tail; out.ay = d.y - Math.sin(a) * tail;
+      out.bx = this.x2[i]!; out.by = this.y2[i]!; out.half = d.width / 2;
+      return true;
+    }
+    return false;
   }
 
   /**

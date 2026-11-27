@@ -1,4 +1,5 @@
 import type { HuntTarget } from '../flight/hunt';
+import { SLOWEST_HONEST_PACE } from '../abduct/autopilot';
 import { Container } from 'pixi.js';
 import type { AbductResult, AbductRules, FlightResult, PointerState, RoomId } from '../contracts';
 import { createAbductScene, emitterPoint } from '../abduct';
@@ -52,7 +53,10 @@ export type SceneName =
   | 'choice';
 
 export interface DebugHook {
-  readonly workOrders: readonly { id: string; kind: string; num: number }[];
+  /** Every order in play order, with its entry rings' rooms in ring order (scripts/e2e-playthrough.cjs checks its fixtures). */
+  readonly workOrders: readonly { id: string; kind: string; num: number; rings: readonly string[] }[];
+  /** The slowest drag pace a browser bot may play rooms at (SLOWEST_HONEST_PACE; scripts/e2e-playthrough.cjs reads it). */
+  readonly honestPace: number;
   readonly scene: string;
   /** A scene transition is running: taps are swallowed until it ends (bots must wait for false). */
   readonly transitioning: boolean;
@@ -575,7 +579,11 @@ export class Game implements Shell {
       aborted: false,
     });
     window.__nightShift = {
-      workOrders: LEVELS.map(({ id, kind }, i) => ({ id, kind, num: i + 1 })),
+      workOrders: LEVELS.map((level, i) => ({
+        id: level.id, kind: level.kind, num: i + 1,
+        rings: (level.kind === 'tutorial' ? level.map.entries : level.map.targets.flatMap(t => t.entries)).map(e => e.roomId),
+      })),
+      honestPace: SLOWEST_HONEST_PACE,
       get scene() {
         return game.scenes.name;
       },

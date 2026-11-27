@@ -40,6 +40,17 @@ export function endsAtSunrise(level: DeepLevelDef): boolean {
   return level.clockMode === undefined || level.clockMode === 'countdown';
 }
 
+/**
+ * Whether a deep room still charges the shift clock this frame, asked before the room steps: until
+ * the room accepts the specimen. The exit animation after a delivery is free; a failure is charged
+ * through its animation, until the room hands over. The game (src/ui/deep-abduct.ts) and the
+ * difficulty model (tests/difficulty/human.ts) both count room time with it, so the next flight
+ * starts at the same hazard phase in both (v0.2 council round 2, Sol P1).
+ */
+export function roomChargesShift(room: { readonly delivered?: boolean } | undefined): boolean {
+  return !room?.delivered;
+}
+
 export interface RunFail {
   target: number;
   entry: number;

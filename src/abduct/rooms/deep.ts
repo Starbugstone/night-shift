@@ -324,7 +324,7 @@ const mayorHome = building([
     [EXITS.mayorElevator, fit('ladder', 1674, -453, 46, 1139)]),
 ], [hatch(-1070, 1200, 'ladder', 292), door(760, 174), hatch(0, 1190, 'ladder'), opening('vertical', 1640, 300, 686, 'shaft')], [
   fragile('Vase', art('vase', 1404, 616)),
-  camera('City hall camera', 1021, 14, 1.63, 0.67, 2.36, 322),
+  camera('City hall camera', 1021, 14, 1.63, 0.67, 2.2, 322), // v0.2 council round 2: sweep 2.36 → 2.2 rad/s (L4 casual Ghost)
   camera('Elevator lobby camera', 1568, 14, 1.3, 0.65, 1.47, 335),
   { kind: 'gear', name: 'Drive gear', sprite: art('gear_big', 1379, -435), speed: 1.8 },
   { kind: 'gear', name: 'Idle gear', sprite: art('gear_small', 1138, -472), speed: -3.6 },

@@ -27,6 +27,8 @@ import { EntryLabels, EntryRingView, RING_CLEAR, SaucerView } from './craft';
 import { DeepFlightHud } from './deep-hud';
 import { DriveInScenery } from './invasion1953';
 import { HazardViews } from './hazards';
+import { lineObstacles, linePieces } from './clear-of';
+import { CRANE_TAIL, type SolidLine } from '../hazards';
 import { FLIGHT_BUBBLES, FlightTintView, abovePlayer, tick } from './overlays';
 import { ProgressArc, RED, dashedArc } from './tells';
 import { RoamView } from '../roam-view';
@@ -339,6 +341,8 @@ export class DeepFlightView implements SceneView {
   private readonly lights: Glow[];
   private readonly rings: (EntryRingView | RoamView)[];
   private readonly labels: EntryLabels;
+  /** Scratch for `HazardField.solidLine` (no per-frame allocation). */
+  private readonly line: SolidLine = { ax: 0, ay: 0, bx: 0, by: 0, half: 0 };
   private readonly saucer: SaucerView;
   private readonly fx: ParticleView;
   private readonly fuse = new WorldFuse();
@@ -443,7 +447,9 @@ export class DeepFlightView implements SceneView {
     if (this.driveIn) bubbles.addChild(this.driveIn.bubbles);
     if (this.collectible) bubbles.addChild(this.collectible.bubbles);
     this.upperWorld.addChild(bubbles);
-    this.labels = new EntryLabels(this.rings.length, 8 + m.hazards.length);
+    // v0.2 council round 2: room for the boxes that keep pills off solid lines (wires, bunting, crane booms)
+    this.labels = new EntryLabels(this.rings.length, 8 + m.hazards.length + m.hazards.reduce((sum, d) =>
+      sum + (d.type === 'wire' ? linePieces(Math.hypot(d.bx - d.ax, d.by - d.ay)) : d.type === 'crane' ? linePieces(d.len * (1 + CRANE_TAIL)) : 0), 0));
     this.upperWorld.addChild(abovePlayer(this.checkpoint.arrival), abovePlayer(this.saucer.root), abovePlayer(this.fuse.root), abovePlayer(this.fx));
     world.addChild(this.tints.worldWash, this.upperWorld);
     this.tints.dawnDecor.addChild(this.dawn.root);
@@ -518,7 +524,11 @@ export class DeepFlightView implements SceneView {
     if (this.recitals?.avoid(clear[n]!, cam)) n++;
     for (let i = 0; i < sim.field.defs.length; i++) {
       const d = sim.field.defs[i]!;
-      if (d.type === 'cow' && (sim.field.tell[i] || sim.field.on[i])) {
+      // v0.2 council round 2 (Opus F2): a pill never hides a solid line the saucer can bump into
+      if (sim.field.solidLine(i, this.line)) {
+        const l = this.line;
+        n = lineObstacles(clear, n, l.ax, l.ay, l.bx, l.by, l.half, cam.x, cam.y);
+      } else if (d.type === 'cow' && (sim.field.tell[i] || sim.field.on[i])) {
         const rise = sim.field.tell[i] && !rm ? 150 * (1 - sim.field.b[i]! / COW.warning) : 0;
         const b = clear[n++]!;
         b.x = d.x - cam.x - 57;

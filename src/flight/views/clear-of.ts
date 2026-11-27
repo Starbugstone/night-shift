@@ -1,4 +1,5 @@
 import { VIEW_H, VIEW_W } from '../../contracts';
+import { maxWireOffset } from '../sim';
 
 /** A screen-space rectangle. */
 export interface Box { x: number; y: number; w: number; h: number }
@@ -23,6 +24,70 @@ export interface PillAsk {
 }
 
 const MARGIN = 8;
+
+/** Longest piece of a solid line one pill obstacle covers (px), so a slanted cable doesn't block its whole bounding box. */
+export const LINE_PIECE = 60;
+/**
+ * How far a solid line's drawing reaches past its segment beside its own half width (px): the drawn wires sit up to
+ * `maxWireOffset()` off it and bunting flags hang 13 px below them, plus their ink.
+ */
+export const LINE_DRAWN = maxWireOffset() + 14;
+/** Air kept round a solid line beside its own half width (px): its drawing and 4 px more. */
+export const LINE_AIR = LINE_DRAWN + 4;
+
+/** Obstacle boxes a solid line of this length needs, at most (size the obstacle list with it). */
+export function linePieces(length: number): number {
+  return Math.max(1, Math.ceil(length / LINE_PIECE));
+}
+
+/**
+ * A route pill must not hide a solid line, a wire, bunting or a survey cable a player can bump into (v0.2 council
+ * round 2, Opus F2: L12's survey cable sat under the "Bathroom hatch" pill at the launch). Writes boxes covering the
+ * on-screen part of the world segment (ax, ay)–(bx, by) into `obs` from `n`, the camera at (camX, camY), and returns
+ * the new count. No allocation: `obs` is the view's preallocated list.
+ */
+export function lineObstacles(obs: Box[], n: number, ax: number, ay: number, bx: number, by: number, half: number, camX: number, camY: number): number {
+  const pieces = linePieces(Math.hypot(bx - ax, by - ay));
+  const air = half + LINE_AIR;
+  for (let k = 0; k < pieces && n < obs.length; k++) {
+    const x0 = ax + (bx - ax) * k / pieces - camX;
+    const y0 = ay + (by - ay) * k / pieces - camY;
+    const x1 = ax + (bx - ax) * (k + 1) / pieces - camX;
+    const y1 = ay + (by - ay) * (k + 1) / pieces - camY;
+    const left = Math.min(x0, x1) - air;
+    const top = Math.min(y0, y1) - air;
+    const right = Math.max(x0, x1) + air;
+    const bottom = Math.max(y0, y1) + air;
+    if (right < 0 || left > VIEW_W || bottom < 0 || top > VIEW_H) continue;
+    const b = obs[n++]!;
+    b.x = left;
+    b.y = top;
+    b.w = right - left;
+    b.h = bottom - top;
+  }
+  return n;
+}
+
+/** Whether the segment (ax, ay)–(bx, by) passes through the box (screen px). */
+export function segmentHitsBox(ax: number, ay: number, bx: number, by: number, b: Box): boolean {
+  // Liang–Barsky clip of the segment against the box
+  let t0 = 0;
+  let t1 = 1;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const edges: [number, number][] = [[-dx, ax - b.x], [dx, b.x + b.w - ax], [-dy, ay - b.y], [dy, b.y + b.h - ay]];
+  for (const [p, q] of edges) {
+    if (p === 0) {
+      if (q < 0) return false;
+      continue;
+    }
+    const r = q / p;
+    if (p < 0) t0 = Math.max(t0, r);
+    else t1 = Math.min(t1, r);
+    if (t0 > t1) return false;
+  }
+  return true;
+}
 
 /** Whether a w × h box at (x, y) misses every one of `obs[0..n)`. */
 export function fits(obs: readonly Box[], n: number, x: number, y: number, w: number, h: number): boolean {

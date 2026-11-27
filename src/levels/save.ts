@@ -248,15 +248,45 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
 /** Fields any build has ever written to a save. */
 const SAVE_FIELDS = ['version', 'glorbs', 'levels', 'upgrades', 'muted', 'allUnlocked', 'reports', 'lang'] as const;
 
+const isFiniteNumber = (v: unknown): boolean => typeof v === 'number' && Number.isFinite(v);
+const isBool = (v: unknown): boolean => typeof v === 'boolean';
+
 /**
- * A stored value worth loading: an object carrying at least one save field. Unreadable JSON, `null`, arrays and an
- * empty `{}` are not saves, so the loader passes over them to an older key instead of importing nothing.
+ * The type every recognised top-level save field has in a save some build wrote (v0.2 council round 2, Sol P2).
+ * A record with one of them mistyped (`"glorbs": null`, `"levels": []`, `"muted": "broken"`) is not a save.
+ */
+export const SAVE_FIELD_TYPES: Readonly<Record<string, (value: unknown) => boolean>> = {
+  version: v => typeof v === 'number' && Number.isInteger(v),
+  glorbs: isFiniteNumber,
+  levels: isObj,
+  upgrades: Array.isArray,
+  muted: isBool,
+  allUnlocked: isBool,
+  reports: isFiniteNumber,
+  lang: v => typeof v === 'string',
+  legacyDispatch: isBool,
+  bridgeAccess: isBool,
+  fieldCheckSeen: isBool,
+  dispatch2199Finale: isBool,
+  trophies: isObj,
+  specimens: isObj,
+};
+
+/**
+ * A stored value worth loading: an object carrying at least one save field, with every recognised field of the
+ * type a build writes. Unreadable JSON, `null`, arrays, an empty `{}` and a record with a mistyped field are not
+ * saves, so the loader passes over them to an older key instead of importing nothing. A sparse record with valid
+ * fields (`{"glorbs": 5}`) and the default record a reset stores still load.
  */
 function readSaveShape(stored: string | null): Record<string, unknown> | null {
   if (!stored) return null;
   let raw: unknown;
   try { raw = JSON.parse(stored); } catch { return null; }
-  return isObj(raw) && SAVE_FIELDS.some(field => Object.hasOwn(raw, field)) ? raw : null;
+  if (!isObj(raw) || !SAVE_FIELDS.some(field => Object.hasOwn(raw, field))) return null;
+  for (const [field, valid] of Object.entries(SAVE_FIELD_TYPES)) {
+    if (Object.hasOwn(raw, field) && !valid(raw[field])) return null;
+  }
+  return raw;
 }
 
 /** True when a stored string holds a loadable save (see readSaveShape). */

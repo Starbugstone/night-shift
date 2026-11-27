@@ -1,3 +1,4 @@
+import { DISPATCH_CROSSING_ART } from '../dispatch-crossing';
 import { GATE_TRAVEL } from '../interior';
 import { en } from '../../i18n/en';
 import { building, type Checkpoint, type Hazard, type InteriorRoom, type Opening } from './interior';
@@ -70,18 +71,18 @@ export const ROOMS_2199 = {
     [...sideApproach(370, 300, 260, 1340), step(2380, 250, 60), step(2385, 242),
       step(2604, 254, 115), step(2650, 250), step(2851, 278, 110), ...outerDoor], 'petunias2199', 'bowl of petunias', 2955, 419),
   artie_bath: room('artie_bath', 'artie', true, cabinet('robe_wardrobe2199'), [
-    { kind: 'swing', name: 'Shower rail', sprite: fit('shower_rail2199', 480, -2405, 56, 115), mountY: -2458, amplitude: 0.7, speed: 0.24, phase: 3.7 },
+    { kind: 'swing', name: 'Shower rail', sprite: fit(DISPATCH_CROSSING_ART.rail, 480, -2405, 56, 115), mountY: -2458, amplitude: 0.7, speed: 0.24, phase: 3.7 },
   ], [...upperSteps(490, shaftRise.artie), step(594, -2272), step(594, -2465, 134, 'Shower rail'), step(590, -2675)], 'spare_robe2199', 'spare dressing gown', 413, 395),
   penny_service: room('penny_service', 'penny', false, fit('counter_kiosk2199', 382, 418, 195, 240), [
-    { kind: 'patrol', name: 'Baggage cart', sprite: fit('baggage_cart2199', 2510, 394, 110, 195), dx: 120, dy: 0, speed: 0.23, phase: 0.4 },
+    { kind: 'patrol', name: 'Baggage cart', sprite: fit(DISPATCH_CROSSING_ART.cart, 2510, 394, 110, 195), dx: 120, dy: 0, speed: 0.23, phase: 0.4 },
   ], [...sideApproach(365, 275, 260), step(2200, 250, 60), step(2315, 215),
     step(2710, 220, 115, 'Baggage cart'), step(2760, 250), step(2851, 278, 110), ...outerDoor], 'ear_fish2199', 'ear fish', 462, 386),
   penny_loft: room('penny_loft', 'penny', true, cabinet('voice_cabinet_tall2199'), [
-    { kind: 'gate', name: 'Luggage shutter', artKey: 'room/luggage_shutter_short2199', area: box(465, -1588, 136, 30), cycle: { period: 23, open: 2.81 + 2 * GATE_TRAVEL, phase: 7.25 }, axis: 'x' },
+    { kind: 'gate', name: 'Luggage shutter', artKey: 'room/luggage_shutter_short2199', area: box(465, -1588, 136, 30), cycle: { period: 23, open: 2.81 + 2 * GATE_TRAVEL, phase: 4 }, axis: 'x' }, // v0.2 council round 2: phase 7.25 → 4, a slow hand meets the first opening
   ], [...upperSteps(525, shaftRise.penny), step(588, -1495), step(588, -1740, 195, 'Luggage shutter'), step(588, -1895)],
   'electronic_guide2199', 'electronic travel guide', 413, 395),
   moe_returns: room('moe_returns', 'moe', false, fit('counter_tall55', 349, 390, 236, 230), [
-    { kind: 'patrol', name: 'Stamp counterweight', sprite: fit('stamp_weight2199', 2730, 290, 83, 99), dx: 0, dy: 95, speed: 0.31, phase: 0.8 },
+    { kind: 'patrol', name: 'Stamp counterweight', sprite: fit(DISPATCH_CROSSING_ART.stamp, 2730, 290, 83, 99), dx: 0, dy: 95, speed: 0.31, phase: 0.8 },
   ], [...sideApproach(455, 277, 232), step(2380, 250, 60), step(2385, 242), step(2604, 254, 115),
     step(2650, 250), step(2851, 278, 110, 'Stamp counterweight'), ...outerDoor], 'complaint_stamp2199', 'complaint stamp', 455, 394),
   moe_vent: room('moe_vent', 'moe', true, cabinet('voice_cabinet_tall2199'), [

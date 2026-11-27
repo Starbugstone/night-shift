@@ -8,7 +8,6 @@ import { ROOMS } from './rooms';
 import { FOLLOW } from './ragdoll';
 import { CEILING } from './rooms/layout';
 import { AbductSimulation } from './simulation';
-import { pointStep } from './point';
 import { SOUVENIR_HINT } from './souvenir';
 import type { AbductViewInput } from './views/effects';
 
@@ -20,8 +19,6 @@ const DOUBLE_TAP = 0.32;
 const TAP_TRAVEL = 22;
 /** The turn hint stays up this long after the first drag, until the player turns once. */
 const TURN_HINT_SECONDS = 7;
-
-const ORIGIN = { x: 0, y: 0 } as const;
 
 interface AbductScene extends Scene {
   debug: AbductSimulation;
@@ -124,18 +121,9 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
           lastY = refY;
         }
         // Pointing: head for the world point under the finger. A twist turns in place.
-        if (pointing && !twist && pointer.down) {
-          const camera = simulation.interior ? simulation.camera : ORIGIN;
-          const { body } = simulation;
-          const toX = pointer.x + camera.x - body.beamX;
-          const toY = pointer.y + camera.y - body.beamY;
-          const distance = Math.hypot(toX, toY);
-          const step = pointStep(distance, dt);
-          if (step > 0) {
-            tutorial = false;
-            if (turnHintUntil < 0) turnHintUntil = clock + TURN_HINT_SECONDS + turnHintWait;
-            simulation.moveBeam(body.beamX + (toX / distance) * step, body.beamY + (toY / distance) * step);
-          }
+        if (pointing && !twist && pointer.down && simulation.pointAt(pointer.x, pointer.y, dt)) {
+          tutorial = false;
+          if (turnHintUntil < 0) turnHintUntil = clock + TURN_HINT_SECONDS + turnHintWait;
         }
         if (pointer.released && simulation.snoozeOwned && travel <= TAP_TRAVEL && clock - pressAt <= TAP_LENGTH) {
           if (clock - firstTapAt <= DOUBLE_TAP && Math.hypot(pointer.x - firstTapX, pointer.y - firstTapY) <= 80) {

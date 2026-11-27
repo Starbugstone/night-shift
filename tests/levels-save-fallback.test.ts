@@ -1,9 +1,11 @@
 // v0.2 save migration (council item 7, 2026-11-27): the loader recognises a real save before it imports or stores
 // anything, passes over unreadable or empty values to the next older key, and still honours the default record a
 // reset stores under the current key. Older keys are never rewritten; preprod keeps its own key.
+// Round 2 (Sol P2): a parseable record with a mistyped save field ({"version":2,"glorbs":null,"levels":[]},
+// {"muted":"broken"}) used to mask an intact v1 save and import 0 Glorbs; every recognised field is now type-checked.
 import { describe, expect, it } from 'vitest';
 import { PREPROD_SAVE_KEY, preprodStorage } from '../src/core/storage';
-import { LEGACY_SAVE_KEY, SAVE_KEY, V2_SAVE_KEY, clearSave, defaultSave, loadSave, type KeyValueStore } from '../src/levels/save';
+import { LEGACY_SAVE_KEY, SAVE_FIELD_TYPES, SAVE_KEY, V2_SAVE_KEY, clearSave, defaultSave, loadSave, type KeyValueStore } from '../src/levels/save';
 
 function memStore(init: Record<string, string> = {}): KeyValueStore & { data: Record<string, string> } {
   const data = { ...init };
@@ -80,5 +82,47 @@ describe('save fallback across older keys', () => {
       expect(disk.data[SAVE_KEY]).toBe(bad);
       expect(disk.data[V2_SAVE_KEY]).toBe(V2);
     }
+  });
+});
+
+describe('a parseable record with a mistyped save field is not a save (round 2, Sol P2)', () => {
+  it.each(['{"version":2,"glorbs":null,"levels":[]}', '{"muted":"broken"}'])('%s under v2 falls through to the intact v1', (bad) => {
+    const store = memStore({ [V2_SAVE_KEY]: bad, [LEGACY_SAVE_KEY]: V1 });
+    const save = loadSave(store);
+    expect(save.glorbs).toBe(321);
+    expect(save.levels.level2.delivered).toBe(true);
+    expect(store.data[V2_SAVE_KEY]).toBe(bad);
+  });
+
+  // every recognised field, with every JSON value of the wrong type, alone and beside valid fields
+  const wrong: Record<string, unknown[]> = {};
+  const samples: unknown[] = [null, 'x', '', 0, 1.5, -1, true, false, [], [1], {}, { a: 1 }];
+  for (const [field, valid] of Object.entries(SAVE_FIELD_TYPES)) wrong[field] = samples.filter(v => !valid(v));
+  const cases = Object.entries(wrong).flatMap(([field, values]) => values.flatMap(value => [
+    { field, record: { version: 2, [field]: value } },
+    { field, record: { version: 2, glorbs: 9, reports: 1, [field]: value } },
+  ]));
+
+  it('generates a wrong value for every recognised field', () => {
+    for (const field of Object.keys(SAVE_FIELD_TYPES)) expect(wrong[field]!.length, field).toBeGreaterThan(0);
+    expect(cases.length).toBeGreaterThan(60);
+  });
+
+  it.each(cases.map(c => [c.field, JSON.stringify(c.record)] as const))('%s mistyped: %s under v2 falls through to v1', (_field, bad) => {
+    expect(loadSave(memStore({ [V2_SAVE_KEY]: bad, [LEGACY_SAVE_KEY]: V1 })).glorbs).toBe(321);
+  });
+
+  it.each(cases.map(c => [c.field, JSON.stringify(c.field === 'version' ? c.record : { ...c.record, version: 3 })] as const))('%s mistyped: %s under the current key falls through to v2', (_field, bad) => {
+    const store = memStore({ [SAVE_KEY]: bad, [V2_SAVE_KEY]: V2 });
+    expect(loadSave(store).glorbs).toBe(140);
+  });
+
+  it('keeps valid sparse saves and the reset record', () => {
+    expect(loadSave(memStore({ [SAVE_KEY]: '{"glorbs":5}', [V2_SAVE_KEY]: V2 })).glorbs).toBe(5);
+    expect(loadSave(memStore({ [V2_SAVE_KEY]: '{"muted":true}', [LEGACY_SAVE_KEY]: V1 })).muted).toBe(true);
+    expect(loadSave(memStore({ [SAVE_KEY]: JSON.stringify(defaultSave()), [V2_SAVE_KEY]: V2 }))).toEqual(defaultSave());
+    // a full save as the game writes it passes every type check
+    const full = { ...defaultSave(), glorbs: 12, dispatch2199Finale: true as const, legacyDispatch: true, lang: 'fr' as const };
+    expect(loadSave(memStore({ [SAVE_KEY]: JSON.stringify(full) }))).toEqual(full);
   });
 });

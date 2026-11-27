@@ -4,7 +4,10 @@
 // seed luck. The counts below are the 2026-11-27 six-seed misses after the touch-path model change and
 // their 20-seed counterparts from the release sweep.
 import { describe, expect, it } from 'vitest';
-import { ALPHA, EXACT_FROM, binomCdf, binomSf, fisherGreater, judgeOrder, judgeRate } from './difficulty/rates';
+import { ALPHA, EXACT_FROM, MIN_BAND_COUNTS, admittedCounts, binomCdf, binomSf, fisherGreater, judgeOrder, judgeRate, narrowBands, widenBand } from './difficulty/rates';
+import { BANDS, CASUAL_GHOST_CAP, STAR_FLOORS } from './difficulty/evaluate';
+import { FINALE_BANDS } from './difficulty/dispatch2199';
+import { GRAIL_TARGETS } from './difficulty/grail';
 
 describe('binomial and Fisher tails', () => {
   it('match hand-computed values', () => {
@@ -69,5 +72,59 @@ describe(`from ${EXACT_FROM} attempts the band is exact`, () => {
   it('a band the old code compared as a share keeps its boundary (5/6 of 24 is 20)', () => {
     expect(judgeRate('x', 20, 24, { min: 5 / 6 }).pass).toBe(true);
     expect(judgeRate('x', 19, 24, { min: 5 / 6 }).pass).toBe(false);
+  });
+});
+
+// Round 2 (user decision 2026-11-27): once Pages gated on the sweep, a band that admits one or two counts out of 20
+// (the 2199 casual Ghost 33–38% admitted only 7/20) turns seed luck into a red build. Every band admits three.
+describe(`every rate band admits at least ${MIN_BAND_COUNTS} counts out of ${EXACT_FROM}`, () => {
+  it('widens a narrow band about its centre in whole counts', () => {
+    expect(widenBand({ min: 0.33, max: 0.38 })).toEqual({ min: 0.30, max: 0.40 });
+    expect(widenBand({ min: 0.50, max: 0.55 })).toEqual({ min: 0.45, max: 0.60 });
+    expect(widenBand({ min: 0.85, max: 0.92 })).toEqual({ min: 0.85, max: 0.95 });
+    expect(widenBand({ min: 0.67, max: 0.75 })).toEqual({ min: 0.65, max: 0.75 });
+    expect(widenBand({ min: 0.40, max: 0.45 })).toEqual({ min: 0.35, max: 0.50 });
+    expect(widenBand({ min: 1, max: 1 })).toEqual({ min: 0.9, max: 1 });
+    // a wide band stays as it is
+    expect(widenBand({ min: 0.55, max: 0.75 })).toEqual({ min: 0.55, max: 0.75 });
+  });
+
+  it('the Grail targets and the 2199 finale bands', () => {
+    for (const table of [FINALE_BANDS, GRAIL_TARGETS]) {
+      for (const [profile, bands] of Object.entries(table)) {
+        for (const [i, [lo, hi]] of bands.entries()) {
+          const scale = hi > 1 ? 100 : 1;
+          const band = { min: lo / scale, max: hi / scale };
+          expect(admittedCounts([band]).length, `${profile} star ${i}: ${lo}–${hi}`).toBeGreaterThanOrEqual(MIN_BAND_COUNTS);
+          expect(widenBand(band), `${profile} star ${i} is already wide`).toEqual(band);
+        }
+      }
+    }
+  });
+
+  it('the tier star floors (with the casual Ghost cap on deep levels) and the deep route, building and flight floors', () => {
+    for (const [tier, profiles] of Object.entries(STAR_FLOORS)) {
+      for (const [profile, floors] of Object.entries(profiles)) {
+        floors.forEach((min, i) => {
+          const band = { min, ...(tier !== 'tutorial' && profile === 'casual' && i === 1 ? { max: CASUAL_GHOST_CAP } : {}) };
+          expect(admittedCounts([band]).length, `${tier} ${profile} star ${i}`).toBeGreaterThanOrEqual(MIN_BAND_COUNTS);
+        });
+      }
+    }
+    for (const [id, band] of Object.entries(BANDS)) {
+      for (const key of ['skilledRoute', 'casualRoute', 'casualBuilding', 'flightDone'] as const) {
+        expect(admittedCounts([{ min: band![key] }]).length, `${id} ${key}`).toBeGreaterThanOrEqual(MIN_BAND_COUNTS);
+      }
+    }
+  });
+
+  it('the guard counts every band on one count together, and lets a single proof run through (mutation check)', () => {
+    const narrow = judgeRate('Finale band: Ghost (casual)', 7, 20, { min: 0.33, max: 0.38 });
+    expect(narrowBands([narrow])).toHaveLength(1);
+    const floor = { ...judgeRate('Ghost (casual)', 7, 20, { min: 0.33, max: 0.9 }), key: 'star 1 (casual)' };
+    const design = { ...judgeRate('Finale band: Ghost (casual)', 7, 20, { min: 0.30, max: 0.40 }), key: 'star 1 (casual)' };
+    expect(narrowBands([design])).toEqual([]);
+    expect(narrowBands([floor, design])[0]).toMatch(/admit 7, 8 out of 20/);
+    expect(narrowBands([judgeRate('Pickup detour (bot)', 1, 1, { min: 1 })])).toEqual([]);
   });
 });

@@ -5,6 +5,15 @@ import { clamp, type Ragdoll } from './ragdoll';
 import type { Room } from './rooms/layout';
 
 export const PILOT_CRUISE = 41;
+/**
+ * The slowest drag pace, as a multiple of PILOT_CRUISE (1.5 × 41 ≈ 62 px/s), that a real player keeps
+ * up through a whole shift: slower than every human-model profile, faster than the solvability bot's
+ * glacial 1×. Every deep shift played at this pace by the perfect-hand autopilot must end inside its
+ * clock with a 5% margin on every tested seed (tests/difficulty/honest-pace.ts, in `npm run difficulty`),
+ * and the browser playthrough (scripts/e2e-playthrough.cjs) never drags slower. v0.2 council round 2,
+ * Opus F1: at 1× the L10 and L12 clocks ran out on the autopilot.
+ */
+export const SLOWEST_HONEST_PACE = 1.5;
 // v0.2 difficulty: the live touch path caps the beam at POINT.max, so the pilot never plans a faster dart.
 const PILOT_DART = POINT.max;
 

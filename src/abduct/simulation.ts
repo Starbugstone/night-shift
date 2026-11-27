@@ -5,7 +5,7 @@ import { bodyPlanFor } from './body-plan';
 import { WitnessReactions } from './invasion1953';
 import { MoistureSim } from './moisture';
 import { PhotoCapture } from './photo';
-import { POINT, pointReach } from './point';
+import { POINT, clampToScreen, pointReach, pointStep } from './point';
 import { InteriorSimulation, type InteriorFailure } from './interior';
 import { clamp, Contact, Ragdoll, STEP, type Blade, type Circle, type Rect, type Solid, type SwingingRect } from './ragdoll';
 import { CEILING, FLOOR, LEFT_WALL, RIGHT_WALL, type Area, type Room } from './rooms/layout';
@@ -14,6 +14,8 @@ import { AWAKE_SECONDS, WakeMeter } from './wake';
 import { SNORE_VOLUME, snoreHeard } from './snore-cue';
 import { tr } from '../i18n';
 import { readSeconds } from '../core/read-time';
+
+const SCREEN_ORIGIN = { x: 0, y: 0 } as const;
 
 export const BEAM_BOUNDS = { left: 47, top: 146, right: 491, bottom: 800 };
 const FAN_BLADE_RADIUS = 14;
@@ -292,8 +294,7 @@ export class AbductSimulation {
   autopilotFinger(dt = 1 / 60): { x: number; y: number } {
     this.autopilot();
     const { body } = this;
-    const cx = this.interior ? this.camera.x : 0;
-    const cy = this.interior ? this.camera.y : 0;
+    const { x: cx, y: cy } = this.screenOrigin;
     let x = body.beamX;
     let y = body.beamY;
     const pilot = this.pilot;
@@ -310,7 +311,31 @@ export class AbductSimulation {
         y += (dy / d) * reach;
       }
     }
-    return { x: x - cx, y: y - cy };
+    // a finger can only press on the screen (./point.ts onScreen)
+    return clampToScreen(x - cx, y - cy);
+  }
+
+  /** World position of the screen's top-left corner: the room camera in a house, the origin in a tutorial room. */
+  get screenOrigin(): { readonly x: number; readonly y: number } {
+    return this.interior ? this.camera : SCREEN_ORIGIN;
+  }
+
+  /**
+   * Pointing (./point.ts): head the beam for the screen point (logical px) under a held finger or
+   * cursor, at the touch speed for its distance. The live touch path (./index.ts) and the
+   * difficulty model's hand (tests/difficulty/human.ts) both steer through here. Returns whether
+   * the beam was asked to move.
+   */
+  pointAt(screenX: number, screenY: number, dt: number): boolean {
+    const origin = this.screenOrigin;
+    const { body } = this;
+    const toX = screenX + origin.x - body.beamX;
+    const toY = screenY + origin.y - body.beamY;
+    const distance = Math.hypot(toX, toY);
+    const step = pointStep(distance, dt);
+    if (step <= 0) return false;
+    this.moveBeam(body.beamX + (toX / distance) * step, body.beamY + (toY / distance) * step);
+    return true;
   }
 
   snooze(): void {

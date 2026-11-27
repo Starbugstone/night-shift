@@ -108,6 +108,17 @@ for (const id of levels) {
   else if (r.code !== 0) broken.push(`${id}: in band but vitest exited ${r.code}; see ${join(out, `${id}.log`)}`);
 }
 lines.push('');
+// v0.2 council round 2 (Opus F1): the perfect-hand autopilot at SLOWEST_HONEST_PACE against each clock
+const honest = levels.map(id => [id, results.get(id)?.report?.honestPace]).filter(([, h]) => h);
+if (honest.length) {
+  lines.push('| Level | Slowest honest hand: delivered | slowest s | must finish by | budget |', '| --- | ---: | ---: | ---: | ---: |');
+  for (const [id, h] of honest) {
+    const done = h.runs.filter(run => run.delivered).length;
+    const worst = Math.max(...h.runs.map(run => run.delivered ? run.seconds : Infinity));
+    lines.push(`| ${id} | ${done}/${h.runs.length} | ${Number.isFinite(worst) ? worst : '–'} | ${h.limitSec === null || !Number.isFinite(h.limitSec) ? '–' : Math.round(h.limitSec * 10) / 10} | ${h.budgetSec === null || !Number.isFinite(h.budgetSec) ? '–' : h.budgetSec} |`);
+  }
+  lines.push('');
+}
 if (other.length) lines.push('## Other violations (not rate bands: exact at every seed count)', '', ...other.map(v => `- ${v}`), '');
 if (broken.length) lines.push('## Runs that did not report', '', ...broken.map(v => `- ${v}`), '');
 const verdict = outOfBand || broken.length

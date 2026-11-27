@@ -6,7 +6,7 @@ import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT, deepShift } from '../abdu
 import { GLOW, ScreenTint } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
 import { Label } from '../core/gfx/text';
-import type { DeepRun } from '../levels/run';
+import { roomChargesShift, type DeepRun } from '../levels/run';
 import { artTex } from './views/art';
 import { HudPanel, HudSunClock, HudTimer } from './views/hud';
 import { C } from './theme';
@@ -46,7 +46,7 @@ export class DeepAbductScene implements Scene {
     this.t += dt;
     if (this.done) return;
     // v0.2 presentation: a delivery the room accepted is safe; its exit animation costs no shift time
-    if (!this.inner.debug?.delivered && this.run.tick(dt)) {
+    if (roomChargesShift(this.inner.debug) && this.run.tick(dt)) {
       this.done = true;
       this.onSunrise();
       return;

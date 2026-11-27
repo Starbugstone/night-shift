@@ -122,7 +122,8 @@ const L7_HAZARDS: HazardDef[] = [
   { type: 'camera', x: 1080, y: 2190, range: 300, half: 0.3, base: -PI / 2, amp: 1.15, rate: 1.05, phase: 1.7 },
   // the galley's own CCTV on its roof corner, sweeping the promenade door (the skylight is the photographer's)
   // v4 difficulty curve (Neon P7): 245 px so it no longer stacks onto the aft funnel camera's sweep
-  { type: 'camera', x: 1410, y: 1762, range: 265, half: 0.28, base: 1.65, amp: 0.7, rate: 0.9, phase: 0.6 },
+  // v0.2 council round 2: half-angle 0.28 → 0.25 (skilled Ghost above casual again)
+  { type: 'camera', x: 1410, y: 1762, range: 265, half: 0.25, base: 1.65, amp: 0.7, rate: 0.9, phase: 0.6 },
   // Greg's neighbour in the next cabin keeps switching the light on: it lights the porthole ring
   { type: 'window', wx: 1412, wy: 2932, x: 1400, y: 2920, r: 95, period: 5.0, on: 4.15, phase: 1.1 },
   // v4 openings (2026-11-26): the officers of the watch on the port bridge wing and the deck below it look

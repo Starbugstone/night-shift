@@ -16,12 +16,26 @@ and hand wobble to measure route difficulty and full-shift star rates.
 | `bot` | 1× | 0 s | 0 px | 0 px | the solvability proof |
 | `skilled` | 2.2× | 0.18 s | 4 px | 10 px | a practised player |
 | `casual` | 3× | 0.28 s | 7 px | 20 px | a first evening |
+| `honest` | 1.5× (`SLOWEST_HONEST_PACE`) | 0 s | 0 px | 0 px | the slowest hand a clock must allow |
+
+**The slowest honest hand** (`tests/difficulty/honest-pace.ts`, v0.2 council round 2): the perfect-hand
+autopilot dragging at `SLOWEST_HONEST_PACE` = 1.5 × the 41 px/s cruise (about 62 px/s, defined once in
+`src/abduct/autopilot.ts`) plays every deep shift, flight and rooms, on every seed the evaluator tests. It
+must deliver all three with at least 5% of `budgetSec` left. The release table lists each level's slowest
+run against that limit. When a clock fails it, give time back and keep the Night owl par where it was in
+elapsed seconds (raise `parMarginSec` by the same amount), or move a timed crossing's phase so a slow
+hand meets its first opening (L12's luggage shutter, phase 7.25 → 4 s). The browser playthrough reads the
+same constant from the build (`__nightShift.honestPace`) and never drags slower.
 
 - **Abduction**: `AbductPilot` with a pace multiplier (darts capped at the touch speed cap,
   `POINT.max` = 260 px/s). The hand plays the plan `reaction` s late, with a few-Hz tremor and a slow
   drift off the ideal line. The beam follows the hand through the live touch path: the finger sits
-  ahead of the beam and `pointStep` moves it, so no frame beats `POINT.max`, the same limit a phone
-  enforces (`tests/levels-difficulty-touch.test.ts` checks every room). It eases off for
+  ahead of the beam, on the 540×960 screen (`clampToScreen`), and `AbductSimulation.pointAt`, the call
+  the game makes for a held finger, moves it, so no frame beats `POINT.max`, the same limit a phone
+  enforces (`tests/levels-difficulty-touch.test.ts` checks every room: speed cap, finger on screen, no
+  beam move around `pointAt`). A room charges the shift clock exactly as the game does, until it accepts
+  the specimen (`roomChargesShift`, `AbductRun.shiftSec`; `tests/levels-difficulty-clock.test.ts` plays the
+  model's hands through the game's own `DeepAbductScene` for every room of every deep level). It eases off for
   2.5 s after hearing a creak or a crash. When the body snags and the beam runs on (lead > 150 px and
   the chest still for 0.5 s), it drags back to the body and rewinds to the last checkpoint reached.
   At a settle exit (the Grail's time window, `exitSettleSec`) the hand lets go one reaction after the
@@ -70,6 +84,17 @@ Keep the default sweep at six seeds; never shrink it.
 
 ## Rate bands and sample size (`tests/difficulty/rates.ts`)
 
+**Three counts at least (user decision 2026-11-27).** Once Pages gated on the sweep, a band that admits
+one or two counts out of 20 turned seed luck into a red build (the 2199 casual Ghost 33–38% admitted only
+7/20). Every rate band, together with every other band on the same count (a tier star floor and a design
+band on that star), must admit at least `MIN_BAND_COUNTS` = 3 counts out of 20. Widen a narrower band
+about its centre in whole counts (`widenBand`: the counts nearest the centre, ties both in): 33–38% →
+30–40%, 50–55% → 45–60%, 85–92% → 85–95%, a 100% floor → 90%. Never shift a band to fit a result. At 20
+seeds a level's design bands (the Grail targets, the 2199 finale bands) replace its tier star floors, so
+a widened design band isn't narrowed again by a floor (`DESIGN_BANDS` in `evaluate.ts`). `narrowBands`
+reports a violation for any count whose bands admit fewer than three, at every seed count, and
+`tests/levels-difficulty-rates.test.ts` checks the band tables themselves.
+
 Every band on a rate (a star share, a route's delivery share, a flight's finish share, a souvenir,
 pickup, detour or time-car share, the casual Ghost and L9 Night owl ceilings, the finale and Grail
 targets) goes through one rule, applied to the observed count *k* out of *n* attempts:
@@ -94,7 +119,7 @@ What six seeds can and cannot see (n = 6):
 
 | Band | Fails at |
 | --- | --- |
-| floor 100% (Bakery skilled stars) | any miss: 5/6 |
+| floor 90% (Bakery skilled stars; 100% until round 2) | 3/6 or fewer (4/6: p = 0.11) |
 | floor 5/6 | 2/6 or fewer (3/6: p = 0.06) |
 | floor 2/3 | 1/6 or fewer (2/6: p = 0.10) |
 | floor 60% | 1/6 or fewer |
@@ -301,6 +326,26 @@ Bold marks a miss. The tutorials stay at 100% Delivered and Still asleep for bot
   Ghost stays 7/20 while skilled falls to 12/20). The rates are chaotic in the dozer dwell: 1.7 s and
   1.9 s put skilled Ghost back at 16–18/20. The clock and par come last: fit them from the run times
   in the JSON report (175 s with a 26 s margin sits in a 172–177.5 s by 148.5–150 s elapsed window).
+
+## v0.2 council round 2 (2026-11-27)
+
+The model now charges room time like the game (no exit animation), keeps the finger on the screen, and
+every deep clock must let the slowest honest hand finish (see *The model*). 20 seeds, **Delivered / Ghost /
+Night owl**, after the model fixes alone → after the retune. Every other level kept its counts exactly.
+
+| Level | Skilled | Casual | Change |
+| --- | --- | --- | --- |
+| L4 | 20/15/20 → 20/15/20 | 20/**9**/20 → 20/13/20 | club roof camera sweep 0.9 → 1.02 rad/s, City hall room camera 2.36 → 2.2 rad/s |
+| L7 | 20/**14**/20 → 20/17/20 | 20/14/20 → 20/13/20 | aft camera half-angle 0.28 → 0.25 (skilled above casual again) |
+| L10 | 19/16/16 → 20/16/16 | 17/9/10 → 19/9/10 | dawn 172 → 183 s, Night owl still at 141 s elapsed; Shrubbery 19/17 → 20/18 (184 s lets a 19th casual one in) |
+| L12 | 18/11/15 → 18/11/14 | 15/**4**/10 → 15/6/10 | luggage shutter phase 7.25 → 4 s, fuse 0.61 → 0.65 s, demolition 175 → 205 s, Night owl 149 → 153 s elapsed; towel 18/14 → 18/15 |
+
+Slowest honest hand, slowest of 20 seeds against the 5% limit: L10 170.8 s of 173.9 s (it was 170.8 s of
+163.4 s with the 172 s dawn), L12 186.8 s of 194.8 s (8 of 20 seeds missed the 175 s clock; the shutter
+and the counterweight cost a slow hand a whole 20–23 s cycle each). Every other deep level clears its
+clock by at least 57 s. L12 fits a narrow corner: with the shutter at phase 4 the casual counts sit on
+their widened edges (Delivered 15, Ghost 6, towel 15), and a clock of 222 s or more lets a 16th casual towel
+run in. Retune L12 from its run times (`DIFFICULTY_OUT` JSON, every run's seconds), not from the totals.
 
 ## Retune results (2026-11-24)
 

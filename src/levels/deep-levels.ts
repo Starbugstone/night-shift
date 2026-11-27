@@ -443,7 +443,8 @@ const L4_HAZARDS: HazardDef[] = [
   // west of Kev's fire escape; the West Tower's and the museum forecourt's watch West Ave down to Nigel,
   // and the plaza tower's watches the tram stop beside the wire gap. Come to Kev from the north, and to
   // Nigel through the tram-wire gap.
-  roofCam(CLUB, 'nw', { range: 520, half: 0.7, base: -2.9, amp: 0.12, rate: 0.9, phase: 0 }, 15),
+  // v0.2 council round 2: sweep rate 0.9 → 1.02 (L4 casual Ghost after the honest touch model)
+  roofCam(CLUB, 'nw', { range: 520, half: 0.7, base: -2.9, amp: 0.12, rate: 1.02, phase: 0 }, 15),
   roofCam(HR_PLAZA, 'sw', { range: 300, half: 0.5, base: PI / 2, amp: 0.12, rate: 0.9, phase: 0.5 }, 12),
   roofCam(HR_W, 'ne', { range: 420, half: 0.5, base: 0.45, amp: 0.12, rate: 0.9, phase: 2 }, 12),
   roofCam(MUSEUM, 'nw', { range: 480, half: 0.5, base: -1.2, amp: 0.12, rate: 0.9, phase: 1 }, 15),

@@ -15,7 +15,8 @@ import { ROOMS } from '../../src/abduct/rooms';
 import type { Room } from '../../src/abduct/rooms/layout';
 import { AbductSimulation } from '../../src/abduct/simulation';
 import { Contact } from '../../src/abduct/ragdoll';
-import { POINT, pointReach, pointStep } from '../../src/abduct/point';
+import { POINT, clampToScreen, pointReach } from '../../src/abduct/point';
+import { roomChargesShift } from '../../src/levels/run';
 import { FlightAutopilot } from '../../src/flight/autopilot';
 import type { DeepFlightSim } from '../../src/flight/deep-sim';
 import type { DeepMap } from '../../src/levels/types';
@@ -81,6 +82,8 @@ export interface AbductRun {
   timeSec: number;
   /** Wall clock in the room, including the initial wait and the outcome animation. */
   clockSec: number;
+  /** Shift clock the room charges, as the game counts it (`roomChargesShift`): the wait, the play and a failure's animation, not a delivery's exit animation. */
+  shiftSec: number;
   bonks: number;
   /** Highest specimen wake meter reached, 0..100. */
   peakWake: number;
@@ -100,21 +103,59 @@ export interface AbductRun {
 }
 
 /**
- * Move the beam toward where the hand means it to be, through the live touch path
- * (src/abduct/index.ts pointing): the finger is held ahead of the beam and the beam heads for it
- * at `pointStep`, so it never beats the `POINT.max` touch speed cap. The finger placement is the
- * one `AbductSimulation.autopilotFinger` uses.
+ * Where the finger presses to move the beam toward where the hand means it to be, through the live touch path
+ * (`AbductSimulation.pointAt`, what src/abduct/index.ts calls for a held finger): the finger is held
+ * ahead of the beam and the beam heads for it at `pointStep`, so it never beats the `POINT.max` touch
+ * speed cap. The finger placement is the one `AbductSimulation.autopilotFinger` uses, and like a real
+ * thumb it stays on the screen (`clampToScreen`): a hand that would reach past the edge presses on it.
  */
-function touchBeam(sim: AbductSimulation, x: number, y: number): void {
+function touchFinger(sim: AbductSimulation, x: number, y: number): { x: number; y: number } {
   const { body } = sim;
   const dx = x - body.beamX;
   const dy = y - body.beamY;
   const d = Math.hypot(dx, dy);
-  if (d === 0) return;
+  const origin = sim.screenOrigin;
+  if (d === 0) return clampToScreen(body.beamX - origin.x, body.beamY - origin.y);
   const speed = Math.min(d / DT, POINT.max);
-  const finger = speed < POINT.min ? POINT.dead + d : pointReach(speed);
-  const step = pointStep(finger, DT);
-  if (step > 0) sim.moveBeam(body.beamX + dx / d * step, body.beamY + dy / d * step);
+  const reach = speed < POINT.min ? POINT.dead + d : pointReach(speed);
+  return clampToScreen(body.beamX + dx / d * reach - origin.x, body.beamY + dy / d * reach - origin.y);
+}
+
+/**
+ * Where the model's hand meets the room. Each frame it gets the screen point the finger presses
+ * (null: lifted), then the room steps once. `charged` is the shift time spent so far.
+ */
+export interface RoomHost {
+  readonly sim: AbductSimulation;
+  frame(finger: { x: number; y: number } | null): void;
+  readonly charged: number;
+}
+
+export interface RoomSetup {
+  room: Room;
+  random: () => number;
+  audio: { sfx(name: string): void };
+  rules: AbductRules;
+  upgrades: ReadonlySet<UpgradeId>;
+}
+
+/**
+ * The default host: the room simulation on its own, the finger through `pointAt` and the shift
+ * charged with `roomChargesShift`. tests/levels-difficulty-clock.test.ts plays the same hands
+ * through the game's own scenes (createAbductScene in a DeepAbductScene) and checks both agree.
+ */
+export function simulationHost({ room, random, audio, rules, upgrades }: RoomSetup): RoomHost {
+  const sim = new AbductSimulation(room, new Set(upgrades), audio, random, rules);
+  let frames = 0;
+  return {
+    sim,
+    frame(finger) {
+      if (finger) sim.pointAt(finger.x, finger.y, DT);
+      if (roomChargesShift(sim)) frames++;
+      sim.update(DT);
+    },
+    get charged() { return frames * DT; },
+  };
 }
 
 export const HARD_RULES: AbductRules = { wakeFails: true, hard: true };
@@ -123,14 +164,15 @@ const DT = 1 / 60;
 
 export function playAbduction(
   id: RoomId | Room, profile: HumanProfile, seed: number, rules: AbductRules = HARD_RULES, upgrades: readonly UpgradeId[] = [],
-  goal: 'exit' | 'souvenir' = 'exit',
+  goal: 'exit' | 'souvenir' = 'exit', host: (setup: RoomSetup) => RoomHost = simulationHost,
 ): AbductRun {
   const random = rng(seed * 7919 + 17);
   const room = typeof id === 'string' ? ROOMS[id] : id;
   // A person hears a creak or a rattle and eases off for a moment.
   let heard = -Infinity;
   const ears = { sfx(name: string) { if (name === 'creak' || name === 'crash') heard = sim?.elapsed ?? 0; } };
-  const sim: AbductSimulation = new AbductSimulation(room, new Set(upgrades), ears, rng(seed), rules);
+  const stage = host({ room, random: rng(seed), audio: ears, rules, upgrades: new Set(upgrades) });
+  const sim: AbductSimulation = stage.sim;
   const pilot = new AbductPilot(room, profile.pace);
   const shake = tremor(random, profile.jitter);
   const wander = tremor(random, profile.drift, 0.18);
@@ -147,7 +189,7 @@ export function playAbduction(
   const queue: { x: number; y: number }[] = Array.from({ length: lag }, () => ({ x: planX, y: planY }));
   // Fresh hazard phase: the player looks at the room for a moment before grabbing.
   const wait = Math.floor(random() * 8 * 60);
-  for (let f = 0; f < wait; f++) sim.update(DT);
+  for (let f = 0; f < wait; f++) stage.frame(null);
   const t0 = sim.elapsed;
   let peakWake = 0;
   let peakSleeper = 0;
@@ -203,8 +245,7 @@ export function playAbduction(
     }
     const w = wobble(sim.elapsed);
     settling = sim.grailExit?.inside ? settling + DT : 0;
-    if (settling === 0 || settling < profile.reaction) touchBeam(sim, hand.x + w.x, hand.y + w.y);
-    sim.update(DT);
+    stage.frame(settling === 0 || settling < profile.reaction ? touchFinger(sim, hand.x + w.x, hand.y + w.y) : null);
     frames++;
     peakWake = Math.max(peakWake, sim.wake.value);
     for (const s of sim.interior?.sleepers ?? []) peakSleeper = Math.max(peakSleeper, s.wake);
@@ -231,6 +272,7 @@ export function playAbduction(
     failBy: result.failBy,
     timeSec: sim.elapsed - t0,
     clockSec: frames * DT,
+    shiftSec: stage.charged,
     bonks: result.bonks,
     peakWake: Math.round(peakWake),
     peakSleeper: Math.round(peakSleeper),

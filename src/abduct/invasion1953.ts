@@ -12,6 +12,12 @@ export const BELL = { earshot: 440, volume: 0.55 };
 
 type Swing = Extract<Hazard, { kind: 'swing' }>;
 
+/**
+ * The belfry clapper's art key: the room draws it and the clapper click finds it by it (round 2, Opus F4: this used
+ * to match the route's English exit label, a translation key, `exitName === 'Bell hatch'`).
+ */
+export const BELL_CLAPPER_ART = 'invasion_bell_clapper';
+
 export class WitnessReactions {
   private screamed = false;
   private nextTick = 0;
@@ -19,9 +25,7 @@ export class WitnessReactions {
   private readonly clapper: Swing | undefined;
 
   constructor(private readonly human: Human, private readonly audio: Audio, route?: InteriorRoute) {
-    this.clapper = route?.exitName === 'Bell hatch'
-      ? route.building.hazards.find((h): h is Swing => h.kind === 'swing')
-      : undefined;
+    this.clapper = route?.building.hazards.find((h): h is Swing => h.kind === 'swing' && h.sprite.key === `room/${BELL_CLAPPER_ART}`);
   }
 
   step(time: number, before: number, wake: number, moved: boolean, x: number, y: number): string | undefined {

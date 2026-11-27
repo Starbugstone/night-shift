@@ -29,7 +29,7 @@ interface Sighting {
   exposure: Record<number, number>;
 }
 
-interface StarRun {
+export interface StarRun {
   seed: number;
   stars: Stars;
   seconds: number;
@@ -98,7 +98,8 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     if (detour === 'car' && !car && sim.collectible?.timeCar) car = new CarFirst(sim, profile, seed);
     if (detour === 'birch' && !birch && isBirch(level.id)) birch = new BirchPickupFirst(sim, profile, seed);
     if (detour === 'tripod' && !tripod) tripod = new LegFirst(sim, profile, seed);
-    const firstLeg = !detour && shift.legs === 0 && profile.name !== 'bot';
+    // a person reads the opening first; the autopilots (the bot, the honest hand) fly the plan
+    const firstLeg = !detour && shift.legs === 0 && profile.reaction > 0;
     const read = firstLeg && level.id === 'birch_bakery' ? new BakeryFirstRead(sim, profile, seed)
       : firstLeg && level.id === 'birch_neighbours' ? new NeighboursCut(sim, profile, seed) : undefined;
     const legStart = shift.elapsed;
@@ -138,8 +139,9 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
       rooms.push(roomId);
       const run = attempt === 0 ? firstAbduction(roomId, profile, seed) : playAbduction(roomId, profile, seed + attempt * 1013);
       // A room that never reaches an outcome still spends the simulated time. Leave it
-      // undelivered if the hand gives up at the model's timeout.
-      if (shift.tick(run.clockSec)) break;
+      // undelivered if the hand gives up at the model's timeout. The shift clock stops when the
+      // room accepts the specimen, as in the game (roomChargesShift).
+      if (shift.tick(run.shiftSec)) break;
       if (!run.delivered) roomFailures.push(`${roomId}: ${run.failReason}${run.failBy ? ` (${run.failBy})` : ''}`);
       if (run.failReason === 'timeout') break;
       if (shift.finishAbduct(run.result) !== 'choice') break;
@@ -159,6 +161,11 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     ...(isBirch(level.id) || level.id === 'level3' ? { legs } : {}),
     ...(tripod ? { tripodLeg: tripod.caught } : {}),
   };
+}
+
+/** One whole deep shift with no detour (tests/difficulty/honest-pace.ts). */
+export function deepShiftRun(level: DeepLevelDef, profile: HumanProfile, seed: number, play: FirstAbduction): StarRun {
+  return deepShift(level, profile, seed, play);
 }
 
 // The safe approach waypoints used by scripts/e2e-playthrough.cjs, one route per entry.
