@@ -72,6 +72,10 @@ class LoadingView implements SceneView {
   private tipText = '';
   private tipSave: SaveData | undefined | null = null;
   private tipTable: unknown = null;
+  /** Round 4 (Fable F4): the percentage and tip layout, rebuilt only when they change, not every frame. */
+  private pctShown = -1;
+  private pctTable: unknown = null;
+  private tipLines = 0;
 
   constructor(private readonly s: LoadingScene) {
     // little saucer, drawn round its own centre so the bob just moves the container
@@ -105,20 +109,24 @@ class LoadingView implements SceneView {
     const str = tr().loading;
     this.title.set(str.clockingIn, VIEW_W / 2, 600, VIEW_W - 60);
     const fw = Math.max(18, (BAR_W - 6) * s.shown);
-    this.fill.draw(Math.round(fw * 2), (g) => roundRect(g, BAR_X + 3, 643, fw, 18, 9).fill(C.mint));
-    this.pct.set(fmt(str.calibrating, { pct: Math.round(s.shown * 100) }), VIEW_W / 2, 690, VIEW_W - 60);
+    if (this.fill.stale(Math.round(fw * 2))) this.fill.redraw((g) => roundRect(g, BAR_X + 3, 643, fw, 18, 9).fill(C.mint));
+    const pct = Math.round(s.shown * 100);
+    if (pct !== this.pctShown || str !== this.pctTable) {
+      this.pctShown = pct;
+      this.pctTable = str;
+      this.pct.set(fmt(str.calibrating, { pct }), VIEW_W / 2, 690, VIEW_W - 60);
+    }
 
     if (this.tipSave !== s.save || this.tipTable !== str) {
       this.tipSave = s.save;
       this.tipTable = str;
       const tips = loadingTips(s.save); // v4 story
       this.tipText = tips[Math.floor(s.tipSeed * tips.length)]!;
+      // the card grows for a long tip (French runs longer) and stays centred on the same spot
+      this.tipLines = wrapLines(this.tipText, TIP_W, 21, 600).length;
+      this.tip.setBlock(this.tipText, 74, 815 - (this.tipLines * 27) / 2, TIP_W);
     }
-    const tip = this.tipText;
-    // the card grows for a long tip (French runs longer) and stays centred on the same spot
-    const lines = wrapLines(tip, TIP_W, 21, 600).length;
-    const h = Math.max(110, 36 + lines * 27);
-    this.card.draw(h, (g) => panelPath(g, 50, 815 - h / 2, VIEW_W - 100, h, { fill: 'rgba(42,33,96,0.92)', r: 20, lineW: 3, shadow: 4 }));
-    this.tip.setBlock(tip, 74, 815 - (lines * 27) / 2, TIP_W);
+    const h = Math.max(110, 36 + this.tipLines * 27);
+    if (this.card.stale(h)) this.card.redraw((g) => panelPath(g, 50, 815 - h / 2, VIEW_W - 100, h, { fill: 'rgba(42,33,96,0.92)', r: 20, lineW: 3, shadow: 4 }));
   }
 }

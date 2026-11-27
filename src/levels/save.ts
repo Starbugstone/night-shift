@@ -128,9 +128,28 @@ function finiteNonNeg(v: unknown, fallback: number, max = 1e9): number {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.min(max, v) : fallback;
 }
 
-function readLevel(raw: unknown): LevelProgress {
+/**
+ * v0.2 council round 4 (Sol P1): the recognised level-record fields a build writes, each with the values it may hold.
+ * A value outside them (`"stars": [null]`, `"attempts": "3"`, `"delivered": 1`) is damage the reader throws away.
+ */
+const isLevelTime = (v: unknown): boolean => v === undefined || v === null || (typeof v === 'number' && Number.isFinite(v) && v > 0);
+const LEVEL_FIELD_SOUND: Readonly<Record<string, (value: unknown) => boolean>> = {
+  stars: v => v === undefined || (Array.isArray(v) ? v.every(isBool) : typeof v === 'number' && Number.isFinite(v)),
+  delivered: v => v === undefined || isBool(v),
+  bestTimeSec: isLevelTime,
+  bestTime: isLevelTime,
+  attempts: v => v === undefined || (typeof v === 'number' && Number.isFinite(v) && v >= 0),
+  mapCollectible: v => v === undefined || typeof v === 'string',
+};
+
+/** `damage` collects the path of every malformed recognised value the reader discards (see validateSave). */
+function readLevel(raw: unknown, path = 'level', damage?: string[]): LevelProgress {
   const lv = defaultLevel();
-  if (!isObj(raw)) return lv;
+  if (!isObj(raw)) {
+    damage?.push(path);
+    return lv;
+  }
+  if (damage) for (const [field, sound] of Object.entries(LEVEL_FIELD_SOUND)) if (!sound(raw[field])) damage.push(`${path}.${field}`);
   const s = raw.stars;
   if (Array.isArray(s)) {
     lv.stars = [s[0] === true, s[1] === true, s[2] === true, s[3] === true];
@@ -198,17 +217,27 @@ function isMapCollectibleId(value: unknown): value is MapCollectibleId {
   return typeof value === 'string' && Object.hasOwn(en.mapCollectibles.items, value);
 }
 
-/** Turn anything (parsed JSON, garbage, older shapes) into a valid SaveData. */
-export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_IDS): SaveData {
+/**
+ * Turn anything (parsed JSON, garbage, older shapes) into a valid SaveData. v0.2 council round 4 (Sol P1): `damage`,
+ * when given, collects the path of every malformed recognised value the result leaves out (a mistyped field, a level
+ * record that is not an object or holds a mistyped field, a non-string upgrade, an unreadable shelf entry for a known
+ * souvenir or specimen). Unknown fields, ids and items are not damage: older and newer builds write them.
+ */
+export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_IDS, damage?: string[]): SaveData {
   const out = defaultSave();
   for (const id of levelIds) out.levels[id] ??= defaultLevel();
   if (!isObj(raw)) return out;
+  if (damage) for (const [field, valid] of Object.entries(SAVE_FIELD_TYPES)) if (Object.hasOwn(raw, field) && !valid(raw[field])) damage.push(field);
   out.glorbs = Math.floor(finiteNonNeg(raw.glorbs, 0, 999999));
   const levels = isObj(raw.levels) ? raw.levels : {};
   // Preserve unregistered level records when an older build reopens this save.
   for (const [id, record] of Object.entries(levels)) {
-    if (Object.hasOwn(Object.prototype, id) || !isObj(record)) continue;
-    const progress = readLevel(record);
+    if (Object.hasOwn(Object.prototype, id)) continue;
+    if (!isObj(record)) {
+      damage?.push(`levels.${id}`);
+      continue;
+    }
+    const progress = readLevel(record, `levels.${id}`, damage);
     out.levels[id] = !LEVEL_IDS.some(known => known === id) && typeof record.mapCollectible === 'string'
       ? { ...progress, mapCollectible: record.mapCollectible }
       : progress;
@@ -219,7 +248,8 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   if (Array.isArray(raw.upgrades)) {
     const set = new Set<UpgradeId>();
     const refunded = new Set<string>();
-    for (const u of raw.upgrades) {
+    for (const [i, u] of raw.upgrades.entries()) {
+      if (typeof u !== 'string') damage?.push(`upgrades[${i}]`);
       if (UPGRADE_IDS.includes(u as UpgradeId)) set.add(u as UpgradeId);
       else if (typeof u === 'string' && Object.hasOwn(RETIRED_UPGRADES, u) && !refunded.has(u)) {
         refunded.add(u);
@@ -242,6 +272,15 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
   out.trophies = readTrophies(raw.trophies);
   out.specimens = readSpecimens(raw.specimens);
+  if (damage) {
+    // a shelf entry for a known souvenir or specimen that the reader could not keep
+    const dropped = (field: string, known: (id: string) => boolean, kept: Record<string, unknown>) => {
+      const stored = raw[field];
+      if (isObj(stored)) for (const id of Object.keys(stored)) if (known(id) && !Object.hasOwn(kept, id)) damage.push(`${field}.${id}`);
+    };
+    dropped('trophies', id => Object.hasOwn(en.items, id), out.trophies);
+    dropped('specimens', isSpecimenId, out.specimens);
+  }
   return out;
 }
 
@@ -341,12 +380,21 @@ export function isStoredSave(stored: string | null): boolean {
   return readSaveShape(stored) !== null;
 }
 
+/**
+ * v0.2 council round 4 (Opus O2): not a save, but a damaged one whose level records survive (salvageCurrent's rule).
+ * The loader salvages the newest such older value before it gives up on the file.
+ */
+export function isSalvageableSave(stored: string | null): boolean {
+  return salvageCurrent(stored) !== null;
+}
+
 // v0.2 damaged save (2026-11-27): the loader says what it found, so the title can offer a reset for a damaged file.
 /**
  * `ok`: a save loaded as stored (or an older save migrated with nothing broken in the way), or there was nothing
- * stored at all. `repaired`: the current save was damaged and loaded repaired. `recovered`: an older save loaded
- * past a newer stored value that was not a save. `unreadable`: something is stored but nothing in it is usable, so
- * the game starts fresh.
+ * stored at all. `repaired`: the save was damaged (a mistyped field, or malformed data inside one, round 4 Sol P1)
+ * and loaded repaired. `recovered`: an older save loaded past a newer stored value that was not a save, or a damaged
+ * older save was salvaged (round 4, Opus O2). `unreadable`: something is stored but nothing in it is usable, so the
+ * game starts fresh.
  */
 export type SaveStatus = 'ok' | 'repaired' | 'recovered' | 'unreadable';
 
@@ -363,8 +411,10 @@ function passedOverDamage(storage: KeyValueStore, key: string): boolean {
 /**
  * The current key wins whenever it holds a save, including the default record a reset stores, or a damaged save
  * whose level records survive (salvageCurrent; it is stored back repaired). Otherwise the newest older save is
- * imported and stored under the current key at once (the older keys are never rewritten). With no older save, a
- * damaged current save that still holds any usable value is repaired rather than thrown away (Opus O6).
+ * imported and stored under the current key at once (the older keys are never rewritten). With no older save, the
+ * newest damaged older save whose level records survive is salvaged the same way (round 4, Opus O2), and failing
+ * that a damaged current save that still holds any usable value is repaired rather than thrown away (Opus O6).
+ * A save with malformed data inside a field is stored back repaired too, so the bad bytes leave the disk (Sol P1).
  */
 export function loadSave(storage: KeyValueStore | null): SaveData {
   return loadSaveWithStatus(storage).save;
@@ -386,12 +436,15 @@ export function loadSaveWithStatus(storage: KeyValueStore | null): { save: SaveD
     const sound = readSaveShape(stored);
     const own = sound ?? salvageCurrent(stored);
     if (own) {
-      const current = validateSave(own);
-      if (!sound || (isObj(own.levels) && !Object.hasOwn(own.levels, 'birch_bakery'))) writeSave(storage, current);
-      return { save: current, status: sound ? 'ok' : 'repaired' };
+      const damage: string[] = [];
+      const current = validateSave(own, LEVEL_IDS, damage);
+      const clean = sound !== null && damage.length === 0;
+      if (!clean || (isObj(own.levels) && !Object.hasOwn(own.levels, 'birch_bakery'))) writeSave(storage, current);
+      return { save: current, status: clean ? 'ok' : 'repaired' };
     }
     if (stored !== null) damaged = true;
-    for (const key of [V2_SAVE_KEY, LEGACY_SAVE_KEY]) {
+    const older = [V2_SAVE_KEY, LEGACY_SAVE_KEY] as const;
+    for (const key of older) {
       const value = read(key);
       if (passedOverDamage(storage, key)) damaged = true;
       const raw = readSaveShape(value);
@@ -399,9 +452,18 @@ export function loadSaveWithStatus(storage: KeyValueStore | null): { save: SaveD
         if (value !== null) damaged = true;
         continue;
       }
+      const damage: string[] = [];
+      const imported = validateSave(raw, LEVEL_IDS, damage);
+      writeSave(storage, imported);
+      return { save: imported, status: damaged ? 'recovered' : damage.length > 0 ? 'repaired' : 'ok' };
+    }
+    // Opus O2: a damaged older save whose level records survive beats a fresh file (the older key stays as it was)
+    for (const key of older) {
+      const raw = salvageCurrent(read(key));
+      if (!raw) continue;
       const imported = validateSave(raw);
       writeSave(storage, imported);
-      return { save: imported, status: damaged ? 'recovered' : 'ok' };
+      return { save: imported, status: 'recovered' };
     }
     const repaired = salvageCurrent(stored, true);
     if (repaired) {

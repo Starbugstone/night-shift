@@ -5,15 +5,19 @@
 // scene's own autopilot (rooms passed as delivered) and reads every shown pill from the ROUTE_PILLS layer:
 // - no shown pill covers a solid line as drawn (docs/REGRESSIONS.md F12, round 2 Opus F2);
 // - no shown pill sits more than PILL_FAR gaps from its ring, or across a solid line from it (round 3 Fable F2).
+// - every ring the autopilot locks showed its pill for at least readSeconds(pill text) before the lock (round 4,
+//   Fable F2: the far-pill rule hid pills a lot, L12's "Bathroom hatch" was never labelled at launch or on approach).
 // The mutation checks switch each rule off in the live view and want the check to fail.
 import './pixi-headless';
 import { Container, Point, type ContainerChild } from 'pixi.js';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import type { GameContext, PointerState } from '../src/contracts';
 import { DeepFlightScene } from '../src/flight/deep-scene';
 import { RING_R } from '../src/flight/sim';
 import { LINE_DRAWN, PILL_FAR, placePills, segmentHitsBox } from '../src/flight/views/clear-of';
-import { EntryLabels, ROUTE_PILLS } from '../src/flight/views/craft';
+import { EntryLabels, ROUTE_PILLS, routePillText } from '../src/flight/views/craft';
+import { readSeconds } from '../src/core/read-time';
+import { HUD_ROW } from '../src/ui/hud';
 import { getLang, LANGS, setLang } from '../src/i18n';
 import { isDeep, LEVELS, workOrderNumber } from '../src/levels/levels';
 import { DeepRun } from '../src/levels/run';
@@ -25,7 +29,15 @@ const EVERY = 10;
 const GAP = RING_R + 34;
 
 interface Rect { x: number; y: number; w: number; h: number }
-interface Check { frames: number; pills: number; delivered: number; covers: string[]; far: string[] }
+interface Check {
+  frames: number; pills: number; delivered: number; covers: string[]; far: string[];
+  /** Seconds each ring's pill has shown on screen so far this shift, by `lang target:entry`. */
+  seen: Map<string, number>;
+  /** Seconds each ring has been on screen so far this shift (its pill shown or not). */
+  onScreen: Map<string, number>;
+  /** Every lock: the ring, how long its pill showed before it, and its read time. */
+  locks: { key: string; room: string; shown: number; need: number; on: number }[];
+}
 
 function context(): GameContext {
   return {
@@ -75,13 +87,24 @@ function checkFrame(scene: DeepFlightScene, at: string, out: Check): void {
   for (let i = 0; i < scene.sim.field.defs.length; i++) {
     if (scene.sim.field.solidLine(i, l)) lines.push({ a: layer.toGlobal(new Point(l.ax, l.ay)), b: layer.toGlobal(new Point(l.bx, l.by)), half: l.half });
   }
-  for (const root of layer.children) {
+  const entryRings = scene.sim.ringRef.filter(r => !r.ape);
+  for (const [k, root] of layer.children.entries()) {
+    const ringAt = root.getGlobalPosition();
+    // on screen and below the top bar (a ring under the bar has no room for its pill: EntryLabels.request)
+    if (shown(root) && ringAt.x > 0 && ringAt.x < 540 && ringAt.y > HUD_ROW.y + HUD_ROW.h + 2 && ringAt.y < 960) {
+      const r = entryRings[k]!;
+      const key = `${getLang()} ${r.target}:${r.entry}`;
+      out.onScreen.set(key, (out.onScreen.get(key) ?? 0) + EVERY * DT);
+    }
     const pill = root.children[0];
     if (!pill || !shown(pill)) continue;
     const b = pill.getBounds();
     const box: Rect = { x: b.x, y: b.y, w: b.width, h: b.height };
     if (box.x + box.w < 0 || box.x > 540 || box.y + box.h < 0 || box.y > 960) continue;
     out.pills++;
+    const ref = entryRings[k]!;
+    const key = `${getLang()} ${ref.target}:${ref.entry}`;
+    out.seen.set(key, (out.seen.get(key) ?? 0) + EVERY * DT);
     const ring = root.getGlobalPosition();
     const cx = box.x + box.w / 2;
     const cy = box.y + box.h / 2;
@@ -107,7 +130,12 @@ function flyDeep(level: DeepLevelDef, limit: number, out: Check, tamper?: Tamper
   let over = false;
   const make = (): DeepFlightScene => {
     const scene = new DeepFlightScene({
-      ctx, level, run, onLocked: (t, e) => { locked = [t, e]; }, onSunrise: () => { over = true; }, onQuotaMet: () => { over = true; }, onQuit: () => { over = true; },
+      ctx, level, run, onLocked: (t, e) => {
+        locked = [t, e];
+        const key = `${getLang()} ${t}:${e}`;
+        const room = level.map.targets[t]!.entries[e]!.roomId;
+        out.locks.push({ key, room, shown: out.seen.get(key) ?? 0, need: readSeconds(routePillText(room)), on: out.onScreen.get(key) ?? 0 });
+      }, onSunrise: () => { over = true; }, onQuotaMet: () => { over = true; }, onQuit: () => { over = true; },
     });
     // the scene manager builds the view before the first render, which syncs it (SceneManager.swap)
     void scene.view;
@@ -139,7 +167,24 @@ function flyDeep(level: DeepLevelDef, limit: number, out: Check, tamper?: Tamper
 }
 
 const deep = LEVELS.filter(isDeep);
-const fresh = (): Check => ({ frames: 0, pills: 0, delivered: 0, covers: [], far: [] });
+const fresh = (): Check => ({ frames: 0, pills: 0, delivered: 0, covers: [], far: [], seen: new Map(), onScreen: new Map(), locks: [] });
+/**
+ * The locks whose pill showed for less than its read time (sampled every EVERY frames). The autopilot sometimes reaches
+ * a ring sooner than that after it comes on screen: then the pill must have shown for all the time its ring was on
+ * screen below the top bar.
+ */
+const shortLocks = (out: Check): string[] => out.locks.filter(l => l.shown + 1e-9 < Math.min(l.need, l.on))
+  .map(l => `${l.key} ${l.room}: pill shown ${l.shown.toFixed(2)} s of ${l.need.toFixed(2)} s (ring on screen ${l.on.toFixed(2)} s) before the lock`);
+
+/** PILL_TABLE=<file>: write every lock's pill time (level, ring, room, shown s, on screen s, read s) there. */
+const TABLE: string[] = [];
+const TABLE_FILE = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.PILL_TABLE;
+afterAll(async () => {
+  if (!TABLE_FILE) return;
+  const fsName = 'node:fs';
+  const fs = await import(/* @vite-ignore */ fsName) as { writeFileSync(path: string, data: string): void };
+  fs.writeFileSync(TABLE_FILE, `${TABLE.join('\n')}\n`);
+});
 
 describe('route pills on the real flight view', () => {
   it('walks every deep level, EN and FR', () => {
@@ -163,6 +208,9 @@ describe('route pills on the real flight view', () => {
       expect(out.pills).toBeGreaterThan(0);
       expect(out.covers.slice(0, 6)).toEqual([]);
       expect(out.far.slice(0, 6)).toEqual([]);
+      for (const l of out.locks) TABLE.push(`${level.id}\t${l.key}\t${l.room}\t${l.shown.toFixed(2)}\t${l.on.toFixed(2)}\t${l.need.toFixed(2)}`);
+      expect(out.locks.length, 'the autopilot locks every ring it delivers').toBe(out.delivered);
+      expect(shortLocks(out)).toEqual([]);
     }, 240_000);
   }
 
@@ -205,5 +253,31 @@ describe('route pills on the real flight view', () => {
     const out = fresh();
     inEnglish(() => flyDeep(l12, 60, out, old));
     expect(out.far.length).toBeGreaterThan(0);
+  }, 240_000);
+
+  // round 4 (Fable F2): the floor fails a level whose pills never show, and the view without the fuse-box exception
+  const placing = (soft: (given: number | undefined) => number | undefined, hideAll = false): Tamper => () => {
+    const real = EntryLabels.prototype.place;
+    EntryLabels.prototype.place = function (this: EntryLabels, n: number, camX: number, camY: number, given?: number): void {
+      const me = this as unknown as { count: number; rings: { showPill(v: boolean): void }[] };
+      const rings = me.rings.slice(0, me.count);
+      real.call(this, n, camX, camY, soft(given));
+      if (hideAll) for (const r of rings) r.showPill(false);
+    };
+    return () => { EntryLabels.prototype.place = real; };
+  };
+
+  it('catches a level whose pills never show (mutation check)', () => {
+    const out = fresh();
+    inEnglish(() => flyDeep(l12, 300, out, placing(g => g, true)));
+    expect(out.locks.length).toBeGreaterThan(0);
+    expect(shortLocks(out).length).toBe(out.locks.length);
+  }, 240_000);
+
+  it('catches the view without the fuse-box exception (mutation check)', () => {
+    const out = fresh();
+    const l10 = deep.find(l => l.id === 'level10')!;
+    inEnglish(() => flyDeep(l10, 300, out, placing(() => -1)));
+    expect(shortLocks(out).join('\n')).toMatch(/rodney_flap/);
   }, 240_000);
 });

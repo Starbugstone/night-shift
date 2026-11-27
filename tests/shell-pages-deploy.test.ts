@@ -19,6 +19,11 @@
 // assembles, the deploy publishes a fallback bundle (the pushed build with the other branch's live build), so a
 // preprod push mid-main-deploy can no longer cancel main. Build artifacts and Pages bundles are named by run and
 // attempt, and the site is assembled only from the builds this attempt's successful legs name.
+//
+// Round 4: matrix legs share one job-level outputs map (the last leg to finish wins, Neon P1), so the build legs
+// declare no outputs and the assemble job finds this attempt's uploads by exact name (attempt included) through the
+// API. The pages group queues every run (`queue: max`, Sol P3: by default a third push replaced the queued one), and
+// a live build whose kept artifact expired is rebuilt through the same tests (Sol P4).
 import { describe, expect, it } from 'vitest';
 import workflow from '../.github/workflows/pages.yml?raw';
 
@@ -44,6 +49,15 @@ function problems(yml: string): string[] {
   if (/\bgit\s+(clone|worktree|pull)\b/.test(code)) bad.push('a run step clones or pulls a branch');
   if (/ref:\s*['"]?(main|preprod|refs\/heads)/.test(code)) bad.push('a checkout names a branch instead of a pinned SHA');
   if (/continue-on-error:\s*true/.test(code)) bad.push('a step may fail without failing the run');
+  // Sol P3: one pending run per group by default; every push must wait its turn, none may cancel another
+  const group = /\nconcurrency:\n((?:(?: {2}[^\n]*)?\n)+)/.exec(code)?.[1] ?? '';
+  if (!/^ {2}group:\s*pages\s*$/m.test(group)) bad.push('the workflow does not run in the pages concurrency group');
+  if (!/^ {2}queue:\s*max\s*$/m.test(group)) bad.push('the pages group keeps only one pending run (queue: max is missing)');
+  if (!/^ {2}cancel-in-progress:\s*false\s*$/m.test(group)) bad.push('a run may cancel the one in progress');
+  // Neon P1: matrix legs share one job-level outputs map, so a leg can overwrite another's outputs
+  for (const [name, s] of j) {
+    if (/^ {4}strategy:/m.test(s) && /^ {4}outputs:/m.test(s)) bad.push(`${name} declares job outputs on a matrix job (its legs overwrite each other)`);
+  }
 
   const pin = j.get('pin');
   if (!pin) bad.push('no pin job');
@@ -61,12 +75,8 @@ function problems(yml: string): string[] {
     if (!/fromJSON\(needs\.pin\.outputs\.build\)/.test(s)) bad.push(`${name} does not build the pinned builds`);
     if (!/fail-fast:\s*false/.test(s)) bad.push(`${name} lets one branch's failure cancel the other's build`);
     if (!/name:\s*dist-\$\{\{\s*matrix\.branch\s*\}\}-\$\{\{\s*matrix\.sha\s*\}\}-\$\{\{\s*github\.run_id\s*\}\}-\$\{\{\s*github\.run_attempt\s*\}\}/.test(s)) bad.push(`${name} does not name its build by branch, commit, run and attempt`);
-    for (const branch of ['main', 'preprod']) {
-      if (!new RegExp(`outputs:[\\s\\S]*\\n\\s+${branch}:\\s*\\$\\{\\{\\s*steps\\.built\\.outputs\\.${branch}\\s*\\}\\}`).test(s)) bad.push(`${name} does not output the ${branch} artifact it uploaded`);
-    }
-    const upload = s.indexOf('actions/upload-artifact');
-    const named = s.indexOf('id: built');
-    if (named < 0 || named < upload) bad.push(`${name} names its artifact before uploading it`);
+    // the upload is the leg's last step: this attempt's artifact exists only if every check before it passed
+    if (/actions\/upload-artifact[\s\S]*\n {6}- /.test(s)) bad.push(`${name} has a step after its upload`);
     const checkouts = [...s.matchAll(/uses: actions\/checkout@[^\n]*\n(?:\s+with:\s*\n\s+ref:\s*([^\n]+))?/g)];
     if (checkouts.length !== 1) bad.push(`${name} has ${checkouts.length} checkouts, not one`);
     else if (!/\$\{\{\s*matrix\.sha\s*\}\}/.test(checkouts[0]![1] ?? '')) bad.push(`${name} does not check out the pinned SHA`);
@@ -97,10 +107,18 @@ function problems(yml: string): string[] {
     if (!/id: choose/.test(s)) bad.push(`${name} has no step choosing each branch's build`);
     // an earlier attempt's upload of a build that failed this time must not be fetched (Sol P2, round 3)
     if (/^\s+pattern:/m.test(s)) bad.push(`${name} fetches builds by pattern, not by this attempt's artifact names`);
-    for (const branch of ['main', 'preprod']) {
-      if (!new RegExp(`name:\\s*\\$\\{\\{\\s*needs\\.build\\.outputs\\.${branch}\\s*\\}\\}`).test(s)) bad.push(`${name} does not fetch the ${branch} build by this attempt's name`);
+    if (/needs\.build\.outputs/.test(s)) bad.push(`${name} reads the matrix job's outputs`);
+    const find = s.indexOf('id: find');
+    if (find < 0 || find > s.indexOf('actions/download-artifact')) bad.push(`${name} does not find this attempt's builds before fetching them`);
+    else {
+      if (!/listWorkflowRunArtifacts/.test(s) || !/run_id: context\.runId/.test(s)) bad.push(`${name} does not list this run's artifacts`);
+      if (!/`dist-\$\{b\.branch\}-\$\{b\.sha\}-\$\{context\.runId\}-\$\{attempt\}`/.test(s)) bad.push(`${name} does not look for each build by its exact name and attempt`);
     }
-    if (!/BUILT:\s*\$\{\{\s*toJSON\(needs\.build\.outputs\)\s*\}\}/.test(s)) bad.push(`${name} does not tell the choose step which builds this attempt made`);
+    for (const key of ['main', 'preprod', 'live']) {
+      if (!new RegExp(`name:\\s*\\$\\{\\{\\s*steps\\.find\\.outputs\\.${key}\\s*\\}\\}`).test(s)) bad.push(`${name} does not fetch the ${key} build by this attempt's name`);
+    }
+    if (!/BUILT:\s*\$\{\{\s*toJSON\(steps\.find\.outputs\)\s*\}\}/.test(s)) bad.push(`${name} does not tell the choose step which builds this attempt made`);
+    if (!/name === `dist-\$\{b\.branch\}-\$\{b\.sha\}-\$\{context\.runId\}-\$\{process\.env\.RUN_ATTEMPT\}`/.test(s)) bad.push(`${name} accepts a build from another attempt`);
     const bundles = [...s.matchAll(/uses: actions\/upload-pages-artifact@[^\n]*\n(?:\s+if:[^\n]*\n)?\s+with:\s*\n((?:\s{10}[^\n]*\n)+)/g)].map((m) => /name:\s*([^\n]+)/.exec(m[1]!)?.[1]?.trim() ?? '');
     if (bundles.some((n) => !/^\$\{\{\s*steps\.choose\.outputs\.(bundle|fallback_bundle)\s*\}\}$/.test(n))) bad.push(`${name} uploads a Pages bundle without a per-attempt name`);
     if (new Set(bundles).size !== bundles.length) bad.push(`${name} uploads two Pages bundles with one name`);
@@ -163,6 +181,23 @@ describe('Pages publishes only pinned, tested commits', () => {
     const anyBundle = workflow.replace('          artifact_name: ${{ steps.fresh.outputs.artifact }}\n', '');
     expect(anyBundle).not.toBe(workflow);
     expect(problems(anyBundle)).toContain('deploy does not publish the bundle the freshness check picked');
+    // round 4 (Neon P1): matrix job outputs, a step after the upload, an attempt-blind match
+    const matrixOutputs = workflow.replace('    runs-on: ubuntu-latest\n    # no job outputs', '    runs-on: ubuntu-latest\n    outputs:\n      main: ${{ steps.built.outputs.main }}\n    # no job outputs');
+    expect(matrixOutputs).not.toBe(workflow);
+    expect(problems(matrixOutputs)).toContain('build declares job outputs on a matrix job (its legs overwrite each other)');
+    const afterUpload = workflow.replace('          retention-days: 90\n', '          retention-days: 90\n      - run: echo done\n');
+    expect(afterUpload).not.toBe(workflow);
+    expect(problems(afterUpload)).toContain('build has a step after its upload');
+    const anyAttempt = workflow.replace('name === `dist-${b.branch}-${b.sha}-${context.runId}-${process.env.RUN_ATTEMPT}`', 'name.startsWith(`dist-${b.branch}-${b.sha}-${context.runId}-`)');
+    expect(anyAttempt).not.toBe(workflow);
+    expect(problems(anyAttempt)).toContain('assemble accepts a build from another attempt');
+    const viaOutputs = workflow.replace('name: ${{ steps.find.outputs.main }}', 'name: ${{ needs.build.outputs.main }}');
+    expect(problems(viaOutputs)).toContain('assemble reads the matrix job\'s outputs');
+    // round 4 (Sol P3): the default one-pending-run queue
+    const single = workflow.replace(/\n {2}# every push waits[^\n]*\n {2}queue: max\n/, '\n');
+    expect(single).not.toBe(workflow);
+    expect(problems(single)).toContain('the pages group keeps only one pending run (queue: max is missing)');
+    expect(problems(workflow.replace('  cancel-in-progress: false\n  # every', '  cancel-in-progress: true\n  # every'))).toContain('a run may cancel the one in progress');
   });
 });
 
@@ -195,6 +230,9 @@ interface World {
   kept?: Record<string, number>;
   /** Files in the assemble job's working directory. */
   files?: string[];
+  /** Artifacts this run has uploaded so far (any attempt), in the order the API lists them. */
+  runArtifacts?: { name: string; expired?: boolean }[];
+  runId?: number;
   ref?: string;
   sha?: string;
   env?: Record<string, string>;
@@ -221,10 +259,16 @@ async function runStep(id: string, world: World): Promise<Outcome> {
           const run = world.kept?.[name];
           return { data: { artifacts: run ? [{ name, expired: false, workflow_run: { id: run } }] : [] } };
         },
+        listWorkflowRunArtifacts: 'listWorkflowRunArtifacts',
       },
     },
+    async paginate(method: string, args: { run_id: number }) {
+      expect(method).toBe('listWorkflowRunArtifacts');
+      expect(args.run_id).toBe(world.runId ?? RUN);
+      return (world.runArtifacts ?? []).map(a => ({ expired: false, ...a }));
+    },
   };
-  const context = { repo: { owner: 'owner', repo: 'night-shift' }, ref: world.ref ?? 'refs/heads/main', sha: world.sha ?? '', runId: RUN };
+  const context = { repo: { owner: 'owner', repo: 'night-shift' }, ref: world.ref ?? 'refs/heads/main', sha: world.sha ?? '', runId: world.runId ?? RUN };
   const core = {
     setOutput(name: string, value: string) { out.outputs[name] = value; },
     setFailed(message: string) { out.failed = message; },
@@ -255,7 +299,7 @@ const RUN = 7;
 const art = (branch: string, sha: string, attempt = 1) => `dist-${branch}-${sha}-${RUN}-${attempt}`;
 const index = (name: string) => `dists/${name}/index.html`;
 /** The assemble job's view of the build legs: the artifact each successful leg of this attempt named. */
-const builtBy = (legs: Record<string, string>) => JSON.stringify({ main: '', preprod: '', ...legs });
+const builtBy = (legs: Record<string, string>) => JSON.stringify({ main: '', preprod: '', live: '', ...legs });
 /** Run choose, then fresh, as the assemble and deploy jobs do. */
 async function chooseThenFresh(world: World & { attempt?: number }, later: Pick<World, 'tips' | 'live'>) {
   const choose = await runStep('choose', { ...world, env: { RUN_ATTEMPT: String(world.attempt ?? 1), ...world.env } });
@@ -328,8 +372,8 @@ describe('a rerun never republishes an older commit (Sol P1)', () => {
     // the run was for main M1; main has moved on to M3 since
     const choose = await runStep('choose', {
       tips: { main: M3, preprod: P1 }, live: [{ branch: 'main', sha: M3 }, { branch: 'preprod', sha: P1 }],
-      files: [index(art('main', M1)), `dists/dist-preprod-${P1}/index.html`],
-      env: { BUILD: JSON.stringify([{ branch: 'main', sha: M1, gate: true }]), BUILT: builtBy({ main: art('main', M1) }), PUSHED: 'main', KEEP: JSON.stringify({ branch: 'preprod', sha: P1, run: 41, name: `dist-preprod-${P1}` }), RUN_ATTEMPT: '2' },
+      files: [index(art('main', M1, 2)), `dists/dist-preprod-${P1}/index.html`],
+      env: { BUILD: JSON.stringify([{ branch: 'main', sha: M1, gate: true }]), BUILT: builtBy({ main: art('main', M1, 2) }), PUSHED: 'main', KEEP: JSON.stringify({ branch: 'preprod', sha: P1, run: 41, name: `dist-preprod-${P1}` }), RUN_ATTEMPT: '2' },
     });
     expect(choose.failed).toBeUndefined();
     expect(choose.outputs.published).toBe('');
@@ -471,7 +515,7 @@ describe('a rerun uses only its own attempt\'s builds (Sol P2, round 3)', () => 
   });
 
   it('a build named by another run or commit is not accepted', async () => {
-    for (const wrong of [`dist-main-${M1}-6-1`, `dist-main-${M2}-${RUN}-1`, `dist-preprod-${M1}-${RUN}-1`]) {
+    for (const wrong of [`dist-main-${M1}-6-1`, `dist-main-${M2}-${RUN}-1`, `dist-preprod-${M1}-${RUN}-1`, `dist-main-${M1}-${RUN}-2`, `dist-main-${M1}-${RUN}-1-x`]) {
       const choose = await runStep('choose', {
         tips: { main: M1 }, live: [], files: [index(wrong)],
         env: { BUILD: JSON.stringify([{ branch: 'main', sha: M1, gate: true }]), BUILT: builtBy({ main: wrong }), PUSHED: 'main', RUN_ATTEMPT: '1', KEEP: '' },
@@ -497,5 +541,166 @@ describe('a rerun uses only its own attempt\'s builds (Sol P2, round 3)', () => 
     }
     expect(names.every(Boolean)).toBe(true);
     expect(new Set(names).size).toBe(names.length);
+  });
+});
+
+// ------------------------------------------------------------------ round 4
+
+/** Model of GitHub's matrix job outputs (Neon P1): every leg evaluates the job's outputs, and they are merged into one
+ * map in the order the legs finish, the last leg's value winning for each name. */
+function mergedMatrixOutputs(legs: Record<string, string>[]): Record<string, string> {
+  return Object.assign({}, ...legs);
+}
+
+/** One whole run, as GitHub would play it: pin, the build legs (a leg uploads only when `passes`), find, choose, fresh.
+ * `state` is the repository and site; a publish updates the site and keeps the published artifacts. */
+interface Site { tips: Record<string, string>; live: World['live']; kept: Record<string, number> }
+async function wholeRun(state: Site, push: { branch: string; sha: string; runId: number }, passes: (sha: string, live: boolean) => boolean, order: 'as-pinned' | 'reversed' = 'as-pinned') {
+  const base = { tips: state.tips, live: state.live, kept: state.kept, runId: push.runId };
+  const pin = await runStep('pin', { ...base, ref: `refs/heads/${push.branch}`, sha: push.sha });
+  if (pin.failed) return { pin };
+  const build = JSON.parse(pin.outputs.build!) as { branch: string; sha: string; gate: boolean; live?: boolean }[];
+  const uploads = build.filter(b => passes(b.sha, b.live === true)).map(b => ({ name: `dist-${b.branch}-${b.sha}-${push.runId}-1` }));
+  if (order === 'reversed') uploads.reverse();
+  const find = await runStep('find', { ...base, runArtifacts: uploads, env: { BUILD: pin.outputs.build!, RUN_ATTEMPT: '1' } });
+  const keep = pin.outputs.keep ? JSON.parse(pin.outputs.keep) as { name: string } : null;
+  const files = [...Object.values(find.outputs).filter(Boolean), ...(keep ? [keep.name] : [])].map(index);
+  const choose = await runStep('choose', { ...base, files, env: { BUILD: pin.outputs.build!, BUILT: JSON.stringify(find.outputs), PUSHED: pin.outputs.pushed!, KEEP: pin.outputs.keep ?? '', RUN_ATTEMPT: '1' } });
+  if (choose.failed || !choose.outputs.published) return { pin, find, choose };
+  const fresh = await runStep('fresh', { ...base, env: { PUBLISHED: choose.outputs.published, BUNDLE: choose.outputs.bundle!, FALLBACK: choose.outputs.fallback!, FALLBACK_BUNDLE: choose.outputs.fallback_bundle! } });
+  if (fresh.outputs.publish === 'true') {
+    const list = JSON.parse(fresh.outputs.artifact === choose.outputs.bundle ? choose.outputs.published : choose.outputs.fallback!) as { branch: string; sha: string; run: number; artifact: string }[];
+    state.live = list.map(({ branch, sha, run, artifact }) => ({ branch, sha, run, artifact }));
+    for (const p of list) state.kept[p.artifact] = p.run;
+  }
+  return { pin, find, choose, fresh };
+}
+
+const liveSha = (state: Site, branch: string) => state.live.find(t => t.branch === branch)?.sha;
+
+describe('the build legs may finish in any order (round 4, Neon P1)', () => {
+  it('job-level outputs on a matrix lose the leg that finished first (the old layout)', () => {
+    const mainLeg = { main: art('main', M1), preprod: '' };
+    const preprodLeg = { main: '', preprod: art('preprod', P1) };
+    // whichever leg finishes last blanks the other's name, so the assemble job skipped that branch
+    expect(mergedMatrixOutputs([mainLeg, preprodLeg]).main).toBe('');
+    expect(mergedMatrixOutputs([preprodLeg, mainLeg]).preprod).toBe('');
+  });
+
+  it('the assemble job finds every passing leg, whichever finished last', async () => {
+    const build = JSON.stringify([{ branch: 'main', sha: M1, gate: true }, { branch: 'preprod', sha: P1, gate: true }]);
+    const names = [];
+    for (const runArtifacts of [[{ name: art('main', M1) }, { name: art('preprod', P1) }], [{ name: art('preprod', P1) }, { name: art('main', M1) }]]) {
+      const find = await runStep('find', { tips: {}, live: [], runArtifacts, env: { BUILD: build, RUN_ATTEMPT: '1' } });
+      names.push(find.outputs);
+    }
+    expect(names[0]).toEqual({ main: art('main', M1), preprod: art('preprod', P1), live: '' });
+    expect(names[1]).toEqual(names[0]);
+  });
+
+  it('the first preprod run (no kept build) publishes both branches in either finishing order', async () => {
+    for (const order of ['as-pinned', 'reversed'] as const) {
+      const state: Site = { tips: { main: M1, preprod: P1 }, live: [], kept: {} };
+      const run = await wholeRun(state, { branch: 'preprod', sha: P1, runId: 20 }, () => true, order);
+      expect(run.choose?.failed, order).toBeUndefined();
+      expect(state.live.map(t => t.sha), order).toEqual([M1, P1]);
+    }
+  });
+
+  it('only this attempt\'s uploads count, and an expired upload is not one', async () => {
+    const build = JSON.stringify([{ branch: 'main', sha: M1, gate: true }]);
+    const rerun = await runStep('find', { tips: {}, live: [], runArtifacts: [{ name: art('main', M1, 1) }], env: { BUILD: build, RUN_ATTEMPT: '2' } });
+    expect(rerun.outputs.main).toBe('');
+    expect(rerun.warnings.join()).toMatch(/earlier attempt; use "Re-run all jobs"/);
+    const expired = await runStep('find', { tips: {}, live: [], runArtifacts: [{ name: art('main', M1, 1), expired: true }], env: { BUILD: build, RUN_ATTEMPT: '1' } });
+    expect(expired.outputs.main).toBe('');
+  });
+});
+
+describe('a live build whose artifact expired is rebuilt through the tests (round 4, Sol P4)', () => {
+  // the site serves preprod P0 (run 5), but run 5's artifacts have expired
+  const start = (): Site => ({ tips: { main: M1, preprod: P2 }, live: [{ branch: 'main', sha: M0, run: 5, artifact: `dist-main-${M0}-5-1` }, { branch: 'preprod', sha: P0, run: 5, artifact: `dist-preprod-${P0}-5-1` }], kept: {} });
+
+  it('pin rebuilds the live SHA beside the newer tip', async () => {
+    const s = start();
+    const pin = await runStep('pin', { ...s, ref: 'refs/heads/main', sha: M1 });
+    expect(JSON.parse(pin.outputs.build!)).toEqual([{ branch: 'main', sha: M1, gate: true }, { branch: 'preprod', sha: P2, gate: false }, { branch: 'preprod', sha: P0, gate: false, live: true }]);
+    expect(pin.outputs.keep).toBe('');
+  });
+
+  it('a failing preprod tip no longer blocks a passing main: the rebuilt live preprod is kept', async () => {
+    const s = start();
+    const run = await wholeRun(s, { branch: 'main', sha: M1, runId: 30 }, sha => sha !== P2);
+    expect(run.choose?.failed).toBeUndefined();
+    expect(run.choose?.warnings.join()).toMatch(/failed; the site keeps/);
+    expect(s.live).toEqual([{ branch: 'main', sha: M1, run: 30, artifact: `dist-main-${M1}-30-1` }, { branch: 'preprod', sha: P0, run: 30, artifact: `dist-preprod-${P0}-30-1` }]);
+    // and the next run keeps that rebuilt artifact instead of rebuilding again
+    const pin = await runStep('pin', { ...s, ref: 'refs/heads/main', sha: M1 });
+    expect(JSON.parse(pin.outputs.keep!)).toEqual({ branch: 'preprod', sha: P0, run: 30, name: `dist-preprod-${P0}-30-1` });
+  });
+
+  it('a passing tip publishes, with the rebuilt live build as the fallback bundle', async () => {
+    const s = start();
+    const run = await wholeRun(s, { branch: 'main', sha: M1, runId: 31 }, () => true);
+    expect(JSON.parse(run.choose!.outputs.fallback!).map((b: { sha: string }) => b.sha)).toEqual([M1, P0]);
+    expect(liveSha(s, 'preprod')).toBe(P2);
+  });
+
+  it('both failing still fails the run, publishing nothing', async () => {
+    const s = start();
+    const run = await wholeRun(s, { branch: 'main', sha: M1, runId: 32 }, sha => sha === M1);
+    expect(run.choose?.failed).toMatch(/preprod .* no earlier good build/);
+    expect(liveSha(s, 'main')).toBe(M0);
+  });
+
+  it('a live SHA that is still the tip is built once, as the tip', async () => {
+    const pin = await runStep('pin', { ...start(), tips: { main: M1, preprod: P0 }, ref: 'refs/heads/main', sha: M1 });
+    expect(JSON.parse(pin.outputs.build!)).toEqual([{ branch: 'main', sha: M1, gate: true }, { branch: 'preprod', sha: P0, gate: true }]);
+  });
+});
+
+describe('every push waits its turn in the pages queue (round 4, Sol P3)', () => {
+  /** GitHub's concurrency group: one run at a time; `single` keeps one pending run (a newer one replaces it), `max`
+   * keeps up to 100 in arrival order. Returns the runs that execute, in order. */
+  const schedule = (running: string, arrivals: string[], queue: 'single' | 'max'): string[] => {
+    const pending: string[] = [];
+    for (const run of arrivals) {
+      if (queue === 'single') pending.splice(0, pending.length, run);
+      else if (pending.length < 100) pending.push(run);
+    }
+    return [running, ...pending];
+  };
+  const queueMode = (yml: string): 'single' | 'max' => (/\nconcurrency:\n(?:(?: {2}[^\n]*)?\n)*? {2}queue: max\n/.test(yml) ? 'max' : 'single');
+
+  // Sol's sequence: preprod P1 is running, main M1 is queued, then preprod P2 arrives and fails its tests
+  const play = async (queue: 'single' | 'max') => {
+    const state: Site = {
+      tips: { main: M1, preprod: P2 },
+      live: [{ branch: 'main', sha: M0, run: 3, artifact: `dist-main-${M0}-3-1` }, { branch: 'preprod', sha: P0, run: 3, artifact: `dist-preprod-${P0}-3-1` }],
+      kept: { [`dist-main-${M0}-3-1`]: 3, [`dist-preprod-${P0}-3-1`]: 3 },
+    };
+    const pushes: Record<string, { branch: string; sha: string; runId: number }> = {
+      P1: { branch: 'preprod', sha: P1, runId: 41 }, M1: { branch: 'main', sha: M1, runId: 42 }, P2: { branch: 'preprod', sha: P2, runId: 43 },
+    };
+    const ran = schedule('P1', ['M1', 'P2'], queue);
+    for (const id of ran) await wholeRun(state, pushes[id]!, sha => sha !== P2);
+    return { ran, state };
+  };
+
+  it('the workflow queues every run', () => {
+    expect(queueMode(workflow)).toBe('max');
+  });
+
+  it('with the queue, the main push still reaches production when the later preprod push fails', async () => {
+    const { ran, state } = await play(queueMode(workflow));
+    expect(ran).toEqual(['P1', 'M1', 'P2']);
+    expect(liveSha(state, 'main')).toBe(M1);
+    expect(liveSha(state, 'preprod')).toBe(P0);
+  });
+
+  it('with the default one-pending-run group, M1 was replaced and production stayed on M0 (the old behaviour)', async () => {
+    const { ran, state } = await play('single');
+    expect(ran).toEqual(['P1', 'P2']);
+    expect(liveSha(state, 'main')).toBe(M0);
   });
 });

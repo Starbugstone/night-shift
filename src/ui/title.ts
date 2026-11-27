@@ -57,7 +57,7 @@ export class TitleScene implements Scene {
   readonly keep = new Button(RESET_CARD.x + 32, RESET_CARD.y + RESET_CARD.h - 92, RESET_CARD.w - 64, 68, '', 'primary', 24);
   /** v0.2 damaged save: the notice's tap target (drawn by SaveNoticeView); shown while the loader's status is not 'ok'. */
   readonly notice = new Button(SAVE_NOTICE.x, SAVE_NOTICE.y, SAVE_NOTICE.w, SAVE_NOTICE.h, '', 'ghost', 17);
-  /** What the loader found at boot; 'ok' once the notice is dismissed or the progress reset. */
+  /** What the loader found at boot; 'ok' once the notice is dismissed or the progress reset (it picks the card's text). */
   saveStatus: SaveStatus;
   /** The confirmation card is open; `confirmT` runs 0..1 as it pops in. */
   confirming = false;
@@ -103,6 +103,7 @@ export class TitleScene implements Scene {
     this.shell.dismissSaveNotice();
     this.saveStatus = 'ok';
     this.notice.visible = false;
+    this.labelsFor = -1; // the keep button follows the status
     this.reset.visible = hasProgress(this.shell.save);
   }
 
@@ -157,7 +158,7 @@ export class TitleScene implements Scene {
     this.trophies.label = fmt(s.trophies.buttonCount, { n: prog.found, max: prog.total });
     this.reset.label = s.title.reset.button;
     this.erase.label = s.title.reset.erase;
-    this.keep.label = s.title.reset.keep;
+    this.keep.label = keepLabel(this.saveStatus);
     for (const { lang, b } of this.langs) {
       b.kind = lang === getLang() ? 'secondary' : 'ghost';
       b.label = lang === 'en' ? 'EN' : 'FR';
@@ -205,6 +206,9 @@ class TitleView implements SceneView {
   private logoFor = -1;
   private readonly bureau = new Label(BUREAU);
   private readonly rules = new Shape();
+  /** Round 4 (Fable F4): the bureau line's half width, measured when its text changes, not every frame. */
+  private bureauText = '';
+  private bureauHalf = 0;
   private readonly tagline = new Label(TAGLINE);
   private readonly startGlow = new Glow(glowTexture(GLOW.mint), true);
   private readonly startPop = new Container();
@@ -340,8 +344,12 @@ class TitleView implements SceneView {
     this.bureau.set(str.bureau, VIEW_W / 2, 362, 380);
     this.bureau.alpha = fade;
     // rules either side of the bureau line, clear of its (language-dependent) width
-    const half = Math.min(190, measure(str.bureau, 16, 800) / 2);
-    this.rules.draw(half, (g) => g.rect(VIEW_W / 2 - half - 48, 361, 34, 2).rect(VIEW_W / 2 + half + 14, 361, 34, 2).fill(C.muted));
+    if (str.bureau !== this.bureauText) {
+      this.bureauText = str.bureau;
+      this.bureauHalf = Math.min(190, measure(str.bureau, 16, 800) / 2);
+    }
+    const half = this.bureauHalf;
+    if (this.rules.stale(half)) this.rules.redraw((g) => g.rect(VIEW_W / 2 - half - 48, 361, 34, 2).rect(VIEW_W / 2 + half + 14, 361, 34, 2).fill(C.muted));
     this.rules.alpha = fade * 0.5;
     const tags = str.taglines;
     this.tagline.set(tags[Math.floor(s.taglineSeed * tags.length)]!, VIEW_W / 2, 600, VIEW_W - 40);
@@ -418,6 +426,20 @@ class SaveNoticeView {
   }
 }
 
+const SAVE_STATUSES: readonly SaveStatus[] = ['ok', 'repaired', 'recovered', 'unreadable'];
+
+/** v0.2 council round 4 (Neon 3): the confirmation card's body for what the loader found. */
+export function cardBody(status: SaveStatus): string {
+  const str = tr().title.reset;
+  return status === 'ok' ? str.body : status === 'unreadable' ? str.damagedLostBody : str.damagedBody;
+}
+
+/** The card's keep button: an unreadable file has no progress to keep, only the fresh file. */
+export function keepLabel(status: SaveStatus): string {
+  const str = tr().title.reset;
+  return status === 'unreadable' ? str.keepFresh : str.keep;
+}
+
 /** The notice line for what the loader found: whatever survived was kept, or nothing could be read. */
 export function noticeText(status: SaveStatus): string {
   const str = tr().title.reset;
@@ -458,14 +480,14 @@ class ResetConfirmView {
     const s = this.s;
     this.root.visible = s.confirming;
     if (!s.confirming) return;
-    const textFor = langVersion() * 2 + (s.damaged ? 1 : 0);
+    const textFor = langVersion() * 4 + SAVE_STATUSES.indexOf(s.saveStatus);
     if (this.textFor !== textFor) {
       this.textFor = textFor;
       const str = tr().title.reset;
       const w = RESET_CARD.w;
       this.title.set(str.title, w / 2, 58, w - 48);
-      // v0.2 damaged save: the card says the file was damaged
-      this.body.setBlock(s.damaged ? str.damagedBody : str.body, 32, 98, w - 64);
+      // v0.2 damaged save: the card says what happened to the file
+      this.body.setBlock(cardBody(s.saveStatus), 32, 98, w - 64);
     }
     const k = rm ? 1 : easeOutBack(s.confirmT, 1.3);
     this.card.scale.set(0.86 + 0.14 * k);

@@ -1,8 +1,10 @@
 // v0.2 damaged save (user, 2026-11-27): a damaged save makes the title say so and offer its reset, even when no
 // progress survived. Walks every generated damaged shape (tests/levels-save-shapes.ts) through a shell that loads,
-// resets and dismisses the way src/core/game.ts does, in EN and FR: the notice and the reset button show, the
-// confirmation card says the file was damaged, Erase needs its confirmation tap, and a reload after the reset (or
-// after dismissing the notice) is clean and 'ok'. A save that loads 'ok' never shows the notice.
+// resets and dismisses with the Game's own SaveSession (src/core/save-session.ts), in EN and FR: the notice and the
+// reset button show, the confirmation card says what happened to the file, Erase needs its confirmation tap, and a
+// reload after the reset is clean and 'ok'. A save that loads 'ok' never shows the notice.
+// Council round 4: the card body and keep button follow the status (Neon 3: an unreadable file has no progress to
+// keep); dismissing writes nothing (Sol P2); saved progress ends the notice, sound and language toggles do not (Neon 4).
 import { afterEach, describe, expect, it } from 'vitest';
 import { VIEW_W } from '../src/contracts';
 import { hasProgress, resetSave } from '../src/core/reset';
@@ -11,9 +13,10 @@ import { preprodStorage } from '../src/core/storage';
 import { measure } from '../src/core/gfx/text';
 import { en } from '../src/i18n/en';
 import { fr } from '../src/i18n/fr';
-import { setLang, type Lang } from '../src/i18n';
-import { defaultSave, loadSaveWithStatus, writeSave, type KeyValueStore, type SaveData, type SaveStatus } from '../src/levels/save';
-import { NOTICE_CROSS_W, NOTICE_TEXT, RESET_CARD, SAVE_NOTICE, TitleScene, noticeText } from '../src/ui/title';
+import { setLang, tr as activeTr, type Lang } from '../src/i18n';
+import { SaveSession } from '../src/core/save-session';
+import { defaultSave, loadSaveWithStatus, type KeyValueStore, type SaveData, type SaveStatus } from '../src/levels/save';
+import { NOTICE_CROSS_W, NOTICE_TEXT, RESET_CARD, SAVE_NOTICE, TitleScene, cardBody, keepLabel, noticeText } from '../src/ui/title';
 import type { Button } from '../src/ui/widgets';
 import { damageCases, memStore, okCases, ownKey } from './levels-save-shapes';
 
@@ -22,21 +25,22 @@ afterEach(() => setLang('en'));
 /** The Game's save handling (constructor, setSave, resetProgress, dismissSaveNotice) over an in-memory disk. */
 function boot(disk: ReturnType<typeof memStore>, preprod: boolean) {
   const storage: KeyValueStore = preprod ? preprodStorage(disk)! : disk;
-  const loaded = loadSaveWithStatus(storage);
+  const loaded = loadSaveWithStatus(preprod ? preprodStorage(memStore(disk.data))! : memStore(disk.data));
+  const saves = new SaveSession(storage);
   const pointer = { x: 0, y: 0, down: false, pressed: false, released: false };
   const sfx: string[] = [];
   const shell = {
     ctx: { pointer, assets: { get: () => undefined }, audio: { sfx: (n: string) => sfx.push(n) }, upgrades: new Set(), tutorial: false, time: 0, reducedMotion: false },
-    save: loaded.save,
-    saveStatus: loaded.status as SaveStatus,
+    get save() { return saves.save; },
+    get saveStatus(): SaveStatus { return saves.status; },
     audio: { sfx: (n: string) => sfx.push(n) },
     input: {},
     assets: { get: () => undefined },
-    setSave(s: SaveData) { shell.save = s; writeSave(storage, s); },
-    resetProgress() { shell.setSave(resetSave(shell.save)); shell.saveStatus = 'ok'; },
-    dismissSaveNotice() { shell.saveStatus = 'ok'; writeSave(storage, shell.save); },
-    toggleMute() {},
-    setLanguage() {},
+    setSave(s: SaveData) { saves.writeProgress(s); },
+    resetProgress() { shell.setSave(resetSave(shell.save)); },
+    dismissSaveNotice() { saves.dismiss(); },
+    toggleMute() { saves.writeSettings({ ...saves.save, muted: !saves.save.muted }); },
+    setLanguage(lang: Lang) { saves.writeSettings({ ...saves.save, lang }); },
     toTitle() {},
     toWorkOrders() {},
     toTrophies() {},
@@ -53,15 +57,24 @@ function boot(disk: ReturnType<typeof memStore>, preprod: boolean) {
 }
 
 const gameSource = import.meta.glob('../src/core/game.ts', { query: '?raw', import: 'default', eager: true })['../src/core/game.ts'] as string;
+const titleSource = import.meta.glob('../src/ui/title.ts', { query: '?raw', import: 'default', eager: true })['../src/ui/title.ts'] as string;
 const cases = damageCases();
 const LANGS: Lang[] = ['en', 'fr'];
+/** Thousands of generated cases per test: under a parallel full run the 5 s default is too short (Neon 4, P2). */
+const SLOW = 60_000;
 
 describe('a damaged save on the title', () => {
-  it('the Game loads with the status and clears it on a reset or a dismissal', () => {
+  it('the Game keeps its save in a SaveSession: progress, settings and the dismissal go through it', () => {
     const game = gameSource;
-    expect(game).toMatch(/loadSaveWithStatus\(this\.storage\)/);
-    expect(game).toMatch(/resetProgress\(\): void \{[^}]*this\._saveStatus = 'ok';/);
-    expect(game).toMatch(/dismissSaveNotice\(\): void \{[^}]*this\._saveStatus = 'ok';[^}]*writeSave\(this\.storage, this\._save\)/);
+    expect(game).toMatch(/this\.saves = new SaveSession\(this\.storage\)/);
+    expect(game).toMatch(/setSave\(s: SaveData\): void \{\s*this\.saves\.writeProgress\(s\);/);
+    expect(game).toMatch(/resetProgress\(\): void \{[^}]*this\.setSave\(resetSave\(this\._save\)\);/);
+    expect(game).toMatch(/dismissSaveNotice\(\): void \{[^}]*this\.saves\.dismiss\(\);\s*\}/);
+    expect(game).toMatch(/toggleMute\(\): void \{\s*this\.setSettings\(/);
+    expect(game).toMatch(/setLanguage\(lang: Lang\): void \{[^}]*this\.setSettings\(/);
+    // nothing else writes the save behind the session's back
+    expect(game.match(/\bwriteSave\(/g) ?? []).toEqual([]);
+    expect(game.match(/\bsaveStatus\b/g)?.length).toBe(1);
   });
 
   it('every damaged shape shows the notice and the reset button, EN and FR', () => {
@@ -77,7 +90,35 @@ describe('a damaged save on the title', () => {
       }
     }
     expect(misses).toEqual([]);
-  });
+  }, SLOW);
+
+  // Neon 3: an unreadable file was started fresh; the card must not say it was patched or offer to keep progress
+  it('the card body and keep button match the status, EN and FR', () => {
+    const misses: string[] = [];
+    const all = [...cases.map(c => ({ ...c, want: c.want })), ...okCases().map(c => ({ ...c, want: ['ok'] as const }))];
+    for (const c of all) {
+      for (const lang of LANGS) {
+        setLang(lang);
+        const f = boot(memStore(c.init), c.preprod);
+        const scene = f.title();
+        scene.relabel();
+        const str = activeTr().title.reset; // the live table (French typography applied)
+        const status = f.loaded.status;
+        const body = status === 'ok' ? str.body : status === 'unreadable' ? str.damagedLostBody : str.damagedBody;
+        const keep = status === 'unreadable' ? str.keepFresh : str.keep;
+        if (scene.saveStatus !== status || cardBody(scene.saveStatus) !== body || keepLabel(status) !== keep || scene.keep.label !== keep) misses.push(`${lang} ${status} ${c.name}`);
+      }
+    }
+    expect(misses).toEqual([]);
+    // the card view draws exactly that body
+    expect(titleSource).toMatch(/this\.body\.setBlock\(cardBody\(s\.saveStatus\)/);
+    expect(titleSource).toMatch(/this\.keep\.label = keepLabel\(this\.saveStatus\)/);
+    for (const lang of LANGS) {
+      const str = tr(lang);
+      expect(new Set([str.body, str.damagedBody, str.damagedLostBody]).size, lang).toBe(3);
+      expect(str.keepFresh, lang).not.toBe(str.keep);
+    }
+  }, SLOW);
 
   it('Erase needs the confirmation tap; then a reload is clean and ok, older keys untouched, settings kept', () => {
     for (const c of cases) {
@@ -106,24 +147,50 @@ describe('a damaged save on the title', () => {
       // no UI click sounds (sound-preferences)
       expect(f.sfx, c.name).toEqual([]);
     }
-  });
+  }, SLOW);
 
-  it('dismissing the notice keeps the loaded save, and the next load is ok', () => {
+  // Sol P2: dismissing an unreadable notice used to write a fresh save over the original bytes without asking
+  it('dismissing the notice hides it for the session and leaves storage byte-identical, for every status', () => {
     for (const c of cases) {
       const disk = memStore(c.init);
       const f = boot(disk, c.preprod);
+      const before = JSON.stringify(disk.data);
       const scene = f.title();
-      const own = ownKey(c.preprod);
-      const others = Object.fromEntries(Object.entries(disk.data).filter(([k]) => k !== own));
       f.tap(scene, scene.notice);
       expect(scene.notice.visible, c.name).toBe(false);
       expect(scene.reset.visible, c.name).toBe(hasProgress(f.shell.save));
       expect(scene.confirming, c.name).toBe(false);
+      expect(JSON.stringify(disk.data), c.name).toBe(before);
+      // back to the title in the same session: still hidden
+      expect(f.title().notice.visible, c.name).toBe(false);
+      // the next boot reads the same disk: an unreadable file is still reported, a repaired one was stored at load
       const again = boot(disk, c.preprod);
-      expect(again.loaded, c.name).toEqual({ save: f.loaded.save, status: 'ok' });
-      expect(Object.fromEntries(Object.entries(disk.data).filter(([k]) => k !== own)), c.name).toEqual(others);
+      expect(again.loaded.status, c.name).toBe(f.loaded.status === 'unreadable' ? 'unreadable' : 'ok');
+      expect(again.title().notice.visible, c.name).toBe(f.loaded.status === 'unreadable');
     }
-  });
+  }, SLOW);
+
+  // Neon 4: the status used to last the whole session, so a played shift still came back to the damaged notice
+  it('saved progress ends the notice; sound and language toggles do not, and never overwrite an unreadable file', () => {
+    for (const c of cases) {
+      const disk = memStore(c.init);
+      const f = boot(disk, c.preprod);
+      const before = JSON.stringify(disk.data);
+      f.shell.toggleMute();
+      f.shell.setLanguage('fr');
+      expect(f.title().notice.visible, c.name).toBe(true);
+      if (f.loaded.status === 'unreadable') expect(JSON.stringify(disk.data), c.name).toBe(before);
+      // a shift is played and its report saved
+      const played = { ...f.shell.save, reports: f.shell.save.reports + 1, levels: { ...f.shell.save.levels, level1: { stars: [true, false, false, false] as SaveData['levels']['level1']['stars'], delivered: true, bestTimeSec: 60, attempts: 1 } } };
+      f.shell.setSave(played);
+      const scene = f.title();
+      expect(scene.notice.visible, c.name).toBe(false);
+      expect(scene.damaged, c.name).toBe(false);
+      expect(scene.reset.visible, c.name).toBe(true);
+      const again = boot(disk, c.preprod);
+      expect(again.loaded, c.name).toEqual({ save: played, status: 'ok' });
+    }
+  }, SLOW);
 
   it('the card says the file was damaged only for a damaged save', () => {
     const damaged = boot(memStore(cases[0]!.init), cases[0]!.preprod).title();
@@ -151,9 +218,12 @@ describe('a damaged save on the title', () => {
         expect(line.length, line).toBeGreaterThan(10);
         expect(measure(line, NOTICE_TEXT.size, NOTICE_TEXT.weight), line).toBeLessThanOrEqual(SAVE_NOTICE.w - 22 - NOTICE_CROSS_W - 8);
       }
-      // the damaged card body leaves room for the Erase button, like the plain body
-      const lines = Math.ceil(measure(tr(lang).damagedBody, 17, 500, true) / (RESET_CARD.w - 64)) + 1;
-      expect(98 + lines * 23, lang).toBeLessThanOrEqual(RESET_CARD.h - 176);
+      // the damaged card bodies leave room for the Erase button, like the plain body
+      for (const body of [tr(lang).damagedBody, tr(lang).damagedLostBody]) {
+        const lines = Math.ceil(measure(body, 17, 500, true) / (RESET_CARD.w - 64)) + 1;
+        expect(98 + lines * 23, lang).toBeLessThanOrEqual(RESET_CARD.h - 176);
+      }
+      expect(measure(tr(lang).keepFresh, 24, 800), lang).toBeLessThanOrEqual(RESET_CARD.w - 64 - 24);
     }
     const scene = boot(memStore(cases[0]!.init), false).title();
     expect(SAVE_NOTICE.x).toBeGreaterThanOrEqual(16);

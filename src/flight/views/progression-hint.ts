@@ -155,16 +155,19 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
     if (lesson.zone(def, x, y, p)) inZone = true;
     if (cool && !cooling && lesson.zone(def, x, y, padFor(lessons.coolOff, active))) cooling = true;
   }
-  // v0.2 council R2: a tip flashed for a frame (L5 spawns in a lighthouse shadow) used to retire the lesson
-  if (!inZone && seen.stage === MET && seen.shownSec >= readSeconds(tip)) seen.stage = SPENT;
+  // v0.2 council R3 (Fable F3): a tip that is up stays for its hold even once the saucer leaves the zone or hovers
+  // into a ring (the leg ends at the lock, which takes the tip down)
+  const held = seen.lastT >= 0 && sim.t >= seen.upSince && sim.t - seen.upSince < lessonHoldSeconds(tip);
+  const read = metAndRead(seen, tip);
+  // v0.2 council R2: a tip flashed for a frame (L5 spawns in a lighthouse shadow) used to retire the lesson.
+  // Round 4 (Fable F3): it never retires in the middle of a showing's hold either
+  if (!inZone && !held && read) seen.stage = SPENT;
   if (cooling) {
     seen.lastT = -1;
     return lessons.coolOff;
   }
-  // v0.2 council R3 (Fable F3): a tip that is up stays for its hold even once the saucer leaves the zone or hovers
-  // into a ring (the leg ends at the lock, which takes the tip down)
-  const held = seen.lastT >= 0 && sim.t >= seen.upSince && sim.t - seen.upSince < lessonHoldSeconds(tip);
-  if ((!inZone && !held) || seen.stage === SPENT || (lesson.quietInRing && sim.inRing >= 0 && !held)) {
+  // round 4 (Fable F3): a lesson already met and read is not raised again (a leg starting in its zone flashed it)
+  if ((!inZone && !held) || seen.stage === SPENT || (read && seen.lastT < 0) || (lesson.quietInRing && sim.inRing >= 0 && !held)) {
     seen.lastT = -1;
     return '';
   }
@@ -172,6 +175,11 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
   if (seen.lastT >= 0 && sim.t > seen.lastT) seen.shownSec += Math.min(sim.t - seen.lastT, 0.1);
   seen.lastT = sim.t;
   return tip;
+}
+
+/** The lesson's hazard was met and its tip has been on screen for its read time (it may retire). */
+function metAndRead(seen: LessonRun, tip: string): boolean {
+  return seen.stage === MET && seen.shownSec >= readSeconds(tip);
 }
 
 /** The zone of the tip already on screen is LESSON_EXIT_PAD px wider (no per-frame closure). */

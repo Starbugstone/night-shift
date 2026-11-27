@@ -80,7 +80,11 @@ pour être lues, et celles des pièces s’affichent sur le chemin que vous pren
 ## Sauvegardes
 
 Votre progression de la v0.1 est conservée. Une sauvegarde abîmée ou vide ne passe plus pour une
-nouvelle partie : le jeu retrouve automatiquement la dernière qui est valable.
+nouvelle partie : le jeu garde toute la progression qu’il peut encore lire, au besoin dans une
+sauvegarde plus ancienne. Quand un dossier revient abîmé, l’écran titre le signale (« Dossier
+mâchouillé. On a sauvé ce qu’on a pu. », ou « Dossier réduit en miettes. En voici un neuf. » quand
+rien n’a pu être lu), et **Recommencer à zéro** reste à portée de main, derrière sa carte de
+confirmation.
 
 ## Corrections
 
@@ -91,4 +95,4 @@ nouvelle partie : le jeu retrouve automatiquement la dernière qui est valable.
   plus sur les objectifs.
 - Les remarques de Vrell sur les livraisons de justesse affichent désormais le même nombre de
   secondes que le rapport.
-- L’écran titre affiche de nouveau la version : **v0.2**.
+- L’écran titre suit désormais automatiquement le numéro de version (**v0.2**).

@@ -16,8 +16,13 @@ name: Test and publish game
 # its pushed build with the other branch's live build (a second, fallback bundle); only a superseded
 # pushed commit, or a stale branch with no live build to fall back on, publishes nothing.
 # Every build artifact and Pages bundle is named by run and attempt, and the site is assembled only
-# from the builds this attempt's successful build legs name (Sol P2, round 3): a rerun never picks up
-# an earlier attempt's artifact, and deploy-pages never sees two bundles with one name.
+# from the builds this attempt uploaded (Sol P2, round 3): a rerun never picks up an earlier attempt's
+# artifact, and deploy-pages never sees two bundles with one name.
+# Round 4: the build legs declare no job outputs (Neon P1: matrix legs share one job-level outputs map,
+# so the leg that finished last could blank the other branch's artifact name); the assemble job lists
+# this run's artifacts and takes each build by its exact name, attempt included. Runs queue in order
+# (Sol P3: by default a group keeps one pending run, so a third push replaced the queued one), and a
+# live build whose kept artifact expired is rebuilt through the same tests (Sol P4).
 on:
   push:
     branches: [main, preprod]
@@ -30,6 +35,8 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: false
+  # every push waits its turn (up to 100 pending runs) instead of replacing the one already waiting
+  queue: max
 jobs:
   pin:
     runs-on: ubuntu-latest
@@ -86,8 +93,12 @@ jobs:
               const entry = live.find(t => t.branch === branch && typeof t.sha === 'string');
               const kept = entry ? await keptBuild(branch, entry) : null;
               if (kept) keep = kept;
+              // the site serves a build whose artifact has expired: rebuild that exact commit through the same
+              // tests, so a failing newer tip still has a tested live build to fall back on (Sol P4, round 4)
+              const rebuild = entry && !kept && entry.sha !== sha;
               // a newer tip is built too; it gates only when there is no last good build to fall back on
-              if (sha !== kept?.sha) build.push({ branch, sha, gate: !kept });
+              if (sha !== kept?.sha) build.push({ branch, sha, gate: !kept && !rebuild });
+              if (rebuild) build.push({ branch, sha: entry.sha, gate: false, live: true });
             }
             core.setOutput('pushed', pushed);
             core.setOutput('targets', JSON.stringify(targets));
@@ -95,19 +106,16 @@ jobs:
             core.setOutput('keep', keep ? JSON.stringify(keep) : '');
             core.setOutput('keep_name', keep?.name ?? '');
             core.setOutput('keep_run', keep ? String(keep.run) : '');
-            await core.summary.addRaw(`Pushed ${pushed} ${context.sha}. Building ${build.map(b => `${b.branch} ${b.sha}${b.gate ? '' : ' (falls back to the live build)'}`).join(', ')}.${keep ? ` Last good ${keep.branch}: ${keep.sha} (run ${keep.run}).` : ''}\n`).write();
+            await core.summary.addRaw(`Pushed ${pushed} ${context.sha}. Building ${build.map(b => `${b.branch} ${b.sha}${b.live ? ' (the live build, its artifact expired)' : b.gate ? '' : ' (falls back to the live build)'}`).join(', ')}.${keep ? ` Last good ${keep.branch}: ${keep.sha} (run ${keep.run}).` : ''}\n`).write();
   # Build and deploy are separate jobs (the layout GitHub documents): deploying in the same job as
   # the upload sometimes asked for the artifact before it was listed ("No artifacts named
   # github-pages"), failing about one push in three.
   build:
     needs: pin
-    name: Test and build ${{ matrix.branch }}
+    name: Test and build ${{ matrix.branch }} ${{ matrix.sha }}
     runs-on: ubuntu-latest
-    # each leg names only its own branch's artifact, and only once it has uploaded it, so the
-    # assemble job sees exactly the builds this attempt's successful legs made (Sol P2, round 3)
-    outputs:
-      main: ${{ steps.built.outputs.main }}
-      preprod: ${{ steps.built.outputs.preprod }}
+    # no job outputs: matrix legs share one outputs map, the last leg to finish wins (Neon P1, round 4).
+    # A leg's upload is its last step, so this attempt's artifact exists only if the leg passed.
     strategy:
       # one branch's failing tip must not stop the other branch's build (Opus F3)
       fail-fast: false
@@ -153,12 +161,6 @@ jobs:
           path: dist
           if-no-files-found: error
           retention-days: 90
-      - id: built
-        name: Name the uploaded build
-        env:
-          BRANCH: ${{ matrix.branch }}
-          ARTIFACT: dist-${{ matrix.branch }}-${{ matrix.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-        run: echo "$BRANCH=$ARTIFACT" >> "$GITHUB_OUTPUT"
   assemble:
     needs: [pin, build]
     # runs when a build leg failed too: only the pushed branch has to pass (see the choose step)
@@ -170,20 +172,48 @@ jobs:
       bundle: ${{ steps.choose.outputs.bundle }}
       fallback_bundle: ${{ steps.choose.outputs.fallback_bundle }}
     steps:
-      # by the names this attempt's successful build legs gave, never a pattern: a pattern also matches
-      # an earlier attempt's upload of a build that failed this time
+      # each pinned build by its exact name in this run and attempt, never a pattern or a job output: a
+      # pattern also matches an earlier attempt's upload of a build that failed this time, and a matrix
+      # job's outputs keep only the last leg's values
+      - id: find
+        name: Find the builds this attempt uploaded
+        uses: actions/github-script@v7
+        env:
+          BUILD: ${{ needs.pin.outputs.build }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const attempt = process.env.RUN_ATTEMPT;
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, { owner, repo, run_id: context.runId, per_page: 100 });
+            const uploaded = new Set(artifacts.filter(a => !a.expired).map(a => a.name));
+            const names = { main: '', preprod: '', live: '' };
+            for (const b of JSON.parse(process.env.BUILD)) {
+              const name = `dist-${b.branch}-${b.sha}-${context.runId}-${attempt}`;
+              if (uploaded.has(name)) { names[b.live ? 'live' : b.branch] = name; continue; }
+              // "Re-run failed jobs" keeps a passed leg from an earlier attempt; only this attempt's builds count
+              const earlier = artifacts.find(a => a.name.startsWith(`dist-${b.branch}-${b.sha}-${context.runId}-`));
+              core.warning(`${b.branch} ${b.sha}: no build from attempt ${attempt}${earlier ? ` (${earlier.name} is from an earlier attempt; use "Re-run all jobs")` : ''}`);
+            }
+            for (const [key, name] of Object.entries(names)) core.setOutput(key, name);
       - name: Fetch this attempt's main build
-        if: ${{ needs.build.outputs.main != '' }}
+        if: ${{ steps.find.outputs.main != '' }}
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build.outputs.main }}
-          path: dists/${{ needs.build.outputs.main }}
+          name: ${{ steps.find.outputs.main }}
+          path: dists/${{ steps.find.outputs.main }}
       - name: Fetch this attempt's preprod build
-        if: ${{ needs.build.outputs.preprod != '' }}
+        if: ${{ steps.find.outputs.preprod != '' }}
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.build.outputs.preprod }}
-          path: dists/${{ needs.build.outputs.preprod }}
+          name: ${{ steps.find.outputs.preprod }}
+          path: dists/${{ steps.find.outputs.preprod }}
+      - name: Fetch this attempt's rebuild of the other branch's live build
+        if: ${{ steps.find.outputs.live != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.find.outputs.live }}
+          path: dists/${{ steps.find.outputs.live }}
       - name: Fetch the other branch's last good build
         if: ${{ needs.pin.outputs.keep_run != '' }}
         uses: actions/download-artifact@v4
@@ -197,7 +227,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           BUILD: ${{ needs.pin.outputs.build }}
-          BUILT: ${{ toJSON(needs.build.outputs) }}
+          BUILT: ${{ toJSON(steps.find.outputs) }}
           PUSHED: ${{ needs.pin.outputs.pushed }}
           KEEP: ${{ needs.pin.outputs.keep }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
@@ -206,19 +236,23 @@ jobs:
             const fs = require('fs');
             const { owner, repo } = context.repo;
             const built = JSON.parse(process.env.BUILD);
-            // artifact names from this attempt's successful build legs (a failed leg names nothing)
+            // artifact names the find step matched for this attempt (a failed leg uploaded nothing)
             const names = (() => { try { return JSON.parse(process.env.BUILT || '{}') ?? {}; } catch { return {}; } })();
             const keep = process.env.KEEP ? JSON.parse(process.env.KEEP) : null;
             const pushed = process.env.PUSHED;
             const tip = async (branch) => (await github.rest.repos.getBranch({ owner, repo, branch })).data.commit.sha;
             const published = [];
-            const kept = keep ? { branch: keep.branch, sha: keep.sha, dir: `dists/${keep.name}`, run: keep.run, artifact: keep.name } : null;
+            // only this run and attempt's own upload of this exact commit counts
+            const ours = (b, name) => {
+              const own = b && typeof name === 'string' && name === `dist-${b.branch}-${b.sha}-${context.runId}-${process.env.RUN_ATTEMPT}` && fs.existsSync(`dists/${name}/index.html`);
+              return own ? { branch: b.branch, sha: b.sha, dir: `dists/${name}`, run: context.runId, artifact: name } : null;
+            };
+            // the other branch's live build: its kept artifact, or this attempt's rebuild of it (Sol P4, round 4)
+            const rebuilt = ours(built.find(b => b.live), names.live);
+            const kept = rebuilt ?? (keep ? { branch: keep.branch, sha: keep.sha, dir: `dists/${keep.name}`, run: keep.run, artifact: keep.name } : null);
             for (const branch of ['main', 'preprod']) {
-              const mine = built.find(b => b.branch === branch);
-              const name = mine ? names[branch] : undefined;
-              // only this run's own upload of this exact commit counts
-              const ok = typeof name === 'string' && name.startsWith(`dist-${branch}-${mine.sha}-${context.runId}-`) && fs.existsSync(`dists/${name}/index.html`);
-              const fresh = ok ? { branch, sha: mine.sha, dir: `dists/${name}`, run: context.runId, artifact: name } : null;
+              const mine = built.find(b => b.branch === branch && !b.live);
+              const fresh = ours(mine, names[branch]);
               if (branch === pushed) {
                 if (!fresh) return core.setFailed(`${branch} ${mine?.sha}: its tests, sweep or build failed; nothing is published`);
                 // a rerun of an older push: the newer push publishes instead

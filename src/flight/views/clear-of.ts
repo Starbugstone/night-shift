@@ -89,9 +89,10 @@ export function segmentHitsBox(ax: number, ay: number, bx: number, by: number, b
   return true;
 }
 
-/** Whether a w × h box at (x, y) misses every one of `obs[0..n)`. */
-export function fits(obs: readonly Box[], n: number, x: number, y: number, w: number, h: number): boolean {
+/** Whether a w × h box at (x, y) misses every one of `obs[0..n)` (but `skip`, when given). */
+export function fits(obs: readonly Box[], n: number, x: number, y: number, w: number, h: number, skip = -1): boolean {
   for (let i = 0; i < n; i++) {
+    if (i === skip) continue;
     const b = obs[i]!;
     if (x < b.x + b.w && x + w > b.x && y < b.y + b.h && y + h > b.y) return false;
   }
@@ -174,8 +175,11 @@ export function placePill(obs: readonly Box[], n: number, a: PillAsk, out: { x: 
  * `placePill` finds room round all of those and each other. `obs` needs `count` spare boxes after
  * `n` (they are overwritten). Writes each pill's top-left corner into `outs[i]`; allocates nothing.
  * A pill with no free space is flagged by `moved[i] === 2`.
+ * `soft` (v0.2 council round 4, Fable F2) is the index of an obstacle drawn above the pills (the saucer's fuse box):
+ * a pill the placement would push past PILL_NEAR gaps, or find no room for, takes its one-gap spot instead when that
+ * obstacle is the only thing in the way there.
  */
-export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array): void {
+export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], count: number, outs: readonly { x: number; y: number }[], moved: Uint8Array, soft = -1): void {
   for (let i = 0; i < count; i++) {
     const a = asks[i]!;
     const o = outs[i]!;
@@ -203,13 +207,24 @@ export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], coun
         o.x = x;
         o.y = y;
       }
-      if (distance === Infinity) {
-        moved[i] = 2;
-        continue;
-      }
+      if (distance === Infinity) moved[i] = 2;
     }
+    if (soft >= 0 && (moved[i] === 2 || Math.abs(o.y + a.h / 2 - a.ringY) / a.gap > PILL_NEAR) && underSoft(obs, n, a, soft, o)) moved[i] = 1;
+    if (moved[i] === 2) continue;
     n = keep(obs, n, o.x, o.y, a);
   }
+}
+
+/** A one-gap spot (its labelled side first, at its own x) blocked by nothing but obstacle `soft`: written into `o`. */
+function underSoft(obs: readonly Box[], n: number, a: PillAsk, soft: number, o: { x: number; y: number }): boolean {
+  for (let pass = 0; pass < 2; pass++) {
+    const y = a.ringY + (pass === 0 ? a.side : -a.side) * a.gap - a.h / 2;
+    if (y < a.top || y + a.h > VIEW_H - MARGIN || !fits(obs, n, a.x, y, a.w, a.h, soft)) continue;
+    o.x = a.x;
+    o.y = y;
+    return true;
+  }
+  return false;
 }
 
 /** A solid line on screen (px), as the deep view passes it to the pill check. */

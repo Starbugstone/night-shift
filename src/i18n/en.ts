@@ -357,6 +357,9 @@ export const en = {
       damagedKept: 'Your file got chewed. We kept what we could.',
       damagedLost: 'File chewed to bits. Here’s a fresh one.',
       damagedBody: 'Your file came back damaged and the Bureau patched what it could. Shredding it erases whatever survived. Sound and language settings stay.',
+      // v0.2 damaged save (council round 4): an unreadable file, nothing survived
+      damagedLostBody: 'Your file came back unreadable, so the Bureau started a fresh one. Shredding clears the damaged file for good. Sound and language settings stay.',
+      keepFresh: 'Keep the fresh file',
     },
   },
 

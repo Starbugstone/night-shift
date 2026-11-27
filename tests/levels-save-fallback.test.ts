@@ -272,9 +272,21 @@ describe('a damaged current save keeps its level progress (round 3, Fable F4)', 
     }
   });
 
-  it('only the current key is salvaged: a damaged v2 still falls through to v1', () => {
+  it('a sound v1 still beats a damaged v2: an older key is salvaged only when no key holds a save', () => {
     const bad = JSON.stringify({ version: 2, glorbs: null, levels: { level3: cleared } });
     expect(loadSave(memStore({ [V2_SAVE_KEY]: bad, [LEGACY_SAVE_KEY]: V1 })).glorbs).toBe(321);
+  });
+
+  // round 4 (Opus O2): a v0.1 save under the v2 key with one wrong-type field used to load blank, and the first new
+  // save hid it for good
+  it.each([['glorbs', null], ['upgrades', {}], ['muted', 'x'], ['reports', []]] as const)('%s = %j under the v2 key alone: its level progress is salvaged', (field, value) => {
+    const bad = JSON.stringify({ version: 2, glorbs: 420, reports: 6, levels: { level1: cleared, level3: cleared }, [field]: value });
+    const store = memStore({ [V2_SAVE_KEY]: bad });
+    const save = loadSave(store);
+    expect(save.levels.level3.delivered).toBe(true);
+    expect(save.glorbs).toBe(field === 'glorbs' ? 0 : 420);
+    expect(store.data[V2_SAVE_KEY]).toBe(bad);
+    expect(JSON.parse(store.data[SAVE_KEY]!)).toEqual(save);
   });
 });
 

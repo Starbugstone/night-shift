@@ -35,6 +35,9 @@ const REPEAT_BASELINE: Readonly<Record<string, string>> = {
   'one souvenir from the': 'per-level souvenir verdict opener; the joke is the sentence after it',
   'save the clock tower': 'the 1955 flyer\'s printed slogan, quoted on its own souvenir and shelf card',
   'it in the morning': 'everyday phrase in three unrelated jokes',
+  // v0.2 council round 4 (Neon 3): the three reset-card bodies (plain, damaged, unreadable) end on the same promise
+  'sound and language settings': 'the reset cards\' shared settings promise (plain, damaged and unreadable file), not a joke',
+  'and language settings stay': 'the reset cards\' shared settings promise (plain, damaged and unreadable file), not a joke',
   'still on the shelf': 'pending',
   'it was the only': 'pending',
   'nobody saw a thing': 'pending',

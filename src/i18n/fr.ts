@@ -55,6 +55,9 @@ export const fr: Strings = {
       damagedKept: 'Dossier mâchouillé. On a sauvé ce qu’on a pu.',
       damagedLost: 'Dossier réduit en miettes. En voici un neuf.',
       damagedBody: 'Votre dossier est revenu abîmé et le Bureau a rafistolé ce qu’il a pu. Le broyer efface tout ce qui a survécu. Vos réglages de son et de langue sont conservés.',
+      // v0.2 damaged save (council round 4): an unreadable file, nothing survived
+      damagedLostBody: 'Votre dossier est revenu illisible, alors le Bureau en a ouvert un neuf. Le broyer supprime le fichier abîmé pour de bon. Vos réglages de son et de langue sont conservés.',
+      keepFresh: 'Garder le dossier neuf',
     },
   },
 

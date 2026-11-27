@@ -11,7 +11,8 @@ import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom, levelRooms } fro
 import { applyDeepRun, applyRun, backfillSpecimens, isLevelUnlocked, setUnlockEverything } from '../levels/progress';
 import { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
-import { clearSave, loadSave, loadSaveWithStatus, writeSave, type KeyValueStore, type SaveData, type SaveStatus } from '../levels/save';
+import { clearSave, loadSave, type KeyValueStore, type SaveData, type SaveStatus } from '../levels/save';
+import { SaveSession } from './save-session';
 import { getLang, resolveLang, setLang, tr, type Lang } from '../i18n';
 import { AbortScene } from '../ui/abort';
 import { DeepAbductScene } from '../ui/deep-abduct';
@@ -117,9 +118,8 @@ export class Game implements Shell {
   readonly scenes: SceneManager;
   private storage: KeyValueStore | null;
   readonly preprod: boolean;
-  private _save: SaveData;
-  /** v0.2 damaged save: what the loader found at boot, until a reset or the player dismisses the notice. */
-  private _saveStatus: SaveStatus;
+  /** v0.2 damaged save: the save and what the loader found (src/core/save-session.ts). */
+  private readonly saves: SaveSession;
   /** Live flight scene (for debug/tests). */
   flight: FlightScene | DeepFlightScene | null = null;
   /** The deep shift in progress (L3+), if any. */
@@ -138,9 +138,7 @@ export class Game implements Shell {
     this.preprod = isPreprodPath(window.location.pathname);
     setUnlockEverything(this.preprod);
     this.storage = this.preprod ? preprodStorage(browserStorage()) : browserStorage();
-    const loaded = loadSaveWithStatus(this.storage);
-    this._save = loaded.save;
-    this._saveStatus = loaded.status;
+    this.saves = new SaveSession(this.storage);
     backfillSpecimens(this._save); // v4 specimens: older saves get their archive from past deliveries
     this.audio.setMuted(this._save.muted);
     this.ctx = {
@@ -160,35 +158,47 @@ export class Game implements Shell {
   }
 
   get save(): SaveData {
-    return this._save;
+    return this.saves.save;
   }
 
+  private get _save(): SaveData {
+    return this.saves.save;
+  }
+
+  /** Progress: written, and (v0.2 council round 4, Neon 4) the damaged-file notice has nothing left to report. */
   setSave(s: SaveData): void {
-    this._save = s;
+    this.saves.writeProgress(s);
+    this.applySave(s);
+  }
+
+  /** Sound and language: never written over an unreadable file the player has not shredded (Sol P2). */
+  private setSettings(s: SaveData): void {
+    this.saves.writeSettings(s);
+    this.applySave(s);
+  }
+
+  private applySave(s: SaveData): void {
     this.ctx.upgrades = new Set(s.upgrades);
     this.audio.setMuted(s.muted);
-    writeSave(this.storage, s);
   }
 
   toggleMute(): void {
-    this.setSave({ ...this._save, muted: !this._save.muted });
+    this.setSettings({ ...this._save, muted: !this._save.muted });
   }
 
   resetProgress(): void {
     // v4 reset: through setSave, so preprod's store writes only its own key
     this.run = null;
     this.setSave(resetSave(this._save));
-    this._saveStatus = 'ok';
   }
 
   get saveStatus(): SaveStatus {
-    return this._saveStatus;
+    return this.saves.status;
   }
 
   dismissSaveNotice(): void {
-    // v0.2 damaged save: storing the loaded save replaces the damaged value, so the next load is clean
-    this._saveStatus = 'ok';
-    writeSave(this.storage, this._save);
+    // v0.2 council round 4 (Sol P2): hidden for this session only; the damaged value stays until a shred or progress
+    this.saves.dismiss();
   }
 
   /** `?lang=fr|en` for testing: beats the saved choice until the player picks one. */
@@ -196,7 +206,7 @@ export class Game implements Shell {
 
   setLanguage(lang: Lang): void {
     this.langOverride = null;
-    this.setSave({ ...this._save, lang });
+    this.setSettings({ ...this._save, lang });
     this.applyLanguage();
   }
 
@@ -215,7 +225,6 @@ export class Game implements Shell {
       if (params.get('reset') === '1') {
         clearSave(this.storage);
         this.setSave(loadSave(this.storage));
-        this._saveStatus = 'ok';
       }
       if (params.get('unlock') === '1') {
         this.setSave({ ...this._save, allUnlocked: true, glorbs: Math.max(this._save.glorbs, 999) });

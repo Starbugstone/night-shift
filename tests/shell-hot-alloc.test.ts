@@ -22,6 +22,14 @@ const COPIES = new Set(['map', 'filter', 'slice', 'concat', 'split', 'flatMap', 
 const inScope = (file: string): boolean =>
   /^src\/(flight\/views|abduct\/views|ui\/views)\//.test(file) || /-view\.ts$/.test(file);
 
+/**
+ * Round 4 (Fable F4): a view class outside the view files (src/ui/title.ts SaveNoticeView, src/abduct/draw.ts
+ * AbductView and HumanArt...): one that implements SceneView, or whose name ends in View or Art.
+ */
+const isViewClass = (cls: ts.ClassLikeDeclaration): boolean =>
+  /(View|Art)$/.test(cls.name?.text ?? '') ||
+  !!cls.heritageClauses?.some(h => h.token === ts.SyntaxKind.ImplementsKeyword && h.types.some(t => t.expression.getText() === 'SceneView'));
+
 /** Minimal posix path helpers (the tests have no node typings). */
 const path = {
   dirname: (p: string): string => p.slice(0, p.lastIndexOf('/')),
@@ -70,6 +78,8 @@ interface Module {
   classes: Map<string, ts.ClassLikeDeclaration>;
   /** Local name → [module file, exported name] for relative named imports. */
   imports: Map<string, [string, string]>;
+  /** Interface name → the classes here that implement it (round 4, Fable F4: fields typed by an interface). */
+  implementers: Map<string, ts.ClassLikeDeclaration[]>;
 }
 
 function topFunctions(src: ts.SourceFile): Map<string, ts.FunctionLikeDeclaration> {
@@ -105,12 +115,19 @@ export function loadModules(sources: Record<string, string>): Map<string, Module
   for (const [file, text] of Object.entries(sources)) {
     const src = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
     const classes = new Map<string, ts.ClassLikeDeclaration>();
+    const implementers = new Map<string, ts.ClassLikeDeclaration[]>();
     const find = (n: ts.Node): void => {
-      if ((ts.isClassDeclaration(n) || ts.isClassExpression(n)) && n.name) classes.set(n.name.text, n);
+      if ((ts.isClassDeclaration(n) || ts.isClassExpression(n)) && n.name) {
+        classes.set(n.name.text, n);
+        for (const h of n.heritageClauses ?? []) {
+          if (h.token !== ts.SyntaxKind.ImplementsKeyword) continue;
+          for (const t of h.types) if (ts.isIdentifier(t.expression)) implementers.set(t.expression.text, [...implementers.get(t.expression.text) ?? [], n]);
+        }
+      }
       ts.forEachChild(n, find);
     };
     find(src);
-    mods.set(file, { src, fns: topFunctions(src), classes, imports: relativeImports(file, src, files) });
+    mods.set(file, { src, fns: topFunctions(src), classes, imports: relativeImports(file, src, files), implementers });
   }
   return mods;
 }
@@ -133,6 +150,17 @@ function resolveClass(mods: Map<string, Module>, file: string, name: string): [s
   const imp = mod.imports.get(name);
   const cls = imp && mods.get(imp[0])?.classes.get(imp[1]);
   return imp && cls ? [imp[0], cls] : null;
+}
+
+/** The classes a field's type name stands for: the class itself, or every class in src that implements the interface. */
+function resolveClasses(mods: Map<string, Module>, file: string, name: string): [string, ts.ClassLikeDeclaration][] {
+  const cls = resolveClass(mods, file, name);
+  if (cls) return [cls];
+  const imp = mods.get(file)!.imports.get(name);
+  const iface = imp ? imp[1] : name;
+  const out: [string, ts.ClassLikeDeclaration][] = [];
+  for (const [f, mod] of mods) for (const c of mod.implementers.get(iface) ?? []) out.push([f, c]);
+  return out;
 }
 
 /** The class name a type annotation names (`X`, `X | null`, `readonly X`), or null. */
@@ -169,6 +197,34 @@ function methodsOf(cls: ts.ClassLikeDeclaration): Map<string, ts.MethodDeclarati
     if ((ts.isMethodDeclaration(m) || ts.isGetAccessorDeclaration(m)) && m.body && ts.isIdentifier(m.name)) methods.set(m.name.text, m);
   }
   return methods;
+}
+
+/**
+ * Local names a function body gives to fields of `this` (`const rl = this.roomLessons`, `const { help } = this`),
+ * mapped to the field's class (round 4, Opus O5). Nested functions keep their own names out.
+ */
+function fieldAliases(body: ts.Node, fields: Map<string, string>): Map<string, string> {
+  const out = new Map<string, string>();
+  const visit = (n: ts.Node): void => {
+    if (isFunction(n) && n !== body.parent) return;
+    if (ts.isVariableDeclaration(n) && n.initializer) {
+      const init = unwrap(n.initializer);
+      if (ts.isIdentifier(n.name) && ts.isPropertyAccessExpression(init) && init.expression.kind === ts.SyntaxKind.ThisKeyword) {
+        const cls = fields.get(init.name.text);
+        if (cls) out.set(n.name.text, cls);
+      }
+      if (ts.isObjectBindingPattern(n.name) && init.kind === ts.SyntaxKind.ThisKeyword) {
+        for (const el of n.name.elements) {
+          const field = el.propertyName && ts.isIdentifier(el.propertyName) ? el.propertyName.text : ts.isIdentifier(el.name) ? el.name.text : null;
+          const cls = field ? fields.get(field) : undefined;
+          if (cls && ts.isIdentifier(el.name)) out.set(el.name.text, cls);
+        }
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(body);
+  return out;
 }
 
 /** A default parameter the call leaves out that allocates (`out = { x: 0 }`), or null. */
@@ -249,10 +305,9 @@ export function hotAllocations(mods: Map<string, Module>): { found: string[]; ho
   type Job = { file: string; body: ts.Node; owner: string; methods: Map<string, ts.MethodDeclaration | ts.GetAccessorDeclaration> | null; fields: Map<string, string> | null };
   const queue: Job[] = [];
   for (const [file, mod] of mods) {
-    if (!inScope(file)) continue;
     const classes: ts.ClassLikeDeclaration[] = [];
     const find = (n: ts.Node): void => {
-      if (ts.isClassDeclaration(n) || ts.isClassExpression(n)) classes.push(n);
+      if ((ts.isClassDeclaration(n) || ts.isClassExpression(n)) && (inScope(file) || isViewClass(n))) classes.push(n);
       ts.forEachChild(n, find);
     };
     find(mod.src);
@@ -305,13 +360,15 @@ export function hotAllocations(mods: Map<string, Module>): { found: string[]; ho
         if (m && called) { const d = defaultAllocation(m, n.parent as ts.CallExpression); if (d) report(n.parent, d); }
         if (m && (called || ts.isGetAccessorDeclaration(m))) follow(m, file, `${owner.split('.')[0]}.${n.name.text}`, methods, fields);
       }
-      // this.<field>.<method>(): into the field's class, wherever it is declared (Fable F6)
+      // this.<field>.<method>(): into the field's class, wherever it is declared (Fable F6); also through a local
+      // alias of the field, `const rl = this.roomLessons; rl.tip(…)` (round 4, Opus O5)
       if (!guarded && fields && ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)) {
         const target = unwrap(n.expression.expression);
-        if (ts.isPropertyAccessExpression(target) && target.expression.kind === ts.SyntaxKind.ThisKeyword) {
-          const clsName = fields.get(target.name.text);
-          const hit = clsName ? resolveClass(mods, file, clsName) : null;
-          if (hit) {
+        const clsName = ts.isPropertyAccessExpression(target) && target.expression.kind === ts.SyntaxKind.ThisKeyword
+          ? fields.get(target.name.text)
+          : ts.isIdentifier(target) ? aliases.get(target.text) : undefined;
+        for (const hit of clsName ? resolveClasses(mods, file, clsName) : []) {
+          {
             const ms = methodsOf(hit[1]);
             const m = ms.get(n.expression.name.text);
             if (m) {
@@ -333,6 +390,7 @@ export function hotAllocations(mods: Map<string, Module>): { found: string[]; ho
       }
       ts.forEachChild(n, c => visit(c, guarded));
     };
+    const aliases = fields ? fieldAliases(body, fields) : new Map<string, string>();
     if (ts.isBlock(body)) visit(body, false);
     else ts.forEachChild(body, c => visit(c, false));
   }
@@ -406,6 +464,60 @@ describe('view sync paths allocate nothing per frame', () => {
     expect(field).toEqual(['src/flight/helper.ts:1 Helper.step: array literal']);
   });
 
+  // round 4 (Opus O5): a call through a local alias of the field used to pass
+  it('follows a local alias of a field (`const rl = this.roomLessons; rl.tip()`) (mutation check)', () => {
+    const helper = 'export class Helper { step(k: number): number { return [k].length; } }\n';
+    for (const body of ['const h = this.help; h.step(1);', 'const h = this.help!; return void h.step(1);', 'const { help } = this; help.step(1);', 'const { help: h } = this; h.step(1);']) {
+      const aliased = hotAllocations(loadModules({
+        'src/flight/views/v.ts': `import { Helper } from '../helper';\nclass V { constructor(private readonly help: Helper) {} sync(): void { ${body} } }\n`,
+        'src/flight/helper.ts': helper,
+      })).found.map(f => f.replace(/ \(.*$/, ''));
+      expect(aliased, body).toEqual(['src/flight/helper.ts:1 Helper.step: array literal']);
+    }
+    // on the real sources (Opus's probe): deep-view.ts reaches RoomLessons through an alias, and RoomLessons gets a closure
+    const closure = mutate('src/abduct/deep-view.ts',
+      '    let tip = \'\';\n',
+      '    let tip = \'\';\n    const rl = this.roomLessons;\n');
+    closure['src/abduct/deep-view.ts'] = closure['src/abduct/deep-view.ts']!.replace('else tip = this.roomLessons.tip(chestX, chestY, pad);', 'else tip = rl.tip(chestX, chestY, pad);');
+    expect(closure['src/abduct/deep-view.ts']).toContain('rl.tip(chestX, chestY, pad)');
+    closure['src/abduct/room-lessons.ts'] = SOURCES['src/abduct/room-lessons.ts']!.replace(
+      'if (h.kind === kind && hazardReach(h, x, y) < lessonNear(kind) + pad) return true;',
+      'if ([h].some(k => k.kind === kind && hazardReach(k, x, y) < lessonNear(kind) + pad)) return true;');
+    expect(closure['src/abduct/room-lessons.ts']).not.toBe(SOURCES['src/abduct/room-lessons.ts']);
+    expect(hotAllocations(loadModules(closure)).found.some(f => /room-lessons\.ts:\d+ RoomLessons\.inZone: closure/.test(f))).toBe(true);
+    // this.<field>.<method>() into a class declared outside every view file, typed by a constructor parameter property
+    const field = hotAllocations(loadModules({
+      'src/flight/views/v.ts': "import { Helper } from '../helper';\nclass V { constructor(private readonly help: Helper) {} sync(): void { this.help.step(1); } }\n",
+      'src/flight/helper.ts': 'export class Helper { step(k: number): number { return [k].length; } }\n',
+    })).found.map(f => f.replace(/ \(.*$/, ''));
+    expect(field).toEqual(['src/flight/helper.ts:1 Helper.step: array literal']);
+  });
+
+  // round 4 (Opus O5): a call through a local alias of the field used to pass
+  it('follows a local alias of a field (`const rl = this.roomLessons; rl.tip()`) (mutation check)', () => {
+    const helper = 'export class Helper { step(k: number): number { return [k].length; } }\n';
+    for (const body of ['const h = this.help; h.step(1);', 'const h = this.help!; return void h.step(1);', 'const { help } = this; help.step(1);', 'const { help: h } = this; h.step(1);']) {
+      const aliased = hotAllocations(loadModules({
+        'src/flight/views/v.ts': `import { Helper } from '../helper';\nclass V { constructor(private readonly help: Helper) {} sync(): void { ${body} } }\n`,
+        'src/flight/helper.ts': helper,
+      })).found.map(f => f.replace(/ \(.*$/, ''));
+      expect(aliased, body).toEqual(['src/flight/helper.ts:1 Helper.step: array literal']);
+    }
+    // on the real sources: RoomLessons' closure reached through an alias in the view that holds it
+    const holder = Object.entries(SOURCES).find(([f, t]) => inScope(f) && /this\.roomLessons\.\w+\(/.test(t));
+    expect(holder, 'a view calls this.roomLessons.<method>()').toBeDefined();
+    const [file, text] = holder!;
+    const call = /this\.roomLessons\.(\w+)\(/.exec(text)!;
+    const aliased = { ...SOURCES, [file]: text.replace(call[0], `(() => 0, 0) as unknown as void; const rl = this.roomLessons; rl.${call[1]}(`) };
+    void aliased;
+    const closure = { ...SOURCES, [file]: text.replace(call[0], `rlAlias.${call[1]}(`).replace(/(\n(\s*)[^\n]*rlAlias\.)/, `\n$2const rlAlias = this.roomLessons;$1`) };
+    closure['src/abduct/room-lessons.ts'] = SOURCES['src/abduct/room-lessons.ts']!.replace(
+      'if (h.kind === kind && hazardReach(h, x, y) < lessonNear(kind) + pad) return true;',
+      'if ([h].some(k => k.kind === kind && hazardReach(k, x, y) < lessonNear(kind) + pad)) return true;');
+    expect(closure['src/abduct/room-lessons.ts']).not.toBe(SOURCES['src/abduct/room-lessons.ts']);
+    expect(hotAllocations(loadModules(closure)).found.some(f => /room-lessons\.ts:\d+ RoomLessons\.inZone: closure/.test(f))).toBe(true);
+  });
+
   it('an early-return change check (`if (x === this.last) return;`) guards the rest of the method', () => {
     const cached = loadModules({
       'src/flight/views/w.ts': 'class W { sync(f: object): void { this.a.x = 1; if (f === this.last) return; this.last = f; this.o = { f }; } }\n',
@@ -416,4 +528,23 @@ describe('view sync paths allocate nothing per frame', () => {
     });
     expect(hotAllocations(unguarded).found.length).toBe(1);
   });
+
+  // round 4 (Fable F4): view classes outside the view files and a field typed by an interface were never scanned
+  it('scans view classes outside the view files and fields typed by an interface (mutation check)', () => {
+    const hit = (sources: Record<string, string>, re: RegExp) => hotAllocations(loadModules(sources)).found.some(f => re.test(f));
+    // a per-frame template string in the title's damaged-save notice
+    const notice = mutate('src/ui/title.ts', '    this.press.visible = s.notice.pressedDown;\n', '    this.press.visible = s.notice.pressedDown;\n    this.press.label = `${fade}`;\n');
+    expect(hit(notice, /title\.ts:\d+ SaveNoticeView\.sync: template string/)).toBe(true);
+    // a per-frame array in HumanArt, reached from DeepAbductView through its SpecimenArt-typed field
+    const human = mutate('src/abduct/draw.ts', '    this.awake.visible = awake;\n', '    this.awake.visible = [awake].length > 0;\n');
+    expect(hit(human, /draw\.ts:\d+ HumanArt\.sync: array literal/)).toBe(true);
+    // a per-frame object in the tutorial abduction's scene view
+    const abduct = mutate('src/abduct/draw.ts', '    this.lastTime = ctx.time;\n    this.moments(dt);\n', '    this.lastTime = ctx.time;\n    this.moments({ dt }.dt);\n');
+    expect(hit(abduct, /draw\.ts:\d+ AbductView\.sync: object literal/)).toBe(true);
+    // and the menu allocations the wider scope found, put back
+    const loading = mutate('src/ui/loading.ts', 'if (this.fill.stale(Math.round(fw * 2))) this.fill.redraw(', 'this.fill.draw(Math.round(fw * 2), ');
+    expect(hit(loading, /loading\.ts:\d+ LoadingView\.sync: closure/)).toBe(true);
+    const shelf = mutate('src/ui/trophies.ts', '    const id = selected.kind', '    void `${selected.kind}`;\n    const id = selected.kind');
+    expect(hit(shelf, /trophies\.ts:\d+ DetailModalView\.sync: template string/)).toBe(true);
+  }, 60_000);
 });

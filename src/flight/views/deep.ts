@@ -512,7 +512,9 @@ export class DeepFlightView implements SceneView {
     this.hazards.sync(cam, t, rm);
     this.driveIn?.sync(cam, sim.field.t, rm, sim.collectible?.collected ?? false, projectorSees(sim.field, sim.st.cause), s.queueBarkT);
     // v4 council: route pills keep clear of the HUD boxes and of every entry ring on screen
-    const quietPills = !!strike && strike.age < 1.12;
+    // L9: far pills stay quiet from the strike's 2 s warning to the end of its reveal. Round 4 (Fable F2): `age < 1.12`
+    // alone held them off from the launch (age counts up to the 10:04 strike), so two rings were locked unlabelled
+    const quietPills = !!strike && strike.age >= -2 && strike.age < 1.12;
     const striking = !!strike && strike.age >= -0.12 && strike.age < 0.75;
     const avoid = this.hud.avoid;
     const clear = this.labels.obstacles;
@@ -557,6 +559,8 @@ export class DeepFlightView implements SceneView {
       b.w = 192;
       b.h = 209;
     }
+    // round 4 (Fable F2): the saucer draws above the pill layer, so a pill may sit under its fuse box at one gap
+    const fuseBox = n;
     {
       const b = clear[n++]!;
       b.x = saucer.x - cam.x - FUSE_R - 8;
@@ -601,7 +605,7 @@ export class DeepFlightView implements SceneView {
         this.labels.request(ring, cam.x, cam.y);
       }
     }
-    this.labels.place(n, cam.x, cam.y);
+    this.labels.place(n, cam.x, cam.y, fuseBox);
     this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0, this.recitals?.coverEars); // v4 UFO pilot
     this.saucer.sync(saucer, t, rm, locking, s.st, lock, sim.field.scramble(saucer.x, saucer.y), sim.st.safe, SAFE_WINDOW);
     if (lifting && !rm) this.saucer.root.y -= Math.min(1, s.st * 6) * 36;

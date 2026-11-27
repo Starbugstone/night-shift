@@ -433,6 +433,12 @@ function pillText(roomId: RoomId): { route: string; advice: string; routeW: numb
   return { route, advice, routeW, textW: routeW + measure(advice, 19, 800) };
 }
 
+/** An entry ring's route pill text in the current language (v0.2 council round 4: its read time is the pill's floor). */
+export function routePillText(roomId: RoomId): string {
+  const { route, advice } = pillText(roomId);
+  return route + advice;
+}
+
 /** Width of an entry ring's route pill in the current language (tests/flight-pill-lines.test.ts places them too). */
 export function routePillWidth(roomId: RoomId): number {
   return Math.min(VIEW_W - 16, pillText(roomId).textW + 28);
@@ -480,8 +486,9 @@ export class EntryLabels {
     this.lineCount++;
   }
 
-  place(n: number, camX: number, camY: number): void {
-    placePills(this.obstacles, n, this.asks, this.count, this.spots, this.moved);
+  /** `soft`: the obstacle drawn above the pills (the saucer's fuse box), which a pill may sit under (see placePills). */
+  place(n: number, camX: number, camY: number, soft = -1): void {
+    placePills(this.obstacles, n, this.asks, this.count, this.spots, this.moved, soft);
     for (let i = 0; i < this.count; i++) {
       const ring = this.rings[i]!;
       const spot = this.spots[i]!;

@@ -800,7 +800,10 @@ class TrophiesView implements SceneView {
   private readonly modal: DetailModalView;
   private lastPage = -1;
   private lastSpecPage = -1;
-  private lastWingKey = '';
+  /** Round 4 (Fable F4): the wing label's room, wing and wing count, compared without building a key string. */
+  private lastWingRoom = '';
+  private lastWingN = -1;
+  private lastWingTotal = -1;
   private lastRoom: TrophyRoomTab | '' = '';
 
   constructor(private readonly s: TrophiesScene) {
@@ -1044,9 +1047,10 @@ class TrophiesView implements SceneView {
       this.nextWing.sync();
       const totalWings = s.activeRoom === 'specimens' ? s.specimenShelf.pages.length : s.shelf.pages.length;
       const curWing = s.activeRoom === 'specimens' ? s.specimenPageIndex : s.pageIndex;
-      const wk = `${s.activeRoom}|${curWing}|${totalWings}`;
-      if (wk !== this.lastWingKey && totalWings > 1) {
-        this.lastWingKey = wk;
+      if ((s.activeRoom !== this.lastWingRoom || curWing !== this.lastWingN || totalWings !== this.lastWingTotal) && totalWings > 1) {
+        this.lastWingRoom = s.activeRoom;
+        this.lastWingN = curWing;
+        this.lastWingTotal = totalWings;
         this.wingLabel.set(fmt(tr().trophies.wing, { n: curWing + 1, total: totalWings }), VIEW_W / 2, HEADER_BASE_H + 22, 240);
       }
     }
@@ -1595,7 +1599,11 @@ class DetailModalView {
   private readonly nextChevron: ExhibitChevron;
   private shownCounter = '';
 
-  private shownKey = '';
+  /** Round 4 (Fable F4): what the modal shows (kind, exhibit id, count, probes), compared field by field. */
+  private shownKind = '';
+  private shownId = '';
+  private shownCount = 0;
+  private shownProbes = 0;
   private artBaseY = 128;
   private curModalH = MODAL_H;
 
@@ -2145,20 +2153,21 @@ class DetailModalView {
     const show = selected !== null;
     if (this.root.visible !== show) this.root.visible = show;
     if (!show || !selected) {
-      this.shownKey = '';
+      this.shownKind = '';
       this.activeTownFig = null;
       this.activeSpecimenFig = null;
       return;
     }
 
     this.huntView.visible = !!nav.huntLaunch;
-    const key = selected.kind === 'souvenir'
-      ? `s|${selected.item.slot.itemId}|${selected.item.found ? selected.item.entry?.count ?? 0 : -1}`
-      : selected.kind === 'specimen'
-        ? `p|${selected.item.slot.id}|${selected.item.found ? `${selected.item.entry?.count ?? 0}|${selected.item.entry?.probes ?? 0}` : -1}`
-        : `t|${selected.item.slot.id}|${selected.item.found ? 1 : 0}`;
-    if (key !== this.shownKey) {
-      this.shownKey = key;
+    const id = selected.kind === 'souvenir' ? selected.item.slot.itemId : selected.item.slot.id;
+    const count = selected.kind === 'town' ? (selected.item.found ? 1 : 0) : selected.item.found ? selected.item.entry?.count ?? 0 : -1;
+    const probes = selected.kind === 'specimen' && selected.item.found ? selected.item.entry?.probes ?? 0 : 0;
+    if (selected.kind !== this.shownKind || id !== this.shownId || count !== this.shownCount || probes !== this.shownProbes) {
+      this.shownKind = selected.kind;
+      this.shownId = id;
+      this.shownCount = count;
+      this.shownProbes = probes;
       if (selected.kind === 'souvenir') this.populateSouvenir(selected.item);
       else if (selected.kind === 'specimen') this.populateSpecimen(selected.item);
       else this.populateTown(selected.item);

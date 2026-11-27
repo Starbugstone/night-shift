@@ -10,6 +10,9 @@
 // 0.25 s, L8 0.38 s). Once up, a tip stays for `lessonHoldSeconds` (FRESH_LINE_SECONDS, or its read time when
 // shorter) unless the saucer is spotted, the leg ends or the lesson retires; checked on every lesson level's
 // autopilot shift, in English and French.
+// Round 4 (Fable F3): a leg starting inside the zone of a lesson already met and read flashed it for 0.3–1.5 s (L3, L5,
+// L8, L10). Such a lesson is no longer raised, a showing never ends at its retirement before its hold, and the check
+// no longer excuses showings that ended because the lesson retired.
 import { describe, expect, it } from 'vitest';
 import type { PointerState } from '../src/contracts';
 import { FlightAutopilot } from '../src/flight/autopilot';
@@ -148,7 +151,8 @@ function showings(level: DeepLevelDef, lesson: FlightLesson, limitSec = 400): Sh
     const on = active === tip;
     if (on && start < 0) start = t;
     if (!on && start >= 0) {
-      const cut = scene.state !== 'fly' || active !== '' || !!flightLessonState(run)?.spent;
+      // round 4 (Fable F3): a lesson retiring is no excuse for a short showing; only the leg ending or another tip cuts one
+      const cut = scene.state !== 'fly' || active !== '';
       out.push({ start, len: t - start, end: cut ? 'cut' : 'flight' });
       start = -1;
     }

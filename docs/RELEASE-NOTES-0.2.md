@@ -71,7 +71,10 @@ are actually taking.
 ## Saves
 
 Your v0.1 progress carries over. A damaged or empty save no longer looks like a fresh start: the
-game finds the last good one automatically.
+game keeps whatever progress it can still read, from an older save if it has to. When a file came
+back damaged, the title screen says so ("Your file got chewed. We kept what we could.", or "File
+chewed to bits. Here’s a fresh one." when nothing could be read), and **Reset progress** stays
+within reach, behind its confirmation card.
 
 ## Fixed
 
@@ -80,4 +83,4 @@ game finds the last good one automatically.
 - Route labels no longer cover a cable or a detector edge.
 - Exit signs stay on screen in French too, and shift memos never run into the performance goals.
 - Vrell's close-call remarks now match the seconds shown on the report.
-- The title screen shows the version again: **v0.2**.
+- The title screen now follows the release version automatically (**v0.2**).
