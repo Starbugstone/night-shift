@@ -26,7 +26,7 @@ export interface TagBox {
  */
 export function exitTagBox(
   room: Pick<Room, 'exit' | 'exitZone' | 'roofExit'>, exitX: number, textW: number, cx: number, cy: number,
-  out: TagBox = { x: 0, y: 0, w: 0, h: 0 },
+  out: TagBox, // required (v0.2 council round 3, Opus O3): a default box allocated every frame when a caller left it out
 ): TagBox {
   const { exit: s, exitZone: a } = room;
   const w = textW + EXIT_TAG.padX;

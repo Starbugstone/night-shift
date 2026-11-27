@@ -241,7 +241,7 @@ class DeepExit {
     this.dashes = new DashedRect(a, 4, 9, MINT);
     const title = gt(sim.room.interior!.exitName);
     this.tagTextW = measure(title, EXIT_TAG.size, EXIT_TAG.weight);
-    const tag = exitTagBox(room, exitX, this.tagTextW, sim.camera.x, sim.camera.y);
+    const tag = exitTagBox(room, exitX, this.tagTextW, sim.camera.x, sim.camera.y, this.tag);
     this.tagPanel.set(tag.w, tag.h);
     this.tagLabel.set(title, 0, 0, tag.w - 12);
     this.placeTag(sim.camera.x, sim.camera.y);

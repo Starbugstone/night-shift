@@ -157,7 +157,7 @@ describe('2199 harbour approaches', () => {
   it('runs a stationary listener and the 0.45-second preview from the live camera sampler', () => {
     const d = map.hazards[0]!;
     if (d.type !== 'camera') throw new Error('Avenue lectern missing');
-    const [lx, ly] = GRIMSBY_SET.listeners[0];
+    const { x: lx, y: ly } = GRIMSBY_SET.listeners[0];
     const poses = new Set<boolean>();
     for (let t = 0; t < 12; t += 0.05) {
       field.sample(t + 0.45);

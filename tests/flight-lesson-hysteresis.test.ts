@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { setLang, tr } from '../src/i18n';
 import type { DeepFlightScene } from '../src/flight/deep-scene';
-import { LESSON_EXIT_PAD, flightLesson } from '../src/flight/views/progression-hint';
+import { LESSON_EXIT_PAD, flightLesson, lessonHoldSeconds } from '../src/flight/views/progression-hint';
 import { readSeconds } from '../src/core/read-time';
 import { LEVELS } from '../src/levels/levels';
 import type { HazardDef } from '../src/flight/hazards';
@@ -43,20 +43,30 @@ describe('flight lessons', () => {
   it('teaches each hazard once a run: it waits for the encounter, then retires after it', () => {
     const run = { legs: 0 };
     let t = 0;
-    const at = (y: number): string => {
+    const at = (y: number, state = 'fly'): string => {
       const s = scene('level4', 270, y);
-      (s as unknown as { run: object }).run = run;
+      (s as unknown as { run: object; state: string }).run = run;
+      (s as unknown as { state: string }).state = state;
       (s.sim as { t: number }).t = (t += 1 / 60);
       return flightLesson(s);
     };
     const near = 1460;
+    // v0.2 council R3 (Fable F3): a tip that is up stays for its hold once the saucer leaves; then it goes
+    const away = (): string => {
+      expect(at(900), 'held just after leaving').toBe(traffic);
+      let last = '';
+      for (let i = 0; i < lessonHoldSeconds(traffic) * 60 + 2; i++) last = at(900);
+      return last;
+    };
     expect(at(near)).toBe(traffic);
-    expect(at(900), 'left before meeting the lanes: not spent').toBe('');
+    expect(away(), 'left before meeting the lanes: not spent').toBe('');
     run.legs = 1;
     expect(at(near), 'still waiting on a later leg').toBe(traffic);
     expect(at(1568), 'on the lane').toBe(traffic);
-    expect(at(900)).toBe('');
-    // v0.2 council R2: met but seen for two frames only, so it is still owed
+    // spotted on the lane: the tip comes down at once, and its hold with it
+    expect(at(1568, 'spotted')).toBe('');
+    expect(at(900), 'out of the zone after the sighting: no hold').toBe('');
+    // v0.2 council R2: met but cut short before its reading time, so it is still owed
     expect(at(near), 'met and flown clear too soon: still owed').toBe(traffic);
     for (let i = 0; i < readSeconds(traffic) * 60 + 2; i++) at(1568);
     expect(at(900)).toBe('');

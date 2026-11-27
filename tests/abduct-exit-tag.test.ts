@@ -54,7 +54,7 @@ describe('exit tags stay on screen (v0.2 follow-up)', () => {
           for (let cy = s.y - VIEW_H - SLACK; cy <= s.y + s.h + SLACK; cy += 24) cameras.push([cx, cy]);
         }
         for (const [cx, cy] of cameras) {
-          const box = exitTagBox(room, sim.exitX, textW, cx, cy);
+          const box = exitTagBox(room, sim.exitX, textW, cx, cy, { x: 0, y: 0, w: 0, h: 0 });
           if (!onScreen(box, cx, cy)) {
             bad.push(`${id} "${title}" at camera (${cx.toFixed(0)}, ${cy.toFixed(0)}): tag ${box.x.toFixed(0)}..${(box.x + box.w).toFixed(0)}`);
             break;

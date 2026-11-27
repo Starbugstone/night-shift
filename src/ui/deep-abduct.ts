@@ -1,7 +1,7 @@
 // Wrap an abduction during a deep shift, with the sunrise clock and warning over the room.
 import { Container } from 'pixi.js';
 import { getLang } from '../i18n';
-import type { Assets, Scene } from '../contracts';
+import type { Assets, RoomId, Scene } from '../contracts';
 import { DEEP_HUD_SUNRISE_SLOT, DEEP_HUD_WARNING_SLOT, deepShift } from '../abduct/deep-view';
 import { GLOW, ScreenTint } from '../core/gfx/glow';
 import { ViewSlot, type SceneView } from '../core/gfx/scene';
@@ -17,6 +17,8 @@ export interface InnerScene extends Scene {
   render(): void;
   /** The room (an AbductSimulation): `delivered` once it has accepted the specimen. */
   debug?: { readonly delivered?: boolean };
+  /** The room it plays, for test scripts. */
+  readonly roomId?: RoomId;
 }
 
 export class DeepAbductScene implements Scene {
@@ -40,6 +42,10 @@ export class DeepAbductScene implements Scene {
 
   get debug(): InnerScene['debug'] {
     return this.inner.debug;
+  }
+
+  get roomId(): RoomId | undefined {
+    return this.inner.roomId;
   }
 
   update(dt: number): void {

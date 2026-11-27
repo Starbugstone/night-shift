@@ -22,6 +22,8 @@ const TURN_HINT_SECONDS = 7;
 
 interface AbductScene extends Scene {
   debug: AbductSimulation;
+  /** The room this scene plays, for test scripts (the e2e runner checks it is the ring it flew to). */
+  readonly roomId: RoomId;
 }
 
 /** Screen-space origin for the shell's iris transition. */
@@ -164,5 +166,6 @@ export function createAbductScene(ctx: GameContext, start: AbductStart, onDone: 
       look.destroy();
     },
     debug: simulation,
+    roomId: start.roomId,
   };
 }

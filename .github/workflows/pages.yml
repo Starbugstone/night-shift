@@ -11,7 +11,13 @@ name: Test and publish game
 # still deploys). Every published build comes from one exact, tested commit, never a fresh clone, and
 # /deployed.json names both SHAs.
 # A rerun keeps its original event SHA (Sol P1, round 2): right before publishing, each SHA must
-# still be its branch's tip or what the site serves now, or the run is superseded and publishes nothing.
+# still be its branch's tip or what the site serves now. Freshness is judged per branch (Sol P1,
+# round 3): when the other branch's new tip is superseded while this run assembles, the run publishes
+# its pushed build with the other branch's live build (a second, fallback bundle); only a superseded
+# pushed commit, or a stale branch with no live build to fall back on, publishes nothing.
+# Every build artifact and Pages bundle is named by run and attempt, and the site is assembled only
+# from the builds this attempt's successful build legs name (Sol P2, round 3): a rerun never picks up
+# an earlier attempt's artifact, and deploy-pages never sees two bundles with one name.
 on:
   push:
     branches: [main, preprod]
@@ -56,10 +62,14 @@ jobs:
                 return Array.isArray(list) ? list : [];
               } catch { return []; }
             })();
-            // the run that kept a tested build of this branch at this commit, if its artifact is still there
-            const keptRun = async (branch, sha) => {
-              const { data } = await github.rest.actions.listArtifactsForRepo({ owner, repo, name: `dist-${branch}-${sha}`, per_page: 20 });
-              return data.artifacts.find(a => !a.expired)?.workflow_run?.id;
+            // the tested build the site serves for this branch, if its artifact is still there: /deployed.json
+            // names its artifact and run; a site published before round 3 names only the SHA (`dist-<branch>-<sha>`)
+            const keptBuild = async (branch, entry) => {
+              const named = typeof entry.artifact === 'string' && entry.artifact.startsWith(`dist-${branch}-${entry.sha}`);
+              const name = named ? entry.artifact : `dist-${branch}-${entry.sha}`;
+              const { data } = await github.rest.actions.listArtifactsForRepo({ owner, repo, name, per_page: 20 });
+              const hit = data.artifacts.find(a => !a.expired && (!named || a.workflow_run?.id === entry.run));
+              return hit?.workflow_run?.id ? { branch, sha: entry.sha, run: hit.workflow_run.id, name } : null;
             };
             const build = [];
             const targets = [];
@@ -73,11 +83,11 @@ jobs:
               targets.push({ branch, sha });
               // the pushed commit must pass: it is the only build this push gates
               if (branch === pushed) { build.push({ branch, sha, gate: true }); continue; }
-              const was = live.find(t => t.branch === branch)?.sha;
-              const run = was ? await keptRun(branch, was) : undefined;
-              if (run) keep = { branch, sha: was, run, name: `dist-${branch}-${was}` };
+              const entry = live.find(t => t.branch === branch && typeof t.sha === 'string');
+              const kept = entry ? await keptBuild(branch, entry) : null;
+              if (kept) keep = kept;
               // a newer tip is built too; it gates only when there is no last good build to fall back on
-              if (sha !== was || !run) build.push({ branch, sha, gate: !run });
+              if (sha !== kept?.sha) build.push({ branch, sha, gate: !kept });
             }
             core.setOutput('pushed', pushed);
             core.setOutput('targets', JSON.stringify(targets));
@@ -93,6 +103,11 @@ jobs:
     needs: pin
     name: Test and build ${{ matrix.branch }}
     runs-on: ubuntu-latest
+    # each leg names only its own branch's artifact, and only once it has uploaded it, so the
+    # assemble job sees exactly the builds this attempt's successful legs made (Sol P2, round 3)
+    outputs:
+      main: ${{ steps.built.outputs.main }}
+      preprod: ${{ steps.built.outputs.preprod }}
     strategy:
       # one branch's failing tip must not stop the other branch's build (Opus F3)
       fail-fast: false
@@ -130,13 +145,20 @@ jobs:
           if [ -f "$RUNNER_TEMP/difficulty/summary.md" ]; then cat "$RUNNER_TEMP/difficulty/summary.md" >> "$GITHUB_STEP_SUMMARY"; fi
           exit "$status"
       - run: npm run build
-      # named by commit and kept, so a later run for the other branch can republish this exact build
+      # named by commit, run and attempt and kept, so a later run for the other branch can republish this
+      # exact build, and a rerun never mistakes an earlier attempt's upload for its own
       - uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.branch }}-${{ matrix.sha }}
+          name: dist-${{ matrix.branch }}-${{ matrix.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: dist
           if-no-files-found: error
           retention-days: 90
+      - id: built
+        name: Name the uploaded build
+        env:
+          BRANCH: ${{ matrix.branch }}
+          ARTIFACT: dist-${{ matrix.branch }}-${{ matrix.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        run: echo "$BRANCH=$ARTIFACT" >> "$GITHUB_OUTPUT"
   assemble:
     needs: [pin, build]
     # runs when a build leg failed too: only the pushed branch has to pass (see the choose step)
@@ -144,11 +166,24 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       published: ${{ steps.choose.outputs.published }}
+      fallback: ${{ steps.choose.outputs.fallback }}
+      bundle: ${{ steps.choose.outputs.bundle }}
+      fallback_bundle: ${{ steps.choose.outputs.fallback_bundle }}
     steps:
-      - uses: actions/download-artifact@v4
+      # by the names this attempt's successful build legs gave, never a pattern: a pattern also matches
+      # an earlier attempt's upload of a build that failed this time
+      - name: Fetch this attempt's main build
+        if: ${{ needs.build.outputs.main != '' }}
+        uses: actions/download-artifact@v4
         with:
-          pattern: dist-*
-          path: dists
+          name: ${{ needs.build.outputs.main }}
+          path: dists/${{ needs.build.outputs.main }}
+      - name: Fetch this attempt's preprod build
+        if: ${{ needs.build.outputs.preprod != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.preprod }}
+          path: dists/${{ needs.build.outputs.preprod }}
       - name: Fetch the other branch's last good build
         if: ${{ needs.pin.outputs.keep_run != '' }}
         uses: actions/download-artifact@v4
@@ -162,62 +197,94 @@ jobs:
         uses: actions/github-script@v7
         env:
           BUILD: ${{ needs.pin.outputs.build }}
+          BUILT: ${{ toJSON(needs.build.outputs) }}
           PUSHED: ${{ needs.pin.outputs.pushed }}
           KEEP: ${{ needs.pin.outputs.keep }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         with:
           script: |
             const fs = require('fs');
             const { owner, repo } = context.repo;
             const built = JSON.parse(process.env.BUILD);
+            // artifact names from this attempt's successful build legs (a failed leg names nothing)
+            const names = (() => { try { return JSON.parse(process.env.BUILT || '{}') ?? {}; } catch { return {}; } })();
             const keep = process.env.KEEP ? JSON.parse(process.env.KEEP) : null;
             const pushed = process.env.PUSHED;
             const tip = async (branch) => (await github.rest.repos.getBranch({ owner, repo, branch })).data.commit.sha;
             const published = [];
+            const kept = keep ? { branch: keep.branch, sha: keep.sha, dir: `dists/${keep.name}`, run: keep.run, artifact: keep.name } : null;
             for (const branch of ['main', 'preprod']) {
               const mine = built.find(b => b.branch === branch);
-              const ok = mine && fs.existsSync(`dists/dist-${branch}-${mine.sha}/index.html`);
+              const name = mine ? names[branch] : undefined;
+              // only this run's own upload of this exact commit counts
+              const ok = typeof name === 'string' && name.startsWith(`dist-${branch}-${mine.sha}-${context.runId}-`) && fs.existsSync(`dists/${name}/index.html`);
+              const fresh = ok ? { branch, sha: mine.sha, dir: `dists/${name}`, run: context.runId, artifact: name } : null;
               if (branch === pushed) {
-                if (!ok) return core.setFailed(`${branch} ${mine?.sha}: its tests, sweep or build failed; nothing is published`);
+                if (!fresh) return core.setFailed(`${branch} ${mine?.sha}: its tests, sweep or build failed; nothing is published`);
                 // a rerun of an older push: the newer push publishes instead
                 const now = await tip(branch);
                 if (now !== mine.sha) {
                   core.warning(`${branch} ${mine.sha} is superseded by ${now}; this run publishes nothing`);
                   return core.setOutput('published', '');
                 }
-                published.push({ branch, sha: mine.sha, dir: `dists/dist-${branch}-${mine.sha}` });
-              } else if (ok) {
-                published.push({ branch, sha: mine.sha, dir: `dists/dist-${branch}-${mine.sha}` });
-              } else if (keep?.branch === branch && fs.existsSync(`dists/${keep.name}/index.html`)) {
-                if (mine) core.warning(`${branch} ${mine.sha} failed; the site keeps ${keep.sha}`);
-                published.push({ branch, sha: keep.sha, dir: `dists/${keep.name}` });
+                published.push(fresh);
+              } else if (fresh) {
+                published.push(fresh);
+              } else if (kept?.branch === branch && fs.existsSync(`${kept.dir}/index.html`)) {
+                if (mine) core.warning(`${branch} ${mine.sha} failed; the site keeps ${kept.sha}`);
+                published.push(kept);
               } else if (mine) {
                 return core.setFailed(`${branch} ${mine.sha} failed and there is no earlier good build to keep`);
               }
             }
+            // if the other branch's new build is superseded before the deploy, the deploy job publishes this
+            // bundle instead: the same pushed build, with the other branch's live build (Sol P1, round 3)
+            const other = published.find(p => p.branch !== pushed);
+            const fallback = other && kept && other.branch === kept.branch && other.sha !== kept.sha && fs.existsSync(`${kept.dir}/index.html`)
+              ? published.map(p => (p === other ? kept : p))
+              : null;
+            const bundle = `pages-${context.runId}-${process.env.RUN_ATTEMPT}`;
             core.setOutput('published', JSON.stringify(published));
+            core.setOutput('bundle', bundle);
+            core.setOutput('fallback', fallback ? JSON.stringify(fallback) : '');
+            core.setOutput('fallback_bundle', fallback ? `${bundle}-fallback` : '');
       - name: Assemble production (main) and preprod
         if: ${{ steps.choose.outputs.published != '' }}
         env:
           PUBLISHED: ${{ steps.choose.outputs.published }}
+          FALLBACK: ${{ steps.choose.outputs.fallback }}
         run: |
           set -euo pipefail
-          mkdir -p site
-          main=$(jq -r '.[] | select(.branch == "main") | .dir' <<<"$PUBLISHED")
-          preprod=$(jq -r '.[] | select(.branch == "preprod") | .dir' <<<"$PUBLISHED")
-          cp -r "$main/." site/
-          if [ -n "$preprod" ]; then cp -r "$preprod" site/preprod; fi
-          mkdir -p site/pixi
-          printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Night Shift preprod</title>' \
-            '<meta http-equiv="refresh" content="0; url=../preprod/">' \
-            '<script>location.replace("../preprod/" + location.search + location.hash)</script>' \
-            > site/pixi/index.html
-          jq -c 'map({branch, sha})' <<<"$PUBLISHED" > site/deployed.json
+          # $1: the chosen builds (JSON), $2: the site directory to fill
+          assemble() {
+            local main preprod
+            main=$(jq -r '.[] | select(.branch == "main") | .dir' <<<"$1")
+            preprod=$(jq -r '.[] | select(.branch == "preprod") | .dir' <<<"$1")
+            mkdir -p "$2"
+            cp -r "$main/." "$2/"
+            if [ -n "$preprod" ]; then cp -r "$preprod" "$2/preprod"; fi
+            mkdir -p "$2/pixi"
+            printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Night Shift preprod</title>' \
+              '<meta http-equiv="refresh" content="0; url=../preprod/">' \
+              '<script>location.replace("../preprod/" + location.search + location.hash)</script>' \
+              > "$2/pixi/index.html"
+            # the run and artifact let a later run republish exactly this build
+            jq -c 'map({branch, sha, run, artifact})' <<<"$1" > "$2/deployed.json"
+          }
+          assemble "$PUBLISHED" site
+          if [ -n "$FALLBACK" ]; then assemble "$FALLBACK" site-fallback; fi
       - uses: actions/configure-pages@v5
         if: ${{ steps.choose.outputs.published != '' }}
       - uses: actions/upload-pages-artifact@v5
         if: ${{ steps.choose.outputs.published != '' }}
         with:
           path: site
+          name: ${{ steps.choose.outputs.bundle }}
+      - uses: actions/upload-pages-artifact@v5
+        if: ${{ steps.choose.outputs.fallback != '' }}
+        with:
+          path: site-fallback
+          name: ${{ steps.choose.outputs.fallback_bundle }}
   deploy:
     needs: assemble
     if: ${{ !cancelled() && needs.assemble.result == 'success' && needs.assemble.outputs.published != '' }}
@@ -227,16 +294,25 @@ jobs:
       url: ${{ steps.publish.outputs.page_url }}
     steps:
       - id: fresh
-        name: Skip a superseded run
+        name: Pick the bundle whose builds are all still current
         uses: actions/github-script@v7
         env:
           PUBLISHED: ${{ needs.assemble.outputs.published }}
+          BUNDLE: ${{ needs.assemble.outputs.bundle }}
+          FALLBACK: ${{ needs.assemble.outputs.fallback }}
+          FALLBACK_BUNDLE: ${{ needs.assemble.outputs.fallback_bundle }}
         with:
           script: |
-            // A rerun keeps its original SHAs: publish only if every one is still its branch's tip
-            // or what the site serves now, so an older commit never replaces a newer deployment.
+            // A rerun keeps its original SHAs: a bundle publishes only if every SHA in it is still its
+            // branch's tip or what the site serves now, so an older commit never replaces a newer
+            // deployment. Both bundles hold the same pushed build; the fallback swaps the other branch's
+            // new build for its live one, so a superseded preprod (or main) tip never blocks the push.
             const { owner, repo } = context.repo;
-            const tip = async (branch) => (await github.rest.repos.getBranch({ owner, repo, branch })).data.commit.sha;
+            const tips = new Map();
+            const tip = async (branch) => {
+              if (!tips.has(branch)) tips.set(branch, (await github.rest.repos.getBranch({ owner, repo, branch })).data.commit.sha);
+              return tips.get(branch);
+            };
             const live = await (async () => {
               try {
                 const site = (await github.rest.repos.getPages({ owner, repo })).data.html_url.replace(/\/$/, '');
@@ -245,14 +321,29 @@ jobs:
                 return Array.isArray(list) ? list : [];
               } catch { return []; }
             })();
-            const stale = [];
-            for (const { branch, sha } of JSON.parse(process.env.PUBLISHED)) {
-              const now = await tip(branch);
-              const was = live.find(t => t.branch === branch)?.sha;
-              if (sha !== now && sha !== was) stale.push(`${branch} ${sha} (tip ${now}, live ${was ?? 'none'})`);
+            const staleIn = async (list) => {
+              const stale = [];
+              for (const { branch, sha } of list) {
+                const now = await tip(branch);
+                const was = live.find(t => t.branch === branch)?.sha;
+                if (sha !== now && sha !== was) stale.push(`${branch} ${sha} (tip ${now}, live ${was ?? 'none'})`);
+              }
+              return stale;
+            };
+            const bundles = [[process.env.PUBLISHED, process.env.BUNDLE], [process.env.FALLBACK, process.env.FALLBACK_BUNDLE]]
+              .filter(([list, name]) => list && name)
+              .map(([list, name]) => ({ list: JSON.parse(list), name }));
+            for (const [i, bundle] of bundles.entries()) {
+              const stale = await staleIn(bundle.list);
+              if (stale.length) { core.warning(`Superseded in ${bundle.name}: ${stale.join('; ')}`); continue; }
+              if (i > 0) core.warning(`Publishing ${bundle.name}: ${bundle.list.map(b => `${b.branch} ${b.sha}`).join(', ')}`);
+              core.setOutput('artifact', bundle.name);
+              return core.setOutput('publish', 'true');
             }
-            if (stale.length) core.warning(`Superseded, not publishing: ${stale.join('; ')}`);
-            core.setOutput('publish', stale.length ? 'false' : 'true');
+            core.warning('Superseded, not publishing');
+            core.setOutput('publish', 'false');
       - id: publish
         if: ${{ steps.fresh.outputs.publish == 'true' }}
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: ${{ steps.fresh.outputs.artifact }}

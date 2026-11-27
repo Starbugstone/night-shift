@@ -179,9 +179,20 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     };
   }
 
-  /** Tutorial abduction: the same in-page autopilot driver as the deep shifts. */
-  async function abduct() {
+  /** The room the abduction on screen plays (null outside a room). */
+  const enteredRoom = () => page.evaluate(() => {
+    const ns = window.__nightShift;
+    return ns.scene === 'abduct' ? (ns.active?.roomId ?? null) : null;
+  });
+
+  /**
+   * Tutorial abduction: the same in-page autopilot driver as the deep shifts. `room` is the ring the run flew to:
+   * the room entered must be that one (v0.2 council round 3, Sol P2: a run steered through the wrong ring passed).
+   */
+  async function abduct(room) {
     await waitScene('abduct', 20000);
+    const entered = await enteredRoom();
+    if (entered !== room) throw new Error(`flew to ${room} but entered ${entered}`);
     await installDriver();
     await sleep(500);
     const drv = abductDriver();
@@ -264,6 +275,10 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
           else if (pickup === 'birch' && c && !c.collected) { route ??= birchRoute(ns); it = detour(a.debug.sim); }
           else it = a.debug.autopilot();
           drv.flight = { down: it.down, x: it.x, y: it.y };
+          // the ring the deep flight is locking: the room entered next must be its room
+          const sim = a.debug.sim;
+          const ref = sim && sim.lockedRing >= 0 ? sim.ringRef?.[sim.lockedRing] : null;
+          if (ref) drv.lock = { target: ref.target, entry: ref.entry };
         } else drv.flight = null;
         if (ns && ns.scene === 'abduct' && a && a.debug && typeof a.debug.autopilot === 'function' && drv.on && p && p.down) {
           // Every room at an honest pace: never slower than the game's SLOWEST_HONEST_PACE (the pace every deep
@@ -411,6 +426,21 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
         carShot = true;
         await shot(name + '-time-car-lock');
       }
+      if (info.scene !== lastScene && info.scene === 'abduct') {
+        // right after entering a room: it must be the room of the ring the flight locked (Sol P2, round 3)
+        const ring = await page.evaluate(() => {
+          const ns = window.__nightShift;
+          const d = window.__e2eDrv;
+          // kept across rooms: a retry from the choice card re-enters the same route without a new lock
+          const lock = d?.lock ?? null;
+          const entry = lock ? ns.run?.level.map.targets[lock.target]?.entries[lock.entry] : null;
+          return { lock, intended: entry?.roomId ?? null, current: ns.run?.current?.roomId ?? null, entered: ns.active?.roomId ?? null };
+        });
+        if (!ring.intended || ring.entered !== ring.intended || ring.current !== ring.intended) {
+          throw new Error(`${name}: locked ring ${JSON.stringify(ring.lock)} (${ring.intended}) but entered ${ring.entered} (run says ${ring.current})`);
+        }
+        log.push({ clock: info.clock, entered: ring.entered, ring: ring.lock });
+      }
       if (info.scene !== lastScene) {
         console.error(name, info.scene, info.clock, info.room ?? '');
         log.push({ at: ((Date.now() - t0) / 1000).toFixed(1), scene: info.scene, clock: info.clock, room: info.room, delivered: info.delivered, spotted: info.spotted, failed: info.failed });
@@ -499,7 +529,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   if (ONLY[0] === 'probe') {
     // one tutorial abduction on its own: ROOM=farm_window|farm_chimney|laundry_skylight|laundry_loading
     await openFixture('?unlock=1&room=' + encodeURIComponent(process.env.ROOM || 'farm_chimney'));
-    try { await abduct(); results.probe = await st(); } catch (e) { failures.probe = 'abduct error ' + e.message; }
+    try { await abduct(process.env.ROOM || 'farm_chimney'); results.probe = await st(); } catch (e) { failures.probe = 'abduct error ' + e.message; }
     await finish();
     return;
   }
@@ -542,7 +572,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       const before = await progressOf(id);
       await fly(r.level, r.ring, r.via);
       await shot(`${r.name}-a-flight-end`);
-      await abduct();
+      await abduct(r.room);
       await waitScene('report', 30000);
       const end = { scene: 'report', report: await reportOf(), progress: await progressOf(id) };
       await sleep(3000);

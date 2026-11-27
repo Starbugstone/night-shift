@@ -1,5 +1,5 @@
 import { tr } from '../../i18n';
-import { readSeconds } from '../../core/read-time';
+import { FRESH_LINE_SECONDS, readSeconds } from '../../core/read-time';
 import type { AmbulanceHazard } from '../ambulance';
 import type { DeepFlightScene } from '../deep-scene';
 import { wrapAngle } from '../geometry';
@@ -86,7 +86,7 @@ export const FLIGHT_LESSONS: Readonly<Record<string, FlightLesson>> = {
   level10: {
     hazard: 'rabbit',
     tip: () => tr().lessons.rabbit,
-    zone: (def, x, y, pad) => Math.hypot(x - (def as { x: number }).x, y - (def as { y: number }).y) - RABBIT.radius < 170 + pad,
+    zone: (def, x, y, pad) => Math.hypot(x - (def as { x: number }).x, y - (def as { y: number }).y) - RABBIT.radius < 320 + pad, // R3 (Fable F3): 170 px left the tip up 1.3 s
     meets: (def, x, y) => inRabbitRun((def as { x: number }).x, (def as { y: number }).y, x, y),
     quietInRing: true,
   },
@@ -101,8 +101,16 @@ const SPENT = 2;
  */
 const encounters = new WeakMap<object, LessonRun>();
 
-/** v0.2 council R2: the lesson retires only once its tip has been on screen for its reading time in total. */
-interface LessonRun { stage: number; shownSec: number; lastT: number }
+/**
+ * v0.2 council R2: the lesson retires only once its tip has been on screen for its reading time in total.
+ * R3 (Fable F3): `upSince` is when the tip on screen came up (`lastT >= 0` while it is up).
+ */
+interface LessonRun { stage: number; shownSec: number; lastT: number; upSince: number }
+
+/** Once up, a tip stays at least this long (its read time when shorter) after the saucer leaves its zone (Fable F3). */
+export function lessonHoldSeconds(tip: string): number {
+  return Math.min(FRESH_LINE_SECONDS, readSeconds(tip));
+}
 
 /** For tests: whether this run's lesson has retired, and how long its tip has been on screen. */
 export function flightLessonState(run: object): { spent: boolean; shownSec: number } | null {
@@ -118,7 +126,12 @@ export function flightLessonState(run: object): { spent: boolean; shownSec: numb
  */
 export function flightLesson(scene: DeepFlightScene, active = ''): string {
   const { sim, run, level } = scene;
-  if (scene.state !== 'fly') return '';
+  if (scene.state !== 'fly') {
+    // spotted, or the leg ends: the tip comes down and its hold with it
+    const s = encounters.get(run);
+    if (s) s.lastT = -1;
+    return '';
+  }
   const { x, y } = sim.saucer;
   const { lessons } = tr();
   if (scene.practice) {
@@ -130,7 +143,7 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
   const lesson = FLIGHT_LESSONS[level.id];
   if (!lesson) return '';
   let seen = encounters.get(run);
-  if (!seen) encounters.set(run, (seen = { stage: FRESH, shownSec: 0, lastT: -1 }));
+  if (!seen) encounters.set(run, (seen = { stage: FRESH, shownSec: 0, lastT: -1, upSince: 0 }));
   const tip = lesson.tip();
   const p = padFor(tip, active);
   const cool = lesson.coolOff !== undefined && run.legs === 0 && sim.suspicion > 0;
@@ -148,10 +161,14 @@ export function flightLesson(scene: DeepFlightScene, active = ''): string {
     seen.lastT = -1;
     return lessons.coolOff;
   }
-  if (!inZone || seen.stage === SPENT || (lesson.quietInRing && sim.inRing >= 0)) {
+  // v0.2 council R3 (Fable F3): a tip that is up stays for its hold even once the saucer leaves the zone or hovers
+  // into a ring (the leg ends at the lock, which takes the tip down)
+  const held = seen.lastT >= 0 && sim.t >= seen.upSince && sim.t - seen.upSince < lessonHoldSeconds(tip);
+  if ((!inZone && !held) || seen.stage === SPENT || (lesson.quietInRing && sim.inRing >= 0 && !held)) {
     seen.lastT = -1;
     return '';
   }
+  if (seen.lastT < 0) seen.upSince = sim.t;
   if (seen.lastT >= 0 && sim.t > seen.lastT) seen.shownSec += Math.min(sim.t - seen.lastT, 0.1);
   seen.lastT = sim.t;
   return tip;

@@ -21,8 +21,10 @@ and hand wobble to measure route difficulty and full-shift star rates.
 **The slowest honest hand** (`tests/difficulty/honest-pace.ts`, v0.2 council round 2): the perfect-hand
 autopilot dragging at `SLOWEST_HONEST_PACE` = 1.5 × the 41 px/s cruise (about 62 px/s, defined once in
 `src/abduct/autopilot.ts`) plays every deep shift, flight and rooms, on every seed the evaluator tests. It
-must deliver all three with at least 5% of `budgetSec` left. The release table lists each level's slowest
-run against that limit. When a clock fails it, give time back and keep the Night owl par where it was in
+must deliver all three with at least 5% of `budgetSec` left. Round 3 (Opus O1): two more hands (`SLOW_HANDS`), the
+same pace with the skilled 0.18 s reaction lag and pace 1.4 with perfect timing, must deliver inside the whole
+`budgetSec`, so a clock has no cliff just below the honest pace. The release tables list each level's slowest
+run against those limits. When a clock fails it, give time back and keep the Night owl par where it was in
 elapsed seconds (raise `parMarginSec` by the same amount), or move a timed crossing's phase so a slow
 hand meets its first opening (L12's luggage shutter, phase 7.25 → 4 s). The browser playthrough reads the
 same constant from the build (`__nightShift.honestPace`) and never drags slower.
@@ -339,6 +341,7 @@ Night owl**, after the model fixes alone → after the retune. Every other level
 | L7 | 20/**14**/20 → 20/17/20 | 20/14/20 → 20/13/20 | aft camera half-angle 0.28 → 0.25 (skilled above casual again) |
 | L10 | 19/16/16 → 20/16/16 | 17/9/10 → 19/9/10 | dawn 172 → 183 s, Night owl still at 141 s elapsed; Shrubbery 19/17 → 20/18 (184 s lets a 19th casual one in) |
 | L12 | 18/11/15 → 18/11/14 | 15/**4**/10 → 15/6/10 | luggage shutter phase 7.25 → 4 s, fuse 0.61 → 0.65 s, demolition 175 → 205 s, Night owl 149 → 153 s elapsed; towel 18/14 → 18/15 |
+| L12 (round 3) | 18/11/14 → 18/11/14 | 15/6/10 → 16/6/10 | Opus O1: demolition 205 → 220 s, Night owl still at 153 s elapsed (margin 52 → 67 s), so a pace-1.4 hand delivers on every seed (was 13/20); a longer or later luggage-shutter opening also fixed it but moved casual Delivered/Ghost/Towel or skilled Ghost/Night owl out of band |
 
 Slowest honest hand, slowest of 20 seeds against the 5% limit: L10 170.8 s of 173.9 s (it was 170.8 s of
 163.4 s with the 172 s dawn), L12 186.8 s of 194.8 s (8 of 20 seeds missed the 175 s clock; the shutter

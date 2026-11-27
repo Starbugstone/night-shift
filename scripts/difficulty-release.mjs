@@ -118,6 +118,21 @@ if (honest.length) {
     lines.push(`| ${id} | ${done}/${h.runs.length} | ${Number.isFinite(worst) ? worst : '–'} | ${h.limitSec === null || !Number.isFinite(h.limitSec) ? '–' : Math.round(h.limitSec * 10) / 10} | ${h.budgetSec === null || !Number.isFinite(h.budgetSec) ? '–' : h.budgetSec} |`);
   }
   lines.push('');
+  // v0.2 council round 3 (Opus O1): the same pace with a reaction lag, and a slightly slower perfect hand, inside the budget
+  const slowNames = [...new Set(honest.flatMap(([, h]) => (h.slow ?? []).map(s => s.hand.name)))];
+  if (slowNames.length) {
+    lines.push(`| Level | ${slowNames.map(n => `${n}: delivered | slowest s`).join(' | ')} | budget |`, `| --- | ${slowNames.map(() => '---: | ---:').join(' | ')} | ---: |`);
+    for (const [id, h] of honest) {
+      const cells = slowNames.map(n => {
+        const s = (h.slow ?? []).find(x => x.hand.name === n);
+        if (!s) return '– | –';
+        const w = Math.max(...s.runs.map(run => run.delivered ? run.seconds : Infinity));
+        return `${s.runs.filter(run => run.delivered).length}/${s.runs.length} | ${Number.isFinite(w) ? w : '–'}`;
+      });
+      lines.push(`| ${id} | ${cells.join(' | ')} | ${h.budgetSec === null || !Number.isFinite(h.budgetSec) ? '–' : h.budgetSec} |`);
+    }
+    lines.push('');
+  }
 }
 if (other.length) lines.push('## Other violations (not rate bands: exact at every seed count)', '', ...other.map(v => `- ${v}`), '');
 if (broken.length) lines.push('## Runs that did not report', '', ...broken.map(v => `- ${v}`), '');

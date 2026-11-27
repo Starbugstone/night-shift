@@ -187,7 +187,9 @@ export class SpottedPhoto {
     this.arrow.visible = this.question.visible = k >= 1;
     if (this.mark.visible) {
       this.mark.rotation = -0.2;
-      this.mark.draw(keyOf(k * 360), (g) => ellipseArc(g, 0, 0, 66, 58, -0.4, -0.4 + TAU * 1.08 * k)
+      // round 3 (Opus O3): the closure only when the arc changes
+      const key = keyOf(k * 360);
+      if (this.mark.stale(key)) this.mark.redraw((g) => ellipseArc(g, 0, 0, 66, 58, -0.4, -0.4 + TAU * 1.08 * k)
         .stroke({ color: '#e0304e', width: 5, cap: 'round' }));
     }
   }

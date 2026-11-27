@@ -56,12 +56,14 @@ export class HudPanel extends Container {
   }
 
   set(w: number, h: number, accent: string = C.ink, pushed = 0): this {
-    this.body.draw(keyOf(w, h), (g) => roundRect(g, 0, 4, w, h, R).fill('rgba(5,3,20,0.45)'));
-    this.fill.draw(keyOf(w, h), (g) => {
+    // round 3 (Opus O3): HUD clocks call this every frame, so the closures only when the size changes
+    const key = keyOf(w, h);
+    if (this.body.stale(key)) this.body.redraw((g) => roundRect(g, 0, 4, w, h, R).fill('rgba(5,3,20,0.45)'));
+    if (this.fill.stale(key)) this.fill.redraw((g) => {
       roundRect(g, 0, 0, w, h, R).fill(PANEL_FILL);
       g.moveTo(R, 3.5).lineTo(w - R, 3.5).stroke({ color: 'rgba(255,255,255,0.13)', width: 1.5 });
     });
-    this.outline.draw(keyOf(w, h), (g) => roundRect(g, 0, 0, w, h, R).stroke({ color: '#ffffff', width: 3 }));
+    if (this.outline.stale(key)) this.outline.redraw((g) => roundRect(g, 0, 0, w, h, R).stroke({ color: '#ffffff', width: 3 }));
     paint(this.outline, accent);
     this.face.y = pushed;
     return this;

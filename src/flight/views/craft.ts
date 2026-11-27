@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
-import { placePills, type Box, type PillAsk } from './clear-of';
+import { PILL_HOLD_FRAMES, pillReach, pillShown, placePills, type Box, type PillAsk, type PillLine } from './clear-of';
 import type { Assets, RoomId } from '../../contracts';
 import { VIEW_H, VIEW_W } from '../../contracts';
 import { easeOutBack } from '../../core/fx';
@@ -419,6 +419,10 @@ export class EntryRingView {
     this.pill.visible = visible;
   }
 
+  /** Fable F2 (round 3): whether the pill showed last frame, and for how many frames it has been hidden. */
+  pillWasShown = true;
+  pillHiddenFrames = PILL_HOLD_FRAMES;
+
 
 }
 
@@ -437,14 +441,18 @@ export function routePillWidth(roomId: RoomId): number {
 /** Both flight views place their visible entry labels together, in screen space. */
 export class EntryLabels {
   readonly obstacles: Box[];
+  /** Solid lines on screen this frame (`line()`), which a pill never sits across from its ring. */
+  private readonly lines: PillLine[];
+  private lineCount = 0;
   private readonly asks: PillAsk[];
   private readonly spots: { x: number; y: number }[];
   private readonly rings: EntryRingView[] = [];
   private readonly moved: Uint8Array;
   private count = 0;
 
-  constructor(capacity: number, otherObstacles: number) {
+  constructor(capacity: number, otherObstacles: number, lineCapacity = 0) {
     this.obstacles = Array.from({ length: 2 * capacity + otherObstacles }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
+    this.lines = Array.from({ length: lineCapacity }, () => ({ ax: 0, ay: 0, bx: 0, by: 0 }));
     this.asks = Array.from({ length: capacity }, () => ({ x: 0, ringX: 0, ringY: 0, reach: 0, gap: 0, side: 1, w: 0, h: 0, top: 0 }));
     this.spots = Array.from({ length: capacity }, () => ({ x: 0, y: 0 }));
     this.moved = new Uint8Array(capacity);
@@ -461,14 +469,31 @@ export class EntryLabels {
     this.rings[this.count++] = ring;
   }
 
+  /** A solid line on screen this frame (screen px); call before `place`. */
+  line(ax: number, ay: number, bx: number, by: number): void {
+    const l = this.lines[this.lineCount];
+    if (!l) return;
+    l.ax = ax;
+    l.ay = ay;
+    l.bx = bx;
+    l.by = by;
+    this.lineCount++;
+  }
+
   place(n: number, camX: number, camY: number): void {
     placePills(this.obstacles, n, this.asks, this.count, this.spots, this.moved);
     for (let i = 0; i < this.count; i++) {
       const ring = this.rings[i]!;
-      ring.showPill(this.moved[i] !== 2);
-      ring.putPill(this.spots[i]!.x, this.spots[i]!.y, camX, camY);
+      const spot = this.spots[i]!;
+      // a pill pushed far from its ring, or across a cable from it, no longer reads as its label: hide it
+      const shown = this.moved[i] !== 2 && pillShown(pillReach(this.asks[i]!, spot.x, spot.y, this.lines, this.lineCount), ring.pillWasShown, ring.pillHiddenFrames);
+      ring.pillHiddenFrames = shown ? 0 : ring.pillHiddenFrames + 1;
+      ring.pillWasShown = shown;
+      ring.showPill(shown);
+      ring.putPill(spot.x, spot.y, camX, camY);
     }
     this.count = 0;
+    this.lineCount = 0;
   }
 }
 

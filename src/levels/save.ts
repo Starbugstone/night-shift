@@ -245,9 +245,6 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   return out;
 }
 
-/** Fields any build has ever written to a save. */
-const SAVE_FIELDS = ['version', 'glorbs', 'levels', 'upgrades', 'muted', 'allUnlocked', 'reports', 'lang'] as const;
-
 const isFiniteNumber = (v: unknown): boolean => typeof v === 'number' && Number.isFinite(v);
 const isBool = (v: unknown): boolean => typeof v === 'boolean';
 
@@ -272,21 +269,71 @@ export const SAVE_FIELD_TYPES: Readonly<Record<string, (value: unknown) => boole
   specimens: isObj,
 };
 
+/** A level record that holds at least one value `readLevel` keeps. */
+function isUsableLevel(record: unknown): boolean {
+  if (!isObj(record)) return false;
+  const s = record.stars;
+  if (Array.isArray(s) ? s.length > 0 && s.every(isBool) : isFiniteNumber(s)) return true;
+  if (isBool(record.delivered)) return true;
+  if (typeof record.attempts === 'number' && Number.isFinite(record.attempts) && record.attempts >= 0) return true;
+  const bt = record.bestTimeSec ?? record.bestTime;
+  if (typeof bt === 'number' && Number.isFinite(bt) && bt > 0) return true;
+  return isMapCollectibleId(record.mapCollectible);
+}
+
 /**
- * A stored value worth loading: an object carrying at least one save field, with every recognised field of the
- * type a build writes. Unreadable JSON, `null`, arrays, an empty `{}` and a record with a mistyped field are not
- * saves, so the loader passes over them to an older key instead of importing nothing. A sparse record with valid
- * fields (`{"glorbs": 5}`) and the default record a reset stores still load.
+ * The fields whose value is progress or a setting, and when that value is usable (v0.2 council round 3, Sol P2).
+ * `version` alone is not a save, and neither is a level map with only `null` or broken records, an upgrade list
+ * with no known upgrade, an unknown language or a shelf with no readable entry.
+ */
+const SAVE_FIELD_USABLE: Readonly<Record<string, (value: unknown) => boolean>> = {
+  glorbs: v => typeof v === 'number' && Number.isFinite(v) && v >= 0,
+  levels: v => isObj(v) && Object.entries(v).some(([id, record]) => !Object.hasOwn(Object.prototype, id) && isUsableLevel(record)),
+  upgrades: v => Array.isArray(v) && v.some(u => typeof u === 'string' && (UPGRADE_IDS.includes(u as UpgradeId) || Object.hasOwn(RETIRED_UPGRADES, u))),
+  muted: isBool,
+  allUnlocked: isBool,
+  reports: v => typeof v === 'number' && Number.isFinite(v) && v >= 0,
+  lang: isLangPref,
+  legacyDispatch: isBool,
+  bridgeAccess: isBool,
+  fieldCheckSeen: isBool,
+  dispatch2199Finale: isBool,
+  trophies: v => Object.keys(readTrophies(v)).length > 0,
+  specimens: v => Object.keys(readSpecimens(v)).length > 0,
+};
+
+/**
+ * A stored value worth loading: an object with every recognised field of the type a build writes, carrying at
+ * least one usable progress or setting value. Unreadable JSON, `null`, arrays, an empty `{}`, a record with a
+ * mistyped field and a well-typed record with nothing usable in it (`{"version":2}`, `{"levels":{"level1":null}}`)
+ * are not saves, so the loader passes over them to an older key instead of importing nothing. A sparse record
+ * with one usable value (`{"glorbs": 5}`, `{"lang": "fr"}`) and the default record a reset stores still load.
  */
 function readSaveShape(stored: string | null): Record<string, unknown> | null {
   if (!stored) return null;
   let raw: unknown;
   try { raw = JSON.parse(stored); } catch { return null; }
-  if (!isObj(raw) || !SAVE_FIELDS.some(field => Object.hasOwn(raw, field))) return null;
+  if (!isObj(raw)) return null;
   for (const [field, valid] of Object.entries(SAVE_FIELD_TYPES)) {
     if (Object.hasOwn(raw, field) && !valid(raw[field])) return null;
   }
-  return raw;
+  const usable = Object.entries(SAVE_FIELD_USABLE).some(([field, ok]) => Object.hasOwn(raw, field) && ok(raw[field]));
+  return usable ? raw : null;
+}
+
+/**
+ * The current key only (v0.2 council round 3, Fable F4): a record that fails the type checks but whose `levels`
+ * holds at least one usable level record is this build's own save with a damaged field, not an empty value.
+ * `validateSave` keeps its progress and defaults the bad field, so an older key never replaces it.
+ */
+function salvageCurrent(stored: string | null, anyValue = false): Record<string, unknown> | null {
+  if (!stored) return null;
+  let raw: unknown;
+  try { raw = JSON.parse(stored); } catch { return null; }
+  if (!isObj(raw)) return null;
+  if (SAVE_FIELD_USABLE.levels!(raw.levels)) return raw;
+  // Opus O6: with no older save to fall back to, any usable value is repaired rather than thrown away
+  return anyValue && Object.entries(SAVE_FIELD_USABLE).some(([field, ok]) => Object.hasOwn(raw, field) && ok(raw[field])) ? raw : null;
 }
 
 /** True when a stored string holds a loadable save (see readSaveShape). */
@@ -295,16 +342,20 @@ export function isStoredSave(stored: string | null): boolean {
 }
 
 /**
- * The current key wins whenever it holds a save, including the default record a reset stores. Otherwise the
- * newest older save is imported and stored under the current key at once (the older keys are never rewritten).
+ * The current key wins whenever it holds a save, including the default record a reset stores, or a damaged save
+ * whose level records survive (salvageCurrent; it is stored back repaired). Otherwise the newest older save is
+ * imported and stored under the current key at once (the older keys are never rewritten). With no older save, a
+ * damaged current save that still holds any usable value is repaired rather than thrown away (Opus O6).
  */
 export function loadSave(storage: KeyValueStore | null): SaveData {
   if (!storage) return defaultSave();
   try {
-    const own = readSaveShape(storage.getItem(SAVE_KEY));
+    const stored = storage.getItem(SAVE_KEY);
+    const sound = readSaveShape(stored);
+    const own = sound ?? salvageCurrent(stored);
     if (own) {
       const current = validateSave(own);
-      if (isObj(own.levels) && !Object.hasOwn(own.levels, 'birch_bakery')) writeSave(storage, current);
+      if (!sound || (isObj(own.levels) && !Object.hasOwn(own.levels, 'birch_bakery'))) writeSave(storage, current);
       return current;
     }
     for (const key of [V2_SAVE_KEY, LEGACY_SAVE_KEY]) {
@@ -313,6 +364,12 @@ export function loadSave(storage: KeyValueStore | null): SaveData {
       const imported = validateSave(raw);
       writeSave(storage, imported);
       return imported;
+    }
+    const repaired = salvageCurrent(stored, true);
+    if (repaired) {
+      const current = validateSave(repaired);
+      writeSave(storage, current);
+      return current;
     }
     return defaultSave();
   } catch {

@@ -455,7 +455,7 @@ export class DeepFlightView implements SceneView {
     this.upperWorld.addChild(bubbles);
     // v0.2 council round 2: room for the boxes that keep pills off solid lines (wires, bunting, crane booms)
     this.labels = new EntryLabels(this.rings.length, 8 + m.hazards.length + m.hazards.reduce((sum, d) =>
-      sum + (d.type === 'wire' ? linePieces(Math.hypot(d.bx - d.ax, d.by - d.ay)) : d.type === 'crane' ? linePieces(d.len * (1 + CRANE_TAIL)) : 0), 0));
+      sum + (d.type === 'wire' ? linePieces(Math.hypot(d.bx - d.ax, d.by - d.ay)) : d.type === 'crane' ? linePieces(d.len * (1 + CRANE_TAIL)) : 0), 0), m.hazards.length);
     this.upperWorld.addChild(abovePlayer(this.checkpoint.arrival), abovePlayer(this.saucer.root), abovePlayer(this.fuse.root), abovePlayer(this.fx));
     world.addChild(this.tints.worldWash, this.upperWorld);
     this.tints.dawnDecor.addChild(this.dawn.root);
@@ -534,6 +534,8 @@ export class DeepFlightView implements SceneView {
       if (sim.field.solidLine(i, this.line)) {
         const l = this.line;
         n = lineObstacles(clear, n, l.ax, l.ay, l.bx, l.by, l.half, cam.x, cam.y);
+        // round 3 (Fable F2): and never sits across one from its ring
+        this.labels.line(l.ax - cam.x, l.ay - cam.y, l.bx - cam.x, l.by - cam.y);
       } else if (d.type === 'cow' && (sim.field.tell[i] || sim.field.on[i])) {
         const rise = sim.field.tell[i] && !rm ? 150 * (1 - sim.field.b[i]! / COW.warning) : 0;
         const b = clear[n++]!;

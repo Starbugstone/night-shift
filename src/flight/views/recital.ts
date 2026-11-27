@@ -4,7 +4,7 @@ import type { Assets } from '../../contracts';
 import { tr } from '../../i18n';
 import { artSprite } from '../../ui/views/art';
 import type { DeepFlightScene } from '../deep-scene';
-import { cameraHeading, GRIMSBY_SET, RECITAL_LOOKAHEAD, recitalAt } from '../recital';
+import { cameraHeading, GRIMSBY_SET, listenerRecitals, RECITAL_LOOKAHEAD, recitalAt } from '../recital';
 import { stewardPose, STEWARD_REACH } from '../photographer';
 import { dashedArc, dashedLine, sectorPath } from './tells';
 import type { Box } from './clear-of';
@@ -35,6 +35,8 @@ export class RecitalView {
   readonly bubble = new Container();
   coverEars = false;
   private readonly listeners: Container[];
+  /** By detector index: the listener who slumps in that recital's cone. */
+  private readonly audience: (Container | undefined)[];
   private readonly previews: Graphics[];
   private readonly lamps = new Container();
   private readonly cards: Container[];
@@ -54,13 +56,15 @@ export class RecitalView {
       this.sectors.addChild(g);
       return g;
     });
-    this.listeners = GRIMSBY_SET.listeners.map(([x, y]) => {
+    this.listeners = GRIMSBY_SET.listeners.map(({ x, y }) => {
       const figure = artSprite(assets, 'flight/recital_listener2199') ?? new Graphics().ellipse(0, 6, 17, 11)
         .fill('#88748b').circle(0, -5, 10).fill('#dbb998');
-      figure.position.set(x!, y!);
+      figure.position.set(x, y);
       this.ground.addChild(figure);
       return figure;
     });
+    this.audience = s.sim.field.defs.map(() => undefined);
+    listenerRecitals(s.sim.field.defs).forEach((d, k) => { if (d >= 0) this.audience[d] = this.listeners[k]; });
     const at = GRIMSBY_SET.sign;
     const sign = new Graphics().rect(at.x - 89, at.y, 8, 47).rect(at.x + 82, at.y, 8, 47).fill('#817e86')
       .roundRect(at.x - 107, at.y - 24, 214, 50, 8).fill('#283a47').stroke({ color: '#d7c48e', width: 4 });
@@ -104,7 +108,7 @@ export class RecitalView {
         g.position.set(d.x, d.y);
         g.rotation = a;
         this.coverEars ||= g.visible && recitalAt(d, future, sim.saucer.x, sim.saucer.y);
-        const listener = i === 0 ? this.listeners[0] : i === 2 ? this.listeners[1] : undefined;
+        const listener = this.audience[i];
         if (listener) {
           const slump = recitalAt(d, t, listener.x, listener.y);
           listener.scale.y = slump ? 0.62 : 1;

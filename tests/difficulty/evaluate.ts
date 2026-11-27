@@ -576,6 +576,7 @@ function appendDeepReport(lines: string[], r: LevelReport): void {
   const deadline = r.levelId === 'level9' ? 'storm passes at' : r.levelId === 'level12' ? 'demolition' : 'sunrise';
   const honest = r.honestPace;
   lines.push(`Slowest honest hand (autopilot, pace ${HONEST_HAND.pace}): ${honest.runs.filter(run => run.delivered).length}/${honest.runs.length} delivered, slowest ${Number.isFinite(honest.worstSec) ? `${honest.worstSec} s` : 'no delivery'}${Number.isFinite(honest.budgetSec) ? `, must finish by ${Math.round(honest.limitSec * 10) / 10} s of ${honest.budgetSec} s` : ''}.`);
+  for (const slow of honest.slow) lines.push(`Slow hand ${slow.hand.name} (pace ${slow.hand.pace}, reaction ${slow.hand.reaction} s): ${slow.runs.filter(run => run.delivered).length}/${slow.runs.length} delivered, slowest ${Number.isFinite(slow.worstSec) ? `${slow.worstSec} s` : 'no delivery'}${Number.isFinite(slow.limitSec) ? ` of ${slow.limitSec} s` : ''}.`);
   lines.push(`Shift estimate: ${Object.entries(r.shiftEstimate).map(([k, s]) => `${k} ${s} s`).join(', ')}${Number.isFinite(r.budgetSec) ? ` · ${deadline} ${r.budgetSec} s` : ''} · Night owl by ${r.parSec} s.`);
   if (r.birchDetours) for (const row of r.birchDetours) {
     lines.push(`${row.profile} pickup detour: ${row.fourth}/${row.attempts} fourth stars, ${row.allFour}/${row.attempts} four-star shifts.`);

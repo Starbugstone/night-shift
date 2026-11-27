@@ -15,8 +15,10 @@ export const LEVEL12: DeepLevelDef = {
   memo: { re: words.re, body: words.body, joke: words.joke },
   clockMode: 'demolition', // v0.2 presentation
   // v0.2 openings: the cordon detours retuned the clock (was 192 s). v0.2 council round 2: the slowest honest hand
-  // (SLOWEST_HONEST_PACE) needs 187 s, so demolition moves 175 → 205 s; Night owl by 153 s elapsed (was 149 s)
-  hours: [0, 0], budgetSec: 205, parMarginSec: 52,
+  // (SLOWEST_HONEST_PACE) needs 187 s, so demolition moves 175 → 205 s; Night owl by 153 s elapsed (was 149 s).
+  // Round 3 (Opus O1): a hand at pace 1.4 loses a whole shutter and counterweight cycle (up to 216 s), so
+  // demolition moves 205 → 220 s with Night owl still at 153 s elapsed (margin 52 → 67 s)
+  hours: [0, 0], budgetSec: 220, parMarginSec: 67,
   map: {
     // v4 openings: Zib slips in from the north under the west demolition barge and flies south. The big
     // recital no longer faces the launch: it guards Moe's bureau at the far end of the avenue.

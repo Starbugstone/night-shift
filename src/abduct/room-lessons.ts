@@ -34,7 +34,12 @@ export function lessonNear(kind: Kind): number {
 }
 
 function outside(a: Area, x: number, y: number): number {
-  return Math.hypot(Math.max(a.x - x, 0, x - a.x - a.w), Math.max(a.y - y, 0, y - a.y - a.h));
+  return outsideBox(a.x, a.y, a.w, a.h, x, y);
+}
+
+/** px from (x, y) to the box (0 inside); takes numbers so a per-frame caller builds no Area (Opus O3). */
+function outsideBox(ax: number, ay: number, aw: number, ah: number, x: number, y: number): number {
+  return Math.hypot(Math.max(ax - x, 0, x - ax - aw), Math.max(ay - y, 0, y - ay - ah));
 }
 
 /** px from (x, y) to where the hazard acts: what it sweeps, covers or sees. */
@@ -43,7 +48,7 @@ export function hazardReach(h: Hazard, x: number, y: number): number {
     case 'patrol': {
       const dx = Math.abs(h.dx);
       const dy = Math.abs(h.dy);
-      return outside({ x: h.sprite.x - dx, y: h.sprite.y - dy, w: h.sprite.w + dx * 2, h: h.sprite.h + dy * 2 }, x, y);
+      return outsideBox(h.sprite.x - dx, h.sprite.y - dy, h.sprite.w + dx * 2, h.sprite.h + dy * 2, x, y);
     }
     case 'fragile': return outside(h.sprite, x, y);
     case 'draft':
@@ -88,7 +93,9 @@ export function roomHazardKind(room: Room, x: number, y: number, pad: number, sh
   let best: Kind | null = null;
   let bestFresh = false;
   let nearest = Infinity;
-  for (const h of room.interior?.building.hazards ?? []) {
+  const hazards = room.interior?.building.hazards;
+  if (!hazards) return null;
+  for (const h of hazards) {
     if (!kinds.has(h.kind)) continue;
     const reach = hazardReach(h, x, y);
     if (reach >= lessonNear(h.kind) + pad) continue;
@@ -127,7 +134,14 @@ export class RoomLessons {
     return this.active ? ROOM_HAZARD_LESSONS[this.active]!() : '';
   }
 
+  /** Runs every frame while a prompt shows: a plain loop, no closure or empty array (Opus O3). */
   private inZone(kind: Kind, x: number, y: number, pad: number): boolean {
-    return (this.room.interior?.building.hazards ?? []).some(h => h.kind === kind && hazardReach(h, x, y) < lessonNear(kind) + pad);
+    const hazards = this.room.interior?.building.hazards;
+    if (!hazards) return false;
+    for (let i = 0; i < hazards.length; i++) {
+      const h = hazards[i]!;
+      if (h.kind === kind && hazardReach(h, x, y) < lessonNear(kind) + pad) return true;
+    }
+    return false;
   }
 }

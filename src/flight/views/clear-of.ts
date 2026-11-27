@@ -212,6 +212,41 @@ export function placePills(obs: Box[], n: number, asks: readonly PillAsk[], coun
   }
 }
 
+/** A solid line on screen (px), as the deep view passes it to the pill check. */
+export interface PillLine { ax: number; ay: number; bx: number; by: number }
+
+/** A shown pill may sit this many of its gaps from its ring, at most (v0.2 council round 3, Fable F2)... */
+export const PILL_FAR = 1.5;
+/** ...and a hidden one comes back only under this many, after PILL_HOLD_FRAMES hidden (no flicker at the edge). */
+export const PILL_NEAR = 1.3;
+export const PILL_HOLD_FRAMES = 30;
+
+function crosses(ax: number, ay: number, bx: number, by: number, l: PillLine): boolean {
+  const d = (bx - ax) * (l.by - l.ay) - (by - ay) * (l.bx - l.ax);
+  if (d === 0) return false;
+  const t = ((l.ax - ax) * (l.by - l.ay) - (l.ay - ay) * (l.bx - l.ax)) / d;
+  const u = ((l.ax - ax) * (by - ay) - (l.ay - ay) * (bx - ax)) / d;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+}
+
+/**
+ * How far a pill placed at top-left (x, y) is from its ring, in pill gaps (vertical, centre to centre), or Infinity
+ * when a solid line runs between the ring's centre and the pill's (it would read as the label of whatever is beyond
+ * the cable). L12's "Bathroom hatch" pill was pushed 165–310 px off its ring, over the barge (Fable F2).
+ */
+export function pillReach(a: PillAsk, x: number, y: number, lines: readonly PillLine[], lineCount: number): number {
+  const cx = x + a.w / 2;
+  const cy = y + a.h / 2;
+  const px = Math.min(Math.max(a.ringX, x), x + a.w);
+  for (let i = 0; i < lineCount; i++) if (crosses(a.ringX, a.ringY, px, cy, lines[i]!) || crosses(a.ringX, a.ringY, cx, cy, lines[i]!)) return Infinity;
+  return Math.abs(cy - a.ringY) / a.gap;
+}
+
+/** Whether a pill at `reach` gaps shows, given whether it showed last frame and how many frames it has been hidden. */
+export function pillShown(reach: number, wasShown: boolean, hiddenFrames: number): boolean {
+  return wasShown ? reach <= PILL_FAR : reach <= PILL_NEAR && hiddenFrames >= PILL_HOLD_FRAMES;
+}
+
 function keep(obs: Box[], n: number, x: number, y: number, a: PillAsk): number {
   const b = obs[n]!;
   b.x = x - 4;
