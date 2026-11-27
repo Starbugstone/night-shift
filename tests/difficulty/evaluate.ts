@@ -14,6 +14,7 @@ import { HARD_RULES, OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type
 import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateTripodFirst, evaluateStars, type CarReport, type StarReport, type TripodReport } from './stars';
 import { checkDispatchFinale } from './dispatch2199';
 import { naiveCarCatches } from './time-car';
+import { RateLedger, bandText, tolerated, type RateCheck } from './rates';
 
 // Minimum shares of full attempts, in the game's star order. The beeline and wake
 // checks below still enforce challenge when the route-aware player earns many stars.
@@ -149,6 +150,9 @@ export interface RouteReport {
   route: string;
   profile: string;
   success: number;
+  /** Delivered attempts out of `attempts` (one per seed). */
+  delivered: number;
+  attempts: number;
   /** Median seconds of a delivered attempt (NaN when none). */
   medianSec: number;
   medianPeakWake: number;
@@ -160,6 +164,9 @@ export interface RouteReport {
 export interface FlightReport {
   profile: string;
   done: number;
+  /** Runs that reached all three rings, out of `runs` (one per seed). */
+  finished: number;
+  runs: number;
   medianSpots: number;
   medianSec: number;
   causes: Record<string, number>;
@@ -178,6 +185,8 @@ interface StarLevelReport {
   souvenirs: { roomId: RoomId | 'field_check'; grabbed: number; delivered: number; medianSec: number }[];
   casualMedianParShare: number;
   casualMedianPeakSuspicion: number;
+  /** Every rate band judged, exact from EXACT_FROM attempts and a binomial sanity check below (./rates.ts). */
+  rates: RateCheck[];
   violations: string[];
 }
 
@@ -220,6 +229,8 @@ function routeReport(roomId: RoomId, building: string, route: string, profile: H
     route,
     profile: profile.name,
     success: ok.length / runs.length,
+    delivered: ok.length,
+    attempts: runs.length,
     medianSec: median(ok.map((r) => r.timeSec)),
     medianPeakWake: median(runs.map((r) => r.peakWake)),
     medianPeakSleeper: median(runs.map((r) => r.peakSleeper)),
@@ -277,28 +288,26 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     roomBeelines: entries.map(entry => ({ roomId: entry.roomId, clean: naiveRoomWins(entry.roomId, level.kind === 'deep') })),
     casualMedianParShare: median(casualRuns.filter(run => run.stars[0]).map(run => run.seconds / par)),
     casualMedianPeakSuspicion: median(casualRuns.map(run => run.peakSuspicion)),
+    rates: [],
     violations: [],
   };
+  const ledger = new RateLedger(base.violations);
+  base.rates = ledger.checks;
   for (const row of souvenirs) {
     const floor = row.roomId === 'inventor_balcony' ? 0.75 : 0.4;
-    if (row.delivered / seeds < floor) base.violations.push(`${row.roomId}: took the souvenir home ${row.delivered}/${seeds}, floor ${pct(floor)}`);
+    ledger.rate(`${row.roomId}: souvenir taken home`, row.delivered, seeds, { min: floor });
   }
   const num = workOrderNumber(level.id);
   const floors = STAR_FLOORS[level.id === 'birch_bakery' || level.id === 'birch_neighbours' ? level.id : level.kind === 'tutorial' ? 'tutorial' : num <= workOrderNumber('level4') ? 'early' : num <= workOrderNumber('level6') ? 'middle' : 'late'];
   for (const row of base.stars) {
     const want = row.profile === 'skilled' ? floors.skilled : row.profile === 'casual' ? floors.casual : [];
     for (const [i, floor] of want.entries()) {
-      const actual = row.earned[i]! / row.attempts;
-      if (actual < floor) base.violations.push(`${base.starLabels[i]} (${row.profile}) earns ${pct(actual)}, band wants ≥ ${pct(floor)}`);
-    }
-    if (level.kind === 'deep' && row.profile === 'casual' && row.earned[1] / row.attempts > CASUAL_GHOST_CAP) {
-      base.violations.push(`too easy: casual Ghost earns ${pct(row.earned[1] / row.attempts)}, band allows ≤ ${pct(CASUAL_GHOST_CAP)}`);
+      const ceiling = level.kind === 'deep' && row.profile === 'casual' && i === 1 ? CASUAL_GHOST_CAP : undefined;
+      ledger.rate(`${base.starLabels[i]} (${row.profile})`, row.earned[i]!, row.attempts, { min: floor, ...(ceiling === undefined ? {} : { max: ceiling }) });
     }
   }
   if (level.kind === 'deep' && skilledStars && casualStars) {
-    const skilled = skilledStars.earned[1] / skilledStars.attempts;
-    const casual = casualStars.earned[1] / casualStars.attempts;
-    if (skilled <= casual) base.violations.push(`Ghost must reward skilled play: skilled ${pct(skilled)}, casual ${pct(casual)}`);
+    ledger.order('Ghost must reward skilled play (skilled above casual)', skilledStars.earned[1], skilledStars.attempts, casualStars.earned[1], casualStars.attempts);
   }
   if (base.beelineCaught !== BEELINE_DELAYS.length) {
     base.violations.push(`too open: a naive flight is stopped at ${base.beelineCaught}/${BEELINE_DELAYS.length} start times`);
@@ -335,6 +344,8 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     return {
       profile: p.name,
       done: runs.filter((r) => r.done).length / runs.length,
+      finished: runs.filter((r) => r.done).length,
+      runs: runs.length,
       medianSpots: median(runs.map((r) => r.spots.length)),
       medianSec: median(runs.map((r) => r.totalSec)),
       causes: tally(runs.flatMap((r) => r.spots.map((s) => s.cause))),
@@ -367,13 +378,13 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     parSec: deepPar(level),
     tension: Math.round(tension),
   };
-  report.violations.push(...check(report, band));
+  report.violations.push(...check(report, band, ledger));
   if (isBirch(level.id)) {
     report.birchDetours = [...profiles, PROFILES.bot].map(profile => evaluateBirchDetours(level, profile, profile.name === 'bot' ? 1 : seeds, play));
     for (const row of report.birchDetours) {
       const bakery = level.id === 'birch_bakery';
       const floor = row.profile === 'bot' ? 1 : row.profile === 'skilled' ? (bakery ? 0.95 : 0.90) : bakery ? 0.90 : 0.80;
-      if (row.fourth < Math.floor(floor * row.attempts)) report.violations.push(`Pickup (${row.profile}) earns ${row.fourth}/${row.attempts}, floor ${pct(floor)}`);
+      ledger.rate(`Pickup detour (${row.profile})`, row.fourth, row.attempts, { min: floor });
       if ((row.profile === 'bot' || seeds >= 20) && row.allFour === 0) report.violations.push(`Pickup (${row.profile}): no four-star shift`);
     }
   }
@@ -386,17 +397,15 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
       if (seeds === 20 && (row.profile === 'skilled' || row.profile === 'casual')) {
         const counts = [...stars.find(star => star.profile === row.profile)!.earned, row.fourthStars];
         GRAIL_TARGETS[row.profile].forEach(([min, max], index) => {
-          const percent = 100 * counts[index]! / seeds;
-          if (percent < min || percent > max)
-            report.violations.push(`${report.starLabels[index]} (${row.profile}) earns ${percent}%, band wants ${min}–${max}%`);
+          ledger.rate(`Grail target: ${report.starLabels[index]} (${row.profile})`, counts[index]!, seeds, { min: min / 100, max: max / 100 });
         });
       }
-      if (row.fourthStars < Math.floor(seeds * floor)) report.violations.push(`Shrubbery (${row.profile}) earned ${row.fourthStars}/${seeds}`);
+      ledger.rate(`Shrubbery detour (${row.profile})`, row.fourthStars, row.attempts, { min: floor });
     }
   }
   if (level.id === 'level12') {
     report.towelFirst = profiles.map(p => evaluateTowelFirst(level, p, seeds, play));
-    report.violations.push(...checkDispatchFinale(report));
+    report.violations.push(...checkDispatchFinale(report, ledger));
   }
   if (level.id === 'level11') {
     if (seeds >= 20 && shiftEstimate.casual !== undefined && shiftEstimate.casual < L11_SHIFT_SEC.min)
@@ -404,17 +413,15 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     report.tripodFirst = profiles.map(profile => evaluateTripodFirst(level, profile, seeds, play));
     for (const row of report.tripodFirst) {
       if (row.profile !== 'skilled' && row.profile !== 'casual') continue;
-      const rate = row.fourthStars / row.attempts;
       const floor = row.profile === 'skilled' ? 5 / 6 : 4 / 6;
-      if (seeds >= 6 && rate < floor) report.violations.push(`Tripod leg detour (${row.profile}) earns ${pct(rate)}, band wants ≥ ${pct(floor)}`);
+      if (seeds >= 6) ledger.rate(`Tripod leg detour (${row.profile})`, row.fourthStars, row.attempts, { min: floor });
     }
   }
   if (level.id === 'level9') {
     if (seeds >= 6) {
       for (const row of stars) {
         if (row.profile !== 'skilled' && row.profile !== 'casual') continue;
-        const rate = row.earned[2] / row.attempts;
-        if (rate > L9_OWL_CAP) report.violations.push(`Night owl (${row.profile}) earns ${pct(rate)}, band allows ≤ ${pct(L9_OWL_CAP)}`);
+        ledger.rate(`Night owl cap (${row.profile})`, row.earned[2], row.attempts, { max: L9_OWL_CAP });
       }
       if (shiftEstimate.casual !== undefined && shiftEstimate.casual < L9_SHIFT_SEC.min)
         report.violations.push(`casual shift estimate ${shiftEstimate.casual} s, band wants ≥ ${L9_SHIFT_SEC.min} s`);
@@ -431,12 +438,9 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     report.carBeelines = naiveCarCatches(level);
     if (report.carBeelines.some(attempt => attempt.caught)) report.violations.push('A naive time-car approach catches the car');
     for (const row of report.carFirst) {
-      const floor = row.profile === 'skilled' ? (seeds === 6 ? 5 / 6 : 0.9)
-        : row.profile === 'casual' ? (seeds === 6 ? 4 / 6 : 0.6) : 0;
+      const floor = row.profile === 'skilled' ? 0.9 : row.profile === 'casual' ? 0.6 : 0;
       const ceiling = row.profile === 'casual' ? 0.85 : 1;
-      const rate = row.catches / row.attempts;
-      if (rate < floor) report.violations.push(`Time car (${row.profile}) catches ${pct(rate)}, band wants ≥ ${pct(floor)}`);
-      if (rate > ceiling) report.violations.push(`Time car (${row.profile}) catches ${pct(rate)}, band wants ≤ ${pct(ceiling)}`);
+      ledger.rate(`Time car catches (${row.profile})`, row.catches, row.attempts, { min: floor, max: ceiling });
       if (seeds >= 20 && row.allFour === 0) report.violations.push(`Time car (${row.profile}): no four-star shift`);
     }
   }
@@ -456,21 +460,27 @@ function noObstacle(room: RoomId): string {
 }
 
 /** Every way the report misses its band, as readable sentences. */
-export function check(r: LevelReport, band: Band): string[] {
+export function check(r: LevelReport, band: Band, ledger = new RateLedger([])): string[] {
   const v: string[] = [];
+  const rates = new RateLedger(v);
+  const judge = (...args: Parameters<RateLedger['rate']>): void => {
+    ledger.checks.push(rates.rate(...args));
+  };
   for (const x of r.routes) {
     const want = x.profile === 'skilled' ? band.skilledRoute : x.profile === 'casual' ? band.casualRoute : 0;
-    if (x.success < want) v.push(`${x.roomId} (${x.profile}) delivers ${pct(x.success)}, band wants ≥ ${pct(want)}; fails: ${JSON.stringify(x.fails)}`);
+    judge(`${x.roomId} (${x.profile}) delivers`, x.delivered, x.attempts, { min: want }, `fails: ${JSON.stringify(x.fails)}`);
   }
   const buildings = new Set(r.routes.map((x) => x.building));
   for (const b of buildings) {
-    const best = Math.max(...r.routes.filter((x) => x.building === b && x.profile === 'casual').map((x) => x.success));
-    if (best < band.casualBuilding) v.push(`${b}: easiest route delivers ${pct(best)} for casual, band wants ≥ ${pct(band.casualBuilding)}`);
+    const casual = r.routes.filter((x) => x.building === b && x.profile === 'casual');
+    if (!casual.length) continue;
+    const best = casual.reduce((a, x) => (x.delivered / x.attempts > a.delivered / a.attempts ? x : a), casual[0]!);
+    judge(`${b}: easiest casual route (${best.roomId}) delivers`, best.delivered, best.attempts, { min: band.casualBuilding });
   }
   for (const f of r.flight) {
     const want = f.profile === 'skilled' ? band.skilledSpots : band.casualSpots;
     if (f.medianSpots > want) v.push(`flight (${f.profile}) median ${f.medianSpots} sightings, band wants ≤ ${want}; causes ${JSON.stringify(f.causes)}`);
-    if (f.done < band.flightDone) v.push(`flight (${f.profile}) finishes ${pct(f.done)} of runs, band wants ≥ ${pct(band.flightDone)}`);
+    judge(`flight (${f.profile}) finishes`, f.finished, f.runs, { min: band.flightDone });
   }
   const casual = r.shiftEstimate.casual;
   if (casual !== undefined && casual > r.budgetSec * band.casualBudgetShare)
@@ -524,6 +534,12 @@ export function formatReport(r: StarLevelReport | LevelReport): string {
   }
   lines.push('');
   if ('routes' in r) appendDeepReport(lines, r);
+  const lenient = tolerated(r.rates);
+  if (lenient.length) {
+    lines.push(`Outside the exact band but inside the ${r.seeds}-seed tolerance (judge at 20 seeds: \`npm run difficulty:release\`):`);
+    for (const c of lenient) lines.push(`- ${c.label}: ${c.k}/${c.n}, band ${bandText(c)}, p = ${c.p!.toFixed(2)}`);
+    lines.push('');
+  }
   lines.push(r.violations.length ? `**Out of band:**\n${r.violations.map((v) => `- ${v}`).join('\n')}` : '**In band.**');
   return lines.join('\n');
 }

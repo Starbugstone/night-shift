@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "difficulty": "vitest run tests/levels-difficulty.test.ts",
-    "difficulty:release": "DIFFICULTY_SEEDS=20 vitest run tests/levels-difficulty.test.ts"
+    "difficulty:release": "node scripts/difficulty-release.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

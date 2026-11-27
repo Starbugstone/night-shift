@@ -45,19 +45,66 @@ and hand wobble to measure route difficulty and full-shift star rates.
 ## Run it
 
 ```bash
-npm run difficulty                                    # all levels, 6 seeds each (part of npm test)
-npm run difficulty:release                            # release candidate: every level, 20 seeds
-DIFFICULTY_SEEDS=20 npm run difficulty                 # steadier rates for tuning
+npm run difficulty                                    # all levels, 6 seeds each: the sanity check in npm test
+npm run difficulty:release                            # the release sweep: every level, 20 seeds, exact bands
+DIFFICULTY_LEVELS=level3,level4 npm run difficulty:release   # 20 seeds on the levels you retuned
 DIFFICULTY_LEVELS=level3,level4 DIFFICULTY_OUT=review/difficulty npm run difficulty
 ```
 
-**Release candidates.** Before a merge to `main`, run `npm run difficulty:release`: every level in
-`LEVELS` at 20 seeds, with the 20-seed-only bands (the 2199 finale bands, 1953 and 1955 shift
-estimates, the Grail targets) switched on. Six seeds hide misses: the v0.2 council found Bakery, L4,
-L5, L6, L11 and L12 out of band at 20 seeds while the default sweep was green. The sweep runs one
-level after another and takes about an hour on a loaded 8-core machine. To spread it out, run groups
-in parallel shells with `DIFFICULTY_SEEDS=20 DIFFICULTY_LEVELS=<ids> npm run difficulty` and cover
-every level. Keep the default sweep at six seeds; never shrink it.
+**Release sweep (user decision 2026-11-27: "6-seed sanity + 20-seed release").** Run
+`npm run difficulty:release` before every preprod push that touches a level, room, hazard, wake,
+suspicion or star tuning, and before a merge to `main`. CI runs it on every pinned commit between
+`npm test` and the build (`.github/workflows/pages.yml`), so an out-of-band commit is never
+published. `scripts/difficulty-release.mjs` runs every level in `LEVELS` at 20 seeds, one vitest
+process per level and several at once (`DIFFICULTY_JOBS`, default the machine's parallelism up to 8),
+with the 20-seed-only bands (the 2199 finale bands, 1953 and 1955 shift estimates, the Grail targets)
+switched on. It prints one table, every rate band with its count out of 20, the band and in or out,
+followed by every other violation, and exits non-zero on any miss or crashed run. `DIFFICULTY_OUT` keeps
+`summary.md` and each level's `.md`, `.json` and `.log`. On 2026-11-27 the full sweep took 4 min
+wall time on this 8-core machine, which was shared with other jobs. Six seeds hide misses: the v0.2
+council found Bakery, L4, L5, L6, L11 and L12 out of band at 20 seeds while the default sweep was green.
+Keep the default sweep at six seeds; never shrink it.
+
+## Rate bands and sample size (`tests/difficulty/rates.ts`)
+
+Every band on a rate (a star share, a route's delivery share, a flight's finish share, a souvenir,
+pickup, detour or time-car share, the casual Ghost and L9 Night owl ceilings, the finale and Grail
+targets) goes through one rule, applied to the observed count *k* out of *n* attempts:
+
+- **n ≥ 20: exact.** *k/n* must sit inside the band. This is the release sweep.
+- **n < 20: sanity.** A count inside the band passes. A count outside fails only when it is too far
+  from the band to be seed luck. For a floor *p₀* it fails when P(X ≤ k | n, p₀) < 0.05. For a ceiling
+  *p₁* it fails when P(X ≥ k | n, p₁) < 0.05, with X ~ Binomial(n, p). In words: a level whose true rate
+  sat exactly on the band edge would give a count this far out less than one time in twenty. This is
+  the one-sided exact (Clopper–Pearson) 95% bound on the rate excluding the band.
+- **"Skilled earns Ghost more often than casual"** compares two rates. It is exact (skilled share
+  strictly above casual) from 20 attempts. Below 20 it fails only when a one-sided Fisher exact test
+  says casual beats skilled (p < 0.05).
+
+Everything that is not a rate stays exact at every seed count: median sightings, shift estimates,
+L9 room median seconds, timeouts, the beeline and every-ring matrix catches and their
+`PENDING_DIRECT` ratchet, direct room drags, par share, peak suspicion and tension. The report lists
+the rates that are outside their exact band but pass the tolerance ("judge at 20 seeds"). The release
+table marks them `in (tolerance)` when the sweep runs below 20 seeds.
+
+What six seeds can and cannot see (n = 6):
+
+| Band | Fails at |
+| --- | --- |
+| floor 100% (Bakery skilled stars) | any miss: 5/6 |
+| floor 5/6 | 2/6 or fewer (3/6: p = 0.06) |
+| floor 2/3 | 1/6 or fewer (2/6: p = 0.10) |
+| floor 60% | 1/6 or fewer |
+| floor 50% (L7 skilled Ghost) | 0/6 (1/6: p = 0.11) |
+| ceiling 90% (casual Ghost, L9 Night owl) | never: 6/6 has p = 0.53. The 20-seed sweep holds it (19/20 fails). |
+
+So the six-seed gate catches a level that collapses, for example a halved fuse: on 2026-11-27,
+L3 casual Ghost fell from 4/6 to 0/6 (p = 0.004) and L6 from 4/6 to 0/6 (p = 0.03), and both failed.
+It does not see a level drifting a few points out of its band. Only the release sweep sees that drift.
+The 2026-11-27 six-seed misses after the touch-path change (Bakery casual Ghost 6/6 against a 90%
+ceiling, L4 3/6, L5 3/6 and L7 2/6 skilled Ghost, L9 skilled Night owl 6/6 against its 90% ceiling)
+all pass the sanity check. The same levels are in band at 20 seeds.
+`tests/levels-difficulty-rates.test.ts` pins these numbers.
 
 **Chaotic rates.** Deep-shift Ghost rates move with the hazard phase at each leg start, and that
 phase depends on how long the rooms took. A change to a room or to the input model can move a
@@ -69,8 +116,8 @@ missed deliveries and sunrise. Deep levels also show route delivery, median time
 sightings, and beeline catches. `DIFFICULTY_OUT` writes `<level>.md` and `<level>.json` under the
 chosen directory. The deep JSON records each sighting's detector index, world coordinates, shift
 time and exposure by detector since the fuse last emptied. Overlapping detectors share a single
-fuse, and each frame is attributed to the detector the game selects. `npm test` enforces the bands
-at six seeds.
+fuse, and each frame is attributed to the detector the game selects. `npm test` runs the bands at
+six seeds with the sample-size tolerance above; the release sweep enforces them exactly.
 Seed counts must be positive integers. Unknown level IDs and deep levels without a band fail.
 
 Each level also reports the casual median time from first input to delivery and two souvenir
@@ -107,8 +154,8 @@ run scored 5/6, 4/6, 4/6 for skilled and 6/6, 3/6, 4/6 for casual (quota, Ghost,
 | L7–L8 | Casual | 2/3 | 33–90% | 1/2 |
 
 Skilled floors are higher in each tier. The skilled model must also earn Ghost more often
-than the casual model on a deep shift. A casual Ghost ceiling of 90% rejects six clean runs
-out of six. Tutorial wake is forgiving while the player learns the controls, so both models
+than the casual model on a deep shift. A casual Ghost ceiling of 90% rejects 19 or 20 clean
+runs out of 20 on the release sweep. Six seeds cannot test it (see *Rate bands and sample size*). Tutorial wake is forgiving while the player learns the controls, so both models
 can earn Still asleep on every attempt. Retest near a boundary at 20 seeds. Human playtests
 can also reveal a hard-to-read tell.
 [Deep shift design](../../../docs/GDD-2-deeper.md)

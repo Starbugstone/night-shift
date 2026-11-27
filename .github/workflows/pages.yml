@@ -6,7 +6,8 @@ name: Test and publish game
 # A push to either branch republishes both. Each branch is pinned to one exact commit first: the
 # pushed commit for the branch that was pushed, the current tip for the other. Each pinned commit
 # is then tested and built from the same checkout, and the site is assembled from those builds
-# only, so it never holds a commit that did not pass its own tests. /deployed.json names both SHAs.
+# only, so it never holds a commit that did not pass its own tests and its 20-seed difficulty sweep.
+# /deployed.json names both SHAs.
 on:
   push:
     branches: [main, preprod]
@@ -73,6 +74,22 @@ jobs:
       # the pinned commit must pass its own tests before its build is published
       - run: npm ci --no-audit --no-fund
       - run: npm test
+      # npm test runs the 6-seed difficulty sanity check; this is the strict one: every level at 20 seeds
+      # on the exact bands (scripts/difficulty-release.mjs). A commit from before the sweep existed (main
+      # until the v0.2 merge) has no script to run and gets a warning instead.
+      - name: Difficulty release sweep (20 seeds, exact bands)
+        env:
+          BRANCH: ${{ matrix.branch }}
+          PINNED: ${{ matrix.sha }}
+        run: |
+          if [ ! -f scripts/difficulty-release.mjs ]; then
+            echo "::warning::$BRANCH $PINNED predates the difficulty release sweep; not swept"
+            exit 0
+          fi
+          status=0
+          DIFFICULTY_OUT="$RUNNER_TEMP/difficulty" npm run difficulty:release || status=$?
+          if [ -f "$RUNNER_TEMP/difficulty/summary.md" ]; then cat "$RUNNER_TEMP/difficulty/summary.md" >> "$GITHUB_STEP_SUMMARY"; fi
+          exit "$status"
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:

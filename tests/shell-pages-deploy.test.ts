@@ -5,7 +5,9 @@
 // Rule (.github/workflows/pages.yml): a `pin` job resolves each branch to one exact SHA (the pushed commit, or
 // the other branch's tip by `git ls-remote`); each build job checks out exactly that SHA, proves it, runs
 // `npm test` before `npm run build` and uploads that build; the site is assembled only from those uploads, with
-// no checkout, clone or build of its own, and /deployed.json names the pinned SHAs.
+// no checkout, clone or build of its own, and /deployed.json names the pinned SHAs. Between the tests and the
+// build, each pinned commit runs the 20-seed difficulty release sweep (`npm run difficulty:release`, user decision
+// 2026-11-27: `npm test` holds only the 6-seed sanity check, the exact bands are judged here).
 import { describe, expect, it } from 'vitest';
 import workflow from '../.github/workflows/pages.yml?raw';
 
@@ -50,9 +52,15 @@ function problems(yml: string): string[] {
     if (checkouts.length !== 1) bad.push(`${name} has ${checkouts.length} checkouts, not one`);
     else if (!/\$\{\{\s*matrix\.sha\s*\}\}/.test(checkouts[0]![1] ?? '')) bad.push(`${name} does not check out the pinned SHA`);
     if (!/git rev-parse HEAD/.test(s)) bad.push(`${name} does not prove the checkout is the pinned commit`);
-    const order = ['actions/checkout', 'npm ci', 'npm test', 'npm run build', 'actions/upload-artifact'].map((step) => s.indexOf(step));
+    const order = ['actions/checkout', 'npm ci', 'npm test', 'npm run difficulty:release', 'npm run build', 'actions/upload-artifact'].map((step) => s.indexOf(step));
     if (order.some((i) => i < 0) || order.some((i, k) => k > 0 && i < order[k - 1]!)) {
-      bad.push(`${name} must run checkout → npm ci → npm test → npm run build → upload, in that order`);
+      bad.push(`${name} must run checkout → npm ci → npm test → npm run difficulty:release → npm run build → upload, in that order`);
+    }
+    const sweep = /\n {6}- name: Difficulty release sweep[^\n]*\n((?: {8}[^\n]*\n)+)/.exec(s)?.[1] ?? '';
+    if (!sweep) bad.push(`${name} has no "Difficulty release sweep" step`);
+    else {
+      if (/^ {8}if:/m.test(sweep)) bad.push(`${name} runs the difficulty sweep only under a condition`);
+      if (!/\bexit "\$status"/.test(sweep) || /npm run difficulty:release\s*(\|\|\s*true|;)/.test(sweep)) bad.push(`${name} ignores the difficulty sweep's exit status`);
     }
   }
   for (const [name, s] of j) {
@@ -82,12 +90,20 @@ describe('Pages publishes only pinned, tested commits', () => {
   it('catches the old clone-the-tips layout and other shortcuts (mutation check)', () => {
     const cloneTips = workflow.replace('      - run: npm test\n', '      - run: npm test\n      - run: git clone --branch preprod "$REPO" preprod && (cd preprod && npm ci && npm run build)\n');
     expect(problems(cloneTips)).toContain('a run step clones or pulls a branch');
-    const buildFirst = workflow.replace('      - run: npm test\n      - run: npm run build\n', '      - run: npm run build\n      - run: npm test\n');
+    const buildFirst = workflow.replace('      - run: npm run build\n', '').replace('      - run: npm test\n', '      - run: npm run build\n      - run: npm test\n');
     expect(buildFirst).not.toBe(workflow);
     expect(problems(buildFirst).some((p) => p.includes('in that order'))).toBe(true);
     const branchRef = workflow.replace('ref: ${{ matrix.sha }}', 'ref: preprod');
     expect(problems(branchRef)).toContain('a checkout names a branch instead of a pinned SHA');
     const noPin = workflow.replace(/\n {2}pin:\n/, '\n  resolve:\n');
     expect(problems(noPin)).toContain('no pin job');
+    const noSweep = workflow.replace(/\n {6}- name: Difficulty release sweep[^\n]*\n(?: {8}[^\n]*\n)+/, '\n');
+    expect(noSweep).not.toBe(workflow);
+    expect(problems(noSweep).some((p) => p.includes('in that order'))).toBe(true);
+    const ignored = workflow.replace('exit "$status"', 'exit 0');
+    expect(ignored).not.toBe(workflow);
+    expect(problems(ignored)).toContain('build ignores the difficulty sweep\'s exit status');
+    const skipped = workflow.replace('      - name: Difficulty release sweep (20 seeds, exact bands)\n', '      - name: Difficulty release sweep (20 seeds, exact bands)\n        if: github.ref == \'refs/heads/main\'\n');
+    expect(problems(skipped)).toContain('build runs the difficulty sweep only under a condition');
   });
 });

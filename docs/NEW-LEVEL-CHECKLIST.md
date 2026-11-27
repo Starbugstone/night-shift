@@ -5,15 +5,16 @@ from coming back in a new level or room, and what enforces it. Rows in `docs/REG
 Every guard below walks `LEVELS` or `ROOMS`, so a new level fails the suite until it meets the rule. Don't narrow
 a guard to pass, and don't add a `PENDING_*` entry for content you are adding (`docs/REGRESSIONS.md` P1).
 
-Before you call a new level or room done, run `npm run typecheck`, `npm test` (which includes `npm run difficulty`)
-and `npm run build`, then the e2e run at the end of this page.
+Before you call a new level or room done, run `npm run typecheck`, `npm test` (which includes `npm run difficulty`,
+the 6-seed sanity check), `npm run difficulty:release` (the 20-seed exact bands) and `npm run build`, then the e2e
+run at the end of this page.
 
 ## Difficulty
 
 | Problem | Rule | Guard | Command |
 |---|---|---|---|
-| Difficulty bands look green on a small sample | Casual, skilled and Ghost rates sit inside the level's band on the release sample, not only on the default sweep. Retune the level; never relax a band. | `tests/levels-difficulty.test.ts`, `tests/difficulty/*` | `npm run difficulty`. *Placeholder: the difficulty agent adds the 20-seed release sweep (`npm run difficulty:release`).* |
-| A straight line still wins | A naive beeline is caught at every tested start time. | `tests/levels-difficulty.test.ts` (nearest-ring beeline) | `npm run difficulty`. *Placeholder: the difficulty agent adds the every-ring, every-entry beeline matrix.* |
+| Difficulty bands look green on a small sample | Casual, skilled and Ghost rates sit inside the level's band on the 20-seed release sweep, where every rate band is exact. The 6-seed run in `npm test` is a sanity check: a rate fails there only when a one-sided exact binomial test (p < 0.05) rules out the band, so it catches big regressions, not seed luck. Retune the level; never relax a band. | `tests/levels-difficulty.test.ts`, `tests/difficulty/*` (rule: `tests/difficulty/rates.ts`, `tests/levels-difficulty-rates.test.ts`), `scripts/difficulty-release.mjs`, the release step in `.github/workflows/pages.yml` | `npm run difficulty` (6 seeds, in `npm test`), then `npm run difficulty:release` (every level at 20 seeds in parallel, one table, non-zero exit on any miss; about 4 min on 8 cores) before every preprod push. CI runs it on each pinned commit before the build. |
+| A straight line still wins | A naive beeline is caught at every tested start time, and so is a thumb held straight from the launch at every entry ring of a deep shift (the every-ring matrix) at every tested delay. These are exact at every seed count: no tolerance. | `tests/levels-difficulty.test.ts` (nearest-ring beeline), `tests/difficulty/beeline.ts` (`directApproaches`, `PENDING_DIRECT`: L5 and L12, may only shrink) | `npm run difficulty`; the report prints the matrix. |
 | Same opening, a detector parked on the spawn | No spawn gate; neighbouring levels use different spawn zones. | `tests/levels-spawn-variety.test.ts` | `npm test` |
 | A deep map nobody flew | Every deep level is flown by the headless autopilot (or names its own driver). | `tests/flight-autopilot.test.ts` | `npm test` |
 | Bump on start | A room spawn sits 10 s without input with zero bonks and zero wake. | `tests/abduct-spawn.test.ts` | `npm test` |
