@@ -206,6 +206,6 @@ describe('L6 openings: caught on the way, not at the spawn', () => {
         }
       }
     }
-  });
+  }, 30_000); // ~2.3 s alone; timed out at 5 s under full-suite load (v0.2 integration run)
 });
 
