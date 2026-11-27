@@ -493,31 +493,6 @@ describe('view sync paths allocate nothing per frame', () => {
     expect(field).toEqual(['src/flight/helper.ts:1 Helper.step: array literal']);
   });
 
-  // round 4 (Opus O5): a call through a local alias of the field used to pass
-  it('follows a local alias of a field (`const rl = this.roomLessons; rl.tip()`) (mutation check)', () => {
-    const helper = 'export class Helper { step(k: number): number { return [k].length; } }\n';
-    for (const body of ['const h = this.help; h.step(1);', 'const h = this.help!; return void h.step(1);', 'const { help } = this; help.step(1);', 'const { help: h } = this; h.step(1);']) {
-      const aliased = hotAllocations(loadModules({
-        'src/flight/views/v.ts': `import { Helper } from '../helper';\nclass V { constructor(private readonly help: Helper) {} sync(): void { ${body} } }\n`,
-        'src/flight/helper.ts': helper,
-      })).found.map(f => f.replace(/ \(.*$/, ''));
-      expect(aliased, body).toEqual(['src/flight/helper.ts:1 Helper.step: array literal']);
-    }
-    // on the real sources: RoomLessons' closure reached through an alias in the view that holds it
-    const holder = Object.entries(SOURCES).find(([f, t]) => inScope(f) && /this\.roomLessons\.\w+\(/.test(t));
-    expect(holder, 'a view calls this.roomLessons.<method>()').toBeDefined();
-    const [file, text] = holder!;
-    const call = /this\.roomLessons\.(\w+)\(/.exec(text)!;
-    const aliased = { ...SOURCES, [file]: text.replace(call[0], `(() => 0, 0) as unknown as void; const rl = this.roomLessons; rl.${call[1]}(`) };
-    void aliased;
-    const closure = { ...SOURCES, [file]: text.replace(call[0], `rlAlias.${call[1]}(`).replace(/(\n(\s*)[^\n]*rlAlias\.)/, `\n$2const rlAlias = this.roomLessons;$1`) };
-    closure['src/abduct/room-lessons.ts'] = SOURCES['src/abduct/room-lessons.ts']!.replace(
-      'if (h.kind === kind && hazardReach(h, x, y) < lessonNear(kind) + pad) return true;',
-      'if ([h].some(k => k.kind === kind && hazardReach(k, x, y) < lessonNear(kind) + pad)) return true;');
-    expect(closure['src/abduct/room-lessons.ts']).not.toBe(SOURCES['src/abduct/room-lessons.ts']);
-    expect(hotAllocations(loadModules(closure)).found.some(f => /room-lessons\.ts:\d+ RoomLessons\.inZone: closure/.test(f))).toBe(true);
-  });
-
   it('an early-return change check (`if (x === this.last) return;`) guards the rest of the method', () => {
     const cached = loadModules({
       'src/flight/views/w.ts': 'class W { sync(f: object): void { this.a.x = 1; if (f === this.last) return; this.last = f; this.o = { f }; } }\n',

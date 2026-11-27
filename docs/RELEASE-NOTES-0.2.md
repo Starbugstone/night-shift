@@ -71,7 +71,7 @@ are actually taking.
 ## Saves
 
 Your v0.1 progress carries over. A damaged or empty save no longer looks like a fresh start: the
-game keeps whatever progress it can still read, from an older save if it has to. When a file came
+game keeps whatever progress it can still read, from an older save if it has to. When a file comes
 back damaged, the title screen says so ("Your file got chewed. We kept what we could.", or "File
 chewed to bits. Here’s a fresh one." when nothing could be read), and **Reset progress** stays
 within reach, behind its confirmation card.

@@ -111,6 +111,11 @@ export function nestedDamageShapes(): { name: string; value: string; progress: b
     out.push({ name: `${name} beside sound records`, value: save(levels, extra), progress: true });
     out.push({ name: `${name} alone`, value: JSON.stringify({ version: 3, glorbs: 0, ...extra }), progress: false });
   }
+  // v0.2 council round 5 (Neon 4): a negative count is a number, so it passed the type check, and the reader clamped it
+  // to 0 while reporting 'ok' and leaving it on disk
+  for (const [field, v] of [['glorbs', -5], ['glorbs', -0.5], ['reports', -1]] as const) {
+    out.push({ name: `${field} = ${v} beside sound records`, value: save(levels, { [field]: v }), progress: true });
+  }
   return out;
 }
 

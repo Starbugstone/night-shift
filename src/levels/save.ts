@@ -228,6 +228,8 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   for (const id of levelIds) out.levels[id] ??= defaultLevel();
   if (!isObj(raw)) return out;
   if (damage) for (const [field, valid] of Object.entries(SAVE_FIELD_TYPES)) if (Object.hasOwn(raw, field) && !valid(raw[field])) damage.push(field);
+  // v0.2 council round 5 (Neon 4): a negative count has the right type but is clamped to 0 below
+  if (damage) for (const field of ['glorbs', 'reports'] as const) if (isFiniteNumber(raw[field]) && (raw[field] as number) < 0) damage.push(field);
   out.glorbs = Math.floor(finiteNonNeg(raw.glorbs, 0, 999999));
   const levels = isObj(raw.levels) ? raw.levels : {};
   // Preserve unregistered level records when an older build reopens this save.
