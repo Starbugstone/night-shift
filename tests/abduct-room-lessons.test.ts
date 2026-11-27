@@ -116,6 +116,10 @@ describe('room hazard prompts teach where the hazard is introduced', () => {
             for (let y = at.y - 400; y < at.y + 400; y += 10) {
               if (hazardReach(mine, x, y) >= lessonNear(kind) || roomHazardLesson(room, x, y, 0) !== ROOM_HAZARD_LESSONS[other.kind]!()) continue;
               expect(roomHazardLesson(room, x, y, 0, new Set([other.kind])), `${id} at ${x},${y}`).toBe(ROOM_HAZARD_LESSONS[kind]!());
+              // v0.2 council R2 (Neon): the prompt on screen holds while the chest stays put; no one-frame flips
+              const lessons = new RoomLessons(room);
+              const frames = Array.from({ length: 30 }, () => lessons.tip(x, y, 12));
+              expect(new Set(frames).size, `${id} at ${x},${y}: ${[...new Set(frames)].join(' / ')}`).toBe(1);
               checked++;
               break found;
             }

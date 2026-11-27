@@ -18,7 +18,7 @@ const routes = {
   len_workshop: { route: "Workshop door", difficulty: "counter & vice" },
   len_skylight: { route: "Skylight", difficulty: "handlebars & lift" },
   // v4 1122
-  rodney_flap: {"route": "Supply flap", "difficulty": "rack & tent flap"},
+  rodney_flap: {"route": "Supply flap", "difficulty": "rack & timed curtain"},
   rodney_loft: {"route": "Banner loft", "difficulty": "chest & swinging shield"},
   black_knight_arch: {"route": "Toll arch", "difficulty": "counter & portcullis"},
   black_knight_loft: {"route": "Portcullis loft", "difficulty": "wheel & gate"},

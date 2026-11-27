@@ -266,7 +266,7 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
     rotation >>= 1;
   }
   else list = withCounted(c.default, counted?.default);
-  const remaining = Math.round(r.remaining);
+  const remaining = Math.floor(r.remaining); // v0.2 council R2: the report row floors the same clock
   return fmt(pick(list, rotation), {
     spotted: r.spotted, failed: r.failed, remaining,
     // v0.2 copy: counted words agree with their number ("1 second", "once")

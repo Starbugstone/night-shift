@@ -56,7 +56,7 @@ Status: **guarded** = a test fails on regression; **pending** = guarded, with cu
 | A6 | Decor that reads as the pickup | Decor near the spawn must not share the pickup's silhouette or colour (the dough bowl read as the cherry pie). | none | rule only. |
 | A7 | Field Check and other wrappers escape room tests | Hard-rule tests run through the scene wrapper, not only the simulation. | `tests/abduct-spawn.test.ts` | guarded for spawn. |
 | A8 | Exit tag off screen | Every interior room's exit tag stays inside the view (below the HUD row, above the bottom bar) wherever the exit shows, in EN and FR; the view places it through `exitTagBox` every frame. | `tests/abduct-exit-tag.test.ts` | guarded (v0.2: the FR dave_roof tag ran off the left edge). |
-| A9 | Room prompt never shown on the obvious route | Every room prompt kind shows on at least one autopilot route of the level that introduces it; when several are in range, a kind not yet shown takes the slot. | `tests/abduct-room-lessons.test.ts` | guarded (v0.2: the L3 patrol prompt never showed). |
+| A9 | Room prompt never shown on the obvious route | Every room prompt kind shows on at least one autopilot route of the level that introduces it; when several are in range, a kind not yet shown takes the slot; the prompt on screen holds until the chest leaves its zone (no one-frame flips, council R2). | `tests/abduct-room-lessons.test.ts` | guarded (v0.2: the L3 patrol prompt never showed). |
 
 ## Flight maps
 
@@ -93,6 +93,7 @@ Status: **guarded** = a test fails on regression; **pending** = guarded, with cu
 | C15 | Report line no level can show | Every deep comment, first-clear, sunrise and pickup line comes out on at least one level in `LEVELS` for some report state and rotation, EN and FR; a pickup or level pool never holds the slot for good. | `tests/ui-report-comment-reach.test.ts` | guarded (v0.2: 30+ lines were unreachable, including every specimen-count line). |
 | C16 | Rank text squeezed sideways | Every rank title, flavour, next-rank line and payoff fits `RANK_BOX` at its normal font next to a 4-digit purse, EN and FR; French says "anneau de parking" throughout. | `tests/ui-workorders-rank-fit.test.ts` | guarded (v0.2). |
 | C17 | Memo copy runs into the goals block | Every level's memo body and joke box clear the goals block at or above the 16 px font floor, EN and FR; cut the copy, never shrink the floor. | `tests/ui-memo-fit.test.ts` (`memoBodyLayout`, shared with the view) | guarded (v0.2: EN L4, FR L4 and FR L7 overflowed after new teaching lines). |
+| C18 | Report numbers that disagree | Vrell's comment and the report rows read the same clock the same way (floored seconds), on every deep level, EN and FR. | `tests/ui-report-seconds.test.ts` | guarded (v0.2 council R2: "11 seconds" over a "0:10 to spare" row). |
 
 ## Engine, rendering and sound
 

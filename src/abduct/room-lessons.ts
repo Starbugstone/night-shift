@@ -111,14 +111,23 @@ export function roomHazardLesson(room: Room, x: number, y: number, pad: number, 
 /** v0.2 follow-up: one room attempt's prompts, remembering which kinds have shown so each gets its turn. */
 export class RoomLessons {
   private readonly shown = new Set<Kind>();
+  /** The prompt on screen: it stays until the chest leaves its zone, then counts as shown (no one-frame flips). */
+  private active: Kind | null = null;
 
   constructor(private readonly room: Room) {}
 
-  /** This frame's prompt for a chest at (x, y), or ''. The kind it returns counts as shown. */
+  /** This frame's prompt for a chest at (x, y), or ''. */
   tip(x: number, y: number, pad: number): string {
-    const kind = roomHazardKind(this.room, x, y, pad, this.shown);
-    if (!kind) return '';
-    this.shown.add(kind);
-    return ROOM_HAZARD_LESSONS[kind]!();
+    if (this.active) {
+      if (this.inZone(this.active, x, y, pad)) return ROOM_HAZARD_LESSONS[this.active]!();
+      this.shown.add(this.active);
+      this.active = null;
+    }
+    this.active = roomHazardKind(this.room, x, y, 0, this.shown);
+    return this.active ? ROOM_HAZARD_LESSONS[this.active]!() : '';
+  }
+
+  private inZone(kind: Kind, x: number, y: number, pad: number): boolean {
+    return (this.room.interior?.building.hazards ?? []).some(h => h.kind === kind && hazardReach(h, x, y) < lessonNear(kind) + pad);
   }
 }

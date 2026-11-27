@@ -381,7 +381,7 @@ export const fr: Strings = {
     len_workshop: { route: "Porte de l’atelier", difficulty: "comptoir et étau" },
     len_skylight: { route: "Lucarne", difficulty: "guidon et montée" },
     // v4 1122
-    rodney_flap: {"route": "Rabat de service", "difficulty": "râtelier et pan de tente"},
+    rodney_flap: {"route": "Rabat de service", "difficulty": "râtelier et pan minuté"},
     rodney_loft: {"route": "Grenier aux bannières", "difficulty": "coffre et écu"},
     black_knight_arch: {"route": "Arche du péage", "difficulty": "comptoir et herse"},
     black_knight_loft: {"route": "Combles de la herse", "difficulty": "roue et herse"},

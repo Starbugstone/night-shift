@@ -23,7 +23,7 @@ run at the end of this page.
 
 | Problem | Rule | Guard | Command |
 |---|---|---|---|
-| A flight hazard nobody explains | Walking `LEVELS` in play order, every flight hazard kind and optional hazard field is classified, and taught on the first level that uses it: by that level's `FLIGHT_LESSONS` entry (`src/flight/views/progression-hint.ts`) or by registered EN+FR memo or prompt strings. Seven hazards from before the rule wait in its `PENDING` list (`docs/REGRESSIONS.md` L13). | `tests/flight-hazard-taught.test.ts` | `npm test` |
+| A flight hazard nobody explains | Walking `LEVELS` in play order, every flight hazard kind and optional hazard field is classified, and taught on the first level that uses it: by that level's `FLIGHT_LESSONS` entry (`src/flight/views/progression-hint.ts`) or by registered EN+FR memo or prompt strings. Its `PENDING` list is empty since v0.2 and may never grow (`docs/REGRESSIONS.md` L13). | `tests/flight-hazard-taught.test.ts` | `npm test` |
 | A room prompt the route never triggers | Every room prompt kind shows on an autopilot route of the level that introduces it; an unseen kind takes the slot over one already shown. | `tests/abduct-room-lessons.test.ts` | `npm test` |
 | A flight lesson left behind when the map moves | Each lesson shows on the autopilot shift no later than the first meeting with its hazard, and never at a spawn far from it; prompts use hysteresis. | `tests/flight-lesson-route.test.ts`, `tests/flight-lesson-hysteresis.test.ts` | `npm test` |
 | A room mechanic nobody explains | Every room field, hazard kind and sleeper-keyed behaviour is classified and taught on its first level, in EN and FR. | `tests/abduct-mechanic-taught.test.ts`, `tests/abduct-room-lessons.test.ts` | `npm test` |
