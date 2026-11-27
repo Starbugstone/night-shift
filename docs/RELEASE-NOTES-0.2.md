@@ -66,8 +66,7 @@ are actually taking.
 - Gameplay sounds are softer and more cartoony, and the background loops are gone.
 - The tractor beam whooshes once instead of constantly, and snoring is quieter and rarer.
 - Ticking clocks, bell clappers and cows only make noise when it actually concerns you.
-- Artie, Penny and Moe now have their own arms and legs, stretched props were redrawn, and Mabel's
-  dough bowl gets a wooden spoon so it no longer looks like the cherry pie.
+- Stretched props were redrawn at their real shapes.
 
 ## Saves
 
@@ -76,11 +75,9 @@ game finds the last good one automatically.
 
 ## Fixed
 
-- Shifts that don't end at sunrise (1955 and the 2199 demolition) no longer say "before dawn", and
-  their clock displays properly everywhere.
-- The 2199 poetry verses stay on screen long enough to read.
+- Shifts that don't end at sunrise no longer say "before dawn", and their clock displays properly
+  everywhere.
 - Route labels no longer cover a cable or a detector edge.
 - Exit signs stay on screen in French too, and shift memos never run into the performance goals.
 - Vrell's close-call remarks now match the seconds shown on the report.
-- A little more time on the clock in 1122 and 2199, so careful flying has room to breathe.
 - The title screen shows the version again: **v0.2**.

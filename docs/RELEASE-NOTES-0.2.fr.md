@@ -18,7 +18,7 @@ Terminez **Fin de quart à 22 h 04 (1955)** pour ouvrir les nouvelles dates du
 1122 et 1953 dans l’ordre de votre choix, puis le final :
 
 - **Sacré Graal ! (Fort de Grimsby, 1122).** Krix veut le Saint Graal pour qu’OBELISK™ vende la vie
-  éternelle par abonnement. Ramenez trois témoins endormis malgré des remparts moqueurs, les vaches
+  éternelle par abonnement. Ramenez trois témoins endormis malgré des remparts moqueurs, des vaches
   catapultées, un lapin tueur et un Chevalier noir qui va très bien, merci.
 - **La Guerre des rhumes (Drive-in de la route 9, 1953).** Un tripode enrhumé traverse l’écran en
   titubant et éternue un rayon thermique. Les premiers rangs applaudissent. Passez après
@@ -38,8 +38,8 @@ retourner décrocher son étoile.
 
 ## Salle des trophées
 
-- Chaque nouveau souvenir, trouvaille et spécimen a sa place sur les étagères, avec un nom et une
-  description.
+- Tous les nouveaux souvenirs, trouvailles et spécimens ont leur place sur les étagères, avec un nom
+  et une description.
 - Chaque spécimen des Archives des spécimens a désormais son propre compte rendu de sonde.
 - Une étagère vide propose **Partir en chasse**, qui vous mène droit au service où l’objet se cache.
 
@@ -75,9 +75,7 @@ pour être lues, et celles des pièces s’affichent sur le chemin que vous pren
   plus discrets et plus rares.
 - Les horloges qui tictaquent, les battants de cloche et les vaches ne font du bruit que quand cela
   vous concerne.
-- Artie, Penny et Moe ont leurs propres bras et jambes, les accessoires étirés ont été redessinés, et
-  le saladier de pâte de Mabel a désormais sa cuillère en bois pour ne plus ressembler à la tarte aux
-  cerises.
+- Les accessoires étirés ont été redessinés à leur vraie forme.
 
 ## Sauvegardes
 
@@ -88,11 +86,9 @@ nouvelle partie : le jeu retrouve automatiquement la dernière qui est valable.
 
 - Les services qui ne finissent pas à l’aube (1955 et la démolition de 2199) ne disent plus
   « avant l’aube », et leur horloge s’affiche correctement partout.
-- Les vers des gardes-poètes de 2199 restent assez longtemps à l’écran pour être lus.
 - Les étiquettes de parcours ne masquent plus un câble ni le bord d’une zone de détection.
 - Les panneaux de sortie restent à l’écran en français aussi, et les notes de service ne débordent
   plus sur les objectifs.
 - Les remarques de Vrell sur les livraisons de justesse affichent désormais le même nombre de
   secondes que le rapport.
-- Un peu plus de temps au chrono en 1122 et en 2199 pour laisser souffler les vols prudents.
 - L’écran titre affiche de nouveau la version : **v0.2**.
