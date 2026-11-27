@@ -1,46 +1,46 @@
 import { en } from '../../i18n/en';
 import { birchRoom, birchSection, roomArt, roomFit } from './deep-birch-bakery';
 import { building, type Hazard, type Opening } from './interior';
-import { BED_POSE, CHAIR_POSE, prop, type Area, type Room } from './layout';
+import { BED_POSE, CHAIR_POSE, prop, shelfProp, type Area, type Room } from './layout';
 
 const noraPose = { ...BED_POSE, neckX: 114, neckY: 550 };
 const lenPose = { ...CHAIR_POSE, neckX: 120, neckY: 507 };
-const cot = prop(roomFit('folding_cot', 42, 576, 295, 36), [{ x: 49, y: 576, w: 282, h: 15 }]);
+const cot = prop(roomFit('folding_cot', 42, 576, 295, 44), [{ x: 49, y: 576, w: 282, h: 15 }]);
 const chair = prop(roomArt('office_chair', 93, 536), [{ x: 103, y: 614, w: 90, h: 17 }, { x: 138, y: 631, w: 20, h: 48 }]);
 const phase = { period: 7.5, open: 4.5, phase: 0.4 };
 const loanedLaser = 'Garage laser';
 const laser = (area: Area): Hazard => ({ kind: 'laser', name: loanedLaser, area, cycle: phase });
-const sideExit = roomFit('door_frame', 806, 365, 112, 285);
+const sideExit = roomFit('door_frame_tall', 801, 365, 117, 285);
 const photos = roomArt('gary_flash_strip', 356, 279);
 const sideGarage = birchSection('Henderson garage', 'workshop', { x: 0, y: 0, w: 918, h: 700 }, [
   cot,
-  prop(roomFit('workbench', 301, 471, 238, 110)),
-  prop(roomFit('shelf', 692, 459, 94, 20)),
+  prop(roomFit('garage_workbench', 301, 471, 238, 110)),
+  shelfProp(692, 459, 94, 20),
 ], [sideExit, photos]);
 
-const loftExit = roomFit('exit_roof_hatch', 537, 10, 204, 76);
+const loftExit = roomFit('exit_roof_hatch', 537, 10, 204, 89);
 const loftGarage = birchSection('Henderson loft', 'workshop', { x: 0, y: 0, w: 782, h: 700 }, [
   cot,
-  prop(roomFit('workbench', 172, 626, 112, 55)),
-  prop(roomFit('shelf', 334, 14, 40, 390)),
-  prop(roomFit('shelf', 685, 508, 78, 20)),
-  prop(roomFit('shelf', 689, 159, 73, 15)),
+  prop(roomFit('garage_workbench', 172, 626, 112, 55)),
+  prop(roomArt('garage_post', 334, 14)),
+  shelfProp(685, 508, 78, 20),
+  shelfProp(689, 159, 73, 15),
 ], [loftExit, photos, roomArt('house_sitting_checklist', 685, 177)]);
 
-const workshopExit = roomFit('door_frame', 680, 318, 110, 248);
+const workshopExit = roomFit('door_frame_tall', 688, 318, 102, 248);
 const workshop = birchSection('Len’s workshop', 'workshop', { x: 0, y: 0, w: 790, h: 700 }, [
   chair,
-  prop(roomFit('workbench', 334, 476, 222, 126)),
-  prop(roomFit('counter', 548, 506, 67, 114)),
+  prop(roomArt('workbench_tall', 334, 476)),
+  prop(roomArt('tool_cabinet', 548, 506)),
 ], [workshopExit]);
 
 const skylightExit = roomFit('exit_skylight', 488, 10, 200, 80);
 const skylight = birchSection('Len’s skylight', 'workshop', { x: 0, y: 0, w: 730, h: 700 }, [
   chair,
-  prop(roomFit('bike_repair_stand', 349, 251, 173, 153), [{ x: 352, y: 256, w: 160, h: 138 }]),
-  prop(roomFit('shelf', 350, 14, 32, 250)),
-  prop(roomFit('shelf', 648, 512, 70, 20)),
-  prop(roomFit('shelf', 659, 300, 60, 17)),
+  prop(roomArt('bike_on_stand', 349, 251), [{ x: 352, y: 256, w: 160, h: 138 }]),
+  prop(roomArt('bike_hoist', 350, 14)),
+  shelfProp(648, 512, 70, 20),
+  shelfProp(659, 300, 60, 17),
 ], [skylightExit]);
 
 const opening = (axis: Opening['axis'], at: number, from: number, to: number): Opening => ({

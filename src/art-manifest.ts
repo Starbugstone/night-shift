@@ -908,6 +908,84 @@ export const ART: Record<string, ArtSpec> = {
   'room/electronic_guide2199': { w: 74, h: 84 },
   'room/complaint_stamp2199': { w: 54, h: 64 },
   'room/answer_display2199': { w: 70, h: 42 },
+
+  // ---- APPEND: v0.2 unstretched room art. Each key is a prop at the shape its rooms place it, so no room
+  // stretches another prop's art (tests/abduct-sprite-aspect.test.ts). Built by scripts/art-shapes/build.mjs.
+  // The shelf family: room/shelf's plank at three more lengths (shelfFit in src/abduct/rooms/layout.ts picks).
+  'room/shelf_stub': { w: 64, h: 20 },
+  'room/shelf_short': { w: 90, h: 20 },
+  'room/shelf_long': { w: 190, h: 20 },
+  // Birch Lane
+  'room/bakery_flue': { w: 35, h: 386 }, // cream enamel oven flue hanging from the ceiling, with joint bands and a damper
+  'room/garage_post': { w: 40, h: 390 }, // timber roof post with a coil of rope on a hook
+  'room/bike_hoist': { w: 32, h: 250 }, // steel hoist pole with a pulley, a chain and a clamp
+  'room/bike_on_stand': { w: 173, h: 153 }, // a bicycle on a tall repair stand with a tool tray
+  'room/tool_cabinet': { w: 67, h: 114 }, // narrow red tool chest on castors, four drawers
+  'room/bakery_bench': { w: 296, h: 158 }, // the padded bench Mabel naps on (room/booth55 redrawn lower)
+  'room/exit_vent_wide': { w: 245, h: 82 }, // room/exit_vent at the width of the bakery's roof vent
+  'room/door_frame_tall': { w: 110, h: 268 }, // room/door_frame for a tall doorway
+  'room/workbench_tall': { w: 222, h: 126 }, // room/workbench, shorter and taller
+  'room/garage_workbench': { w: 232, h: 110 }, // room/workbench, a little shorter
+  // 1955
+  'room/amp_stack55': { w: 140, h: 159 }, // an amp head on two speaker cabinets
+  'room/counter_tall55': { w: 192, h: 194 }, // the steel-top diner counter at full bar height
+  'room/gingham_table55': { w: 178, h: 134 }, // decor: a kitchen table under a red gingham cloth, ketchup and napkins on top
+  'room/counterweight_block55': { w: 65, h: 68 }, // squat cast-iron weight with a lifting ring
+  'room/trunk_body_low55': { w: 336, h: 158 }, // room/trunk_body55 at the height the trunk bay draws it
+  // 1953
+  'room/invasion_icebox': { w: 127, h: 309 }, // tall round-shouldered refrigerator with a note under a magnet
+  'room/invasion_hutch': { w: 150, h: 310 }, // kitchen dresser: plates and a bread bin over two cupboard doors
+  'room/invasion_cupboard': { w: 126, h: 293 }, // two-door mauve cupboard (hangs from the ceiling or stands on the floor)
+  'room/invasion_cupboard_tall': { w: 128, h: 415 }, // the same cupboard with three doors
+  'room/invasion_confessional': { w: 150, h: 310 }, // arched confessional with a drawn curtain
+  'room/invasion_rafter_crate': { w: 178, h: 91 }, // slatted crate with a rope handle and a stencilled saucer
+  'room/invasion_rafter_beam': { w: 243, h: 67 }, // thick rafter with two iron straps
+  'room/invasion_attic_shelf_deep': { w: 200, h: 90 }, // room/invasion_attic_shelf, narrower
+  'room/invasion_attic_shelf_low': { w: 226, h: 85 }, // room/invasion_attic_shelf, lower
+  'room/invasion_lab_cart': { w: 111, h: 194 }, // three-shelf trolley with flasks, a sample box and jars
+  'room/invasion_wire_ledge': { w: 96, h: 18 }, // decor: thin wire wall ledge under the Geiger counter (not a plank: it holds nothing)
+  'room/exit_window_narrow': { w: 117, h: 207 }, // room/exit_window for a narrow doorway-sized opening
+  // 1122
+  'room/grail_long_bench': { w: 270, h: 98 }, // long timber bench
+  'room/grail_stone_bench': { w: 270, h: 98 }, // the same bench in stone
+  'room/grail_guard_seat': { w: 176, h: 170 }, // guard's bench against a tall iron-banded post
+  'room/grail_stockpile': { w: 285, h: 175 }, // stack of dressed building stones tied with a rope
+  'room/grail_shield_rack': { w: 200, h: 256 }, // boarded rack holding four kite shields
+  'room/grail_toll_desk': { w: 200, h: 256 }, // toll desk with a coin badge and a cash box
+  'room/grail_book_stand': { w: 200, h: 256 }, // book cupboard with an open tome on its sloped top
+  'room/grail_strongbox': { w: 200, h: 290 }, // tall iron-bound chest with a brass lock
+  'room/grail_winch': { w: 200, h: 290 }, // portcullis winch: a cog wheel and crank in a timber frame
+  'room/grail_chimney': { w: 200, h: 290 }, // stone chimney breast with a small fire
+  'room/grail_flue_hood': { w: 515, h: 166 }, // wide stone flue hood; one block wears a carved scowl
+  'room/grail_hanging_shield': { w: 79, h: 96 }, // dented kite shield on a ring
+  // 2199
+  'room/transit_bench2199': { w: 332, h: 140 }, // the waiting-room bench (room/booth55 redrawn long and low)
+  'room/counter_kiosk2199': { w: 195, h: 240 }, // service kiosk (room/counter55 redrawn tall)
+  'room/baggage_cart2199': { w: 110, h: 195 }, // three-shelf baggage trolley loaded with cases
+  'room/stamp_weight2199': { w: 83, h: 99 }, // a giant rubber stamp used as a counterweight
+  'room/shower_rail2199': { w: 56, h: 115 }, // shower head on its pipe, dripping
+  'room/luggage_shutter_short2199': { w: 136, h: 30 }, // room/luggage_shutter2199 at the hatch's width
+  'room/robe_sofa_wide2199': { w: 280, h: 110 }, // room/robe_sofa2199, a little wider
+  'room/voice_cabinet_tall2199': { w: 115, h: 330 }, // room/voice_cabinet2199, taller
+  'room/robe_wardrobe2199': { w: 115, h: 330 }, // room/wardrobe, tall and narrow
+  // Grimsby
+  'room/dino_legs_squat': { w: 160, h: 215 }, // room/dino_legs for the lower plinth in the museum hall
+  'room/fireplace_narrow': { w: 192, h: 220 }, // room/fireplace at the width of Doyle's chimney
+  'room/fish_crate_tower': { w: 190, h: 256 }, // four fish crates stacked, fish looking out of the top one
+  'room/fish_crate_box': { w: 100, h: 100 }, // one fish crate on ice
+  'room/bulb_crate': { w: 90, h: 90 }, // crate of spare lighthouse bulbs in straw (fragile)
+  'room/storm_lantern': { w: 30, h: 150 }, // caged storm lantern on a long cord (swings)
+  'room/show_pool_wide': { w: 872, h: 160 }, // room/show_pool at the width of the show hall
+  'room/exit_skylight_wide': { w: 280, h: 90 }, // room/exit_skylight at the width of the marine park's roof panel
+  'room/stairs_tall': { w: 584, h: 686 }, // room/stairs for a full storey
+  'room/stone_plinth_low': { w: 186, h: 70 }, // room/stone_plinth, the low launcher slab
+  'room/towel_cart_narrow': { w: 95, h: 130 }, // room/towel_cart at the width of its lane
+  'room/tunnel_divider_short': { w: 60, h: 266 }, // room/tunnel_divider, the low glass divider
+  'room/cow_pinup': { w: 120, h: 100 }, // decor: the prize cow as a taped-up paper print (the framed room/portrait_cow is solid)
+  // 1953 flight map: the ploughed strips at their three sizes, same row pitch as flight/invasion_field_rows
+  'flight/invasion_field_rows_wide': { w: 300, h: 360 },
+  'flight/invasion_field_rows_strip': { w: 210, h: 325 },
+  'flight/invasion_field_rows_patch': { w: 230, h: 200 },
 };
 
 /**

@@ -60,7 +60,7 @@ const EXITS = {
   captainFunnel: art('exit_chimney_top', -274, -286),
   marcoSkylight: art('exit_skylight', 1170, -1506),
   marcoPromenade: art('exit_patio_door', 2706, 446),
-  gregAwning: fit('exit_skylight', 1300, -706, 220, 80),
+  gregAwning: fit('exit_skylight', 1300, -706, 220, 88),
   gregCabin: art('exit_porthole', 2480, 966),
 } as const;
 

@@ -64,7 +64,7 @@ export function paintCaveProp(g: Brush, key: string, w: number, h: number): bool
     stone(g, [2,h, 0,h * 0.22, rim,2, w - rim,0, w,h * 0.18, w - 2,h], '#665868');
     stone(g, [rim,h - rim, rim + 3,rim * 2, w - rim * 2,rim, w - rim,h - rim], '#211b32');
     stone(g, [1,rim * 2, rim,2, w - rim,0, w,rim, rim + 3,rim + 3], '#ba9d89');
-  } else if (key === 'room/stone_plinth') {
+  } else if (key === 'room/stone_plinth' || key === 'room/stone_plinth_low') {
     stone(g, [0,6, w * 0.08,0, w - 6,0, w,h * 0.17, w - 4,h, 5,h], '#715b60');
     stone(g, [0,6,w * 0.08,0,w - 6,0,w,h * 0.17,w * 0.22,h * 0.22,0,h * 0.14], '#b89983');
     stone(g, [0,h * 0.63,w * 0.48,h * 0.46,w * 0.76,h * 0.55,w,h * 0.42,w,h * 0.54,w * 0.73,h * 0.65,w * 0.43,h * 0.6,0,h * 0.76], '#514453');

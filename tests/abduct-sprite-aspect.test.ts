@@ -24,20 +24,10 @@ const STRETCHABLE: Readonly<Record<string, string>> = {
 };
 
 /** Room art keys still drawn out of their manifest shape in at least one room. */
-const PENDING_ROOM = new Set([
-  'room/amp_case55', 'room/bike_repair_stand', 'room/black_knight_shield', 'room/booth55', 'room/bus_cart55',
-  'room/counter', 'room/counter55', 'room/counterweight', 'room/dino_legs', 'room/door_frame',
-  'room/exit_roof_hatch', 'room/exit_skylight', 'room/exit_vent', 'room/exit_window', 'room/fireplace',
-  'room/fish_crates', 'room/folding_cot', 'room/gear_big', 'room/grail_bench', 'room/grail_chest',
-  'room/grail_counter', 'room/grail_flue', 'room/grail_lectern', 'room/grail_rack', 'room/grail_settle',
-  'room/grail_stand', 'room/hanging_bulb', 'room/invasion_attic_shelf', 'room/invasion_pew_end',
-  'room/invasion_queue_rail', 'room/lightning_cable55', 'room/luggage_shutter2199', 'room/privacy_curtain',
-  'room/robe_sofa2199', 'room/shelf', 'room/show_pool', 'room/stairs', 'room/stone_plinth', 'room/towel_cart',
-  'room/trunk_body55', 'room/tunnel_divider', 'room/voice_cabinet2199', 'room/wardrobe', 'room/workbench',
-]);
+const PENDING_ROOM = new Set<string>();
 
 /** Flight prop keys still drawn out of their manifest shape on some map. */
-const PENDING_FLIGHT = new Set(['flight/invasion_field_rows']);
+const PENDING_FLIGHT = new Set<string>();
 
 /** Drawn w/h over manifest w/h, as a ratio of ratios (1 = same shape). */
 function shape(key: string, w: number, h: number): number {

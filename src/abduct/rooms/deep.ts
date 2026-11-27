@@ -134,7 +134,7 @@ const daveHall = [
 ] as const;
 const daveHome = building([
   room('Master bedroom', 'suburb_bedroom', box(0, 0, 760, 700),
-    [art('portrait_cow', 205, 150), art('potato_butte', 400, 522)],
+    [art('cow_pinup', 205, 150), art('potato_butte', 400, 522)],
     // A low nightstand, not the old wardrobe: the way out of bed to the door is open.
     [art('nightstand', 400, 576)], [daveBed]),
   room('Upstairs hall', 'hallway', box(760, 0, 760, 700),
@@ -143,7 +143,7 @@ const daveHome = building([
   room('Attic', 'attic', box(760, -780, 760, 780),
     [EXITS.daveRoof, fit('ladder', 1210, -240, 52, 240)], [art('boxes', 842, -124), art('boxes', 1348, -124)]),
   room('Stairwell', 'stairwell', box(0, 700, 760, 700),
-    [fit('stairs', 85, 700, 584, 686)]),
+    [fit('stairs_tall', 85, 700, 584, 686)]),
   room('Living room', 'living_room', box(760, 700, 1000, 700),
     [EXITS.davePatio], [art('tv_static', 829, 1286), art('couch', 1010, 1266), art('nightstand', 1390, 1276)]),
 ], [
@@ -244,7 +244,7 @@ const nigelHome = building([
   room('Security office', 'office', box(0, 0, 760, 700),
     [art('lost_umbrella', 221, 230)], [], [officeChair(93), nigelDesk]),
   room('Dinosaur hall', 'museum', box(760, 0, 940, 700),
-    [], [nigelSkull, art('dino_ribs', 1138, 486), fit('dino_legs', 1398, 471, 160, 215)], [], [nigelSkull]),
+    [], [nigelSkull, art('dino_ribs', 1138, 486), art('dino_legs_squat', 1398, 471)], [], [nigelSkull]),
   room('Laser vault', 'vault', box(1700, 0, 930, 700),
     [EXITS.nigelSkylight], [art('display_case', 1827, 526), art('display_case', 2235, 526)]),
   room('Gift shop', 'museum', box(0, 700, 760, 700),

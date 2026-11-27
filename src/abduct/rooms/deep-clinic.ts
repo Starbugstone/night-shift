@@ -241,7 +241,7 @@ const pembertonHome = building([
   room('Linen room', 'linen_room', box(-800, 0, 800, 700),
     [], [art('laundry_cart', -300, 576)]),
   room('Recovery bay', 'recovery_bay', box(0, 0, 1000, 700),
-    [art('heart_monitor', 400, 536), art('iv_stand', 900, 486)], [], [pembertonBed], [fit('privacy_curtain', 520, 14, 110, 170)]),
+    [art('heart_monitor', 400, 536), art('iv_stand', 900, 486)], [], [pembertonBed], [fit('privacy_curtain', 520, 14, 110, 179)]),
   room('Ward corridor', 'corridor', box(1000, 0, 1520, 700),
     [art('internal_affairs_sign', 1500, 92)], []),
 ], [door(0, 200), door(1000, 200), hatch(700, -700, 'shaft', 220)], [

@@ -90,6 +90,28 @@ export function prop(sprite: Sprite, colliders?: readonly Area[]): Furniture {
   return { sprite, colliders, grabbable: true };
 }
 
+/** One plank drawn at four lengths, shortest first (scripts/art-shapes/build.mjs). */
+const SHELVES = ['room/shelf_stub', 'room/shelf_short', 'room/shelf', 'room/shelf_long'] as const;
+
+/**
+ * Shelf art for a plank w wide and h thick: the longest shelf of the family that still covers the plank,
+ * drawn in its own shape (art is never stretched). The art may hang a few px below the plank: its brackets.
+ */
+export function shelfFit(x: number, y: number, w: number, h: number): Sprite {
+  let pick: Sprite | undefined;
+  for (const key of SHELVES) {
+    const art = ART[key]!;
+    const drawn = Math.round(w * art.h / art.w);
+    if (!pick || drawn >= 0.93 * h) pick = { key, x, y, w, h: drawn };
+  }
+  return pick!;
+}
+
+/** A solid shelf: it collides as the w x h plank, whichever shelf art covers it. */
+export function shelfProp(x: number, y: number, w: number, h: number): Furniture {
+  return prop(shelfFit(x, y, w, h), [{ x, y, w, h }]);
+}
+
 export function bed(x: number): Furniture {
   const y = FLOOR - 140;
   return prop(sprite('room/bed', x, y), [

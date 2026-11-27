@@ -1,6 +1,6 @@
 import { en } from '../../i18n/en';
 import { building, type Checkpoint, type Hazard, type InteriorRoom, type Opening } from './interior';
-import { BED_POSE, prop, sprite, type Area, type Furniture, type Room, type Sprite } from './layout';
+import { BED_POSE, prop, shelfProp, sprite, type Area, type Furniture, type Room, type Sprite } from './layout';
 
 const box = (x: number, y: number, w: number, h: number): Area => ({ x, y, w, h });
 const art = (key: string, x: number, y: number): Sprite => sprite('room/' + key, x, y);
@@ -8,8 +8,9 @@ const fit = (key: string, x: number, y: number, w: number, h: number): Sprite =>
 const point = (x: number, y: number, cross?: string, speed?: number): Checkpoint => ({ x, y, cross, speed });
 const side = (at: number, from: number, to: number): Opening => ({ axis: 'vertical', at, from, to, trim: 'door' });
 const top = (at: number, from: number, to: number): Opening => ({ axis: 'horizontal', at, from, to, trim: 'shaft' });
-const shelf = (x: number, y: number, w: number): Sprite => fit('shelf', x, y, w, 18);
-const sampleShelf = (x: number, y: number, w: number): Furniture => prop(shelf(x, y, w));
+/** Decor: the wire ledge under the Geiger counter. It holds nothing, so it is not drawn as a shelf. */
+const ledge = (x: number, y: number, w: number): Sprite => fit('invasion_wire_ledge', x, y, w, 18);
+const sampleShelf = (x: number, y: number, w: number): Furniture => shelfProp(x, y, w, 18);
 
 const [blink, meteor, interval, fire, peace] = en.invasion1953.mumbles;
 const subjects = {
@@ -54,9 +55,9 @@ function extendEscape(
   } else {
     const edge = room.x + room.w;
     supports.push(
-      prop(fit('invasion_attic_shelf', edge + 220, 0, 127, 299)),
-      prop(fit('invasion_attic_shelf', edge + 650, 430, 123, 270)),
-      prop(fit('invasion_attic_shelf', edge + 1050, 0, 128, lintel)),
+      prop(fit('invasion_cupboard', edge + 220, 0, 127, 299)),
+      prop(fit('invasion_cupboard', edge + 653, 430, 117, 270), [box(edge + 650, 430, 123, 270)]),
+      prop(fit(lintel > 350 ? 'invasion_cupboard_tall' : 'invasion_cupboard', edge + 1050, 0, 128, lintel)),
     );
     checkpoints.push(
       point(edge + 274, 386), point(edge + 445, 333), point(edge + 708, 247),
@@ -99,28 +100,31 @@ function route(
 const kitchenDaybed = prop(fit('invasion_daybed', 37, 556, 334, 81), [box(42, 580, 322, 32)]);
 const boothBench = prop(fit('invasion_bench', 42, 564, 330, 91), [box(48, 580, 319, 30)]);
 const churchPew = prop(fit('invasion_pew', 38, 514, 333, 142), [box(42, 580, 325, 29)]);
-const counter = prop(fit('counter55', 439, 388, 127, 309));
-const labCart = prop(fit('bus_cart55', 320, 499, 111, 194));
+const icebox = prop(art('invasion_icebox', 439, 388));
+const labCart = prop(art('invasion_lab_cart', 320, 499));
 const geiger = art('invasion_geiger_counter', 232, 425);
-const windowExit = fit('exit_window', 1783, 350, 117, 207);
-const atticExit = fit('exit_roof_hatch', 392, -1620, 186, 74);
+const windowExit = art('exit_window_narrow', 1783, 350);
+const atticExit = fit('exit_roof_hatch', 392, -1620, 186, 81);
 const staffExit = fit('door_frame', 1828, 339, 117, 207);
-const ventExit = fit('exit_roof_hatch', 389, -873, 186, 74);
+const ventExit = fit('exit_roof_hatch', 389, -873, 186, 81);
 const vestryExit = fit('door_frame', 1788, 325, 117, 210);
-const bellExit = fit('exit_roof_hatch', 415, -870, 187, 74);
+const bellExit = fit('exit_roof_hatch', 415, -870, 187, 82);
 
 function gallery(name: string, theme: string, x: number, obstacle: string, exit: Sprite): InteriorRoom {
+  const block = box(x + 520, 391, 150, 310);
+  // The queue rail keeps its own shape (157x307) over the same block.
+  const blocker = obstacle === 'invasion_queue_rail' ? art(obstacle, x + 516, 391) : fit(obstacle, block.x, block.y, block.w, block.h);
   return section(name, theme, box(x, 0, 980, 700), [
-    prop(fit('invasion_attic_shelf', x + 190, 0, 110, 274)),
-    prop(fit(obstacle, x + 520, 391, 150, 310)),
+    prop(fit('invasion_cupboard', x + 186, 0, 118, 274), [box(x + 190, 0, 110, 274)]),
+    prop(blocker, [block]),
   ], [exit]);
 }
 
 export const ROOMS_1953 = {
   forester_kitchen: route('forester', en.routes.forester_kitchen.route, [
     section('Farmhouse laboratory', subjects.forester.room, box(0, 0, 920, 700),
-      [kitchenDaybed, labCart, counter, sampleShelf(592, 377, 82)], [geiger, shelf(211, 457, 98)]),
-    gallery('Kitchen passage', 'farm', 920, 'counter55', windowExit),
+      [kitchenDaybed, labCart, icebox, sampleShelf(592, 377, 82)], [geiger, ledge(211, 457, 98)]),
+    gallery('Kitchen passage', 'farm', 920, 'invasion_hutch', windowExit),
   ], [side(920, 273, 558), side(1900, 350, 557)], [
     { kind: 'creak', name: 'Creaky boards', area: box(295, 574, 238, 126) },
   ], windowExit, box(1815, 370, 80, 142), [
@@ -130,13 +134,13 @@ export const ROOMS_1953 = {
 
   forester_attic: route('forester', en.routes.forester_attic.route, [
     section('Attic laboratory', subjects.forester.room, box(0, -832, 820, 1532), [
-      kitchenDaybed, prop(fit('invasion_attic_shelf', 306, 270, 209, 95)),
+      kitchenDaybed, prop(fit('invasion_attic_shelf_deep', 306, 270, 209, 95)),
       sampleShelf(290, -55, 230), sampleShelf(678, -320, 142), sampleShelf(680, -583, 140),
     ],
-      [geiger, shelf(218, 457, 94)]),
+      [geiger, ledge(218, 457, 94)]),
     section('Attic rafters', 'farm', box(335, -1636, 485, 804), [
-      prop(fit('invasion_attic_shelf', 335, -1235, 191, 86)),
-      prop(fit('invasion_attic_shelf', 577, -1440, 243, 67)), sampleShelf(663, -1221, 75),
+      prop(fit('invasion_attic_shelf_deep', 335, -1235, 191, 86)),
+      prop(art('invasion_rafter_beam', 577, -1440)), sampleShelf(663, -1221, 75),
     ], [atticExit]),
   ], [top(-832, 502, 712), top(-1636, 391, 578)], [
     { kind: 'camera', name: 'Martian probe', skin: 'invasion', x: 798, y: -550, angle: 3.22, spread: 0.19,
@@ -165,7 +169,7 @@ export const ROOMS_1953 = {
       []),
     section('Projector duct', 'booth', box(337, -891, 483, 799), [
       prop(fit('invasion_attic_shelf', 337, -451, 193, 83)),
-      prop(fit('amp_case55', 609, -664, 211, 78)), sampleShelf(713, -300, 85),
+      prop(fit('invasion_attic_shelf_low', 609, -664, 211, 78)), sampleShelf(713, -300, 85),
     ], [ventExit]),
   ], [top(-92, 487, 753), top(-891, 386, 575)], [
     { kind: 'laser', name: 'Inspection lamp', skin: 'invasion', area: box(544, 145, 276, 12),
@@ -180,7 +184,7 @@ export const ROOMS_1953 = {
     section('Church vestry', subjects.collier.room, box(0, 0, 925, 700),
       [churchPew, prop(fit('invasion_pew_end', 390, 365, 125, 294)), sampleShelf(727, 530, 78)],
       []),
-    gallery('Vestry passage', 'church', 925, 'invasion_pew_end', vestryExit),
+    gallery('Vestry passage', 'church', 925, 'invasion_confessional', vestryExit),
   ], [side(925, 275, 562), side(1905, 325, 535)], [
     { kind: 'creak', name: 'Loose boards', area: box(447, 555, 469, 145) },
   ], vestryExit, box(1815, 348, 85, 144), [
@@ -190,11 +194,11 @@ export const ROOMS_1953 = {
 
   collier_bell: route('collier', en.routes.collier_bell.route, [
     section('Church belfry', subjects.collier.room, box(0, -92, 820, 792),
-      [churchPew, prop(fit('invasion_attic_shelf', 298, 264, 232, 84)), sampleShelf(694, 318, 70)],
+      [churchPew, prop(fit('invasion_attic_shelf_low', 298, 264, 232, 84)), sampleShelf(694, 318, 70)],
       []),
     section('Bell loft', 'church', box(362, -888, 458, 796), [
-      prop(fit('invasion_attic_shelf', 362, -436, 178, 91)),
-      prop(fit('invasion_attic_shelf', 608, -655, 212, 83)),
+      prop(art('invasion_rafter_crate', 362, -436)),
+      prop(fit('invasion_attic_shelf_low', 608, -655, 212, 83)),
     ], [bellExit]),
   ], [top(-92, 522, 731), top(-888, 412, 606)], [
     { kind: 'swing', name: 'Bell clapper', sprite: art('invasion_bell_clapper', 579, 33),

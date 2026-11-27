@@ -18,11 +18,7 @@ import type { Area, Furniture, Room, Sprite } from '../src/abduct/rooms/layout';
 import { distanceTo, overlap, ROOM_ENTRIES } from './abduct-guard-helpers';
 
 /** Art keys that are still solid in some rooms and decor in others. */
-const PENDING_ROLE = new Set([
-  'room/portrait_cow', // solid on farm_window's wall, decor in dave_roof / dave_patio
-  'room/shelf', // solid almost everywhere, decor in forester_kitchen / forester_attic
-  'room/counter55', // solid in five 1955 / 1953 / 2199 rooms, decor in bully_kitchen
-]);
+const PENDING_ROLE = new Set<string>();
 
 /** A collider may poke this far (px) past its art, and leave at most this share of its area off the art. */
 const MAX_OVERHANG = 8;

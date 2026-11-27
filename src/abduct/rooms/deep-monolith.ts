@@ -43,9 +43,7 @@ function routes(w: Witness): [Room, Room] {
   const shaleTop = w.id === 'reed' ? 320 : 288;
   const shaleStart = w.id === 'echo' ? 245 : 300;
   const lip = w.id === 'flint' ? 130 : 100;
-  const launcher = art('stone_plinth', launchX - 51, 616);
-  launcher.w = 186;
-  launcher.h = 70;
+  const launcher = art('stone_plinth_low', launchX - 51, 616);
   const sideGate = length - 390;
   const hazards: Hazard[] = [
     { kind: 'toss', name: 'Practice toss', sprite: art('practice_bone', launchX, 582), height: 260, airtime: 2.8, period: 6.7, phase },

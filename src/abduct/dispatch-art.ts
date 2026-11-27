@@ -11,6 +11,10 @@ const silhouettes: Readonly<Record<string, readonly [string, string, string, str
   'room/robe_sofa2199': ['#875870', 'M6 14H94V89H88V96H80V89H22V96H14V89H6Z', '#c68b92', 'M2 4H98V33H2Z'],
   'room/voice_cabinet2199': ['#707789', 'M5 2H95V98H5Z', '#a6a6ad', 'M15 13H85V44H15ZM19 62H78V68H19ZM19 76H78V82H19Z'],
   'room/luggage_shutter2199': ['#918b87', 'M1 4H99V96H1Z', '#dbbb83', 'M4 20H96V36H4ZM4 62H96V78H4Z'],
+  // v0.2 unstretched art: the same prop at another shape
+  'room/robe_sofa_wide2199': ['#875870', 'M6 14H94V89H88V96H80V89H22V96H14V89H6Z', '#c68b92', 'M2 4H98V33H2Z'],
+  'room/voice_cabinet_tall2199': ['#707789', 'M5 2H95V98H5Z', '#a6a6ad', 'M15 13H85V44H15ZM19 62H78V68H19ZM19 76H78V82H19Z'],
+  'room/luggage_shutter_short2199': ['#918b87', 'M1 4H99V96H1Z', '#dbbb83', 'M4 20H96V36H4ZM4 62H96V78H4Z'],
   'flight/pickup_bypass_towel': ['#eed18a', 'M4 22L76 5L97 71L24 94Z', '#99769d', 'M17 72L88 52L91 60L20 81ZM21 82L93 62L95 67L23 89Z'],
 };
 

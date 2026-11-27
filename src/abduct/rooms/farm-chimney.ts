@@ -6,7 +6,7 @@ export const farmChimney: Room = {
   pose: BED_POSE,
   furniture: [
     bed(24),
-    prop({ ...sprite('room/fireplace', 326, 626), w: 192 }, [{ x: 328, y: 626, w: 188, h: 216 }]),
+    prop(sprite('room/fireplace_narrow', 326, 626), [{ x: 328, y: 626, w: 188, h: 216 }]),
     prop(sprite('room/pot_rack', 34, 261)),
     prop(sprite('room/shelf', 177, 410)),
   ],

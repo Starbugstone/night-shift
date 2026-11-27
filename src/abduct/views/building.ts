@@ -44,7 +44,7 @@ const PALETTES: Record<string, readonly [string, string]> = {
 const FALLBACK_NAMES = new Map(Object.keys(ART).filter(key => key.startsWith('room/')).map(key => [key, key.slice(5).replaceAll('_', ' ')]));
 const DEFAULT_PALETTE = ['#273347', '#4e5972'] as const;
 /** Swinging props that are lamps: their pool of light swings with them. */
-const SWING_LAMPS = new Set(['room/hanging_bulb', 'room/work_lamp', 'room/chandelier']);
+const SWING_LAMPS = new Set(['room/hanging_bulb', 'room/storm_lantern', 'room/work_lamp', 'room/chandelier']);
 /** The five screens on room/monitor_bank.svg, in its 200x140 box: x, y, w, h. */
 const MONITORS = [[36, 3, 62, 37], [102, 3, 62, 37], [6, 41, 60, 49], [68, 41, 63, 50], [133, 41, 60, 49]] as const;
 const DISCO = ['255,110,210', '124,255,203', '255,210,122', '120,170,255', '255,110,210', '124,255,203'] as const;

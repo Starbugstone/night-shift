@@ -50,9 +50,9 @@ export const LEVEL11: DeepLevelDef = {
     ],
     groundProps: [
       prop('invasion_crater_top', 'field', 475, 1213),
-      { ...prop('invasion_field_rows', 'field', 555, 1670), w: 300, h: 360 },
-      { ...prop('invasion_field_rows', 'field', 1330, 900), w: 210, h: 325, rot: 0.17 },
-      { ...prop('invasion_field_rows', 'field', 500, 430), w: 230, h: 200, rot: 0.12 },
+      prop('invasion_field_rows_wide', 'field', 555, 1670),
+      { ...prop('invasion_field_rows_strip', 'field', 1330, 900), rot: 0.17 },
+      { ...prop('invasion_field_rows_patch', 'field', 500, 430), rot: 0.12 },
     ],
     props: [
       prop('invasion_screen_top', 'civic', 900, 2030, '#5c6379'),

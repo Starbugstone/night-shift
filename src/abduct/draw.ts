@@ -126,6 +126,7 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
       ellipse(g, 65, 45, 3, 3, INK);
       break;
     case 'room/fireplace':
+    case 'room/fireplace_narrow': // v0.2 unstretched art: the same prop at another shape
       roundBox(g, 6, 15, w - 12, h - 17, 8, '#7b535d', INK);
       roundBox(g, 51, 62, w - 102, h - 66, 32, '#291f35', INK);
       roundBox(g, 3, 3, w - 6, 27, 4, '#a27573', INK);
@@ -140,6 +141,9 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
       }
       break;
     case 'room/shelf':
+    case 'room/shelf_stub': // v0.2 unstretched art: the same prop at another shape
+    case 'room/shelf_short':
+    case 'room/shelf_long':
       roundBox(g, 2, 3, w - 4, h - 6, 5, '#936c63', INK);
       break;
     case 'room/cat_sleeping':
@@ -169,6 +173,7 @@ function fallback(g: CanvasRenderingContext2D, key: string, x: number, y: number
       ellipse(g, 94, 137, 8, 7, '#494059');
       break;
     case 'room/towel_cart':
+    case 'room/towel_cart_narrow': // v0.2 unstretched art: the same prop at another shape
       roundBox(g, 3, 23, w - 6, 87, 14, '#b48d74', INK);
       for (let i = 0; i < 3; i++) {
         const inset = w * 0.16 + i * 4;
@@ -706,7 +711,7 @@ export class AbductView implements SceneView {
       }
       loose.addChild(prop(ctx, s));
       if (s.key === 'room/lamp') this.light(s.x + s.w / 2, s.y + 26, 190, true, false);
-      if (s.key === 'room/fireplace') this.light(s.x + s.w / 2, s.y + s.h - 50, 170, true, true);
+      if (s.key === 'room/fireplace' || s.key === 'room/fireplace_narrow') this.light(s.x + s.w / 2, s.y + s.h - 50, 170, true, true);
     }
     this.light(room.exit.x + room.exit.w / 2, room.exit.y + room.exit.h / 2, 230, false, false);
     if (room.cart) {

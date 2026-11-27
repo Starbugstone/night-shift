@@ -84,7 +84,7 @@ function route(
 // ====================================================================== the marine park (Bubbles)
 
 const PARK_EXITS = {
-  roof: fit('exit_skylight', 2390, -596, 280, 90),
+  roof: art('exit_skylight_wide', 2390, -596),
   tunnel: art('exit_loading_door', -2100, 446),
 } as const;
 
@@ -94,15 +94,15 @@ const DOCK_DOOR = { period: 7, open: 3.9, phase: 2.4 };
 
 const parkHome = building([
   room('Show pool', 'show_pool', box(0, 0, 900, 700),
-    [fit('show_pool', 14, 526, 872, 160)], [], [], []),
+    [art('show_pool_wide', 14, 526)], [], [], []),
   room('Sea-lion rocks', 'show_pool', box(900, 0, 1000, 700),
     [], [fit('sea_lion_rocks', 1170, 626, 240, 60)]),
   room('Service roof', 'attic', box(1420, -610, 1280, 610),
     [PARK_EXITS.roof, art('sprinkler_head', 1660, -596), art('sprinkler_head', 2260, -596)],
-    [fit('fish_crates', 1860, -270, 190, 256)]),
+    [art('fish_crate_tower', 1860, -270)]),
   // two glass dividers: over the low one, then push her down under the hanging one
   room('Viewing tunnel', 'aquarium_tunnel', box(-900, 0, 900, 700),
-    [], [fit('tunnel_divider', -260, 420, 60, 266), fit('tunnel_divider', -560, 14, 70, 370)]),
+    [], [art('tunnel_divider_short', -260, 420), fit('tunnel_divider', -560, 14, 70, 370)]),
   room('Jellyfish hall', 'jelly_hall', box(-2200, 0, 1300, 700),
     [PARK_EXITS.tunnel, art('mop_bucket', -1540, 596), art('sprinkler_head', -1390, 14)]),
 ], [
@@ -175,7 +175,7 @@ const lighthouse = building([
   room('Lamp gallery', 'lamp_room', box(900, 0, 1000, 700),
     [LIGHT_EXITS.gallery], []),
   room('Spiral stairs', 'lighthouse_stairs', box(0, 700, 900, 700),
-    [fit('stairs', 85, 700, 584, 686)]),
+    [fit('stairs_tall', 85, 700, 584, 686)]),
   room('Weight shaft', 'lighthouse_stairs', box(900, 700, 420, 1100)),
   room('Boat shed', 'boat_shed', box(1320, 1100, 900, 700),
     [LIGHT_EXITS.slipway]),
@@ -184,10 +184,10 @@ const lighthouse = building([
   door(900, 120, 358), hatch(700, 640, 'stairs', 200), door(900, 1000, 1386), door(1320, 1400, 1786),
 ], [
   LENS,
-  swing('Storm lantern', fit('hanging_bulb', 1180, 14, 30, 150), 0.6, 1.9, 14),
-  fragile('Spare lamp bulbs', fit('fish_crates', 1250, 596, 90, 90)),
-  swing('Storm lantern', fit('hanging_bulb', 1560, 14, 30, 150), 0.6, 1.75, 14, 1.3),
-  fragile('Spare lamp bulbs', fit('fish_crates', 1630, 596, 90, 90)),
+  swing('Storm lantern', art('storm_lantern', 1180, 14), 0.6, 1.9, 14),
+  fragile('Spare lamp bulbs', art('bulb_crate', 1250, 596)),
+  swing('Storm lantern', art('storm_lantern', 1560, 14), 0.6, 1.75, 14, 1.3),
+  fragile('Spare lamp bulbs', art('bulb_crate', 1630, 596)),
   { kind: 'creak', name: 'Creaky spiral stairs', area: box(85, 728, 730, 644) },
   patrol('Clockwork weight', art('counterweight_lighthouse', 1240, 950), 0, 200, 1.15),
   gate('Slipway door', box(1960, 1350, 34, 436), 'y', 7.1, 3.9, 0.9),
@@ -227,7 +227,7 @@ const market = building([
   room('Ice chute', 'cold_store', box(820, -1000, 300, 1000),
     [MARKET_EXITS.loft]),
   room('Cold store', 'cold_store', box(1100, 0, 1000, 700),
-    [MARKET_EXITS.dock], [fit('fish_crates', 1520, 586, 100, 100)]),
+    [MARKET_EXITS.dock], [art('fish_crate_box', 1520, 586)]),
 ], [hatch(0, 848, 'shaft', 244), door(1100, 180)], [
   swing('Hanging scales', art('hanging_scales', 520, 30), 0.5, 1.7, 14),
   { kind: 'creak', name: 'Wet duckboards', area: box(420, 250, 300, 436) },

@@ -1,6 +1,6 @@
 import { en } from '../../i18n/en';
 import { building, type Building, type Checkpoint, type InteriorRoom, type Opening, type Sleeper } from './interior';
-import { BED_POSE, prop, sprite, type Area, type Human, type Room, type Sprite } from './layout';
+import { BED_POSE, prop, shelfProp, sprite, type Area, type Human, type Room, type Sprite } from './layout';
 import type { Pose } from '../ragdoll';
 
 export function roomArt(key: string, x: number, y: number): Sprite {
@@ -34,27 +34,26 @@ export function birchRoom(
 }
 
 const pose: Pose = { ...BED_POSE, neckX: 114, neckY: 550 };
-const bench = prop(roomFit('booth55', 34, 528, 296, 158), [{ x: 49, y: 576, w: 282, h: 15 }]);
+const bench = prop(roomArt('bakery_bench', 34, 528), [{ x: 49, y: 576, w: 282, h: 15 }]);
 const crumb: Sleeper = {
   name: en.birch.crumb, radius: 237,
   asleep: roomArt('cat_sleeping', 432, 628), awake: roomArt('cat_awake', 432, 608),
 };
-const stockExit = roomFit('door_frame', 670, 301, 110, 268);
-const stockShelf = roomFit('shelf', 284, 435, 91, 22);
+const stockExit = roomArt('door_frame_tall', 670, 301);
 const stockroom = birchSection('Stockroom', 'bakery', { x: 0, y: 0, w: 780, h: 700 }, [
   bench,
   prop(roomArt('cooling_rack', 376, 495)),
-  prop(stockShelf),
+  shelfProp(284, 435, 91, 22),
 ], [
   stockExit, roomArt('bakery_roll_bag', 524, 608),
 ]);
 
-const ventExit = roomFit('exit_vent', 461, 12, 245, 82);
+const ventExit = roomArt('exit_vent_wide', 461, 12);
 const ventBay = birchSection('Service bay', 'bakery', { x: 0, y: 0, w: 730, h: 700 }, [
   bench,
-  prop(roomFit('shelf', 350, 14, 35, 386)),
+  prop(roomArt('bakery_flue', 350, 14)),
   prop(roomFit('flour_trolley', 355, 275, 142, 124), [{ x: 355, y: 277, w: 139, h: 121 }]),
-  prop(roomFit('shelf', 666, 642, 54, 16)),
+  shelfProp(666, 642, 54, 16),
 ], [
   ventExit, roomArt('bakery_roll_bag', 524, 608),
 ]);

@@ -46,11 +46,15 @@ export function paintRoom55(g: CanvasRenderingContext2D, key: string, w: number,
       ellipse(g, w - 10, 8, 9, 7, CREAM);
       return true;
     case 'room/booth55':
+    case 'room/bakery_bench': // v0.2 unstretched art: the same prop at another shape
+    case 'room/transit_bench2199':
       block(0.02, 0.02, 0.43, 0.91, OXIDE);
       block(0.06, 0.18, 0.33, 0.62, '#b56b70');
       block(0.03, 0.82, 0.93, 0.17, OXIDE);
       return true;
     case 'room/counter55':
+    case 'room/counter_tall55': // v0.2 unstretched art: the same prop at another shape
+    case 'room/counter_kiosk2199':
       block(0.035, 0.11, 0.93, 0.88, TEAL);
       block(0.015, 0.035, 0.97, 0.15, METAL);
       return true;
@@ -76,6 +80,7 @@ export function paintRoom55(g: CanvasRenderingContext2D, key: string, w: number,
       g.fill();
       return true;
     case 'room/trunk_body55':
+    case 'room/trunk_body_low55': // v0.2 unstretched art: the same prop at another shape
       block(0.01, 0.39, 0.98, 0.51, '#565e76');
       block(0.04, 0.4, 0.8, 0.17, '#39293d');
       block(0.8, 0.13, 0.18, 0.56, OXIDE);
@@ -98,12 +103,15 @@ export function paintRoom55(g: CanvasRenderingContext2D, key: string, w: number,
       block(0.14, 0.64, 0.72, 0.045, METAL);
       return true;
     case 'room/amp_case55':
+    case 'room/amp_stack55': // v0.2 unstretched art: the same prop at another shape
       block(0.01, 0.03, 0.98, 0.94, '#403d51');
       ellipse(g, w * 0.5, h * 0.52, w * 0.28, h * 0.36, '#524b5d', METAL);
       block(0.09, 0.1, 0.13, 0.14, METAL);
       block(0.78, 0.76, 0.13, 0.14, METAL);
       return true;
     case 'room/bus_cart55':
+    case 'room/invasion_lab_cart': // v0.2 unstretched art: the same prop at another shape
+    case 'room/baggage_cart2199':
       block(0.08, 0.17, 0.07, 0.62, METAL);
       block(0.85, 0.07, 0.07, 0.72, METAL);
       block(0.78, 0.025, 0.20, 0.08, METAL);
@@ -142,11 +150,14 @@ export function paintRoom55(g: CanvasRenderingContext2D, key: string, w: number,
       block(0.0, 0.935, 1.0, 0.055, '#725c65');
       return true;
     case 'room/counterweight':
+    case 'room/counterweight_block55': // v0.2 unstretched art: the same prop at another shape
+    case 'room/stamp_weight2199':
       block(0.37, 0, 0.26, 0.18, METAL);
       block(0.06, 0.12, 0.88, 0.84, '#766353');
       for (let i = 0; i < 5; i++) block(0.1, 0.25 + 0.125 * i, 0.8, 0.12, '#708092');
       return true;
     case 'room/lightning_cable55':
+    case 'room/shower_rail2199': // v0.2 unstretched art: the same prop at another shape
       g.beginPath();
       g.moveTo(w * 0.5, 0);
       g.bezierCurveTo(w * 0.92, h * 0.28, w * 0.09, h * 0.56, w * 0.52, h * 0.80);

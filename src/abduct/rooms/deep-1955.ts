@@ -1,6 +1,6 @@
 import { en } from '../../i18n/en';
 import { building, type Building, type Checkpoint, type Hazard, type InteriorRoom, type Opening, type Sleeper } from './interior';
-import { BED_POSE, CHAIR_POSE, prop, sprite, type Area, type Furniture, type Room, type Sprite } from './layout';
+import { BED_POSE, CHAIR_POSE, prop, shelfProp, sprite, type Area, type Furniture, type Room, type Sprite } from './layout';
 
 const box = (x: number, y: number, w: number, h: number): Area => ({ x, y, w, h });
 const art = (key: string, x: number, y: number): Sprite => sprite('room/' + key, x, y);
@@ -23,7 +23,7 @@ const sleeper = (name: string, key: string, x: number, y: number, radius: number
 });
 const floor = (key: string, x: number, y: number, w: number, depth = 24): Furniture =>
   prop(art(key, x, y), [box(x, y, w, depth)]);
-const shelf = (x: number, y: number, w = 100): Furniture => prop(fit('shelf', x, y, w, 20));
+const shelf = (x: number, y: number, w = 100): Furniture => shelfProp(x, y, w, 20);
 
 const SUBJECTS = {
   doc: { ...en.crestValley.sleepers.doc, pose: { ...BED_POSE, neckX: 130, neckY: 548 } },
@@ -47,7 +47,7 @@ function route(
 }
 
 export const CLOCK_FACE_55 = fit('clock_face_back', 221, 306, 194, 194);
-export const TRUNK_55 = fit('trunk_body55', 45, 546, 336, 158);
+export const TRUNK_55 = art('trunk_body_low55', 45, 546);
 export const GYM_DOORS_55 = art('gym_doors55', 530, 498);
 
 const clockBay = section('Clock ledge', 'tower', box(0, 0, 740, 700), [
@@ -74,14 +74,14 @@ const towerSide = building([
     service, art('counterweight_guide55', 959, 386),
   ]),
 ], [door(740, 217, 545), door(1500, 335, 545)], [
-  patrol('Counterweight', fit('counterweight', 969, 519, 65, 68), 0, 50),
+  patrol('Counterweight', art('counterweight_block55', 969, 519), 0, 50),
   gate('Service gate', box(1130, 150, 32, 536), 'y', 16, 4.2, 7),
   swing('Service bell', art('service_bell55', 1010, 99), 0.4, 1.45, 40),
 ]);
 
 const boothBay = section("Lyle's booth", 'cafe', box(0, 0, 740, 700), [
   prop(art('booth55', 42, 502), [box(60, 590, 150, 34)]),
-  prop(fit('counter55', 355, 403, 192, 194)),
+  prop(art('counter_tall55', 355, 403)),
   prop(art('counter_plinth55', 361, 591)),
 ], [art('stool55', 573, 607)]);
 
@@ -102,8 +102,8 @@ const kitchen = fit('door_frame', 1380, 260, 120, 210);
 const cafeSide = building([
   boothBay,
   section('Back kitchen', 'cafe', box(740, 0, 770, 700), [
-    shelf(1115, 490, 130), prop(fit('counter55', 1026, 584, 108, 116)),
-  ], [kitchen, fit('counter55', 1191, 566, 178, 134)]),
+    shelf(1115, 490, 130), prop(fit('counter_tall55', 1022, 584, 115, 116), [box(1026, 584, 108, 116)]),
+  ], [kitchen, art('gingham_table55', 1191, 566)]),
 ], [door(740, 230, 530), door(1510, 260, 470)], [
   jukebox,
   gate('Kitchen swing door', box(740, 230, 24, 300), 'y', 16, 4.3, 10),
@@ -114,11 +114,11 @@ const cafeSide = building([
 
 const trunkBay = section('Trunk bay', 'dance_lot', box(0, 0, 740, 700), [
   prop(TRUNK_55, [box(64, 590, 267, 44), box(331, 563, 39, 77)]),
-  prop(fit('amp_case55', 427, 457, 140, 159)),
+  prop(art('amp_stack55', 427, 457)),
   prop(art('amp_crate55', 427, 610)),
 ], [art('trunk_lid55', 33, 432), GYM_DOORS_55]);
 
-const bandstand = fit('exit_roof_hatch', 492, -502, 198, 70);
+const bandstand = fit('exit_roof_hatch', 492, -504, 198, 87);
 const danceUpper = building([
   { ...trunkBay, supports: [...trunkBay.supports, shelf(389, 410, 110)] },
   section('Stage rigging', 'dance_lot', box(390, -520, 350, 520), [], [bandstand]),
