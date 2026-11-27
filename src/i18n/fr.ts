@@ -127,6 +127,8 @@ export const fr: Strings = {
     draft: 'Le courant d’air monte. Laissez-vous porter.',
     camera: 'La caméra de Gary a sa propre jauge. Évitez le cône.',
     pop: 'Le coucou sort à heure fixe. Passez quand il rentre.',
+    // v0.2 follow-up: first-encounter flight lesson for L10 (the rabbit)
+    rabbit: "Ce lapin n'a rien d'ordinaire. Filez !",
   },
   // v4 progression
   fieldCheckControls: {
@@ -245,7 +247,7 @@ export const fr: Strings = {
       human: "Clive, Sylvie et Matt",
       collect: "Clive, Sylvie et Matt",
       re: "Ordre n°{num} · La Guerre des rhumes",
-      body: "Agent Zib, le drive-in projette un film d’invasion. Notre engin, devant l’écran, devait compter les gens. Ramenez trois témoins avant l’aube. Dans la cour à l’ouest, une patte de tripode soutient le poulailler.",
+      body: "Agent Zib, le drive-in projette un film d’invasion. Notre engin, devant l’écran, devait compter les gens. Ramenez trois témoins avant l’aube. Dans la cour à l’ouest, une patte de tripode soutient le poulailler. Un tripode est enrhumé : il vire à l'orange, puis éternue. Passez après l'éternuement.", // v0.2 follow-up: teaches the sneezing tripod
       joke: "J’étais jeune pilote, ce soir-là. La moitié de la division était enrhumée. Je vous raconterai ce que j’ai fait à votre retour.",
       signoff: "— Vrell. Gardez les vitres fermées.",
     },
@@ -301,7 +303,7 @@ export const fr: Strings = {
       human: 'Dave, Barb et Gary',
       collect: 'Dave, Barb et Gary',
       re: 'Ordre n°{num} — Allée des Érables (commande groupée)',
-      body: "Trois avant l’aube cette fois, Zib. Dave le dentiste, Barb la coach et Gary de la surveillance du quartier. Gare à la voiture de police. Mme Pruitt surveille la rue aux jumelles depuis sa fenêtre. Gary a fait des achats.",
+      body: "Trois avant l’aube cette fois, Zib. Dave le dentiste, Barb la coach et Gary de la surveillance du quartier. Gare à la voiture de police. Mme Pruitt surveille la rue aux jumelles depuis sa fenêtre. Gary a fait des achats : des caméras sur les toits balaient la rue, passez derrière. Les chauves-souris volent en nuées compactes : elles ne s'écartent pas, vous si.", // v0.2 follow-up: teaches the cameras and bat flocks
       joke: "Les lasers de Gary l’ont piégé onze fois. Un astronome bénévole veille chemin des Bouleaux avec sa parabole SETI, si le détour vous tente.",
       signoff: '— Vrell. Contresigné avec réserves.', // v4 story
     },
@@ -312,7 +314,7 @@ export const fr: Strings = {
       human: 'Nigel, Kévin et le maire',
       collect: 'Nigel, Kévin et le maire',
       re: 'Ordre n°{num} — Grimsby Centre (confinement)',
-      body: "À cause de la plainte de Gary et de la photo de Mme Pruitt à la mairie, le siège exige un audit civique : Nigel au musée, DJ Kévin au Bass-Fond et le maire Whitlock. Attention à l'hélico de la police, à la circulation et aux néons.",
+      body: "À cause de la plainte de Gary et de la photo de Mme Pruitt à la mairie, le siège exige un audit civique : Nigel au musée, DJ Kévin au Bass-Fond et le maire Whitlock. Attention à l'hélico de la police, à la circulation et aux néons. La grue du chantier tourne, flèche solide. Les bureaux clignotent, puis éclairent la rue : la compta fait des heures sup.", // v0.2 follow-up: teaches the crane and the office windows
       joke: "Le maire est un élu : remplissez le formulaire 9-V (Vote, Extraterrestre). Vérifiez aussi le registre de Nigel : quelqu'un a expédié une pierre noire hors inventaire du musée la semaine dernière.",
       signoff: '— Vrell. Ma paupière tremble.', // v4 story
     },
@@ -357,7 +359,7 @@ export const fr: Strings = {
       human: 'le commandant Sterling, le chef Marco et Greg',
       collect: 'le commandant Sterling, le chef Marco et Greg',
       re: 'Ordre n°{num} — SS Buffet Royal (hors budget)',
-      body: "Un dossier de la clinique signale un passager embarqué chez Pete — sur le paquebot qui transporte la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg, le client tout compris. Le commandant fait la sieste avec le manifeste dans sa veste : on videra ses poches au débriefing. Esquivez le photographe et tenez bon dans la houle.",
+      body: "Un dossier de la clinique signale un passager embarqué chez Pete — sur le paquebot qui transporte la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg, le client tout compris. Le commandant fait la sieste avec le manifeste dans sa veste : on videra ses poches au débriefing. Esquivez le photographe et tenez bon dans la houle. Les stewards font des rondes à la lampe, en quête de serviettes.", // v0.2 follow-up: teaches the deck stewards
       joke: "Budget validé par personne : on facture en recherche maritime. Doris, la sœur de Mme Pruitt, est sur le pont avec le même classeur. Ne téléportez pas la tour de crevettes.",
       signoff: '— Vrell. Détruisez cette note après lecture.', // v4 story
     },
@@ -448,15 +450,15 @@ export const fr: Strings = {
 
   ranks: [
     { title: 'Stagiaire', flavour: 'Non payé. Zéro anneau de parking.' },
-    { title: "Ravisseur à l'essai", flavour: 'Prometteur, malgré les bosses. Pas de grille-pain.' },
+    { title: "Ravisseur à l'essai", flavour: 'Doué, cabossé. Pas de grille-pain.' }, // v0.2 follow-up: fits the rank card unsqueezed
     { title: 'Ravisseur', flavour: 'Droit au tour de cou débloqué.' },
-    { title: 'Ravisseur confirmé', flavour: "Anneau de parking : sur liste d'attente. Derrière Bubulle." },
-    { title: 'Chef ravisseur', flavour: 'Signe les formulaires des autres. Les lit rarement.' },
-    { title: 'Chef des Affaires internes', flavour: 'Habilité au thermomètre en laiton de 1953.' },
+    { title: 'Ravisseur confirmé', flavour: 'Anneau de parking : après Bubulle.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Chef ravisseur', flavour: 'Signe tout. Ne lit rien.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Chef des Affaires internes', flavour: 'Habilité au thermomètre en laiton.' }, // v0.2 follow-up: fits the rank card unsqueezed
     // v0.2 copy
-    { title: 'Grand amiral de la sieste', flavour: 'Pouf réservé à votre nom. Vrell a encore un tabouret pliant.' },
-    { title: 'Directeur des paradoxes', flavour: 'Salarié, en quelque sorte. La paie tombe la veille.' },
-    { title: 'Employé du millénaire', flavour: 'Encadré à chaque siècle. Vrell écrit toujours « Zibb ».' },
+    { title: 'Grand amiral de la sieste', flavour: 'Pouf réservé. Vrell a un tabouret.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Directeur des paradoxes', flavour: 'La paie tombe la veille.' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Employé du millénaire', flavour: 'Encadré partout. Écrit « Zibb ».' }, // v0.2 follow-up: fits the rank card unsqueezed
   ],
 
   // v4 L9 1955
@@ -489,7 +491,7 @@ export const fr: Strings = {
   dispatch2199: {
     // v0.2 presentation
     banner: "Récupérez les trois avant la démolition",
-    parking: "Anneau de stationnement : Zib. Piscine comprise.",
+    parking: "Anneau de parking : Zib. Piscine.", // v0.2 follow-up: "anneau de parking" everywhere; fits the rank card
     sign: "Pas de panique",
     agent: "À : Agent Zib",
     deadline: "DÉMOLITION",

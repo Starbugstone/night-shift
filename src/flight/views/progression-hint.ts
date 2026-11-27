@@ -3,6 +3,7 @@ import type { AmbulanceHazard } from '../ambulance';
 import type { DeepFlightScene } from '../deep-scene';
 import { wrapAngle } from '../geometry';
 import type { HazardDef, HazardType, PorchHazard, TrafficHazard, WatcherHazard } from '../hazards';
+import { RABBIT, inRabbitRun } from '../grail'; // v0.2 follow-up: the L10 rabbit
 import { inLighthouseShadow, type LighthouseHazard } from '../lighthouse';
 import type { HumSlab } from '../monolith';
 import type { PhotographerHazard } from '../photographer';
@@ -80,6 +81,14 @@ export const FLIGHT_LESSONS: Readonly<Record<string, FlightLesson>> = {
   level6: near<AmbulanceHazard>('ambulance', () => tr().lessons.ambulance, (d, x, y) => Math.hypot(x - d.bayX, y - d.bayY) - d.trigger, 200),
   level7: near<PhotographerHazard>('photographer', () => tr().lessons.shutter, (d, x, y) => Math.hypot(x - d.x, y - d.y) - d.range, 200, { quietInRing: true }),
   level8: near<HumSlab>('hum', () => tr().lessons.hum, (d, x, y) => Math.hypot(x - d.x, y - d.y) - d.outer, 135, { quietInRing: true }),
+  // v0.2 follow-up: the killer rabbit lunges at a saucer that dawdles in its run; the tip shows as its circle nears
+  level10: {
+    hazard: 'rabbit',
+    tip: () => tr().lessons.rabbit,
+    zone: (def, x, y, pad) => Math.hypot(x - (def as { x: number }).x, y - (def as { y: number }).y) - RABBIT.radius < 170 + pad,
+    meets: (def, x, y) => inRabbitRun((def as { x: number }).x, (def as { y: number }).y, x, y),
+    quietInRing: true,
+  },
 };
 
 const FRESH = 0;

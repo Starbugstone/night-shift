@@ -5,11 +5,12 @@
 //
 // Rule: every kind with a room prompt is taught on the first level in LEVELS order whose rooms use it, every
 // room of that level with the kind gets the prompt, and wherever that room's autopilot route brings the chest
-// to the hazard, the prompt showed first. (The L3 routes keep well clear of the patrols; a player who strays
-// towards one gets the prompt on the way.)
+// to the hazard, the prompt showed first. Every kind also shows on at least one of those autopilot routes
+// (v0.2 follow-up: the L3 patrol prompt never did), and where two zones overlap a kind not yet shown this
+// attempt takes the slot from a nearer one already taught.
 import { describe, expect, it } from 'vitest';
 import type { RoomId } from '../src/contracts';
-import { ROOM_HAZARD_LESSONS, ROOM_LESSON_NEAR, hazardReach, roomHazardLesson, roomTeaches } from '../src/abduct/room-lessons';
+import { ROOM_HAZARD_LESSONS, RoomLessons, hazardReach, lessonNear, roomHazardLesson, roomTeaches } from '../src/abduct/room-lessons';
 import { ROOMS } from '../src/abduct/rooms/index';
 import type { Hazard } from '../src/abduct/rooms/interior';
 import { AbductSimulation } from '../src/abduct/simulation';
@@ -36,12 +37,21 @@ function introduced(kind: Kind): { level: string; rooms: RoomId[] } | null {
 
 interface RouteLog { shown: number | null; reached: number | null }
 
-function playRoom(id: RoomId, kind: Kind): RouteLog {
+/** A point on the hazard, to search around. */
+function anchor(h: Hazard): { x: number; y: number } {
+  if ('sprite' in h) return h.sprite;
+  if ('area' in h) return h.area;
+  return 'x' in h ? h : { x: 0, y: 0 };
+}
+
+/** v0.2 follow-up: plays the room's autopilot route with one RoomLessons, as the room view does. */
+function playRoom(id: RoomId, kind: Kind, whole = false): RouteLog {
   const room = ROOMS[id];
   const sim = new AbductSimulation(room, new Set(), { sfx() {} }, () => 0.5, HARD);
   const tip = ROOM_HAZARD_LESSONS[kind]!();
   const hazards = (room.interior?.building.hazards ?? []).filter(h => h.kind === kind);
   const log: RouteLog = { shown: null, reached: null };
+  const lessons = new RoomLessons(room);
   let active = '';
   for (let f = 0; f < 160 * 60 && !sim.complete; f++) {
     const { dx, dy } = sim.autopilot();
@@ -49,9 +59,9 @@ function playRoom(id: RoomId, kind: Kind): RouteLog {
     sim.update(DT);
     const { chestX, chestY } = sim.body;
     if (log.reached === null && hazards.some(h => hazardReach(h, chestX, chestY) <= 0)) log.reached = sim.elapsed;
-    active = roomHazardLesson(room, chestX, chestY, active ? 12 : 0);
+    active = lessons.tip(chestX, chestY, active ? 12 : 0);
     if (log.shown === null && active === tip) log.shown = sim.elapsed;
-    if (log.shown !== null && log.reached !== null) break;
+    if (!whole && log.shown !== null && log.reached !== null) break;
   }
   return log;
 }
@@ -85,11 +95,42 @@ describe('room hazard prompts teach where the hazard is introduced', () => {
     });
   }
 
+  // v0.2 follow-up: the L3 patrol prompt never showed, because a nearer fragile, draft or camera hazard always
+  // took the slot. A kind not yet shown this attempt now beats a nearer one already taught.
+  it('every prompt kind shows on the autopilot route of at least one room of its first level', () => {
+    const missing = KINDS.filter(kind => !introduced(kind)!.rooms.some(id => playRoom(id, kind, true).shown !== null));
+    expect(missing).toEqual([]);
+  }, 120_000);
+
+  it('prefers a kind not yet shown this attempt over a nearer one already taught', () => {
+    let checked = 0;
+    for (const kind of KINDS) {
+      for (const id of introduced(kind)!.rooms) {
+        const room = ROOMS[id];
+        const hazards = room.interior!.building.hazards;
+        const mine = hazards.find(h => h.kind === kind)!;
+        // a point inside both zones where another taught kind is nearest: once that kind has shown, this one wins
+        found: for (const other of hazards.filter(h => h.kind !== kind && roomTeaches(room).has(h.kind))) {
+          const at = anchor(mine);
+          for (let x = at.x - 400; x < at.x + 400; x += 10) {
+            for (let y = at.y - 400; y < at.y + 400; y += 10) {
+              if (hazardReach(mine, x, y) >= lessonNear(kind) || roomHazardLesson(room, x, y, 0) !== ROOM_HAZARD_LESSONS[other.kind]!()) continue;
+              expect(roomHazardLesson(room, x, y, 0, new Set([other.kind])), `${id} at ${x},${y}`).toBe(ROOM_HAZARD_LESSONS[kind]!());
+              checked++;
+              break found;
+            }
+          }
+        }
+      }
+    }
+    expect(checked, 'found rooms where two prompt zones overlap').toBeGreaterThan(0);
+  });
+
   it('stays out of rooms far from the hazard', () => {
     for (const kind of KINDS) {
       for (const id of introduced(kind)!.rooms) {
         const room = ROOMS[id];
-        const far = (room.interior?.building.hazards ?? []).every(h => !roomTeaches(room).has(h.kind) || hazardReach(h, -5000, -5000) > ROOM_LESSON_NEAR);
+        const far = (room.interior?.building.hazards ?? []).every(h => !roomTeaches(room).has(h.kind) || hazardReach(h, -5000, -5000) > lessonNear(h.kind));
         if (far) expect(roomHazardLesson(room, -5000, -5000, 0)).toBe('');
       }
     }

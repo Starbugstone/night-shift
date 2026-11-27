@@ -61,6 +61,17 @@ export function rankCard(save: Shell['save']): RankCard {
   };
 }
 
+// v0.2 follow-up: the rank panel's text boxes, shared with tests/ui-workorders-rank-fit.test.ts so every rank
+// title, flavour and payoff is checked to fit without the Label squeeze, next to a four-digit purse.
+const UPGRADES_X = 336;
+export const RANK_BOX = {
+  title: { x: 44, y: 146, w: 322, weight: 800, size: (title: string): number => (title.length > 16 ? 22 : 26) },
+  purse: { x: 374, y: 114, w: 128, h: 48 },
+  coin: { x: 398, y: 138 },
+  glorbs: { x: 420, y: 139, w: 76, size: 26, weight: 800 },
+  flavour: { x: 44, w: UPGRADES_X - 44 - 12, weight: 600, size: (topRank: boolean): number => (topRank ? 15 : 14) },
+} as const;
+
 function outstandingOrders(save: Shell['save'], index: number): string {
   const eras: Record<string, string> = { level10: '1122', level11: '1953' };
   const levels: Record<string, { human: string }> = tr().levels;
@@ -88,7 +99,7 @@ export class WorkOrdersScene implements Scene {
   toastT = 0;
   readonly back = new Button(16, 18, 64, 60, '‹', 'ghost', 40);
   readonly trophies = new Button(VIEW_W - 80, 18, 64, 60, '', 'ghost', 24);
-  readonly upgrades = new Button(336, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
+  readonly upgrades = new Button(UPGRADES_X, 186, 180, 60, tr().workOrders.upgrades, 'amber', 24);
   readonly cards: Card[] = [];
   readonly recommended: number;
   private readonly look = new ViewSlot(() => new WorkOrdersView(this));
@@ -223,10 +234,11 @@ class WorkOrdersView implements SceneView {
     const stars = totalStars(save);
     const rank = rankCard(save);
     const nr = rank.nextAt;
-    const colW = s.upgrades.x - 44 - 12;
-    const purse = roundRect(new Graphics(), 384, 114, 118, 48, 24).fill('rgba(18,13,43,0.55)');
+    const colW = RANK_BOX.flavour.w;
+    const box = RANK_BOX;
+    const purse = roundRect(new Graphics(), box.purse.x, box.purse.y, box.purse.w, box.purse.h, 24).fill('rgba(18,13,43,0.55)');
     const coin = iconSprite(glorbTexture(assets, 38), 38);
-    coin.position.set(410, 138);
+    coin.position.set(box.coin.x, box.coin.y);
     this.toast.addChild(this.toastPanel, this.toastText);
     this.root.addChild(
       this.sky, mask, this.list, header, rule, this.back, this.trophies, this.trophyIcon,
@@ -234,14 +246,14 @@ class WorkOrdersView implements SceneView {
       new Label({ size: 17, color: C.muted, weight: 600 }).set(strings.subtitle, VIEW_W / 2, 80, VIEW_W - 180),
       highlightedPanel(new Graphics(), 24, 100, VIEW_W - 48, 76, { fill: C.panel, r: 18, lineW: 3, shadow: 4 }),
       new Label({ size: 14, color: C.muted, align: 'left', weight: 800 }).set(strings.rank, 44, 120),
-      new Label({ size: rank.title.length > 16 ? 22 : 26, color: C.text, align: 'left', weight: 800 }).set(rank.title, 44, 146, 328),
+      new Label({ size: box.title.size(rank.title), color: C.text, align: 'left', weight: box.title.weight }).set(rank.title, box.title.x, box.title.y, box.title.w),
       purse, coin,
-      new Label({ size: 26, color: C.mint, align: 'left', weight: 800 }).set(String(save.glorbs), 434, 139, 62),
+      new Label({ size: box.glorbs.size, color: C.mint, align: 'left', weight: box.glorbs.weight }).set(String(save.glorbs), box.glorbs.x, box.glorbs.y, box.glorbs.w),
       new Label({ size: 22, color: C.amberHi, align: 'left', weight: 800 }).set(fmt(strings.stars, { n: stars, max: MAX_STARS }), 44, 198),
     );
     if (nr !== null) this.root.addChild(new Label({ size: 15, color: C.muted, align: 'left', weight: 700 }).set(fmt(strings.nextRank, { n: nr }), 44, 224, colW));
-    const flavour = new Label({ size: nr !== null ? 14 : 15, color: nr !== null ? 'rgba(169,162,214,0.8)' : C.muted, align: 'left', italic: true });
-    this.root.addChild(flavour.set(rank.flavour, 44, nr !== null ? 244 : 232, colW), this.upgrades, this.toast);
+    const flavour = new Label({ size: box.flavour.size(nr === null), color: nr !== null ? 'rgba(169,162,214,0.8)' : C.muted, align: 'left', weight: box.flavour.weight, italic: true });
+    this.root.addChild(flavour.set(rank.flavour, box.flavour.x, nr !== null ? 244 : 232, colW), this.upgrades, this.toast);
   }
 
   sync(): void {

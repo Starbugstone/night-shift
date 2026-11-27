@@ -20,6 +20,17 @@ export function mapCollectibleReport(
   };
 }
 
+// v0.2 follow-up: the town pickup's line shares Vrell's comment slot instead of always winning it.
+/**
+ * Even reports talk about the town pickup, odd ones about the shift, so every outcome pool still
+ * comes round on a level with a pickup. `rest` is the rotation left for the outcome line.
+ */
+export function pickupTurn(comment: string | undefined, rotation: number): { line: string | null; rest: number } {
+  const r = Math.abs(Math.floor(rotation));
+  if (!comment) return { line: null, rest: r };
+  return r % 2 === 0 ? { line: comment, rest: r >> 1 } : { line: null, rest: r >> 1 };
+}
+
 /** Sightings from which the local paper runs the story. */
 export const TABLOID_SPOTTED = 2;
 

@@ -22,6 +22,16 @@ export const ROOM_HAZARD_LESSONS: Partial<Record<Kind, () => string>> = {
 
 /** The prompt comes up this many px from the hazard's footprint. */
 export const ROOM_LESSON_NEAR = 170;
+/**
+ * v0.2 follow-up: a patrol walks towards you, so its prompt comes up further out. At 170 px no L3 autopilot
+ * route ever showed it: the closest pass, over the watch dog's beat in Gary's garage, is about 200 px out.
+ */
+const NEAR_BY_KIND: Partial<Record<Kind, number>> = { patrol: 240 };
+
+/** How far from a hazard of this kind its prompt comes up, px. */
+export function lessonNear(kind: Kind): number {
+  return NEAR_BY_KIND[kind] ?? ROOM_LESSON_NEAR;
+}
 
 function outside(a: Area, x: number, y: number): number {
   return Math.hypot(Math.max(a.x - x, 0, x - a.x - a.w), Math.max(a.y - y, 0, y - a.y - a.h));
@@ -67,19 +77,48 @@ export function roomTeaches(room: Room): ReadonlySet<Kind> {
 
 const EMPTY: ReadonlySet<Kind> = new Set();
 
-/** The room prompt for a chest at (x, y), or ''. `pad` widens the zone of the prompt already showing. */
-export function roomHazardLesson(room: Room, x: number, y: number, pad: number): string {
+/**
+ * The hazard kind whose prompt shows for a chest at (x, y), or null. `pad` widens the zone of the prompt
+ * already showing. v0.2 follow-up: among the kinds in range, the nearest one not yet in `shown` wins over a
+ * nearer kind already taught, so a patrol beside a fragile vase still gets its turn.
+ */
+export function roomHazardKind(room: Room, x: number, y: number, pad: number, shown: ReadonlySet<Kind> = EMPTY): Kind | null {
   const kinds = roomTeaches(room);
-  if (kinds.size === 0) return '';
-  let best = '';
-  let nearest = ROOM_LESSON_NEAR;
+  if (kinds.size === 0) return null;
+  let best: Kind | null = null;
+  let bestFresh = false;
+  let nearest = Infinity;
   for (const h of room.interior?.building.hazards ?? []) {
     if (!kinds.has(h.kind)) continue;
     const reach = hazardReach(h, x, y);
-    if (reach < nearest + pad) {
+    if (reach >= lessonNear(h.kind) + pad) continue;
+    const fresh = !shown.has(h.kind);
+    if ((fresh && !bestFresh) || (fresh === bestFresh && reach < nearest)) {
+      best = h.kind;
+      bestFresh = fresh;
       nearest = reach;
-      best = ROOM_HAZARD_LESSONS[h.kind]!();
     }
   }
   return best;
+}
+
+/** The room prompt for a chest at (x, y), or ''. `pad` widens the zone of the prompt already showing. */
+export function roomHazardLesson(room: Room, x: number, y: number, pad: number, shown?: ReadonlySet<Kind>): string {
+  const kind = roomHazardKind(room, x, y, pad, shown);
+  return kind ? ROOM_HAZARD_LESSONS[kind]!() : '';
+}
+
+/** v0.2 follow-up: one room attempt's prompts, remembering which kinds have shown so each gets its turn. */
+export class RoomLessons {
+  private readonly shown = new Set<Kind>();
+
+  constructor(private readonly room: Room) {}
+
+  /** This frame's prompt for a chest at (x, y), or ''. The kind it returns counts as shown. */
+  tip(x: number, y: number, pad: number): string {
+    const kind = roomHazardKind(this.room, x, y, pad, this.shown);
+    if (!kind) return '';
+    this.shown.add(kind);
+    return ROOM_HAZARD_LESSONS[kind]!();
+  }
 }

@@ -33,7 +33,6 @@ const REPEAT_BASELINE: Readonly<Record<string, string>> = {
   'a souvenir from every': 'per-level souvenir verdict opener; the joke is the sentence after it',
   'not one souvenir from': 'per-level souvenir verdict opener; the joke is the sentence after it',
   'one souvenir from the': 'per-level souvenir verdict opener; the joke is the sentence after it',
-  'the 1953 brass thermometer': 'running joke (the brass thermometer, paid off in 1953); counted in check B',
   'save the clock tower': 'the 1955 flyer\'s printed slogan, quoted on its own souvenir and shelf card',
   'it in the morning': 'everyday phrase in three unrelated jokes',
   'still on the shelf': 'pending',

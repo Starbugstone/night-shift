@@ -259,11 +259,12 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
   else if (r.spotted >= 3) list = withCounted(c.spotted, counted?.spotted);
   else if (r.failed >= 2) list = withCounted(c.failed, counted?.failed);
   else if (r.remaining < 20) list = c.close;
-  else if (r.levelId === 'level3' && rotation % 2 === 0) list = c.gary;
-  else if (r.levelId === 'level4' && rotation % 2 === 0) list = c.mayor;
-  else if (r.levelId === 'level5' && rotation % 2 === 0) list = c.pier; // L5 pier code
-  else if (r.levelId === 'level6' && rotation % 2 === 0) list = c.clinic; // L6 clinic code
-  else if (r.levelId === 'level7' && rotation % 2 === 0) list = c.cruise; // L7 cruise code
+  else if (OWN_POOL[r.levelId]) {
+    // v0.2 follow-up: the level's own pool takes the even reports and the default pool the odd ones; both pick
+    // with the halved rotation (picking with the even rotation itself never reached the pool's second line)
+    list = rotation % 2 === 0 ? c[OWN_POOL[r.levelId]!] : withCounted(c.default, counted?.default);
+    rotation >>= 1;
+  }
   else list = withCounted(c.default, counted?.default);
   const remaining = Math.round(r.remaining);
   return fmt(pick(list, rotation), {
@@ -272,6 +273,15 @@ export function deepComment(r: DeepCommentInput, rotation: number): string {
     seconds: plural(remaining, c.units.seconds), times: plural(r.spotted, c.units.times), sightings: plural(r.spotted, c.units.sightings),
   });
 }
+
+/** A level's own recap pool, shown on every other quiet delivery. */
+const OWN_POOL: Readonly<Record<string, 'gary' | 'mayor' | 'pier' | 'clinic' | 'cruise'>> = {
+  level3: 'gary',
+  level4: 'mayor',
+  level5: 'pier', // L5 pier code
+  level6: 'clinic', // L6 clinic code
+  level7: 'cruise', // L7 cruise code
+};
 
 type CountedPools = (typeof en.humor.deepComments.bySpecimens)[1];
 

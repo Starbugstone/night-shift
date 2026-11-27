@@ -368,7 +368,8 @@ describe('optional map collectibles', () => {
         const runMissed = new DeepRun(lv, idx);
         runMissed.delivered.fill(true);
         const outMissed = applyDeepRun(past, lv.id, runMissed.summary());
-        const seededMissed = { ...outMissed, save: { ...outMissed.save, reports: 3 } };
+        // v0.2 follow-up: the pickup line takes the even reports (pickupTurn); 6 is even and 6 % 3 === 0
+        const seededMissed = { ...outMissed, save: { ...outMissed.save, reports: 6 } };
         const repMissed = deepReport(runMissed, seededMissed);
         expect(repMissed.rows, `${lang}:${lv.id} missed row`).toContainEqual([words.row, words.missed.replace('{name}', item.name)]);
         expect(repMissed.comment, `${lang}:${lv.id} missed comment`).toBe(item.missedComment);
@@ -381,8 +382,8 @@ describe('optional map collectibles', () => {
     const collected = { ...flight, mapCollectible: flyer.id };
     const past = applyRun(defaultSave(), 'level2', delivery, flight).save;
     const outcome = applyRun(past, 'level2', delivery, collected);
-    // seed 3 (3 % 3 === 0) triggers Vrell's missed-pickup line on a missed repeat run
-    const missedOutcome = { ...outcome, save: { ...outcome.save, reports: 3 } };
+    // seed 6 (even: the pickup's turn in pickupTurn; 6 % 3 === 0) triggers Vrell's missed-pickup line on a missed repeat run
+    const missedOutcome = { ...outcome, save: { ...outcome.save, reports: 6 } };
     for (const [lang, label, found, missed, gotQuip, missedQuip] of [
       ['en', 'Town pickup', 'Slipper flyer · collected', 'Slipper flyer · left behind', 'rubbing his nose', 'sitting on my desk'],
       ['fr', 'Trouvaille en ville', 'Avis de chausson · en soute', 'Avis de chausson · sur place', 'provocation', 'trône sur mon bureau'],

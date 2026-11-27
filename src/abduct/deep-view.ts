@@ -12,6 +12,7 @@ import { HudButton, HudMeter, HudPanel, HudPrompt, HudTimer, HUD_ROW, type Meter
 import { HumanArt, RESTART, type SpecimenArt } from './draw';
 import { DolphinArt } from './dolphin-art';
 import { inside } from './interior';
+import { EXIT_TAG, exitTagBox } from './exit-tag'; // v0.2 follow-up
 import { ProbePaperwork } from './probe-draw';
 import { clamp, Joint } from './ragdoll';
 import type { Building, InteriorRoom, Opening } from './rooms/interior';
@@ -30,7 +31,7 @@ import { hazardView } from './views/hazards';
 import { BiscuitDrops } from './views/invasion1953';
 import { AMBER, DashedLine, DashedRect, INK, LIGHT, MINT, RED, TAU, box, circleInView, intersects } from './views/pieces';
 import { SleeperView } from './views/sleeper';
-import { roomHazardLesson } from './room-lessons'; // v0.2 teaching
+import { RoomLessons } from './room-lessons'; // v0.2 teaching
 
 /** Sunrise clock, between the sleeper meter and the camera fuse on row two. */
 export const DEEP_HUD_SUNRISE_SLOT = { x: 202, y: 86, w: 132, h: 64 } as const;
@@ -112,10 +113,12 @@ class DeepHud {
   private readonly snooze = new Container();
   private readonly snoozeLabel = new Label({ size: 13, weight: 750, color: '#ffffff' });
   private readonly lesson = new HudPrompt();
+  private readonly roomLessons: RoomLessons; // v0.2 follow-up: each prompt kind gets its turn
   private lessonActive = false;
   private second = -1;
 
   constructor(private readonly sim: AbductSimulation, private readonly ctx: GameContext, paperwork: ProbePaperwork | undefined) {
+    this.roomLessons = new RoomLessons(sim.room);
     this.restart.sync(RESTART, tr().common.restart, false);
     this.root.addChild(this.wake, this.timer, this.restart, this.turns.root);
     this.sleepers = sim.interior!.sleepers.map(s => ({
@@ -161,7 +164,7 @@ class DeepHud {
     else if (sim.room.human === 'gary' && chestX > 270 - pad && chestX < 505 + pad && chestY > 175 - pad) tip = tips.laser;
     else if (sim.room.human === 'dave' && chestX > 280 - pad && chestX < 480 + pad && chestY < 490 + pad) tip = tips.settle;
     else if ((sim.room.human === 'sterling' || sim.room.human === 'marco' || sim.room.human === 'greg') && chestX < 390 + pad && chestY > -pad && chestY < 680 + pad && elapsed < 10) tip = tips.roll;
-    else tip = roomHazardLesson(sim.room, chestX, chestY, pad); // v0.2 teaching
+    else tip = this.roomLessons.tip(chestX, chestY, pad); // v0.2 teaching
     this.lessonActive = tip.length > 0;
     this.lesson.visible = this.lessonActive && !sim.delivered && !sim.failure;
     if (this.lesson.visible) this.lesson.sync(VIEW_W / 2, 756, 49, tip, 20, 'release', elapsed, rm);
@@ -223,6 +226,10 @@ class DeepExit {
   private readonly fill: Sprite;
   private readonly arrows = new ExitChevrons();
   private readonly dashes: DashedRect;
+  // v0.2 follow-up: the exit tag slides along the view edge instead of running off it (exit-tag.ts)
+  private readonly tagPanel = new HudPanel();
+  private readonly tagLabel = new Label({ size: EXIT_TAG.size, weight: EXIT_TAG.weight, color: MINT });
+  private readonly tagTextW: number;
 
   constructor(private readonly sim: AbductSimulation, ctx: GameContext, private readonly paperwork?: ProbePaperwork) {
     const { room, exitX, exitY } = sim;
@@ -230,12 +237,12 @@ class DeepExit {
     this.fill = box(a.x, a.y, a.w, a.h, MINT);
     this.dashes = new DashedRect(a, 4, 9, MINT);
     const title = gt(sim.room.interior!.exitName);
-    const width = measure(title, 14, 900) + 22;
-    const titleY = room.roofExit ? Math.max(s.y + s.h, a.y + a.h) + 17 : s.y - 17;
-    const panel = new HudPanel().set(width, 24);
-    panel.position.set(exitX - width / 2, titleY - 12);
-    this.unlocked.addChild(this.fill, this.dashes.root, this.arrows.root,
-      panel, new Label({ size: 14, weight: 900, color: MINT }).set(title, exitX, titleY, width - 12));
+    this.tagTextW = measure(title, EXIT_TAG.size, EXIT_TAG.weight);
+    const tag = exitTagBox(room, exitX, this.tagTextW, sim.camera.x, sim.camera.y);
+    this.tagPanel.set(tag.w, tag.h);
+    this.tagLabel.set(title, 0, 0, tag.w - 12);
+    this.placeTag(sim.camera.x, sim.camera.y);
+    this.unlocked.addChild(this.fill, this.dashes.root, this.arrows.root, this.tagPanel, this.tagLabel);
     if (sim.grailExit) {
       // An empty track shows from the start that this opening has a bar to fill.
       const track = box(a.x - 2, a.y + a.h - 12, a.w + 4, 12, INK, 0.75);
@@ -253,6 +260,7 @@ class DeepExit {
     if (!this.root.visible) return;
     this.unlocked.visible = this.glow.visible = !paperwork || !!sim.interior!.probes?.done;
     if (!this.unlocked.visible) return;
+    this.placeTag(cx, cy);
     const { exitX: x, exitY: y, elapsed, body } = sim;
     const pulse = rm ? 0.5 : 0.5 + 0.5 * Math.sin(elapsed * 3.2);
     const near = 1 - clamp((Math.hypot(body.chestX - x, body.chestY - y) - 60) / 300, 0, 1);
@@ -261,6 +269,12 @@ class DeepExit {
     this.fill.alpha = 0.07 + 0.07 * pulse + 0.1 * near;
     this.dashes.sync(3 + near, rm ? 0 : -elapsed * 14);
     this.arrows.root.y = y - pulse * (5 + near * 4);
+  }
+
+  private placeTag(cx: number, cy: number): void {
+    const tag = exitTagBox(this.sim.room, this.sim.exitX, this.tagTextW, cx, cy);
+    this.tagPanel.position.set(tag.x, tag.y);
+    this.tagLabel.position.set(tag.x + tag.w / 2, tag.y + tag.h / 2);
   }
 }
 

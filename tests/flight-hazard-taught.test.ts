@@ -37,6 +37,13 @@ const TAUGHT: Readonly<Record<string, { level: string; teach: readonly Teach[] }
   },
   'hazard.heli': { level: 'level4', teach: [{ key: 'levels.level4.body', cue: { en: 'police chopper', fr: 'hélico' } }] },
   'hazard.cow': { level: 'level10', teach: [{ key: 'levels.level10.joke', cue: { en: 'moos, move', fr: 'meugle' } }] },
+  // v0.2 follow-up: the seven hazards that waited in PENDING
+  'hazard.camera': { level: 'level3', teach: [{ key: 'levels.level3.body', cue: { en: 'rooftop cameras', fr: 'caméras sur les toits' } }] },
+  'hazard.flock': { level: 'level3', teach: [{ key: 'levels.level3.body', cue: { en: 'solid flocks', fr: 'nuées compactes' } }] },
+  'hazard.crane': { level: 'level4', teach: [{ key: 'levels.level4.body', cue: { en: 'crane', fr: 'grue' } }] },
+  'hazard.window': { level: 'level4', teach: [{ key: 'levels.level4.body', cue: { en: 'Office windows flicker', fr: 'bureaux clignotent' } }] },
+  'hazard.steward': { level: 'level7', teach: [{ key: 'levels.level7.body', cue: { en: 'Stewards patrol', fr: 'stewards font des rondes' } }] },
+  'hazard.camera.burst': { level: 'level11', teach: [{ key: 'levels.level11.body', cue: { en: 'glows amber, then sneezes', fr: 'éternue' } }] },
 };
 
 /** Plays like a kind taught earlier: the variant is taught by that kind. */
@@ -46,15 +53,7 @@ const VARIANT_OF: Readonly<Record<string, { of: string; why: string }>> = {
 };
 
 /** Hazards that shipped untaught: the level that introduces them, and what is missing. Only shrinks. */
-const PENDING: Readonly<Record<string, { level: string; note: string }>> = {
-  'hazard.camera': { level: 'level3', note: 'rooftop CCTV cones: the L3 memo only says "Gary’s been shopping"' },
-  'hazard.flock': { level: 'level3', note: 'solid bat flocks that stun the saucer: no memo line or lesson' },
-  'hazard.crane': { level: 'level4', note: 'a rotating solid crane boom: the L4 memo names chopper, traffic and neon only' },
-  'hazard.window': { level: 'level4', note: 'office windows that flicker, then light a pool: nothing names them' },
-  'hazard.steward': { level: 'level7', note: 'deck stewards with torches: the L7 memo names the photographer and the swell' },
-  'hazard.rabbit': { level: 'level10', note: 'the rabbit lunges at a saucer hovering slowly nearby: nothing warns of it' },
-  'hazard.camera.burst': { level: 'level11', note: 'the 1953 projector: amber warning then timed exposure; the memo does not explain it' },
-};
+const PENDING: Readonly<Record<string, { level: string; note: string }>> = {};
 
 /** Kinds and fields that change nothing the player must do, with why. */
 const NOT_A_MECHANIC: Readonly<Record<string, string>> = {
