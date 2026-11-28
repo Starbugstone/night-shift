@@ -143,7 +143,12 @@ const L3_HAZARDS: HazardDef[] = [
   },
   // Gary's own CCTV, on the garage corner, sweeping his drive and roof
   // Guard the obvious driveway approach. The skylight approach stays above the cone.
-  { type: 'camera', x: 1440, y: 1930, range: 295, half: 0.26, base: 0.69, amp: 0.13, rate: 1.25, phase: 0 },
+  // v0.2 council round 6 (Neon P2): aimed 0.13 rad further down the drive (base was 0.69). Its cone never left the
+  // garage-door ring centre, so with the 0.9 s fuse the "timed door" could not be timed without Hush Drive (a parked
+  // hover locked at 0/160 start times; now 48/160 at the centre, windows up to 3 s at most 2.5 s apart;
+  // tests/flight-ring-lock-window.test.ts). Not 0.85: that also moved the planner's way north past Barb's yard light
+  // and cost the casual hand 8 Ghosts out of 20 (base 0.80 / 0.82 / 0.85: 18 / 17 / 10).
+  { type: 'camera', x: 1440, y: 1930, range: 295, half: 0.26, base: 0.82, amp: 0.13, rate: 1.25, phase: 0 },
   // motion-sensor lights on the walls along the way (none on Maple Court itself, the way north)
   // v4 difficulty curve (Neon P4): the SW/SE Birch Lane lights and East St's second light are gone.
   // They sat away from every ring and made L3 the busiest map before L4.
@@ -154,7 +159,9 @@ const L3_HAZARDS: HazardDef[] = [
   // trigger sits across the obvious way in. Come in from the side or wait out the 3 s.
   yardLight(905, 842),
   porch(DAVE, 'e', 712), // v4 difficulty curve: 29 px north so the roof ring sits outside its lit edge (planner stall)
-  yardLight(1560, 961),
+  // v0.2 round 6 tuning: its trigger reaches 112 px (was 100) across Barb's south approach, still clear of her chimney ring
+  // (185 px). Casual Ghost was 17/20 with the CCTV move alone, aim about 15 (docs/REGRESSIONS.md L21).
+  yardLight(1560, 961, 112),
   porch(BARB, 'e', 840),
   // Gary's own motion lights on posts. The drive light is the one door trap left on the map: it
   // lights the garage-door ring, so come in over the side return, not straight up the drive.

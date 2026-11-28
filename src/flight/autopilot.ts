@@ -387,7 +387,13 @@ export class FlightAutopilot {
   private ring = -1;
   private mode: Mode = 'hold';
   private decideAt = -1;
-  private holdSince = 0;
+  // v0.2 round 6 (docs/REGRESSIONS.md L21): the wait clock runs from the last step along the path, not from the last
+  // mode switch. After REPLAN_AFTER / 2 the relaxed limit let one 0.1 s "go" through, the next decision's strict limit
+  // stopped it and the switch reset the clock, so the re-plan never came: a model hand on L3 waited until sunrise.
+  // A go taken on the relaxed limit now commits to its stop; a wait with no progress re-plans after REPLAN_AFTER.
+  private waitFrom = 0;
+  private progressPi = 0;
+  private commitTo = -1;
   private anchor: Vec2 = { x: 0, y: 0 };
   private lastPos: Vec2 = { x: 0, y: 0 };
   /** Last decision (debug): mode chosen and the predicted fuse peaks. */
@@ -473,7 +479,9 @@ export class FlightAutopilot {
     this.stop = 0;
     this.mode = 'hold';
     this.decideAt = -1;
-    this.holdSince = sim.t;
+    this.waitFrom = sim.t;
+    this.progressPi = 0;
+    this.commitTo = -1;
     if (bestT >= 0 && this.stats.order[this.stats.order.length - 1] !== bestT) this.stats.order.push(bestT);
   }
 
@@ -589,8 +597,9 @@ export class FlightAutopilot {
     this.stats.decisions++;
     const next = this.nextStop();
     const last = this.path.length - 1;
-    const waited = sim.t - this.holdSince;
-    const limit = waited > REPLAN_AFTER / 2 ? 0.9 : SAFE_PEAK;
+    const waited = sim.t - this.waitFrom;
+    const committed = this.commitTo > this.pi;
+    const limit = committed || waited > REPLAN_AFTER / 2 ? 0.9 : SAFE_PEAK;
     const horizon = 5;
     const L = this.last;
     L.hold = -1;
@@ -616,6 +625,7 @@ export class FlightAutopilot {
       if (peak < bestPeak) bestPeak = peak;
     }
     if (best >= 0) {
+      if (!committed && bestPeak >= SAFE_PEAK) this.commitTo = best;
       this.stop = best;
       L.stop = best;
       this.setMode('go');
@@ -647,11 +657,7 @@ export class FlightAutopilot {
 
   private setMode(m: Mode): void {
     this.last.mode = m;
-    if (m !== 'go' && this.mode === 'go') {
-      this.holdSince = this.sim.t;
-      this.stats.holds++;
-    }
-    if (m === 'go' && this.mode !== 'go') this.holdSince = this.sim.t;
+    if (m !== 'go' && this.mode === 'go') this.stats.holds++;
     this.mode = m;
   }
 
@@ -686,7 +692,7 @@ export class FlightAutopilot {
     if (sim.t >= this.decideAt) {
       this.decideAt = sim.t + DECIDE_EVERY;
       // stuck behind something for a long time: try another ring / target
-      if (this.mode !== 'go' && sim.t - this.holdSince > REPLAN_AFTER) {
+      if ((this.mode !== 'go' || this.commitTo > this.pi) && sim.t - this.waitFrom > REPLAN_AFTER) {
         this.avoid[this.ring] = this.avoid[this.ring]! + 1500;
         this.replan();
       }
@@ -695,6 +701,10 @@ export class FlightAutopilot {
     const rpi = { pi: this.pi };
     this.control(sim.st, rpi, Math.max(this.stop, this.pi), this.mode, this.anchor, this.ro);
     this.pi = rpi.pi;
+    if (this.pi > this.progressPi) {
+      this.progressPi = this.pi;
+      this.waitFrom = sim.t;
+    }
     const sx = s.x - sim.camX;
     const sy = s.y - sim.camY;
     const dt = this.lastCall < 0 ? 1 / 60 : Math.max(0, Math.min(0.1, sim.t - this.lastCall));

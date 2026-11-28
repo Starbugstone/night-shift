@@ -30,10 +30,12 @@ export const LEVEL8: DeepLevelDef = {
         entries: [{ ...en.routes.echo_appeal, roomId: 'echo_appeal', x: 847, y: 2079, labelSide: 'above' }] },
     ],
     // The picket line: each slab keeps its own beat, so the gaps drift along the line.
+    // v0.2 round 6 tuning: each note holds 0.15 s longer (was 5.5, 6, 5.7 s), so the silences are 0.15 s shorter. With the
+    // flight model's hold livelock fixed, casual Ghost rose to 19/20 over its 90% cap (docs/REGRESSIONS.md L21).
     hazards: [
-      slab(200,1312,75,299,6.7,5.5,2.3),
-      slab(754,1300,75,299,6.8,6,6.5),
-      slab(1180,1314,75,299,6.5,5.7,6.1),
+      slab(200,1312,75,299,6.7,5.65,2.3),
+      slab(754,1300,75,299,6.8,6.15,6.5),
+      slab(1180,1314,75,299,6.5,5.85,6.1),
     ],
     groundProps: [], props: [], roads: [], lamps: [],
   },

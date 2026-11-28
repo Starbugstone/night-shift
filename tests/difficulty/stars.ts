@@ -14,6 +14,7 @@ import { towelDetour } from './towel';
 import { LegFirst } from './drive-in';
 import { CarFirst, type CarAttempt } from './time-car';
 import { humanFlightController, humanSteering, playAbduction, rng, type AbductRun, type HumanProfile } from './human';
+import { ParkWatch, type Park } from './park';
 
 const DT = 1 / 60;
 const TUTORIAL_RULES = { wakeFails: false, hard: false };
@@ -42,6 +43,8 @@ export interface StarRun {
   car?: CarAttempt;
   legs?: readonly { seconds: number; room: RoomId }[];
   tripodLeg?: boolean;
+  /** Deep shifts: the longest time the saucer sat parked while flying (./park.ts). */
+  park?: Park;
 }
 
 type FirstAbduction = (room: RoomId, profile: HumanProfile, seed: number) => AbductRun;
@@ -84,6 +87,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
   let tripod: LegFirst | undefined;
   let birch: BirchPickupFirst | undefined;
   const legs: { seconds: number; room: RoomId }[] = [];
+  const park = new ParkWatch();
   const limit = level.clockMode === 'elapsed' ? 180 : Infinity;
   while (shift.phase === 'flight' && shift.elapsed < limit) {
     const flight = new DeepFlightScene({
@@ -114,6 +118,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
       steer(ctx.pointer, wasFlying ? (hedge && sim.collectible?.available ? hedge() : chase?.steer() ?? (towel && !sim.collectible!.collected ? towel() : birch?.active ? birch.steer() : read?.active ? read.steer() : controller(sim))) : flight.state === 'spotted' && flight.st >= SPOT_HOLD ? RETRY_TAP : undefined);
       ctx.time += DT;
       flight.update(DT);
+      park.step(sim.saucer, wasFlying && flight.state === 'fly', shift.elapsed, shift.legs + 1);
       chase?.record();
       peakSuspicion = Math.max(peakSuspicion, sim.suspicion);
       if (sim.suspicion === 0) exposure = undefined;
@@ -157,6 +162,7 @@ function deepShift(level: DeepLevelDef, profile: HumanProfile, seed: number, fir
     sightings,
     roomFailures,
     peakSuspicion,
+    park: park.longest,
     ...(car ? { car: car.result() } : {}),
     ...(isBirch(level.id) || level.id === 'level3' ? { legs } : {}),
     ...(tripod ? { tripodLeg: tripod.caught } : {}),

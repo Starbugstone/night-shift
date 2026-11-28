@@ -48,7 +48,10 @@ interface Check {
   locks: { key: string; room: string; shown: number; need: number; on: number }[];
   /** Pills shown for fewer than PILL_HOLD_FRAMES while their ring stayed on screen and unlocked (round 5, Fable). */
   flickers: string[];
-  /** Steered launch runs that never locked because the autopilot's own fuse model calls the ring a catch (it holds). */
+  /**
+   * Steered launch runs that never locked while the autopilot's own fuse model called the ring a catch (it held).
+   * Only named in the failure: no ring is exempt (council round 6, Opus F2; L3's garage door was, until its CCTV moved).
+   */
   unreached: Set<string>;
 }
 
@@ -332,6 +335,36 @@ afterAll(async () => {
   fs.writeFileSync(`${TABLE_FILE}.flickers`, `${FLICKERS.join('\n')}\n`);
 });
 
+/**
+ * Flies the steered runs, in every language: each entry ring from the launch, then a whole shift on each entry index.
+ * Returns the rings never locked (`lang target:entry`), each marked when the autopilot held off it (`go = caught`).
+ */
+function flySteered(level: DeepLevelDef, out: Check, langs: readonly (typeof LANGS)[number][] = LANGS, only?: Steer): string[] {
+  const lang = getLang();
+  try {
+    for (const l of langs) {
+      setLang(l);
+      if (only) {
+        flyDeep(level, 300, out, undefined, only);
+        continue;
+      }
+      level.map.targets.forEach((t, target) => t.entries.forEach((_, entry) => flyDeep(level, 300, out, undefined, { target, entry })));
+      const most = Math.max(...level.map.targets.map(t => t.entries.length));
+      for (let entry = 0; entry < most; entry++) flyDeep(level, 300, out, undefined, { target: -1, entry });
+    }
+  } finally {
+    setLang(lang);
+  }
+  const locked = new Set(out.locks.map(l => l.key));
+  const missing: string[] = [];
+  for (const l of langs) level.map.targets.forEach((t, ti) => t.entries.forEach((_, ei) => {
+    if (only && (ti !== only.target || ei !== only.entry)) return;
+    const key = `${l} ${ti}:${ei}`;
+    if (!locked.has(key)) missing.push(out.unreached.has(key) ? `${key} (the autopilot holds: go = caught)` : key);
+  }));
+  return missing;
+}
+
 describe('route pills on the real flight view', () => {
   it('walks every deep level, EN and FR', () => {
     expect(deep.length).toBeGreaterThan(10);
@@ -363,33 +396,31 @@ describe('route pills on the real flight view', () => {
 
     // round 5 (Fable): the floor for every ring a player can lock, not only the autopilot's choice
     it(`${level.id}: every entry ring, the autopilot steered to it, showed its pill before the lock (EN, FR)`, () => {
-      const lang = getLang();
       const out = fresh();
-      try {
-        for (const l of LANGS) {
-          setLang(l);
-          level.map.targets.forEach((t, target) => t.entries.forEach((_, entry) => flyDeep(level, 300, out, undefined, { target, entry })));
-          const most = Math.max(...level.map.targets.map(t => t.entries.length));
-          for (let entry = 0; entry < most; entry++) flyDeep(level, 300, out, undefined, { target: -1, entry });
-        }
-      } finally {
-        setLang(lang);
-      }
+      const missing = flySteered(level, out);
       for (const l of out.locks) STEERED.push(`${level.id}\t${l.key}\t${l.room}\t${l.shown.toFixed(2)}\t${l.on.toFixed(2)}\t${l.need.toFixed(2)}`);
-      const locked = new Set(out.locks.map(l => l.key));
-      const missing: string[] = [];
-      for (const l of LANGS) level.map.targets.forEach((t, ti) => t.entries.forEach((_, ei) => { if (!locked.has(`${l} ${ti}:${ei}`)) missing.push(`${l} ${ti}:${ei}`); }));
-      // a ring the autopilot will not fly into (its model says going in is a catch, so it holds) is listed, not failed
-      for (const key of missing) if (out.unreached.has(key)) STEERED.push(`${level.id}\t${key}\tunreached: the autopilot holds (go = caught)`);
+      for (const key of missing) STEERED.push(`${level.id}\t${key}\tnever locked`);
       FLICKERS.push(...out.flickers.map(f => `steered ${f}`));
-      expect(missing.filter(key => !out.unreached.has(key)), 'the steered autopilot locks every entry ring').toEqual([]);
-      expect(missing.length, 'most entry rings are locked').toBeLessThan(locked.size);
+      // no exemption (council round 6, Opus F2): a ring the autopilot holds off is a ring a player can't time either
+      expect(missing, 'the steered autopilot locks every entry ring').toEqual([]);
       expect(out.covers.slice(0, 6)).toEqual([]);
       expect(out.far.slice(0, 6)).toEqual([]);
       expect(shortLocks(out)).toEqual([]);
       expect(out.flickers.slice(0, 6), 'no pill flashes for less than PILL_HOLD_FRAMES').toEqual([]);
     }, 240_000);
   }
+
+  // mutation (council round 6, Opus F2): a static camera parked over Gary's skylight made both Gary rings "unreached"
+  // and L3 still passed while the floor exempted a ring the autopilot holds off. Now that ring fails the floor.
+  it('fails a ring under a static camera (L3 skylight)', () => {
+    const level = deep.find(l => l.id === 'level3')!;
+    const sky = level.map.targets[2]!.entries[0]!;
+    const hazards = level.map.hazards.map(d => (d.type === 'camera' && d.x === 1440 && d.y === 1930
+      ? { ...d, base: Math.atan2(sky.y - d.y, sky.x - d.x), amp: 0, half: 0.4 } : d));
+    expect(hazards).not.toEqual(level.map.hazards);
+    const mutant = { ...level, map: { ...level.map, hazards } } as DeepLevelDef;
+    expect(flySteered(mutant, fresh(), ['en'], { target: 2, entry: 0 })[0]).toMatch(/^en 2:0/);
+  }, 240_000);
 
   const l12 = deep.find(l => l.id === 'level12')!;
   const inEnglish = (fly: () => void): void => {

@@ -69,8 +69,13 @@ export const LEVEL9: DeepLevelDef = {
       { type: 'car', key: 'flight/police55_top', role: 'police', path: [
         { x: 1135, y: 755 }, { x: 1640, y: 755 }, { x: 1640, y: 1030 }, { x: 1135, y: 1030 },
       ], loop: true, speed: 150, dwell: 0, phase: 450, coneRange: 240, coneHalf: 0.32, sweepAmp: 0, sweepRate: 0, barR: 0 },
+      // v0.2 L9 tune (docs/REGRESSIONS.md L21): hold 3.2 → 2.7 s. At 3.2 s the skilled and casual models tied on
+      // Ghost (18/20 each, 20 seeds): every lost Ghost was the same top-speed overshoot of Marvin's hatch ring into
+      // the dance spot, which both hands fly alike. Turning more often (same 0.45 s amber tell) makes the café leg
+      // test reaction: skilled 20/18/18 → 20/19/18, casual 20/18/14 → 20/16/15 (Delivered/Ghost/Night owl).
+      // 2.4 s also passed (skilled 18, casual 13 Ghost) but left casual Night owl at 12/20 on a 10/20 floor.
       { type: 'watcher', skin: 'cafe55', name: 'Café watcher', x: 555, y: 1100, range: 225, half: 0.35,
-        angles: [2.12, 0], hold: 3.2, sweepAmp: 0.08, sweepRate: 0.8 },
+        angles: [2.12, 0], hold: 2.7, sweepAmp: 0.08, sweepRate: 0.8 },
       { type: 'wire', kind: 'power', ax: cable.x, ay: cable.north, bx: cable.x, by: cable.south },
       spot('dance_spot55', 1150, 1860, 600, 0.45, -0.89),
       // Saturday-night cruising on the cross street: the obvious way north from Main Street has to time a gap

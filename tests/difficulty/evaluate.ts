@@ -11,7 +11,8 @@ import { starLabels } from '../../src/levels/progress';
 import { isBirch } from './birch';
 import { BEELINE_DELAYS, beelineFlight, directApproaches, directViolations, naiveRoomWins, type DirectApproach } from './beeline';
 import { HARD_RULES, OBSTACLE_NEAR_PX, PROFILES, playAbduction, playFlight, type AbductRun, type HumanProfile } from './human';
-import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateTripodFirst, evaluateStars, type CarReport, type StarReport, type TripodReport } from './stars';
+import { evaluateBirchDetours, evaluateShrubbery, evaluateCarFirst, evaluateTowelFirst, evaluateTripodFirst, evaluateStars, type CarReport, type StarReport, type StarRun, type TripodReport } from './stars';
+import { PARK_LIMIT_SEC } from './park';
 import { checkDispatchFinale, starKey } from './dispatch2199';
 import { naiveCarCatches } from './time-car';
 import { EXACT_FROM, RateLedger, bandText, narrowBands, tolerated, type RateCheck } from './rates';
@@ -325,6 +326,10 @@ export function evaluateLevel(level: LevelDef, seeds = 6, profiles: HumanProfile
     base.violations.push(`too open: a naive flight is stopped at ${base.beelineCaught}/${BEELINE_DELAYS.length} start times`);
   }
   if (level.kind === 'deep') base.violations.push(...directViolations(level, direct));
+  // round 6: a model hand never parks for good while the shift clock runs (./park.ts, docs/REGRESSIONS.md L21)
+  for (const row of base.stars) for (const run of row.runs) {
+    if (run.park && run.park.seconds > PARK_LIMIT_SEC) base.violations.push(`model stall: ${row.profile} seed ${run.seed} parked ${run.park.seconds.toFixed(1)} s at (${run.park.x}, ${run.park.y}) on leg ${run.park.leg}, limit ${PARK_LIMIT_SEC} s`);
+  }
   for (const room of base.roomBeelines) {
     if (room.clean > 0) base.violations.push(`too open: ${room.roomId} delivers asleep on a direct drag at ${room.clean}/${BEELINE_DELAYS.length} start times`);
   }
@@ -536,6 +541,8 @@ export function formatReport(r: StarLevelReport | LevelReport): string {
   }
   lines.push('');
   lines.push(`Naive flight stopped: ${r.beelineCaught}/${BEELINE_DELAYS.length} start times. Casual median par used: ${pct(r.casualMedianParShare)}. Casual median peak suspicion: ${pct(r.casualMedianPeakSuspicion)}.`);
+  const parks = r.stars.map(row => ({ row, run: row.runs.reduce<StarRun | undefined>((a, b) => (b.park && b.park.seconds > (a?.park?.seconds ?? -1) ? b : a), undefined) })).filter(p => p.run?.park);
+  if (parks.length) lines.push(`Longest park while flying: ${parks.map(({ row, run }) => `${row.profile} ${run!.park!.seconds.toFixed(1)} s (seed ${run!.seed}, leg ${run!.park!.leg}, at ${run!.park!.x}, ${run!.park!.y})`).join('; ')}.`);
   if (r.directApproaches.length) {
     const clean = cleanDirect(r.directApproaches);
     const caught = r.directApproaches.filter(run => run.caught).length;
