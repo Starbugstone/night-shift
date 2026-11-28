@@ -250,7 +250,7 @@ export const fr: Strings = {
       human: "Rodney, le Chevalier et Tom",
       collect: "Trois témoins",
       re: "Ordre n°{num} · Sacré Graal !",
-      body: "Agent Zib, Krix a fait appel et retravaille chez OBELISK™. Nos concurrents revendiquent le Saint Graal pour vendre la vie éternelle par abonnement. Leurs trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le juridique annule les signatures. À la haie ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux. À demi réveillé, Rodney fuit bravement.",
+      body: "Agent Zib, Krix a fait appel et retravaille chez OBELISK™. Nos concurrents revendiquent le Saint Graal pour vendre la vie éternelle par abonnement. Leurs trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le juridique annule les signatures. À la haie ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux. À demi réveillé, Rodney s’enfuit bravement.",
       joke: "Les Français lancent des vaches. Si la route meugle, dégagez.",
       signoff: "— Vrell. Pas de joute pendant le service.",
     },

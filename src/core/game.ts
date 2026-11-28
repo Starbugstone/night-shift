@@ -23,7 +23,7 @@ import { DispatchFinale, FINALE_BEAT } from '../ui/dispatch-finale';
 import { FilmScene } from '../ui/film';
 import { preloadFilm } from '../ui/film-art';
 import { FILM_AFTER, FILM_BEFORE, FILM_IDS, filmOfLevel, filmSeen, markFilmSeen, type FilmId } from '../ui/films';
-import { MemoScene } from '../ui/memo';
+import { MemoScene, type MemoReplay } from '../ui/memo';
 import { ReportScene, deepReport, tutorialReport } from '../ui/report';
 import { TitleScene } from '../ui/title';
 import { TrophiesScene, type TrophyReturnTarget } from '../ui/trophies';
@@ -335,8 +335,9 @@ export class Game implements Shell {
     // the level's story film, once seen; 2199 keeps its Bureau epilogue until a film takes it over
     const film = filmOfLevel(id);
     // (a delivered level is past its film's moment: older saves can watch it too)
-    const replay = film && (filmSeen(this.save, film) || this.save.levels[id].delivered) ? () => this.playFilm(film, () => this.toMemo(i))
-      : finale && this.save.levels.level12.delivered ? () => this.showDispatchFinale(() => this.toMemo(i)) : undefined;
+    const replay: MemoReplay | undefined = film && (filmSeen(this.save, film) || this.save.levels[id].delivered)
+      ? { label: tr().films.replay, open: () => this.playFilm(film, () => this.toMemo(i)) }
+      : finale && this.save.levels.level12.delivered ? { label: tr().dispatch2199.replay, open: () => this.showDispatchFinale(() => this.toMemo(i)) } : undefined;
     this.scenes.go('memo', () => new MemoScene(this, i, practice, replay, hunt));
   }
 

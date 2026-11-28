@@ -37,6 +37,12 @@ export function memoAddressee(id: string, promoted = false): string {
   return promoted ? memo.toAgentSenior : memo.toAgent;
 }
 
+/** A memo's replay button: what it says and what it opens. */
+export interface MemoReplay {
+  readonly label: string;
+  readonly open: () => void;
+}
+
 export class MemoScene implements Scene {
   t = 0;
   chars = 0;
@@ -51,14 +57,14 @@ export class MemoScene implements Scene {
     readonly shell: Shell,
     private readonly levelIndex: number,
     private readonly openPractice?: () => void,
-    private readonly openReplay?: () => void,
+    private readonly openReplay?: MemoReplay,
     private readonly hunt?: HuntTarget,
   ) {
     const level = tr().levels[this.level.id];
     this.totalChars = level.body.length + level.joke.length;
     if (openReplay) {
-      // v4 films: the level's story film (the 2199 epilogue on its own memo)
-      this.replay = new Button(16, 852, 145, 84, this.level.id === 'level12' ? tr().dispatch2199.replay : tr().films.replay, 'secondary', 18);
+      // v4 films: the level's story film, or the 2199 epilogue; the caller names it (no level-id branch here)
+      this.replay = new Button(16, 852, 145, 84, openReplay.label, 'secondary', 18);
       this.start.x = 169;
       this.start.w = VIEW_W - 169 - 16;
     }
@@ -91,7 +97,7 @@ export class MemoScene implements Scene {
     const audio = this.shell.audio;
     if (this.back.update(p, dt)) return this.shell.toWorkOrders();
     if (this.start.update(p, dt)) return this.shell.toFlight(this.levelIndex, 0, this.hunt);
-    if (this.replay?.update(p, dt)) return this.openReplay?.();
+    if (this.replay?.update(p, dt)) return this.openReplay?.open();
     if (this.practice?.update(p, dt)) return this.openPractice?.();
     // v4 voices: Vrell babbles the memo while it types (in place of the old key clicks)
     if (this.chars === 0 && this.totalChars > 0) {

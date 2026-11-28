@@ -12,7 +12,7 @@ describe('memo buttons', () => {
     const hush = vi.fn();
     const shell = { ctx: { pointer, reducedMotion: true }, audio: { sfx() {}, speak() {}, hush }, save: defaultSave(), assets: { get: () => undefined } } as unknown as Shell;
     const openReplay = vi.fn();
-    const memo = new MemoScene(shell, LEVELS.findIndex((l) => l.id === 'level12'), vi.fn(), openReplay);
+    const memo = new MemoScene(shell, LEVELS.findIndex((l) => l.id === 'level12'), vi.fn(), { label: 'Bureau epilogue', open: openReplay });
     memo.update(1 / 60);
     const button = memo.replay!;
     Object.assign(pointer, { x: button.x + button.w / 2, y: button.y + button.h / 2, down: true, pressed: true });
