@@ -84,7 +84,8 @@ export class FilmScene implements Scene {
     const i = this.shotIndex;
     const shot = this.clock.shots[i]!;
     const l = this.t - shot.start;
-    if (shot.capInF !== null && captionAlpha(shot, l) > 0 && captionShown(shot, l) < Math.min(shot.read, FRESH_LINE_SECONDS)) return;
+    // v0.2 council round 7 (Sol P3, Neon F1): before the caption fades in it has been shown for 0 s, so a tap waits too
+    if (shot.capInF !== null && captionShown(shot, l) < Math.min(shot.read, FRESH_LINE_SECONDS)) return;
     // the skipped shot's remaining sound cues stay silent
     this.cue[i] = this.film.shots[i]!.sfx?.length ?? 0;
     this.t = i + 1 < this.clock.shots.length ? this.clock.shots[i + 1]!.start : this.clock.length;

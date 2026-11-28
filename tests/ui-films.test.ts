@@ -116,6 +116,10 @@ describe('playing a film', () => {
       for (let i = 0; i < clock.shots.length; i++) {
         const s = clock.shots[i]!;
         if (s.capInF !== null) {
+          // before the line fades in (council round 7, Sol P3: a tap at 0.18 s skipped the whole first shot)
+          scene.t = s.start + Math.min(0.05, s.capInF / 2);
+          r.tap(scene);
+          expect(scene.shotIndex, `${film.id}/${i}: tap before the line`).toBe(i);
           // halfway into the line's first read: a tap is ignored
           scene.t = s.start + s.capInF + CAP_IN + Math.min(s.read, FRESH_LINE_SECONDS) / 2;
           r.tap(scene);

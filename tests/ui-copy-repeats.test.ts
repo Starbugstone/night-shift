@@ -158,6 +158,7 @@ const FR_LOCAL: Readonly<Record<string, RegExp>> = {
   'Pôle emploi': /p[ôo]le emploi|france travail|(?<!\p{L})assedic(?!\p{L})/iu,
   'pounds (£ / livres)': /£|\d\s*livres?(?!\p{L})|livres? sterling/iu,
   'other French brands': /(?<!\p{L})(?:sncf|ratp|tf1|minitel)(?!\p{L})|carte vitale/iu,
+  SAMU: /(?<!\p{L})SAMU(?!\p{L})/u, // v0.2 season review: France's emergency medical service
 };
 
 /** US-only idioms in the English table. */

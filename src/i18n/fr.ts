@@ -2962,7 +2962,7 @@ export const fr: Strings = {
         },
         pete: {
           at3: "Lance la bouilloire à 2 h pile et sort deux mugs ébréchés : un pour lui, un pour la « météo malpolie ».",
-          at10: "Son phare clignote « MÉTÉO MALPOLIE » en morse à chaque passage. Les ferries répondent « BONNE NUIT, PETE ».", // v0.2 season review (Neon): X-Files cap (S15)
+          at10: "Son phare envoie « MÉTÉO MALPOLIE » en morse à chaque passage. Les ferries répondent « BONNE NUIT, PETE ».", // v0.2 season review (Neon): X-Files cap (S15)
         },
         sal: {
           at3: "A collé « COMPTEZ DEUX FOIS » sur la caisse noire, à l'intention de Kipper et des lueurs nocturnes.", // v0.2 season review (Neon): X-Files cap (S15)
@@ -2974,7 +2974,7 @@ export const fr: Strings = {
         },
         osei: {
           at3: "Note la technique de sondage de nos stagiaires en dormant et laisse des remarques sur le thermomètre en laiton.",
-          at10: "Compte nos visites comme formation continue. Et réclame les heures.", // v0.2 season review (Neon): X-Files cap (S15)
+          at10: "Compte nos visites comme formation continue. Et fait valider les heures.", // v0.2 season review (Neon): X-Files cap (S15)
         },
         pemberton: {
           at3: "Enfile ses plus belles chaussettes antidérapantes et épingle un petit merci sur sa blouse dès que le plafond s'illumine.",
@@ -3201,7 +3201,7 @@ export const fr: Strings = {
   films: {
     skip: 'Passer',
     watch: 'Lancer le film',
-    replay: 'Revoir le film',
+    replay: 'Voir le film', // v0.2 council round 7 (Neon F4): an older save may never have seen it; fits the button
     loading: 'Chargement du film…',
     tap: 'Touchez pour continuer',
     quote: { open: '« ', close: ' »' },
@@ -3226,7 +3226,7 @@ export const fr: Strings = {
         nothing_to_stamp: 'Ni bleus, ni procès. Dire que je vous avais préparé une vitrine.',
         tube: 'Le siège a lu le rapport. Il veut maintenant trois dormeurs en une nuit.',
         lanyard: 'Un vrai badge ! C’est normal, PROVISOIRE écrit des deux côtés ?',
-        two_calls_first: 'La banlieue attendra. D’abord deux petits appels : boulangerie, garage.',
+        two_calls_first: 'La banlieue attendra. D’abord deux missions : une boulangère, un garage.', // v0.2 council round 7 (Neon F2): « appels » are phone calls
         birch_lane: 'Chemin des Bouleaux. Les lampes mordent. Faites l’exercice. Ou pas.',
       },
     },
