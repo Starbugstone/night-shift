@@ -1,5 +1,5 @@
 import { Container, Graphics, Sprite } from 'pixi.js';
-import { PILL_HOLD_FRAMES, pillReach, pillShown, placePills, type Box, type PillAsk, type PillLine } from './clear-of';
+import { heldClear, PILL_HOLD_FRAMES, pillReach, pillShown, placePills, refitHeld, type Box, type PillAsk, type PillLine } from './clear-of';
 import type { Assets, RoomId } from '../../contracts';
 import { VIEW_H, VIEW_W } from '../../contracts';
 import { easeOutBack } from '../../core/fx';
@@ -450,6 +450,15 @@ export class EntryRingView {
     out.h = 40;
   }
 
+  /** The pill's width in full, and with its route name only (`shortPill`). */
+  get labelWidth(): number {
+    return this.labelW;
+  }
+
+  get shortWidth(): number {
+    return this.shortW;
+  }
+
   private keptX = 0;
   private keptY = 0;
   private placed = false;
@@ -468,6 +477,13 @@ export class EntryRingView {
   pillHiddenFrames = PILL_HOLD_FRAMES;
   /** Round 5 (Fable): frames in a row a shown pill has wanted to hide (it hides at PILL_HOLD_FRAMES). */
   pillHideFrames = 0;
+  /** Round 7 (Fable finding 3): the ring's screen position at `EntryLabels.request` and its motion since the frame before. */
+  screenX = 0;
+  screenY = 0;
+  screenVX = 0;
+  screenVY = 0;
+  /** The `EntryLabels` frame that last saw this ring (-1: none), so a ring back on screen starts with no motion. */
+  seenFrame = -1;
 
 
 }
@@ -503,6 +519,17 @@ export class EntryLabels {
   /** Round 5 (Fable): which pills `placePills` gave their short width this frame. */
   private readonly short: Uint8Array;
   private count = 0;
+  /**
+   * Round 7 (Fable finding 3): where Zib's speech bubble may show from any frame on (screen px; w 0: nowhere). The deep
+   * view fills it once (`DeepFlightHud.zibZone`); a new pill must not drift into it before its hold is over (`lasts`).
+   */
+  readonly speech: Box = { x: 0, y: 0, w: 0, h: 0 };
+  /** Frames placed so far, and this frame's `place` arguments (`lasts` reads them). */
+  private frame = 0;
+  private n = 0;
+  private hard = 0;
+  private soft = -1;
+  private ringsFrom = 0;
 
   constructor(capacity: number, otherObstacles: number, lineCapacity = 0) {
     this.obstacles = Array.from({ length: 2 * capacity + otherObstacles }, () => ({ x: 0, y: 0, w: 0, h: 0 }));
@@ -516,6 +543,12 @@ export class EntryLabels {
   request(ring: EntryRingView, camX: number, camY: number): void {
     const ask = this.asks[this.count]!;
     ring.ask(camX, camY, ask);
+    const moving = ring.seenFrame === this.frame - 1;
+    ring.screenVX = moving ? ask.ringX - ring.screenX : 0;
+    ring.screenVY = moving ? ask.ringY - ring.screenY : 0;
+    ring.screenX = ask.ringX;
+    ring.screenY = ask.ringY;
+    ring.seenFrame = this.frame;
     if (ask.ringX < -RING_R || ask.ringX > VIEW_W + RING_R ||
         ask.ringY < ask.top || ask.ringY > VIEW_H + RING_R) {
       ring.showPill(false);
@@ -539,8 +572,14 @@ export class EntryLabels {
    * `soft`: the obstacle drawn above the pills (the saucer's fuse box), which a pill may sit under (see placePills).
    * (`aimX`, `aimY`), round 5 (Fable): where the saucer will be in a moment (screen px); the pill of the ring nearest it
    * is placed first, so the ring the player is heading for keeps its label when two pills want one spot.
+   * `ringsFrom`, round 7: obstacles [ringsFrom, n) are entry-ring boxes (`RING_CLEAR`), which a held pill sliding back
+   * inside the screen may come into the air of (`refitHeld`).
    */
-  place(n: number, camX: number, camY: number, soft = -1, aimX = NaN, aimY = NaN, hard = 0): void {
+  place(n: number, camX: number, camY: number, soft = -1, aimX = NaN, aimY = NaN, hard = 0, ringsFrom = n): void {
+    this.n = n;
+    this.hard = hard;
+    this.soft = soft;
+    this.ringsFrom = ringsFrom;
     let lead: EntryRingView | null = null;
     let best = Infinity;
     for (let i = 0; i < this.count && !Number.isNaN(aimX); i++) {
@@ -553,8 +592,9 @@ export class EntryLabels {
     }
     // Round 6 (Fable P3): a held pill keeps its old spot, so that spot is reserved before the other pills are placed
     // (the round 5 hold let another pill land on it). Held pills move to the end of the list [count, this.count) and
-    // their boxes sit at obstacles [n, n + held); a hold whose box meets the top bar, a screen edge, a HUD box
-    // (obstacles [0, hard)) or another held pill is dropped: that pill hides at once.
+    // their boxes sit at obstacles [n, n + held). Round 7 (Fable finding 3): a kept box that meets the top bar, a screen
+    // edge, a HUD box (obstacles [0, hard)) or another held pill slides to the nearest free spot by its ring
+    // (`refitHeld`); only a hold with no such spot is dropped, and that pill hides at once.
     let count = this.count;
     let held = 0;
     for (let pass = 0; pass <= this.count; pass++) {
@@ -571,7 +611,9 @@ export class EntryLabels {
         this.rings[i]!.heldBox(camX, camY, box);
         // kept in world space, so the camera can carry it off screen, under the top bar or under a HUD box
         if (box.x < 0 || box.x + box.w > VIEW_W || box.y < this.asks[i]!.top || box.y + box.h > VIEW_H ||
-            meets(this.obstacles, 0, hard, box) || meets(this.obstacles, n, n + held, box)) continue;
+            meets(this.obstacles, 0, hard, box) || meets(this.obstacles, n, n + held, box)) {
+          if (!this.refit(i, box, held, camX, camY)) continue;
+        }
         // kept with the same 4 px of air as a placed pill (placePills)
         box.x -= 4;
         box.y -= 4;
@@ -605,6 +647,20 @@ export class EntryLabels {
     }
     this.count = 0;
     this.lineCount = 0;
+    this.frame++;
+  }
+
+  /**
+   * Round 7 (Fable finding 3): moves held pill `i`, whose kept `box` the camera carried to a screen edge, under the top
+   * bar, a HUD box or another held pill, to the nearest free spot by its ring (`refitHeld`; the held boxes follow
+   * obstacles [0, n), so one pass checks them all, and the fuse box may cover it). False: there is none, it hides.
+   */
+  private refit(i: number, box: Box, held: number, camX: number, camY: number): boolean {
+    const ring = this.rings[i]!, ask = this.asks[i]!;
+    if (!refitHeld(this.obstacles, this.n + held, this.soft, ask, box, this.lines, this.lineCount, this.ringsFrom, this.n)) return false;
+    ring.putPill(box.x, box.y, camX, camY);
+    if (box.w === ask.short && box.w < ring.labelWidth) ring.shortPill(true);
+    return true;
   }
 
   /** Whether pill `i` shows where `placePills` put it: not pushed far from its ring or across a cable from it. */
@@ -613,7 +669,60 @@ export class EntryLabels {
     const spot = this.spots[i]!;
     // a pill pushed far from its ring, or across a cable from it, no longer reads as its label: hide it
     const shown = this.moved[i] !== 2 && pillShown(pillReach(this.asks[i]!, spot.x, spot.y, this.lines, this.lineCount), ring.pillWasShown, ring.pillHiddenFrames);
-    return shown;
+    // round 7 (Fable finding 3): a hidden pill (or one whose ring comes back on screen) shows only at a spot it could be
+    // held at for PILL_HOLD_FRAMES
+    return shown && ((ring.pillWasShown && ring.pillVisible) || this.lasts(i));
+  }
+
+  /**
+   * Round 7 (Fable finding 3): whether pill `i` could be held at its spot for PILL_HOLD_FRAMES. Round 6 showed pills that
+   * came back as their ring slid towards a screen edge or Zib's bubble, needed a hold a few frames later and could not
+   * keep it there: they hid after 2–28 frames. So the spot moves with its ring's screen motion (the camera, or a roaming
+   * ring) frame by frame, until the ring leaves the screen (`request`):
+   * - wherever it leaves the screen sideways, the spot pulled back inside (`refitHeld`) must miss the map obstacles
+   *   (obstacles [hard, n), rings as discs) where they will be by then;
+   * - wherever it meets the zone where Zib's bubble may start (`speech`), its ring's other side must be free, at its
+   *   width or its short one.
+   * A ring whose disc is all off screen (a corner) gets no new pill.
+   */
+  private lasts(i: number): boolean {
+    const a = this.asks[i]!, spot = this.spots[i]!, ring = this.rings[i]!;
+    const vx = ring.screenVX, vy = ring.screenVY;
+    const dx = a.ringX - Math.min(Math.max(a.ringX, 0), VIEW_W), dy = a.ringY - Math.min(Math.max(a.ringY, a.top), VIEW_H);
+    if (dx * dx + dy * dy >= RING_R * RING_R) return false;
+    const z = this.speech;
+    for (let k = 1; k <= PILL_HOLD_FRAMES; k++) {
+      const rx = a.ringX + vx * k, ry = a.ringY + vy * k;
+      if (rx < -RING_R || rx > VIEW_W + RING_R || ry < a.top || ry > VIEW_H + RING_R) return true;
+      const x = spot.x + vx * k, y = spot.y + vy * k;
+      const inside = Math.min(Math.max(x, 0), VIEW_W - a.w);
+      // the map moves with the ring, so the pulled-in spot is checked against the obstacles where they are now
+      if (inside !== x && !this.clearAt(inside - vx * k, spot.y, a.w, a.h)) return false;
+      if (z.w > 0 && inside < z.x + z.w && inside + a.w > z.x && y + a.h > z.y && !this.flips(i, k, inside, y)) return false;
+    }
+    return true;
+  }
+
+  /** Whether pill `i`, `k` frames on at screen (x, y), has room on its ring's other side (see `lasts`). */
+  private flips(i: number, k: number, x: number, y: number): boolean {
+    const a = this.asks[i]!, ring = this.rings[i]!, z = this.speech;
+    const vx = ring.screenVX * k, vy = ring.screenVY * k;
+    const my = 2 * (a.ringY + vy) - y - a.h;
+    if (my < a.top || my + a.h > z.y) return false;
+    for (let pass = 0; pass < 2; pass++) {
+      const w = pass === 0 ? a.w : ring.shortWidth;
+      if (pass > 0 && !(w < a.w)) break;
+      // the short pill sits centred on its ring (`refitHeld`)
+      const mx = pass === 0 ? x : Math.min(Math.max(a.ringX + vx - w / 2, 0), VIEW_W - w);
+      // the map moves with the ring; the HUD boxes stay put on screen
+      if (this.clearAt(mx - vx, my - vy, w, a.h) && heldClear(this.obstacles, 0, this.hard, -1, mx, my, w, a.h, 0, 0)) return true;
+    }
+    return false;
+  }
+
+  /** Whether a w × h box at (x, y) misses the map obstacles (obstacles [hard, n), as they are this frame). */
+  private clearAt(x: number, y: number, w: number, h: number): boolean {
+    return heldClear(this.obstacles, this.hard, this.n, this.soft, x, y, w, h, this.ringsFrom, this.n);
   }
 
   /**
@@ -622,7 +731,7 @@ export class EntryLabels {
    */
   private holds(i: number): boolean {
     const ring = this.rings[i]!;
-    if (this.shows(i) || !(ring.pillWasShown && ring.pillVisible)) return false;
+    if (!(ring.pillWasShown && ring.pillVisible) || this.shows(i)) return false;
     return ring.pillHideFrames + 1 < PILL_HOLD_FRAMES;
   }
 

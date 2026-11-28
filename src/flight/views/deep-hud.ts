@@ -274,6 +274,11 @@ export class DeepFlightHud {
     return this.zib.avoid(out, s.zibText, s.state === 'spotted' ? 0 : s.zibT);
   }
 
+  /** Round 7 (Fable finding 3): where Zib's bubble may show from any frame on (`ZibBubble.zone`). */
+  zibZone(out: Box): void {
+    this.zib.zone(out);
+  }
+
   sync(t: number, rm: boolean): void {
     const s = this.s;
     const { sim, run } = s;

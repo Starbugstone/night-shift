@@ -460,6 +460,7 @@ export class DeepFlightView implements SceneView {
     world.addChild(this.tints.worldWash, this.upperWorld);
     this.tints.dawnDecor.addChild(this.dawn.root);
     this.hud = new DeepFlightHud(s);
+    this.hud.zibZone(this.labels.speech);
     this.spotted = new DeepSpottedView(assets);
     this.spotted.photo.stamp = photoStampFor(s.level); // v0.2 presentation
     this.root.addChild(this.camera.root, this.tints.root);
@@ -577,6 +578,7 @@ export class DeepFlightView implements SceneView {
       b.w = 324;
       b.h = 52;
     }
+    const ringsFrom = n;
     for (let i = 0; i < this.rings.length; i++) {
       const ring = this.rings[i]!;
       const p = sim.rings[i]!;
@@ -609,7 +611,7 @@ export class DeepFlightView implements SceneView {
       }
     }
     // round 5 (Fable): the ring the saucer is heading for (where it will be in 0.8 s) places its pill first
-    this.labels.place(n, cam.x, cam.y, fuseBox, saucer.x + saucer.vx * 0.8 - cam.x, saucer.y + saucer.vy * 0.8 - cam.y, hard);
+    this.labels.place(n, cam.x, cam.y, fuseBox, saucer.x + saucer.vx * 0.8 - cam.x, saucer.y + saucer.vy * 0.8 - cam.y, hard, ringsFrom);
     this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0, this.recitals?.coverEars); // v4 UFO pilot
     this.saucer.sync(saucer, t, rm, locking, s.st, lock, sim.field.scramble(saucer.x, saucer.y), sim.st.safe, SAFE_WINDOW);
     if (lifting && !rm) this.saucer.root.y -= Math.min(1, s.st * 6) * 36;

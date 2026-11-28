@@ -12,6 +12,8 @@
 // - round 6 (Fable P3, items 5 and 6): every rendered frame, no two shown pills overlap and none sits off screen, under
 //   the top bar or under Zib's bubble (checkPillBoxes); each pill shows at the launch in every language about as long
 //   as in English.
+// - round 7 (Fable finding 3): the flicker check excuses nothing but a ring leaving the screen, hiding or locking (round 6
+//   also skipped a held pill whose kept spot went off screen or under a HUD box, and 21 flashes came back).
 // The mutation checks switch each rule off in the live view and want the check to fail.
 import './pixi-headless';
 import { Container, Point, type ContainerChild } from 'pixi.js';
@@ -141,7 +143,8 @@ type Tamper = (scene: DeepFlightScene) => () => void;
 /**
  * Round 5 (Fable): frames each pill has been shown in a row, by its index in the route-pill layer. A shown run that
  * ends shorter than PILL_HOLD_FRAMES is a flicker, unless its ring left the screen (`EntryLabels.request`), was hidden
- * or is locking. Checked every rendered frame (a 3-frame flash falls between the EVERY-frame samples).
+ * or is locking. Checked every rendered frame (a 3-frame flash falls between the EVERY-frame samples). Round 7: nothing
+ * else is excused.
  */
 function trackRuns(scene: DeepFlightScene, at: string, runs: number[], out: Check): void {
   const layer = find(scene.view, ROUTE_PILLS)!;
@@ -162,9 +165,11 @@ function trackRuns(scene: DeepFlightScene, at: string, runs: number[], out: Chec
     const p = root.getGlobalPosition();
     const gone = !shown(root) || p.x < -RING_R || p.x > 540 + RING_R || p.y < top || p.y > 960 + RING_R;
     if (gone || scene.sim.lock.ring === i || scene.sim.lockedRing === i) continue;
-    if (heldSpotTaken(scene, root, k)) continue;
+    // round 7 (Fable finding 3): no excuse for a held spot the camera carried to an edge or under a HUD box (round 6
+    // skipped those showings, and 21 flashes of 2–28 frames came back); the reason is only named in the failure
     const r = scene.sim.ringRef[i]!;
-    out.flickers.push(`${at} ${r.target}:${r.entry}: pill shown ${len} frames (${(len * DT).toFixed(2)} s)`);
+    const why = heldSpotTaken(scene, root, k);
+    out.flickers.push(`${at} ${r.target}:${r.entry}: pill shown ${len} frames (${(len * DT).toFixed(2)} s)${why ? `, its kept spot ${why}` : ''}`);
   }
 }
 
@@ -179,27 +184,28 @@ function keepSpot(pill: ContainerChild, k: number): void {
 }
 
 /**
- * Round 6 (Fable P3): a held pill keeps its spot in world space, and hides at once when the camera carries that spot off
- * screen, under the top bar, or under a HUD box (Zib's bubble, the minimap, the target chips): it may not stay there
- * (checkPillBoxes), and nowhere near its ring is free, so that early end is not a flash.
+ * Round 6 (Fable P3): a held pill keeps its spot in world space, and the camera can carry that spot off screen, under the
+ * top bar or under a HUD box (Zib's bubble, the minimap, the target chips), where it may not stay (checkPillBoxes).
+ * Round 7 (Fable finding 3): the view then slides the kept spot back inside (`EntryLabels.refit`), so this only names
+ * where a flash's last spot went, for the failure message; it excuses nothing.
  */
-function heldSpotTaken(scene: DeepFlightScene, root: ContainerChild, k: number): boolean {
+function heldSpotTaken(scene: DeepFlightScene, root: ContainerChild, k: number): string {
   const spot = lastSpots[k];
-  if (!spot) return false;
+  if (!spot) return '';
   // the panel, as in checkPillBoxes
   const at = (root as Container).toGlobal(new Point(spot.x, spot.y - 20));
   const box = { x: at.x, y: at.y, w: spot.w, h: 40 };
   const top = HUD_ROW.y + HUD_ROW.h + 2;
-  if (box.x < 0.01 || box.x + box.w > 539.99 || box.y < top + 0.01 || box.y + box.h > 959.99) return true;
+  if (box.x < 0.01 || box.x + box.w > 539.99 || box.y + box.h > 959.99) return 'went off screen';
+  if (box.y < top + 0.01) return 'went under the top bar';
   const meets = (o: Rect, air: number) => box.x < o.x + o.w + air && o.x - air < box.x + box.w && box.y < o.y + o.h + air && o.y - air < box.y + box.h;
-  // from the first frame of a line (the view keeps pills out from then; the bubble fades in over it)
   const bubble = find(scene.view, ZIB_BUBBLE);
   if (bubble?.visible) {
     const b = bubble.getBounds();
-    if (meets({ x: b.x, y: b.y, w: b.width, h: b.height }, 4)) return true;
+    if (meets({ x: b.x, y: b.y, w: b.width, h: b.height }, 4)) return "went under Zib's bubble";
   }
   const hud = (scene as unknown as { look: { peek(): { hud: { avoid: Rect[] } } | undefined } }).look.peek()?.hud.avoid ?? [];
-  return hud.some(o => meets(o, 4));
+  return hud.some(o => meets(o, 4)) ? 'went under a HUD box' : '';
 }
 
 /** Where to steer the autopilot: target `target`'s entry `entry`, or (target -1) entry `entry` of every target. */
@@ -508,7 +514,16 @@ describe('route pills on the real flight view', () => {
     const l5 = deep.find(l => l.id === 'level5')!;
     const target = l5.map.targets.findIndex(t => t.entries.some(e => e.roomId === 'sal_dock'));
     const entry = l5.map.targets[target]!.entries.findIndex(e => e.roomId === 'sal_dock');
-    inEnglish(() => flyDeep(l5, 300, out, tampered(me => { for (let i = 0; i < me.count; i++) me.asks[i]!.short = 0; }), { target, entry }));
+    // round 7: in `ask`, not only before `place` (it asks again on each pass after a hold, which put the short width back)
+    const noShort: Tamper = () => {
+      const real = EntryRingView.prototype.ask;
+      EntryRingView.prototype.ask = function (this: EntryRingView, ...args: Parameters<EntryRingView['ask']>): void {
+        real.apply(this, args);
+        args[2].short = 0;
+      };
+      return () => { EntryRingView.prototype.ask = real; };
+    };
+    inEnglish(() => flyDeep(l5, 300, out, noShort, { target, entry }));
     expect(shortLocks(out).join('\n')).toMatch(/sal_dock: pill shown 0\.00 s/);
   }, 240_000);
 
@@ -518,6 +533,36 @@ describe('route pills on the real flight view', () => {
     const l10 = deep.find(l => l.id === 'level10')!;
     inEnglish(() => flyDeep(l10, 300, out, tampered(me => { for (let i = 0; i < me.count; i++) me.rings[i]!.pillHideFrames = PILL_HOLD_FRAMES; })));
     expect(out.flickers.join('\n')).toMatch(/pill shown \d+ frames/);
+  }, 240_000);
+
+  // round 7 (Fable finding 3): without the slide back inside the screen (`EntryLabels.refit`), L5's tunnel pill hides
+  // under Zib's bubble 23 frames after it shows; without the forecast (`EntryLabels.lasts`), L3's back door pill comes
+  // back as its ring slides out at the right edge and hides 8 frames later, and L9's canopy pill drifts towards Zib's
+  // bubble, which starts a line 10 frames later and leaves it no spot
+  const without = (rule: 'refit' | 'lasts', value: boolean): Tamper => () => {
+    const proto = EntryLabels.prototype as unknown as Record<typeof rule, () => boolean>;
+    const real = proto[rule];
+    expect(real).toBeTypeOf('function');
+    proto[rule] = () => value;
+    return () => { proto[rule] = real; };
+  };
+
+  it('catches held pills that hide at an edge or under Zib\'s bubble at once (mutation check)', () => {
+    const l5 = deep.find(l => l.id === 'level5')!;
+    const out = fresh();
+    inEnglish(() => flyDeep(l5, 20, out, without('refit', false)));
+    expect(out.flickers.join('\n')).toMatch(/pill shown \d+ frames .*went under Zib's bubble/);
+  }, 240_000);
+
+  it('catches pills shown where they can\'t be held (mutation check)', () => {
+    const l3 = deep.find(l => l.id === 'level3')!;
+    const l9 = deep.find(l => l.id === 'level9')!;
+    const edge = fresh();
+    inEnglish(() => flyDeep(l3, 300, edge, without('lasts', true), { target: 1, entry: 1 }));
+    expect(edge.flickers.join('\n')).toMatch(/pill shown \d+ frames .*went off screen/);
+    const zib = fresh();
+    inEnglish(() => flyDeep(l9, 300, zib, without('lasts', true), { target: 2, entry: 1 }));
+    expect(zib.flickers.join('\n')).toMatch(/pill shown \d+ frames .*went under Zib's bubble/);
   }, 240_000);
 
   // round 6 (Fable P3): a held pill that reserves nothing lets another pill land on its spot (L10's Black Knight arch

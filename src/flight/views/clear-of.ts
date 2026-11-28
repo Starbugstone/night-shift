@@ -1,5 +1,5 @@
 import { VIEW_H, VIEW_W } from '../../contracts';
-import { maxWireOffset } from '../sim';
+import { maxWireOffset, RING_R } from '../sim';
 
 /** A screen-space rectangle. */
 export interface Box { x: number; y: number; w: number; h: number }
@@ -326,6 +326,80 @@ export function pillReach(a: PillAsk, x: number, y: number, lines: readonly Pill
 /** Whether a pill at `reach` gaps shows, given whether it showed last frame and how many frames it has been hidden. */
 export function pillShown(reach: number, wasShown: boolean, hiddenFrames: number): boolean {
   return wasShown ? reach <= PILL_FAR : reach <= PILL_NEAR && hiddenFrames >= PILL_HOLD_FRAMES;
+}
+
+/**
+ * Round 7 (Fable finding 3): a held pill (`EntryLabels.place`) keeps its last spot in world space, so the camera can carry
+ * it off screen, under the top bar, under a HUD box or onto another held pill. Instead of hiding it there at once (a
+ * 2–28 frame flash), this moves `box` (the pill's screen box, without air) to the nearest spot inside the screen and below
+ * `a.top` that misses `obs[0..n)` (but `soft`), still under or over its ring (`a.reach`), within PILL_FAR gaps of it and
+ * on its side of every one of `lines[0..lineCount)`. `obs[ringsFrom, ringsTo)` are ring boxes (RING_R and 8 px of air):
+ * the held pill may come into a ring's air but never over its disc. In order: at its width, then at `a.short` (route name
+ * only); 8 px inside the screen, then flush with its edge; the spot pulled inside the screen or that spot mirrored to the
+ * ring's other side, each also moved to every side of each obstacle it meets. Writes the spot and width into `box`, or
+ * returns false and leaves it as it was when none is free. Rewrites `a.w`. Allocates nothing.
+ */
+export function refitHeld(obs: readonly Box[], n: number, soft: number, a: PillAsk, box: Box, lines = NO_LINES, lineCount = 0, ringsFrom = n, ringsTo = n): boolean {
+  const h = box.h;
+  for (let pass = 0; pass < 4; pass++) {
+    const w = pass < 2 ? box.w : a.short ?? 0;
+    if (pass >= 2 && !(w > 0 && w < box.w)) break;
+    const m = pass % 2 === 0 ? MARGIN : 0;
+    // the short pill sits centred on its ring, as `placePills` puts it
+    const bx = pass < 2 ? box.x : a.ringX - w / 2;
+    let bestX = NaN, bestY = NaN, best = Infinity;
+    for (let base = 0; base < 2; base++) {
+      const x0 = bx < 0 || bx + w > VIEW_W ? clampX(bx, w, m) : bx;
+      const by = base === 0 ? box.y : 2 * a.ringY - box.y - h;
+      const y0 = by < a.top || by + h > VIEW_H ? clampY(by, h, a.top, m) : by;
+      for (let j = -1; j < n; j++) {
+        const o = j < 0 ? null : obs[j]!;
+        if (o && (j === soft || !hits(obs, j, x0, y0, w, h, ringsFrom, ringsTo))) continue;
+        for (let e = 0; e < (o ? 4 : 1); e++) {
+          const x = !o || e > 1 ? x0 : clampX(e === 0 ? o.x - w - 0.5 : o.x + o.w + 0.5, w, m);
+          const y = !o || e < 2 ? y0 : clampY(e === 2 ? o.y - h - 0.5 : o.y + o.h + 0.5, h, a.top, m);
+          const d = (x - bx) ** 2 + (y - box.y) ** 2;
+          if (d >= best || x < 0 || x + w > VIEW_W || y < a.top || y + h > VIEW_H) continue;
+          if (x >= a.ringX + a.reach || x + w <= a.ringX - a.reach || !heldClear(obs, 0, n, soft, x, y, w, h, ringsFrom, ringsTo)) continue;
+          a.w = w;
+          if (pillReach(a, x, y, lines, lineCount) > PILL_FAR) continue;
+          best = d;
+          bestX = x;
+          bestY = y;
+        }
+      }
+    }
+    if (best === Infinity) continue;
+    box.x = bestX;
+    box.y = bestY;
+    box.w = w;
+    return true;
+  }
+  return false;
+}
+
+/** Whether a w × h box at (x, y) meets obstacle `j`: a ring's disc (RING_R + 2) for a ring box, else the box. */
+function hits(obs: readonly Box[], j: number, x: number, y: number, w: number, h: number, ringsFrom: number, ringsTo: number): boolean {
+  const o = obs[j]!;
+  if (!(x < o.x + o.w && x + w > o.x && y < o.y + o.h && y + h > o.y)) return false;
+  if (j < ringsFrom || j >= ringsTo) return true;
+  const cx = o.x + o.w / 2, cy = o.y + o.h / 2;
+  const dx = cx - Math.min(Math.max(cx, x), x + w), dy = cy - Math.min(Math.max(cy, y), y + h);
+  return dx * dx + dy * dy < (RING_R + 2) ** 2;
+}
+
+/** Whether a w × h box at (x, y) misses every one of `obs[from..n)` but `soft`, the ring boxes as discs (see `refitHeld`). */
+export function heldClear(obs: readonly Box[], from: number, n: number, soft: number, x: number, y: number, w: number, h: number, ringsFrom: number, ringsTo: number): boolean {
+  for (let j = from; j < n; j++) if (j !== soft && hits(obs, j, x, y, w, h, ringsFrom, ringsTo)) return false;
+  return true;
+}
+
+function clampX(x: number, w: number, m: number): number {
+  return Math.min(Math.max(x, m), VIEW_W - m - w);
+}
+
+function clampY(y: number, h: number, top: number, m: number): number {
+  return Math.min(Math.max(y, top), VIEW_H - m - h);
 }
 
 function keep(obs: Box[], n: number, x: number, y: number, a: PillAsk): number {

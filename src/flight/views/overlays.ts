@@ -60,6 +60,9 @@ export class FlightTintView {
 /** Display label of Zib's speech bubble (tests/flight-pill-view.test.ts keeps route pills from under it). */
 export const ZIB_BUBBLE = 'zib-bubble';
 
+/** Height of Zib's speech card with one line (it grows with longer lines). */
+const CARD_MIN_H = 64;
+
 export class ZibBubble {
   readonly root = new Container({ label: ZIB_BUBBLE });
   private readonly card = new Shape();
@@ -68,7 +71,7 @@ export class ZibBubble {
   private readonly blink: Container;
   private readonly panic: Container | null;
   private message = '';
-  private height = 64;
+  private height = CARD_MIN_H;
 
   constructor(assets: Assets) {
     this.portrait = paintedSprite('zib-portrait', 90, 90, (g) => drawPortrait(g, assets, 'zib', 0, 0, 84, 0, false));
@@ -100,7 +103,7 @@ export class ZibBubble {
   private layout(msg: string): void {
     if (msg === this.message) return;
     this.message = msg;
-    this.height = Math.max(64, 24 + this.words.setBlock(msg, 128, 0, 340));
+    this.height = Math.max(CARD_MIN_H, 24 + this.words.setBlock(msg, 128, 0, 340));
     const y = VIEW_H - 28 - this.height;
     this.words.y = y + 12;
     this.card.draw(keyOf(this.height), (g) => panelPath(g, 112, y, VIEW_W - 136, this.height,
@@ -115,11 +118,23 @@ export class ZibBubble {
   avoid(out: Box, msg: string, time: number): boolean {
     if (time <= 0) return false;
     this.layout(msg);
+    this.box(out, this.height);
+    return true;
+  }
+
+  /**
+   * Round 7 (Fable finding 3): the least box `avoid` gives (a one-line card), where Zib's bubble may show from any frame
+   * on. A new route pill must not drift into it before its hold is over (`EntryLabels.speech`).
+   */
+  zone(out: Box): void {
+    this.box(out, CARD_MIN_H);
+  }
+
+  private box(out: Box, height: number): void {
     out.x = this.portrait.x - 45 - 4;
-    out.y = Math.min(this.portrait.y - 45, VIEW_H - 28 - this.height) - 4;
+    out.y = Math.min(this.portrait.y - 45, VIEW_H - 28 - height) - 4;
     out.w = VIEW_W - 24 + 4 - out.x;
     out.h = VIEW_H - out.y;
-    return true;
   }
 }
 
