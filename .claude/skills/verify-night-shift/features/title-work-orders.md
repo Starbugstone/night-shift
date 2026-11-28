@@ -28,7 +28,7 @@ Preconditions:
 - **Check the locked card.** Run `await game.tap(270, 558)`. The scene stays `workorders` and a notice asks you to deliver Farmer Doyle first. Capture `await game.capture('larry-locked')`.
 - **Start a deep shift.** On a fresh list at zero scroll, tap `(270, 762)` for L3 or the visible top of L4 at `(270, 918)`. Expect `memo`, tap **Start shift** at `(270, 894)`, then expect `flight`. Check `window.__nightShift.run.level.id` for the chosen level and verify that `await game.stored()` is still null.
 - **Scroll to the concepts.** Twice, run `await game.drag(270, 850, 270, 330, 30); await game.step(90)`. Capture the three cards and check for **MISSION CONCEPT · NOT PLAYABLE** or **PROJET DE MISSION · NON JOUABLE**. Tap `(270, 400)`, `(270, 604)` and `(270, 808)`. Each tap stays on Work Orders, with no save written.
-- **Open a memo.** Run `await game.tap(270, 354); await game.expectScene('memo')`. Tap the memo body at `(270, 420)` to finish the text reveal. Capture the Farmer Doyle work-order memo. Tap `(48, 48)` to return to the list.
+- **Open a memo.** Run `await game.tap(270, 354)`. On a save where L1 isn't delivered, the intro film plays first: `await game.expectScene('film'); await game.tap(454, 53)` taps **Skip** (the film is checked in [story films](../../../../docs/story/films.md) and `tests/ui-films.test.ts`). Then `await game.expectScene('memo')`. Tap the memo body at `(270, 420)` to finish the text reveal. Capture the Farmer Doyle work-order memo. Tap `(48, 48)` to return to the list.
 - **Check L2 after delivery.** From the reloaded Work Orders after the tutorial delivery, verify the L1 card's stars and best time. Run `await game.tap(270, 558); await game.expectScene('memo')` and capture the Larry memo.
 
 ## Gotchas

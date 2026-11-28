@@ -17,6 +17,7 @@ import { FlightScene } from '../src/flight/scene';
 import { isDeep, LEVELS, workOrderNumber } from '../src/levels/levels';
 import { DeepRun } from '../src/levels/run';
 import { Button } from '../src/ui/widgets';
+import { FILMS } from '../src/ui/films';
 
 const raw = import.meta.glob('../src/**/*.ts', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const files = Object.entries(raw).map(([p, text]) => ({ path: p.replace(/^\.\.\//, ''), text }));
@@ -31,6 +32,8 @@ const SCREEN_SFX: Readonly<Record<string, readonly string[]>> = {
   // the report's stamps, star and outcome cues, timed by its reveal animation
   'src/ui/report.ts': ['stamp', 'fail', 'lock_on', 'success'],
   'src/ui/dispatch-finale.ts': ['stamp'],
+  // v4 films: each film's cues are data on its shots (src/ui/films.ts), timed by the film, checked below
+  'src/ui/film.ts': ['name'],
   // the Field Check card's crash on a failed practice
   'src/ui/field-check.ts': ['crash'],
 };
@@ -68,6 +71,18 @@ describe('no UI click or tap sounds', () => {
     expect(hook, 'the unlock hook in src/core/game.ts').not.toBeNull();
     expect(hook![1]).not.toMatch(/sfx|speak/);
     for (const path of ['src/core/input.ts', 'src/core/scenes.ts']) expect(strip(raw[`../${path}`]!), path).not.toMatch(/\.sfx\s*\(/);
+  });
+
+  it('films play soft story cues from the palette, never a UI sound', () => {
+    const names = new Set(sfxNames());
+    for (const film of FILMS) {
+      for (const shot of film.shots) {
+        for (const [, name] of shot.sfx ?? []) {
+          expect(names.has(name), `${film.id}/${shot.id} plays ${name}`).toBe(true);
+          expect(name, `${film.id}/${shot.id}`).not.toMatch(UI_NAME);
+        }
+      }
+    }
   });
 
   it('plays only the listed cues on the screens outside play', () => {

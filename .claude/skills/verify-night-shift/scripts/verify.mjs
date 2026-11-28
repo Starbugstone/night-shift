@@ -344,6 +344,11 @@ try {
       await game.tap(270, 686);
       await game.expectScene('workorders');
       await game.tap(270, target.startsWith('farm_') ? 354 : 558);
+      // a fresh save plays the intro film before Farmer Doyle's first memo: Skip it
+      if (target.startsWith('farm_')) {
+        await game.expectScene('film');
+        await game.tap(454, 53);
+      }
       await game.expectScene('memo');
       await game.tap(270, 894);
       await game.flyRing(target);

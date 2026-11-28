@@ -56,6 +56,8 @@ export interface SaveData {
   /** The player finished or skipped the Field Check offer. */
   dispatch2199Finale?: true;
   fieldCheckSeen: boolean;
+  /** v4 films: story films already played (src/ui/films.ts `FilmId`s); each plays once by itself. */
+  filmsSeen: string[];
   /** Access to the inserted bridge and Maple Court for returning players. */
   bridgeAccess: boolean;
   /** Reports filed so far; rotates Vrell's comments. */
@@ -113,6 +115,7 @@ export function defaultSave(): SaveData {
     legacyDispatch: false,
     bridgeAccess: false,
     fieldCheckSeen: false,
+    filmsSeen: [],
     reports: 0,
     lang: 'auto',
     trophies: {},
@@ -240,6 +243,7 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   out.legacyDispatch = raw.legacyDispatch === true || (oldDispatch && played);
   out.fieldCheckSeen = raw.fieldCheckSeen === true || (oldDispatch && out.levels.level2.delivered);
   if (raw.dispatch2199Finale === true) out.dispatch2199Finale = true;
+  out.filmsSeen = Array.isArray(raw.filmsSeen) ? [...new Set(raw.filmsSeen.filter((f): f is string => typeof f === 'string'))].slice(0, 32) : [];
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
   out.trophies = readTrophies(raw.trophies);
   out.specimens = readSpecimens(raw.specimens);

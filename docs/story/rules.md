@@ -103,8 +103,14 @@ The storyboard is reviewed before rendering, and the film follows it.
   2.4–7 s.
 - A caption never crosses a cut and never overlaps the next one. If a line needs more time than the action, slow
   the calm end of the shot so the camera keeps creeping. Don't cut the line short or speed up the reading.
-- In the game, a film never moves to the next page before its reading time. A tap moves on once the line can
-  be read, and Skip is always there. `src/ui/dispatch-finale.ts` is the reference.
+- In the game, a film plays its captions for their full reading time. A tap jumps to the next shot only once
+  the line has been fully visible for its reading time or 2.4 s (`FRESH_LINE_SECONDS`), whichever is shorter.
+  The end card waits for a tap. Skip is always there. Each film plays once by itself and can be replayed from
+  its level's memo.
+- The engine is `src/ui/film.ts` (timing in `src/core/film-time.ts`), the films and their triggers are in
+  `src/ui/films.ts`, and the storyboards are in [films.md](films.md). Keyframes are 896×1200 webp files in
+  `public/film/<film>/<shot>.webp`, loaded on demand rather than through the art manifest.
+  `?film=<id>` plays one film.
 
 ### Sound and motion
 

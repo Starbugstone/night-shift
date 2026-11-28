@@ -1295,7 +1295,7 @@ export const en = {
       level12: "Three residents. Grimsby stays. Your mother called, Zib. I told her: adequate.",
       level9: "Three 1955 witnesses logged and the timeline held. Bonus: OBELISK™ Legal can't patent time travel now. Why is it blinking two more dates?",
       level1: "Not dead, not fired, and Doyle is in the hold. Take Route 9 into town—Spin City's night clerk is next.",
-      level2: "Larry is logged and Accounting traced forty socks to your saucer. Temporary lanyard’s in the tray. Two calls on Birch Lane, then the bulk order.",
+      level2: "Larry is logged and Accounting traced forty socks to your saucer. Temporary lanyard’s in the tray—come to my office.",
       level3: "Suburbia cleared, though Gary filed a complaint and Mrs. Pruitt mailed your photo to City Hall. We're going downtown.",
       level4: "Mayor returned, mostly intact. Nigel's ledger has a black rock sold to an 'offshore consultancy', and the Mayor's desk logged its crate to Barnacle Bay. Follow the coast.",
       level5: "Bubbles left a polite note—who taught a dolphin to write?—and Pete's log triggered a Compliance audit. Pack the brass thermometer.",
@@ -3188,6 +3188,40 @@ export const en = {
       // L8 Patent Valley
       'first-edition bone': "Humanity's very first tool—a heavy bone picked up by an ape. Security immediately filed it as an unlicensed weapon.",
     } satisfies Record<string, string>,
+  },
+  // v4 films: the Season 1 story films (src/ui/films.ts, docs/story/films.md)
+  films: {
+    skip: 'Skip',
+    watch: 'Roll the film',
+    replay: 'Watch film',
+    loading: 'Rolling film…',
+    tap: 'Tap to continue',
+    quote: { open: '“', close: '”' },
+    speakers: { narration: 'Bureau file', vrell: 'Vrell', zib: 'Zib', krix: 'Krix' },
+    opening: {
+      title: 'The Opening',
+      sub: 'Season 1 · Route 9, tonight',
+      lines: {
+        incident: 'Incident report: last quarter’s intern. Routine pickup. Eyes on his watch.',
+        zap: 'The power lines were solid. The bread was toast. So was he.',
+        fired: 'Vrell fired him. Someone else snapped him up before the ink dried.',
+        arrives: 'The replacement: Zib. Unpaid. Their only reference is from their mum.',
+        keys: 'The keys. That bandage is load-bearing. Do not peel it.',
+        launch: 'Route 9. One farmer, fast asleep. Mind the power lines, Zib.',
+      },
+    },
+    probation: {
+      title: 'Off Probation',
+      sub: 'Season 1 · Birch Lane, next',
+      lines: {
+        hold: 'Shift two. One laundromat clerk, delivered asleep. Plus forty odd socks.',
+        nothing_to_stamp: 'No bruises. No lawsuit. And I had a display case ready for you.',
+        tube: 'Head Office read the report. Now it wants three sleepers in one night.',
+        lanyard: 'A real lanyard! Should it say TEMPORARY on both sides?',
+        two_calls_first: 'The suburbs can wait. First, two small live calls: a baker and a garage.',
+        birch_lane: 'Birch Lane. The porch lights bite. Take the practice drill. Or don\'t.',
+      },
+    },
   },
 };
 

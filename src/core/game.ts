@@ -18,6 +18,9 @@ import { DeepChoiceScene } from '../ui/deep-choice';
 import { FieldCheckAbduction, FieldCheckCard } from '../ui/field-check';
 import { LoadingScene } from '../ui/loading';
 import { DispatchFinale, FINALE_BEAT } from '../ui/dispatch-finale';
+import { FilmScene } from '../ui/film';
+import { preloadFilm } from '../ui/film-art';
+import { FILM_AFTER, FILM_BEFORE, FILM_IDS, filmOfLevel, filmSeen, markFilmSeen, type FilmId } from '../ui/films';
 import { MemoScene } from '../ui/memo';
 import { ReportScene, deepReport, tutorialReport } from '../ui/report';
 import { TitleScene } from '../ui/title';
@@ -228,7 +231,11 @@ export class Game implements Shell {
     const room = params.get('room');
     const flight = params.get('flight');
     const level = params.get('level');
-    if (room && isRoomId(room)) {
+    const film = params.get('film');
+    if (film && (FILM_IDS as readonly string[]).includes(film)) {
+      // v4 films: `?film=<id>` plays one story film, then the title (testing and review)
+      this.playFilm(film as FilmId, () => this.toTitle());
+    } else if (room && isRoomId(room)) {
       this.startRoom(room);
     } else if (flight && Number(flight) >= 1) {
       this.toFlight(clampLevel(Number(flight) - 1));
@@ -269,6 +276,8 @@ export class Game implements Shell {
 
   toWorkOrders(): void {
     this.ctx.hunt = undefined;
+    // v4 films: the intro plays before the first Route 9 memo, so its frames start loading here
+    if (!this.save.levels.level1.delivered && !filmSeen(this.save, 'opening')) preloadFilm('opening');
     this.flight = null;
     this.scenes.go('workorders', () => new WorkOrdersScene(this));
   }
@@ -283,9 +292,19 @@ export class Game implements Shell {
 
   toMemo(levelIndex: number, hunt?: HuntTarget): void {
     const i = clampLevel(levelIndex);
-    const finale = LEVELS[i]!.id === 'level12';
+    const id = LEVELS[i]!.id;
+    // v4 films: a story film plays once before this level's first memo
+    const before = FILM_BEFORE[id];
+    if (before && !hunt && !filmSeen(this.save, before) && !this.save.levels[id].delivered) {
+      return this.playFilm(before, () => this.toMemo(i));
+    }
+    const finale = id === 'level12';
     const practice = finale ? () => this.practiceRecital(i) : i === FIELD_CHECK_INDEX ? () => this.toFieldCheck() : undefined;
-    const replay = finale && this.save.levels.level12.delivered ? () => this.showDispatchFinale(() => this.toMemo(i)) : undefined;
+    // the level's story film, once seen; 2199 keeps its Bureau epilogue until a film takes it over
+    const film = filmOfLevel(id);
+    // (a delivered level is past its film's moment: older saves can watch it too)
+    const replay = film && (filmSeen(this.save, film) || this.save.levels[id].delivered) ? () => this.playFilm(film, () => this.toMemo(i))
+      : finale && this.save.levels.level12.delivered ? () => this.showDispatchFinale(() => this.toMemo(i)) : undefined;
     this.scenes.go('memo', () => new MemoScene(this, i, practice, replay, hunt));
   }
 
@@ -299,11 +318,25 @@ export class Game implements Shell {
       onLocked: finish, onSunrise: finish, onQuit: finish }));
   }
 
+  /** v4 films: play a story film (marking it seen), then `then`. */
+  playFilm(id: FilmId, then: () => void): void {
+    if (!this.save.filmsSeen.includes(id)) this.setSave(markFilmSeen(this.save, id));
+    this.scenes.go('film', () => new FilmScene(this, id, then));
+  }
+
   private showDispatchFinale(finish: () => void): void {
     this.scenes.go('dispatch-finale', () => {
       if (!this.save[FINALE_BEAT]) this.setSave({ ...this.save, [FINALE_BEAT]: true });
       return new DispatchFinale(this, finish);
     });
+  }
+
+  /** The film a first delivery of this level unlocks, if it hasn't played yet (it starts loading). */
+  private filmAfter(levelId: string, delivered: boolean): FilmId | undefined {
+    const film = FILM_AFTER[levelId as keyof typeof FILM_AFTER];
+    if (!film || !delivered || filmSeen(this.save, film)) return undefined;
+    preloadFilm(film);
+    return film;
   }
 
   private toFieldCheck(): void {
@@ -429,8 +462,11 @@ export class Game implements Shell {
     const outcome = applyRun(this._save, LEVELS[i]!.id, abduct, flight);
     if (persist) this.setSave(outcome.save);
     const practiceNext = persist && LEVELS[i]?.id === 'level2' && outcome.stars[0] && !outcome.save.fieldCheckSeen;
+    const advance = practiceNext ? () => this.toFieldCheck() : undefined;
+    const film = persist ? this.filmAfter(LEVELS[i]!.id, outcome.stars[0] === true) : undefined;
+    const watch = film ? () => this.playFilm(film, advance ?? (() => this.toWorkOrders())) : undefined;
     this.scenes.go('report', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome,
-      practiceNext ? () => this.toFieldCheck() : undefined), false, transition);
+      advance, watch, watch && tr().films.watch), false, transition);
   }
 
   toAbortChoice(levelIndex: number, room: RoomId, flight: FlightResult): void {
@@ -555,9 +591,12 @@ export class Game implements Shell {
     const outcome = applyDeepRun(this._save, run.level.id, run.summary());
     this.setSave(outcome.save);
     this.run = null;
-    const finale = run.level.id === 'level12' && run.phase === 'done' && !this.save[FINALE_BEAT]
-      ? () => this.showDispatchFinale(() => this.toWorkOrders()) : undefined;
-    this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome, undefined, finale), false, transition);
+    // v4 films: a first delivery rolls its story film (2199: the season finale) after the report
+    const film = this.filmAfter(run.level.id, run.phase === 'done');
+    const finale = film ? () => this.playFilm(film, () => this.toWorkOrders())
+      : run.level.id === 'level12' && run.phase === 'done' && !this.save[FINALE_BEAT] ? () => this.showDispatchFinale(() => this.toWorkOrders()) : undefined;
+    this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome, undefined, finale,
+      film ? tr().films.watch : undefined), false, transition);
   }
 
   // ---------------------------------------------------------------- debug
