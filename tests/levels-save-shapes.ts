@@ -40,6 +40,7 @@ export function notSaveShapes(): string[] {
     version: [1, 2, 3, 0],
     levels: [{}, ...[...LEVEL_IDS, 'level99'].flatMap(id => emptyRecords.map(r => ({ [id]: r })))],
     upgrades: [[], [null], ['warp_drive'], [1, {}]],
+    filmsSeen: [[], [null], [1, {}]],
     lang: ['', 'broken', 'EN'],
     trophies: [{}, { 'Not an item': { count: 1, room: 'bedroom' } }, { x: null }],
     specimens: [{}, { 'Not a specimen': { count: 1, first: 0, probed: false } }, { x: null }],
@@ -104,6 +105,10 @@ export function nestedDamageShapes(): { name: string; value: string; progress: b
   const shelves: [string, Record<string, unknown>][] = [
     ['upgrades with a number', { upgrades: ['hush_drive', 7] }],
     ['upgrades with null', { upgrades: [null, 'beam_dampener'] }],
+    // Season 1 films (2026-11-28): the seen list keeps unique strings, at most 32
+    ['films seen with a number', { filmsSeen: ['opening', 7] }],
+    ['films seen with a repeat', { filmsSeen: ['opening', 'opening'] }],
+    ['films seen past 32', { filmsSeen: Array.from({ length: 33 }, (_, i) => `film${i}`) }],
     ...[null, 3, 'x', [], { count: 0, room, first: 0 }, { count: 1, room: 7, first: 0 }].map(e => [`trophy ${JSON.stringify(e)}`, { trophies: { [item]: e } }] as [string, Record<string, unknown>]),
     ...[null, 3, [], { count: 'x', first: 0, probed: true, probes: 1 }, { count: 1, first: 0, probes: -1 }].map(e => [`specimen ${JSON.stringify(e)}`, { specimens: { [specimen]: e } }] as [string, Record<string, unknown>]),
     // v0.2 council round 5 (Sol P3): a kept entry with a mistyped field (see shelfFieldDamageShapes)

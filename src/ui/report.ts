@@ -188,13 +188,15 @@ export class ReportScene implements Scene {
     readonly outcome: RunOutcome,
     private readonly advance?: () => void,
     private readonly finale?: () => void,
+    /** v4 films: the next button's label when `finale` plays a story film. */
+    finaleLabel?: string,
   ) {
     this.end = model.headline ? TABLOID_END : END;
     const successor = levelIndex + 1;
     const branching = LEVELS[levelIndex]?.requires || LEVELS[successor]?.requires;
     // At a fork the report returns to Work Orders so the player chooses the date.
     this.hasNext = !branching && isLevelUnlocked(outcome.save, successor);
-    this.next.label = finale ? tr().dispatch2199.replay : advance ? tr().fieldCheckControls.short : model.delivered && this.hasNext ? tr().common.next : tr().common.workOrders;
+    this.next.label = finale ? finaleLabel ?? tr().dispatch2199.replay : advance ? tr().fieldCheckControls.short : model.delivered && this.hasNext ? tr().common.next : tr().common.workOrders;
     if (this.next.label.length > 9) this.next.size = 26;
   }
 

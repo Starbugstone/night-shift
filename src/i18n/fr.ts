@@ -1319,7 +1319,7 @@ export const fr: Strings = {
       level12: "Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : correct.", // v0.2 season review (Neon): Vrell's word in French is « correct »
       level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, le juridique d'OBELISK™ ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
       level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la route 9 vers la ville : le veilleur de Spin City vous attend.',
-      level2: "Larry est recensé. La compta a remonté la piste de quarante chaussettes jusqu’à votre soucoupe. Votre badge provisoire est dans le bac. Deux missions chemin des Bouleaux, puis la commande en gros.",
+      level2: "Larry est recensé et la compta a suivi quarante chaussettes jusqu’à votre soucoupe. Badge provisoire dans le bac — passez au bureau.",
       level3: 'Banlieue bouclée, mais Gary a porté plainte et Mme Pruitt a envoyé votre photo à la mairie. Direction le centre-ville.',
       level4: "Maire livré, presque intact. Le registre de Nigel note une pierre noire vendue à un « cabinet de conseil offshore », et le bureau du maire a suivi sa caisse jusqu'à Barnacle Bay. Suivez la côte.",
       level5: "Bubulle a laissé un mot poli — qui apprend à écrire à un dauphin ? — et le registre de Pete a déclenché un audit. Sortez le thermomètre en laiton.",
@@ -3195,6 +3195,40 @@ export const fr: Strings = {
       'lime mankini': "Maillot bretelles vert radioactif sous double vitre blindée. Très joli… vu à deux parsecs.",
       // L8 Vallée des brevets
       'first-edition bone': "Le tout premier outil de l'humanité : un gros fémur ramassé par un singe. La Sécurité l'a aussitôt classé arme illégale.",
+    },
+  },
+  // v4 films : les films de la saison 1 (src/ui/films.ts, docs/story/films.md)
+  films: {
+    skip: 'Passer',
+    watch: 'Lancer le film',
+    replay: 'Revoir le film',
+    loading: 'Chargement du film…',
+    tap: 'Touchez pour continuer',
+    quote: { open: '« ', close: ' »' },
+    speakers: { narration: 'Dossier du Bureau', vrell: 'Vrell', zib: 'Zib', krix: 'Krix' },
+    opening: {
+      title: 'L’ouverture',
+      sub: 'Saison 1 · Route 9, cette nuit',
+      lines: {
+        incident: 'Rapport d’incident : le stagiaire d’avant. Routine. Les yeux sur sa montre.',
+        zap: 'Les lignes électriques étaient solides. Le pain était grillé. Lui aussi.',
+        fired: 'Vrell l’a viré. Quelqu’un d’autre l’a récupéré avant que l’encre sèche.',
+        arrives: 'La relève : Zib. Non payé. Seule référence : sa maman.',
+        keys: 'Voici les clés. Ce pansement est porteur. N’y touchez pas.',
+        launch: 'Route 9. Un fermier qui dort. Évitez les lignes électriques, Zib.',
+      },
+    },
+    probation: {
+      title: 'Fin de période d’essai',
+      sub: 'Saison 1 · Chemin des Bouleaux',
+      lines: {
+        hold: 'Deuxième nuit. Un veilleur de laverie, livré endormi. Et quarante chaussettes.',
+        nothing_to_stamp: 'Ni bleus, ni procès. Dire que je vous avais préparé une vitrine.',
+        tube: 'Le siège a lu le rapport. Il veut maintenant trois dormeurs en une nuit.',
+        lanyard: 'Un vrai badge ! C’est normal, PROVISOIRE écrit des deux côtés ?',
+        two_calls_first: 'La banlieue attendra. D’abord deux petits appels : boulangerie, garage.',
+        birch_lane: 'Chemin des Bouleaux. Les lampes mordent. Faites l’exercice. Ou pas.',
+      },
     },
   },
 };

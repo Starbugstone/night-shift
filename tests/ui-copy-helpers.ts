@@ -9,6 +9,7 @@ import { isDeep, LEVELS, levelRooms } from '../src/levels/levels';
 import { levelStarCount, RANKS } from '../src/levels/progress';
 import { defaultSave, type LevelId } from '../src/levels/save';
 import { buildSpecimenCatalog, buildTownCatalog, buildTrophyCatalog } from '../src/ui/trophy-data';
+import { FILM_AFTER, FILM_BEFORE } from '../src/ui/films';
 
 export interface Leaf {
   path: string;
@@ -103,6 +104,9 @@ export function tiedStrings(lang: Lang): TiedString[] {
       add(id, 'during', `room ${roomId} mumbles`, it.mumbles.map((m) => gt(m)));
     }
   }
+  // v4 films: a film before a level is read during it; a film after a first delivery, after that level
+  for (const [lvl, film] of Object.entries(FILM_BEFORE)) add(lvl as LevelId, 'during', `films.${film}`, film && t.films[film]);
+  for (const [lvl, film] of Object.entries(FILM_AFTER)) add(lvl as LevelId, 'after', `films.${film}`, film && t.films[film]);
   const items = t.items as Record<string, unknown>;
   const souvenirItems = t.souvenirs.items as Record<string, unknown>;
   const descriptions = t.trophies.descriptions as Record<string, unknown>;

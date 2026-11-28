@@ -156,6 +156,7 @@ const READ_IN_PLACE: Readonly<Record<string, string>> = {
   'src/flight/views/deep.ts:quipFor': 'DeepTargetView times its own quip (SELF_TIMED)',
   'src/ui/dispatch-finale.ts:popAt': 'the finale view pops the toast after the bill has been read',
   'src/ui/dispatch-finale.ts:timings': 'the finale turns each page after its lines are read; the last page waits for a tap',
+  'src/core/film-time.ts:read': 'a film caption holds its shot for readSeconds() of its longer language (tests/ui-films.test.ts, REGRESSIONS C22)',
 };
 
 const isViewFile = (path: string): boolean => /\/views\//.test(path) || /(^|[-/])(view|draw)\.ts$/.test(path) || /-(view|draw)\.ts$/.test(path);

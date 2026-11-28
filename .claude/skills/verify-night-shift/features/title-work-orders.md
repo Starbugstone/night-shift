@@ -26,7 +26,7 @@ Preconditions: start at the title with an empty save. For later cards, deliver t
 - **Clock in.** Run `await game.tap(270, 686); await game.expectScene('workorders')`. A fresh list shows Intern, 0/55 stars, 0 Glorbs, a playable Farmer Doyle marked NEXT DISPATCH, and locked cards below. Capture it.
 - **Check a locked card.** Run `await game.tap(270, 588)`. The scene stays `workorders` and the card asks you to deliver Farmer Doyle first.
 - **Scroll.** Run `await game.drag(270, 850, 270, 330, 30); await game.step(90)` and capture; repeat to reach 2199 at the bottom.
-- **Open a memo.** Run `await game.tap(270, 364); await game.expectScene('memo')`. Tap the memo body at (270, 420) to finish the reveal. Capture the memo, then tap (48, 48) to return.
+- **Open a memo.** Run `await game.tap(270, 364)`. On a save where L1 isn't delivered, the intro film plays first: `await game.expectScene('film'); await game.tap(454, 53)` taps **Skip** (the film is checked in [story films](../../../../docs/story/films.md) and `tests/ui-films.test.ts`). Then `await game.expectScene('memo')`. Tap the memo body at (270, 420) to finish the reveal. Capture the memo, then tap (48, 48) to return.
 - **Era unlocks.** With a save that has delivered 1955 only, check that 1122 and 1953 open a memo and 2199 stays locked; deliver one era and check 2199 is still locked.
 
 ## Gotchas

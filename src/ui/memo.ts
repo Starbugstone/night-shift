@@ -56,7 +56,12 @@ export class MemoScene implements Scene {
   ) {
     const level = tr().levels[this.level.id];
     this.totalChars = level.body.length + level.joke.length;
-    if (openReplay) this.replay = new Button(16, 852, 145, 84, tr().dispatch2199.replay, 'secondary', 18);
+    if (openReplay) {
+      // v4 films: the level's story film (the 2199 epilogue on its own memo)
+      this.replay = new Button(16, 852, 145, 84, this.level.id === 'level12' ? tr().dispatch2199.replay : tr().films.replay, 'secondary', 18);
+      this.start.x = 169;
+      this.start.w = VIEW_W - 169 - 16;
+    }
     if (openPractice) {
       const words = tr().fieldCheck;
       const label = this.level.id === 'level12' ? tr().dispatch2199.practice : shell.save.fieldCheckSeen ? words.replay : words.start;

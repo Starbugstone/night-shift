@@ -56,6 +56,8 @@ export interface SaveData {
   /** The player finished or skipped the Field Check offer. */
   dispatch2199Finale?: true;
   fieldCheckSeen: boolean;
+  /** v4 films: story films already played (src/ui/films.ts `FilmId`s); each plays once by itself. */
+  filmsSeen: string[];
   /** Access to the inserted bridge and Maple Court for returning players. */
   bridgeAccess: boolean;
   /** Reports filed so far; rotates Vrell's comments. */
@@ -113,6 +115,7 @@ export function defaultSave(): SaveData {
     legacyDispatch: false,
     bridgeAccess: false,
     fieldCheckSeen: false,
+    filmsSeen: [],
     reports: 0,
     lang: 'auto',
     trophies: {},
@@ -222,6 +225,18 @@ export function readSpecimens(raw: unknown, damage?: string[]): Record<string, S
   return out;
 }
 
+/** Season 1 films seen, by film id: unique strings, at most 32. A non-string, a repeat or an overflow is damage. */
+function readFilmsSeen(raw: unknown, damage?: string[]): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  for (const [i, f] of raw.entries()) {
+    if (typeof f !== 'string' || seen.has(f)) damage?.push(`filmsSeen[${i}]`);
+    else if (seen.size >= 32) damage?.push('filmsSeen');
+    else seen.add(f);
+  }
+  return [...seen];
+}
+
 function isMapCollectibleId(value: unknown): value is MapCollectibleId {
   return typeof value === 'string' && Object.hasOwn(en.mapCollectibles.items, value);
 }
@@ -280,6 +295,7 @@ export function validateSave(raw: unknown, levelIds: readonly string[] = LEVEL_I
   out.legacyDispatch = raw.legacyDispatch === true || (oldDispatch && played);
   out.fieldCheckSeen = raw.fieldCheckSeen === true || (oldDispatch && out.levels.level2.delivered);
   if (raw.dispatch2199Finale === true) out.dispatch2199Finale = true;
+  out.filmsSeen = readFilmsSeen(raw.filmsSeen, damage);
   out.lang = isLangPref(raw.lang) ? raw.lang : 'auto';
   out.trophies = readTrophies(raw.trophies, damage);
   out.specimens = readSpecimens(raw.specimens, damage);
@@ -315,6 +331,7 @@ export const SAVE_FIELD_TYPES: Readonly<Record<string, (value: unknown) => boole
   bridgeAccess: isBool,
   fieldCheckSeen: isBool,
   dispatch2199Finale: isBool,
+  filmsSeen: Array.isArray, // Season 1 films (src/ui/films.ts)
   trophies: isObj,
   specimens: isObj,
   // v0.2 (2026-11-28): `satisfies` makes a new SaveData field (a seen-film flag, say) a type error until it is listed here
@@ -352,9 +369,11 @@ const SAVE_FIELD_USABLE: Readonly<Record<string, (value: unknown) => boolean>> =
   bridgeAccess: isBool,
   fieldCheckSeen: isBool,
   dispatch2199Finale: isBool,
+  filmsSeen: v => Array.isArray(v) && v.some(f => typeof f === 'string'),
   trophies: v => Object.keys(readTrophies(v)).length > 0,
   specimens: v => Object.keys(readSpecimens(v)).length > 0,
-};
+  // every field but `version` says when its value is usable; a new SaveData field is a type error until it does
+} satisfies Record<Exclude<keyof SaveData, 'version'>, (value: unknown) => boolean>;
 
 /**
  * A stored value worth loading: an object with every recognised field of the type a build writes, carrying at
