@@ -32,10 +32,10 @@ const HOLD = LOCK.time + MARGIN;
 const STEP = 0.25;
 /** Two sweeps of the slowest cycle on these maps (the L3 cruiser laps in about 19 s). */
 const SPAN = 40;
-/** A window a hand can hit: three start times in a row. */
-const MIN_WINDOW = 0.5;
-/** The longest wait outside a ring for its next window; the healthy rings wait at most 3.75 s (see the header). */
-const MAX_WAIT = 8;
+/** A window a hand can hit: five start times in a row (council round 7, Opus F2: was 0.5 s; the tightest healthy ring, greg_cabin, opens 1.5 s). */
+const MIN_WINDOW = 1;
+/** The longest wait outside a ring for its next window; the healthy rings wait at most 3.75 s (see the header; council round 7, Opus F2: was 8 s). */
+const MAX_WAIT = 5;
 
 const SPOTS: { x: number; y: number }[] = [{ x: 0, y: 0 }];
 for (const r of [SPOT_R / 2, SPOT_R]) for (let k = 0; k < 8; k++) SPOTS.push({ x: r * Math.cos((k * Math.PI) / 4), y: r * Math.sin((k * Math.PI) / 4) });

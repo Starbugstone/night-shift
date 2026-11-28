@@ -62,6 +62,16 @@ export class SaveSession {
     if (this.loaded !== 'unreadable') writeSave(this.storage, s);
   }
 
+  /**
+   * A story mark (a film seen, the Field Check offer, the 2199 epilogue) is not progress: it is stored like a
+   * setting, so it never overwrites an unreadable file the player has not shredded and the notice stays. v0.2 council
+   * round 7 (Opus F1): opening the first L1 memo on an unreadable save played the intro film and its seen mark
+   * wrote a fresh save over the file without the Erase confirmation.
+   */
+  writeStoryMark(s: SaveData): void {
+    this.writeSettings(s);
+  }
+
   /** The player read the notice: hidden until the next boot, nothing written. */
   dismiss(): void {
     this.dismissed = true;

@@ -180,6 +180,12 @@ export class Game implements Shell {
     this.applySave(s);
   }
 
+  /** A story mark (film seen, Field Check offer, 2199 epilogue): stored like a setting (council round 7, Opus F1). */
+  private setStoryMark(s: SaveData): void {
+    this.saves.writeStoryMark(s);
+    this.applySave(s);
+  }
+
   private applySave(s: SaveData): void {
     this.ctx.upgrades = new Set(s.upgrades);
     this.audio.setMuted(s.muted);
@@ -266,7 +272,7 @@ export class Game implements Shell {
     const film = params.get('film');
     if (film && (FILM_IDS as readonly string[]).includes(film)) {
       // v4 films: `?film=<id>` plays one story film, then the title (testing and review)
-      this.playFilm(film as FilmId, () => this.toTitle());
+      this.playFilm(film as FilmId, () => this.toTitle(), false);
     } else if (room && isRoomId(room)) {
       this.startRoom(room);
     } else if (flight && Number(flight) >= 1) {
@@ -351,15 +357,15 @@ export class Game implements Shell {
       onLocked: finish, onSunrise: finish, onQuit: finish }));
   }
 
-  /** v4 films: play a story film (marking it seen), then `then`. */
-  playFilm(id: FilmId, then: () => void): void {
-    if (!this.save.filmsSeen.includes(id)) this.setSave(markFilmSeen(this.save, id));
+  /** v4 films: play a story film (marking it seen, except from the `?film=` review URL), then `then`. */
+  playFilm(id: FilmId, then: () => void, mark = true): void {
+    if (mark && !this.save.filmsSeen.includes(id)) this.setStoryMark(markFilmSeen(this.save, id));
     this.scenes.go('film', () => new FilmScene(this, id, then));
   }
 
   private showDispatchFinale(finish: () => void): void {
     this.scenes.go('dispatch-finale', () => {
-      if (!this.save[FINALE_BEAT]) this.setSave({ ...this.save, [FINALE_BEAT]: true });
+      if (!this.save[FINALE_BEAT]) this.setStoryMark({ ...this.save, [FINALE_BEAT]: true });
       return new DispatchFinale(this, finish);
     });
   }
@@ -423,7 +429,7 @@ export class Game implements Shell {
   }
 
   private markFieldCheckSeen(): void {
-    if (!this.save.fieldCheckSeen) this.setSave({ ...this.save, fieldCheckSeen: true });
+    if (!this.save.fieldCheckSeen) this.setStoryMark({ ...this.save, fieldCheckSeen: true });
   }
 
   toFlight(levelIndex: number, spotted = 0, hunt?: HuntTarget): void {

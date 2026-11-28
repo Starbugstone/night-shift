@@ -40,6 +40,7 @@ function boot(disk: ReturnType<typeof memStore>, preprod: boolean) {
     setSave(s: SaveData) { return saves.writeProgress(s); },
     resetProgress() { return saves.reset(); },
     dismissSaveNotice() { saves.dismiss(); },
+    storyMark(s: SaveData) { saves.writeStoryMark(s); },
     toggleMute() { saves.writeSettings({ ...saves.save, muted: !saves.save.muted }); },
     setLanguage(lang: Lang) { saves.writeSettings({ ...saves.save, lang }); setLang(lang); },
     toTitle() {},
@@ -75,6 +76,12 @@ describe('a damaged save on the title', () => {
     expect(game).toMatch(/dismissSaveNotice\(\): void \{[^}]*this\.saves\.dismiss\(\);\s*\}/);
     expect(game).toMatch(/toggleMute\(\): void \{\s*this\.setSettings\(/);
     expect(game).toMatch(/setLanguage\(lang: Lang\): void \{[^}]*this\.setSettings\(/);
+    // v0.2 council round 7 (Opus F1): story marks are not progress; each one goes through setStoryMark
+    expect(game).toMatch(/private setStoryMark\(s: SaveData\): void \{\s*this\.saves\.writeStoryMark\(s\);/);
+    expect(game).toMatch(/this\.setStoryMark\(markFilmSeen\(/);
+    expect(game).toMatch(/this\.setStoryMark\(\{ \.\.\.this\.save, \[FINALE_BEAT\]: true \}\)/);
+    expect(game).toMatch(/this\.setStoryMark\(\{ \.\.\.this\.save, fieldCheckSeen: true \}\)/);
+    expect(game).not.toMatch(/setSave\([^;]*(markFilmSeen|FINALE_BEAT|fieldCheckSeen: true)/);
     // nothing else writes the save behind the session's back
     expect(game.match(/\bwriteSave\(/g) ?? []).toEqual([]);
     expect(game.match(/\bsaveStatus\b/g)?.length).toBe(1);
@@ -192,6 +199,21 @@ describe('a damaged save on the title', () => {
       expect(scene.reset.visible, c.name).toBe(true);
       const again = boot(disk, c.preprod);
       expect(again.loaded, c.name).toEqual({ save: played, status: 'ok' });
+    }
+  }, SLOW);
+
+  // v0.2 council round 7 (Opus F1): the intro film plays when the first L1 memo opens, before any shift; its seen
+  // mark wrote a fresh save over an unreadable file and cleared the notice without the Erase confirmation
+  it('a story mark (a film seen) keeps the notice and never overwrites an unreadable file, for every status', () => {
+    for (const c of cases) {
+      const disk = memStore(c.init);
+      const f = boot(disk, c.preprod);
+      const before = JSON.stringify(disk.data);
+      f.shell.storyMark({ ...f.shell.save, filmsSeen: [...f.shell.save.filmsSeen, 'opening'] });
+      expect(f.shell.saveStatus, c.name).toBe(f.loaded.status);
+      expect(f.title().notice.visible, c.name).toBe(true);
+      expect(f.shell.save.filmsSeen, c.name).toContain('opening');
+      if (f.loaded.status === 'unreadable') expect(JSON.stringify(disk.data), c.name).toBe(before);
     }
   }, SLOW);
 
