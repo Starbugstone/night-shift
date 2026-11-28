@@ -317,7 +317,8 @@ export const SAVE_FIELD_TYPES: Readonly<Record<string, (value: unknown) => boole
   dispatch2199Finale: isBool,
   trophies: isObj,
   specimens: isObj,
-};
+  // v0.2 (2026-11-28): `satisfies` makes a new SaveData field (a seen-film flag, say) a type error until it is listed here
+} satisfies Record<keyof SaveData, (value: unknown) => boolean>;
 
 /**
  * A level record that holds at least one value `readLevel` keeps. v0.2 council round 5 (Sol P2): that includes an
