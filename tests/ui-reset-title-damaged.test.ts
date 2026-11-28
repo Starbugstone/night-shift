@@ -7,15 +7,16 @@
 // keep); dismissing writes nothing (Sol P2); saved progress ends the notice, sound and language toggles do not (Neon 4).
 import { afterEach, describe, expect, it } from 'vitest';
 import { VIEW_W } from '../src/contracts';
-import { hasProgress, resetSave } from '../src/core/reset';
+import { hasProgress } from '../src/core/reset';
 import type { Shell } from '../src/core/shell';
 import { preprodStorage } from '../src/core/storage';
 import { measure } from '../src/core/gfx/text';
 import { en } from '../src/i18n/en';
 import { fr } from '../src/i18n/fr';
-import { setLang, tr as activeTr, type Lang } from '../src/i18n';
+import { fmt, getLang, setLang, tr as activeTr, type Lang } from '../src/i18n';
 import { SaveSession } from '../src/core/save-session';
 import { defaultSave, loadSaveWithStatus, type KeyValueStore, type SaveData, type SaveStatus } from '../src/levels/save';
+import { trophyProgress } from '../src/ui/trophy-data';
 import { NOTICE_CROSS_W, NOTICE_TEXT, RESET_CARD, SAVE_NOTICE, TitleScene, cardBody, keepLabel, noticeText } from '../src/ui/title';
 import type { Button } from '../src/ui/widgets';
 import { damageCases, memStore, okCases, ownKey } from './levels-save-shapes';
@@ -37,10 +38,10 @@ function boot(disk: ReturnType<typeof memStore>, preprod: boolean) {
     input: {},
     assets: { get: () => undefined },
     setSave(s: SaveData) { return saves.writeProgress(s); },
-    resetProgress() { return shell.setSave(resetSave(shell.save)); },
+    resetProgress() { return saves.reset(); },
     dismissSaveNotice() { saves.dismiss(); },
     toggleMute() { saves.writeSettings({ ...saves.save, muted: !saves.save.muted }); },
-    setLanguage(lang: Lang) { saves.writeSettings({ ...saves.save, lang }); },
+    setLanguage(lang: Lang) { saves.writeSettings({ ...saves.save, lang }); setLang(lang); },
     toTitle() {},
     toWorkOrders() {},
     toTrophies() {},
@@ -68,7 +69,9 @@ describe('a damaged save on the title', () => {
     const game = gameSource;
     expect(game).toMatch(/this\.saves = new SaveSession\(this\.storage\)/);
     expect(game).toMatch(/setSave\(s: SaveData\): boolean \{\s*const persisted = this\.saves\.writeProgress\(s\);[^}]*return persisted;/);
-    expect(game).toMatch(/resetProgress\(\): boolean \{[^}]*return this\.setSave\(resetSave\(this\._save\)\);/);
+    // v0.2 council round 6 (Sol P2): the reset has its own path, and live progress moves only when it was stored
+    expect(game).toMatch(/resetProgress\(\): boolean \{[^}]*if \(!this\.saves\.reset\(\)\) return false;[^}]*this\.applySave\(this\._save\);\s*return true;\s*\}/);
+    expect(game).not.toMatch(/resetSave\(/);
     expect(game).toMatch(/dismissSaveNotice\(\): void \{[^}]*this\.saves\.dismiss\(\);\s*\}/);
     expect(game).toMatch(/toggleMute\(\): void \{\s*this\.setSettings\(/);
     expect(game).toMatch(/setLanguage\(lang: Lang\): void \{[^}]*this\.setSettings\(/);
@@ -227,6 +230,54 @@ describe('a damaged save on the title', () => {
     // the view draws the jammed note in place of the shredded one, and both fit the phone width
     expect(titleSource).toMatch(/this\.shredded\.set\(s\.shredFailed \? str\.reset\.shredFailed : str\.reset\.done/);
     for (const lang of LANGS) for (const line of [tr(lang).done, tr(lang).shredFailed]) expect(measure(line, 19, 800), line).toBeLessThanOrEqual(VIEW_W - 40);
+  }, SLOW);
+
+  // v0.2 council round 6 (Sol P2): a jammed erase cleared progress in memory only, so once writes worked again the
+  // next mute or language tap stored the empty save while the jammed note still said the file was still here
+  it('a jammed erase keeps live progress; the next mute or language tap stores the loaded save, EN and FR', () => {
+    const misses: string[] = [];
+    for (const c of cases) {
+      for (const lang of LANGS) {
+        setLang(lang);
+        const disk = memStore(c.init);
+        const f = boot(disk, c.preprod);
+        const loaded = structuredClone(f.shell.save);
+        const status = f.shell.saveStatus;
+        const own = ownKey(c.preprod);
+        const ownBytes = disk.data[own];
+        const count = (s: SaveData) => { const p = trophyProgress(s); return fmt(activeTr().trophies.buttonCount, { n: p.found, max: p.total }); };
+        const setItem = disk.setItem;
+        disk.setItem = () => { throw new Error('quota exceeded'); };
+        const scene = f.title();
+        f.tap(scene, scene.reset);
+        f.tap(scene, scene.erase);
+        scene.relabel();
+        if (!scene.shredFailed) misses.push(`${lang} ${c.name}: no jammed note`);
+        if (JSON.stringify(f.shell.save) !== JSON.stringify(loaded)) misses.push(`${lang} ${c.name}: live progress changed after a jammed erase`);
+        if (scene.trophies.label !== count(loaded)) misses.push(`${lang} ${c.name}: trophy count ${scene.trophies.label}, want ${count(loaded)}`);
+        if (f.shell.saveStatus !== status) misses.push(`${lang} ${c.name}: status ${f.shell.saveStatus}, want ${status}`);
+        // the store works again; the player taps mute and the other language while the note still shows
+        disk.setItem = setItem;
+        f.tap(scene, scene.mute);
+        const other = scene.langs.find((l) => l.lang !== getLang())!;
+        f.tap(scene, other.b);
+        if (!scene.shredFailed) misses.push(`${lang} ${c.name}: the note went before the taps were checked`);
+        const want = { ...loaded, muted: !loaded.muted, lang: other.lang };
+        if (JSON.stringify(f.shell.save) !== JSON.stringify(want)) misses.push(`${lang} ${c.name}: live save after the taps is not the loaded progress`);
+        const stored = boot(memStore(disk.data), c.preprod).loaded.save;
+        if (status === 'unreadable') {
+          if (disk.data[own] !== ownBytes) misses.push(`${lang} ${c.name}: the unreadable bytes were overwritten`);
+        } else if (JSON.stringify(stored) !== JSON.stringify(want)) misses.push(`${lang} ${c.name}: stored save lost progress (glorbs ${stored.glorbs}, want ${loaded.glorbs})`);
+        // a later erase that lands clears it for good, settings kept
+        f.tap(scene, scene.reset);
+        f.tap(scene, scene.erase);
+        if (scene.shredFailed) misses.push(`${lang} ${c.name}: the landed erase said jammed`);
+        const again = boot(memStore(disk.data), c.preprod).loaded;
+        if (again.status !== 'ok' || JSON.stringify(again.save) !== JSON.stringify({ ...defaultSave(), muted: want.muted, lang: want.lang })) misses.push(`${lang} ${c.name}: the landed erase reloads ${again.status} with glorbs ${again.save.glorbs}`);
+        if (hasProgress(f.shell.save) || f.shell.saveStatus !== 'ok') misses.push(`${lang} ${c.name}: live save after the landed erase`);
+      }
+    }
+    expect(misses.slice(0, 20)).toEqual([]);
   }, SLOW);
 
   it('the card says the file was damaged only for a damaged save', () => {

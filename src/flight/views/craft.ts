@@ -442,6 +442,14 @@ export class EntryRingView {
     this.pill.position.set(this.keptX, this.keptY);
   }
 
+  /** Round 6 (Fable P3): the screen box `holdPill` would keep this frame, at the width the pill shows. */
+  heldBox(camX: number, camY: number, out: Box): void {
+    out.x = this.entry.x + this.keptX - camX;
+    out.y = this.entry.y + this.keptY - 20 - camY;
+    out.w = this.brief.visible ? this.shortW : this.labelW;
+    out.h = 40;
+  }
+
   private keptX = 0;
   private keptY = 0;
   private placed = false;
@@ -532,41 +540,108 @@ export class EntryLabels {
    * (`aimX`, `aimY`), round 5 (Fable): where the saucer will be in a moment (screen px); the pill of the ring nearest it
    * is placed first, so the ring the player is heading for keeps its label when two pills want one spot.
    */
-  place(n: number, camX: number, camY: number, soft = -1, aimX = NaN, aimY = NaN): void {
-    let first = -1;
+  place(n: number, camX: number, camY: number, soft = -1, aimX = NaN, aimY = NaN, hard = 0): void {
+    let lead: EntryRingView | null = null;
     let best = Infinity;
     for (let i = 0; i < this.count && !Number.isNaN(aimX); i++) {
       const a = this.asks[i]!;
       const d = (a.ringX - aimX) ** 2 + (a.ringY - aimY) ** 2;
       if (d < best) {
         best = d;
-        first = i;
+        lead = this.rings[i]!;
       }
     }
-    placePills(this.obstacles, n, this.asks, this.count, this.spots, this.moved, soft, this.lines, this.lineCount, this.short, first);
+    // Round 6 (Fable P3): a held pill keeps its old spot, so that spot is reserved before the other pills are placed
+    // (the round 5 hold let another pill land on it). Held pills move to the end of the list [count, this.count) and
+    // their boxes sit at obstacles [n, n + held); a hold whose box meets the top bar, a screen edge, a HUD box
+    // (obstacles [0, hard)) or another held pill is dropped: that pill hides at once.
+    let count = this.count;
+    let held = 0;
+    for (let pass = 0; pass <= this.count; pass++) {
+      let first = -1;
+      for (let i = 0; i < count; i++) {
+        if (this.rings[i] === lead) first = i;
+        if (pass > 0) this.rings[i]!.ask(camX, camY, this.asks[i]!);
+      }
+      placePills(this.obstacles, n + held, this.asks, count, this.spots, this.moved, soft, this.lines, this.lineCount, this.short, first);
+      let more = false;
+      for (let i = count - 1; i >= 0; i--) {
+        if (!this.holds(i)) continue;
+        const box = this.obstacles[n + held]!;
+        this.rings[i]!.heldBox(camX, camY, box);
+        // kept in world space, so the camera can carry it off screen, under the top bar or under a HUD box
+        if (box.x < 0 || box.x + box.w > VIEW_W || box.y < this.asks[i]!.top || box.y + box.h > VIEW_H ||
+            meets(this.obstacles, 0, hard, box) || meets(this.obstacles, n, n + held, box)) continue;
+        // kept with the same 4 px of air as a placed pill (placePills)
+        box.x -= 4;
+        box.y -= 4;
+        box.w += 8;
+        box.h += 8;
+        held++;
+        count--;
+        this.swap(i, count);
+        more = true;
+      }
+      if (!more) break;
+    }
     for (let i = 0; i < this.count; i++) {
       const ring = this.rings[i]!;
-      const spot = this.spots[i]!;
-      // a pill pushed far from its ring, or across a cable from it, no longer reads as its label: hide it
-      const shown = this.moved[i] !== 2 && pillShown(pillReach(this.asks[i]!, spot.x, spot.y, this.lines, this.lineCount), ring.pillWasShown, ring.pillHiddenFrames);
-      // round 5 (Fable): a shown pill hides only once it has wanted to for PILL_HOLD_FRAMES, and keeps its last spot
-      // next to its ring meanwhile (world space, so it stays on its side of every solid line): no short flash
-      const showing = ring.pillWasShown && ring.pillVisible;
-      ring.pillHideFrames = shown || !showing ? 0 : ring.pillHideFrames + 1;
-      const held = !shown && showing && ring.pillHideFrames < PILL_HOLD_FRAMES;
-      ring.pillHiddenFrames = shown || held ? 0 : ring.pillHiddenFrames + 1;
-      ring.pillWasShown = shown || held;
-      // a held pill is still shown: never hidden and shown again in one frame (a visible flip rebuilds the render group)
-      if (held) ring.holdPill();
-      else {
-        ring.showPill(shown);
-        ring.putPill(spot.x, spot.y, camX, camY);
-        ring.shortPill(this.short[i] === 1);
+      if (i >= count) {
+        ring.pillHideFrames++;
+        ring.pillHiddenFrames = 0;
+        ring.pillWasShown = true;
+        // a held pill is still shown: never hidden and shown again in one frame (a visible flip rebuilds the render group)
+        ring.holdPill();
+        continue;
       }
+      const shown = this.shows(i);
+      const showing = ring.pillWasShown && ring.pillVisible;
+      ring.pillHideFrames = 0;
+      ring.pillHiddenFrames = shown ? 0 : showing ? 1 : ring.pillHiddenFrames + 1;
+      ring.pillWasShown = shown;
+      ring.showPill(shown);
+      ring.putPill(this.spots[i]!.x, this.spots[i]!.y, camX, camY);
+      ring.shortPill(this.short[i] === 1);
     }
     this.count = 0;
     this.lineCount = 0;
   }
+
+  /** Whether pill `i` shows where `placePills` put it: not pushed far from its ring or across a cable from it. */
+  private shows(i: number): boolean {
+    const ring = this.rings[i]!;
+    const spot = this.spots[i]!;
+    // a pill pushed far from its ring, or across a cable from it, no longer reads as its label: hide it
+    const shown = this.moved[i] !== 2 && pillShown(pillReach(this.asks[i]!, spot.x, spot.y, this.lines, this.lineCount), ring.pillWasShown, ring.pillHiddenFrames);
+    return shown;
+  }
+
+  /**
+   * Round 5 (Fable): a shown pill hides only once it has wanted to for PILL_HOLD_FRAMES, and keeps its last spot next to
+   * its ring meanwhile (world space, so it stays on its side of every solid line): no short flash.
+   */
+  private holds(i: number): boolean {
+    const ring = this.rings[i]!;
+    if (this.shows(i) || !(ring.pillWasShown && ring.pillVisible)) return false;
+    return ring.pillHideFrames + 1 < PILL_HOLD_FRAMES;
+  }
+
+  private swap(i: number, j: number): void {
+    const r = this.rings[i]!, a = this.asks[i]!;
+    this.rings[i] = this.rings[j]!;
+    this.asks[i] = this.asks[j]!;
+    this.rings[j] = r;
+    this.asks[j] = a;
+  }
+}
+
+/** Whether `box` meets any of `obs[from, to)`. */
+function meets(obs: readonly Box[], from: number, to: number, box: Box): boolean {
+  for (let j = from; j < to; j++) {
+    const o = obs[j]!;
+    if (box.x < o.x + o.w && o.x < box.x + box.w && box.y < o.y + o.h && o.y < box.y + box.h) return true;
+  }
+  return false;
 }
 
 export class DogView {

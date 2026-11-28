@@ -38,9 +38,9 @@ three-wing trophy room and the 2199 Dispatch finale. When the game changes, upda
 | 9 | `level7` | A Whole Cruise Ship | deep, 480 s | Captain Sterling, Chef Marco, Greg | `shrimp_tower` |
 | 10 | `level8` | Prior Contact | time trial, 100 s | outdoor apes plus `echo_appeal` (Echo) | `krix` |
 | 11 | `level9` | Clocking Out at 10:04 (1955) | deep, 380 s, storm clock | Doc, Buff, Marvin | `time_car` (moving) |
-| 12 | `level10` | Ni! (1122) | deep, 330 s, needs `level9` | Rodney, the Black Knight, Tom the Enchanter | `shrubbery` |
+| 12 | `level10` | Ni! (1122) | deep, 183 s, needs `level9` | Rodney, the Black Knight, Tom the Enchanter | `shrubbery` |
 | 13 | `level11` | The War of the Colds (1953) | deep, 292 s, needs `level9` | the forester, Van Bell, Collier | `tripod_leg` |
-| 14 | `level12` | Your Town Is in the Way (2199) | deep, 175 s demolition clock, needs `level10` + `level11` | Artie, Penny, Moe | `bypass_towel` |
+| 14 | `level12` | Your Town Is in the Way (2199) | deep, 220 s demolition clock, needs `level10` + `level11` | Artie, Penny, Moe | `bypass_towel` |
 
 `levelRooms(level)` in `src/levels/levels.ts` lists the exact room ids; the table is a reading aid.
 

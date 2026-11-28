@@ -1,6 +1,7 @@
 // v0.2 damaged save (council round 4): the save the Game plays on and what the title may say about the file.
 // DOM-free so tests/ui-reset-title-damaged.test.ts drives the same rules the Game runs.
 import { loadSaveWithStatus, writeSave, type KeyValueStore, type SaveData, type SaveStatus } from '../levels/save';
+import { resetSave } from './reset';
 
 /**
  * The loaded save and the loader's status. The status lasts until progress is written over the file (Neon 4: a
@@ -38,6 +39,21 @@ export class SaveSession {
     const persisted = this.storage === null || writeSave(this.storage, s);
     if (persisted) this.loaded = 'ok';
     return persisted;
+  }
+
+  /**
+   * The title's Erase: the fresh save (settings kept) is written first, and only a write that lands replaces live
+   * progress and clears the status. v0.2 council round 6 (Sol P2): a jammed erase used to clear progress in memory
+   * only, so the next settings write (mute, language) stored the empty save while the note said the file was still
+   * here. A failed reset leaves the save, the status and the reset button exactly as they were.
+   */
+  reset(): boolean {
+    const fresh = resetSave(this.current);
+    const persisted = this.storage === null || writeSave(this.storage, fresh);
+    if (!persisted) return false;
+    this.current = fresh;
+    this.loaded = 'ok';
+    return true;
   }
 
   /** Sound and language: stored, except over an unreadable file nobody chose to shred yet. */

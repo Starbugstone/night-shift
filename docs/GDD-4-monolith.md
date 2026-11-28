@@ -24,7 +24,7 @@ Echo’s split-level cave keeps the easy `echo_appeal` route from the spatial re
 
 ## Scoring and proof
 
-- **Quota met** requires both troop quotas and Echo before sunrise.
+- **Quota met** requires both troop quotas and Echo before sunrise, which comes **100 s** into the run.
 - **Ghost** requires a completed quota with zero full flight sightings. A cave retry costs clock time.
 - **Night owl** requires a completed quota with at least 25 seconds remaining of the 100 s run. Finishing at exactly 75 seconds earns it. <!-- shipped clock: level8 budgetSec=100 parMarginSec=25 -->
 

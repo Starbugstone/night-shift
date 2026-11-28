@@ -268,6 +268,12 @@ export class DeepFlightHud {
     }
   }
 
+  /** v0.2 council round 6 (item 5): the box of Zib's speech bubble while it shows, for the route pills to keep out of. */
+  zibBox(out: Box): boolean {
+    const s = this.s;
+    return this.zib.avoid(out, s.zibText, s.state === 'spotted' ? 0 : s.zibT);
+  }
+
   sync(t: number, rm: boolean): void {
     const s = this.s;
     const { sim, run } = s;

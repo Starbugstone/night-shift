@@ -454,7 +454,7 @@ export class DeepFlightView implements SceneView {
     if (this.collectible) bubbles.addChild(this.collectible.bubbles);
     this.upperWorld.addChild(bubbles);
     // v0.2 council round 2: room for the boxes that keep pills off solid lines (wires, bunting, crane booms)
-    this.labels = new EntryLabels(this.rings.length, 8 + m.hazards.length + m.hazards.reduce((sum, d) =>
+    this.labels = new EntryLabels(this.rings.length, 9 + m.hazards.length + m.hazards.reduce((sum, d) =>
       sum + (d.type === 'wire' ? linePieces(Math.hypot(d.bx - d.ax, d.by - d.ay)) : d.type === 'crane' ? linePieces(d.len * (1 + CRANE_TAIL)) : 0), 0), m.hazards.length);
     this.upperWorld.addChild(abovePlayer(this.checkpoint.arrival), abovePlayer(this.saucer.root), abovePlayer(this.fuse.root), abovePlayer(this.fx));
     world.addChild(this.tints.worldWash, this.upperWorld);
@@ -527,6 +527,9 @@ export class DeepFlightView implements SceneView {
       b.w = a.w + 8;
       b.h = a.h + 8;
     }
+    // v0.2 council round 6 (item 5): Zib's speech bubble draws over the pills; a held pill never stays under it either
+    if (this.hud.zibBox(clear[n]!)) n++;
+    const hard = n;
     if (this.collectible?.avoid(clear[n]!, cam.x, cam.y)) n++;
     if (this.grail?.avoid(clear[n]!, cam)) n++;
     if (this.recitals?.avoid(clear[n]!, cam)) n++;
@@ -606,7 +609,7 @@ export class DeepFlightView implements SceneView {
       }
     }
     // round 5 (Fable): the ring the saucer is heading for (where it will be in 0.8 s) places its pill first
-    this.labels.place(n, cam.x, cam.y, fuseBox, saucer.x + saucer.vx * 0.8 - cam.x, saucer.y + saucer.vy * 0.8 - cam.y);
+    this.labels.place(n, cam.x, cam.y, fuseBox, saucer.x + saucer.vx * 0.8 - cam.x, saucer.y + saucer.vy * 0.8 - cam.y, hard);
     this.saucer.cue(s.state, s.state === 'fly' && sim.st.cause >= 0, sim.st.sus, s.zibT > 0, this.recitals?.coverEars); // v4 UFO pilot
     this.saucer.sync(saucer, t, rm, locking, s.st, lock, sim.field.scramble(saucer.x, saucer.y), sim.st.safe, SAFE_WINDOW);
     if (lifting && !rm) this.saucer.root.y -= Math.min(1, s.st * 6) * 36;

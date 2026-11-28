@@ -243,3 +243,80 @@ describe('a shift passes only on a fresh, persisted delivery (round 5, Sol P2)',
     }
   });
 });
+
+// v0.2 council round 6 (Sol P3, docs/REGRESSIONS.md P6): replacing both journeys' `expectDelivered(...)` calls with
+// `end.progress` kept every test above green, since they ran expectDelivered on its own. Every journey now stores its
+// outcome through the runner's `delivered()`, which this suite runs against the delivery cases, and no write to
+// `results` may skip it.
+/** `ONLY=probe` is a manual one-room diagnostic: it plays no shift, delivers nothing and records the scene it ended on. */
+const PROBE_WRITE = 'results.probe = await st()';
+
+/** A function of the runner, cut out of the script by name (braces matched). */
+function cutFunction(src: string, name: string): string | null {
+  const start = src.indexOf(`async function ${name}(`);
+  if (start < 0) return null;
+  let depth = 0;
+  let end = src.indexOf('{', src.indexOf(')', start));
+  for (; end < src.length; end++) {
+    if (src[end] === '{') depth++;
+    else if (src[end] === '}' && --depth === 0) break;
+  }
+  return src.slice(start, end + 1);
+}
+
+/** Every write to `results` that skips `delivered()`, and every case `delivered()` gets wrong. */
+async function resultProblems(src: string, deliverySrc: string): Promise<string[]> {
+  const bad: string[] = [];
+  const body = cutFunction(src, 'delivered');
+  if (!body) return ['the runner has no delivered()'];
+  for (const m of src.matchAll(/\bresults(?:\[[^\]]*\]|\.\w+)\s*=(?!=)\s*([^;\n]*)/g)) {
+    if (m[0].trim() === PROBE_WRITE) continue;
+    if (!/^await delivered\(/.test(m[1]!)) bad.push(`a journey stores its result without delivered(): ${m[0].trim()}`);
+  }
+  if (/Object\.assign\(\s*results\b|\bresults\s*=[^=]/.test(src.replace('const results = {};', ''))) bad.push('results is written some other way');
+  // one call per journey: the tutorial rings and the deep shifts
+  if ((src.match(/await delivered\(/g) ?? []).length < 2) bad.push('a journey does not go through delivered()');
+  const delivery = loadDelivery(deliverySrc);
+  const page = { reloads: 0, reloaded: null as unknown };
+  const expectDelivered = runnerExpectDelivered(src, delivery, page);
+  if (!expectDelivered) return [...bad, 'the runner has no expectDelivered'];
+  const run = new Function('expectDelivered', `${body}\nreturn delivered;`)(expectDelivered) as
+    (id: string, before: Progress, end: End, extra?: string[], info?: Record<string, unknown>) => Promise<{ before: Progress; result: Progress; tag?: number }>;
+  for (const c of deliveryCases()) {
+    page.reloaded = c.reloaded;
+    const id = c.name.slice(0, c.name.indexOf(':'));
+    try {
+      const out = await run(id, c.before, c.end, c.extra, { tag: 7 });
+      if (!c.pass) bad.push(`delivered() accepted ${c.name}`);
+      else if (JSON.stringify(out.result) !== JSON.stringify(c.end.progress) || out.before !== c.before || out.tag !== 7) bad.push(`delivered() mangled ${c.name}`);
+    } catch (e) {
+      if (c.pass) bad.push(`delivered() rejected ${c.name}: ${String(e)}`);
+    }
+  }
+  return bad;
+}
+
+describe('every journey stores its outcome through the delivery checks (round 6, Sol P3)', () => {
+  it('every write to results is await delivered(...), and delivered() accepts only a fresh, persisted delivery', async () => {
+    expect(await resultProblems(runner, deliverySource)).toEqual([]);
+  });
+
+  it('catches a journey that stores its progress past the checks (mutation check)', async () => {
+    const tutorialCall = 'await delivered(id, before, end)';
+    const deepCall = 'await delivered(order.id, run.before, run.end, run.extra, run.info)';
+    const checkCall = 'await expectDelivered(id, before, end, extra)';
+    const mutations: [string, string][] = [
+      // Sol's round 6 bypass: every expectDelivered call answered with the raw progress
+      ['every expectDelivered call replaced by end.progress', runner.replaceAll(checkCall, 'end.progress')],
+      ['the tutorial journey skips delivered()', runner.replace(tutorialCall, '{ before, report: end.report, result: end.progress }')],
+      ['the deep journey skips delivered()', runner.replace(deepCall, '{ ...run.info, result: run.end.progress }')],
+      ['both journeys skip delivered()', runner.replace(tutorialCall, '{ result: end.progress }').replace(deepCall, '{ result: run.end.progress }')],
+      ['delivered() drops the run\'s own problems', runner.replace(checkCall, 'await expectDelivered(id, before, end)')],
+      ['a journey stores the raw run', runner.replace(deepCall, 'run')],
+    ];
+    for (const [name, mutated] of mutations) {
+      expect(mutated, name).not.toBe(runner);
+      expect((await resultProblems(mutated, deliverySource)).length, name).toBeGreaterThan(0);
+    }
+  });
+});

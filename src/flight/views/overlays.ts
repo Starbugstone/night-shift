@@ -1,4 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
+import type { Box } from './clear-of';
 import type { Assets, Vec2 } from '../../contracts';
 import { VIEW_H, VIEW_W } from '../../contracts';
 import { GLOW, glowTexture, Glow, ScreenTint } from '../../core/gfx/glow';
@@ -56,8 +57,11 @@ export class FlightTintView {
   }
 }
 
+/** Display label of Zib's speech bubble (tests/flight-pill-view.test.ts keeps route pills from under it). */
+export const ZIB_BUBBLE = 'zib-bubble';
+
 export class ZibBubble {
-  readonly root = new Container();
+  readonly root = new Container({ label: ZIB_BUBBLE });
   private readonly card = new Shape();
   private readonly words = new Paragraph(ZIB);
   private readonly portrait: Container;
@@ -84,20 +88,38 @@ export class ZibBubble {
     const a = clamp(Math.min(time * 4, (total - time) * 6), 0, 1);
     this.root.alpha = a;
     this.root.y = rm ? 0 : (1 - a) * 30;
-    if (msg !== this.message) {
-      this.message = msg;
-      this.height = Math.max(64, 24 + this.words.setBlock(msg, 128, 0, 340));
-      const y = VIEW_H - 28 - this.height;
-      this.words.y = y + 12;
-      this.card.draw(keyOf(this.height), (g) => panelPath(g, 112, y, VIEW_W - 136, this.height,
-        { fill: C.paper, r: 18, lineW: 3, shadow: 0 }).poly([114, y + this.height - 26, 96, y + this.height - 12, 116, y + this.height - 10]).fill(C.paper));
-    }
+    this.layout(msg);
     const closed = !rm && isBlinking(t, 1.7);
     const alarm = panic && !!this.panic;
     // blink with alpha: a visible flip rebuilds the render group
     this.portrait.alpha = !alarm && !closed ? 1 : 0;
     this.blink.alpha = !alarm && closed ? 1 : 0;
     if (this.panic) this.panic.alpha = alarm ? 1 : 0;
+  }
+
+  private layout(msg: string): void {
+    if (msg === this.message) return;
+    this.message = msg;
+    this.height = Math.max(64, 24 + this.words.setBlock(msg, 128, 0, 340));
+    const y = VIEW_H - 28 - this.height;
+    this.words.y = y + 12;
+    this.card.draw(keyOf(this.height), (g) => panelPath(g, 112, y, VIEW_W - 136, this.height,
+      { fill: C.paper, r: 18, lineW: 3, shadow: 0 }).poly([114, y + this.height - 26, 96, y + this.height - 12, 116, y + this.height - 10]).fill(C.paper));
+  }
+
+  /**
+   * v0.2 council round 6 (item 5): while a line shows (`time` > 0, as passed to `sync`), the screen box of the portrait
+   * and the card with 4 px of air, down to the bottom edge (it slides up as it fades in), written into `out`. Route pills
+   * draw under the HUD, so they keep out of it (DeepFlightView): never a sliver of pill beside the portrait.
+   */
+  avoid(out: Box, msg: string, time: number): boolean {
+    if (time <= 0) return false;
+    this.layout(msg);
+    out.x = this.portrait.x - 45 - 4;
+    out.y = Math.min(this.portrait.y - 45, VIEW_H - 28 - this.height) - 4;
+    out.w = VIEW_W - 24 + 4 - out.x;
+    out.h = VIEW_H - out.y;
+    return true;
   }
 }
 

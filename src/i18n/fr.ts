@@ -401,7 +401,7 @@ export const fr: Strings = {
     tom_smoke: {"route": "Trou de fumée", "difficulty": "conduit et étincelles"},
     // v4 2199
     artie_garden: { route: "Porte du jardin", difficulty: "long et dégagé" },
-    artie_bath: { route: "Trappe de la salle de bains", difficulty: "court et cadencé" },
+    artie_bath: { route: "Trappe du bain", difficulty: "court et cadencé" },
     penny_service: { route: "Porte de service", difficulty: "long et dégagé" },
     penny_loft: { route: "Mezzanine des billets", difficulty: "court et cadencé" },
     moe_returns: { route: "Accès aux retours", difficulty: "long et dégagé" },
@@ -1964,7 +1964,7 @@ export const fr: Strings = {
     "Penny": "Penny",
     "Moe": "Moe",
     "Garden door": "Porte du jardin",
-    "Bathroom hatch": "Trappe de la salle de bains",
+    "Bathroom hatch": "Trappe du bain",
     "Service door": "Porte de service",
     "Ticket loft": "Mezzanine des billets",
     "Side returns": "Accès aux retours",

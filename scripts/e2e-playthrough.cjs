@@ -336,6 +336,15 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
     return end.progress;
   }
 
+  /**
+   * v0.2 council round 6 (Sol P3): the one way a journey's outcome becomes a result. Every write to `results` is
+   * `await delivered(...)`, and tests/shell-e2e-runner.test.ts runs this function too, so no journey can store its
+   * raw progress (`end.progress`) past the delivery checks.
+   */
+  async function delivered(id, before, end, extra = [], info = {}) {
+    return { ...info, before, report: end.report, result: await expectDelivered(id, before, end, extra) };
+  }
+
   async function deepShift({ id, num }, name) {
     const pickup = pickupDriver(id);
     await openFixture('?unlock=1&flight=' + num);
@@ -502,8 +511,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       if (!stars.every(Boolean)) extra.push(`pickup run needs all four stars, has ${JSON.stringify(stars)}`);
       if (pickup === 'time_car' && !carShot) extra.push('time car lock not captured');
     }
-    const result = await expectDelivered(id, before, end, extra);
-    return { wallSec: ((Date.now() - t0) / 1000).toFixed(1), gameSec: gameSec === null ? null : Math.round(gameSec * 10) / 10, budgetSec, renderer, pickup, spottedTaps, report: end.report, before, result, log };
+    // the loop below stores it through delivered()
+    return { before, end, extra, info: { wallSec: ((Date.now() - t0) / 1000).toFixed(1), gameSec: gameSec === null ? null : Math.round(gameSec * 10) / 10, budgetSec, renderer, pickup, spottedTaps, log } };
   }
 
   const ONLY = (process.env.ONLY || '').split(',').map(t => t.trim()).filter(Boolean);
@@ -571,7 +580,7 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
       const end = { scene: 'report', report: await reportOf(), progress: await progressOf(id) };
       await sleep(3000);
       await shot(`${r.name}-b-report`);
-      results[r.name] = { before, report: end.report, result: await expectDelivered(id, before, end) };
+      results[r.name] = await delivered(id, before, end);
       console.error('RESULT', r.name, 'delivered');
     } catch (e) {
       failures[r.name] = String(e.message || e);
@@ -582,7 +591,8 @@ const POLL_MS = Number(process.env.POLL_MS || 8);
   for (const order of deepToPlay) {
     const name = runName(order.id);
     try {
-      results[name] = await deepShift(order, name);
+      const run = await deepShift(order, name);
+      results[name] = await delivered(order.id, run.before, run.end, run.extra, run.info);
       console.error('RESULT', name, 'delivered', results[name].wallSec + ' s wall,', results[name].gameSec + ' game s of', results[name].budgetSec ?? 'no clock');
     } catch (e) {
       failures[name] = String(e.message || e);

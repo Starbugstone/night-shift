@@ -34,7 +34,6 @@ import { PointerInput } from './input';
 import { startLoop } from './loop';
 import { SceneManager, type Transition } from './scenes';
 import type { MutableContext, Shell } from './shell';
-import { resetSave } from './reset';
 import { browserStorage, isPreprodPath, preprodStorage, watchReducedMotion } from './storage';
 import { viewUploader } from './gfx/prepare';
 
@@ -188,9 +187,12 @@ export class Game implements Shell {
   }
 
   resetProgress(): boolean {
-    // v4 reset: through setSave, so preprod's store writes only its own key
+    // v4 reset: through the session, so preprod's store writes only its own key. v0.2 council round 6 (Sol P2): live
+    // progress is replaced only when the fresh save was stored; a jammed erase keeps it all
+    if (!this.saves.reset()) return false;
     this.run = null;
-    return this.setSave(resetSave(this._save));
+    this.applySave(this._save);
+    return true;
   }
 
   get saveStatus(): SaveStatus {

@@ -9,6 +9,9 @@
 //   Fable F2: the far-pill rule hid pills a lot, L12's "Bathroom hatch" was never labelled at launch or on approach).
 // - round 5 (Fable): the same floor with the autopilot steered to every entry ring (a player may pick any), and no pill
 //   that flashes for less than PILL_HOLD_FRAMES (checked every rendered frame) unless its ring leaves or locks.
+// - round 6 (Fable P3, items 5 and 6): every rendered frame, no two shown pills overlap and none sits off screen, under
+//   the top bar or under Zib's bubble (checkPillBoxes); each pill shows at the launch in every language about as long
+//   as in English.
 // The mutation checks switch each rule off in the live view and want the check to fail.
 import './pixi-headless';
 import { Container, Point, type ContainerChild } from 'pixi.js';
@@ -19,6 +22,9 @@ import { RING_R } from '../src/flight/sim';
 import { FlightAutopilot } from '../src/flight/autopilot';
 import { LINE_DRAWN, PILL_FAR, PILL_HOLD_FRAMES, placePills, segmentHitsBox } from '../src/flight/views/clear-of';
 import { EntryLabels, ROUTE_PILLS, routePillText } from '../src/flight/views/craft';
+import { ZIB_BUBBLE } from '../src/flight/views/overlays';
+import { DeepFlightHud } from '../src/flight/views/deep-hud';
+import { EntryRingView } from '../src/flight/views/craft';
 import { readSeconds } from '../src/core/read-time';
 import { HUD_ROW } from '../src/ui/hud';
 import { getLang, LANGS, setLang } from '../src/i18n';
@@ -144,6 +150,7 @@ function trackRuns(scene: DeepFlightScene, at: string, runs: number[], out: Chec
     const pill = root.children[0];
     if (pill && shown(pill)) {
       runs[k] = (runs[k] ?? 0) + 1;
+      keepSpot(pill, k);
       continue;
     }
     const len = runs[k] ?? 0;
@@ -152,9 +159,44 @@ function trackRuns(scene: DeepFlightScene, at: string, runs: number[], out: Chec
     const p = root.getGlobalPosition();
     const gone = !shown(root) || p.x < -RING_R || p.x > 540 + RING_R || p.y < top || p.y > 960 + RING_R;
     if (gone || scene.sim.lock.ring === i || scene.sim.lockedRing === i) continue;
+    if (heldSpotTaken(scene, root, k)) continue;
     const r = scene.sim.ringRef[i]!;
     out.flickers.push(`${at} ${r.target}:${r.entry}: pill shown ${len} frames (${(len * DT).toFixed(2)} s)`);
   }
+}
+
+/** Round 6: the spot each shown pill sat at last frame (local to its world-anchored root) and its drawn width. */
+const lastSpots: { x: number; y: number; w: number }[] = [];
+
+function keepSpot(pill: ContainerChild, k: number): void {
+  const spot = lastSpots[k] ??= { x: 0, y: 0, w: 0 };
+  spot.x = pill.x;
+  spot.y = pill.y;
+  spot.w = pill.getBounds().width - 2;
+}
+
+/**
+ * Round 6 (Fable P3): a held pill keeps its spot in world space, and hides at once when the camera carries that spot off
+ * screen, under the top bar, or under a HUD box (Zib's bubble, the minimap, the target chips): it may not stay there
+ * (checkPillBoxes), and nowhere near its ring is free, so that early end is not a flash.
+ */
+function heldSpotTaken(scene: DeepFlightScene, root: ContainerChild, k: number): boolean {
+  const spot = lastSpots[k];
+  if (!spot) return false;
+  // the panel, as in checkPillBoxes
+  const at = (root as Container).toGlobal(new Point(spot.x, spot.y - 20));
+  const box = { x: at.x, y: at.y, w: spot.w, h: 40 };
+  const top = HUD_ROW.y + HUD_ROW.h + 2;
+  if (box.x < 0.01 || box.x + box.w > 539.99 || box.y < top + 0.01 || box.y + box.h > 959.99) return true;
+  const meets = (o: Rect, air: number) => box.x < o.x + o.w + air && o.x - air < box.x + box.w && box.y < o.y + o.h + air && o.y - air < box.y + box.h;
+  // from the first frame of a line (the view keeps pills out from then; the bubble fades in over it)
+  const bubble = find(scene.view, ZIB_BUBBLE);
+  if (bubble?.visible) {
+    const b = bubble.getBounds();
+    if (meets({ x: b.x, y: b.y, w: b.width, h: b.height }, 4)) return true;
+  }
+  const hud = (scene as unknown as { look: { peek(): { hud: { avoid: Rect[] } } | undefined } }).look.peek()?.hud.avoid ?? [];
+  return hud.some(o => meets(o, 4));
 }
 
 /** Where to steer the autopilot: target `target`'s entry `entry`, or (target -1) entry `entry` of every target. */
@@ -176,6 +218,37 @@ function steerTo(scene: DeepFlightScene, steer: Steer): void {
     if (!r.ape && mine && r.entry !== steer.entry) avoid[i] = 1e6;
   }
   (scene as unknown as { autopilot: FlightAutopilot | null }).autopilot = ap;
+}
+
+/**
+ * Round 6 (Fable P3, Neon/parent item 5): every rendered frame, no two shown pills overlap, no shown pill sits off
+ * screen or under the top bar, and none sits under Zib's speech bubble (the HUD draws it over the pills). The round 5
+ * hold kept a pill's old spot without reserving it, so another pill was placed on it (L10's Black Knight arch over the
+ * loft for 13 frames at the lock). Reported in `out.covers`.
+ */
+function checkPillBoxes(scene: DeepFlightScene, at: string, out: Check): void {
+  const layer = find(scene.view, ROUTE_PILLS)!;
+  const top = HUD_ROW.y + HUD_ROW.h + 2;
+  const bubble = find(scene.view, ZIB_BUBBLE);
+  const zib = bubble?.visible ? bubble.getBounds() : null;
+  const boxes: { x: number; y: number; w: number; h: number; k: number }[] = [];
+  for (const [k, root] of layer.children.entries()) {
+    const pill = root.children[0];
+    if (!pill || !shown(pill)) continue;
+    // the panel: the bounds less the pill's 1 px outline (craft.ts PILL_PANEL), which may hang over the edge
+    const b = pill.getBounds();
+    const box = { x: b.x + 1, y: b.y + 1, w: b.width - 2, h: b.height - 2, k };
+    const name = () => { const r = scene.sim.ringRef.filter(q => !q.ape)[k]!; return `${r.target}:${r.entry}`; };
+    if (box.x < -0.01 || box.x + box.w > 540.01 || box.y + box.h > 960.01) out.covers.push(`${at} ${name()}: pill partly off screen at (${Math.round(box.x)}, ${Math.round(box.y)})`);
+    else if (box.y < top - 0.01) out.covers.push(`${at} ${name()}: pill under the top bar at y ${Math.round(box.y)}`);
+    if (zib && box.x < zib.x + zib.width - 0.5 && zib.x < box.x + box.w - 0.5 && box.y < zib.y + zib.height - 0.5 && zib.y < box.y + box.h - 0.5) out.covers.push(`${at} ${name()}: pill under Zib's bubble`);
+    for (const o of boxes) {
+      const w = Math.min(o.x + o.w, box.x + box.w) - Math.max(o.x, box.x);
+      const h = Math.min(o.y + o.h, box.y + box.h) - Math.max(o.y, box.y);
+      if (w > 0.5 && h > 0.5) out.covers.push(`${at} ${name()}: pill overlaps another shown pill by ${Math.round(w)}×${Math.round(h)} px`);
+    }
+    boxes.push(box);
+  }
 }
 
 /** With `steer` on one target, flies from the launch to that ring and stops at its lock. */
@@ -226,6 +299,7 @@ function flyDeep(level: DeepLevelDef, limit: number, out: Check, tamper?: Tamper
     scene.render();
     undo?.();
     trackRuns(scene, `${getLang()} ${level.id} t=${(f * DT).toFixed(2)} s`, runs, out);
+    checkPillBoxes(scene, `${getLang()} ${level.id} t=${(f * DT).toFixed(2)} s`, out);
     if (f % EVERY === 0) checkFrame(scene, `${getLang()} t=${(f * DT).toFixed(1)} s`, out);
   }
   const ap = scene.debug.ap;
@@ -413,5 +487,61 @@ describe('route pills on the real flight view', () => {
     const l10 = deep.find(l => l.id === 'level10')!;
     inEnglish(() => flyDeep(l10, 300, out, tampered(me => { for (let i = 0; i < me.count; i++) me.rings[i]!.pillHideFrames = PILL_HOLD_FRAMES; })));
     expect(out.flickers.join('\n')).toMatch(/pill shown \d+ frames/);
+  }, 240_000);
+
+  // round 6 (Fable P3): a held pill that reserves nothing lets another pill land on its spot (L10's Black Knight arch
+  // over the loft at the lock), and pills placed without Zib's bubble as an obstacle sit under it (item 5)
+  it('catches held pills that reserve nothing, and pills placed under Zib\'s bubble (mutation check)', () => {
+    const l10 = deep.find(l => l.id === 'level10')!;
+    const l3 = deep.find(l => l.id === 'level3')!;
+    const unreserved: Tamper = () => {
+      const real = EntryRingView.prototype.heldBox;
+      EntryRingView.prototype.heldBox = (_x: number, _y: number, out: { x: number; y: number; w: number; h: number }) => {
+        out.x = 270;
+        out.y = 500;
+        out.w = out.h = 0;
+      };
+      return () => { EntryRingView.prototype.heldBox = real; };
+    };
+    const held = fresh();
+    inEnglish(() => flyDeep(l10, 300, held, unreserved));
+    expect(held.covers.join('\n')).toMatch(/pill overlaps another shown pill/);
+    const blind: Tamper = () => {
+      const real = DeepFlightHud.prototype.zibBox;
+      DeepFlightHud.prototype.zibBox = () => false;
+      return () => { DeepFlightHud.prototype.zibBox = real; };
+    };
+    const zib = fresh();
+    inEnglish(() => flyDeep(l3, 300, zib, blind));
+    expect(zib.covers.join('\n')).toMatch(/pill under Zib's bubble/);
+  }, 240_000);
+
+  // round 6 (Neon P3): L12's French "Trappe de la salle de bains" (310 px) found no room at the launch, so its pill showed
+  // 0.00 s of the 5.50 s its ring was on screen while the English one showed throughout. A route name shows at the launch
+  // in every language about as long as in English (the widest gap measured is 0.17 s).
+  it('every ring\'s pill shows at the launch in every language about as long as in English', () => {
+    const lang = getLang();
+    const gaps: string[] = [];
+    try {
+      for (const level of deep) {
+        const seen = new Map<string, Map<string, number>>();
+        for (const l of LANGS) {
+          setLang(l);
+          const out = fresh();
+          flyDeep(level, 8, out);
+          seen.set(l, new Map([...out.seen].map(([k, v]) => [k.slice(k.indexOf(' ') + 1), v])));
+        }
+        const en = seen.get('en')!;
+        for (const l of LANGS) {
+          for (const ring of new Set([...en.keys(), ...seen.get(l)!.keys()])) {
+            const a = en.get(ring) ?? 0, b = seen.get(l)!.get(ring) ?? 0;
+            if (Math.abs(a - b) > 0.5) gaps.push(`${level.id} ${ring}: pill shown ${a.toFixed(2)} s in en, ${b.toFixed(2)} s in ${l}`);
+          }
+        }
+      }
+    } finally {
+      setLang(lang);
+    }
+    expect(gaps).toEqual([]);
   }, 240_000);
 });
