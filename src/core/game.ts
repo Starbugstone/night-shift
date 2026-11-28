@@ -19,7 +19,6 @@ import { DeepAbductScene } from '../ui/deep-abduct';
 import { DeepChoiceScene } from '../ui/deep-choice';
 import { FieldCheckAbduction, FieldCheckCard } from '../ui/field-check';
 import { LoadingScene } from '../ui/loading';
-import { DispatchFinale, FINALE_BEAT } from '../ui/dispatch-finale';
 import { FilmScene } from '../ui/film';
 import { preloadFilm } from '../ui/film-art';
 import { FILM_AFTER, FILM_BEFORE, FILM_IDS, filmOfLevel, filmSeen, markFilmSeen, type FilmId } from '../ui/films';
@@ -338,12 +337,11 @@ export class Game implements Shell {
     }
     const finale = id === 'level12';
     const practice = finale ? () => this.practiceRecital(i) : i === FIELD_CHECK_INDEX ? () => this.toFieldCheck() : undefined;
-    // the level's story film, once seen; 2199 keeps its Bureau epilogue until a film takes it over
+    // the level's story film, once seen (2199: the season finale, which took over the Bureau epilogue)
     const film = filmOfLevel(id);
     // (a delivered level is past its film's moment: older saves can watch it too)
     const replay: MemoReplay | undefined = film && (filmSeen(this.save, film) || this.save.levels[id].delivered)
-      ? { label: tr().films.replay, open: () => this.playFilm(film, () => this.toMemo(i)) }
-      : finale && this.save.levels.level12.delivered ? { label: tr().dispatch2199.replay, open: () => this.showDispatchFinale(() => this.toMemo(i)) } : undefined;
+      ? { label: tr().films.replay, open: () => this.playFilm(film, () => this.toMemo(i)) } : undefined;
     this.scenes.go('memo', () => new MemoScene(this, i, practice, replay, hunt));
   }
 
@@ -361,13 +359,6 @@ export class Game implements Shell {
   playFilm(id: FilmId, then: () => void, mark = true): void {
     if (mark && !this.save.filmsSeen.includes(id)) this.setStoryMark(markFilmSeen(this.save, id));
     this.scenes.go('film', () => new FilmScene(this, id, then));
-  }
-
-  private showDispatchFinale(finish: () => void): void {
-    this.scenes.go('dispatch-finale', () => {
-      if (!this.save[FINALE_BEAT]) this.setStoryMark({ ...this.save, [FINALE_BEAT]: true });
-      return new DispatchFinale(this, finish);
-    });
   }
 
   /** The film a first delivery of this level unlocks, if it hasn't played yet (it starts loading). */
@@ -632,8 +623,7 @@ export class Game implements Shell {
     this.run = null;
     // v4 films: a first delivery rolls its story film (2199: the season finale) after the report
     const film = this.filmAfter(run.level.id, run.phase === 'done');
-    const finale = film ? () => this.playFilm(film, () => this.toWorkOrders())
-      : run.level.id === 'level12' && run.phase === 'done' && !this.save[FINALE_BEAT] ? () => this.showDispatchFinale(() => this.toWorkOrders()) : undefined;
+    const finale = film ? () => this.playFilm(film, () => this.toWorkOrders()) : undefined;
     this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome, undefined, finale,
       film ? tr().films.watch : undefined), false, transition);
   }

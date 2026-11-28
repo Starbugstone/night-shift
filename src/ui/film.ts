@@ -10,7 +10,7 @@ import {
 import { FRESH_LINE_SECONDS } from '../core/read-time';
 import { glowTexture } from '../core/gfx/glow';
 import { ViewSlot } from '../core/gfx/scene';
-import { Label, Paragraph } from '../core/gfx/text';
+import { Label, measure, Paragraph } from '../core/gfx/text';
 import { paintedTexture } from '../core/gfx/textures';
 import { tr } from '../i18n';
 import { filmFrame, filmReady, FRAME_H, FRAME_W, preloadFilm } from './film-art';
@@ -30,6 +30,11 @@ const END_FADE = 0.6;
 /** When the "tap to continue" hint shows on the end card (s). */
 const END_HINT = 1.6;
 const SMASH = 0.4;
+/** Captions: 27 px bold, 476 px wide, at most three lines (docs/story/rules.md §6; tests/ui-films.test.ts). */
+export const CAPTION = { size: 27, weight: 700, width: W - 64, maxLines: 3 } as const;
+/** End card title: 46 px, smaller (down to 34 px) when a title would not fit, never squeezed. */
+const TITLE_SIZE = 46;
+const TITLE_MIN = 34;
 const FADE_IN = 0.45;
 const NO_FX: readonly FilmFx[] = [];
 const SHAKE: readonly (readonly [number, number])[] = [[7, -5], [-6, 4], [4, -3], [-3, 2], [2, -1], [-1, 1]];
@@ -131,8 +136,8 @@ class FilmView {
   private readonly black = new Graphics().rect(0, 0, W, H).fill('#05040c');
   private readonly shade: Sprite;
   private readonly who = new Label({ size: 19, weight: 800, color: C.mint, align: 'left' });
-  private readonly line = new Paragraph({ size: 27, weight: 700, color: '#fbfaf4', align: 'left', lineHeight: 36 });
-  private readonly endTitle = new Label({ size: 46, weight: 850, color: '#fbfaf4' });
+  private readonly line = new Paragraph({ size: CAPTION.size, weight: CAPTION.weight, color: '#fbfaf4', align: 'left', lineHeight: 36 });
+  private readonly endTitle: Label;
   private readonly endSub = new Label({ size: 22, weight: 700, color: C.mint });
   private readonly loading = new Label({ size: 24, weight: 700, color: C.muted });
   private readonly hint = new Label({ size: 20, weight: 700, color: C.muted });
@@ -156,6 +161,7 @@ class FilmView {
     this.skip = new ButtonView(scene.skip);
     const { films } = tr();
     const words = films[scene.id];
+    this.endTitle = new Label({ size: titleSize(words.title), weight: 850, color: '#fbfaf4' });
     this.endTitle.set(words.title, W / 2, H * 0.42, W - 64);
     this.endSub.set(words.sub, W / 2, H * 0.42 + 52, W - 64);
     this.loading.set(films.loading, W / 2, H / 2);
@@ -301,7 +307,7 @@ class FilmView {
     this.capShot = i;
     const words = tr();
     const text = spokenLine(words, this.scene.id, def);
-    const h = this.line.setBlock(text, 32, 0, W - 64);
+    const h = this.line.setBlock(text, 32, 0, CAPTION.width);
     const top = H - 64 - h;
     this.line.position.y = top;
     this.who.set(words.films.speakers[def.who ?? 'narration'].toUpperCase(), 32, top - 22);
@@ -339,6 +345,12 @@ class FilmView {
     for (const t of this.textures) t.destroy(true);
     this.textures.length = 0;
   }
+}
+
+/** The end-card title size that fits the screen without squeezing the letters. */
+export function titleSize(title: string): number {
+  const w = measure(title, TITLE_SIZE, 850);
+  return w <= W - 64 ? TITLE_SIZE : Math.max(TITLE_MIN, Math.floor((TITLE_SIZE * (W - 64)) / w));
 }
 
 function flashCurve(d: number): number {

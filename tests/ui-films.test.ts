@@ -3,7 +3,7 @@
 // "must stay on screen long enough for the player to read the text".
 //
 // 1. Every caption is fully visible for readSeconds() of its longer language (EN or FR), never crosses
-//    a cut, and fits two lines (about 80 characters).
+//    a cut, and wraps to at most three lines at the caption font.
 // 2. The film clock runs forward without jumps; shots are 4–8 per film, one keyframe each, on disk.
 // 3. Every film plays somewhere (before a level's memo or after a first delivery) and has its title card
 //    and lines in both languages.
@@ -16,7 +16,8 @@ import { en } from '../src/i18n/en';
 import { fr } from '../src/i18n/fr';
 import { LEVELS } from '../src/levels/levels';
 import { defaultSave, validateSave } from '../src/levels/save';
-import { FilmScene } from '../src/ui/film';
+import { CAPTION, FilmScene, titleSize } from '../src/ui/film';
+import { measure, wrapLines } from '../src/core/gfx/text';
 import { framePath } from '../src/ui/film-art';
 import { FILM_AFTER, FILM_BEFORE, FILMS, filmClock, spokenLine } from '../src/ui/films';
 
@@ -41,7 +42,7 @@ describe('every film caption can be read', () => {
         const full = timed.capOutF! - (timed.capInF! + CAP_IN);
         expect(full, `fully visible ${full.toFixed(2)} s, needs ${need.toFixed(2)} s`).toBeGreaterThanOrEqual(need - EPS);
         expect(timed.capOutF! + CAP_OUT, 'the caption is gone before the cut').toBeLessThanOrEqual(timed.end - timed.start + EPS);
-        for (const l of lines) expect(l.length, `"${l}" fits two lines`).toBeLessThanOrEqual(82);
+        for (const l of lines) expect(wrapLines(l, CAPTION.width, CAPTION.size, CAPTION.weight).length, `"${l}" fits three lines`).toBeLessThanOrEqual(CAPTION.maxLines);
       });
     });
   }
@@ -78,10 +79,14 @@ describe('every film is cut together', () => {
     for (const film of FILMS) expect(films.filter((f) => f === film.id), film.id).toHaveLength(1);
   });
 
-  it('every film has its title card in both languages', () => {
+  it('every film has its title card in both languages, fitting without a squeeze', () => {
     for (const film of FILMS) {
       for (const dict of [en, fr]) {
         expect(dict.films[film.id].title.length).toBeGreaterThan(0);
+        const title = dict.films[film.id].title;
+        const size = titleSize(title);
+        expect(size, `"${title}" stays big enough`).toBeGreaterThanOrEqual(34);
+        expect(measure(title, size, 850), `"${title}" fits at ${size} px`).toBeLessThanOrEqual(CAPTION.width + 0.5);
         expect(dict.films[film.id].sub.length).toBeGreaterThan(0);
       }
     }

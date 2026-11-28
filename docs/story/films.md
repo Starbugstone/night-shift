@@ -448,8 +448,8 @@ THE FRAME: High-angle dusk view of a quiet suburban lane that runs from the bott
 - **Title card:** Prior Art / Antériorité. Sub-line: Season 1 · Patent Valley, very early / Saison 1 · Vallée des brevets, très tôt.
 - **Trigger:** After the first delivery report of L7 (SS Buffet Royale). It unlocks L8.
 - **Logline:** The manifest in the Captain's jacket is signed by Krix: he has sent an OBELISK™ slab three million years back so that apes patent the Bureau's beam, the royalty bills are already arriving, and Vrell breaks open Basement B-4 to send Zib after him.
-- **Status:** Storyboarded; waiting for its frames (image quota, 2026-11-28). Not in the game yet.
-- **Length:** 6 shots, 20.1 s authored, about 41.95 s with the reading holds.
+- **Status:** Painted (Astra, 2026-11-28) and reviewed by the director; cameras fitted to the painted frames. Built in `src/ui/films.ts`.
+- **Length:** 6 shots, 20.1 s authored, about 43.6 s with the reading holds.
 
 ### Storyboard
 
@@ -466,16 +466,17 @@ THE FRAME: High-angle dusk view of a quiet suburban lane that runs from the bott
 
 #### `prior_art_1` · The Jacket
 
-- **Cue:** Fade in on the Captain's sleeping face. Slide right and down to the two green fingers easing the folded paper out of the jacket.
+- **Cue:** Fade in on the Captain's sleeping face. Slide right and down to the two green fingers easing the folded paper out of the jacket, with Zib under the Captain's cap.
 - **Who:** `narration`
 - **Line EN:** Debrief. The Captain slept through it. His jacket had more to say. (66 characters)
 - **Line FR:** Débriefing. Le commandant a dormi tout du long. Sa veste, elle, a parlé. (72 characters)
-- **Caption:** `capIn` 0.5, `capOut` 3, `holdAt` 2.7, `read` 5.8 s
+- **Caption:** `capIn` 0.5, `capOut` 2.78, `holdAt` 2.68, `read` 5.8 s
 - **Action length:** 3.2 s
-- **Camera keys:** `[[0, 0.4, 0.36, 1.55, 0], [3, 0.56, 0.47, 1.4, 0, 'inOutSine'], [3.2, 0.56, 0.47, 1.41, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.27, 0.34, 1.55, 0], [3, 0.52, 0.45, 1.4, 0, 'inOutSine'], [3.2, 0.52, 0.45, 1.41, 0, 'linear']]`
 - **Transition in:** fade from black, 0.45 s
 - **Effects:** none
 - **Sound cues:** `snore` at 0.3
+- **Keyframe (painted):** `public/film/prior_art/jacket.webp` (full size: `review/film-frames/prior_art_1.png`). Measured: the Captain's face (0.22, 0.30), the folded paper (0.45, 0.44), Zib's face (0.63, 0.43), the biscuit (0.53, 0.59), the saucer (0.55, 0.24). On model.
 
 **Image prompt**
 
@@ -492,16 +493,17 @@ THE FRAME: Medium shot of a metal intake bench at the edge of the hangar, under 
 
 #### `prior_art_2` · The Signature
 
-- **Cue:** Cut to the paper. Start on the drawing of the slab and the lilac seal, then push down and in until the doodled signature fills the frame.
+- **Cue:** Cut to the paper. Start on the drawing of the slab and the lilac seal, then push down the sheet until the doodled signature sits just above the caption.
 - **Who:** `vrell`
 - **Line EN:** “The museum's black rock. Bought by OBELISK™. Signed… Krix.” (58 characters)
 - **Line FR:** « La pierre noire du musée. Achetée par OBELISK™. Signé… Krix. » (60 characters)
-- **Caption:** `capIn` 0.5, `capOut` 2.9, `holdAt` 2.7, `read` 5.3 s
+- **Caption:** `capIn` 0.5, `capOut` 2.68, `holdAt` 2.58, `read` 5.3 s
 - **Action length:** 3 s
-- **Camera keys:** `[[0, 0.44, 0.36, 1.5, 0], [0.6, 0.44, 0.36, 1.52, 0, 'linear'], [2.7, 0.55, 0.47, 1.9, 0, 'inOutSine'], [3, 0.55, 0.47, 1.92, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.55, 0.4, 1.4, 0], [0.6, 0.55, 0.4, 1.42, 0, 'linear'], [2.7, 0.5, 0.66, 1.55, 0, 'inOutSine'], [3, 0.5, 0.66, 1.57, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** `camera_focus` at 0.9, `alert` at 2.5
+- **Keyframe (painted):** `public/film/prior_art/signature.webp` (full size: `review/film-frames/prior_art_2.png`). Measured: the slab drawing (0.42, 0.37), the lilac seal (0.70, 0.42), the doodle signature (0.52, 0.72, down to 0.77), the toaster box (0.84, 0.17). The signature is painted lower than the prompt asked, so the push ends at focus y 0.66 and holds it just above the caption.
 
 **Image prompt**
 
@@ -522,12 +524,13 @@ THE FRAME: Over-the-shoulder close-up of a cream shipping manifest held in Vrell
 - **Who:** `narration`
 - **Line EN:** His slab went back three million years. The apes just patented our beam. (72 characters)
 - **Line FR:** Sa dalle a remonté trois millions d’années. Les singes ont breveté notre rayon. (79 characters)
-- **Caption:** `capIn` 0.9, `capOut` 3.4, `holdAt` 3.3, `read` 6.3 s
+- **Caption:** `capIn` 0.9, `capOut` 3.18, `holdAt` 3.08, `read` 6.3 s
 - **Action length:** 3.6 s
-- **Camera keys:** `[[0, 0.72, 0.4, 1.6, 0], [0.9, 0.715, 0.4, 1.58, 0, 'linear'], [3.2, 0.38, 0.43, 1.3, 0, 'inOutSine'], [3.6, 0.38, 0.43, 1.29, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.74, 0.36, 1.6, 0], [0.9, 0.735, 0.36, 1.58, 0, 'linear'], [3.2, 0.35, 0.4, 1.3, 0, 'inOutSine'], [3.6, 0.35, 0.4, 1.29, 0, 'linear']]`
 - **Transition in:** dissolve, 0.6 s
 - **Effects:** none
 - **Sound cues:** `beam_on` at 1.6
+- **Keyframe (painted):** `public/film/prior_art/racket.webp` (full size: `review/film-frames/prior_art_3.png`). Measured: Krix's face (0.75, 0.25) and watch (0.80, 0.31), the slab (0.28, 0.08 to 0.58), Flint (0.17, 0.36), Reed (0.44, 0.26), Echo (0.46, 0.39), her tablet (0.47, 0.47) and stamp (0.55, 0.38), the limo's lilac mark (0.94, 0.36). Reed's bone sits in his hair, as in `adequate_1`.
 
 **Image prompt**
 
@@ -544,16 +547,17 @@ THE FRAME: Wide shot of a dry prehistoric riverbed before sunrise: cracked ochre
 
 #### `prior_art_4` · The Royalties
 
-- **Cue:** Cut to the tube mouth as the bills burst out. Follow them down and settle on Vrell, chest-deep, with one stuck to his glasses.
+- **Cue:** Cut to the tube mouth as the bills burst out, with the saucer and the bill on its bandage in the window. Follow the bills down and left, past Zib, and settle on Vrell, chest-deep, with one stuck to his glasses.
 - **Who:** `vrell`
 - **Line EN:** “Royalties. On every beam we ever fired. Backdated to the Stone Age.” (67 characters)
 - **Line FR:** « Des droits sur chaque rayon tiré. Rétroactifs jusqu’à l’âge de pierre. » (74 characters)
-- **Caption:** `capIn` 0.5, `capOut` 2.9, `holdAt` 2.7, `read` 6.2 s
+- **Caption:** `capIn` 0.5, `capOut` 2.68, `holdAt` 2.58, `read` 5.9 s
 - **Action length:** 3 s
-- **Camera keys:** `[[0, 0.5, 0.36, 1.4, 0], [2.6, 0.4, 0.44, 1.5, 0, 'inOutSine'], [3, 0.4, 0.44, 1.51, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.68, 0.36, 1.4, 0], [2.6, 0.36, 0.44, 1.5, 0, 'inOutSine'], [3, 0.36, 0.44, 1.51, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** `alert` at 0.1, `stamp` at 1.2
+- **Keyframe (painted):** `public/film/prior_art/royalties.webp` (full size: `review/film-frames/prior_art_4.png`). Measured: the tube mouth (0.50, 0.14), Vrell's face (0.30, 0.42) with the bill on his lens (0.39, 0.41), Zib's face (0.76, 0.44), the saucer in the window (0.86, 0.19) and the bill on its bandage (0.92, 0.19).
 
 **Image prompt**
 
@@ -571,16 +575,17 @@ THE FRAME: Medium shot of the office in chaos. The brass pneumatic tube at the t
 
 #### `prior_art_5` · Basement B-4
 
-- **Cue:** Cut to the door. Push in on the padlock as Vrell strains. On the snap, a small jolt; ease back a touch and hold on the swinging chain.
+- **Cue:** Cut to the door, framed right of centre on the padlock. Push in as Vrell strains. On the snap, a small jolt; ease back a touch and hold on the chain.
 - **Who:** `vrell`
 - **Line EN:** “Temporal Dispatch. Sealed since 1985. Head Office must never know.” (66 characters)
 - **Line FR:** « Le Dispatch temporel. Scellé depuis 1985. Le siège ne doit jamais le savoir. » (76 characters)
-- **Caption:** `capIn` 0.4, `capOut` 3.3, `holdAt` 3.1, `read` 6.3 s
+- **Caption:** `capIn` 0.4, `capOut` 3.08, `holdAt` 2.98, `read` 6.3 s
 - **Action length:** 3.4 s
-- **Camera keys:** `[[0, 0.5, 0.44, 1.15, 0], [2.3, 0.5, 0.47, 1.6, 0, 'inCubic'], [3.4, 0.5, 0.46, 1.54, 0, 'outSine']]`
+- **Camera keys:** `[[0, 0.56, 0.46, 1.2, 0], [2.3, 0.56, 0.45, 1.45, 0, 'inCubic'], [3.4, 0.56, 0.45, 1.4, 0, 'outSine']]`
 - **Transition in:** cut
 - **Effects:** stamp at 2.3
 - **Sound cues:** `creak` at 0.4, `crash` at 2.3
+- **Keyframe (painted):** `public/film/prior_art/basement.webp` (full size: `review/film-frames/prior_art_5.png`). Measured: the hourglass (0.57, 0.26), the padlock (0.57, 0.46), Vrell's face (0.31, 0.43), Zib's face (0.79, 0.46), the mug (0.69, 0.56). The painter put a chrono console in the corridor at the left edge (x 0.02 to 0.22), which belongs inside the vault: the camera never shows anything left of x 0.247, so it stays out of the film.
 
 **Image prompt**
 
@@ -597,16 +602,17 @@ THE FRAME: Symmetrical medium shot down a low basement corridor lit by one bare 
 
 #### `prior_art_6` · Three Million Years
 
-- **Cue:** Cut tight on the dial as the needle swings. Sweep up and back to show the gate and the saucer tipping in, hold, then push through the ring. Iris onto the slab in the valley.
+- **Cue:** Cut tight on the dial and Vrell's hand on the lever. Sweep up and back to show Vrell, the gate and the saucer tipping in, hold, then push through the ring. Iris onto the slab in the valley.
 - **Who:** `vrell`
 - **Line EN:** “Get in, kid. Three million years back, and home before my coffee's cold.” (72 characters)
 - **Line FR:** « Montez, Zib. Trois millions d’années aller-retour. Mon café refroidit. » (70 characters)
-- **Caption:** `capIn` 0.35, `capOut` 2.7, `holdAt` 2, `read` 5.9 s
+- **Caption:** `capIn` 0.35, `capOut` 2.48, `holdAt` 2, `read` 5.9 s
 - **Action length:** 3.9 s
-- **Camera keys:** `[[0, 0.27, 0.54, 1.7, 0], [1.9, 0.52, 0.46, 1.1, 0, 'outCubic'], [2.05, 0.52, 0.46, 1.1, 0, 'linear'], [3.3, 0.6, 0.36, 1.65, 0, 'inOutCubic'], [3.9, 0.6, 0.36, 1.65, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.33, 0.52, 1.7, 0], [1.9, 0.45, 0.5, 1.02, 0, 'outCubic'], [2.05, 0.45, 0.5, 1.02, 0, 'linear'], [3.3, 0.7, 0.36, 1.7, 0, 'inOutCubic'], [3.9, 0.7, 0.36, 1.7, 0, 'linear']]`
 - **Transition in:** cut
-- **Effects:** iris onto (0.63, 0.37), the slab seen through the gate, closing by 3.9 at 2.9
+- **Effects:** iris onto (0.72, 0.37), the slab seen through the gate, closing by 3.9 at 2.9
 - **Sound cues:** `clock_tick` at 0.2, `clock_tick` at 0.7, `beam_on` at 1.9
+- **Keyframe (painted):** `public/film/prior_art/three_million_years.webp` (full size: `review/film-frames/prior_art_6.png`). Measured: the dial (0.35, 0.57), the lever knob (0.33, 0.42), Vrell's face (0.18, 0.36), the gate's centre (0.66, 0.33), the saucer (0.54, 0.28), Zib in the dome (0.53, 0.19), the slab in the gate (0.72, 0.37).
 
 **Image prompt**
 
@@ -635,8 +641,8 @@ THE FRAME: Wide shot inside the basement chamber, dust sheets pulled to the floo
 - **Title card:** Hired / Embauché (working title: Adequate; Vrell's word is « correct » in French). Sub-line: Season 1 · Temporal Dispatch / Saison 1 · Dispatch temporel.
 - **Trigger:** After the first delivery report of L8 (Patent Valley). It opens Work Order #0011 (1955).
 - **Logline:** Three ape witnesses and two biscuits void the patent, OBELISK™'s own lawyers bill Krix for the bone, Vrell takes back the lanyard only to pin on a staff badge, and then the time dial starts humming by itself.
-- **Status:** Storyboarded; waiting for its frames (image quota, 2026-11-28). Not in the game yet.
-- **Length:** 6 shots, 19 s authored, about 39.45 s with the reading holds.
+- **Status:** Painted (Astra, 2026-11-28) and reviewed by the director; cameras fitted to the painted frames. Built in `src/ui/films.ts`.
+- **Length:** 6 shots, 19 s authored, about 40.2 s with the reading holds.
 
 ### Storyboard
 
@@ -657,12 +663,13 @@ THE FRAME: Wide shot inside the basement chamber, dust sheets pulled to the floo
 - **Who:** `narration`
 - **Line EN:** Star witnesses, three million years old. One biscuit each. (70 characters)
 - **Line FR:** Témoins clés, vieux de trois millions d’années. Un biscuit chacun. (68 characters)
-- **Caption:** `capIn` 0.5, `capOut` 2.9, `holdAt` 2.6, `read` 5.7 s
+- **Caption:** `capIn` 0.5, `capOut` 2.68, `holdAt` 2.58, `read` 5.4 s
 - **Action length:** 3 s
-- **Camera keys:** `[[0, 0.3, 0.42, 1.5, 0], [3, 0.7, 0.42, 1.5, 0, 'drift']]`
+- **Camera keys:** `[[0, 0.27, 0.4, 1.5, 0], [3, 0.73, 0.4, 1.5, 0, 'drift']]`
 - **Transition in:** fade from black, 0.45 s
 - **Effects:** none
 - **Sound cues:** `pickup` at 0.4
+- **Keyframe (painted):** `public/film/adequate/witnesses.webp` (full size: `review/film-frames/adequate_1.png`). Measured: Flint's face (0.22, 0.33), Reed's (0.44, 0.31), Echo's (0.75, 0.33), her biscuit (0.86, 0.30).
 
 **Image prompt**
 
@@ -677,16 +684,17 @@ THE FRAME: Medium shot of the metal intake bench at the edge of the hangar, unde
 
 #### `adequate_2` · Void
 
-- **Cue:** Smash cut onto the stamp as it lands. After the shake, drift down and ease out to show the tablet split in two and the second biscuit.
+- **Cue:** Smash cut onto the stamp as it lands. After the shake, drift down and ease out to show the tablet split in two, Echo's face and the second biscuit.
 - **Who:** `narration`
 - **Line EN:** The patent clerk struck out the claim herself. The second biscuit helped. (73 characters)
 - **Line FR:** La greffière a rayé le brevet elle-même. Le deuxième biscuit a aidé. (68 characters)
-- **Caption:** `capIn` 0.5, `capOut` 2.7, `holdAt` 2.4, `read` 5.9 s
+- **Caption:** `capIn` 0.5, `capOut` 2.48, `holdAt` 2.38, `read` 5.9 s
 - **Action length:** 2.8 s
-- **Camera keys:** `[[0, 0.5, 0.4, 1.7, 0], [0.4, 0.5, 0.405, 1.68, 0, 'linear'], [2.6, 0.5, 0.47, 1.45, 0, 'inOutSine'], [2.8, 0.5, 0.47, 1.44, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.48, 0.46, 1.7, 0], [0.4, 0.48, 0.465, 1.68, 0, 'linear'], [2.6, 0.53, 0.555, 1.2, 0, 'inOutSine'], [2.8, 0.53, 0.555, 1.19, 0, 'linear']]`
 - **Transition in:** smash
 - **Effects:** flash + shake (part of the smash cut) at 0
 - **Sound cues:** `stamp` at 0, `crash` at 0.15
+- **Keyframe (painted):** `public/film/adequate/void.webp` (full size: `review/film-frames/adequate_2.png`). Measured: Echo's face (0.52, 0.27), the stamp (0.47, 0.50), the cracked tablet (0.52, 0.64, down to 0.73), the second biscuit (0.75, 0.26). The tablet is painted lower than the prompt asked, so the drift ends wider (scale 1.2) to keep it above the caption.
 
 **Image prompt**
 
@@ -704,12 +712,13 @@ THE FRAME: Close shot of Echo alone at a Bureau desk under the amber lamp (the s
 - **Who:** `narration`
 - **Line EN:** OBELISK™ paid the costs. Then its lawyers billed Krix for the bone. (67 characters)
 - **Line FR:** OBELISK™ a payé les frais. Puis ses avocats ont facturé l’os à Krix. (68 characters)
-- **Caption:** `capIn` 0.5, `capOut` 3, `holdAt` 2.8, `read` 5.5 s
+- **Caption:** `capIn` 0.5, `capOut` 2.78, `holdAt` 2.68, `read` 5.5 s
 - **Action length:** 3.2 s
-- **Camera keys:** `[[0, 0.32, 0.33, 1.6, 0], [0.6, 0.325, 0.335, 1.6, 0, 'linear'], [3, 0.58, 0.4, 1.5, 0, 'inOutSine'], [3.2, 0.58, 0.4, 1.5, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.26, 0.37, 1.6, 0], [0.6, 0.265, 0.372, 1.6, 0, 'linear'], [3, 0.6, 0.37, 1.5, 0, 'inOutSine'], [3.2, 0.6, 0.37, 1.5, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** `stamp` at 0.3
+- **Keyframe (painted):** `public/film/adequate/bone_bill.webp` (full size: `review/film-frames/adequate_3.png`). Measured: the bone (0.22, 0.36), the lilac seal on the bill (0.50, 0.37), Krix's face (0.62, 0.29), the toaster (0.76, 0.44).
 
 **Image prompt**
 
@@ -724,16 +733,17 @@ THE FRAME: Medium shot at a tall wooden Bureau counter that fills the left third
 
 #### `adequate_4` · Hand It Over
 
-- **Cue:** Cut to the two-shot and hold it a beat longer than is comfortable. Then push slowly onto Zib and the lanyard in their hands.
+- **Cue:** Cut to the two-shot, with Bubbles watching from her tank, and hold it a beat longer than is comfortable. Then push slowly onto Zib and the lanyard in their hands.
 - **Who:** `vrell`
 - **Line EN:** “Hand over the lanyard, Zib. It was only ever temporary.” (55 characters)
 - **Line FR:** « Rendez le badge, Zib. Il n’a jamais été que provisoire. » (55 characters)
-- **Caption:** `capIn` 0.4, `capOut` 2.9, `holdAt` 2.6, `read` 4.9 s
+- **Caption:** `capIn` 0.4, `capOut` 2.68, `holdAt` 2.58, `read` 4.9 s
 - **Action length:** 3 s
-- **Camera keys:** `[[0, 0.5, 0.44, 1.25, 0], [0.7, 0.5, 0.44, 1.26, 0, 'linear'], [2.8, 0.64, 0.48, 1.6, 0, 'inOutSine'], [3, 0.64, 0.48, 1.61, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.53, 0.46, 1.12, 0], [0.7, 0.53, 0.46, 1.13, 0, 'linear'], [2.8, 0.68, 0.52, 1.45, 0, 'inOutSine'], [3, 0.68, 0.52, 1.46, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** none
+- **Keyframe (painted):** `public/film/adequate/hand_it_over.webp` (full size: `review/film-frames/adequate_4.png`). Measured: Vrell's face (0.33, 0.37), his open hand (0.55, 0.48), Zib's face (0.74, 0.43), the lanyard (0.69, 0.56) and its card (0.67, 0.63), the closed box (0.48, 0.63), Bubbles' tank (0.52, 0.26).
 
 **Image prompt**
 
@@ -750,16 +760,17 @@ THE FRAME: Two-shot across the desk in the office, lit low by the amber lamp. On
 
 #### `adequate_5` · Hired
 
-- **Cue:** Cut tight on the mint badge as the pin goes into the scarf. Pull back and up until both faces are in frame: the tears and the hidden smile.
+- **Cue:** Cut tight on the mint badge as the pin goes into the scarf. Pull back until both faces are in frame, the tears and the hidden smile, with the lanyard in the in-tray just above the caption.
 - **Who:** `vrell`
 - **Line EN:** “You're on the payroll. Head Office said genius. I said adequate.” (64 characters)
 - **Line FR:** « Vous voilà salarié. Le siège a dit : génial. Moi, j’ai dit : correct. » (77 characters)
-- **Caption:** `capIn` 0.4, `capOut` 3.1, `holdAt` 2.8, `read` 6.4 s
+- **Caption:** `capIn` 0.4, `capOut` 2.88, `holdAt` 2.78, `read` 5.9 s
 - **Action length:** 3.2 s
-- **Camera keys:** `[[0, 0.6, 0.5, 1.7, 0], [0.5, 0.6, 0.5, 1.68, 0, 'linear'], [3, 0.48, 0.42, 1.3, 0, 'outSine'], [3.2, 0.48, 0.42, 1.3, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.6, 0.52, 1.7, 0], [0.5, 0.6, 0.52, 1.68, 0, 'linear'], [3, 0.52, 0.5, 1.12, 0, 'outSine'], [3.2, 0.52, 0.5, 1.12, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** `success` at 0.6
+- **Keyframe (painted):** `public/film/adequate/hired.webp` (full size: `review/film-frames/adequate_5.png`). Measured: the badge (0.60, 0.54), Vrell's face (0.30, 0.34), Zib's face (0.65, 0.42), the coin (0.82, 0.47), the open box (0.43, 0.67), the lanyard in the tray (0.72, 0.69), Bubbles' tank (0.52, 0.26).
 
 **Image prompt**
 
@@ -777,16 +788,17 @@ THE FRAME: Close two-shot in the office, warmer than the shot before. On the lef
 
 #### `adequate_6` · The Dial
 
-- **Cue:** Cut to the two faces, frozen. Whip left to the open stairwell and the light coming up it, hold, then push down the steps onto the spinning dial. Iris onto the dial.
+- **Cue:** Cut to the two faces, frozen, Zib pointing. Whip left through the open stairwell door and land tight on the console, so the caption covers the steps; creep in on the spinning dial. Iris onto the dial.
 - **Who:** `zib`
 - **Line EN:** “Uh, Vrell? The time dial is humming. It says 1955.” (50 characters)
 - **Line FR:** « Euh, Vrell ? Le cadran s’est mis à ronronner. Il affiche 1955. » (62 characters)
-- **Caption:** `capIn` 0.35, `capOut` 2.8, `holdAt` 2.2, `read` 5.4 s
+- **Caption:** `capIn` 0.35, `capOut` 2.58, `holdAt` 2.2, `read` 5.4 s
 - **Action length:** 3.8 s
-- **Camera keys:** `[[0, 0.72, 0.46, 1.5, 0], [0.5, 0.72, 0.46, 1.5, 0, 'linear'], [1.7, 0.34, 0.43, 1.5, 0, 'inOutCubic'], [2.3, 0.335, 0.43, 1.52, 0, 'linear'], [3.2, 0.3, 0.41, 1.9, 0, 'inOutSine'], [3.8, 0.3, 0.41, 1.9, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.7, 0.4, 1.5, 0], [0.5, 0.7, 0.4, 1.5, 0, 'linear'], [1.7, 0.22, 0.275, 1.85, 0, 'inOutCubic'], [2.3, 0.22, 0.275, 1.87, 0, 'linear'], [3.2, 0.21, 0.27, 2.1, 0, 'inOutSine'], [3.8, 0.21, 0.27, 2.1, 0, 'linear']]`
 - **Transition in:** cut
-- **Effects:** iris onto (0.30, 0.40), the dial, closing by 3.8 at 3
+- **Effects:** iris onto (0.21, 0.33), the dial, closing by 3.8 at 3
 - **Sound cues:** `clock_tick` at 1.7, `clock_tick` at 2.2, `clock_tick` at 2.6, `clock_tick` at 2.9
+- **Keyframe (painted):** `public/film/adequate/dial.webp` (full size: `review/film-frames/adequate_6.png`). Measured: Zib's face (0.58, 0.42), Vrell's face (0.80, 0.31), the dial (0.21, 0.33), the steps (y 0.41 to 0.55). The painter drew the steps rising from the office to the console; canon has them going down (Decisions 6). The whip lands tight on the console so the caption covers the steps, and the iris closes on the dial.
 
 **Image prompt**
 
@@ -816,8 +828,8 @@ THE FRAME: Wide shot of the office looking towards its back wall. On the right, 
 - **Title card:** The Parking Ring / L’anneau. Sub-line: Season 1 · The end / Saison 1 · Fin.
 - **Trigger:** After the first delivery report of the 2199 shift (`level12`). Same seen-beat as today: `dispatch2199Finale`.
 - **Logline:** The bypass is voided with Zib's signature first, Krix gets the bill, Bubbles is gone and has left Zib her ring, Vrell's pension vests and goes in the drawer marked Later, and Zib's saucer floats in its own pool.
-- **Status:** Storyboarded; waiting for its frames (image quota, 2026-11-28). Not in the game yet. Replaces the three panels of `DispatchFinale` and keeps their beats.
-- **Length:** 7 shots, 22.7 s authored, about 42.9 s with the reading holds.
+- **Status:** Painted (Astra, 2026-11-28) and reviewed by the director; cameras fitted to the painted frames. Built in `src/ui/films.ts`; it took over the route of the three-panel `DispatchFinale`, which stays in the tree. Replaces the three panels of `DispatchFinale` and keeps their beats.
+- **Length:** 7 shots, 22.7 s authored, about 44.4 s with the reading holds.
 
 ### Storyboard
 
@@ -835,16 +847,17 @@ THE FRAME: Wide shot of the office looking towards its back wall. On the right, 
 
 #### `outro_1` · Order Void
 
-- **Cue:** Fade in as the stamp lands on the road. After the jolt, slide down and right to the two signatures, the mint one above the purple one.
+- **Cue:** Fade in on the stamp just landed, Vrell and Zib either side. After the jolt, push in and slide down-right to the two signatures, the mint one above the purple one.
 - **Who:** `narration`
 - **Line EN:** The hyperspace bypass: void. Zib signed first. Vrell countersigned. (67 characters)
 - **Line FR:** Déviation hyperspatiale : annulée. Zib a signé en premier. Vrell a contresigné. (79 characters)
-- **Caption:** `capIn` 0.6, `capOut` 2.9, `holdAt` 2.7, `read` 6.3 s
+- **Caption:** `capIn` 0.6, `capOut` 2.68, `holdAt` 2.58, `read` 6.3 s
 - **Action length:** 3 s
-- **Camera keys:** `[[0, 0.5, 0.4, 1.6, 0], [0.7, 0.5, 0.4, 1.6, 0, 'linear'], [2.8, 0.58, 0.5, 1.6, 0, 'inOutSine'], [3, 0.58, 0.5, 1.61, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.5, 0.42, 1.3, 0], [0.7, 0.5, 0.42, 1.3, 0, 'linear'], [2.8, 0.56, 0.62, 1.6, 0, 'inOutSine'], [3, 0.56, 0.62, 1.61, 0, 'linear']]`
 - **Transition in:** fade from black, 0.45 s
 - **Effects:** stamp at 0.35
 - **Sound cues:** `stamp` at 0.35
+- **Keyframe (painted):** `public/film/outro/order_void.webp` (full size: `review/film-frames/outro_1.png`). Measured: the stamp (0.47, 0.47), the red barred circle (0.47, 0.57), the mint signature (0.62, 0.67) above the purple one (0.63, 0.705), Vrell's face (0.27, 0.30), Zib's face (0.74, 0.31), the empty tank (0.82, 0.14) and Bubbles' photo (0.61, 0.11).
 
 **Image prompt**
 
@@ -866,12 +879,13 @@ THE FRAME: Three-quarter high-angle shot over the desk under the amber lamp. A l
 - **Who:** `krix`
 - **Line EN:** “All this, for selling one small town? …Do you take toast?” (57 characters)
 - **Line FR:** « Tout ça pour une petite ville vendue ? … Vous prenez les tartines ? » (67 characters)
-- **Caption:** `capIn` 0.4, `capOut` 3.1, `holdAt` 2.9, `read` 5.7 s
+- **Caption:** `capIn` 0.4, `capOut` 2.88, `holdAt` 2.78, `read` 5.7 s
 - **Action length:** 3.2 s
-- **Camera keys:** `[[0, 0.5, 0.46, 1.5, 0], [2, 0.62, 0.38, 1.5, 0, 'inOutSine'], [2.2, 0.62, 0.38, 1.5, 0, 'linear'], [3.2, 0.7, 0.38, 1.45, 0, 'outSine']]`
+- **Camera keys:** `[[0, 0.44, 0.5, 1.5, 0], [2, 0.6, 0.38, 1.5, 0, 'inOutSine'], [2.2, 0.6, 0.38, 1.5, 0, 'linear'], [3.2, 0.72, 0.39, 1.45, 0, 'outSine']]`
 - **Transition in:** cut
 - **Effects:** stamp at 2.2
 - **Sound cues:** `pickup` at 2.2
+- **Keyframe (painted):** `public/film/outro/bill.webp` (full size: `review/film-frames/outro_2.png`). Measured: Krix's face (0.57, 0.33), the pen (0.42, 0.42), the bill (0.42, 0.50 and down), Vrell's arm (0.15, 0.58), the toaster (0.84, 0.51), the toast (0.83, 0.32).
 
 **Image prompt**
 
@@ -887,16 +901,17 @@ THE FRAME: Medium shot across the desk from Vrell's side. Krix sits on the far s
 
 #### `outro_3` · The Empty Tank
 
-- **Cue:** Cut to Zib from behind, small in front of the tank. Push slowly past their shoulder until the damp note fills the frame.
+- **Cue:** Cut to Zib from behind, small in front of the tank, the wet fin-prints on the floor. Push slowly past their shoulder until the damp note fills the frame.
 - **Who:** `bubbles (written note)` (existing string `dispatch2199.note`, reused word for word)
 - **Line EN:** So long, and thanks for all the fish. (37 characters)
 - **Line FR:** Salut, et encore merci pour le poisson. (39 characters)
-- **Caption:** `capIn` 0.9, `capOut` 3.3, `holdAt` 3.1, `read` 3.6 s
+- **Caption:** `capIn` 0.9, `capOut` 3.08, `holdAt` 2.98, `read` 3.6 s
 - **Action length:** 3.4 s
-- **Camera keys:** `[[0, 0.36, 0.5, 1.4, 0], [0.6, 0.365, 0.5, 1.4, 0, 'linear'], [3, 0.54, 0.38, 1.75, 0, 'inOutSine'], [3.4, 0.54, 0.38, 1.76, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.42, 0.5, 1.25, 0], [0.6, 0.425, 0.5, 1.25, 0, 'linear'], [3, 0.62, 0.38, 1.75, 0, 'inOutSine'], [3.4, 0.62, 0.38, 1.76, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** none
+- **Keyframe (painted):** `public/film/outro/empty_tank.webp` (full size: `review/film-frames/outro_3.png`). Measured: Zib's head (0.28, 0.48), their hand on the glass (0.45, 0.48), the tank's centre (0.53, 0.32), the note (0.64, 0.38), the photo (0.21, 0.26), the fin-prints (0.57 to 0.95, 0.64 to 0.76).
 
 **Image prompt**
 
@@ -913,16 +928,17 @@ THE FRAME: Medium shot of the office wall beside the desk. The porthole tank fil
 
 #### `outro_4` · The Transfer
 
-- **Cue:** Cut tight on the permit and the fin-print. Tilt up to Zib's face as the mint of the ring on the card lights their eyes.
+- **Cue:** Cut tight on the permit and the fin-print. Tilt up and ease back to Zib's face as the mint of the ring on the card lights their eyes; the ring stays in frame.
 - **Who:** `bubbles (written note)` (existing string `dispatch2199.transfer`, reused word for word)
 - **Line EN:** Nobody coached me. I’m just that good. (38 characters)
 - **Line FR:** Personne ne m’a donné de cours. Je suis douée, c’est tout. (58 characters)
-- **Caption:** `capIn` 0.4, `capOut` 2.9, `holdAt` 2.7, `read` 4.9 s
+- **Caption:** `capIn` 0.4, `capOut` 2.68, `holdAt` 2.58, `read` 4.9 s
 - **Action length:** 3 s
-- **Camera keys:** `[[0, 0.5, 0.47, 1.6, 0], [0.8, 0.5, 0.47, 1.6, 0, 'linear'], [2.8, 0.5, 0.34, 1.5, 0, 'inOutSine'], [3, 0.5, 0.335, 1.5, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.52, 0.6, 1.6, 0], [0.8, 0.52, 0.6, 1.6, 0, 'linear'], [2.8, 0.5, 0.44, 1.25, 0, 'inOutSine'], [3, 0.5, 0.437, 1.25, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** `pickup` at 0.5
+- **Keyframe (painted):** `public/film/outro/transfer.webp` (full size: `review/film-frames/outro_4.png`). Measured: Zib's face (0.47, 0.30), the card (0.54, 0.60, from 0.50 to 0.70), the ring on it (0.52, 0.58), the fin-print (0.63, 0.66), the badge (0.29, 0.50). The card is painted lower than the prompt asked, so the tilt up ends wider (scale 1.25) and keeps the ring above the caption.
 
 **Image prompt**
 
@@ -941,12 +957,13 @@ THE FRAME: Close-up of Zib from the chest up, facing us, in front of the softly 
 - **Who:** `narration`
 - **Line EN:** That night Vrell's pension vested. He'd had the form filled in since 1953. (74 characters)
 - **Line FR:** Retraite acquise pour Vrell, cette nuit-là. Formulaire rempli depuis 1953. (74 characters)
-- **Caption:** `capIn` 0.5, `capOut` 2.9, `holdAt` 2.6, `read` 5.9 s
+- **Caption:** `capIn` 0.5, `capOut` 2.68, `holdAt` 2.58, `read` 5.9 s
 - **Action length:** 3 s
-- **Camera keys:** `[[0, 0.68, 0.34, 1.5, 0], [0.5, 0.68, 0.34, 1.5, 0, 'linear'], [1.8, 0.46, 0.44, 1.5, 0, 'inOutSine'], [3, 0.46, 0.45, 1.55, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.72, 0.335, 1.5, 0], [0.5, 0.72, 0.335, 1.5, 0, 'linear'], [1.8, 0.48, 0.47, 1.32, 0, 'inOutSine'], [3, 0.48, 0.48, 1.3, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** stamp at 2
 - **Sound cues:** `stamp` at 2
+- **Keyframe (painted):** `public/film/outro/vested.webp` (full size: `review/film-frames/outro_5.png`). Measured: the calendar (0.76, 0.18), Vrell's face (0.38, 0.35), the stamp (0.57, 0.53), the gold mark (0.59, 0.61), the deckchair (0.45, 0.61).
 
 **Image prompt**
 
@@ -965,12 +982,13 @@ THE FRAME: Medium shot of Vrell at his desk under the amber lamp. On the wall at
 - **Who:** `vrell`
 - **Line EN:** “I'll file it under Later. Somebody has to sign your forms.” (58 characters)
 - **Line FR:** « Je le classe à Plus tard. Il faut bien quelqu’un pour signer vos formulaires. » (77 characters)
-- **Caption:** `capIn` 0.4, `capOut` 3, `holdAt` 2.8, `read` 6.4 s
+- **Caption:** `capIn` 0.4, `capOut` 2.78, `holdAt` 2.68, `read` 6.4 s
 - **Action length:** 3.2 s
-- **Camera keys:** `[[0, 0.44, 0.52, 1.6, 0], [0.6, 0.44, 0.52, 1.6, 0, 'linear'], [2.8, 0.5, 0.4, 1.3, 0, 'outSine'], [3.2, 0.5, 0.4, 1.3, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.46, 0.58, 1.6, 0], [0.6, 0.46, 0.58, 1.6, 0, 'linear'], [2.8, 0.55, 0.46, 1.1, 0, 'outSine'], [3.2, 0.55, 0.46, 1.1, 0, 'linear']]`
 - **Transition in:** cut
 - **Effects:** none
 - **Sound cues:** `creak` at 0.3
+- **Keyframe (painted):** `public/film/outro/later.webp` (full size: `review/film-frames/outro_6.png`). Measured: the form in the drawer (0.42, 0.57), Vrell's face (0.36, 0.29), Zib (0.77, 0.24), the lanyard and permit (0.61, 0.27), the empty in-tray (0.60, 0.43).
 
 **Image prompt**
 
@@ -988,16 +1006,17 @@ THE FRAME: Low-angle shot from beside the desk. The deep bottom drawer of the de
 
 #### `outro_7` · The Pool
 
-- **Cue:** Cut tight on the scarf-striped pennant and the permit on its lanyard. Sweep back and down to show the pool and the floating saucer, hold, then push in on Zib in the dome. Iris onto the saucer.
+- **Cue:** Cut tight on the scarf-striped pennant and the permit on its lanyard. Sweep back and left to show the pool, the floating saucer and Vrell at the window, hold, then push in on Zib in the dome. Iris onto the saucer.
 - **Who:** `zib` (existing string `dispatch2199.pool`, reused word for word)
 - **Line EN:** “It has a POOL.” (14 characters)
 - **Line FR:** « Il y a une PISCINE. » (19 characters)
-- **Caption:** `capIn` 0.35, `capOut` 2.6, `holdAt` 2, `read` 2.5 s
+- **Caption:** `capIn` 0.35, `capOut` 2.38, `holdAt` 2, `read` 2.5 s
 - **Action length:** 3.9 s
-- **Camera keys:** `[[0, 0.72, 0.34, 1.7, 0], [1.9, 0.5, 0.46, 1.1, 0, 'outCubic'], [2.05, 0.5, 0.46, 1.1, 0, 'linear'], [3.3, 0.5, 0.42, 1.5, 0, 'inOutCubic'], [3.9, 0.5, 0.42, 1.5, 0, 'linear']]`
+- **Camera keys:** `[[0, 0.775, 0.35, 1.7, 0], [1.9, 0.44, 0.5, 1.02, 0, 'outCubic'], [2.05, 0.44, 0.5, 1.02, 0, 'linear'], [3.3, 0.49, 0.42, 1.5, 0, 'inOutCubic'], [3.9, 0.49, 0.42, 1.5, 0, 'linear']]`
 - **Transition in:** cut
-- **Effects:** iris onto (0.50, 0.42), the saucer, closing by 3.9 at 2.9
+- **Effects:** iris onto (0.49, 0.42), the saucer, closing by 3.9 at 2.9
 - **Sound cues:** `success` at 1.9, `lullaby` at 2.9
+- **Keyframe (painted):** `public/film/outro/pool.webp` (full size: `review/film-frames/outro_7.png`). Measured: the pennant (0.86, 0.27), the permit on the lanyard (0.87, 0.44), the saucer (0.48, 0.48), Zib in the dome (0.49, 0.36), Vrell at the window (0.14, 0.26), the pool's near rim (y 0.67). The pennant and Vrell are too far apart for one phone frame: the shot opens on the pennant, and the wide frame keeps Vrell.
 
 **Image prompt**
 

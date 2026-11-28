@@ -1324,8 +1324,8 @@ export const fr: Strings = {
       level4: "Maire livré, presque intact. Le registre de Nigel note une pierre noire vendue à un « cabinet de conseil offshore », et le bureau du maire a suivi sa caisse jusqu'à Barnacle Bay. Suivez la côte.",
       level5: "Bubulle a laissé un mot poli — qui apprend à écrire à un dauphin ? — et le registre de Pete a déclenché un audit. Sortez le thermomètre en laiton.",
       level6: 'Formulaire 7-B validé, dignité quasi intacte. Attendez : un dossier nomme le paquebot qui transporte la pierre noire. On embarque.',
-      level7: "Le manifeste du commandant nomme nos concurrents : OBELISK™ — signé Krix, l'ex-stagiaire au grille-pain. Il a changé de bord. Le Dispatch temporel est au sous-sol : prenez un pied-de-biche.",
-      level8: 'Brevets annulés, frais facturés à OBELISK™, Krix en plein audit. Vous êtes embauché, Zib. Vrai salaire. Ne touchez pas au cadran.',
+      level7: 'Commandant, chef et Greg en soute. Attendez — il y a un manifeste plié dans la veste de Sterling. Au débriefing, Zib.',
+      level8: 'Cinq singes livrés avant l’aube et Écho tient encore son tampon. Attendez-moi au bureau, Zib. Apportez votre badge.',
     },
   },
 
@@ -3205,7 +3205,7 @@ export const fr: Strings = {
     loading: 'Chargement du film…',
     tap: 'Touchez pour continuer',
     quote: { open: '« ', close: ' »' },
-    speakers: { narration: 'Dossier du Bureau', vrell: 'Vrell', zib: 'Zib', krix: 'Krix' },
+    speakers: { narration: 'Dossier du Bureau', vrell: 'Vrell', zib: 'Zib', krix: 'Krix', bubbles: 'Mot de Bubulle' },
     opening: {
       title: 'L’ouverture',
       sub: 'Saison 1 · Route 9, cette nuit',
@@ -3228,6 +3228,40 @@ export const fr: Strings = {
         lanyard: 'Un vrai badge ! C’est normal, PROVISOIRE écrit des deux côtés ?',
         two_calls_first: 'La banlieue attendra. D’abord deux missions : une boulangère, un garage.', // v0.2 council round 7 (Neon F2): « appels » are phone calls
         birch_lane: 'Chemin des Bouleaux. Les lampes mordent. Faites l’exercice. Ou pas.',
+      },
+    },
+    prior_art: {
+      title: 'Antériorité',
+      sub: 'Saison 1 · Vallée des brevets, très tôt',
+      lines: {
+        jacket: 'Débriefing. Le commandant a dormi tout du long. Sa veste, elle, a parlé.',
+        signature: 'La pierre noire du musée. Achetée par OBELISK™. Signé… Krix.',
+        racket: 'Sa dalle a remonté trois millions d’années. Les singes ont breveté notre rayon.',
+        royalties: 'Des droits sur chaque rayon tiré. Rétroactifs jusqu’à l’âge de pierre.',
+        basement: 'Le Dispatch temporel. Scellé depuis 1985. Le siège ne doit jamais le savoir.',
+        three_million_years: 'Montez, Zib. Trois millions d’années aller-retour. Mon café refroidit.',
+      },
+    },
+    adequate: {
+      title: 'Embauché',
+      sub: 'Saison 1 · Dispatch temporel',
+      lines: {
+        witnesses: 'Témoins clés, vieux de trois millions d’années. Un biscuit chacun.',
+        void: 'La greffière a rayé le brevet elle-même. Le deuxième biscuit a aidé.',
+        bone_bill: 'OBELISK™ a payé les frais. Puis ses avocats ont facturé l’os à Krix.',
+        hand_it_over: 'Rendez le badge, Zib. Il n’a jamais été que provisoire.',
+        hired: 'Vous voilà salarié. Le siège a dit : génial. Moi, j’ai dit : correct.',
+        dial: 'Euh, Vrell ? Le cadran s’est mis à ronronner. Il affiche 1955.',
+      },
+    },
+    outro: {
+      title: 'L’anneau',
+      sub: 'Saison 1 · Fin',
+      lines: {
+        order_void: 'Déviation hyperspatiale : annulée. Zib a signé en premier. Vrell a contresigné.',
+        bill: 'Tout ça pour une petite ville vendue ? … Vous prenez les tartines ?',
+        vested: 'Retraite acquise pour Vrell, cette nuit-là. Formulaire rempli depuis 1953.',
+        later: 'Je le classe à Plus tard. Il faut bien quelqu’un pour signer vos formulaires.',
       },
     },
   },

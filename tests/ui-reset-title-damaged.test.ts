@@ -17,6 +17,7 @@ import { fmt, getLang, setLang, tr as activeTr, type Lang } from '../src/i18n';
 import { SaveSession } from '../src/core/save-session';
 import { defaultSave, loadSaveWithStatus, type KeyValueStore, type SaveData, type SaveStatus } from '../src/levels/save';
 import { trophyProgress } from '../src/ui/trophy-data';
+import { markFilmSeen } from '../src/ui/films';
 import { NOTICE_CROSS_W, NOTICE_TEXT, RESET_CARD, SAVE_NOTICE, TitleScene, cardBody, keepLabel, noticeText } from '../src/ui/title';
 import type { Button } from '../src/ui/widgets';
 import { damageCases, memStore, okCases, ownKey } from './levels-save-shapes';
@@ -79,7 +80,8 @@ describe('a damaged save on the title', () => {
     // v0.2 council round 7 (Opus F1): story marks are not progress; each one goes through setStoryMark
     expect(game).toMatch(/private setStoryMark\(s: SaveData\): void \{\s*this\.saves\.writeStoryMark\(s\);/);
     expect(game).toMatch(/this\.setStoryMark\(markFilmSeen\(/);
-    expect(game).toMatch(/this\.setStoryMark\(\{ \.\.\.this\.save, \[FINALE_BEAT\]: true \}\)/);
+    // the 2199 epilogue's mark rides on the outro film's mark (films: the outro took over the epilogue)
+    expect(markFilmSeen(defaultSave(), 'outro').dispatch2199Finale).toBe(true);
     expect(game).toMatch(/this\.setStoryMark\(\{ \.\.\.this\.save, fieldCheckSeen: true \}\)/);
     expect(game).not.toMatch(/setSave\([^;]*(markFilmSeen|FINALE_BEAT|fieldCheckSeen: true)/);
     // nothing else writes the save behind the session's back

@@ -97,7 +97,9 @@ The storyboard is reviewed before rendering, and the film follows it.
 
 - Show one caption at a time and label who speaks. Put speech in quotes (“…” EN, « … » FR) and leave narration
   plain.
-- A caption is at most two lines at phone size (about 80 characters).
+- A caption wraps to at most three lines at the caption font (27 px bold, 476 px wide; about 90 characters).
+  Shorter is better: the picture tells the beat. An end-card title is never squeezed; a long one gets a smaller
+  size (down to 34 px).
 - **A caption is fully visible for at least `readSeconds()` of its longer language (EN or FR).** Fade-in and
   fade-out don't count toward that time. The formula is the game's: about 15 characters a second plus a beat,
   2.4–7 s.
