@@ -208,6 +208,13 @@ guards it. Read the rows your change touches before you finish, and run their gu
 - **Evidence shows the change.** Capture on a fresh build after the change, at 1× phone size, in EN and FR for
   text, after the memo typewriter has finished. The final report lists the tests run and what is still pending.
 
+## Storytelling rules (2026-11-28)
+
+`docs/story/rules.md` holds the rules for every story surface: canon, cause and effect, readability, humour and
+films. Read it before writing story copy or making a film. Films start as a storyboard table and use concrete
+illustrated keyframes. Every caption stays fully on screen for `readSeconds()` of its longer language and never
+crosses a cut. Fable directs films.
+
 ## Git and committing (shared checkout)
 
 Several sessions edit this checkout at once, with uncommitted hunks in the same files (`en.ts`, `fr.ts`,

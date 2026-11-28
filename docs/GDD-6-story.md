@@ -404,4 +404,4 @@ Keep these replacements with the release that depends on them. The numbers and l
 | L2 time-car easter egg | Replace the retired Tuesday line with “Free parking, apparently.” |
 | L9 archive and first clear | Use “Crest Valley, the next valley over from Grimsby” and the Gazette’s “From our archives” treatment. End the report with “Why is it blinking two more dates?” |
 
-Use both locales. [Story decisions](story/decisions.md) · [Continuity review](story/continuity-review.md)
+Use both locales. [Storytelling rules](story/rules.md) · [Story decisions](story/decisions.md) · [Continuity review](story/continuity-review.md)
