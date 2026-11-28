@@ -56,6 +56,11 @@ the [continuity review](continuity-review.md). They are canon.
 - Every souvenir, pickup and specimen has a trophy slot with EN and FR text (C2).
 - A new mechanic is taught by a memo line or prompt that has a reason in the story
   (`tests/abduct-mechanic-taught.test.ts`).
+- **Season flow (hard rule, user, 2026-11-28).** A delivered shift goes straight on: report, then its story film if one
+  follows it, then the next order's memo. Never back to Work Orders in the middle of the season. The next order is the
+  next one still to deliver (the eras go on in season order, and the one left behind comes next); only the end of the
+  season returns to Work Orders. Every route goes through `continueIndex` (`src/levels/progress.ts`), and
+  `tests/levels-season-flow.test.ts` walks the whole season in both era orders (C24).
 
 ## 6. Films and interludes
 

@@ -71,6 +71,7 @@ run at the end of this page.
 
 | Problem | Rule | Guard | Command |
 |---|---|---|---|
+| A shift or film that drops the player on Work Orders mid-season | A delivered shift continues report → its story film (if any) → the next order's memo through `continueIndex`; a new level, era or film must keep the whole-season walk passing in every era order. Only the finale ends on Work Orders. | `tests/levels-season-flow.test.ts` (C24) | `npm test` |
 | A level missing from a registry | Counted words match the specimen count, plurals agree, each level has its own cover story, headline and opener, `#NNNN` numbers. | `tests/levels-registries.test.ts`, `tests/ui-story.test.ts`, `tests/ui-workorders.test.ts`, `tests/ui-report-extras.test.ts` | `npm test` |
 | The same gag again, France-only references | No repeated 4-word phrases without a reason; worldwide references. | `tests/ui-copy-repeats.test.ts` | `npm test` |
 | Missing French | FR mirrors EN. | `tests/ui-i18n.test.ts` | `npm test` |

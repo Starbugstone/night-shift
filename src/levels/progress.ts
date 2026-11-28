@@ -254,6 +254,26 @@ export function nextDispatchIndex(save: SaveData, order: readonly DispatchOrder[
   return order.findIndex(available);
 }
 
+/**
+ * Season flow (user, 2026-11-28, hard rule): where a delivered shift continues. The report's Next and the story film
+ * that follows a first delivery both go straight to this level's memo, as every Grimsby shift always did: the next
+ * order still to deliver after this one, else one left behind (1122 after 1953 while 2199 waits), else the next order
+ * on a replay. The eras stay free to play in either order from Work Orders. Null only at the end of the season.
+ * `tests/levels-season-flow.test.ts` walks the whole season through it.
+ */
+export function continueIndex(save: SaveData, levelIndex: number, order: readonly DispatchOrder[] = LEVELS): number | null {
+  const open = (i: number) => i >= 0 && i < order.length && isLevelUnlocked(save, i, order);
+  const fresh = (i: number) => open(i) && !save.levels[order[i]!.id]?.delivered;
+  // the next order still to deliver, in season order (1953 flown before 1122 goes on to 2199 once both are in)
+  const ahead = order.findIndex((_, i) => i > levelIndex && fresh(i));
+  if (ahead >= 0) return ahead;
+  // an open order left behind (1122 after 1953 while 2199 waits for both)
+  const behind = nextDispatchIndex(save, order);
+  if (behind >= 0 && behind !== levelIndex) return behind;
+  // everything open is delivered: a replay walks on to the next order, the finale ends at Work Orders
+  return open(levelIndex + 1) ? levelIndex + 1 : null;
+}
+
 export interface RunOutcome {
   save: SaveData;
   stars: Stars;

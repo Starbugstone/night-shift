@@ -117,6 +117,11 @@ Archive): every room's `human` needs an entry with an EN and FR name, age, heigh
 description (`tests/ui-trophies-specimens.test.ts`). The "probed" stamp is rolled once at first delivery
 and is cosmetic only: it never touches stars, Glorbs or unlocks.
 
+**Hard rule: the season flows straight on (user, 2026-11-28).** A delivered shift always continues: report, then the
+story film that follows it if any, then the next order's memo, the same way for every level and era. Only the end of the
+season returns to Work Orders. Route every report and after-level film through `continueIndex`
+(`src/levels/progress.ts`); `tests/levels-season-flow.test.ts` walks the whole season in every era order.
+
 **Hard rule: no bump on start.** Every room spawn must sit 10 s without input with zero bonks and
 zero wake (`tests/abduct-spawn.test.ts`); fix the spawn pose or position, never the wake rules.
 

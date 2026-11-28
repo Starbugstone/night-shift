@@ -8,7 +8,7 @@ import { DeepFlightScene } from '../flight/deep-scene';
 import { FlightScene } from '../flight/scene';
 import { FIELD_CHECK, FIELD_CHECK_INDEX, FIELD_CHECK_ROOM, FIELD_CHECK_RULES } from '../levels/field-check';
 import { LEVELS, deepSlot, isDeep, isRoomId, levelIndexForRoom, levelRooms } from '../levels/levels';
-import { applyDeepRun, applyRun, backfillSpecimens, isLevelUnlocked, setUnlockEverything } from '../levels/progress';
+import { applyDeepRun, applyRun, backfillSpecimens, continueIndex, isLevelUnlocked, setUnlockEverything } from '../levels/progress';
 import { DeepRun } from '../levels/run';
 import type { DeepLevelDef } from '../levels/types';
 import { clearSave, loadSave, type KeyValueStore, type SaveData, type SaveStatus } from '../levels/save';
@@ -361,6 +361,16 @@ export class Game implements Shell {
     this.scenes.go('film', () => new FilmScene(this, id, then));
   }
 
+  /**
+   * Season flow (user, 2026-11-28, hard rule): after a delivered shift and its story film, straight on to the next
+   * open order's memo, as the report's Next does; Work Orders only once nothing is left (after the finale).
+   */
+  private continueAfter(levelIndex: number): void {
+    const next = continueIndex(this.save, levelIndex);
+    if (next === null) this.toWorkOrders();
+    else this.toMemo(next);
+  }
+
   /** The film a first delivery of this level unlocks, if it hasn't played yet (it starts loading). */
   private filmAfter(levelId: string, delivered: boolean): FilmId | undefined {
     const film = FILM_AFTER[levelId as keyof typeof FILM_AFTER];
@@ -494,7 +504,7 @@ export class Game implements Shell {
     const practiceNext = persist && LEVELS[i]?.id === 'level2' && outcome.stars[0] && !outcome.save.fieldCheckSeen;
     const advance = practiceNext ? () => this.toFieldCheck() : undefined;
     const film = persist ? this.filmAfter(LEVELS[i]!.id, outcome.stars[0] === true) : undefined;
-    const watch = film ? () => this.playFilm(film, advance ?? (() => this.toWorkOrders())) : undefined;
+    const watch = film ? () => this.playFilm(film, advance ?? (() => this.continueAfter(i))) : undefined;
     this.scenes.go('report', () => new ReportScene(this, i, tutorialReport(i, abduct, flight, outcome), outcome,
       advance, watch, watch && tr().films.watch), false, transition);
   }
@@ -623,7 +633,7 @@ export class Game implements Shell {
     this.run = null;
     // v4 films: a first delivery rolls its story film (2199: the season finale) after the report
     const film = this.filmAfter(run.level.id, run.phase === 'done');
-    const finale = film ? () => this.playFilm(film, () => this.toWorkOrders()) : undefined;
+    const finale = film ? () => this.playFilm(film, () => this.continueAfter(run.levelIndex)) : undefined;
     this.scenes.go('report', () => new ReportScene(this, run.levelIndex, deepReport(run, outcome), outcome, undefined, finale,
       film ? tr().films.watch : undefined), false, transition);
   }

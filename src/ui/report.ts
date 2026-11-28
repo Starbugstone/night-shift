@@ -13,7 +13,7 @@ import { Label, Paragraph, measure, wrapLines } from '../core/gfx/text';
 import type { Shell } from '../core/shell';
 import { itemsPhrase, vrellComment } from '../levels/humor';
 import { LEVELS } from '../levels/levels';
-import { countStars, isLevelUnlocked, type RunOutcome } from '../levels/progress';
+import { continueIndex, countStars, type RunOutcome } from '../levels/progress';
 import { fmt, gt, localArt, tr } from '../i18n';
 import { fmtTime } from './draw';
 import { reportContent } from './report-content';
@@ -177,7 +177,8 @@ export class ReportScene implements Scene {
   coinHop = 0;
   private readonly look = new ViewSlot(() => new ReportView(this));
   readonly end: number;
-  private readonly hasNext: boolean;
+  /** Where Next continues after a delivery (season flow), or null for Work Orders. */
+  private readonly nextIndex: number | null;
   private playedExtras = { approved: false, tabloid: false };
   private spoke = false; // v4 voices: Vrell says his comment out loud
 
@@ -192,11 +193,9 @@ export class ReportScene implements Scene {
     finaleLabel?: string,
   ) {
     this.end = model.headline ? TABLOID_END : END;
-    const successor = levelIndex + 1;
-    const branching = LEVELS[levelIndex]?.requires || LEVELS[successor]?.requires;
-    // At a fork the report returns to Work Orders so the player chooses the date.
-    this.hasNext = !branching && isLevelUnlocked(outcome.save, successor);
-    this.next.label = finale ? finaleLabel ?? tr().dispatch2199.replay : advance ? tr().fieldCheckControls.short : model.delivered && this.hasNext ? tr().common.next : tr().common.workOrders;
+    // season flow (user, 2026-11-28): a delivery always continues to the next open order, eras included
+    this.nextIndex = model.delivered ? continueIndex(outcome.save, levelIndex) : null;
+    this.next.label = finale ? finaleLabel ?? tr().dispatch2199.replay : advance ? tr().fieldCheckControls.short : this.nextIndex !== null ? tr().common.next : tr().common.workOrders;
     if (this.next.label.length > 9) this.next.size = 26;
   }
 
@@ -217,7 +216,7 @@ export class ReportScene implements Scene {
     if (this.next.update(p, dt)) {
       if (this.finale) return this.finale();
       if (this.advance) return this.advance();
-      if (this.model.delivered && this.hasNext) return this.shell.toMemo(this.levelIndex + 1);
+      if (this.nextIndex !== null) return this.shell.toMemo(this.nextIndex);
       return this.shell.toWorkOrders();
     }
     const skipped = p.pressed && !this.retry.contains(p.x, p.y) && !this.next.contains(p.x, p.y) && this.t < this.end;
