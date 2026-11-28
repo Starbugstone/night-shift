@@ -9,7 +9,7 @@
 //    and lines in both languages.
 // 4. In play: a tap never skips a line before it could be read, the end card waits for a tap, Skip leaves.
 import { describe, expect, it } from 'vitest';
-import { authoredLocal, CAP_IN, CAP_OUT, captionAlpha, shotAt } from '../src/core/film-time';
+import { authoredLocal, CAP_IN, CAP_OUT, captionAlpha, captionShown, shotAt } from '../src/core/film-time';
 import { FRESH_LINE_SECONDS, readSeconds } from '../src/core/read-time';
 import type { Shell } from '../src/core/shell';
 import { en } from '../src/i18n/en';
@@ -105,6 +105,33 @@ describe('playing a film', () => {
       pointer.released = false;
     };
     return { shell, tap, sounds, done: () => done, then: () => { done++; } };
+  }
+
+  // council round 7 (Fable 1): a thumb that keeps tapping from a shot's first frame still reads every line
+  for (const film of FILMS) {
+    it(`${film.id}: tapping every 0.2, 0.3 or 0.5 s from the start never cuts a line`, () => {
+      for (const every of [0.2, 0.3, 0.5]) {
+        const r = rig();
+        const scene = new FilmScene(r.shell, film.id, r.then);
+        scene.update(1 / 60);
+        const clock = scene.clock;
+        const best = clock.shots.map(() => 0);
+        let next = every;
+        for (let k = 0; k < 60 * 120 && scene.endT < 0; k++) {
+          const i = scene.shotIndex;
+          const s = clock.shots[i]!;
+          if (s.capInF !== null) best[i] = Math.max(best[i]!, captionShown(s, scene.t - s.start));
+          if (scene.t >= next) {
+            r.tap(scene);
+            next = scene.t + every;
+          } else scene.update(1 / 60);
+        }
+        clock.shots.forEach((s, i) => {
+          if (s.capInF === null) return;
+          expect(best[i]!, `${film.id}/${i} tapped every ${every} s`).toBeGreaterThanOrEqual(Math.min(s.read, FRESH_LINE_SECONDS) - 1 / 30);
+        });
+      }
+    });
   }
 
   for (const film of FILMS) {
