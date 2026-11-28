@@ -106,9 +106,9 @@ const GAGS: Readonly<Record<string, Gag>> = {
   '"Adequate"': { re: /\badequate\b/i, scope: 'global', cap: 5, why: 'continuity review §4: Vrell\'s word, used sparingly' },
   'X-Files': {
     re: /truth is out there|trust no one|mulder|scully|i want to believe|smoking man|x-files|under "x"|agent nigel/i,
-    scope: 'global', cap: 2, now: 7, why: 'continuity review S15: keep Gary and Nigel, replace the rest',
+    scope: 'global', cap: 2, now: 3, why: 'continuity review S15: keep Gary and Nigel, replace the rest',
   },
-  Tuesday: { re: /\btuesday/i, scope: 'global', cap: 7, now: 8, why: 'the Tuesday gag is retired (decisions.md); S16 cut "Classic Tuesday" from the L2 time-car egg' },
+  Tuesday: { re: /\btuesday/i, scope: 'global', cap: 7, why: 'the Tuesday gag is retired (decisions.md); S16 cut "Classic Tuesday" from the L2 time-car egg' },
 };
 
 function distinctTexts(list: readonly { text: string }[]): string[] {

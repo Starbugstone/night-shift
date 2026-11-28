@@ -400,9 +400,12 @@ export const en = {
       afterL5: [
         'Tip: Bubbles the dolphin has her own Bureau parking ring. Hers comes with a pool.',
         'Tip: Form 7-B is strictly medical. Stop giggling in the Endoscopy wing.',
+        // v0.2 season review (Neon): the tips GDD-6 planned (S9, S10): Vrell's field past, Bubbles' tank before the 2199 outro
+        'Tip: Vrell flew field shifts in 1953. He says the uniform was warmer then.',
       ],
       afterL7: [
         'Tip: OBELISK™ charges for dramatic music. Our beam is silent and costs nothing.',
+        'Tip: Bubbles now audits Accounting from the porthole tank by Vrell’s desk. Knock twice.',
       ],
     },
   },
@@ -587,7 +590,7 @@ export const en = {
       re: 'Work Order #{num} — Nov 12, 1955 (10:04)',
       body: "Temporal Dispatch picked up 1.21 gigawatts in 1955. Someone built a time machine without Form 88-MPH. In 1955 the Grimsby Gazette covered the next valley over, Crest Valley. Grab Doc off the clock tower, Buff from Lyle's Coffee Shop and Marvin Cherry behind the school dance. Be out by 10:10, when the storm passes.",
       joke: "A gull-wing time car is due at the clock tower at 10:04 sharp. Wait at the west turnout, then match its speed to impound it before the lightning hits.",
-      signoff: "— Vrell. I told you to leave the dial alone.",
+      signoff: "— Vrell. We should have unplugged the dial.", // v0.2 season review (Neon): nobody touched it; it lit up on its own
     },
     level1: {
       title: 'Farmer Doyle Sleeps Like a Log',
@@ -1161,7 +1164,7 @@ export const en = {
     spotShouts: {
       police: ['UNIT 4, UFO!', 'FREEZE! …PLEASE?'],
       patrol: ['10-4, SAUCER!', 'BACKUP!'],
-      watcher: ['I KNEW IT!', 'DOROTHY! THE BOOK!'],
+      watcher: ['I KNEW IT!', 'DORIS! THE BOOK!'], // v0.2 season review (Neon): her sister is Doris (L7)
       heli: ['GOT A VISUAL!', 'TALLY-HO!'],
       dog: ['WOOF!', 'MAAARGE!'],
       // L5 pier code
@@ -1295,7 +1298,7 @@ export const en = {
           perfect: ['One specimen, no sightings, not a crumb out of place. Head Office calls that a pilot scheme.'],
           spotted: ['One specimen delivered, and spotted {times}. For one human, Zib. One.'],
           failed: ['One specimen, {failed} retries. The specimen was asleep, Zib. It was not a moving target.'],
-          default: ['One specimen. Adequate, in the travel size.'],
+          default: ['One specimen. Travel-sized shift, full-sized paperwork.'], // v0.2 season review (Neon): "adequate" stays Vrell's story word (cap 5)
         },
         2: {
           perfect: ["Both aboard, no sightings, home before dawn. Two for two. Don't let it go to your antennae."],
@@ -1717,7 +1720,7 @@ export const en = {
       'sardine tin': {
         got: [
           'An empty sardine tin, fished off the pool floor. Bubbles has already invoiced us for the contents.',
-          'A sardine tin. Bubbles ate them in 1997. She still brings it up.',
+          'A sardine tin. Bubbles ate them in 2019. She still brings it up.', // v0.2 season review (Neon): Bubbles is 14
         ],
         missed: [
           'You left the sardine tin on the pool floor. Bubbles will notice. Half of her, anyway.',
@@ -1966,7 +1969,7 @@ export const en = {
     zib: {
       // L2: the time car in Spin City's back lot
       timeCar: [
-        'Someone parked a time machine in a laundromat lot. Classic Tuesday.',
+        'Someone parked a time machine in a laundromat lot. Free parking, apparently.', // v0.2 season review (Neon): the Tuesday gag is retired
         'Scorch marks, gull-wing door, no plates. Whoever owns it is late. Or early.',
         "If that car hits 88 miles per hour, I'm not doing the paperwork.",
       ],
@@ -3013,7 +3016,7 @@ export const en = {
         },
         mayor: {
           at3: "Rehearses a speech in case we say \"Take me to your leader\". Nobody has told him our leader is Vrell, and Vrell does not take meetings.",
-          at10: "A chain-smoking man in shadows now lurks at every council meeting. Whitlock calls him his \"advisor\".",
+          at10: "Opens every council meeting by asking if anyone is from another planet. One hand goes up. It's Gary.", // v0.2 season review (Neon): X-Files cap (S15)
         },
         bubbles: {
           at3: "Taught the sea lion to clap twice when we hover, then backflips straight into the beam.",
@@ -3021,10 +3024,10 @@ export const en = {
         },
         pete: {
           at3: "Puts the kettle on at 2 AM sharp and sets out two chipped mugs—one for him, one for \"rude weather\".",
-          at10: "His lighthouse now blinks \"THE TRUTH IS OUT THERE\" in Morse code. Ferries flash back \"NIGHT, PETE\".",
+          at10: "His lighthouse blinks \"RUDE WEATHER\" in Morse whenever we pass. Ferries flash back \"NIGHT, PETE\".", // v0.2 season review (Neon): X-Files cap (S15)
         },
         sal: {
-          at3: "Taped \"TRUST NO ONE\" over the petty cash tin—especially Kipper the cat and glowing night visitors.",
+          at3: "Taped \"COUNT TWICE\" over the petty cash tin, aimed squarely at Kipper the cat and glowing night visitors.", // v0.2 season review (Neon): X-Files cap (S15)
           at10: "Put the Bureau on a monthly retainer with an itemized surcharge per brass probe and a night fee.",
         },
         hank: {
@@ -3033,7 +3036,7 @@ export const en = {
         },
         osei: {
           at3: "Grades our interns' probe technique in her sleep and annotates the 1953 brass thermometer.",
-          at10: "A sceptical FBI doctor haunts her ward now, muttering \"Mulder, it's me\" over every odd patient chart.",
+          at10: "Logs our visits as continuing professional development. Claims the hours.", // v0.2 season review (Neon): X-Files cap (S15)
         },
         pemberton: {
           at3: "Wears his best grippy socks to bed and clips a thank-you note to his gown whenever the ceiling glows.",

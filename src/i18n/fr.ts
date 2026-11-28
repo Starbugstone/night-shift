@@ -98,9 +98,12 @@ export const fr: Strings = {
       afterL5: [
         'Astuce : Bubulle le dauphin a son anneau de parking au Bureau. Le sien a une piscine.',
         'Astuce : le formulaire 7-B est strictement médical. Cessez de glousser en endoscopie.',
+        // v0.2 season review (Neon): les astuces prévues par GDD-6 (S9, S10)
+        'Astuce : Vrell a volé sur le terrain en 1953. Selon lui, l’uniforme tenait plus chaud.',
       ],
       afterL7: [
         "Astuce : OBELISK™ facture la musique dramatique. Notre rayon est silencieux et gratuit.",
+        'Astuce : Bubulle contrôle la compta depuis le hublot-aquarium près du bureau de Vrell. Frappez deux fois.',
       ],
     },
   },
@@ -247,7 +250,7 @@ export const fr: Strings = {
       human: "Rodney, le Chevalier et Tom",
       collect: "Trois témoins",
       re: "Ordre n°{num} · Sacré Graal !",
-      body: "Agent Zib, Krix a fait appel et retravaille chez OBELISK™. Nos concurrents revendiquent le Saint Graal pour vendre la vie éternelle par abonnement. Leurs trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le juridique annule les signatures. À la haie ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux. À demi réveillé, Rodney s’enfuit.",
+      body: "Agent Zib, Krix a fait appel et retravaille chez OBELISK™. Nos concurrents revendiquent le Saint Graal pour vendre la vie éternelle par abonnement. Leurs trois témoins ont signé en dormant. Ramenez-les avant l’aube pour que le juridique annule les signatures. À la haie ouest, des chevaliers réclament un jardinet. La fenêtre temporelle ne prend que des passagers immobiles : lâchez-les dans la sortie et attendez la jauge, sinon ils arrivent en plusieurs morceaux. À demi réveillé, Rodney fuit bravement.",
       joke: "Les Français lancent des vaches. Si la route meugle, dégagez.",
       signoff: "— Vrell. Pas de joute pendant le service.",
     },
@@ -284,11 +287,11 @@ export const fr: Strings = {
       re: 'Ordre n°{num} — 12 nov. 1955 (22 h 04)',
       body: "Le Dispatch temporel a capté 2,21 gigowatts en 1955 : quelqu'un bricole le temps sans formulaire 88-MPH. En 1955, la Gazette de Grimsby couvrait aussi Crest Valley, la vallée voisine. Embarquez Doc sur l'horloge, Buff au Café Lyle et Marvin Cherry derrière le bal. Filez avant 22 h 10, fin de l'orage.",
       joke: "Une voiture temporelle est attendue devant l'horloge à 22 h 04 pile. Guettez-la à la sortie ouest, puis calez-vous sur sa vitesse pour la saisir avant la foudre.",
-      signoff: "— Vrell. J'avais dit : pas touche au cadran.",
+      signoff: "— Vrell. On aurait dû débrancher ce cadran.", // v0.2 season review (Neon): personne n'y a touché
     },
     level1: {
       title: 'Le fermier Doyle dort comme un loir',
-      location: 'Ferme Doyle · D9',
+      location: 'Ferme Doyle · Route 9', // v0.2 season review (Neon): same road as the opening film and 1953; D9 is France-only
       blurb: 'Gros gaillard. Ronflement XXL. Chien au sommeil léger.',
       human: 'le fermier Doyle',
       collect: 'le fermier Doyle',
@@ -371,7 +374,7 @@ export const fr: Strings = {
       human: 'le commandant Sterling, le chef Marco et Greg',
       collect: 'le commandant Sterling, le chef Marco et Greg',
       re: 'Ordre n°{num} — SS Buffet Royal (hors budget)',
-      body: "Un dossier clinique signale un passager embarqué chez Pete, sur le paquebot de la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg (tout compris). Le commandant somnole avec le manifeste en poche : on fouillera au débriefing. Esquivez le photographe et tenez bon dans la houle. Les stewards font des rondes à la lampe, chassant les serviettes des transats.", // v0.2 follow-up: teaches the deck stewards
+      body: "Un dossier d’hôpital signale un passager embarqué chez Pete, sur le paquebot de la pierre noire du musée. Prenez le commandant Sterling, le chef Marco et Greg (tout compris). Le commandant somnole avec le manifeste en poche : on fouillera au débriefing. Esquivez le photographe et tenez bon dans la houle. Les stewards font des rondes à la lampe, chassant les serviettes des transats.", // v0.2 follow-up: teaches the deck stewards
       joke: "Budget validé par personne : on facture en recherche maritime. Doris, la sœur de Mme Pruitt, est sur le pont avec le même classeur. Ne téléportez pas la tour de crevettes.",
       signoff: '— Vrell. Détruisez cette note après lecture.', // v4 story
     },
@@ -470,7 +473,7 @@ export const fr: Strings = {
     // v0.2 copy
     { title: 'Grand amiral de la sieste', flavour: 'Pouf réservé. Vrell a une caisse.' }, // v0.2 follow-up: fits the rank card unsqueezed
     { title: 'Directeur des paradoxes', flavour: 'Salarié. La paie tombe la veille.' }, // v0.2 follow-up: fits the rank card unsqueezed
-    { title: 'Employé du millénaire', flavour: 'Au mur chaque siècle : « Zibb ».' }, // v0.2 follow-up: fits the rank card unsqueezed
+    { title: 'Employé du millénaire', flavour: 'Encadré à vie. Plaque : « Zibb ».' }, // v0.2 follow-up: fits the rank card unsqueezed
   ],
 
   // v4 L9 1955
@@ -701,7 +704,7 @@ export const fr: Strings = {
       level3: ['un ballon-sonde', 'le drone des Voisins vigilants de Gary', 'Vénus, encore'],
       level4: ["un spectacle de drones que personne n'a commandé", 'le nouvel éclairage public du maire', 'un dirigeable égaré'],
       level5: ['une méduse fluorescente', 'un coup de chaud du phare', 'une brume de mer suspecte'],
-      level6: ['un hélicoptère du SAMU', 'un exercice incendie de routine', 'le distributeur de café'],
+      level6: ['un hélicoptère-ambulance', /* v0.2 season review (Neon): SAMU is France-only */ 'un exercice incendie de routine', 'le distributeur de café'],
       // v4 L8
       level8: ['un roulement de tambour trop dramatique', 'un gros rocher noir très brillant'],
       level7: ["un feu d'artifice", 'le projecteur karaoké du commandant', 'une mouette de taille réglementaire'],
@@ -1124,7 +1127,7 @@ export const fr: Strings = {
     spotShouts: {
       police: ['UNITÉ 4, OVNI !', 'HALTE ! …SVP ?'],
       patrol: ['REÇU, SOUCOUPE !', 'RENFORTS !'],
-      watcher: ['JE LE SAVAIS !', 'DOROTHÉE ! LE CARNET !'],
+      watcher: ['JE LE SAVAIS !', 'DORIS ! LE CARNET !'], // v0.2 season review (Neon): sa sœur s'appelle Doris (L7)
       heli: ['CONTACT VISUEL !', 'CIBLE EN VUE !'],
       dog: ['OUAF !', 'GINETTE !'],
       // L5 pier code
@@ -1256,7 +1259,7 @@ export const fr: Strings = {
           perfect: ["Un spécimen, zéro témoin, pas une miette de travers. Le siège appelle ça un projet pilote."],
           spotted: ['Un spécimen livré, et repéré {times}. Pour un seul humain, Zib. Un seul.'],
           failed: ["Un spécimen, {failed} essais ratés. Le spécimen dormait, Zib. Ce n'était pas une cible mouvante."],
-          default: ['Un spécimen. Correct, format voyage.'],
+          default: ['Un spécimen. Mission format voyage, paperasse grand format.'], // v0.2 season review (Neon): « correct » reste le mot de Vrell
         },
         2: {
           perfect: ["Les deux à bord, zéro témoin, rentré avant l'aube. Deux sur deux. Que ça ne vous monte pas aux antennes."],
@@ -1313,9 +1316,9 @@ export const fr: Strings = {
       // v4 1953
       level11: "Papy Doyle m’a prêté son thermomètre en laiton. J’ai pris la fièvre de l’équipage par derrière. Le drive-in a cru voir une sonde.",
       // v4 2199
-      level12: "Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : convenable.",
+      level12: "Trois habitants. Grimsby reste. Votre mère a appelé, Zib. Je lui ai dit : correct.", // v0.2 season review (Neon): Vrell's word in French is « correct »
       level9: "Trois témoins de 1955 classés et la chronologie tient bon. En prime, le juridique d'OBELISK™ ne pourra pas breveter le temps. Pourquoi deux autres dates clignotent sur le cadran ?",
-      level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la D9 vers la ville : le veilleur de Spin City vous attend.',
+      level1: 'Ni mort, ni viré, et Doyle est en soute. Prenez la route 9 vers la ville : le veilleur de Spin City vous attend.',
       level2: "Larry est recensé. La compta a remonté la piste de quarante chaussettes jusqu’à votre soucoupe. Votre badge provisoire est dans le bac. Deux missions chemin des Bouleaux, puis la commande en gros.",
       level3: 'Banlieue bouclée, mais Gary a porté plainte et Mme Pruitt a envoyé votre photo à la mairie. Direction le centre-ville.',
       level4: "Maire livré, presque intact. Le registre de Nigel note une pierre noire vendue à un « cabinet de conseil offshore », et le bureau du maire a suivi sa caisse jusqu'à Barnacle Bay. Suivez la côte.",
@@ -1672,7 +1675,7 @@ export const fr: Strings = {
       'sardine tin': {
         got: [
           "Une boîte de sardines vide, repêchée au fond du bassin. Bubulle nous a déjà facturé le contenu.",
-          "Une boîte de sardines. Bubulle les a mangées en 1997. Elle en parle encore.",
+          "Une boîte de sardines. Bubulle les a mangées en 2019. Elle en parle encore.", // v0.2 season review (Neon): Bubulle a 14 ans
         ],
         missed: [
           "La boîte de sardines est restée au fond. Bubulle le remarquera. Une moitié d'elle, du moins.",
@@ -1919,7 +1922,7 @@ export const fr: Strings = {
     zib: {
       // L2 : la machine à voyager dans le temps derrière la laverie (doublage VF : « 88 miles à l'heure »)
       timeCar: [
-        'Une machine à remonter le temps garée derrière la laverie. Un mardi normal.',
+        'Une machine à remonter le temps garée derrière la laverie. Stationnement gratuit, visiblement.', // v0.2 season review (Neon): le gag du mardi est retiré
         'Traces de brûlé, porte papillon, pas de plaque. Proprio en retard. Ou en avance.',
         "Si cette voiture atteint 88 miles à l'heure, je ne remplis pas le formulaire.",
       ],
@@ -2951,7 +2954,7 @@ export const fr: Strings = {
         },
         mayor: {
           at3: "Répète un discours au cas où on dirait « Menez-moi à votre chef ». Personne ne lui a dit que notre chef, c'est Vrell — et Vrell ne reçoit pas.",
-          at10: "L'Homme à la cigarette rôde dans l'ombre à chaque conseil municipal. Whitlock le présente comme son « conseiller ».",
+          at10: "Ouvre chaque conseil municipal en demandant si quelqu'un vient d'une autre planète. Une main se lève : celle de Gary.", // v0.2 season review (Neon): X-Files cap (S15)
         },
         bubbles: {
           at3: "Elle a dressé l'otarie à applaudir deux fois dès qu'on arrive, puis saute en salto arrière droit dans le rayon.",
@@ -2959,10 +2962,10 @@ export const fr: Strings = {
         },
         pete: {
           at3: "Lance la bouilloire à 2 h pile et sort deux mugs ébréchés : un pour lui, un pour la « météo malpolie ».",
-          at10: "Son phare envoie « La vérité est ailleurs » en morse. Les ferries lui répondent « Bonne nuit, Pete ».",
+          at10: "Son phare clignote « MÉTÉO MALPOLIE » en morse à chaque passage. Les ferries répondent « BONNE NUIT, PETE ».", // v0.2 season review (Neon): X-Files cap (S15)
         },
         sal: {
-          at3: "A collé « Ne faites confiance à personne » sur la caisse noire — surtout pas à Kipper ni aux lueurs nocturnes.",
+          at3: "A collé « COMPTEZ DEUX FOIS » sur la caisse noire, à l'intention de Kipper et des lueurs nocturnes.", // v0.2 season review (Neon): X-Files cap (S15)
           at10: "Facture désormais un forfait mensuel au Bureau, avec supplément par sonde et tarif de nuit.",
         },
         hank: {
@@ -2971,7 +2974,7 @@ export const fr: Strings = {
         },
         osei: {
           at3: "Note la technique de sondage de nos stagiaires en dormant et laisse des remarques sur le thermomètre en laiton.",
-          at10: "Une médecin sceptique du FBI hante son service en murmurant « Mulder, c'est moi » sur chaque dossier louche.",
+          at10: "Compte nos visites comme formation continue. Et réclame les heures.", // v0.2 season review (Neon): X-Files cap (S15)
         },
         pemberton: {
           at3: "Enfile ses plus belles chaussettes antidérapantes et épingle un petit merci sur sa blouse dès que le plafond s'illumine.",
